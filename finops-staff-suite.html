@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TSM FinOps Command Suite — Autonomous Financial Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#060e1f;
+  --navy2:#0a1628;
+  --navy3:#0f2040;
+  --navy-card:#111d35;
+  --gold:#c9a84c;
+  --gold2:#f0c96a;
+  --gold3:#fad98a;
+  --cyan:#1ab8d4;
+  --cyan2:#5ee0f5;
+  --teal:#0dd6a8;
+  --teal2:#5ef5d4;
+  --purple:#8050dc;
+  --coral:#e05a4a;
+  --white:#fff;
+  --text-white:rgba(255,255,255,0.95);
+  --text-dim:rgba(255,255,255,0.55);
+  --text-faint:rgba(255,255,255,0.25);
+  --border:rgba(255,255,255,0.07);
+  --border2:rgba(255,255,255,0.12);
+  --surface:rgba(255,255,255,0.04);
+  --surface2:rgba(255,255,255,0.07);
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Outfit',sans-serif;
+  background:var(--navy);
+  color:var(--text-white);
+  min-height:100vh;
+  line-height:1.6;
+}
+
+/* ---- NAV ---- */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 2rem;height:56px;
+  background:rgba(6,14,31,0.92);
+  backdrop-filter:blur(12px);
+  border-bottom:0.5px solid var(--border2);
+}
+.nav-logo{display:flex;align-items:center;gap:8px;font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--gold2);letter-spacing:0.06em}
+.nav-logo-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);animation:pulse 2s infinite}
+.nav-links{display:flex;gap:4px}
+.nav-link{font-size:11px;font-weight:500;color:var(--text-dim);padding:5px 10px;border-radius:6px;cursor:pointer;transition:all 0.15s;text-decoration:none;letter-spacing:0.03em;border:none;background:none}
+.nav-link:hover{color:var(--text-white);background:var(--surface2)}
+.nav-cta{font-size:11px;font-weight:500;background:var(--gold);color:var(--navy2);border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-family:'Outfit',sans-serif;transition:opacity 0.15s;text-decoration:none}
+.nav-cta:hover{opacity:0.88}
+
+/* ---- HERO ---- */
+.hero{
+  min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;
+  text-align:center;padding:7rem 2rem 4rem;position:relative;overflow:hidden;
+}
+.hero-bg{
+  position:absolute;inset:0;z-index:0;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 20%, rgba(201,168,76,0.08) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 20% 70%, rgba(26,184,212,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 80%, rgba(13,214,168,0.05) 0%, transparent 60%),
+    var(--navy);
+}
+.hero-grid-overlay{position:absolute;inset:0;z-index:0;background-image:linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 0%,transparent 75%)}
+.hero-content{position:relative;z-index:1;max-width:760px}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(201,168,76,0.1);border:0.5px solid rgba(201,168,76,0.35);
+  border-radius:24px;padding:5px 16px;
+  font-size:11px;font-weight:500;color:var(--gold2);
+  font-family:'DM Mono',monospace;letter-spacing:0.09em;text-transform:uppercase;
+  margin-bottom:2rem;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.hero h1{
+  font-family:'DM Serif Display',serif;
+  font-size:clamp(42px,6vw,72px);
+  line-height:1.08;color:var(--text-white);
+  margin-bottom:1.5rem;
+}
+.hero h1 .gold{color:var(--gold2);font-style:italic}
+.hero-sub{font-size:17px;color:var(--text-dim);max-width:560px;margin:0 auto 2.5rem;line-height:1.75;font-weight:300}
+.hero-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:3rem}
+.btn-primary{background:var(--gold);color:var(--navy2);border:none;border-radius:8px;padding:12px 24px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;transition:all 0.15s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn-primary:hover{background:var(--gold3);transform:translateY(-1px)}
+.btn-outline{background:transparent;color:var(--text-white);border:0.5px solid var(--border2);border-radius:8px;padding:12px 24px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Outfit',sans-serif;transition:all 0.15s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn-outline:hover{background:var(--surface2);border-color:rgba(255,255,255,0.2)}
+.hero-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border2);border:0.5px solid var(--border2);border-radius:12px;overflow:hidden;max-width:500px;margin:0 auto}
+.hero-stat{background:var(--navy2);padding:1.25rem 1rem;text-align:center}
+.hero-stat-num{font-size:28px;font-weight:600;font-family:'DM Mono',monospace;color:var(--gold2)}
+.hero-stat-label{font-size:11px;color:var(--text-faint);margin-top:3px;text-transform:uppercase;letter-spacing:0.06em}
+
+/* ---- SECTION COMMON ---- */
+section{padding:5rem 2rem;max-width:900px;margin:0 auto}
+.section-eyebrow{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem}
+.eyebrow-line{height:0.5px;width:32px;background:var(--gold);opacity:0.5}
+.eyebrow-text{font-size:11px;font-weight:500;color:var(--gold);text-transform:uppercase;letter-spacing:0.12em;font-family:'DM Mono',monospace}
+.section-title{font-family:'DM Serif Display',serif;font-size:clamp(28px,4vw,42px);color:var(--text-white);line-height:1.15;margin-bottom:0.75rem}
+.section-title .gold{color:var(--gold2);font-style:italic}
+.section-desc{font-size:15px;color:var(--text-dim);line-height:1.75;max-width:600px;margin-bottom:3rem;font-weight:300}
+
+/* ---- SUITE NODES ---- */
+.node-feature{background:rgba(201,168,76,0.05);border:0.5px solid rgba(201,168,76,0.2);border-radius:16px;padding:2rem;margin-bottom:1rem;position:relative;overflow:hidden}
+.node-feature::before{content:'';position:absolute;top:0;right:0;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,0.06),transparent 70%)}
+.node-feature-head{display:flex;align-items:flex-start;gap:16px;margin-bottom:1.25rem}
+.node-icon-lg{width:48px;height:48px;border-radius:12px;background:rgba(201,168,76,0.12);border:0.5px solid rgba(201,168,76,0.25);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.node-icon-cyan{background:rgba(26,184,212,0.12);border-color:rgba(26,184,212,0.25)}
+.node-icon-teal{background:rgba(13,214,168,0.12);border-color:rgba(13,214,168,0.25)}
+.node-icon-purple{background:rgba(128,80,220,0.12);border-color:rgba(128,80,220,0.25)}
+.node-icon-coral{background:rgba(224,90,74,0.12);border-color:rgba(224,90,74,0.25)}
+.node-title{font-size:18px;font-weight:500;color:var(--text-white);margin-bottom:3px}
+.node-subtitle{font-size:11px;color:var(--text-dim);font-family:'DM Mono',monospace;letter-spacing:0.06em}
+.node-body{font-size:13px;color:var(--text-dim);line-height:1.75;margin-bottom:1rem}
+.node-pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1.25rem}
+.node-pill{font-size:10px;padding:3px 10px;border-radius:20px;font-weight:500;font-family:'DM Mono',monospace;letter-spacing:0.04em}
+.pill-gold{background:rgba(201,168,76,0.1);color:var(--gold2);border:0.5px solid rgba(201,168,76,0.25)}
+.pill-cyan{background:rgba(26,184,212,0.1);color:var(--cyan2);border:0.5px solid rgba(26,184,212,0.25)}
+.pill-teal{background:rgba(13,214,168,0.1);color:var(--teal2);border:0.5px solid rgba(13,214,168,0.25)}
+.pill-purple{background:rgba(128,80,220,0.1);color:#b090f0;border:0.5px solid rgba(128,80,220,0.25)}
+.pill-coral{background:rgba(224,90,74,0.1);color:#f09080;border:0.5px solid rgba(224,90,74,0.25)}
+.node-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn-node{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:7px 16px;border-radius:7px;cursor:pointer;font-family:'Outfit',sans-serif;transition:all 0.15s;text-decoration:none;border:0.5px solid}
+.btn-node:hover{opacity:0.8;transform:translateY(-1px)}
+.btn-showcase{background:rgba(26,184,212,0.15);color:var(--cyan2);border-color:rgba(26,184,212,0.35);font-weight:600}
+.btn-gold-node{background:rgba(201,168,76,0.12);color:var(--gold2);border-color:rgba(201,168,76,0.3)}
+.btn-teal-node{background:rgba(13,214,168,0.12);color:var(--teal2);border-color:rgba(13,214,168,0.3)}
+.btn-purple-node{background:rgba(128,80,220,0.12);color:#b090f0;border-color:rgba(128,80,220,0.3)}
+.btn-ghost-node{background:transparent;color:var(--text-dim);border-color:var(--border2)}
+.btn-ghost-node:hover{color:var(--text-white);border-color:var(--border2)}
+
+/* SHOWCASE HIGHLIGHT BOX */
+.showcase-highlight{
+  background:rgba(26,184,212,0.06);
+  border:1px solid rgba(26,184,212,0.25);
+  border-radius:10px;padding:12px 16px;
+  display:flex;align-items:flex-start;gap:12px;margin-top:1rem;
+}
+.sh-badge{font-family:'DM Mono',monospace;font-size:10px;font-weight:500;color:var(--cyan2);background:rgba(26,184,212,0.12);border:0.5px solid rgba(26,184,212,0.3);border-radius:4px;padding:2px 7px;white-space:nowrap;margin-top:1px}
+.sh-text{font-size:12px;color:rgba(255,255,255,0.6);line-height:1.6}
+.sh-text strong{color:var(--cyan2)}
+
+/* SUITE GRID */
+.suite-mini-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:1.5rem}
+.suite-mini-card{background:var(--surface);border:0.5px solid var(--border2);border-radius:12px;padding:1.1rem;transition:border-color 0.2s}
+.suite-mini-card:hover{border-color:rgba(255,255,255,0.2)}
+.smc-icon{font-size:18px;margin-bottom:8px}
+.smc-name{font-size:12px;font-weight:500;color:var(--text-white);margin-bottom:3px}
+.smc-desc{font-size:11px;color:var(--text-dim);line-height:1.5}
+.neural-banner{
+  background:var(--surface);border:0.5px solid var(--border2);border-radius:10px;
+  padding:10px 16px;display:flex;align-items:center;gap:10px;
+  font-size:11px;color:var(--text-faint);font-family:'DM Mono',monospace;
+  margin-bottom:3rem;
+}
+.nb-dot{width:5px;height:5px;border-radius:50%;background:var(--teal);animation:pulse 2.5s infinite}
+.nb-line{flex:1;height:0.5px;background:repeating-linear-gradient(to right,rgba(255,255,255,0.1) 0,rgba(255,255,255,0.1) 4px,transparent 4px,transparent 10px)}
+
+/* ---- PROBLEM ---- */
+.problem-section{background:rgba(224,90,74,0.04);border:0.5px solid rgba(224,90,74,0.15);border-radius:16px;padding:2rem;border-left:2px solid var(--coral);margin-bottom:3rem}
+.problem-section h3{font-size:16px;font-weight:500;color:var(--text-white);margin-bottom:0.75rem}
+.problem-section p{font-size:13px;color:var(--text-dim);line-height:1.75;margin-bottom:1rem}
+.pain-pills{display:flex;flex-wrap:wrap;gap:6px}
+.pain-pill{font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(224,90,74,0.1);color:#f09080;border:0.5px solid rgba(224,90,74,0.25)}
+
+/* ---- MATRIX ---- */
+.matrix-wrap{border:0.5px solid var(--border2);border-radius:14px;overflow:hidden;margin-bottom:3rem}
+.matrix-head{display:grid;grid-template-columns:1.4fr 1.3fr 1.3fr 0.65fr;background:var(--navy3);padding:0.75rem 1.25rem;gap:10px;border-bottom:0.5px solid var(--border2)}
+.mh{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-faint);font-family:'DM Mono',monospace}
+.mh.accent{color:var(--gold2)}
+.matrix-row{display:grid;grid-template-columns:1.4fr 1.3fr 1.3fr 0.65fr;padding:0.85rem 1.25rem;gap:10px;border-top:0.5px solid var(--border);align-items:start}
+.matrix-row:nth-child(even){background:rgba(255,255,255,0.02)}
+.mr-label{font-size:12px;font-weight:500;color:var(--text-white)}
+.mr-old{font-size:11px;color:var(--text-dim);line-height:1.5}
+.mr-new{font-size:11px;color:rgba(13,214,168,0.85);line-height:1.5;font-weight:500}
+.badge-ex{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 8px;border-radius:20px;background:rgba(13,214,168,0.1);color:var(--teal2);border:0.5px solid rgba(13,214,168,0.25);font-weight:500;font-family:'DM Mono',monospace}
+.badge-meets{background:rgba(26,184,212,0.1);color:var(--cyan2);border-color:rgba(26,184,212,0.25)}
+
+/* ---- STEPS ---- */
+.steps-section{max-width:900px;margin:0 auto;padding:0 2rem 5rem}
+.steps-eyebrow{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem}
+.steps-title{font-family:'DM Serif Display',serif;font-size:clamp(28px,4vw,40px);color:var(--text-white);margin-bottom:0.75rem}
+.steps-title .gold{color:var(--gold2);font-style:italic}
+.steps-desc{font-size:15px;color:var(--text-dim);margin-bottom:2.5rem;font-weight:300;line-height:1.75;max-width:580px}
+
+.step{background:var(--navy-card);border:0.5px solid var(--border2);border-radius:14px;margin-bottom:10px;overflow:hidden;transition:border-color 0.2s}
+.step.active{border-color:rgba(201,168,76,0.3)}
+.step-header{display:flex;align-items:center;gap:14px;padding:1.1rem 1.25rem;cursor:pointer;user-select:none}
+.step-header:hover .step-title-text{color:var(--text-white)}
+.step-num{
+  width:32px;height:32px;border-radius:8px;
+  background:var(--navy3);border:0.5px solid var(--border2);
+  color:var(--gold2);font-size:12px;font-weight:500;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'DM Mono',monospace;flex-shrink:0;
+  transition:all 0.2s;
+}
+.step.active .step-num{background:var(--gold);color:var(--navy2);border-color:var(--gold)}
+.step-title-text{font-size:13px;font-weight:500;color:rgba(255,255,255,0.75);flex:1;transition:color 0.15s}
+.step.active .step-title-text{color:var(--text-white)}
+.step-chevron{font-size:11px;color:var(--text-faint);transition:transform 0.25s;display:flex;align-items:center}
+.step.active .step-chevron{transform:rotate(90deg);color:var(--gold2)}
+.step-body{display:none;padding:0 1.25rem 1.25rem}
+.step.active .step-body{display:block}
+.step-divider{height:0.5px;background:var(--border);margin-bottom:1rem}
+.step-desc{font-size:12px;color:var(--text-dim);line-height:1.75;margin-bottom:1rem}
+
+/* URL BAR */
+.url-bar{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(0,0,0,0.3);border:0.5px solid var(--border2);
+  border-radius:8px;padding:7px 12px;margin-bottom:10px;
+}
+.url-lock{font-size:11px}
+.url-text{font-size:11px;color:var(--text-dim);font-family:'DM Mono',monospace;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.url-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);flex-shrink:0}
+.url-status{font-size:10px;color:var(--teal);font-family:'DM Mono',monospace;font-weight:500}
+
+/* ACTION BUTTONS */
+.action-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px}
+.ab{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;padding:6px 14px;border-radius:7px;cursor:pointer;transition:all 0.15s;text-decoration:none;border:0.5px solid;font-family:'Outfit',sans-serif}
+.ab:hover{opacity:0.82;transform:translateY(-1px)}
+.ab-showcase{background:rgba(26,184,212,0.15);color:var(--cyan2);border-color:rgba(26,184,212,0.4);font-weight:700;font-size:12px;padding:8px 18px}
+.ab-gold{background:rgba(201,168,76,0.12);color:var(--gold2);border-color:rgba(201,168,76,0.3)}
+.ab-cyan{background:rgba(26,184,212,0.1);color:var(--cyan2);border-color:rgba(26,184,212,0.25)}
+.ab-teal{background:rgba(13,214,168,0.1);color:var(--teal2);border-color:rgba(13,214,168,0.25)}
+.ab-navy{background:var(--navy3);color:var(--text-white);border-color:var(--border2)}
+.ab-ghost{background:transparent;color:var(--text-dim);border-color:var(--border)}
+.ab-ghost:hover{color:var(--text-white);border-color:var(--border2)}
+.ab-purple{background:rgba(128,80,220,0.12);color:#b090f0;border-color:rgba(128,80,220,0.3)}
+
+.feature-callout{display:flex;align-items:flex-start;gap:10px;background:rgba(13,214,168,0.05);border:0.5px solid rgba(13,214,168,0.18);border-radius:8px;padding:10px 12px;margin-top:8px}
+.fc-icon{font-size:13px;flex-shrink:0;margin-top:1px}
+.fc-text{font-size:11px;color:rgba(255,255,255,0.5);line-height:1.65}
+.fc-text strong{color:var(--teal2)}
+
+/* INTEL CARDS */
+.intel-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:3rem}
+.intel-card{background:var(--navy-card);border:0.5px solid var(--border2);border-radius:12px;padding:1.1rem}
+.intel-tag{font-size:10px;padding:2px 8px;border-radius:20px;display:inline-block;font-weight:500;font-family:'DM Mono',monospace;margin-bottom:8px}
+.intel-num{font-size:22px;font-weight:500;font-family:'DM Mono',monospace;color:var(--text-white);margin-bottom:5px}
+.intel-label{font-size:11px;color:var(--text-dim);line-height:1.5}
+.intel-bar{height:3px;border-radius:2px;margin-top:10px}
+
+/* CTA */
+.cta-section{
+  background:var(--navy2);
+  border-top:0.5px solid var(--border2);
+  padding:5rem 2rem;text-align:center;position:relative;overflow:hidden;
+}
+.cta-section::before{content:'';position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:500px;height:300px;background:radial-gradient(ellipse,rgba(201,168,76,0.07),transparent 70%)}
+.cta-inner{position:relative;z-index:1;max-width:600px;margin:0 auto}
+.cta-title{font-family:'DM Serif Display',serif;font-size:clamp(28px,4vw,48px);color:var(--text-white);line-height:1.1;margin-bottom:1rem}
+.cta-title .gold{color:var(--gold2);font-style:italic}
+.cta-sub{font-size:14px;color:var(--text-dim);line-height:1.75;margin-bottom:2rem;font-weight:300}
+.cta-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:1.5rem}
+.demo-terminal{
+  background:rgba(0,0,0,0.3);border:0.5px solid rgba(26,184,212,0.25);
+  border-radius:10px;padding:12px 16px;
+  font-size:11px;color:rgba(255,255,255,0.35);
+  font-family:'DM Mono',monospace;display:flex;align-items:center;gap:10px;max-width:480px;margin:0 auto;
+}
+.dt-blink{display:inline-block;width:7px;height:13px;background:var(--cyan);animation:blink 1.2s infinite;border-radius:1px}
+@keyframes blink{0%,50%{opacity:1}51%,100%{opacity:0}}
+
+/* FOOTER */
+footer{background:var(--navy);border-top:0.5px solid var(--border);padding:2rem;text-align:center;font-size:11px;color:var(--text-faint);font-family:'DM Mono',monospace;letter-spacing:0.04em}
+footer a{color:var(--gold);text-decoration:none}
+
+/* DIVIDER */
+.section-divider{height:0.5px;background:var(--border);max-width:900px;margin:0 auto}
+
+/* RESPONSIVE */
+@media(max-width:640px){
+  nav{padding:0 1rem}
+  .nav-links{display:none}
+  section{padding:3rem 1rem}
+  .hero{padding:6rem 1rem 3rem}
+  .hero-stats{grid-template-columns:repeat(3,1fr)}
+  .intel-grid{grid-template-columns:1fr}
+  .matrix-head,.matrix-row{grid-template-columns:1fr 1fr;gap:6px}
+  .matrix-head .mh:nth-child(3),.matrix-row .mr-new,.matrix-head .mh:nth-child(4),.matrix-row div:last-child{display:none}
+  .steps-section{padding:0 1rem 3rem}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <div class="nav-logo-dot"></div>
+    TSM · FINOPS COMMAND
+  </div>
+  <div class="nav-links">
+    <a class="nav-link" href="#suite">The Suite</a>
+    <a class="nav-link" href="#command">Command</a>
+    <a class="nav-link" href="#copilot">Copilot</a>
+    <a class="nav-link" href="#steps">How It Works</a>
+    <a class="nav-link" href="#intel">Intel</a>
+  </div>
+  <a class="nav-cta" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">&#9654; &nbsp;Launch Showcase</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero" id="top">
+  <div class="hero-bg"></div>
+  <div class="hero-grid-overlay"></div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <div class="nav-logo-dot" style="width:6px;height:6px"></div>
+      TSM Intelligence Network &mdash; Five Nodes · One Command
+    </div>
+    <h1>The <span class="gold">FinOps Command</span><br/>Suite</h1>
+    <p class="hero-sub">Five neurally-connected financial intelligence nodes operating as one autonomous system — replacing the $60K/year manual Staff Accountant role with Executive-Grade Command intelligence at $1,750/month.</p>
+    <div class="hero-actions">
+      <a class="btn-primary" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">&#9670; &nbsp;Launch FinOps Doc Showcase</a>
+      <a class="btn-outline" href="#steps">View How It Works &darr;</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-num">$60K</div>
+        <div class="hero-stat-label">Role replaced</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">$1,750</div>
+        <div class="hero-stat-label">Per month</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">5</div>
+        <div class="hero-stat-label">Unified nodes</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SUITE OVERVIEW -->
+<section id="suite">
+  <div class="section-eyebrow"><div class="eyebrow-line"></div><div class="eyebrow-text">The Neurally-Connected Suite</div></div>
+  <h2 class="section-title">Five Nodes. <span class="gold">One Financial Brain.</span></h2>
+  <p class="section-desc">Every node shares a single encrypted data membrane. Actions taken in one propagate instantly across all others — this is not software integration, it is financial neural architecture.</p>
+
+  <div class="suite-mini-grid">
+    <div class="suite-mini-card">
+      <div class="smc-icon">&#9670;</div>
+      <div class="smc-name">FinOps Copilot</div>
+      <div class="smc-desc">Neural core &amp; conversational AI layer. Routes queries, commands nodes, delivers BNCA.</div>
+    </div>
+    <div class="suite-mini-card">
+      <div class="smc-icon">&#9654;</div>
+      <div class="smc-name">Financial Command</div>
+      <div class="smc-desc">Operational engine. Autonomous payment posting, AR ledger, bank reconciliation.</div>
+    </div>
+    <div class="suite-mini-card">
+      <div class="smc-icon">&#9632;</div>
+      <div class="smc-name">FinOps Strategist</div>
+      <div class="smc-desc">Analytical brain. Surfaces tax windows, collection priorities, cash-flow risk.</div>
+    </div>
+    <div class="suite-mini-card">
+      <div class="smc-icon">&#9675;</div>
+      <div class="smc-name">FinOps Portal</div>
+      <div class="smc-desc">Executive dashboard. Live AR, reconciliation status, compliance health, intel alerts.</div>
+    </div>
+    <div class="suite-mini-card">
+      <div class="smc-icon">&#9679;</div>
+      <div class="smc-name">Doc Showcase</div>
+      <div class="smc-desc">Document node chain: Ingest → Parse → AI → BNCA → Report. Mic-Drop Mode processing.</div>
+    </div>
+  </div>
+
+  <div class="neural-banner">
+    <div class="nb-dot"></div>
+    <div class="nb-line"></div>
+    <span>All five nodes share one encrypted data membrane · Zero Trust Score on every transaction</span>
+    <div class="nb-line"></div>
+    <div class="nb-dot"></div>
+  </div>
+
+  <!-- PROBLEM BOX -->
+  <div class="problem-box" style="background:rgba(224,90,74,0.04);border:0.5px solid rgba(224,90,74,0.15);border-radius:14px;padding:1.75rem;border-left:2px solid rgba(224,90,74,0.6);margin-bottom:2rem">
+    <h3 style="font-size:15px;font-weight:500;color:var(--text-white);margin-bottom:0.6rem">The Human Bottleneck — Why Manual Accounting Fails Growing Businesses</h3>
+    <p style="font-size:12px;color:var(--text-dim);line-height:1.75;margin-bottom:1rem">Traditional Staff Accountant workflows are reactive by design: manual data entry consumes hours, month-end reconciliations create fire-drills, and critical AR opportunities slip past overloaded human analysts. QuickBooks and Biller Genie provide data — but they require human labor to turn data into strategy.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">
+      <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(224,90,74,0.1);color:#f09080;border:0.5px solid rgba(224,90,74,0.25)">Reactive, not predictive</span>
+      <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(224,90,74,0.1);color:#f09080;border:0.5px solid rgba(224,90,74,0.25)">Month-end fire drills</span>
+      <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(224,90,74,0.1);color:#f09080;border:0.5px solid rgba(224,90,74,0.25)">Missed AR collections</span>
+      <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(224,90,74,0.1);color:#f09080;border:0.5px solid rgba(224,90,74,0.25)">Inconsistent audit trails</span>
+      <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(224,90,74,0.1);color:#f09080;border:0.5px solid rgba(224,90,74,0.25)">$60K+ salary overhead</span>
+      <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(224,90,74,0.1);color:#f09080;border:0.5px solid rgba(224,90,74,0.25)">Software ≠ strategy</span>
+    </div>
+  </div>
+
+  <!-- MATRIX -->
+  <div class="matrix-wrap">
+    <div class="matrix-head">
+      <div class="mh">Function</div>
+      <div class="mh">Staff Accountant</div>
+      <div class="mh accent">TSM Command</div>
+      <div class="mh">Rating</div>
+    </div>
+    <div class="matrix-row">
+      <div class="mr-label">Payment Processing</div>
+      <div class="mr-old">Manually posts customer payments</div>
+      <div class="mr-new">AR Ledger Node: tracks cash timing &amp; predicts delayed revenue</div>
+      <div><span class="badge-ex">&#10003; Exceeds</span></div>
+    </div>
+    <div class="matrix-row">
+      <div class="mr-label">Reconciliation</div>
+      <div class="mr-old">Conducts analysis to find errors</div>
+      <div class="mr-new">Bank Recon Node: closes loop automatically before month-end</div>
+      <div><span class="badge-ex">&#10003; Exceeds</span></div>
+    </div>
+    <div class="matrix-row">
+      <div class="mr-label">Record Keeping</div>
+      <div class="mr-old">Maintains records for GAAP compliance</div>
+      <div class="mr-new">Compliance Shield: proactive documentation gap monitoring</div>
+      <div><span class="badge-ex">&#10003; Exceeds</span></div>
+    </div>
+    <div class="matrix-row">
+      <div class="mr-label">Software Management</div>
+      <div class="mr-old">Manually enters data into QuickBooks</div>
+      <div class="mr-new">Live Uploader: drag-and-drop normalization of legacy data</div>
+      <div><span class="badge-meets">&#9654; Meets</span></div>
+    </div>
+    <div class="matrix-row">
+      <div class="mr-label">Executive Support</div>
+      <div class="mr-old">Responds to inquiries as needed</div>
+      <div class="mr-new">BNCA Strategist: real-time Best Next Course of Action generation</div>
+      <div><span class="badge-ex">&#10003; Exceeds</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- NODE DEEP DIVES -->
+<section id="command">
+  <div class="section-eyebrow"><div class="eyebrow-line"></div><div class="eyebrow-text">Node Architecture</div></div>
+  <h2 class="section-title">Each Node. <span class="gold">Built to Command.</span></h2>
+  <p class="section-desc">Every node in the suite has a defined mission, live intelligence, and autonomous execution capability. Together they form an unbroken financial intelligence loop.</p>
+
+  <!-- FINANCIAL COMMAND NODE -->
+  <div class="node-feature" style="margin-bottom:1rem" id="command-node">
+    <div class="node-feature-head">
+      <div class="node-icon-lg">&#9654;</div>
+      <div>
+        <div class="node-title">Financial Command</div>
+        <div class="node-subtitle">AUTONOMOUS OPERATIONS ENGINE · PRIMARY NODE</div>
+      </div>
+    </div>
+    <div class="node-body">The operational core of the suite. Financial Command autonomously executes the work a Staff Accountant performs manually — but without delays, errors, or end-of-day batch processing. The Bank Reconciliation Node runs a Strongest Close Loop every cycle, detecting discrepancies in real time. The AR Ledger tracks cash timing and flags revenue delay risk before it becomes a collection problem.</div>
+    <div class="node-pills">
+      <span class="node-pill pill-gold">AR Ledger Node</span>
+      <span class="node-pill pill-gold">Bank Recon Node</span>
+      <span class="node-pill pill-gold">Compliance Shield</span>
+      <span class="node-pill pill-gold">Audit Trail Generator</span>
+      <span class="node-pill pill-gold">GAAP Documentation</span>
+    </div>
+    <div class="node-actions">
+      <a class="btn-node btn-gold-node" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">&#9654; &nbsp;Launch Financial Command</a>
+      <a class="btn-node btn-ghost-node" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">Run $1,200 Discrepancy Demo</a>
+    </div>
+    <div class="feature-callout" style="border-color:rgba(201,168,76,0.2);background:rgba(201,168,76,0.04)">
+      <span class="fc-icon">&#9670;</span>
+      <div class="fc-text"><strong style="color:var(--gold2)">Live demo available:</strong> The Bank Reconciliation Node detects a $1,200 discrepancy in real time. This is the Strongest Close Loop in action — watch it close before the month-end risk window opens.</div>
+    </div>
+  </div>
+
+  <!-- FINOPS COPILOT NODE -->
+  <div class="node-feature" style="background:rgba(26,184,212,0.04);border-color:rgba(26,184,212,0.18);margin-bottom:1rem" id="copilot">
+    <div class="node-feature-head">
+      <div class="node-icon-lg node-icon-cyan">&#9670;</div>
+      <div>
+        <div class="node-title">FinOps Copilot</div>
+        <div class="node-subtitle">NEURAL CORE · CONVERSATIONAL AI COMMAND LAYER</div>
+      </div>
+    </div>
+    <div class="node-body">The FinOps Copilot is the connective tissue of the entire suite — a conversational AI interface that routes your questions to the right node, executes cross-node analysis, and returns BNCA (Best Next Course of Action) recommendations instantly. Ask in plain English: "What's my highest-priority AR collection right now?" — Copilot queries the AR Ledger, cross-references the Strategist's intel, and answers with an action plan. Every response includes a Zero Trust Score for data integrity validation.</div>
+    <div class="node-pills">
+      <span class="node-pill pill-cyan">BNCA Generation</span>
+      <span class="node-pill pill-cyan">Cross-Node Routing</span>
+      <span class="node-pill pill-cyan">Zero Trust Score</span>
+      <span class="node-pill pill-cyan">Real-Time Analysis</span>
+      <span class="node-pill pill-cyan">Plain-English Interface</span>
+    </div>
+    <div class="node-actions">
+      <a class="btn-node btn-showcase" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">&#9670; &nbsp;Open FinOps Doc Showcase &rarr;</a>
+      <a class="btn-node btn-ghost-node" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">View Copilot Prompt Examples</a>
+    </div>
+    <div class="showcase-highlight">
+      <div class="sh-badge">LIVE APP</div>
+      <div class="sh-text">The <strong>FinOps Doc Showcase</strong> is Copilot's document intelligence interface — upload any FinOps document and watch the full node chain light up: <strong>INGEST → PARSE → AI ANALYSIS → BNCA → REPORT</strong>. Sample docs preloaded: Bank Reconciliation, AP Aging, GL Extract, Cash Flow Statement, Invoice Audit, and Budget Variance.</div>
+    </div>
+  </div>
+
+  <!-- STRATEGIST NODE -->
+  <div class="node-feature" style="background:rgba(13,214,168,0.03);border-color:rgba(13,214,168,0.15);margin-bottom:1rem" id="strategist">
+    <div class="node-feature-head">
+      <div class="node-icon-lg node-icon-teal">&#9632;</div>
+      <div>
+        <div class="node-title">FinOps Strategist</div>
+        <div class="node-subtitle">ANALYTICAL BRAIN · CONTINUOUS INTELLIGENCE ENGINE</div>
+      </div>
+    </div>
+    <div class="node-body">The Strategist runs continuous background analysis on your financial data, operating like a Chief Financial Strategist who never sleeps. It surfaces high-priority AR collections, open tax savings windows, cash-flow risks, and budget variance alerts — then delivers them as actionable BNCA reports to the Portal and Copilot. Reports processed through the Doc Showcase can be pushed directly into the Strategist's memory for cross-node action.</div>
+    <div class="node-pills">
+      <span class="node-pill pill-teal">AR Priority Intel</span>
+      <span class="node-pill pill-teal">Tax Window Detection</span>
+      <span class="node-pill pill-teal">Cash Flow Risk</span>
+      <span class="node-pill pill-teal">Budget Variance Alerts</span>
+      <span class="node-pill pill-teal">BNCA Briefings</span>
+    </div>
+    <div class="node-actions">
+      <a class="btn-node btn-teal-node" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">&#9632; &nbsp;View Strategist Briefing</a>
+      <a class="btn-node btn-ghost-node" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">Push Doc to Strategist &rarr;</a>
+    </div>
+    <div class="feature-callout">
+      <span class="fc-icon">&#9670;</span>
+      <div class="fc-text"><strong>Current intel signals:</strong> $18.4K high-priority AR collection — timing risk flagged. $34K tax savings window open — 14-day action window. $92K Q1 OpEx budget variance detected across 4 departments. These are live signals from your own financial data, not estimates.</div>
+    </div>
+  </div>
+
+  <!-- FINOPS PORTAL NODE -->
+  <div class="node-feature" style="background:rgba(128,80,220,0.04);border-color:rgba(128,80,220,0.15);margin-bottom:1rem" id="portal">
+    <div class="node-feature-head">
+      <div class="node-icon-lg node-icon-purple">&#9675;</div>
+      <div>
+        <div class="node-title">FinOps Portal</div>
+        <div class="node-subtitle">EXECUTIVE COMMAND DASHBOARD · LIVE OVERSIGHT INTERFACE</div>
+      </div>
+    </div>
+    <div class="node-body">The Portal is your command home — a live, autonomous dashboard that aggregates outputs from all five nodes into a single executive view. AR status, bank reconciliation health, compliance score, strategist alerts, and document processing history all update in real time without manual refresh. Every autonomous action is logged in Command History with full reasoning, allowing you to review, approve exceptions, or override decisions at any time.</div>
+    <div class="node-pills">
+      <span class="node-pill pill-purple">Live AR Dashboard</span>
+      <span class="node-pill pill-purple">Recon Health Monitor</span>
+      <span class="node-pill pill-purple">Compliance Score</span>
+      <span class="node-pill pill-purple">Command History</span>
+      <span class="node-pill pill-purple">Alert Center</span>
+    </div>
+    <div class="node-actions">
+      <a class="btn-node btn-purple-node" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">&#9675; &nbsp;Open FinOps Portal</a>
+      <a class="btn-node btn-ghost-node" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">View Command History</a>
+      <a class="btn-node btn-ghost-node" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">Set Guardrails &amp; Preferences</a>
+    </div>
+  </div>
+
+  <!-- DOC SHOWCASE NODE -->
+  <div class="node-feature" style="background:rgba(26,184,212,0.05);border-color:rgba(26,184,212,0.25);border-width:1px">
+    <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(26,184,212,0.12);border:0.5px solid rgba(26,184,212,0.3);border-radius:20px;padding:3px 12px;font-size:10px;font-weight:500;color:var(--cyan2);font-family:'DM Mono',monospace;letter-spacing:0.07em;margin-bottom:1rem;text-transform:uppercase">
+      <div style="width:5px;height:5px;border-radius:50%;background:var(--cyan);animation:pulse 1.5s infinite"></div>
+      Live Application · Click to Launch
+    </div>
+    <div class="node-feature-head">
+      <div class="node-icon-lg node-icon-cyan">&#9679;</div>
+      <div>
+        <div class="node-title">FinOps Doc Showcase</div>
+        <div class="node-subtitle">DOCUMENT INTELLIGENCE PIPELINE · MIC-DROP MODE PROCESSING</div>
+      </div>
+    </div>
+    <div class="node-body">The Doc Showcase is the live document intelligence interface — the place where raw financial files enter the system and emerge as structured intelligence. Upload any FinOps document (Excel, CSV, PDF, Word) or choose from six preloaded samples. Watch the full node chain execute: INGEST → PARSE → AI ANALYSIS → BNCA → REPORT. The AI returns a Summary, Findings, Risk Level, Flags, and Best Next Course of Action. Save reports to Strategist memory or push them directly into cross-node workflow. This is Mic-Drop Mode.</div>
+    <div class="node-pills">
+      <span class="node-pill pill-cyan">Bank Reconciliation</span>
+      <span class="node-pill pill-cyan">AP Aging Report</span>
+      <span class="node-pill pill-cyan">GL Extract</span>
+      <span class="node-pill pill-cyan">Cash Flow Statement</span>
+      <span class="node-pill pill-cyan">Invoice Audit</span>
+      <span class="node-pill pill-cyan">Budget Variance</span>
+      <span class="node-pill pill-cyan">Custom Upload</span>
+    </div>
+    <div style="margin-bottom:12px">
+      <div class="url-bar">
+        <span class="url-lock">&#128274;</span>
+        <span class="url-text">tsm-shell.fly.dev/finops-showcase/index.html</span>
+        <div class="url-dot"></div>
+        <span class="url-status">LIVE</span>
+      </div>
+    </div>
+    <div class="node-actions">
+      <a class="btn-node btn-showcase" style="font-size:13px;padding:10px 22px" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">&#9654; &nbsp;Launch FinOps Doc Showcase</a>
+      <a class="btn-node btn-cyan" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">Use Sample: Bank Recon</a>
+      <a class="btn-node btn-cyan" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">Use Sample: AP Aging</a>
+      <a class="btn-node btn-ghost-node" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">Upload Your Own Document</a>
+    </div>
+    <div class="showcase-highlight" style="margin-top:12px">
+      <div class="sh-badge">NODE CHAIN</div>
+      <div class="sh-text">Step 1: Choose SAMPLE or ACTUAL mode. Step 2: Select a document or upload your own. Step 3: Hit <strong>▶ PROCESS</strong> — the node chain activates. Step 4: AI returns Summary, Findings, Risk, Flags, and BNCA. Step 5: <strong>SAVE REPORT</strong> to Strategist memory. Step 6: <strong>PUSH TO STRATEGIST</strong> for cross-node action.</div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- STEP-BY-STEP HOW TO -->
+<div class="steps-section" id="steps">
+  <div class="steps-eyebrow"><div class="eyebrow-line"></div><div class="eyebrow-text">Deployment Walkthrough</div></div>
+  <h2 class="steps-title">Step-by-Step: <span class="gold">How to Run the Suite</span></h2>
+  <p class="steps-desc">Six steps to move your organization from manual accounting to Autonomous Financial Command. Each step is a live platform action — click any URL button to navigate directly to that module.</p>
+
+  <!-- STEP 01 -->
+  <div class="step active" id="s1">
+    <div class="step-header" onclick="toggleStep('s1')">
+      <div class="step-num">01</div>
+      <div class="step-title-text">Access the FinOps Portal — Your Command Home Base</div>
+      <div class="step-chevron">&#9654;</div>
+    </div>
+    <div class="step-body">
+      <div class="step-divider"></div>
+      <p class="step-desc">Start here every morning. The FinOps Portal is your live executive dashboard — a unified view of your entire financial operation updated autonomously across all five nodes. No manual refresh, no end-of-day batch. AR status, reconciliation health, compliance score, and Strategist alerts are all live the moment you log in.</p>
+      <div class="url-bar">
+        <span class="url-lock">&#128274;</span>
+        <span class="url-text">app.tsmfinancial.com/portal/dashboard</span>
+        <div class="url-dot"></div>
+        <span class="url-status">LIVE</span>
+      </div>
+      <div class="action-row">
+        <a class="ab ab-gold" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">&#9675; &nbsp;Launch FinOps Portal</a>
+        <a class="ab ab-ghost" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">View Command History</a>
+        <a class="ab ab-ghost" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">Set Guardrails &amp; Preferences</a>
+      </div>
+      <div class="feature-callout">
+        <span class="fc-icon">&#9670;</span>
+        <div class="fc-text"><strong>Live AR Status, Bank Recon Health, Compliance Score, and Intel Alerts</strong> all update autonomously. Your financial position is always current — no human intervention required to maintain the dashboard.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 02 -->
+  <div class="step" id="s2">
+    <div class="step-header" onclick="toggleStep('s2')">
+      <div class="step-num">02</div>
+      <div class="step-title-text">Open the FinOps Copilot — Tell It What You Need</div>
+      <div class="step-chevron">&#9654;</div>
+    </div>
+    <div class="step-body">
+      <div class="step-divider"></div>
+      <p class="step-desc">Copilot is your AI co-pilot and the neural core of the suite. Type a business question in plain English — "What's my highest-priority AR collection right now?" or "Show me this month's reconciliation risk" — and Copilot routes the query to the right node, executes the analysis, and delivers a BNCA recommendation instantly. Every response includes a Zero Trust Score for data integrity validation.</p>
+      <div class="url-bar">
+        <span class="url-lock">&#128274;</span>
+        <span class="url-text">app.tsmfinancial.com/copilot</span>
+        <div class="url-dot"></div>
+        <span class="url-status">LIVE</span>
+      </div>
+      <div class="action-row">
+        <a class="ab ab-showcase" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">&#9670; &nbsp;Open FinOps Doc Showcase &rarr;</a>
+        <a class="ab ab-cyan" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">Launch FinOps Copilot</a>
+        <a class="ab ab-ghost" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">View Prompt Examples</a>
+      </div>
+      <div class="showcase-highlight">
+        <div class="sh-badge">LIVE APP</div>
+        <div class="sh-text">The <strong>FinOps Doc Showcase</strong> is Copilot's document intelligence interface. Upload any financial document and watch the node chain execute: <strong>INGEST → PARSE → AI → BNCA → REPORT</strong>. Six preloaded sample documents available — no upload required to test.</div>
+      </div>
+      <div class="feature-callout" style="margin-top:8px">
+        <span class="fc-icon">&#9632;</span>
+        <div class="fc-text"><strong>Zero Trust Security:</strong> A Zero Trust Score is embedded in every Copilot interaction — validating data integrity in a way standard accounting software cannot provide.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 03 -->
+  <div class="step" id="s3">
+    <div class="step-header" onclick="toggleStep('s3')">
+      <div class="step-num">03</div>
+      <div class="step-title-text">Activate Financial Command — Autonomous Operations</div>
+      <div class="step-chevron">&#9654;</div>
+    </div>
+    <div class="step-body">
+      <div class="step-divider"></div>
+      <p class="step-desc">Financial Command is where manual accounting ends. Once activated, it continuously monitors your AR ledger, posts incoming payments, flags timing anomalies, and queues collections — without human intervention. The Bank Reconciliation Node runs the Strongest Close Loop every cycle, detecting discrepancies in real time before they become month-end surprises.</p>
+      <div class="url-bar">
+        <span class="url-lock">&#128274;</span>
+        <span class="url-text">app.tsmfinancial.com/command/activate</span>
+        <div class="url-dot"></div>
+        <span class="url-status">LIVE</span>
+      </div>
+      <div class="action-row">
+        <a class="ab ab-gold" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">&#9654; &nbsp;Activate Financial Command</a>
+        <a class="ab ab-ghost" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">Run Demo: $1,200 Discrepancy Detection</a>
+        <a class="ab ab-ghost" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">View Bank Recon Node</a>
+      </div>
+      <div class="feature-callout">
+        <span class="fc-icon">&#9632;</span>
+        <div class="fc-text"><strong>Strongest Close Loop demo:</strong> Watch the Bank Reconciliation Node detect a $1,200 discrepancy in real time. This replaces your month-end fire drill — the loop closes automatically before the risk window opens.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 04 -->
+  <div class="step" id="s4">
+    <div class="step-header" onclick="toggleStep('s4')">
+      <div class="step-num">04</div>
+      <div class="step-title-text">Process Documents via FinOps Doc Showcase</div>
+      <div class="step-chevron">&#9654;</div>
+    </div>
+    <div class="step-body">
+      <div class="step-divider"></div>
+      <p class="step-desc">The Doc Showcase is Mic-Drop Mode for document processing. Drag and drop any financial document — Excel, CSV, PDF, Word — or select one of six preloaded samples (Bank Reconciliation, AP Aging, GL Extract, Cash Flow, Invoice Audit, Budget Variance). The node chain activates instantly: INGEST → PARSE → AI ANALYSIS → BNCA → REPORT. The AI returns a full findings summary, risk level, flags, and BNCA action plan. Save to Strategist memory or push directly into cross-node workflow.</p>
+      <div class="url-bar">
+        <span class="url-lock">&#128274;</span>
+        <span class="url-text">tsm-shell.fly.dev/finops-showcase/index.html</span>
+        <div class="url-dot"></div>
+        <span class="url-status">LIVE</span>
+      </div>
+      <div class="action-row">
+        <a class="ab ab-showcase" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">&#9654; &nbsp;Launch FinOps Doc Showcase</a>
+        <a class="ab ab-cyan" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">Sample: Bank Recon</a>
+        <a class="ab ab-cyan" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">Sample: AP Aging</a>
+        <a class="ab ab-cyan" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">Sample: Invoice Audit</a>
+        <a class="ab ab-ghost" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">Upload Custom Document</a>
+      </div>
+      <div class="showcase-highlight">
+        <div class="sh-badge">NODE CHAIN</div>
+        <div class="sh-text">Step 1: Choose SAMPLE or ACTUAL mode · Step 2: Select or upload · Step 3: Hit <strong>▶ PROCESS</strong> · Step 4: AI returns Summary, Findings, Risk, Flags, BNCA · Step 5: <strong>💾 SAVE REPORT</strong> to Strategist · Step 6: <strong>→ PUSH TO FINOPS STRATEGIST</strong> for cross-node action.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 05 -->
+  <div class="step" id="s5">
+    <div class="step-header" onclick="toggleStep('s5')">
+      <div class="step-num">05</div>
+      <div class="step-title-text">Read the Strategist Briefing — Your Daily Intel Report</div>
+      <div class="step-chevron">&#9654;</div>
+    </div>
+    <div class="step-body">
+      <div class="step-divider"></div>
+      <p class="step-desc">The FinOps Strategist runs continuous background analysis and delivers a daily intelligence briefing surfacing what matters most: high-priority AR collections, open tax savings windows, cash-flow risk signals, and budget variance alerts. Documents pushed from the Showcase feed directly into Strategist memory for richer cross-node intelligence. This is the analysis a human CFO would do — done autonomously, in real time.</p>
+      <div class="url-bar">
+        <span class="url-lock">&#128274;</span>
+        <span class="url-text">app.tsmfinancial.com/strategist/briefing</span>
+        <div class="url-dot"></div>
+        <span class="url-status">LIVE</span>
+      </div>
+      <div class="action-row">
+        <a class="ab ab-teal" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">&#9632; &nbsp;View Today's Strategist Briefing</a>
+        <a class="ab ab-ghost" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">Configure Alert Thresholds</a>
+        <a class="ab ab-ghost" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">Recall Saved Reports</a>
+      </div>
+      <div class="feature-callout">
+        <span class="fc-icon">&#9670;</span>
+        <div class="fc-text"><strong>Active intel:</strong> $18.4K AR collection priority · $34K tax savings window open · $92K Q1 OpEx variance flagged across 4 departments · $312K AP outstanding with 3 vendors on credit hold. These are live signals from your financial data.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 06 -->
+  <div class="step" id="s6">
+    <div class="step-header" onclick="toggleStep('s6')">
+      <div class="step-num">06</div>
+      <div class="step-title-text">Review, Override, Command — You Stay in Control</div>
+      <div class="step-chevron">&#9654;</div>
+    </div>
+    <div class="step-body">
+      <div class="step-divider"></div>
+      <p class="step-desc">Autonomous does not mean invisible. Every action the suite takes is logged in Command History with full reasoning — you can review, approve exceptions, override decisions, and set guardrails at any time. The system learns your preferences, reducing exception rates and tightening autonomous accuracy over time. You set the strategy. The suite executes it.</p>
+      <div class="url-bar">
+        <span class="url-lock">&#128274;</span>
+        <span class="url-text">app.tsmfinancial.com/portal/command-history</span>
+        <div class="url-dot"></div>
+        <span class="url-status">LIVE</span>
+      </div>
+      <div class="action-row">
+        <a class="ab ab-gold" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">&#9670; &nbsp;Open Command History</a>
+        <a class="ab ab-ghost" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">Set Guardrails &amp; Preferences</a>
+        <a class="ab ab-ghost" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">Configure Override Rules</a>
+      </div>
+      <div class="feature-callout">
+        <span class="fc-icon">&#9670;</span>
+        <div class="fc-text"><strong>Zero Trust Score</strong> is displayed on every autonomous action — a confidence and integrity rating that tells you exactly how and why each decision was made, in plain language. Executive Command means you always know what the suite is doing and why.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section-divider"></div>
+
+<!-- INTELLIGENCE SIGNALS -->
+<section id="intel">
+  <div class="section-eyebrow"><div class="eyebrow-line"></div><div class="eyebrow-text">Financial Intelligence Node</div></div>
+  <h2 class="section-title">Live Intel. <span class="gold">Real Numbers.</span></h2>
+  <p class="section-desc">The Strategist continuously scans your financial position. These are the kinds of signals it surfaces — opportunities and risks that a manual analyst would miss.</p>
+
+  <div class="intel-grid">
+    <div class="intel-card">
+      <div class="intel-tag" style="background:rgba(224,90,74,0.1);color:#f09080;border:0.5px solid rgba(224,90,74,0.25)">AR Priority</div>
+      <div class="intel-num">$18.4K</div>
+      <div class="intel-label">High-priority collection identified — timing risk flagged by Strategist node</div>
+      <div class="intel-bar" style="background:rgba(224,90,74,0.25);width:78%"></div>
+    </div>
+    <div class="intel-card">
+      <div class="intel-tag" style="background:rgba(13,214,168,0.1);color:var(--teal2);border:0.5px solid rgba(13,214,168,0.25)">Tax Window</div>
+      <div class="intel-num">$34K</div>
+      <div class="intel-label">Open tax savings window detected — action required within current cycle</div>
+      <div class="intel-bar" style="background:rgba(13,214,168,0.3);width:60%"></div>
+    </div>
+    <div class="intel-card">
+      <div class="intel-tag" style="background:rgba(201,168,76,0.12);color:var(--gold2);border:0.5px solid rgba(201,168,76,0.3)">Bank Recon</div>
+      <div class="intel-num">$1,200</div>
+      <div class="intel-label">Live demo: discrepancy detected &amp; closed by Command node in real time</div>
+      <div class="intel-bar" style="background:rgba(201,168,76,0.3);width:45%"></div>
+    </div>
+    <div class="intel-card">
+      <div class="intel-tag" style="background:rgba(26,184,212,0.1);color:var(--cyan2);border:0.5px solid rgba(26,184,212,0.25)">AP Aging</div>
+      <div class="intel-num">$312K</div>
+      <div class="intel-label">Outstanding payables · 22 vendors tracked · 3 on credit hold status</div>
+      <div class="intel-bar" style="background:rgba(26,184,212,0.25);width:90%"></div>
+    </div>
+    <div class="intel-card">
+      <div class="intel-tag" style="background:rgba(128,80,220,0.1);color:#b090f0;border:0.5px solid rgba(128,80,220,0.25)">Invoice Audit</div>
+      <div class="intel-num">$44K</div>
+      <div class="intel-label">At-risk amount across 18 invoice exceptions from 340 reviewed</div>
+      <div class="intel-bar" style="background:rgba(128,80,220,0.25);width:55%"></div>
+    </div>
+    <div class="intel-card">
+      <div class="intel-tag" style="background:rgba(224,90,74,0.1);color:#f09080;border:0.5px solid rgba(224,90,74,0.25)">Budget Variance</div>
+      <div class="intel-num">$92K</div>
+      <div class="intel-label">Q1 OpEx over budget — 4 departments flagged for Strategist review</div>
+      <div class="intel-bar" style="background:rgba(224,90,74,0.2);width:68%"></div>
+    </div>
+  </div>
+
+  <div style="background:rgba(26,184,212,0.05);border:0.5px solid rgba(26,184,212,0.2);border-radius:12px;padding:1.25rem 1.5rem;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+    <div style="flex:1;min-width:200px">
+      <div style="font-size:13px;font-weight:500;color:var(--text-white);margin-bottom:4px">See these numbers in action</div>
+      <div style="font-size:12px;color:var(--text-dim);line-height:1.6">Load the Bank Reconciliation sample in the FinOps Doc Showcase and watch the AI generate its own findings, risk score, and BNCA for the $48K variance / 3 accounts flagged scenario.</div>
+    </div>
+    <a class="btn-primary" style="white-space:nowrap" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">&#9654; &nbsp;Try It Live</a>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-section">
+  <div class="cta-inner">
+    <div class="cta-title">Ready for the <span class="gold">Strongest Close Loop?</span></div>
+    <p class="cta-sub">Watch the Bank Reconciliation Node detect a $1,200 discrepancy in real time. Upload your own financial document and see the full AI node chain — INGEST → PARSE → AI → BNCA → REPORT — execute in seconds. No setup. No manual accounting. Just Command.</p>
+    <div class="cta-btns">
+      <a class="btn-primary" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">&#9670; &nbsp;Launch FinOps Doc Showcase</a>
+      <a class="btn-outline" href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">Book a Live Demo</a>
+    </div>
+    <div class="demo-terminal">
+      <div class="dt-blink"></div>
+      DEMO READY &mdash; Bank Recon Node &mdash; $1,200 discrepancy scenario loaded &mdash; node chain standing by &mdash; awaiting command
+    </div>
+  </div>
+</div>
+
+<footer>
+  TSM Financial Command Suite &mdash; Autonomous FinOps Intelligence &nbsp;|&nbsp;
+  <a href="https://tsm-shell.fly.dev/finops-showcase/index.html" target="_blank">FinOps Doc Showcase</a> &nbsp;|&nbsp;
+  FinOps Copilot &nbsp;·&nbsp; Financial Command &nbsp;·&nbsp; Strategist &nbsp;·&nbsp; Portal &nbsp;·&nbsp; Doc Uploader
+  <br/><br/>
+  &copy; TSM Financial &mdash; Five Nodes. One Command.
+</footer>
+
+<script>
+function toggleStep(id){
+  var el=document.getElementById(id);
+  var isActive=el.classList.contains('active');
+  document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active')});
+  if(!isActive){el.classList.add('active');el.scrollIntoView({behavior:'smooth',block:'nearest'})}
+}
+</script>
+</body>
+</html>
