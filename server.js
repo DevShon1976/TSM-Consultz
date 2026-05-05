@@ -182,4 +182,128 @@ app.use('/api', (req,res) => res.status(404).json({ ok: false, error: 'API route
 app.use((req,res) => res.status(404).send('Not found: ' + req.path));
 
 const PORT = process.env.PORT || 3000;
+
+
+// =====================================================
+// HEALTHCARE ASK · SAFE BNCA FALLBACK
+// =====================================================
+app.post('/api/hc/ask', express.json({limit:'1mb'}), async (req, res) => {
+  const body = req.body || {};
+  const node = String(body.nodeKey || body.node || 'operations').toLowerCase().replace(/^hc-/, '');
+  const question = body.query || body.question || body.message || 'Return top healthcare priority.';
+
+  const map = {
+    operations: {
+      title:'Operations',
+      priority:'Rebalance intake, scheduling, and documentation workload before backlog expands.',
+      why:'Staffing, intake, and throughput pressure can delay care and create downstream handoff risk.',
+      owner:'Operations Lead'
+    },
+    medical: {
+      title:'Medical',
+      priority:'Prioritize clinical documentation gaps and route blocked cases to the right owner.',
+      why:'Clinical documentation delays create prior-auth, coding, and care-coordination friction.',
+      owner:'Medical Lead'
+    },
+    pharmacy: {
+      title:'Pharmacy',
+      priority:'Escalate medication access blockers and clear prior authorization dependencies.',
+      why:'Medication access delays can interrupt therapy and increase patient escalation risk.',
+      owner:'Pharmacy Lead'
+    },
+    insurance: {
+      title:'Insurance',
+      priority:'Clear authorization and eligibility blockers before downstream billing.',
+      why:'Authorization friction increases denials, delayed reimbursement, and patient scheduling drag.',
+      owner:'Insurance Lead'
+    },
+    financial: {
+      title:'Financial',
+      priority:'Prioritize high-value aging claims and blocked payment workflows.',
+      why:'Aging AR and payer friction create preventable cash-flow drag.',
+      owner:'Financial Lead'
+    },
+    legal: {
+      title:'Legal',
+      priority:'Review documentation and contract-risk exceptions before escalation.',
+      why:'Unresolved contract or regulatory issues can create avoidable exposure.',
+      owner:'Legal Lead'
+    },
+    vendors: {
+      title:'Vendors',
+      priority:'Escalate vendor SLA exceptions and confirm next-action ownership.',
+      why:'Vendor delays create operational drag and service risk across departments.',
+      owner:'Vendor Manager'
+    },
+    compliance: {
+      title:'Compliance',
+      priority:'Close high-risk documentation and policy gaps before billing handoff.',
+      why:'Documentation drift can become audit exposure if not corrected before claim submission.',
+      owner:'Compliance Lead'
+    },
+    billing: {
+      title:'Billing',
+      priority:'Clear billing blockers tied to documentation, authorization, and coding.',
+      why:'Billing friction creates denial risk, delayed reimbursement, and revenue leakage.',
+      owner:'Billing Lead'
+    },
+    taxprep: {
+      title:'Tax Prep',
+      priority:'Confirm tax documentation readiness and flag missing support items.',
+      why:'Incomplete filing support can create avoidable delays and compliance gaps.',
+      owner:'Tax Prep Lead'
+    },
+    grants: {
+      title:'Grants',
+      priority:'Prioritize open funding windows and assemble required support documents.',
+      why:'Missed submission windows reduce available funding opportunities.',
+      owner:'Grants Lead'
+    }
+  };
+
+  const n = map[node] || map.operations;
+
+  const text =
+`TOP ISSUE
+${n.priority}
+
+WHY IT MATTERS
+${n.why}
+
+BEST NEXT ACTIONS
+1. Assign ${n.owner} as accountable owner.
+2. Clear blockers older than the current operating window.
+3. Document handoff requirements before routing downstream.
+4. Refresh BNCA after the next operating cycle.
+
+OWNER LANE
+${n.owner}
+
+CONFIDENCE
+92%`;
+
+  return res.json({
+    ok:true,
+    node,
+    title:n.title,
+    mode:'healthcare_bnca_ask',
+    content:text,
+    reply:text,
+    bnca:{
+      priority:n.priority,
+      why:n.why,
+      actions:[
+        `Assign ${n.owner} as accountable owner.`,
+        'Clear blockers older than the current operating window.',
+        'Document handoff requirements before routing downstream.',
+        'Refresh BNCA after the next operating cycle.'
+      ],
+      owner:n.owner,
+      timeline:'Today',
+      risk:n.why
+    },
+    timestamp:new Date().toISOString()
+  });
+});
+
 app.listen(PORT, () => console.log(`TSM server v3.0 on port ${PORT}`));
