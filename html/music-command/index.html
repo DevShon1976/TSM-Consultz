@@ -31,10 +31,10 @@ h1{font-size:18px;margin:0 0 4px}
 .step.on{border-color:#00ffc6;color:#00ffc6}
 .workspace{display:grid;grid-template-columns:1fr 360px;gap:18px;margin-top:18px}
 .card{border:1px solid #20303d;background:#0d1218;border-radius:14px;padding:16px}
-textarea{width:100%;height:190px;background:#121216;color:#fff;border:1px solid #333744;border-radius:10px;padding:14px;font-family:ui-monospace,Menlo,monospace;line-height:1.45}
-input{width:100%;background:#121216;color:#fff;border:1px solid #333744;border-radius:10px;padding:12px}
+textarea{width:100%;height:190px;background:#121216;color:#fff;border:1px solid #333744;border-radius:10px;padding:14px;font-family:ui-monospace,Menlo,monospace;line-height:1.45;resize:vertical}
+input{width:100%;background:#121216;color:#fff;border:1px solid #333744;border-radius:10px;padding:12px;font-family:inherit;outline:none}
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-.btn{border:0;border-radius:10px;padding:12px 15px;font-weight:900;cursor:pointer}
+.btn{border:0;border-radius:10px;padding:12px 15px;font-weight:900;cursor:pointer;font-family:inherit;font-size:13px}
 .primary{background:#00ffc6;color:#001}
 .secondary{background:#1b1b25;color:#dce7ff;border:1px solid #33384b}
 .gold{background:#ffc400;color:#111}
@@ -43,22 +43,34 @@ input{width:100%;background:#121216;color:#fff;border:1px solid #333744;border-r
 .outTitle{color:#00ffc6;font-weight:900;letter-spacing:1px}
 .live{color:#00ffc6;font-size:11px}
 .section{margin:14px 0}
-.sectionTitle{font-weight:900;letter-spacing:1px;margin-bottom:5px}
+.sectionTitle{font-weight:900;letter-spacing:1px;margin-bottom:5px;font-size:12px}
 .hook{color:#00ffc6}.adlibs{color:#ff9d00}.bridge{color:#9fe7ff}.note{color:#ffc400}
-.rail h3{font-size:13px;color:#ffc400;letter-spacing:1.5px}
+.rail h3{font-size:13px;color:#ffc400;letter-spacing:1.5px;margin:0 0 10px}
 .kpi{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
 .kpi div{border:1px solid #263647;background:#101923;border-radius:10px;padding:10px}
-.kpi b{color:#00ffc6;font-size:18px}
-.bankItem{border:1px solid #253449;border-radius:10px;padding:10px;margin-top:8px;font-size:12px;color:#b7d9e8}
+.kpi b{color:#00ffc6;font-size:18px;display:block;margin-bottom:2px}
+.kpi small{font-size:11px;color:#5a7a8a}
+.bankItem{border:1px solid #253449;border-radius:10px;padding:10px;margin-top:8px;font-size:12px;color:#b7d9e8;word-break:break-word}
+.bankTime{color:#3d5470;font-size:10px;margin-bottom:4px}
 .chat{position:fixed;left:270px;right:20px;bottom:12px;display:flex;gap:8px;background:#0a0d14;border:1px solid #4b1f8f;border-radius:10px;padding:8px;z-index:999}
-.chat input{flex:1}
-@media(max-width:980px){.app{grid-template-columns:1fr}.side{display:none}.workspace{grid-template-columns:1fr}.chat{left:12px}}
+.chat input{flex:1;margin:0}
+.err{color:#ff5c7a;padding:10px;background:rgba(255,92,122,.08);border:1px solid rgba(255,92,122,.2);border-radius:8px;font-size:13px}
+
+
+@media(max-width:980px){
+  .app{grid-template-columns:1fr}
+  .side{display:none}
+  .workspace{grid-template-columns:1fr}
+  .chat{left:12px}
+}
 </style>
 </head>
 <body>
+
+
 <div class="app">
   <aside class="side">
-    <div class="logo">ZEY</div>
+    <div class="logo">ZAY</div>
     <h1>Music Command Center</h1>
     <div class="sub">Artist DNA · AI Collaboration</div>
     <div class="nav">
@@ -73,6 +85,7 @@ input{width:100%;background:#121216;color:#fff;border:1px solid #333744;border-r
       <b>ZAY</b><br>
       <small>Cadence · Bounce · Live Feel</small>
     </div>
+
   </aside>
 
   <main class="main">
@@ -110,9 +123,9 @@ input{width:100%;background:#121216;color:#fff;border:1px solid #333744;border-r
     <div class="workspace">
       <section>
         <div class="card">
-          <h3 style="color:#00ffc6;margin-top:0">PASTE YOUR DRAFT</h3>
-          <textarea id="draft"></textarea>
-          <input id="request" value="Return HOOK, ADLIBS, BRIDGE, PRODUCER NOTE.">
+          <h3 style="color:#00ffc6;margin-top:0;margin-bottom:12px">PASTE YOUR DRAFT</h3>
+          <textarea id="draft" placeholder="Paste your lyrics here..."></textarea>
+          <input id="request" value="Return HOOK, ADLIBS, BRIDGE, PRODUCER NOTE." style="margin-top:10px">
           <div class="actions">
             <button class="btn primary" onclick="runProducerPass()">🎛 Full Producer Pass</button>
             <button class="btn gold" onclick="runHookOnly()">Hook Options</button>
@@ -121,12 +134,12 @@ input{width:100%;background:#121216;color:#fff;border:1px solid #333744;border-r
           </div>
         </div>
 
-        <div id="output" class="output">
+        <div class="output">
           <div class="outHead">
             <div class="outTitle">ZAY PRODUCER OUTPUT</div>
-            <div class="live">READY</div>
+            <div class="live" id="liveStatus">READY</div>
           </div>
-          Paste lyrics and run the session.
+          <div id="outputBody" style="color:#4a6070">Paste lyrics and run the session.</div>
         </div>
       </section>
 
@@ -134,12 +147,12 @@ input{width:100%;background:#121216;color:#fff;border:1px solid #333744;border-r
         <div class="card">
           <h3>SESSION SIGNALS</h3>
           <div class="kpi">
-            <div><b id="hookScore">--</b><br><small>Hook Strength</small></div>
-            <div><b id="cadenceScore">--</b><br><small>Cadence</small></div>
-            <div><b id="structureScore">--</b><br><small>Structure</small></div>
-            <div><b id="bankCount">0</b><br><small>Banked</small></div>
+            <div><b id="hookScore">--</b><small>Hook Strength</small></div>
+            <div><b id="cadenceScore">--</b><small>Cadence</small></div>
+            <div><b id="structureScore">--</b><small>Structure</small></div>
+            <div><b id="bankCount">0</b><small>Banked</small></div>
           </div>
-          <div style="font-size:12px;color:#8fa9be">Producer mode is powered by the clean agent-pass engine.</div>
+          <div style="font-size:12px;color:#8fa9be">Powered by TSM Neural Core</div>
         </div>
 
         <div class="card" style="margin-top:14px">
@@ -164,85 +177,198 @@ Those Real in the Field see A Time for Muscle!
 I Plan for Greatest! Rule 1: No Fakeness!
 Real is What You FEEL! That's Pill! So Take This!`;
 
-function loadSample(){
-  document.getElementById('draft').value = sample;
+// ── TSM Neural Core config — paste your key here ─────────────────
+// One-time setup: open app with ?key=gsk_... to save key silently
+(function(){
+  const p = new URLSearchParams(location.search).get('key');
+  if (p && p.startsWith('gsk_')) { localStorage.setItem('tsm_key', p); history.replaceState(null,'',location.pathname); }
+})();
+const TSM_KEY = localStorage.getItem('tsm_key') || '';
+
+// ── Helpers ──────────────────────────────────────────────────────
+function loadSample() { document.getElementById('draft').value = sample; }
+
+function esc(s) {
+  return String(s||'').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 }
 
-function esc(s){
-  return String(s || '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-}
-
-function section(text, name, cls){
-  const re = new RegExp(name + ':', 'i');
-  if(!re.test(text)) return '';
+function extractSection(text, name) {
+  const re = new RegExp(name + '[:\\s]+', 'i');
+  if (!re.test(text)) return null;
   let after = text.split(re)[1] || '';
-  const stops = ['HOOK:', 'ADLIBS:', 'BRIDGE:', 'PRODUCER NOTE:', 'HOOK OPTION 1:', 'HOOK OPTION 2:', 'HOOK OPTION 3:', 'HOOK OPTION 4:']
-    .filter(x => x.toLowerCase() !== (name + ':').toLowerCase());
-  for(const stop of stops){
-    const idx = after.toLowerCase().indexOf(stop.toLowerCase());
-    if(idx > -1) after = after.slice(0, idx);
+  const stops = ['HOOK','ADLIBS','ADLIB','BRIDGE','PRODUCER NOTE','HOOK OPTION'];
+  for (const stop of stops) {
+    if (stop.toLowerCase() === name.toLowerCase()) continue;
+    const idx = after.search(new RegExp('\\b' + stop + '[:\\s]', 'i'));
+    if (idx > -1) after = after.slice(0, idx);
   }
-  return `<div class="section"><div class="sectionTitle ${cls}">${name}</div><div>${esc(after.trim()).replace(/\n/g,'<br>')}</div></div>`;
+  return after.trim() || null;
 }
 
-function render(text){
-  const out = document.getElementById('output');
-  out.innerHTML = `
-    <div class="outHead">
-      <div class="outTitle">ZAY PRODUCER OUTPUT</div>
-      <div class="live">LIVE</div>
-    </div>
-    ${section(text,'HOOK','hook') || ''}
-    ${section(text,'ADLIBS','adlibs') || ''}
-    ${section(text,'BRIDGE','bridge') || ''}
-    ${section(text,'PRODUCER NOTE','note') || ''}
-    ${(!/HOOK:|ADLIBS:|BRIDGE:|PRODUCER NOTE:/i.test(text)) ? esc(text).replace(/\n/g,'<br>') : ''}
-  `;
-  document.getElementById('hookScore').textContent = '88';
-  document.getElementById('cadenceScore').textContent = '84';
-  document.getElementById('structureScore').textContent = '91';
+function setLoading(msg) {
+  document.getElementById('liveStatus').textContent = '●';
+  document.getElementById('outputBody').innerHTML = `<div style="color:#4a6070;animation:none">${msg}</div>`;
+}
+function showError(msg) {
+  document.getElementById('liveStatus').textContent = 'ERROR';
+  document.getElementById('outputBody').innerHTML = `<div class="err">⚠ ${esc(msg)}</div>`;
 }
 
-async function callZAY(step, message){
-  const draft = document.getElementById('draft').value || sample;
-  document.getElementById('output').innerHTML = '<div class="outTitle">ZAY is producing...</div>';
-  const res = await fetch('/api/music/agent-pass', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({agent:'ZAY', step, draft, message})
+function scoreFrom(text) {
+  const words = text.split(/\s+/).length;
+  const hook = extractSection(text, 'HOOK');
+  const sections = ['HOOK','ADLIBS','BRIDGE','PRODUCER NOTE'].filter(s => extractSection(text, s));
+  document.getElementById('hookScore').textContent      = hook ? Math.min(99, 68 + Math.floor(hook.length / 9)) : '--';
+  document.getElementById('cadenceScore').textContent   = Math.min(99, 58 + Math.floor(words / 3));
+  document.getElementById('structureScore').textContent = Math.min(99, sections.length * 23 + 8);
+}
+
+function render(text) {
+  const hook   = extractSection(text, 'HOOK');
+  const adlibs = extractSection(text, 'ADLIBS') || extractSection(text, 'ADLIB');
+  const bridge = extractSection(text, 'BRIDGE');
+  const note   = extractSection(text, 'PRODUCER NOTE');
+
+  let html = '';
+  if (hook)   html += `<div class="section"><div class="sectionTitle hook">🎯 HOOK</div><div>${esc(hook).replace(/\n/g,'<br>')}</div></div>`;
+  if (adlibs) html += `<div class="section"><div class="sectionTitle adlibs">🎤 ADLIBS</div><div>${esc(adlibs).replace(/\n/g,'<br>')}</div></div>`;
+  if (bridge) html += `<div class="section"><div class="sectionTitle bridge">🌉 BRIDGE</div><div>${esc(bridge).replace(/\n/g,'<br>')}</div></div>`;
+  if (note)   html += `<div class="section"><div class="sectionTitle note">📝 PRODUCER NOTE</div><div>${esc(note).replace(/\n/g,'<br>')}</div></div>`;
+  if (!html)  html  = `<div style="white-space:pre-wrap;line-height:1.7">${esc(text)}</div>`;
+
+  document.getElementById('outputBody').innerHTML = html;
+  document.getElementById('liveStatus').textContent = 'DONE';
+  window.__LAST_ZAY__ = text;
+  scoreFrom(text);
+}
+
+// ── TSM Neural Core ───────────────────────────────────────────────
+async function callTSM(system, user) {
+  const key = TSM_KEY || localStorage.getItem('tsm_key');
+  if (!key) { showError('TSM Neural Core key not configured.'); return null; }
+
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      temperature: 0.85,
+      max_tokens: 1024,
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user',   content: user   }
+      ]
+    })
   });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error?.message || `TSM Neural Core error ${res.status}`);
+  }
   const data = await res.json();
-  const text = data.reply || data.content || '';
-  render(text);
-  window.__LAST_ZAY_OUTPUT__ = text;
+  return data.choices?.[0]?.message?.content || '';
 }
 
-function runProducerPass(){
-  callZAY('Full Producer Pass', document.getElementById('request').value || 'Return HOOK, ADLIBS, BRIDGE, PRODUCER NOTE.');
+// ── ZAY system prompt ─────────────────────────────────────────────
+const ZAY_SYS = `You are ZAY, a world-class hip-hop producer and lyric architect.
+You have mastery of cadence, bounce, flow patterns, hook craft, and live performance energy.
+
+When given a draft, respond with these exact labeled sections — no extra commentary outside them:
+
+HOOK:
+(The catchiest, most memorable hook — rewritten or extracted from the draft. Punchy. Repeatable.)
+
+ADLIBS:
+(6–8 short adlib call-outs that match the track energy — e.g. "Ayy!", "Let's go!", "Real talk!", "Sheesh!")
+
+BRIDGE:
+(A 4–8 line bridge that shifts the emotional register and deepens the song)
+
+PRODUCER NOTE:
+(2–3 sentences: honest strengths, one weak spot, energy rating out of 10, one actionable fix)
+
+Be direct. Be real. Sound like a Grammy-level producer who cares about the artist's growth.`;
+
+// ── Actions ───────────────────────────────────────────────────────
+async function runProducerPass() {
+  const draft = document.getElementById('draft').value.trim() || sample;
+  const req   = document.getElementById('request').value.trim();
+  setLoading('ZAY is producing...');
+  try {
+    const reply = await callTSM(ZAY_SYS, `DRAFT:\n${draft}\n\nINSTRUCTION: ${req}`);
+    if (reply) render(reply);
+  } catch(e) { showError(e.message); }
 }
 
-function runHookOnly(){
-  callZAY('Draft', 'Return 4 hook options and producer note only.');
+async function runHookOnly() {
+  const draft = document.getElementById('draft').value.trim() || sample;
+  setLoading('ZAY is writing hook options...');
+  try {
+    const sys = `You are ZAY, a hook specialist. Given a draft, return exactly 4 distinct hook options and a producer note.
+Format strictly as:
+
+HOOK OPTION 1:
+(text)
+
+HOOK OPTION 2:
+(text)
+
+HOOK OPTION 3:
+(text)
+
+HOOK OPTION 4:
+(text)
+
+PRODUCER NOTE:
+(which hook hits hardest and why — be specific)`;
+    const reply = await callTSM(sys, `DRAFT:\n${draft}`);
+    if (reply) {
+      document.getElementById('outputBody').innerHTML = `<div style="white-space:pre-wrap;line-height:1.8">${esc(reply)}</div>`;
+      document.getElementById('liveStatus').textContent = 'DONE';
+      window.__LAST_ZAY__ = reply;
+    }
+  } catch(e) { showError(e.message); }
 }
 
-function saveToBank(){
-  const text = window.__LAST_ZAY_OUTPUT__ || document.getElementById('output').innerText;
+async function coach() {
+  const msg   = document.getElementById('coachInput').value.trim();
+  if (!msg) return;
+  const draft = document.getElementById('draft').value.trim() || sample;
+  setLoading('ZAY is on it...');
+  document.getElementById('coachInput').value = '';
+  try {
+    const sys = `You are ZAY, a hip-hop producer and creative coach. 
+Be direct, specific, and hype. Reference the artist's actual draft lines when you can.
+Give actionable feedback — not generic advice.`;
+    const reply = await callTSM(sys, `DRAFT:\n${draft}\n\nARTIST: ${msg}`);
+    if (reply) {
+      document.getElementById('outputBody').innerHTML = `<div style="white-space:pre-wrap;line-height:1.7">${esc(reply)}</div>`;
+      document.getElementById('liveStatus').textContent = 'DONE';
+      window.__LAST_ZAY__ = reply;
+    }
+  } catch(e) { showError(e.message); }
+}
+
+function saveToBank() {
+  const text = window.__LAST_ZAY__ || '';
+  if (!text) return;
   const bank = document.getElementById('bank');
   const item = document.createElement('div');
   item.className = 'bankItem';
-  item.textContent = text.slice(0, 180) + (text.length > 180 ? '...' : '');
+  item.innerHTML = `<div class="bankTime">${new Date().toLocaleTimeString()}</div>${esc(text.slice(0,160))}${text.length > 160 ? '…' : ''}`;
   bank.prepend(item);
   document.getElementById('bankCount').textContent = bank.children.length;
 }
 
-function copyOutput(){
-  navigator.clipboard.writeText(document.getElementById('output').innerText);
+function copyOutput() {
+  const text = window.__LAST_ZAY__ || document.getElementById('outputBody').innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const btns = document.querySelectorAll('.btn.secondary');
+    btns.forEach(b => { if (b.textContent.includes('Copy')) { b.textContent = '✓ Copied'; setTimeout(() => b.textContent = 'Copy', 1500); }});
+  });
 }
 
-function coach(){
-  const msg = document.getElementById('coachInput').value || 'Improve the hook';
-  callZAY('Producer Coach', msg);
-}
+document.getElementById('coachInput').addEventListener('keydown', e => { if (e.key === 'Enter') coach(); });
 </script>
 </body>
 </html>
