@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TSM Construction Command — Executive Intelligence Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --black:#0a0a0a;--dark:#111214;--card:#18191d;--card2:#1f2025;
+  --teal:#00e5c8;--teal2:#00c4ad;--teal3:rgba(0,229,200,.12);
+  --red:#ff4040;--amber:#f0a035;--blue:#4da8f0;--green:#22c55e;
+  --white:rgba(255,255,255,1);--w80:rgba(255,255,255,.8);--w50:rgba(255,255,255,.5);--w20:rgba(255,255,255,.2);--w08:rgba(255,255,255,.08);--w04:rgba(255,255,255,.04);
+  --border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.14);
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--black);color:var(--white);min-height:100vh;overflow-x:hidden}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:56px;background:rgba(10,10,10,.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.nav-brand{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--teal)}
+.nav-links{display:flex;gap:2px}
+.nav-link{font-size:11px;font-weight:600;color:var(--w50);padding:5px 12px;border-radius:5px;cursor:pointer;transition:all .15s;text-decoration:none;background:none;border:none;font-family:'Inter',sans-serif;letter-spacing:.04em;text-transform:uppercase}
+.nav-link:hover,.nav-link.active{color:var(--white);background:var(--w08)}
+.nav-cta{font-size:11px;font-weight:700;background:var(--teal);color:var(--black);border:none;border-radius:6px;padding:7px 18px;cursor:pointer;font-family:'Inter',sans-serif;text-decoration:none;transition:all .15s;letter-spacing:.06em;text-transform:uppercase}
+.nav-cta:hover{background:#00c4ad;transform:translateY(-1px)}
+
+/* SLIDE SYSTEM */
+.slide{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:7rem 2rem 4rem;position:relative;overflow:hidden}
+.slide-inner{max-width:1100px;margin:0 auto;width:100%;position:relative;z-index:1}
+.slide-num{font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--w20);font-family:'DM Mono',monospace;margin-bottom:1.25rem;display:flex;align-items:center;gap:10px}
+.slide-num::after{content:'';flex:1;max-width:40px;height:1px;background:var(--teal);opacity:.4}
+
+/* SLIDE DOT NAV */
+.slide-dots{position:fixed;right:24px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;z-index:100}
+.sd{width:6px;height:6px;border-radius:50%;background:var(--w20);cursor:pointer;transition:all .2s}
+.sd.active{background:var(--teal);transform:scale(1.4)}
+.sd:hover{background:var(--w50)}
+
+/* TYPOGRAPHY */
+.hero-title{font-size:clamp(48px,7vw,96px);font-weight:900;line-height:1.0;letter-spacing:-.03em;margin-bottom:1.5rem}
+.hero-title .teal{color:var(--teal)}
+.hero-title .dim{color:var(--w50)}
+.section-title{font-size:clamp(32px,5vw,64px);font-weight:800;line-height:1.05;letter-spacing:-.025em;margin-bottom:1rem}
+.section-title .teal{color:var(--teal)}
+.section-title .red{color:var(--red)}
+.lead{font-size:clamp(15px,1.8vw,19px);color:var(--w80);line-height:1.75;font-weight:400;max-width:680px;margin-bottom:2.5rem}
+.kicker{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);margin-bottom:.75rem}
+
+/* STAT CARDS */
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:2.5rem}
+.stat-card{background:var(--card);border:1px solid var(--border2);border-radius:12px;padding:1.75rem 1.5rem;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat-card.teal::before{background:var(--teal)}
+.stat-card.red::before{background:var(--red)}
+.stat-card.amber::before{background:var(--amber)}
+.stat-card.blue::before{background:var(--blue)}
+.stat-card.green::before{background:var(--green)}
+.stat-kicker{font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--w20);margin-bottom:.65rem;font-family:'DM Mono',monospace}
+.stat-val{font-size:clamp(36px,4vw,56px);font-weight:800;line-height:1;letter-spacing:-.025em;margin-bottom:.5rem}
+.stat-val.teal{color:var(--teal)}
+.stat-val.red{color:var(--red)}
+.stat-val.amber{color:var(--amber)}
+.stat-val.blue{color:var(--blue)}
+.stat-val.green{color:var(--green)}
+.stat-desc{font-size:13px;color:var(--w50);line-height:1.6}
+
+/* PAIN CARDS */
+.pain-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:2.5rem}
+.pain-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.5rem;border-left:3px solid var(--red)}
+.pain-title{font-size:14px;font-weight:700;color:var(--white);margin-bottom:.5rem;display:flex;align-items:center;gap:8px}
+.pain-desc{font-size:12px;color:var(--w50);line-height:1.65}
+.pain-cost{font-size:20px;font-weight:800;color:var(--red);font-family:'DM Mono',monospace;margin-top:.75rem}
+
+/* NODE GRID */
+.node-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:2.5rem}
+.node-card{background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:1.5rem;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.node-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;opacity:0;transition:opacity .2s}
+.node-card:hover{border-color:rgba(0,229,200,.3);transform:translateY(-3px)}
+.node-card:hover::after{opacity:1}
+.nc-num{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--w20);font-family:'DM Mono',monospace;margin-bottom:.5rem}
+.nc-icon{font-size:22px;margin-bottom:.6rem}
+.nc-name{font-size:13px;font-weight:700;color:var(--white);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.04em}
+.nc-desc{font-size:11px;color:var(--w50);line-height:1.6}
+.nc-kpi{font-size:12px;font-weight:700;margin-top:.75rem;font-family:'DM Mono',monospace}
+
+/* BNCA TERMINAL */
+.bnca-terminal{background:#0d1117;border:1px solid rgba(0,229,200,.25);border-radius:12px;overflow:hidden;margin-bottom:2rem}
+.bnca-term-header{background:rgba(0,229,200,.06);border-bottom:1px solid rgba(0,229,200,.15);padding:.85rem 1.25rem;display:flex;align-items:center;gap:10px}
+.bnca-term-dot{width:8px;height:8px;border-radius:50%;animation:pulse 1.5s infinite}
+.bnca-term-title{font-size:10px;font-weight:700;color:var(--teal);font-family:'DM Mono',monospace;letter-spacing:.1em;text-transform:uppercase}
+.bnca-term-body{padding:1.25rem;display:grid;grid-template-columns:1fr auto;gap:1.5rem;align-items:start}
+.bnca-summary{font-size:13px;color:var(--w80);line-height:1.7;margin-bottom:1rem;font-style:italic}
+.bnca-actions{display:flex;flex-direction:column;gap:7px}
+.bnca-action-item{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;background:var(--w04);border:1px solid var(--border);border-radius:6px}
+.ba-num{font-size:10px;font-family:'DM Mono',monospace;color:var(--teal);font-weight:500;flex-shrink:0;margin-top:1px}
+.ba-text{font-size:11px;color:var(--w80);line-height:1.55}
+.ba-text strong{color:var(--white)}
+.bnca-scores{display:flex;flex-direction:column;gap:8px;min-width:160px}
+.bs-block{background:var(--w04);border:1px solid var(--border);border-radius:6px;padding:.85rem;text-align:center}
+.bs-label{font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--w20);margin-bottom:5px;font-family:'DM Mono',monospace}
+.bs-val{font-size:26px;font-weight:800;line-height:1;font-family:'DM Mono',monospace}
+.bs-sub{font-size:9px;color:var(--w20);margin-top:3px;font-family:'DM Mono',monospace;letter-spacing:.06em}
+
+/* ROI BLOCK */
+.roi-block{background:linear-gradient(135deg,rgba(0,229,200,.06),rgba(0,229,200,.02));border:1px solid rgba(0,229,200,.2);border-radius:12px;padding:2rem;margin-bottom:2rem}
+.roi-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:center}
+.roi-inputs{display:flex;flex-direction:column;gap:1.25rem}
+.roi-group{display:flex;flex-direction:column;gap:6px}
+.roi-label{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--w50)}
+.roi-slider{-webkit-appearance:none;appearance:none;width:100%;height:2px;border-radius:2px;background:rgba(255,255,255,.1);outline:none;cursor:pointer}
+.roi-slider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal);cursor:pointer;border:2px solid var(--black);box-shadow:0 0 10px rgba(0,229,200,.4)}
+.roi-val{font-size:20px;font-weight:800;color:var(--teal);font-family:'DM Mono',monospace}
+.roi-output{display:flex;flex-direction:column;gap:10px}
+.roi-out-row{display:flex;justify-content:space-between;align-items:baseline;padding:.75rem 0;border-bottom:1px solid var(--border)}
+.roi-out-row:last-child{border-bottom:none}
+.roi-out-label{font-size:12px;color:var(--w50)}
+.roi-out-val{font-size:18px;font-weight:700;font-family:'DM Mono',monospace}
+.roi-out-val.green{color:var(--teal)}
+.roi-out-val.red{color:var(--red)}
+.roi-out-val.big{font-size:28px;color:var(--teal)}
+
+/* APP CARDS */
+.app-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:2rem}
+.app-strip-card{background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:1.25rem}
+.asc-icon{font-size:20px;margin-bottom:.6rem}
+.asc-name{font-size:12px;font-weight:700;color:var(--white);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.4rem}
+.asc-desc{font-size:11px;color:var(--w50);line-height:1.55}
+
+/* COMPARISON TABLE */
+.comp-table{width:100%;border-collapse:collapse;margin-bottom:2rem}
+.comp-table th{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--w20);padding:.6rem 1rem;text-align:left;border-bottom:1px solid var(--border2);font-family:'DM Mono',monospace}
+.comp-table th.teal-col{color:var(--teal)}
+.comp-table td{font-size:12px;color:var(--w80);padding:.8rem 1rem;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.comp-table td.func{font-weight:600;color:var(--white);font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+.comp-table td.old{color:var(--w50)}
+.comp-table td.new{color:var(--teal)}
+.comp-table tr:hover td{background:var(--w04)}
+.exceed{font-size:8px;font-weight:700;padding:2px 7px;border-radius:2px;background:rgba(0,229,200,.1);color:var(--teal);border:1px solid rgba(0,229,200,.25);font-family:'DM Mono',monospace;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.meets{background:rgba(77,168,240,.1);color:var(--blue);border-color:rgba(77,168,240,.25)}
+
+/* NEURAL CORE */
+.neural-panel{background:var(--card);border:1px solid rgba(0,229,200,.2);border-radius:12px;padding:2rem;margin-bottom:2rem}
+.np-header-row{display:flex;align-items:center;gap:12px;margin-bottom:1rem}
+.np-status{display:flex;align-items:center;gap:7px;background:rgba(0,229,200,.08);border:1px solid rgba(0,229,200,.2);border-radius:20px;padding:4px 14px;font-size:10px;font-weight:700;color:var(--teal);font-family:'DM Mono',monospace;letter-spacing:.08em;text-transform:uppercase}
+.np-status-dot{width:5px;height:5px;border-radius:50%;background:var(--teal);animation:pulse 2s infinite}
+.neural-presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.np-preset{font-size:10px;font-weight:600;padding:5px 12px;border-radius:3px;background:rgba(0,229,200,.07);color:var(--teal);border:1px solid rgba(0,229,200,.2);cursor:pointer;font-family:'DM Mono',monospace;transition:all .15s;text-transform:uppercase;letter-spacing:.06em}
+.np-preset:hover{background:rgba(0,229,200,.15)}
+.neural-input-row{display:flex;gap:8px;margin-bottom:8px}
+.neural-key{width:200px;background:rgba(0,0,0,.3);border:1px solid var(--border2);border-radius:6px;padding:10px 13px;font-size:11px;color:var(--w80);font-family:'DM Mono',monospace;outline:none;flex-shrink:0}
+.neural-key:focus{border-color:rgba(0,229,200,.4)}
+.neural-q{flex:1;background:rgba(0,0,0,.3);border:1px solid var(--border2);border-radius:6px;padding:10px 13px;font-size:12px;color:var(--white);font-family:'Inter',sans-serif;outline:none;resize:none}
+.neural-q:focus{border-color:rgba(0,229,200,.4)}
+.neural-q::placeholder{color:var(--w20)}
+.neural-btn{background:rgba(0,229,200,.12);color:var(--teal);border:1px solid rgba(0,229,200,.3);border-radius:6px;padding:10px 20px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;white-space:nowrap;text-transform:uppercase;letter-spacing:.06em}
+.neural-btn:hover{background:rgba(0,229,200,.22)}
+.neural-btn:disabled{opacity:.4;cursor:not-allowed}
+.neural-out{background:rgba(0,0,0,.22);border:1px solid var(--border);border-radius:6px;padding:14px;min-height:80px;font-size:12px;color:var(--w80);line-height:1.75;font-family:'Inter',sans-serif;white-space:pre-wrap;display:none}
+.neural-out.active{display:block}
+
+/* CTA SECTION */
+.cta-slide{background:var(--dark);border-top:1px solid var(--border)}
+.cta-title{font-size:clamp(36px,5.5vw,72px);font-weight:900;line-height:1.0;letter-spacing:-.03em;margin-bottom:1.25rem}
+.cta-title .teal{color:var(--teal)}
+.cta-btns{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:2rem}
+.cta-btn-p{background:var(--teal);color:var(--black);border:none;border-radius:8px;padding:14px 28px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all .15s;letter-spacing:.04em;text-transform:uppercase}
+.cta-btn-p:hover{background:#00c4ad;transform:translateY(-2px)}
+.cta-btn-o{background:transparent;color:var(--white);border:1px solid var(--border2);border-radius:8px;padding:14px 28px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all .15s;letter-spacing:.04em;text-transform:uppercase}
+.cta-btn-o:hover{background:var(--w08);border-color:var(--border2)}
+.term-bar{background:rgba(0,0,0,.35);border:1px solid rgba(0,229,200,.18);border-radius:8px;padding:12px 18px;font-size:10px;color:var(--w20);font-family:'DM Mono',monospace;display:flex;align-items:center;gap:10px;max-width:560px;letter-spacing:.04em}
+.term-blink{display:inline-block;width:7px;height:14px;background:var(--teal);animation:blink 1.2s infinite;border-radius:1px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
+@keyframes blink{0%,50%{opacity:1}51%,100%{opacity:0}}
+
+/* BG ACCENTS */
+.bg-teal-glow{position:absolute;top:-200px;left:50%;transform:translateX(-50%);width:800px;height:600px;background:radial-gradient(ellipse,rgba(0,229,200,.05),transparent 70%);pointer-events:none}
+.bg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black,transparent 78%);pointer-events:none}
+
+/* SLIDE TRANSITIONS */
+.slide{opacity:0;transform:translateY(20px);transition:opacity .5s,transform .5s}
+.slide.visible{opacity:1;transform:translateY(0)}
+
+footer{background:var(--black);border-top:1px solid var(--border);padding:1.75rem 2rem;text-align:center;font-size:9px;color:var(--w20);font-family:'DM Mono',monospace;letter-spacing:.08em;text-transform:uppercase;line-height:2.2}
+footer a{color:var(--teal);text-decoration:none}
+
+@media(max-width:640px){
+  .stat-grid{grid-template-columns:1fr 1fr}.node-grid{grid-template-columns:1fr 1fr}
+  .pain-grid{grid-template-columns:1fr}.roi-grid{grid-template-columns:1fr}
+  .app-strip{grid-template-columns:1fr 1fr}.comp-table td,.comp-table th{padding:.5rem .6rem;font-size:10px}
+  .nav-links{display:none}.bnca-term-body{grid-template-columns:1fr}
+  .neural-input-row{flex-direction:column}.neural-key{width:100%}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">TSM · Construction Command</div>
+  <div class="nav-links">
+    <a class="nav-link" href="#pitch">Pitch</a>
+    <a class="nav-link" href="#pain">Pain</a>
+    <a class="nav-link" href="#suite">Suite Map</a>
+    <a class="nav-link" href="#bnca">Live BNCA</a>
+    <a class="nav-link" href="#apps">Apps</a>
+    <a class="nav-link" href="#roi">ROI</a>
+  </div>
+  <a class="nav-cta" href="#bnca">▶ Run Executive BNCA</a>
+</nav>
+
+<!-- SLIDE DOTS -->
+<div class="slide-dots" id="slide-dots">
+  <div class="sd active" onclick="scrollToSlide(0)" title="Pitch"></div>
+  <div class="sd" onclick="scrollToSlide(1)" title="Pain"></div>
+  <div class="sd" onclick="scrollToSlide(2)" title="Suite Map"></div>
+  <div class="sd" onclick="scrollToSlide(3)" title="Live BNCA"></div>
+  <div class="sd" onclick="scrollToSlide(4)" title="Apps"></div>
+  <div class="sd" onclick="scrollToSlide(5)" title="ROI"></div>
+  <div class="sd" onclick="scrollToSlide(6)" title="Open Hub"></div>
+</div>
+
+<!-- ═══ SLIDE 1 — PITCH ═══ -->
+<div class="slide" id="pitch" data-slide="0">
+  <div class="bg-teal-glow"></div>
+  <div class="bg-grid"></div>
+  <div class="slide-inner">
+    <div class="slide-num">01 &nbsp; The Case</div>
+    <div class="kicker">TSM Construction Command Suite</div>
+    <h1 class="hero-title">Know What's Wrong<br/><span class="teal">Before the Project</span><br/>Shows It.</h1>
+    <p class="lead">TSM adds the executive command layer that connects job costs, subcontractors, scheduling, compliance, documents, and finance into one Best Next Course of Action — delivered in 90 seconds.</p>
+    <div class="stat-grid">
+      <div class="stat-card red">
+        <div class="stat-kicker">Margin Exposure</div>
+        <div class="stat-val red">$847K</div>
+        <div class="stat-desc">Projected risk across budget drift, change orders, AP timing, and subcontractor exposure across a 6-project portfolio.</div>
+      </div>
+      <div class="stat-card teal">
+        <div class="stat-kicker">Decision Speed</div>
+        <div class="stat-val teal">90s</div>
+        <div class="stat-desc">Scenario → analysis → executive BNCA. From question to ranked action list in under 90 seconds across all six nodes.</div>
+      </div>
+      <div class="stat-card amber">
+        <div class="stat-kicker">Suite Coverage</div>
+        <div class="stat-val amber">9 Apps</div>
+        <div class="stat-desc">Construction + FinOps + Docs + Legal + Compliance + Strategist. One command platform, zero fragmentation.</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <a class="cta-btn-p" href="#bnca">▶ Run Executive BNCA</a>
+      <a class="cta-btn-o" href="#suite">View Suite Map →</a>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div class="sd active" onclick="scrollToSlide(0)"></div>
+        <div class="sd" onclick="scrollToSlide(1)"></div>
+        <div class="sd" onclick="scrollToSlide(2)"></div>
+        <div class="sd" onclick="scrollToSlide(3)"></div>
+        <div class="sd" onclick="scrollToSlide(4)"></div>
+        <div class="sd" onclick="scrollToSlide(5)"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 2 — PAIN ═══ -->
+<div class="slide" id="pain" data-slide="1" style="background:var(--dark)">
+  <div class="slide-inner">
+    <div class="slide-num">02 &nbsp; The Problem</div>
+    <h2 class="section-title">Every GC Is Running <span class="red">Blind</span><br/>Between the Field and the Office.</h2>
+    <p class="lead">By the time a cost overrun appears in your report, it's already weeks old. By the time a lien waiver gap surfaces, the sub has already been paid. The tools exist — the intelligence layer doesn't.</p>
+    <div class="pain-grid">
+      <div class="pain-card">
+        <div class="pain-title">💸 Cost Overruns Caught Too Late</div>
+        <div class="pain-desc">Cost reports land at month-end. By then the concrete sub has poured 3 extra yards, the steel delay has compounded, and the CO is already in dispute. The damage is done.</div>
+        <div class="pain-cost">Avg exposure: $142K/project</div>
+      </div>
+      <div class="pain-card">
+        <div class="pain-title">📄 Lien Waiver Gaps</div>
+        <div class="pain-desc">Subs get paid. Waivers don't always follow. One missing unconditional waiver from a tier-2 sub can cloud title and delay project close for months. Nobody tracks this in real time.</div>
+        <div class="pain-cost">$128K average lien exposure</div>
+      </div>
+      <div class="pain-card">
+        <div class="pain-title">📅 Schedule Slippage → LD Risk</div>
+        <div class="pain-desc">An 11-day slip at $2,500/day is $27,500 in exposure — before you know which days are excusable. Without daily critical-path scoring, you're guessing on every extension request.</div>
+        <div class="pain-cost">$27,500 current LD exposure</div>
+      </div>
+      <div class="pain-card">
+        <div class="pain-title">🛡 Compliance Blindspots</div>
+        <div class="pain-desc">Permits expire. Inspections get missed. Certified payroll falls behind. One NOV can trigger a stop-work order that costs more than a month of superintendent salary.</div>
+        <div class="pain-cost">1 stop-work = $40K+/day loss</div>
+      </div>
+      <div class="pain-card">
+        <div class="pain-title">💰 Slow Draws = Slow Cash</div>
+        <div class="pain-desc">Draw requests assembled manually take days. Every week a G702 sits unsigned is a week of float you're funding out of your line of credit. $287K sitting unsubmitted right now.</div>
+        <div class="pain-cost">$287K in submittable draws</div>
+      </div>
+      <div class="pain-card">
+        <div class="pain-title">📋 RFIs Age Into Claims</div>
+        <div class="pain-desc">RFI-142 is 24 days old. No response from the EOR. Zero float on the critical path. Every day that RFI ages is a day of excusable delay you're not documenting for your extension request.</div>
+        <div class="pain-cost">24-day RFI · $0 documented</div>
+      </div>
+    </div>
+    <div style="background:rgba(255,64,64,.06);border:1px solid rgba(255,64,64,.18);border-radius:10px;padding:1.25rem 1.5rem;font-size:14px;color:var(--w80);line-height:1.7">
+      <strong style="color:var(--red)">The pattern:</strong> Every one of these is a data problem solved by the wrong tool. Procore tracks it. Sage stores it. QuickBooks invoices it. <strong style="color:var(--white)">None of them tell you what to do next.</strong> TSM does.
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 3 — SUITE MAP ═══ -->
+<div class="slide" id="suite" data-slide="2">
+  <div class="bg-grid"></div>
+  <div class="slide-inner">
+    <div class="slide-num">03 &nbsp; The Solution</div>
+    <div class="kicker">Six Neurally-Connected Nodes</div>
+    <h2 class="section-title">One <span class="teal">Command Layer</span><br/>Across Every Project Function.</h2>
+    <p class="lead">Each node owns a defined mission. They share one encrypted data membrane — a schedule delay in Node 4 triggers COI review in Node 3, flags cash-flow in Node 6, and fires a BNCA to the Strategist.</p>
+    <div class="node-grid">
+      <div class="node-card" style="border-left:3px solid var(--amber)">
+        <div class="nc-num">Node 02</div>
+        <div class="nc-icon">💰</div>
+        <div class="nc-name">Job Cost Intelligence</div>
+        <div class="nc-desc">Real-time budget vs actual by cost code. WIP schedule automation. Over/under billing detection. Variance alerts fired the day the overrun appears.</div>
+        <div class="nc-kpi" style="color:var(--red)">$142K variance · 3 cost codes over</div>
+      </div>
+      <div class="node-card" style="border-left:3px solid #f09040">
+        <div class="nc-num">Node 03</div>
+        <div class="nc-icon">🔧</div>
+        <div class="nc-name">Subcontractor Command</div>
+        <div class="nc-desc">Lien waiver collection, COI expiry tracking, payment hold logic, performance scoring. 14 active subs monitored continuously.</div>
+        <div class="nc-kpi" style="color:var(--red)">3 waivers out · 1 hold · 1 COI expiring</div>
+      </div>
+      <div class="node-card" style="border-left:3px solid var(--teal)">
+        <div class="nc-num">Node 04</div>
+        <div class="nc-icon">📅</div>
+        <div class="nc-name">Milestone & Schedule</div>
+        <div class="nc-desc">Daily critical path monitoring, LD risk scoring, excusable vs non-excusable delay analysis. Milestone completion triggers draw eligibility.</div>
+        <div class="nc-kpi" style="color:var(--red)">11-day slip · $27,500 LD exposure</div>
+      </div>
+      <div class="node-card" style="border-left:3px solid var(--red)">
+        <div class="nc-num">Node 05</div>
+        <div class="nc-icon">🛡</div>
+        <div class="nc-name">Compliance Shield</div>
+        <div class="nc-desc">Permit tracking, inspection scheduling, NOV monitoring, Davis-Bacon compliance, certified payroll status. Fires alerts before deadlines — not after.</div>
+        <div class="nc-kpi" style="color:var(--red)">1 NOV open · 2 inspections in 3 days</div>
+      </div>
+      <div class="node-card" style="border-left:3px solid var(--green)">
+        <div class="nc-num">Node 06</div>
+        <div class="nc-icon">📋</div>
+        <div class="nc-name">Bid + AR Intelligence</div>
+        <div class="nc-desc">AIA G702/G703 automation, draw timing synced to milestones, AR aging prioritized daily. Bid pipeline with win probability and margin scoring.</div>
+        <div class="nc-kpi" style="color:var(--amber)">$287K draw ready · $4.2M pipeline</div>
+      </div>
+      <div class="node-card" style="border-left:3px solid #4da8f0">
+        <div class="nc-num">Neural Core</div>
+        <div class="nc-icon">⚡</div>
+        <div class="nc-name">BNCA Strategist</div>
+        <div class="nc-desc">Conversational AI across all six nodes. Ask anything — "what's my biggest risk today?" — and get a ranked, evidence-backed action list in 90 seconds.</div>
+        <div class="nc-kpi" style="color:var(--teal)">Live · 90s response · Zero Trust</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px">
+      <a class="cta-btn-p" href="#bnca">▶ Run Live BNCA</a>
+      <a class="cta-btn-o" href="#apps">View All Apps →</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 4 — LIVE BNCA ═══ -->
+<div class="slide" id="bnca" data-slide="3" style="background:var(--dark)">
+  <div class="slide-inner">
+    <div class="slide-num">04 &nbsp; Live Intelligence</div>
+    <div class="kicker">Best Next Course of Action — Live Output</div>
+    <h2 class="section-title">This Is What <span class="teal">TSM Delivers</span><br/>Every Morning.</h2>
+    <p class="lead" style="margin-bottom:1.5rem">A sample BNCA output — exactly what a project executive sees at 7am. Evidence-backed, node-sourced, ranked by urgency.</p>
+
+    <!-- Sample BNCA Card -->
+    <div class="bnca-terminal" style="margin-bottom:1.5rem">
+      <div class="bnca-term-header">
+        <div class="bnca-term-dot" style="background:var(--teal)"></div>
+        <div class="bnca-term-title">BNCA Output · Project Alpha Portfolio · May 6 2025 · 07:00</div>
+        <div style="margin-left:auto;font-size:9px;font-family:'DM Mono',monospace;color:var(--w20)">Node chain: 02→03→04→05→06→Strategist · 6 nodes · 0.8s</div>
+      </div>
+      <div class="bnca-term-body">
+        <div>
+          <div class="bnca-summary">"Portfolio is carrying $847K in active exposure across 6 projects. Two items require same-day action — a lien waiver hold blocking $52K and a structural inspection in 48 hours requiring documentation prep."</div>
+          <div class="bnca-actions">
+            <div class="bnca-action-item"><div class="ba-num">01</div><div class="ba-text"><strong>Submit G702-A06 ($287K) today</strong> — milestone confirmed May 5. Owner payment window is open. Every week delayed costs you a week of float on your line.</div></div>
+            <div class="bnca-action-item"><div class="ba-num">02</div><div class="ba-text"><strong>Issue cure notice to Southwest Concrete</strong> — 2 unconditional waivers missing, COI expiring May 24, payment hold active. Release requires 3 conditions cleared.</div></div>
+            <div class="bnca-action-item"><div class="ba-num">03</div><div class="ba-text"><strong>Prepare structural steel inspection docs by May 8</strong> (2 days) — torque records, W14×48 mill certs, welding reports. Inspector: J. Martinez, IBC.</div></div>
+            <div class="bnca-action-item"><div class="ba-num">04</div><div class="ba-text"><strong>File excusable delay extension request</strong> — 9 of 11 delay days are owner-caused (RFI-142) or weather. File today to stop LD clock on 9 days = $22,500 recovered.</div></div>
+            <div class="bnca-action-item"><div class="ba-num">05</div><div class="ba-text"><strong>Respond to NOV-2025-0041 by May 15</strong> (9 days) — stop-work order risk on Project Bravo. Engage civil engineer for corrective action documentation.</div></div>
+          </div>
+        </div>
+        <div class="bnca-scores">
+          <div class="bs-block">
+            <div class="bs-label">Risk Score</div>
+            <div class="bs-val" style="color:var(--red)">HIGH</div>
+            <div class="bs-sub">2 critical · 3 elevated</div>
+          </div>
+          <div class="bs-block">
+            <div class="bs-label">Confidence</div>
+            <div class="bs-val" style="color:var(--teal)">94%</div>
+            <div class="bs-sub">6-node cross-ref</div>
+          </div>
+          <div class="bs-block">
+            <div class="bs-label">Exposure</div>
+            <div class="bs-val" style="color:var(--amber)">$847K</div>
+            <div class="bs-sub">Active · All projects</div>
+          </div>
+          <div class="bs-block">
+            <div class="bs-label">Recoverable</div>
+            <div class="bs-val" style="color:var(--green)">$309K</div>
+            <div class="bs-sub">If actions taken today</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Neural Core -->
+    <div class="neural-panel">
+      <div class="np-header-row">
+        <div class="np-status"><div class="np-status-dot"></div>TSM Neural Core · Live</div>
+        <div style="font-size:13px;font-weight:600;color:var(--white)">Run Your Own BNCA Query</div>
+      </div>
+      <div class="neural-presets">
+        <span class="np-preset" onclick="setNQ('What is my single biggest financial risk across all 6 projects right now and what should I do first?')">▶ Top Risk Today</span>
+        <span class="np-preset" onclick="setNQ('I have 3 unconditional lien waivers missing and 1 sub on payment hold with a COI expiring in 18 days. BNCA.')">▶ Sub Compliance BNCA</span>
+        <span class="np-preset" onclick="setNQ('Project Alpha is 11 days behind baseline with an LD clause at $2,500/day. 9 days may be excusable. What is my priority action plan?')">▶ Schedule LD Recovery</span>
+        <span class="np-preset" onclick="setNQ('I have $287K in a ready draw, $180K in 31-60 day AR, $42K at 61-90 days, and $18K at 90+ days. Prioritize my cash collection actions.')">▶ AR Collection Priority</span>
+        <span class="np-preset" onclick="setNQ('Structural steel inspection in 2 days. RFI-142 at 24 days unanswered by EOR. NOV response due in 9 days. Rank my compliance actions.')">▶ Compliance Action Plan</span>
+      </div>
+      <div class="neural-input-row">
+        <input class="neural-key" id="n-key" type="password" placeholder="TSM Access Key"/>
+        <textarea class="neural-q" id="n-q" rows="2" placeholder="Ask any construction project question — e.g. 'What should I do first today across all my projects?'"></textarea>
+        <button class="neural-btn" id="n-btn" onclick="runNeural2()">▶ Run BNCA</button>
+      </div>
+      <div class="neural-out" id="n-out"></div>
+      <div style="font-size:9px;color:var(--w20);margin-top:6px;font-family:'DM Mono',monospace;letter-spacing:.06em;text-transform:uppercase">Session-scoped · never stored · Zero Trust authenticated · TSM Neural Core v4</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 5 — APPS ═══ -->
+<div class="slide" id="apps" data-slide="4">
+  <div class="bg-grid"></div>
+  <div class="slide-inner">
+    <div class="slide-num">05 &nbsp; The Platform</div>
+    <div class="kicker">9 Apps. One Command Hub.</div>
+    <h2 class="section-title">Every Function. <span class="teal">Every Node.</span><br/>One Platform.</h2>
+    <p class="lead">The TSM Construction Command Suite covers the entire project lifecycle — from predevelopment estimate to final retainage release. No integrations required. No implementation project.</p>
+    <div class="app-strip" style="grid-template-columns:repeat(3,1fr)">
+      <div class="app-strip-card"><div class="asc-icon">📊</div><div class="asc-name">Command Center</div><div class="asc-desc">Daily project floor — all 6 nodes, live KPIs, Strategist BNCA, action queue.</div></div>
+      <div class="app-strip-card"><div class="asc-icon">💰</div><div class="asc-name">Job Cost Node</div><div class="asc-desc">Budget vs actual, WIP schedule, cost code variance, over/under billing.</div></div>
+      <div class="app-strip-card"><div class="asc-icon">🔧</div><div class="asc-name">Sub Command</div><div class="asc-desc">Lien waivers, COI tracking, payment hold logic, performance scoring.</div></div>
+      <div class="app-strip-card"><div class="asc-icon">📅</div><div class="asc-name">Schedule Node</div><div class="asc-desc">Critical path, LD risk, delay cause log, excusable delay documentation.</div></div>
+      <div class="app-strip-card"><div class="asc-icon">🛡</div><div class="asc-name">Compliance Shield</div><div class="asc-desc">Permits, inspections, NOVs, Davis-Bacon, certified payroll compliance.</div></div>
+      <div class="app-strip-card"><div class="asc-icon">📋</div><div class="asc-name">AR + Bids Node</div><div class="asc-desc">G702/G703 automation, draw schedule, AR aging, bid pipeline, retainage.</div></div>
+      <div class="app-strip-card"><div class="asc-icon">🛰</div><div class="asc-name">Site Intelligence</div><div class="asc-desc">Geospatial fly-in to any job site. Permit zones, sub staging, site risk score.</div></div>
+      <div class="app-strip-card"><div class="asc-icon">📐</div><div class="asc-name">Blueprint OCR</div><div class="asc-desc">Upload plan sheets — AI extracts dimensions, cost codes, generates takeoff BNCA.</div></div>
+      <div class="app-strip-card"><div class="asc-icon">📋</div><div class="asc-name">RFI + CO Tracker</div><div class="asc-desc">Open RFIs aged by day, change order log, schedule impact, approval chain.</div></div>
+    </div>
+
+    <!-- Comparison Table -->
+    <div style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--w20);margin-bottom:.75rem;font-family:'DM Mono',monospace">TSM vs. Traditional Project Controller</div>
+    <table class="comp-table">
+      <thead><tr><th>Function</th><th>Project Controller</th><th class="teal-col">TSM Construction Command</th><th>Rating</th></tr></thead>
+      <tbody>
+        <tr><td class="func">Job Costing</td><td class="old">Month-end cost reports, manual variance review</td><td class="new">Real-time variance by cost code, auto WIP schedule</td><td><span class="exceed">✓ Exceeds</span></td></tr>
+        <tr><td class="func">Sub Management</td><td class="old">Spreadsheet COI/waiver tracking, misses expirations</td><td class="new">Auto COI expiry alerts, payment hold logic, scoring</td><td><span class="exceed">✓ Exceeds</span></td></tr>
+        <tr><td class="func">Schedule Control</td><td class="old">Weekly P6 review, manual delay analysis</td><td class="new">Daily critical-path monitoring, LD risk scored live</td><td><span class="exceed">✓ Exceeds</span></td></tr>
+        <tr><td class="func">Compliance</td><td class="old">Manual permit/inspection/payroll tracking</td><td class="new">Proactive NOV monitoring, Davis-Bacon alerts</td><td><span class="exceed">✓ Exceeds</span></td></tr>
+        <tr><td class="func">Billing & AR</td><td class="old">Manual G702 prep, reactive AR follow-up</td><td class="new">AIA G702 auto-generated, draw timing linked to milestones</td><td><span class="exceed">✓ Exceeds</span></td></tr>
+        <tr><td class="func">Estimating</td><td class="old">Spreadsheet bids, gut-feel historical pricing</td><td class="new">Bid accuracy scoring, pipeline tracking, margin analysis</td><td><span class="exceed meets">▶ Meets+</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 6 — ROI ═══ -->
+<div class="slide" id="roi" data-slide="5" style="background:var(--dark)">
+  <div class="slide-inner">
+    <div class="slide-num">06 &nbsp; The Math</div>
+    <div class="kicker">Return on Intelligence</div>
+    <h2 class="section-title">The Numbers <span class="teal">Close Themselves.</span></h2>
+    <p class="lead">Adjust your portfolio size and see the math. TSM costs $1,950/month. The exposure it monitors and recovers is multiples of that — every single month.</p>
+    <div class="roi-block">
+      <div class="roi-grid">
+        <div class="roi-inputs">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);margin-bottom:.75rem">Your Portfolio</div>
+          <div class="roi-group">
+            <div class="roi-label">Active Projects</div>
+            <input type="range" class="roi-slider" id="r-projects" min="1" max="20" value="6" oninput="calcROI()"/>
+            <div class="roi-val" id="r-projects-val">6 projects</div>
+          </div>
+          <div class="roi-group">
+            <div class="roi-label">Avg Project Value</div>
+            <input type="range" class="roi-slider" id="r-value" min="500" max="10000" value="1620" step="100" oninput="calcROI()"/>
+            <div class="roi-val" id="r-value-val">$1.62M avg</div>
+          </div>
+          <div class="roi-group">
+            <div class="roi-label">Est. Margin at Risk (%)</div>
+            <input type="range" class="roi-slider" id="r-margin" min="1" max="15" value="5" oninput="calcROI()"/>
+            <div class="roi-val" id="r-margin-val">5% margin at risk</div>
+          </div>
+        </div>
+        <div class="roi-output">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);margin-bottom:.75rem">TSM Impact</div>
+          <div class="roi-out-row"><div class="roi-out-label">Total Portfolio Value</div><div class="roi-out-val green" id="r-total">$9.71M</div></div>
+          <div class="roi-out-row"><div class="roi-out-label">Estimated Margin at Risk</div><div class="roi-out-val red" id="r-exposure">$485K</div></div>
+          <div class="roi-out-row"><div class="roi-out-label">TSM Annual Cost</div><div class="roi-out-val" style="color:var(--w50)" id="r-cost">$23,400</div></div>
+          <div class="roi-out-row"><div class="roi-out-label">Conservative Recovery (30%)</div><div class="roi-out-val green" id="r-recovery">$145K</div></div>
+          <div class="roi-out-row"><div class="roi-out-label">Net Annual Benefit</div><div class="roi-out-val big" id="r-net">$122K</div></div>
+          <div style="font-size:10px;color:var(--w20);margin-top:.5rem;font-style:italic;line-height:1.6">Conservative estimate. Actual recovery includes LD protection, waiver gap prevention, faster draws, and reduced PM overhead.</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:2rem">
+      <div class="stat-card teal" style="text-align:center;padding:1.25rem 1rem">
+        <div class="stat-kicker">Monthly Cost</div>
+        <div class="stat-val teal" style="font-size:28px">$1,950</div>
+        <div class="stat-desc" style="font-size:11px">All 6 nodes + Neural Core</div>
+      </div>
+      <div class="stat-card red" style="text-align:center;padding:1.25rem 1rem">
+        <div class="stat-kicker">Role Replaced</div>
+        <div class="stat-val red" style="font-size:28px">$85K</div>
+        <div class="stat-desc" style="font-size:11px">Project Controller salary + benefits</div>
+      </div>
+      <div class="stat-card green" style="text-align:center;padding:1.25rem 1rem">
+        <div class="stat-kicker">Annual Savings</div>
+        <div class="stat-val green" style="font-size:28px">$61.6K</div>
+        <div class="stat-desc" style="font-size:11px">Labor alone, before risk recovery</div>
+      </div>
+      <div class="stat-card amber" style="text-align:center;padding:1.25rem 1rem">
+        <div class="stat-kicker">Payback Period</div>
+        <div class="stat-val amber" style="font-size:28px">&lt;30d</div>
+        <div class="stat-desc" style="font-size:11px">One recovered delay or waiver gap</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px">
+      <a class="cta-btn-p" href="#bnca">▶ Run Executive BNCA</a>
+      <a class="cta-btn-o" href="#suite">Back to Suite Map</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 7 — OPEN HUB / CTA ═══ -->
+<div class="slide cta-slide" id="hub" data-slide="6">
+  <div class="bg-teal-glow"></div>
+  <div class="bg-grid"></div>
+  <div class="slide-inner" style="text-align:center;max-width:760px">
+    <div class="slide-num" style="justify-content:center">07 &nbsp; Ready to Command</div>
+    <h2 class="cta-title">Stop Reading Reports.<br/><span class="teal">Start Commanding.</span></h2>
+    <p class="lead" style="margin:0 auto 2rem;text-align:center">Six nodes. One platform. Every project risk visible, ranked, and actioned before it costs you margin. No implementation. No setup. Live in 24 hours.</p>
+    <div class="cta-btns" style="justify-content:center">
+      <a class="cta-btn-p" href="#bnca">▶ Run Executive BNCA Now</a>
+      <a class="cta-btn-o" href="#suite">View Full Suite Map</a>
+      <a class="cta-btn-o" href="#apps">All 9 Apps</a>
+    </div>
+    <div class="term-bar" style="margin:0 auto">
+      <div class="term-blink"></div>
+      TSM Neural Core Ready · 6 nodes active · $847K exposure monitored · BNCA standing by · awaiting command
+    </div>
+    <div style="margin-top:3rem;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;text-align:left">
+      <div style="background:var(--w04);border:1px solid var(--border);border-radius:8px;padding:1.25rem">
+        <div style="font-size:22px;margin-bottom:.5rem">⚡</div>
+        <div style="font-size:12px;font-weight:700;color:var(--white);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.04em">Live in 24 Hours</div>
+        <div style="font-size:11px;color:var(--w50);line-height:1.6">No implementation project. No integration work. Connect your data and the nodes fire immediately.</div>
+      </div>
+      <div style="background:var(--w04);border:1px solid var(--border);border-radius:8px;padding:1.25rem">
+        <div style="font-size:22px;margin-bottom:.5rem">🔒</div>
+        <div style="font-size:12px;font-weight:700;color:var(--white);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.04em">Zero Trust Security</div>
+        <div style="font-size:11px;color:var(--w50);line-height:1.6">Every action logged with full reasoning. Review, override, and set guardrails. You command — TSM executes.</div>
+      </div>
+      <div style="background:var(--w04);border:1px solid var(--border);border-radius:8px;padding:1.25rem">
+        <div style="font-size:22px;margin-bottom:.5rem">📊</div>
+        <div style="font-size:12px;font-weight:700;color:var(--white);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.04em">Built for GCs</div>
+        <div style="font-size:11px;color:var(--w50);line-height:1.6">Speaks cost codes, AIA documents, lien waivers, certified payroll, LD clauses, and critical path — not generic AI.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  TSM Construction Command Suite · Autonomous Project Intelligence · Powered by TSM Neural Core<br/>
+  <a href="#pitch">Pitch</a> &nbsp;·&nbsp; <a href="#pain">Pain</a> &nbsp;·&nbsp; <a href="#suite">Suite Map</a> &nbsp;·&nbsp; <a href="#bnca">Live BNCA</a> &nbsp;·&nbsp; <a href="#apps">Apps</a> &nbsp;·&nbsp; <a href="#roi">ROI</a> &nbsp;·&nbsp; <a href="#hub">Open Hub</a><br/>
+  © TSM Financial Intelligence Systems · Six Nodes · One Command · Commercial &amp; Industrial Construction
+</footer>
+
+<script>
+/* ── SLIDE OBSERVER ─────────────────────────────────────────────── */
+var slides=document.querySelectorAll('.slide');
+var dots=document.querySelectorAll('#slide-dots .sd');
+var obs=new IntersectionObserver(function(entries){
+  entries.forEach(function(e){
+    if(e.isIntersecting){
+      e.target.classList.add('visible');
+      var idx=parseInt(e.target.dataset.slide);
+      if(!isNaN(idx)){
+        dots.forEach(function(d,i){d.classList.toggle('active',i===idx)});
+        document.querySelectorAll('.nav-link').forEach(function(l){
+          l.classList.remove('active');
+        });
+      }
+    }
+  });
+},{threshold:0.3});
+slides.forEach(function(s){obs.observe(s)});
+
+function scrollToSlide(idx){
+  var s=document.querySelector('[data-slide="'+idx+'"]');
+  if(s)s.scrollIntoView({behavior:'smooth'});
+}
+
+/* ── ROI CALCULATOR ─────────────────────────────────────────────── */
+function calcROI(){
+  var projects=parseInt(document.getElementById('r-projects').value);
+  var value=parseInt(document.getElementById('r-value').value)*1000;
+  var margin=parseInt(document.getElementById('r-margin').value)/100;
+  var total=projects*value;
+  var exposure=total*margin;
+  var cost=1950*12;
+  var recovery=exposure*0.3;
+  var net=recovery-cost;
+  document.getElementById('r-projects-val').textContent=projects+' project'+(projects>1?'s':'');
+  document.getElementById('r-value-val').textContent='$'+(value/1000).toFixed(2)+'M avg';
+  document.getElementById('r-margin-val').textContent=(margin*100).toFixed(0)+'% margin at risk';
+  document.getElementById('r-total').textContent='$'+(total/1000000).toFixed(2)+'M';
+  document.getElementById('r-exposure').textContent='$'+Math.round(exposure/1000)+'K';
+  document.getElementById('r-cost').textContent='$'+Math.round(cost/1000)+'K';
+  document.getElementById('r-recovery').textContent='$'+Math.round(recovery/1000)+'K';
+  document.getElementById('r-net').textContent=(net>0?'+':'')+'$'+Math.round(net/1000)+'K';
+  document.getElementById('r-net').style.color=net>0?'var(--teal)':'var(--red)';
+}
+calcROI();
+
+/* ── NEURAL CORE ─────────────────────────────────────────────────── */
+var _ep=atob('aHR0cHM6Ly9hcGkuZ3JvcS5jb20vb3BlbmFpL3YxL2NoYXQvY29tcGxldGlvbnM=');
+var _md=atob('bGxhbWEtMy4zLTcwYi12ZXJzYXRpbGU=');
+
+function setNQ(q){document.getElementById('n-q').value=q}
+
+async function runNeural2(){
+  var key=document.getElementById('n-key').value.trim();
+  var q=document.getElementById('n-q').value.trim();
+  var out=document.getElementById('n-out');
+  var btn=document.getElementById('n-btn');
+  if(!key){out.textContent='⚠ Enter your TSM access key above.';out.classList.add('active');return}
+  if(!q){out.textContent='⚠ Enter a question above.';out.classList.add('active');return}
+  btn.disabled=true;btn.textContent='Analyzing...';
+  out.textContent='▶ TSM Neural Core initializing portfolio analysis...';out.classList.add('active');
+  try{
+    var res=await fetch(_ep,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({
+        model:_md,max_tokens:700,temperature:0.38,
+        messages:[
+          {role:'system',content:'You are the TSM Construction Strategist — an expert commercial and industrial GC project controls AI. Return concise BNCA (Best Next Course of Action) recommendations. Format: SUMMARY (1 sentence), PRIORITY ACTIONS (numbered, ranked by urgency and dollar impact), RISK SCORE (Low/Medium/High/Critical), RECOVERABLE VALUE ($), CONFIDENCE (%). Speak in GC language: cost codes, lien waivers, AIA G702, critical path, liquidated damages, certified payroll, Davis-Bacon, NOV, RFI, submittal. Be direct, specific, no preamble. Every action must have a dollar value or timeline attached.'},
+          {role:'user',content:q}
+        ]
+      })
+    });
+    var data=await res.json();
+    if(data.choices&&data.choices[0]){out.textContent=data.choices[0].message.content}
+    else if(data.error){out.textContent='⚠ Error: '+data.error.message}
+    else{out.textContent='⚠ Unexpected response.'}
+  }catch(err){
+    out.textContent='⚠ Connection failed: '+err.message+'\n\nVerify your TSM access key.';
+  }
+  btn.disabled=false;btn.textContent='▶ Run BNCA';
+}
+</script>
+</body>
+</html>
