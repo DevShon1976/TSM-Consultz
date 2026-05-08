@@ -1585,5 +1585,81 @@ async function pocAnalyze(mode) {
 }
 </script>
 
+<script src="/healthcare/js/hc-node-enhance.js?v=intel-gold"></script>
+
+<script>
+(function(){
+  if(window.__HC_INDEX_INTEL_GOLD__) return;
+  window.__HC_INDEX_INTEL_GOLD__ = true;
+
+  const keys=["operations","medical","pharmacy","financial","legal","vendors","compliance","billing","taxprep","grants","insurance"];
+
+  function guess(card){
+    const t=(card.innerText||"").toLowerCase();
+    return keys.find(k=>t.includes(k)) || "operations";
+  }
+
+  function style(){
+    if(document.getElementById("hc-intel-gold-style")) return;
+    const st=document.createElement("style");
+    st.id="hc-intel-gold-style";
+    st.textContent=`
+      .hc-intel-gold-btn{
+        background:#ffc400!important;
+        color:#001!important;
+        border:1px solid rgba(255,196,0,.65)!important;
+        border-radius:10px!important;
+        padding:10px 14px!important;
+        min-width:170px!important;
+        font-weight:900!important;
+        letter-spacing:.08em!important;
+        text-transform:uppercase!important;
+        box-shadow:0 0 18px rgba(255,196,0,.24)!important;
+        cursor:pointer!important;
+        margin-top:10px!important;
+      }
+    `;
+    document.head.appendChild(st);
+  }
+
+  function apply(){
+    style();
+
+    document.querySelectorAll(".nc-open-btn").forEach(btn=>{
+      if((btn.innerText||"").trim().toUpperCase()==="INTEL"){
+        btn.innerText="INTEL WORKBENCH";
+        btn.classList.add("hc-intel-gold-btn");
+      }
+    });
+
+    const cards=[...document.querySelectorAll(".node-card,.card,.nc-card,[data-node],[data-key]")];
+
+    cards.forEach(card=>{
+      const t=(card.innerText||"").toLowerCase();
+      if(!keys.some(k=>t.includes(k))) return;
+      if(card.querySelector(".hc-intel-gold-btn")) return;
+
+      const key=card.dataset.node || card.dataset.key || guess(card);
+
+      const btn=document.createElement("button");
+      btn.className="hc-intel-gold-btn";
+      btn.textContent="INTEL WORKBENCH";
+      btn.onclick=e=>{
+        e.preventDefault();
+        e.stopPropagation();
+        if(window.hcOpenEnhancedNode) window.hcOpenEnhancedNode(key);
+        else alert("HC Intel Workbench not loaded yet.");
+      };
+      card.appendChild(btn);
+    });
+  }
+
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",apply);
+  else apply();
+
+  [400,1000,2000,3500].forEach(ms=>setTimeout(apply,ms));
+})();
+</script>
+
 </body>
 </html>
