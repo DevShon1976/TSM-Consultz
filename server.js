@@ -216,7 +216,7 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 
 app.post('/api/extract-pdf', upload.single('pdf'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ ok: false, error: 'No file uploaded' });
-    const pdfParse = require('pdf-parse');
+    const pdfParse = require('pdf-parse').default || require('pdf-parse');
     const data = await pdfParse(req.file.buffer);
     const text = data.text.trim();
     if (!text || text.length < 50) {
