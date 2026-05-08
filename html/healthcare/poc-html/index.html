@@ -397,17 +397,17 @@ Example: Claim #HC-2024-8821 denied. CPT 99213. Reason: Medical necessity not es
 </div>
 
 <script>
-// ── FIX STATUS BAR OVERLAP ──
+// FIX STATUS BAR OVERLAP
 document.head.appendChild(Object.assign(document.createElement('style'),{textContent:'body{padding-bottom:70px!important}'}));
 
-// ── STATE ──
+// STATE
 let GROQ_KEY = sessionStorage.getItem('groq_key') || '';
 let GROQ_MODEL = sessionStorage.getItem('groq_model') || 'llama-3.3-70b-versatile';
 let docText = '';
 let activeApps = 0;
 let completedApps = 0;
 
-// ── RESTORE KEY ──
+// RESTORE KEY
 if(GROQ_KEY){
   document.getElementById('tsm-neural-core-key').value = GROQ_KEY;
   document.getElementById('tsm-neural-core-dot').classList.add('ok');
@@ -415,13 +415,13 @@ if(GROQ_KEY){
   document.getElementById('tsm-neural-core-model-txt').style.color = 'var(--green)';
 }
 
-// ── CLOCK ──
+// CLOCK
 setInterval(()=>{
   document.getElementById('hdr-clock').textContent =
     new Date().toLocaleTimeString('en-US',{hour12:false});
 },1000);
 
-// ── DOC INPUT ──
+// DOC INPUT
 document.getElementById('doc-text').addEventListener('input', function(){
   docText = this.value.trim();
   updateDocStatus();
@@ -438,7 +438,7 @@ function updateDocStatus(){
     : 'Enter a document to begin neural processing';
 }
 
-// ── FILE DROP ──
+// FILE DROP
 function onDrag(e){e.preventDefault();document.getElementById('drop-area').style.borderColor='var(--cyan)'}
 function offDrag(){document.getElementById('drop-area').style.borderColor=''}
 function onDrop(e){
@@ -458,7 +458,7 @@ function readFile(file){
   reader.readAsText(file);
 }
 
-// ── SAMPLE DOCS ──
+// SAMPLE DOCS
 const SAMPLES = {
   denial: `EXPLANATION OF BENEFITS — CLAIM DENIAL NOTICE
 Claim ID: AZ-BCBS-2026-88214
@@ -554,7 +554,7 @@ function clearAll(){
   updateDocStatus();
 }
 
-// ── KEY ──
+// KEY
 function onKeyInput(v){
   GROQ_KEY = v.trim();
   sessionStorage.setItem('groq_key', GROQ_KEY);
@@ -588,7 +588,7 @@ async function testKey(){
   }
 }
 
-// ── TSM NEURAL CORE STREAM ──
+// TSM NEURAL CORE STREAM
 async function groqStream(systemPrompt, userPrompt, onChunk, onDone, onError, maxTokens=700){
   if(!GROQ_KEY){ onError('No TSM Neural Core key configured.'); return; }
   try {
@@ -626,7 +626,7 @@ async function groqStream(systemPrompt, userPrompt, onChunk, onDone, onError, ma
   }catch(e){onError(e.message);}
 }
 
-// ── APP PROMPTS ──
+// APP PROMPTS
 const APP_PROMPTS = {
   app1:{
     name:'BNCA Command Nodes',
@@ -747,7 +747,7 @@ ${doc}`
   }
 };
 
-// ── FIRE ALL ──
+// FIRE ALL
 async function fireAll(){
   if(!GROQ_KEY){alert('Enter your TSM Neural Core API key first.');return;}
   if(!docText){alert('Load or paste a document first.');return;}
@@ -830,7 +830,7 @@ function setFlowStatus(id, status){
   el.style.color = status==='DONE' ? 'var(--green)' : status==='ACTIVE' ? 'var(--amber)' : status==='ERROR' ? 'var(--red)' : 'var(--faint)';
 }
 
-// ── FORMAT OUTPUT ──
+// FORMAT OUTPUT
 const SECTION_COLORS = {
   1: 'var(--cyan)', 2: 'var(--green)', 3: 'var(--purple)', 4: 'var(--amber)'
 };
@@ -849,7 +849,7 @@ function formatOutput(text, appNum){
     });
 }
 
-// ── RELAY ──
+// RELAY
 async function relayToApp(fromId, toId){
   const fromText = document.getElementById(fromId).textContent;
   if(!fromText) return;
@@ -863,7 +863,7 @@ async function relayToApp(fromId, toId){
   docText = prevDoc;
 }
 
-// ── UTILS ──
+// UTILS
 function copyOutput(id){
   const txt = document.getElementById(id).textContent;
   if(txt) navigator.clipboard.writeText(txt).catch(()=>{});
