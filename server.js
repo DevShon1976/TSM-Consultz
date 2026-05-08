@@ -215,31 +215,20 @@ const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 app.post('/api/extract-pdf', upload.single('pdf'), async (req, res) => {
   try {
+    if (!req.file) return res.status(400).json({ ok: false, error: 'No file uploaded' });
     const pdfParse = require('pdf-parse');
     const data = await pdfParse(req.file.buffer);
     const text = data.text.trim();
-      return res.json({ ok: false, error: 'PDF appears to be scanned/image-only. Please paste text manually.' });
+    if (!text || text.length < 50) {
+      return res.json({ ok: false, error: 'PDF appears to be scanned. Paste text manually.' });
     }
-    res.json({ ok: true, text, pages: data.numpages, words: text.split(/\s+/).length });
+    const wordCount = text.split(' ').filter(Boolean).length;
+    res.json({ ok: true, text, pages: data.numpages, words: wordCount });
   } catch(e) {
     res.status(500).json({ ok: false, error: e.message });
   }
 });
 
-// PDF TEXT EXTRACTION
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
-app.post('/api/extract-pdf', upload.single('pdf'), async (req, res) => {
-  try {
-    const pdfParse = require('pdf-parse');
-    const data = await pdfParse(req.file.buffer);
-    const text = data.text.trim();
-      return res.json({ ok: false, error: 'PDF appears to be scanned/image-only. Please paste text manually.' });
-    }
-    res.json({ ok: true, text, pages: data.numpages, words: text.split(/\s+/).length });
-  } catch(e) {
-    res.status(500).json({ ok: false, error: e.message });
-  }
-});
 // Suite routers — clean, separated, no cross-contamination
 // Security
 app.use(limiter);
