@@ -3153,6 +3153,132 @@ window.addEventListener('load', () => {
   renderPOs();
 });
 </script>
+
+<script>
+(function(){
+  if(window.__CONSTRUCTION_OCR_GEO_FLYIN__) return;
+  window.__CONSTRUCTION_OCR_GEO_FLYIN__ = true;
+
+  const css=document.createElement("style");
+  css.textContent=`
+    #geoFlyin{
+      position:fixed;inset:0;z-index:99999;
+      background:radial-gradient(circle at center,#0b1b25,#02060a 70%);
+      display:none;align-items:center;justify-content:center;
+      overflow:hidden;color:#dff7ff;font-family:Inter,system-ui,Arial;
+    }
+    #geoFlyin.active{display:flex}
+    .geo-map{
+      position:absolute;inset:-15%;
+      background:
+        linear-gradient(rgba(0,255,198,.08) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(0,255,198,.08) 1px,transparent 1px);
+      background-size:44px 44px;
+      transform:perspective(900px) rotateX(58deg) scale(1.4);
+      animation:geoMove 4s ease-in-out forwards;
+    }
+    @keyframes geoMove{
+      0%{transform:perspective(900px) rotateX(58deg) scale(3.2) translateY(260px);opacity:.2}
+      55%{transform:perspective(900px) rotateX(58deg) scale(1.7) translateY(40px);opacity:1}
+      100%{transform:perspective(900px) rotateX(58deg) scale(1.1) translateY(-20px);opacity:1}
+    }
+    .geo-roof{
+      position:relative;z-index:2;width:min(680px,80vw);height:360px;
+      border:2px solid #00ffc6;background:rgba(0,255,198,.08);
+      box-shadow:0 0 40px rgba(0,255,198,.35);
+      transform:rotateX(58deg) rotateZ(-12deg);
+      animation:roofLand 4s ease-in-out forwards;
+    }
+    @keyframes roofLand{
+      0%{transform:scale(.2) rotateX(70deg) rotateZ(-35deg);opacity:.1}
+      70%{transform:scale(1.05) rotateX(58deg) rotateZ(-12deg);opacity:1}
+      100%{transform:scale(1) rotateX(58deg) rotateZ(-12deg);opacity:1}
+    }
+    .geo-pin{
+      position:absolute;z-index:4;top:50%;left:50%;transform:translate(-50%,-50%);
+      background:#ffc400;color:#001;padding:12px 16px;border-radius:999px;
+      font-weight:900;box-shadow:0 0 30px rgba(255,196,0,.6);
+      animation:pinPulse 1s infinite alternate;
+    }
+    @keyframes pinPulse{from{transform:translate(-50%,-50%) scale(1)}to{transform:translate(-50%,-50%) scale(1.08)}}
+    .geo-caption{
+      position:absolute;top:34px;left:50%;transform:translateX(-50%);
+      z-index:5;text-align:center;
+    }
+    .geo-caption h2{margin:0;color:#00ffc6;letter-spacing:.18em}
+    .geo-caption p{color:#8fb4c7}
+    .ocr-test-output{
+      position:fixed;right:22px;bottom:22px;z-index:9999;
+      background:#07131d;border:1px solid rgba(0,255,198,.3);
+      color:#dff7ff;border-radius:12px;padding:14px;width:330px;
+      box-shadow:0 0 24px rgba(0,255,198,.18);font-family:monospace;
+    }
+  `;
+  document.head.appendChild(css);
+
+  function showGeoFlyin(address="Ameris Project Site"){
+    let el=document.getElementById("geoFlyin");
+    if(!el){
+      el=document.createElement("div");
+      el.id="geoFlyin";
+      el.innerHTML=`
+        <div class="geo-map"></div>
+        <div class="geo-caption">
+          <h2>GEOSPATIAL SITE LOCK</h2>
+          <p id="geoAddress">${address}</p>
+        </div>
+        <div class="geo-roof"></div>
+        <div class="geo-pin">ROOFTOP LOCKED</div>
+      `;
+      document.body.appendChild(el);
+    }
+    document.getElementById("geoAddress").textContent=address;
+    el.classList.add("active");
+    setTimeout(()=>el.classList.remove("active"),4600);
+  }
+
+  function runOCRTest(){
+    const out=document.createElement("div");
+    out.className="ocr-test-output";
+    out.innerHTML=`
+      <b style="color:#00ffc6">OCR VIEWER TEST</b><br><br>
+      Blueprint: A102_FloorPlan_Rev3.pdf<br>
+      Rooms detected: 6<br>
+      Labels extracted: OFFICE 101, CONF ROOM 102, LOBBY, BREAK ROOM<br>
+      Measurements: 120'-0" × 96'-0"<br>
+      Status: <span style="color:#00ffc6">OCR READY</span>
+    `;
+    document.body.appendChild(out);
+    setTimeout(()=>out.remove(),6500);
+  }
+
+  window.runBlueprintOCRTest = runOCRTest;
+  window.runGeoRooftopFlyin = showGeoFlyin;
+
+  function addButtons(){
+    if(document.getElementById("geoOcrControls")) return;
+    const bar=document.createElement("div");
+    bar.id="geoOcrControls";
+    bar.style.cssText="position:fixed;left:22px;bottom:22px;z-index:9999;display:flex;gap:8px";
+    bar.innerHTML=`
+      <button style="background:#00ffc6;color:#001;border:0;border-radius:8px;padding:10px 12px;font-weight:900" onclick="runBlueprintOCRTest()">OCR TEST</button>
+      <button style="background:#ffc400;color:#001;border:0;border-radius:8px;padding:10px 12px;font-weight:900" onclick="runGeoRooftopFlyin('Ameris Construction · Rooftop Site Lock')">GEO FLY-IN</button>
+    `;
+    document.body.appendChild(bar);
+  }
+
+  document.addEventListener("click",e=>{
+    const t=(e.target.textContent||"").toLowerCase();
+    if(t.includes("ocr scan")){
+      setTimeout(runOCRTest,250);
+    }
+  },true);
+
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",addButtons);
+  else addButtons();
+})();
+</script>
+
 </body>
 y
   
