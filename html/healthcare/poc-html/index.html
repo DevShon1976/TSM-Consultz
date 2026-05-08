@@ -74,8 +74,8 @@ textarea::placeholder{color:var(--faint)}
 .tsm-neural-core-key-label{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--faint);white-space:nowrap}
 .tsm-neural-core-key-input{flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:11px;padding:6px 10px;outline:none}
 .tsm-neural-core-key-input:focus{border-color:var(--amber)}
-.tsm-neural-core-status-dot{width:7px;height:7px;border-radius:50%;background:var(--faint);flex-shrink:0}
-.tsm-neural-core-status-dot.ok{background:var(--green);box-shadow:0 0 6px var(--green)}
+.groq-status-dot{width:7px;height:7px;border-radius:50%;background:var(--faint);flex-shrink:0}
+.groq-status-dot.ok{background:var(--green);box-shadow:0 0 6px var(--green)}
 
 /* NEURAL FLOW */
 .neural-flow{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:28px;padding:16px 0;border:1px solid var(--border);background:var(--bg2);overflow-x:auto}
@@ -224,7 +224,7 @@ Example: Claim #HC-2024-8821 denied. CPT 99213. Reason: Medical necessity not es
       <div class="process-info" id="process-info">Enter a document to begin neural processing</div>
     </div>
     <div class="tsm-neural-core-key-row">
-      <div class="tsm-neural-core-status-dot" id="tsm-neural-core-dot"></div>
+      <div class="groq-status-dot" id="tsm-neural-core-dot"></div>
       <div class="tsm-neural-core-key-label">TSM Neural Core Key</div>
       <input class="tsm-neural-core-key-input" id="tsm-neural-core-key" type="password" placeholder="gsk_..." oninput="onKeyInput(this.value)">
       <button class="btn btn-ghost" style="font-size:8px;padding:5px 10px" onclick="testKey()">Test</button>
@@ -558,7 +558,7 @@ function clearAll(){
 function onKeyInput(v){
   GROQ_KEY = v.trim();
   sessionStorage.setItem('groq_key', GROQ_KEY);
-  document.getElementById('tsm-neural-core-dot').className = GROQ_KEY.startsWith('gsk_') ? 'tsm-neural-core-status-dot ok' : 'tsm-neural-core-status-dot';
+  document.getElementById('tsm-neural-core-dot').className = GROQ_KEY.startsWith('gsk_') ? 'groq-status-dot ok' : 'groq-status-dot';
   document.getElementById('fire-btn').disabled = !GROQ_KEY || docText.length < 20;
 }
 
@@ -589,7 +589,7 @@ async function testKey(){
 }
 
 // ── TSM NEURAL CORE STREAM ──
-async function tsm-neural-coreStream(systemPrompt, userPrompt, onChunk, onDone, onError, maxTokens=700){
+async function groqStream(systemPrompt, userPrompt, onChunk, onDone, onError, maxTokens=700){
   if(!GROQ_KEY){ onError('No TSM Neural Core key configured.'); return; }
   try {
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions',{ 
@@ -797,7 +797,7 @@ async function runApp(num, prompt){
   let text = '';
   let finalToks = 0;
 
-  await tsm-neural-coreStream(
+  await groqStream(
     prompt.system,
     prompt.user(docText.slice(0, 3000)),
     (chunk)=>{
