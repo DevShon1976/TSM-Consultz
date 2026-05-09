@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TSM · FinOps Doc Showcase</title>
+<style>
+:root{
+  --bg:#0a0f0a;--surface:#0d150d;--surface2:#0b120b;--border:#1e3a1e;
+  --cyan:#00aaff;--green:#00ff88;--amber:#ffaa00;--red:#ff4444;--purple:#aa55ff;
+  --text:#e0ffe0;--muted:#556655;--dim:#0a1020;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Courier New',monospace;font-size:13px;min-height:100vh}
+
+/* HEADER */
+.hdr{display:flex;justify-content:space-between;align-items:center;padding:11px 20px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.hdr-left{display:flex;flex-direction:column;gap:2px}
+.hdr-title{font-size:14px;font-weight:700;letter-spacing:3px;color:var(--cyan)}
+.hdr-sub{font-size:9px;color:var(--muted);letter-spacing:1.5px}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.back-btn{padding:5px 12px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-family:inherit;font-size:9px;font-weight:700;cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all .2s;text-decoration:none}
+.back-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,255,136,.4)}50%{opacity:.7;box-shadow:0 0 0 4px rgba(0,255,136,0)}}
+
+/* LAYOUT */
+.shell{display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 48px)}
+
+/* LEFT SIDEBAR */
+.sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sidebar-section{border-bottom:1px solid var(--border);padding:12px}
+.sec-label{font-size:8px;font-weight:700;letter-spacing:2px;color:var(--amber);margin-bottom:9px;text-transform:uppercase}
+
+/* WORKFLOW TABS */
+.workflow-tabs{display:flex;border-bottom:1px solid var(--border)}
+.wtab{flex:1;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer;font-family:inherit;font-size:8px;font-weight:700;letter-spacing:1px;padding:8px 4px;text-align:center;text-transform:uppercase;transition:all .15s}
+.wtab:hover{color:var(--text)}
+.wtab.active{border-bottom-color:var(--amber);color:var(--amber)}
+.workflow-panel{display:none;flex:1;overflow-y:auto;padding:12px}
+.workflow-panel.active{display:block}
+
+/* DAILY WORKFLOW */
+.workflow-step{align-items:flex-start;border-bottom:1px solid var(--border);display:flex;gap:9px;padding:8px 0}
+.wchk{-webkit-appearance:none;appearance:none;background:var(--bg);border:1px solid var(--border);cursor:pointer;flex-shrink:0;height:14px;margin-top:1px;position:relative;width:14px}
+.wchk:checked{background:var(--green);border-color:var(--green)}
+.wchk:checked::after{color:#000;content:'✓';font-size:9px;left:2px;position:absolute;top:-1px}
+.wstep-body{flex:1}
+.wstep-time{color:var(--amber);font-size:8px;letter-spacing:1px;margin-bottom:2px;text-transform:uppercase}
+.wstep-title{color:var(--text);font-size:11px;font-weight:700;margin-bottom:2px}
+.wstep-desc{color:var(--muted);font-size:10px;line-height:1.5}
+.workflow-progress{background:var(--border);height:3px;margin:10px 0 6px}
+.workflow-progress-fill{background:var(--green);height:100%;transition:width .3s}
+.progress-label{color:var(--muted);font-size:9px;text-align:right}
+
+/* MODE BUTTONS */
+.mode-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.mode-btn{background:none;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:1px;padding:7px;text-align:center;text-transform:uppercase;transition:all .2s}
+.mode-btn.active{border-color:var(--cyan);color:var(--cyan);background:var(--dim)}
+.mode-btn:hover{border-color:var(--border);color:var(--text)}
+
+/* SAMPLE CARDS */
+.sample-grid{display:flex;flex-direction:column;gap:5px;overflow-y:auto;max-height:220px}
+.sample-card{border:1px solid var(--border);cursor:pointer;padding:8px 10px;transition:all .2s}
+.sample-card:hover{border-color:var(--cyan);background:var(--dim)}
+.sample-card.selected{border-color:var(--amber);background:#1a1200}
+.sc-type{color:var(--amber);font-size:8px;letter-spacing:1.5px;margin-bottom:2px;text-transform:uppercase}
+.sc-name{color:var(--cyan);font-size:11px;font-weight:700}
+.sc-desc{color:var(--muted);font-size:9px;line-height:1.4;margin-top:2px}
+
+/* DROP ZONE */
+.drop-zone{border:2px dashed var(--border);cursor:pointer;padding:20px;text-align:center;transition:all .2s}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--cyan);background:var(--dim)}
+.drop-zone.has-file{border-color:var(--amber);border-style:solid}
+.drop-icon{font-size:22px;margin-bottom:6px}
+.drop-title{color:var(--cyan);font-size:10px;font-weight:700;letter-spacing:2px}
+.drop-sub{color:var(--muted);font-size:9px;margin-top:4px}
+.drop-file-name{color:var(--amber);font-size:10px;font-weight:700;margin-top:6px}
+input[type=file]{display:none}
+
+/* FIRE BUTTON */
+.fire-wrap{padding:10px 12px;border-top:1px solid var(--border);background:var(--surface2)}
+.fire-status{color:var(--muted);font-size:9px;letter-spacing:1px;margin-bottom:6px;text-align:center}
+.fire-btn{align-items:center;background:var(--amber);border:none;color:#000;cursor:pointer;display:flex;font-family:inherit;font-size:10px;font-weight:700;gap:6px;justify-content:center;letter-spacing:2px;padding:10px;text-transform:uppercase;transition:all .2s;width:100%}
+.fire-btn:hover{background:#d48b1a;box-shadow:0 0 16px rgba(255,170,0,.3)}
+.fire-btn:disabled{background:var(--border);color:var(--muted);cursor:not-allowed}
+
+/* MAIN OUTPUT */
+.main-output{display:flex;flex-direction:column;overflow:hidden}
+
+/* PIPELINE */
+.pipeline-bar{align-items:center;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;gap:0;padding:8px 16px;overflow-x:auto}
+.pipe-node{align-items:center;display:flex;flex-direction:column;min-width:70px;padding:0 6px;text-align:center}
+.pipe-dot{align-items:center;background:var(--surface);border:2px solid var(--border);border-radius:50%;display:flex;font-size:12px;height:30px;justify-content:center;transition:all .4s;width:30px}
+.pipe-dot.active{border-color:var(--cyan);background:var(--dim);box-shadow:0 0 10px rgba(0,170,255,.4)}
+.pipe-dot.done{border-color:var(--green);background:#0d1f0d}
+.pipe-lbl{color:var(--muted);font-size:8px;letter-spacing:1px;margin-top:3px;text-transform:uppercase}
+.pipe-arr{color:var(--border);font-size:14px;padding:0 2px;margin-bottom:12px}
+.pipe-arr.active{color:var(--cyan)}
+
+/* OUTPUT APPS GRID */
+.apps-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);flex:1;overflow:auto}
+.app-card{background:var(--bg);display:flex;flex-direction:column}
+.app-hdr{align-items:center;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:8px;padding:8px 12px}
+.app-num{color:var(--muted);font-size:8px;letter-spacing:1px}
+.app-name{color:var(--text);font-size:11px;font-weight:700;flex:1}
+.app-badge{font-family:inherit;font-size:8px;letter-spacing:1px;padding:2px 6px;text-transform:uppercase}
+.badge-standby{background:var(--surface);border:1px solid var(--border);color:var(--muted)}
+.badge-active{background:#1a1200;border:1px solid var(--amber);color:var(--amber);animation:badge-pulse .8s infinite}
+@keyframes badge-pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.badge-done{background:#0d1f0d;border:1px solid rgba(0,255,136,.3);color:var(--green)}
+.badge-error{background:#1a0505;border:1px solid rgba(255,68,68,.3);color:var(--red)}
+.app-body{flex:1;overflow-y:auto;padding:12px;min-height:140px}
+.app-idle{align-items:center;display:flex;flex-direction:column;gap:6px;justify-content:center;min-height:120px;opacity:.35}
+.app-idle-icon{font-size:20px}
+.app-idle-txt{color:var(--muted);font-size:9px;letter-spacing:1.5px;text-transform:uppercase}
+.app-out{color:#99ccff;font-size:11px;line-height:1.75;white-space:pre-wrap;word-break:break-word}
+.app-footer{align-items:center;background:var(--surface);border-top:1px solid var(--border);display:flex;gap:7px;padding:6px 11px}
+.copy-btn{background:none;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-family:inherit;font-size:8px;letter-spacing:1px;padding:3px 8px;text-transform:uppercase;transition:all .15s}
+.copy-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+.tok-count{color:var(--muted);font-size:9px;margin-left:auto}
+
+/* STATUS BAR */
+.status-bar{align-items:center;background:var(--surface2);border-top:1px solid var(--border);display:flex;gap:10px;padding:5px 14px;flex-shrink:0}
+.status-seg{color:var(--muted);font-size:9px;letter-spacing:1px}
+.status-seg.live{color:var(--green)}
+.status-sep{color:var(--border)}
+.export-bar{display:flex;gap:7px;margin-left:auto}
+.export-btn{background:none;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-family:inherit;font-size:8px;font-weight:700;letter-spacing:1px;padding:4px 10px;text-transform:uppercase;transition:all .15s}
+.export-btn:hover{border-color:var(--amber);color:var(--amber)}
+.export-btn.primary{border-color:var(--green);color:var(--green)}
+.export-btn.primary:hover{background:#0d1f0d}
+.push-btn{border-color:var(--purple)!important;color:var(--purple)!important}
+.push-btn:hover{background:#1a0f2a!important}
+
+/* MANAGER EXPORT MODAL */
+.modal-bg{background:rgba(0,0,0,.8);bottom:0;display:none;left:0;position:fixed;right:0;top:0;z-index:900}
+.modal-bg.open{display:block}
+.modal{background:var(--surface);border:1px solid var(--border);left:50%;max-height:90vh;max-width:680px;overflow-y:auto;padding:0;position:fixed;top:50%;transform:translate(-50%,-50%);width:95%;z-index:901}
+.modal-hdr{align-items:center;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;gap:10px;padding:12px 16px}
+.modal-title{color:var(--amber);font-size:11px;font-weight:700;letter-spacing:2px;flex:1;text-transform:uppercase}
+.modal-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px}
+.report-preview{background:#fff;color:#1a1a1a;font-family:Arial,sans-serif;font-size:12px;line-height:1.6;padding:32px;min-height:400px}
+.rpt-logo{align-items:center;border-bottom:2px solid #1a3a5c;display:flex;justify-content:space-between;margin-bottom:20px;padding-bottom:14px}
+.rpt-brand{color:#1a3a5c;font-size:18px;font-weight:700;letter-spacing:2px}
+.rpt-date{color:#666;font-size:11px}
+.rpt-title{color:#1a3a5c;font-size:16px;font-weight:700;margin-bottom:4px}
+.rpt-subtitle{color:#666;font-size:12px;margin-bottom:20px}
+.rpt-section{margin-bottom:18px}
+.rpt-section-title{background:#1a3a5c;color:#fff;font-size:10px;font-weight:700;letter-spacing:2px;padding:5px 10px;text-transform:uppercase;margin-bottom:8px}
+.rpt-kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.rpt-kpi{background:#f5f8ff;border:1px solid #dde;padding:10px;text-align:center}
+.rpt-kpi-val{color:#1a3a5c;font-size:18px;font-weight:700}
+.rpt-kpi-lbl{color:#666;font-size:9px;letter-spacing:1px;margin-top:2px;text-transform:uppercase}
+.rpt-body{color:#333;font-size:12px;line-height:1.7;white-space:pre-wrap}
+.rpt-footer{border-top:1px solid #ddd;color:#999;font-size:10px;margin-top:20px;padding-top:10px;text-align:center}
+.modal-actions{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border)}
+
+/* TOAST */
+.toast{background:var(--surface);border:1px solid var(--green);bottom:14px;color:var(--green);display:none;font-size:10px;left:50%;letter-spacing:1px;padding:8px 16px;position:fixed;transform:translateX(-50%);z-index:999}
+.toast.show{display:block;animation:tin .2s ease}
+@keyframes tin{from{transform:translateX(-50%) translateY(8px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+.cursor{animation:cur .6s infinite}
+@keyframes cur{0%,100%{opacity:1}50%{opacity:0}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-left">
+    <div class="hdr-title">⚡ FINOPS DOC SHOWCASE</div>
+    <div class="hdr-sub">4-ENGINE BNCA · MANAGER EXPORT · DAILY WORKFLOW</div>
+  </div>
+  <div class="hdr-right">
+    <div class="status-dot"></div>
+    <span style="color:var(--green);font-size:9px;letter-spacing:1px">NEURAL LINK · HC-STRATEGIST</span>
+    <a class="back-btn" href="/finops-suite/financial-ui.html?v=enterprise-ready">← HUB</a>
+    <a class="back-btn" href="/finops-suite/finops-main-strategist/index.html">STRATEGIST →</a>
+  </div>
+</div>
+
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <!-- WORKFLOW TABS -->
+    <div class="workflow-tabs">
+      <button class="wtab active" onclick="switchTab('docs',this)">Documents</button>
+      <button class="wtab" onclick="switchTab('morning',this)">Morning</button>
+      <button class="wtab" onclick="switchTab('midday',this)">Midday</button>
+      <button class="wtab" onclick="switchTab('eod',this)">EOD</button>
+    </div>
+
+    <!-- DOCS PANEL -->
+    <div class="workflow-panel active" id="tab-docs">
+      <div class="sidebar-section" style="border-top:none;padding-top:0">
+        <div class="sec-label">Mode</div>
+        <div class="mode-row">
+          <button class="mode-btn active" id="mode-sample" onclick="setMode('sample')">◈ Sample Doc</button>
+          <button class="mode-btn" id="mode-actual" onclick="setMode('actual')">↑ Upload Doc</button>
+        </div>
+      </div>
+
+      <div id="panel-sample">
+        <div class="sidebar-section">
+          <div class="sec-label">Select Sample Document</div>
+          <div class="sample-grid" id="sample-grid"></div>
+        </div>
+      </div>
+
+      <div id="panel-actual" style="display:none">
+        <div class="sidebar-section">
+          <div class="sec-label">Upload Document</div>
+          <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+            <div class="drop-icon">📄</div>
+            <div class="drop-title">Drop Document Here</div>
+            <div class="drop-sub">TXT · PDF · CSV · XLSX · DOC</div>
+            <div class="drop-file-name" id="dropFileName"></div>
+          </div>
+          <input type="file" id="fileInput" accept=".txt,.csv,.pdf,.xlsx,.doc,.docx"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- MORNING WORKFLOW -->
+    <div class="workflow-panel" id="tab-morning">
+      <div class="sec-label">Morning Workflow · Start of Day</div>
+      <div class="workflow-progress"><div class="workflow-progress-fill" id="morning-fill" style="width:0%"></div></div>
+      <div class="progress-label" id="morning-label">0 / 6 complete</div>
+      <div id="morning-steps"></div>
+    </div>
+
+    <!-- MIDDAY WORKFLOW -->
+    <div class="workflow-panel" id="tab-midday">
+      <div class="sec-label">Midday Workflow · Review & Action</div>
+      <div class="workflow-progress"><div class="workflow-progress-fill" id="midday-fill" style="width:0%"></div></div>
+      <div class="progress-label" id="midday-label">0 / 5 complete</div>
+      <div id="midday-steps"></div>
+    </div>
+
+    <!-- EOD WORKFLOW -->
+    <div class="workflow-panel" id="tab-eod">
+      <div class="sec-label">End of Day · Close & Report</div>
+      <div class="workflow-progress"><div class="workflow-progress-fill" id="eod-fill" style="width:0%"></div></div>
+      <div class="progress-label" id="eod-label">0 / 5 complete</div>
+      <div id="eod-steps"></div>
+    </div>
+
+    <!-- FIRE -->
+    <div class="fire-wrap">
+      <div class="fire-status" id="fire-status">SELECT A DOCUMENT TO BEGIN</div>
+      <button class="fire-btn" id="fire-btn" disabled onclick="fireAll()">⚡ FIRE ALL 4 ENGINES</button>
+    </div>
+  </div>
+
+  <!-- OUTPUT PANEL -->
+  <div class="main-output">
+
+    <!-- PIPELINE -->
+    <div class="pipeline-bar">
+      <div class="pipe-node"><div class="pipe-dot" id="pipe0">📥</div><div class="pipe-lbl">Ingest</div></div>
+      <div class="pipe-arr" id="arr0">›</div>
+      <div class="pipe-node"><div class="pipe-dot" id="pipe1">🔍</div><div class="pipe-lbl">Parse</div></div>
+      <div class="pipe-arr" id="arr1">›</div>
+      <div class="pipe-node"><div class="pipe-dot" id="pipe2">🧠</div><div class="pipe-lbl">AI Analysis</div></div>
+      <div class="pipe-arr" id="arr2">›</div>
+      <div class="pipe-node"><div class="pipe-dot" id="pipe3">⚡</div><div class="pipe-lbl">BNCA</div></div>
+      <div class="pipe-arr" id="arr3">›</div>
+      <div class="pipe-node"><div class="pipe-dot" id="pipe4">📊</div><div class="pipe-lbl">Report</div></div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:16px">
+        <span style="color:var(--muted);font-size:9px" id="pipeline-status">STANDBY</span>
+        <span style="color:var(--muted);font-size:9px" id="engines-active">0 / 4 engines</span>
+      </div>
+    </div>
+
+    <!-- 4 APP CARDS -->
+    <div class="apps-grid">
+
+      <!-- APP 01 -->
+      <div class="app-card">
+        <div class="app-hdr">
+          <span class="app-num">01</span>
+          <span class="app-name">Document Triage &amp; Flag Analysis</span>
+          <span class="app-badge badge-standby" id="badge1">STANDBY</span>
+        </div>
+        <div class="app-body" id="body1">
+          <div class="app-idle"><div class="app-idle-icon">◈</div><div class="app-idle-txt">Awaiting Document</div></div>
+        </div>
+        <div class="app-footer">
+          <button class="copy-btn" onclick="copyOut(1)">Copy</button>
+          <span class="tok-count" id="tok1"></span>
+        </div>
+      </div>
+
+      <!-- APP 02 -->
+      <div class="app-card">
+        <div class="app-hdr">
+          <span class="app-num">02</span>
+          <span class="app-name">Variance &amp; Risk Intelligence</span>
+          <span class="app-badge badge-standby" id="badge2">STANDBY</span>
+        </div>
+        <div class="app-body" id="body2">
+          <div class="app-idle"><div class="app-idle-icon">◈</div><div class="app-idle-txt">Awaiting Document</div></div>
+        </div>
+        <div class="app-footer">
+          <button class="copy-btn" onclick="copyOut(2)">Copy</button>
+          <span class="tok-count" id="tok2"></span>
+        </div>
+      </div>
+
+      <!-- APP 03 -->
+      <div class="app-card">
+        <div class="app-hdr">
+          <span class="app-num">03</span>
+          <span class="app-name">Controller Action Plan · BNCA</span>
+          <span class="app-badge badge-standby" id="badge3">STANDBY</span>
+        </div>
+        <div class="app-body" id="body3">
+          <div class="app-idle"><div class="app-idle-icon">◈</div><div class="app-idle-txt">Awaiting Document</div></div>
+        </div>
+        <div class="app-footer">
+          <button class="copy-btn" onclick="copyOut(3)">Copy Action Plan</button>
+          <span class="tok-count" id="tok3"></span>
+        </div>
+      </div>
+
+      <!-- APP 04 -->
+      <div class="app-card">
+        <div class="app-hdr">
+          <span class="app-num">04</span>
+          <span class="app-name">CFO Executive Intelligence</span>
+          <span class="app-badge badge-standby" id="badge4">STANDBY</span>
+        </div>
+        <div class="app-body" id="body4">
+          <div class="app-idle"><div class="app-idle-icon">◈</div><div class="app-idle-txt">Awaiting Document</div></div>
+        </div>
+        <div class="app-footer">
+          <button class="copy-btn" onclick="copyOut(4)">Copy CFO Report</button>
+          <span class="tok-count" id="tok4"></span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- STATUS BAR -->
+    <div class="status-bar">
+      <span class="status-dot" style="width:6px;height:6px;flex-shrink:0"></span>
+      <span class="status-seg">FINOPS NEURAL BRIDGE</span>
+      <span class="status-sep">·</span>
+      <span class="status-seg" id="doc-status">No document loaded</span>
+      <span class="status-sep">·</span>
+      <span class="status-seg" id="global-progress"></span>
+      <div class="export-bar" id="export-bar" style="display:none">
+        <button class="export-btn primary" onclick="saveReport()">💾 Save Report</button>
+        <button class="export-btn" onclick="openExportModal()">📄 Manager Export</button>
+        <button class="export-btn push-btn" onclick="pushToStrategist()">→ Push to Strategist</button>
+        <button class="export-btn" onclick="exportTxt()">⬇ Export TXT</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MANAGER EXPORT MODAL -->
+<div class="modal-bg" id="modal-bg" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-hdr">
+      <span class="modal-title">📄 Manager Export — Report Preview</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="report-preview" id="report-preview"></div>
+    <div class="modal-actions">
+      <button class="export-btn primary" style="flex:1;padding:9px" onclick="printReport()">🖨 Print / Save as PDF</button>
+      <button class="export-btn" style="flex:1;padding:9px" onclick="copyReportText()">Copy Full Report</button>
+      <button class="export-btn" style="flex:1;padding:9px" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast-el"></div>
+
+<script>
+// ── STATE ──
+let currentMode = 'sample';
+let selectedSampleId = null;
+let selectedFile = null;
+let outputs = {1:'',2:'',3:'',4:''};
+let currentLabel = '';
+let currentContent = '';
+
+// ── GROQ ──
+const GROQ_KEY = localStorage.getItem('finops_groq_key') || '';
+const GROQ_MODEL = localStorage.getItem('finops_groq_model') || 'llama3-70b-8192';
+
+// ── SAMPLES ──
+const SAMPLES = {
+  'bank-recon': {
+    label: 'Bank Reconciliation Q1',
+    type: 'RECONCILIATION',
+    desc: 'Q1 recon · $48K variance · 3 accounts flagged',
+    content: 'Bank Reconciliation Statement Q1 2026. Account: Operating Checking #1001. Statement Date: March 31, 2026. Bank Balance: $287,600. Deposits in Transit: $8,100. Outstanding Checks: $22,400. Adjusted Bank Balance: $273,300. Book Balance: $225,100. Difference: $48,200. NSF items: 3 ($4,200). Clearing items >90 days: 2 ($12,400). Accounts flagged: 1001, 1003, 1007. Notes: $48,200 variance requires immediate investigation. Possible timing differences and unposted deposits.'
+  },
+  'ap-aging': {
+    label: 'AP Aging Report',
+    type: 'PAYABLES',
+    desc: '$312K outstanding · 22 vendors · 3 on credit hold',
+    content: 'Accounts Payable Aging Report. Period: April 30, 2026. Current (0-30 days): $88,400. 31-60 days: $74,200. 61-90 days: $51,800. 91-180 days: $63,400. 180+ days: $34,200. Total Outstanding: $312,000. Top vendors: MedSupply $44K (credit hold), StaffPro $38K (credit hold), LabCore $29K (credit hold), TechServices $22K, FacilitiesCo $18K. Total vendors: 22. Credit hold vendors: 3. Notes: 3 vendors on credit hold representing $111,000 — immediate action required.'
+  },
+  'gl-extract': {
+    label: 'GL Extract Q1',
+    type: 'GENERAL LEDGER',
+    desc: 'Revenue $2.4M vs $2.8M budget · -14.3% variance',
+    content: 'General Ledger Extract Q1 2026. Revenue: $2,400,000 actual vs $2,800,000 budget (variance: -$400,000 / -14.3%). COGS: $1,100,000. Gross Profit: $1,300,000 (54.2% margin). Operating Expenses: $890,000. Net Income: $410,000. Department variances: Dept A -$180,000, Dept B -$82,000, Dept C +$14,000. AR Days Outstanding: 47 days (target: 35). Collections rate: 91.2%. Payroll variance: +$45,000 (3 unbudgeted FTEs). Notes: Revenue shortfall driven by delayed contract execution in Q1.'
+  },
+  'cash-flow': {
+    label: 'Cash Flow Statement',
+    type: 'TREASURY',
+    desc: 'Operating cash -$82K · investing -$140K · financing +$200K',
+    content: 'Cash Flow Statement Month Ending April 30, 2026. Operating Activities: Collections from customers $380,000. Payments to vendors -$312,000. Payroll -$95,000. Other operating -$55,400. Net operating cash flow: -$82,400. Investing Activities: Equipment purchase -$140,000. Net investing: -$140,000. Financing Activities: Credit line draw +$200,000. Net financing: +$200,000. Net change in cash: -$22,400. Beginning cash: $310,000. Ending cash: $287,600. Notes: Operating cash negative for 2nd consecutive month. Credit line now 68% utilized.'
+  },
+  'invoice-audit': {
+    label: 'Invoice Audit Report',
+    type: 'AUDIT',
+    desc: '340 invoices reviewed · 18 exceptions · $44K at risk',
+    content: 'Invoice Audit Report Q1 2026. Total invoices reviewed: 340. Total value: $1,240,000. Exceptions found: 18. Duplicate payments detected: 3 invoices ($12,400). Missing PO references: 8 invoices ($18,200). Unapproved vendor payments: 4 invoices ($8,800). Invoices overdue >60 days: 3 ($4,800). Total at risk: $44,200 (3.6% of total). Top exception vendors: TechVendor ($8,200), OfficeSupply ($6,400), ConsultCo ($5,800). Notes: Duplicate payment control weakness identified — recommend 3-way match enforcement.'
+  },
+  'budget-variance': {
+    label: 'Budget Variance Q1',
+    type: 'PLANNING',
+    desc: 'Q1 OpEx over budget $92K across 4 departments',
+    content: 'Budget Variance Report Q1 2026. Total OpEx Budget: $840,000. Actual OpEx: $932,000. Variance: +$92,000 over budget (+10.9%). Department breakdown: Sales +$28,000 (trade show spend), IT +$34,000 (software licenses unplanned $22K + hardware), HR +$18,000 (3 unbudgeted FTEs), Facilities +$12,000 (HVAC repair). Headcount variance: +3 FTE unbudgeted. Travel & Entertainment: 140% of budget ($18,000 over). Software licenses: $22,000 unplanned. Notes: IT and Sales are primary drivers — recommend budget reforecast for Q2.'
+  }
+};
+
+// ── WORKFLOW DATA ──
+const WORKFLOWS = {
+  morning: [
+    {time:'7:00–7:30 AM', title:'Pull overnight bank feed', desc:'Check for unmatched wires, NSF items, and timing differences before staff arrival.'},
+    {time:'7:30–8:00 AM', title:'Review AP aging exceptions', desc:'Flag any vendors 90+ days or on credit hold. Prioritize payment queue for the day.'},
+    {time:'8:00–8:30 AM', title:'Run BNCA on overnight docs', desc:'Process any documents received overnight through the 4-engine BNCA pipeline.'},
+    {time:'8:30–9:00 AM', title:'Check month-end close status', desc:'Review close checklist progress and identify any blockers needing immediate attention.'},
+    {time:'9:00–9:30 AM', title:'Send controller daily brief', desc:'Export manager report and push BNCA summary to strategist for executive visibility.'},
+    {time:'9:30–10:00 AM', title:'Clear compliance flags', desc:'Address any open compliance items, missing approvals, or documentation gaps.'},
+  ],
+  midday: [
+    {time:'11:00–11:30 AM', title:'AR collections follow-up', desc:'Contact overdue accounts. Log call notes. Update AR aging status in system.'},
+    {time:'11:30–12:00 PM', title:'Approve AP payment batch', desc:'Review and approve invoices in queue. Verify 3-way match before releasing payments.'},
+    {time:'1:00–1:30 PM', title:'Process expense reports', desc:'Review submitted expense reports. Flag missing receipts and policy violations.'},
+    {time:'1:30–2:00 PM', title:'Update GL entries', desc:'Post approved journal entries. Verify debits equal credits. Document support.'},
+    {time:'2:00–2:30 PM', title:'Run midday variance check', desc:'Compare actuals vs budget for key accounts. Flag significant variances to controller.'},
+  ],
+  eod: [
+    {time:'4:00–4:30 PM', title:'Reconcile daily cash position', desc:'Match all day\'s transactions. Resolve exceptions. Confirm ending cash balance.'},
+    {time:'4:30–5:00 PM', title:'Update month-end close checklist', desc:'Mark completed tasks. Document any new blockers. Update close readiness score.'},
+    {time:'5:00–5:15 PM', title:'Generate EOD BNCA summary', desc:'Process day\'s key documents through BNCA. Export controller report for review.'},
+    {time:'5:15–5:30 PM', title:'Push to Main Strategist', desc:'Send all BNCA outputs to Main Strategist for cross-node executive intelligence update.'},
+    {time:'5:30 PM', title:'Lock daily audit trail', desc:'Confirm all transactions logged. Save reports. Set up next-day priority queue.'},
+  ]
+};
+
+// ── AI PROMPTS ──
+const PROMPTS = {
+  app1: {
+    system: `You are a financial document triage AI for a FinOps operations team. Analyze the document and output EXACTLY this format:
+
+DOCUMENT TYPE: [type]
+TRIAGE STATUS: [CLEAN / REVIEW NEEDED / EXCEPTION / CRITICAL]
+
+FLAGS DETECTED:
+• [specific flag with dollar amount if applicable]
+• [specific flag]
+• [specific flag]
+
+MISSING INFORMATION:
+• [missing item or "None detected"]
+
+COMPLIANCE CONCERNS:
+• [regulatory or policy concern or "None"]
+
+DATA QUALITY:
+• Completeness: [%]
+• Accuracy indicators: [notes]
+
+PRIORITY SCORE: [1-10] | URGENCY: [CRITICAL/HIGH/MEDIUM/LOW]
+RECOMMENDED OWNER: [who should act on this]
+
+Be specific. Cite exact amounts and dates from the document. Max 220 words.`,
+    user: doc => `Triage this financial document:\n\n${doc}`
+  },
+  app2: {
+    system: `You are a financial variance and risk intelligence AI. Analyze accounting documents for risks, variances, and anomalies. Output EXACTLY this format:
+
+RISK LEVEL: [CRITICAL / HIGH / MEDIUM / LOW]
+RISK SCORE: [1-100]
+
+VARIANCE ANALYSIS:
+• [specific variance vs budget/prior period with $ and %]
+• [trend analysis]
+• [benchmark comparison if applicable]
+
+FINANCIAL RISKS:
+• [risk item + $ exposure + likelihood]
+• [risk item + $ exposure]
+
+ANOMALIES DETECTED:
+• [unusual pattern or transaction or "None"]
+
+KEY METRICS:
+• [calculated ratio or metric from the document]
+• [calculated ratio or metric]
+
+CASH IMPACT: $[amount] [positive/negative direction]
+P&L IMPACT: $[amount]
+
+ESCALATION REQUIRED: [Yes/No] — [to whom and why, or N/A]
+
+Be precise with numbers from the document. Max 220 words.`,
+    user: doc => `Perform variance and risk analysis:\n\n${doc}`
+  },
+  app3: {
+    system: `You are a Controller Action Plan AI and BNCA (Best Next Course of Action) engine. Generate a specific, prioritized action plan a controller or accounting manager must execute. Output EXACTLY this format:
+
+BNCA — CONTROLLER ACTION PLAN
+
+IMMEDIATE (Do Today):
+1. [specific action + owner + deadline + $ impact]
+2. [specific action + owner + deadline]
+3. [specific action + owner + deadline]
+
+THIS WEEK:
+1. [action + owner]
+2. [action + owner]
+
+APPROVAL / SIGNATURE REQUIRED:
+• [who must sign + what + by when]
+
+SYSTEM ENTRIES TO POST:
+• [what to enter + which system + account codes if known]
+
+COMMUNICATIONS TO SEND:
+• [who to notify + about what + urgency]
+
+DOCUMENTS TO GATHER:
+• [supporting docs needed for audit trail]
+
+ESTIMATED RESOLUTION: [X hours / X days]
+REVENUE PROTECTION: $[amount at risk if not acted on]
+
+Be directive. Use action verbs. Max 260 words.`,
+    user: doc => `Generate a Controller BNCA Action Plan for:\n\n${doc}`
+  },
+  app4: {
+    system: `You are a CFO Executive Intelligence AI. Translate accounting documents into board-level financial intelligence. Output EXACTLY this format:
+
+CFO EXECUTIVE BRIEF
+
+EXECUTIVE SUMMARY:
+[2 sentence board-level summary of what this means for the business]
+
+FINANCIAL IMPACT:
+• Cash Position Impact: $[amount] [direction]
+• P&L Impact: $[amount] [favorable/unfavorable]
+• Balance Sheet Effect: [description]
+• Working Capital: [impact]
+
+RISK EXPOSURE:
+• [primary risk] — $[exposure]
+• [secondary risk] — $[exposure]
+
+STRATEGIC IMPLICATIONS:
+[3 sentences on business impact, competitive or operational consequences]
+
+CFO DIRECTIVES:
+1. [strategic directive with timeline]
+2. [strategic directive with timeline]
+3. [directive]
+
+REPORTING IMPACT:
+• Month-end close: [affected/not affected + how]
+• Board reporting: [impact on next board package]
+• Audit readiness: [status]
+
+CONFIDENCE LEVEL: [XX%]
+RECOMMENDED BOARD VISIBILITY: [Yes/No — why]
+
+Be executive-level. Dollar-precise. Max 260 words.`,
+    user: doc => `Generate CFO executive intelligence from:\n\n${doc}`
+  }
+};
+
+// ── TAB SWITCHING ──
+function switchTab(tab, btn) {
+  document.querySelectorAll('.wtab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.workflow-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+// ── RENDER SAMPLES ──
+function renderSamples() {
+  const grid = document.getElementById('sample-grid');
+  grid.innerHTML = Object.entries(SAMPLES).map(([id, s]) => `
+    <div class="sample-card" onclick="selectSample('${id}',this)">
+      <div class="sc-type">${s.type}</div>
+      <div class="sc-name">${s.label}</div>
+      <div class="sc-desc">${s.desc}</div>
+    </div>`).join('');
+}
+
+function selectSample(id, el) {
+  document.querySelectorAll('.sample-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedSampleId = id;
+  currentLabel = SAMPLES[id].label;
+  currentContent = SAMPLES[id].content;
+  document.getElementById('fire-btn').disabled = false;
+  document.getElementById('fire-status').textContent = '✓ ' + currentLabel + ' — READY TO FIRE';
+  document.getElementById('doc-status').textContent = currentLabel + ' loaded';
+}
+
+// ── MODE SWITCH ──
+function setMode(m) {
+  currentMode = m;
+  selectedSampleId = null; selectedFile = null;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('mode-' + m).classList.add('active');
+  document.getElementById('panel-sample').style.display = m === 'sample' ? '' : 'none';
+  document.getElementById('panel-actual').style.display = m === 'actual' ? '' : 'none';
+  document.getElementById('fire-btn').disabled = true;
+  document.getElementById('fire-status').textContent = 'SELECT A DOCUMENT TO BEGIN';
+}
+
+// ── FILE UPLOAD ──
+const fi = document.getElementById('fileInput');
+const dz = document.getElementById('dropZone');
+fi.addEventListener('change', e => { if (e.target.files[0]) setFile(e.target.files[0]); });
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag-over'); if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]); });
+
+async function setFile(f) {
+  selectedFile = f;
+  dz.classList.add('has-file');
+  document.getElementById('dropFileName').textContent = '📎 ' + f.name + ' (' + (f.size/1024).toFixed(1) + ' KB)';
+  currentLabel = f.name;
+  // Try to read text files directly
+  const ext = f.name.split('.').pop().toLowerCase();
+  if (['txt','csv'].includes(ext)) {
+    currentContent = await new Promise((res,rej) => { const r = new FileReader(); r.onload = e => res(e.target.result.slice(0,4000)); r.onerror = rej; r.readAsText(f); });
+  } else {
+    // Try server-side extraction
+    try {
+      const fd = new FormData(); fd.append('pdf', f);
+      const resp = await fetch('/api/extract-pdf', {method:'POST', body:fd});
+      const data = await resp.json();
+      currentContent = data.ok ? data.text : `[${ext.toUpperCase()} file — ${(f.size/1024).toFixed(1)}KB]`;
+    } catch {
+      currentContent = `[${ext.toUpperCase()} file — ${(f.size/1024).toFixed(1)}KB — paste content below if needed]`;
+    }
+  }
+  document.getElementById('fire-btn').disabled = false;
+  document.getElementById('fire-status').textContent = '✓ ' + f.name + ' — READY TO FIRE';
+  document.getElementById('doc-status').textContent = f.name + ' loaded';
+}
+
+// ── PIPELINE ──
+function setPipe(n) {
+  for (let i = 0; i <= 4; i++) {
+    const dot = document.getElementById('pipe' + i);
+    const arr = document.getElementById('arr' + i);
+    if (i < n) { dot.className = 'pipe-dot done'; if(arr) arr.className = 'pipe-arr active'; }
+    else if (i === n) { dot.className = 'pipe-dot active'; if(arr) arr.className = 'pipe-arr'; }
+    else { dot.className = 'pipe-dot'; if(arr) arr.className = 'pipe-arr'; }
+  }
+}
+function pipeAll() { for(let i=0;i<=4;i++){ document.getElementById('pipe'+i).className='pipe-dot done'; const a=document.getElementById('arr'+i); if(a) a.className='pipe-arr active'; } }
+
+// ── TOAST ──
+function toast(msg) {
+  const el = document.getElementById('toast-el');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ── FIRE ALL ──
+async function fireAll() {
+  if (!currentContent) { toast('Select or upload a document first'); return; }
+
+  outputs = {1:'',2:'',3:'',4:''};
+  [1,2,3,4].forEach(n => {
+    document.getElementById('body'+n).innerHTML = '<div class="app-idle"><div class="app-idle-icon" style="opacity:.5">⟳</div><div class="app-idle-txt">Processing…</div></div>';
+    document.getElementById('badge'+n).className = 'app-badge badge-active';
+    document.getElementById('badge'+n).textContent = 'ACTIVE';
+    document.getElementById('tok'+n).textContent = '';
+  });
+
+  document.getElementById('export-bar').style.display = 'none';
+  document.getElementById('fire-btn').disabled = true;
+  document.getElementById('global-progress').textContent = 'Firing all 4 engines…';
+  document.getElementById('engines-active').textContent = '4 / 4 engines';
+  document.getElementById('pipeline-status').textContent = 'PROCESSING';
+
+  setPipe(0); await delay(300);
+  setPipe(1); await delay(300);
+  setPipe(2);
+
+  const engines = [1,2,3,4].map(n => runEngine(n));
+  await Promise.all(engines);
+
+  pipeAll();
+  document.getElementById('global-progress').textContent = '✓ All 4 engines complete';
+  document.getElementById('pipeline-status').textContent = 'COMPLETE';
+  document.getElementById('export-bar').style.display = 'flex';
+  document.getElementById('fire-btn').disabled = false;
+
+  // BNCA bridge report
+  if (typeof TSM_BNCA !== 'undefined') {
+    TSM_BNCA.report('finops_showcase', {
+      name: 'FinOps Doc Showcase',
+      subtitle: 'Last processed: ' + currentLabel,
+      status: 'READY',
+      metrics: { last_doc: currentLabel, engines: '4', status: 'complete' },
+      flags: ['Document processed: ' + currentLabel],
+      priority: 'LOW'
+    });
+  }
+
+  toast('✓ All 4 engines complete — ready to export');
+}
+
+async function runEngine(num) {
+  const prompt = PROMPTS['app'+num];
+  const bodyEl = document.getElementById('body'+num);
+  const badgeEl = document.getElementById('badge'+num);
+  const tokEl = document.getElementById('tok'+num);
+
+  bodyEl.innerHTML = '';
+  const outDiv = document.createElement('div');
+  outDiv.className = 'app-out';
+  bodyEl.appendChild(outDiv);
+
+  let full = '', tokens = 0;
+
+  // Try Groq first (user's own key), fallback to tsm-shell API
+  try {
+    let resp;
+    if (GROQ_KEY) {
+      resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
+        body: JSON.stringify({model: GROQ_MODEL, max_tokens:700, stream:true,
+          messages:[{role:'system',content:prompt.system},{role:'user',content:prompt.user(currentContent)}]})
+      });
+    } else {
+      resp = await fetch('https://tsm-shell.fly.dev/api/groq', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          messages:[{role:'system',content:prompt.system},{role:'user',content:prompt.user(currentContent)}],
+          max_tokens:700, stream:false
+        })
+      });
+      const data = await resp.json();
+      full = data.content || data.reply || 'No response';
+      outDiv.textContent = full;
+      outputs[num] = full;
+      badgeEl.className = 'app-badge badge-done';
+      badgeEl.textContent = 'COMPLETE';
+      tokEl.textContent = Math.round(full.length/4) + ' tokens';
+      return;
+    }
+
+    const reader = resp.body.getReader(), dec = new TextDecoder();
+    while (true) {
+      const {done, value} = await reader.read(); if (done) break;
+      for (const line of dec.decode(value).split('\n')) {
+        if (!line.startsWith('data: ') || line.includes('[DONE]')) continue;
+        try {
+          const chunk = JSON.parse(line.slice(6)).choices?.[0]?.delta?.content || '';
+          full += chunk; tokens++;
+          outDiv.textContent = full + '▌';
+          bodyEl.scrollTop = bodyEl.scrollHeight;
+        } catch {}
+      }
+    }
+    outDiv.textContent = full;
+    outputs[num] = full;
+    badgeEl.className = 'app-badge badge-done';
+    badgeEl.textContent = 'COMPLETE';
+    tokEl.textContent = tokens + ' tokens';
+  } catch(e) {
+    outDiv.textContent = 'Engine ' + num + ' error: ' + e.message + '\n\nCheck API connectivity or add Groq key in Operations Suite settings.';
+    badgeEl.className = 'app-badge badge-error';
+    badgeEl.textContent = 'ERROR';
+    outputs[num] = '';
+  }
+}
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ── COPY ──
+function copyOut(num) {
+  if (outputs[num]) { navigator.clipboard.writeText(outputs[num]); toast('✓ Copied Engine 0'+num+' output'); }
+  else toast('No output yet');
+}
+
+// ── SAVE REPORT ──
+function saveReport() {
+  try {
+    const reports = JSON.parse(localStorage.getItem('tsm_finops_reports') || '[]');
+    reports.unshift({
+      id: Date.now(),
+      label: currentLabel,
+      saved: new Date().toLocaleString(),
+      outputs,
+      summary: outputs[3] || outputs[1] || ''
+    });
+    localStorage.setItem('tsm_finops_reports', JSON.stringify(reports.slice(0, 20)));
+    // Also update main strategist key
+    localStorage.setItem('tsm_finops_report', JSON.stringify({
+      summary: [
+        '=== TRIAGE ===\n' + outputs[1],
+        '=== VARIANCE & RISK ===\n' + outputs[2],
+        '=== CONTROLLER ACTION PLAN ===\n' + outputs[3],
+        '=== CFO BRIEF ===\n' + outputs[4]
+      ].join('\n\n'),
+      label: currentLabel,
+      ts: Date.now()
+    }));
+    toast('✓ Report saved to strategist memory');
+  } catch(e) { toast('Save failed: ' + e.message); }
+}
+
+// ── MANAGER EXPORT MODAL ──
+function openExportModal() {
+  const preview = document.getElementById('report-preview');
+  const now = new Date();
+  const riskMatch = (outputs[2] || '').match(/RISK LEVEL[:\s]+([A-Z]+)/i);
+  const risk = riskMatch ? riskMatch[1] : '—';
+  const flagMatch = (outputs[1] || '').match(/FLAGS DETECTED[\s\S]*?(?=MISSING|$)/i);
+  const scoreMatch = (outputs[4] || '').match(/CONFIDENCE[:\s]+(\d+%)/i);
+
+  preview.innerHTML = `
+    <div class="rpt-logo">
+      <div>
+        <div class="rpt-brand">TSM · FINOPS INTELLIGENCE</div>
+        <div style="color:#666;font-size:11px;margin-top:3px">Financial Operations · AI-Assisted Analysis</div>
+      </div>
+      <div class="rpt-date">
+        <div style="font-weight:700;color:#1a3a5c">${now.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</div>
+        <div style="color:#999;font-size:10px">${now.toLocaleTimeString()}</div>
+      </div>
+    </div>
+
+    <div class="rpt-title">${currentLabel}</div>
+    <div class="rpt-subtitle">FinOps BNCA Report · 4-Engine AI Analysis · Prepared for Management Review</div>
+
+    <div class="rpt-kpi-row">
+      <div class="rpt-kpi"><div class="rpt-kpi-val" style="color:${risk==='CRITICAL'?'#cc0000':risk==='HIGH'?'#cc6600':risk==='MEDIUM'?'#996600':'#006600'}">${risk}</div><div class="rpt-kpi-lbl">Risk Level</div></div>
+      <div class="rpt-kpi"><div class="rpt-kpi-val">4</div><div class="rpt-kpi-lbl">Engines Run</div></div>
+      <div class="rpt-kpi"><div class="rpt-kpi-val">${scoreMatch ? scoreMatch[1] : '—'}</div><div class="rpt-kpi-lbl">Confidence</div></div>
+      <div class="rpt-kpi"><div class="rpt-kpi-val" style="color:#006600">✓</div><div class="rpt-kpi-lbl">BNCA Complete</div></div>
+    </div>
+
+    ${outputs[1] ? `<div class="rpt-section"><div class="rpt-section-title">01 · Document Triage &amp; Flag Analysis</div><div class="rpt-body">${outputs[1]}</div></div>` : ''}
+    ${outputs[2] ? `<div class="rpt-section"><div class="rpt-section-title">02 · Variance &amp; Risk Intelligence</div><div class="rpt-body">${outputs[2]}</div></div>` : ''}
+    ${outputs[3] ? `<div class="rpt-section"><div class="rpt-section-title">03 · Controller Action Plan · BNCA</div><div class="rpt-body">${outputs[3]}</div></div>` : ''}
+    ${outputs[4] ? `<div class="rpt-section"><div class="rpt-section-title">04 · CFO Executive Intelligence</div><div class="rpt-body">${outputs[4]}</div></div>` : ''}
+
+    <div class="rpt-footer">
+      Generated by TSM FinOps Intelligence · tsm-shell.fly.dev · ${now.toLocaleString()}<br>
+      This report was produced by AI-assisted analysis. All findings should be reviewed by a qualified accounting professional before action.
+    </div>`;
+
+  document.getElementById('modal-bg').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
+
+function printReport() {
+  const content = document.getElementById('report-preview').innerHTML;
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><title>${currentLabel} — FinOps Report</title><style>body{font-family:Arial,sans-serif;font-size:12px;line-height:1.6;color:#1a1a1a;max-width:800px;margin:0 auto;padding:20px}.rpt-logo{display:flex;justify-content:space-between;border-bottom:2px solid #1a3a5c;padding-bottom:14px;margin-bottom:20px}.rpt-brand{color:#1a3a5c;font-size:18px;font-weight:700;letter-spacing:2px}.rpt-kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}.rpt-kpi{background:#f5f8ff;border:1px solid #dde;padding:10px;text-align:center}.rpt-kpi-val{color:#1a3a5c;font-size:18px;font-weight:700}.rpt-kpi-lbl{color:#666;font-size:9px;letter-spacing:1px;margin-top:2px;text-transform:uppercase}.rpt-section{margin-bottom:18px}.rpt-section-title{background:#1a3a5c;color:#fff;font-size:10px;font-weight:700;letter-spacing:2px;padding:5px 10px;text-transform:uppercase;margin-bottom:8px}.rpt-body{color:#333;font-size:12px;line-height:1.7;white-space:pre-wrap}.rpt-footer{border-top:1px solid #ddd;color:#999;font-size:10px;margin-top:20px;padding-top:10px;text-align:center}@media print{body{max-width:100%}}</style></head><body>${content}</body></html>`);
+  win.document.close();
+  setTimeout(() => win.print(), 500);
+}
+
+function copyReportText() {
+  const text = [
+    `TSM FINOPS BNCA REPORT — ${currentLabel}`,
+    `Generated: ${new Date().toLocaleString()}`,
+    '='.repeat(60),
+    '\n01 · TRIAGE & FLAGS\n' + (outputs[1]||'—'),
+    '\n02 · VARIANCE & RISK\n' + (outputs[2]||'—'),
+    '\n03 · CONTROLLER ACTION PLAN\n' + (outputs[3]||'—'),
+    '\n04 · CFO EXECUTIVE BRIEF\n' + (outputs[4]||'—'),
+  ].join('\n');
+  navigator.clipboard.writeText(text);
+  toast('✓ Full report copied to clipboard');
+}
+
+function exportTxt() {
+  const text = [
+    `TSM FINOPS BNCA REPORT`,
+    `Document: ${currentLabel}`,
+    `Generated: ${new Date().toLocaleString()}`,
+    '='.repeat(60),
+    '\n01 · TRIAGE & FLAG ANALYSIS\n' + (outputs[1]||'—'),
+    '\n02 · VARIANCE & RISK INTELLIGENCE\n' + (outputs[2]||'—'),
+    '\n03 · CONTROLLER ACTION PLAN · BNCA\n' + (outputs[3]||'—'),
+    '\n04 · CFO EXECUTIVE INTELLIGENCE\n' + (outputs[4]||'—'),
+  ].join('\n');
+  const blob = new Blob([text], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `finops-bnca-${currentLabel.replace(/\s+/g,'-').toLowerCase()}-${Date.now()}.txt`;
+  a.click();
+  toast('✓ Report exported');
+}
+
+function pushToStrategist() {
+  saveReport();
+  setTimeout(() => {
+    window.location.href = '/finops-suite/finops-main-strategist/index.html?v=doc-push-' + Date.now();
+  }, 500);
+}
+
+// ── RENDER WORKFLOWS ──
+function renderWorkflow(key) {
+  const steps = WORKFLOWS[key];
+  const el = document.getElementById(key + '-steps');
+  if (!el) return;
+  el.innerHTML = steps.map((s, i) => `
+    <div class="workflow-step">
+      <input type="checkbox" class="wchk" id="${key}-${i}" onchange="updateWorkflowProgress('${key}',${steps.length})"/>
+      <div class="wstep-body">
+        <div class="wstep-time">${s.time}</div>
+        <div class="wstep-title">${s.title}</div>
+        <div class="wstep-desc">${s.desc}</div>
+      </div>
+    </div>`).join('');
+}
+
+function updateWorkflowProgress(key, total) {
+  const done = document.querySelectorAll(`#${key}-steps .wchk:checked`).length;
+  const pct = Math.round(done/total*100);
+  document.getElementById(key+'-fill').style.width = pct + '%';
+  document.getElementById(key+'-label').textContent = done + ' / ' + total + ' complete';
+}
+
+// ── INIT ──
+renderSamples();
+renderWorkflow('morning');
+renderWorkflow('midday');
+renderWorkflow('eod');
+</script>
+
+<script src="/finops-suite/assets/bnca-bridge.js"></script>
+</body>
+</html>
