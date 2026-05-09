@@ -152,6 +152,7 @@ select.field option{background:var(--surface2)}
 .cursor{animation:blink .6s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 </style>
+<script src="/finops-suite/assets/bnca-bridge.js"></script>
 </head>
 <body>
 
@@ -1010,6 +1011,31 @@ function exportAll() {
 
 // ── INIT ──
 setDoc('invoice', document.querySelector('.doc-tab.active'));
+</script>
+<script>
+// BNCA NODE REPORT — Accounting POC
+(function(){
+  function reportBNCA(){
+    if(typeof TSM_BNCA === 'undefined') return;
+    // Read last processed doc from localStorage if available
+    const lastDoc = localStorage.getItem('finops_last_doc_type') || 'none';
+    const lastProcessed = localStorage.getItem('finops_last_processed') || 'No document processed yet';
+    TSM_BNCA.report('accounting_poc', {
+      name: 'Accounting Doc POC',
+      subtitle: '10 doc types · 4 AI engines · Best Next Actions',
+      status: lastDoc !== 'none' ? 'READY' : 'STANDBY',
+      metrics: {
+        last_doc_type: lastDoc,
+        engines_available: '4',
+        doc_types: '10'
+      },
+      flags: lastDoc !== 'none' ? ['Last document: ' + lastDoc + ' processed successfully'] : ['No document processed yet'],
+      priority: 'LOW'
+    });
+  }
+  setInterval(reportBNCA, 5000);
+  setTimeout(reportBNCA, 1000);
+})();
 </script>
 </body>
 </html>
