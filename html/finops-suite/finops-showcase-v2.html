@@ -2,960 +2,1189 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>TSM · FinOps Doc Showcase</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinOps Doc Showcase</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#0a0f0a;--surface:#0d150d;--surface2:#0b120b;--border:#1e3a1e;
-  --cyan:#00aaff;--green:#00ff88;--amber:#ffaa00;--red:#ff4444;--purple:#aa55ff;
-  --text:#e0ffe0;--muted:#556655;--dim:#0a1020;
-}
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--text);font-family:'Courier New',monospace;font-size:13px;min-height:100vh}
+  :root {
+    --bg: #0a0c08;
+    --surface: #111410;
+    --surface2: #161a12;
+    --surface3: #1c2116;
+    --border: #252d1a;
+    --gold: #f5a623;
+    --gold-dim: rgba(245,166,35,0.12);
+    --gold-glow: rgba(245,166,35,0.06);
+    --green: #5dba3b;
+    --green-dim: rgba(93,186,59,0.15);
+    --green-bright: #7de053;
+    --red: #e05c4a;
+    --blue: #5b9fd4;
+    --text: #c8d4b0;
+    --muted: #5a6b48;
+    --white: #e8f0d8;
+    --radius: 8px;
+    --mono: 'IBM Plex Mono', monospace;
+    --head: 'Syne', sans-serif;
+    --body: 'DM Sans', sans-serif;
+  }
 
-/* HEADER */
-.hdr{display:flex;justify-content:space-between;align-items:center;padding:11px 20px;border-bottom:1px solid var(--border);background:var(--surface2)}
-.hdr-left{display:flex;flex-direction:column;gap:2px}
-.hdr-title{font-size:14px;font-weight:700;letter-spacing:3px;color:var(--cyan)}
-.hdr-sub{font-size:9px;color:var(--muted);letter-spacing:1.5px}
-.hdr-right{display:flex;align-items:center;gap:8px}
-.back-btn{padding:5px 12px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-family:inherit;font-size:9px;font-weight:700;cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all .2s;text-decoration:none}
-.back-btn:hover{border-color:var(--cyan);color:var(--cyan)}
-.status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 2s infinite}
-@keyframes blink{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,255,136,.4)}50%{opacity:.7;box-shadow:0 0 0 4px rgba(0,255,136,0)}}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--mono); background: var(--bg); color: var(--text); min-height: 100vh; font-size: 13px; overflow: hidden; }
 
-/* LAYOUT */
-.shell{display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 48px)}
+  /* ===== TOP BAR ===== */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    height: 48px;
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 300;
+  }
 
-/* LEFT SIDEBAR */
-.sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
-.sidebar-section{border-bottom:1px solid var(--border);padding:12px}
-.sec-label{font-size:8px;font-weight:700;letter-spacing:2px;color:var(--amber);margin-bottom:9px;text-transform:uppercase}
+  .topbar-left { display: flex; align-items: center; gap: 1rem; }
 
-/* WORKFLOW TABS */
-.workflow-tabs{display:flex;border-bottom:1px solid var(--border)}
-.wtab{flex:1;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer;font-family:inherit;font-size:8px;font-weight:700;letter-spacing:1px;padding:8px 4px;text-align:center;text-transform:uppercase;transition:all .15s}
-.wtab:hover{color:var(--text)}
-.wtab.active{border-bottom-color:var(--amber);color:var(--amber)}
-.workflow-panel{display:none;flex:1;overflow-y:auto;padding:12px}
-.workflow-panel.active{display:block}
+  .tb-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--gold);
+    letter-spacing: 0.06em;
+  }
 
-/* DAILY WORKFLOW */
-.workflow-step{align-items:flex-start;border-bottom:1px solid var(--border);display:flex;gap:9px;padding:8px 0}
-.wchk{-webkit-appearance:none;appearance:none;background:var(--bg);border:1px solid var(--border);cursor:pointer;flex-shrink:0;height:14px;margin-top:1px;position:relative;width:14px}
-.wchk:checked{background:var(--green);border-color:var(--green)}
-.wchk:checked::after{color:#000;content:'✓';font-size:9px;left:2px;position:absolute;top:-1px}
-.wstep-body{flex:1}
-.wstep-time{color:var(--amber);font-size:8px;letter-spacing:1px;margin-bottom:2px;text-transform:uppercase}
-.wstep-title{color:var(--text);font-size:11px;font-weight:700;margin-bottom:2px}
-.wstep-desc{color:var(--muted);font-size:10px;line-height:1.5}
-.workflow-progress{background:var(--border);height:3px;margin:10px 0 6px}
-.workflow-progress-fill{background:var(--green);height:100%;transition:width .3s}
-.progress-label{color:var(--muted);font-size:9px;text-align:right}
+  .tb-logo-icon { font-size: 1rem; }
 
-/* MODE BUTTONS */
-.mode-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.mode-btn{background:none;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:1px;padding:7px;text-align:center;text-transform:uppercase;transition:all .2s}
-.mode-btn.active{border-color:var(--cyan);color:var(--cyan);background:var(--dim)}
-.mode-btn:hover{border-color:var(--border);color:var(--text)}
+  .tb-sub {
+    font-size: 0.58rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-left: 1px solid var(--border);
+    padding-left: 1rem;
+  }
 
-/* SAMPLE CARDS */
-.sample-grid{display:flex;flex-direction:column;gap:5px;overflow-y:auto;max-height:220px}
-.sample-card{border:1px solid var(--border);cursor:pointer;padding:8px 10px;transition:all .2s}
-.sample-card:hover{border-color:var(--cyan);background:var(--dim)}
-.sample-card.selected{border-color:var(--amber);background:#1a1200}
-.sc-type{color:var(--amber);font-size:8px;letter-spacing:1.5px;margin-bottom:2px;text-transform:uppercase}
-.sc-name{color:var(--cyan);font-size:11px;font-weight:700}
-.sc-desc{color:var(--muted);font-size:9px;line-height:1.4;margin-top:2px}
+  .topbar-right { display: flex; align-items: center; gap: 0.4rem; }
 
-/* DROP ZONE */
-.drop-zone{border:2px dashed var(--border);cursor:pointer;padding:20px;text-align:center;transition:all .2s}
-.drop-zone:hover,.drop-zone.drag-over{border-color:var(--cyan);background:var(--dim)}
-.drop-zone.has-file{border-color:var(--amber);border-style:solid}
-.drop-icon{font-size:22px;margin-bottom:6px}
-.drop-title{color:var(--cyan);font-size:10px;font-weight:700;letter-spacing:2px}
-.drop-sub{color:var(--muted);font-size:9px;margin-top:4px}
-.drop-file-name{color:var(--amber);font-size:10px;font-weight:700;margin-top:6px}
-input[type=file]{display:none}
+  .neural-link {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-right: 0.5rem;
+  }
 
-/* FIRE BUTTON */
-.fire-wrap{padding:10px 12px;border-top:1px solid var(--border);background:var(--surface2)}
-.fire-status{color:var(--muted);font-size:9px;letter-spacing:1px;margin-bottom:6px;text-align:center}
-.fire-btn{align-items:center;background:var(--amber);border:none;color:#000;cursor:pointer;display:flex;font-family:inherit;font-size:10px;font-weight:700;gap:6px;justify-content:center;letter-spacing:2px;padding:10px;text-transform:uppercase;transition:all .2s;width:100%}
-.fire-btn:hover{background:#d48b1a;box-shadow:0 0 16px rgba(255,170,0,.3)}
-.fire-btn:disabled{background:var(--border);color:var(--muted);cursor:not-allowed}
+  .nl-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: blink 2s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-/* MAIN OUTPUT */
-.main-output{display:flex;flex-direction:column;overflow:hidden}
+  .tb-btn {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 0.3rem 0.7rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
 
-/* PIPELINE */
-.pipeline-bar{align-items:center;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;gap:0;padding:8px 16px;overflow-x:auto}
-.pipe-node{align-items:center;display:flex;flex-direction:column;min-width:70px;padding:0 6px;text-align:center}
-.pipe-dot{align-items:center;background:var(--surface);border:2px solid var(--border);border-radius:50%;display:flex;font-size:12px;height:30px;justify-content:center;transition:all .4s;width:30px}
-.pipe-dot.active{border-color:var(--cyan);background:var(--dim);box-shadow:0 0 10px rgba(0,170,255,.4)}
-.pipe-dot.done{border-color:var(--green);background:#0d1f0d}
-.pipe-lbl{color:var(--muted);font-size:8px;letter-spacing:1px;margin-top:3px;text-transform:uppercase}
-.pipe-arr{color:var(--border);font-size:14px;padding:0 2px;margin-bottom:12px}
-.pipe-arr.active{color:var(--cyan)}
+  .tb-btn:hover { color: var(--gold); border-color: rgba(245,166,35,0.3); }
 
-/* OUTPUT APPS GRID */
-.apps-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);flex:1;overflow:auto}
-.app-card{background:var(--bg);display:flex;flex-direction:column}
-.app-hdr{align-items:center;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:8px;padding:8px 12px}
-.app-num{color:var(--muted);font-size:8px;letter-spacing:1px}
-.app-name{color:var(--text);font-size:11px;font-weight:700;flex:1}
-.app-badge{font-family:inherit;font-size:8px;letter-spacing:1px;padding:2px 6px;text-transform:uppercase}
-.badge-standby{background:var(--surface);border:1px solid var(--border);color:var(--muted)}
-.badge-active{background:#1a1200;border:1px solid var(--amber);color:var(--amber);animation:badge-pulse .8s infinite}
-@keyframes badge-pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.badge-done{background:#0d1f0d;border:1px solid rgba(0,255,136,.3);color:var(--green)}
-.badge-error{background:#1a0505;border:1px solid rgba(255,68,68,.3);color:var(--red)}
-.app-body{flex:1;overflow-y:auto;padding:12px;min-height:140px}
-.app-idle{align-items:center;display:flex;flex-direction:column;gap:6px;justify-content:center;min-height:120px;opacity:.35}
-.app-idle-icon{font-size:20px}
-.app-idle-txt{color:var(--muted);font-size:9px;letter-spacing:1.5px;text-transform:uppercase}
-.app-out{color:#99ccff;font-size:11px;line-height:1.75;white-space:pre-wrap;word-break:break-word}
-.app-footer{align-items:center;background:var(--surface);border-top:1px solid var(--border);display:flex;gap:7px;padding:6px 11px}
-.copy-btn{background:none;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-family:inherit;font-size:8px;letter-spacing:1px;padding:3px 8px;text-transform:uppercase;transition:all .15s}
-.copy-btn:hover{border-color:var(--cyan);color:var(--cyan)}
-.tok-count{color:var(--muted);font-size:9px;margin-left:auto}
+  /* ===== TAB BAR ===== */
+  .tabbar {
+    position: fixed;
+    top: 48px; left: 0; right: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    height: 36px;
+    display: flex;
+    align-items: stretch;
+    z-index: 200;
+    padding: 0 1rem;
+  }
 
-/* STATUS BAR */
-.status-bar{align-items:center;background:var(--surface2);border-top:1px solid var(--border);display:flex;gap:10px;padding:5px 14px;flex-shrink:0}
-.status-seg{color:var(--muted);font-size:9px;letter-spacing:1px}
-.status-seg.live{color:var(--green)}
-.status-sep{color:var(--border)}
-.export-bar{display:flex;gap:7px;margin-left:auto}
-.export-btn{background:none;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-family:inherit;font-size:8px;font-weight:700;letter-spacing:1px;padding:4px 10px;text-transform:uppercase;transition:all .15s}
-.export-btn:hover{border-color:var(--amber);color:var(--amber)}
-.export-btn.primary{border-color:var(--green);color:var(--green)}
-.export-btn.primary:hover{background:#0d1f0d}
-.push-btn{border-color:var(--purple)!important;color:var(--purple)!important}
-.push-btn:hover{background:#1a0f2a!important}
+  .tab {
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0 1rem;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    transition: all 0.15s;
+  }
 
-/* MANAGER EXPORT MODAL */
-.modal-bg{background:rgba(0,0,0,.8);bottom:0;display:none;left:0;position:fixed;right:0;top:0;z-index:900}
-.modal-bg.open{display:block}
-.modal{background:var(--surface);border:1px solid var(--border);left:50%;max-height:90vh;max-width:680px;overflow-y:auto;padding:0;position:fixed;top:50%;transform:translate(-50%,-50%);width:95%;z-index:901}
-.modal-hdr{align-items:center;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;gap:10px;padding:12px 16px}
-.modal-title{color:var(--amber);font-size:11px;font-weight:700;letter-spacing:2px;flex:1;text-transform:uppercase}
-.modal-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px}
-.report-preview{background:#fff;color:#1a1a1a;font-family:Arial,sans-serif;font-size:12px;line-height:1.6;padding:32px;min-height:400px}
-.rpt-logo{align-items:center;border-bottom:2px solid #1a3a5c;display:flex;justify-content:space-between;margin-bottom:20px;padding-bottom:14px}
-.rpt-brand{color:#1a3a5c;font-size:18px;font-weight:700;letter-spacing:2px}
-.rpt-date{color:#666;font-size:11px}
-.rpt-title{color:#1a3a5c;font-size:16px;font-weight:700;margin-bottom:4px}
-.rpt-subtitle{color:#666;font-size:12px;margin-bottom:20px}
-.rpt-section{margin-bottom:18px}
-.rpt-section-title{background:#1a3a5c;color:#fff;font-size:10px;font-weight:700;letter-spacing:2px;padding:5px 10px;text-transform:uppercase;margin-bottom:8px}
-.rpt-kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
-.rpt-kpi{background:#f5f8ff;border:1px solid #dde;padding:10px;text-align:center}
-.rpt-kpi-val{color:#1a3a5c;font-size:18px;font-weight:700}
-.rpt-kpi-lbl{color:#666;font-size:9px;letter-spacing:1px;margin-top:2px;text-transform:uppercase}
-.rpt-body{color:#333;font-size:12px;line-height:1.7;white-space:pre-wrap}
-.rpt-footer{border-top:1px solid #ddd;color:#999;font-size:10px;margin-top:20px;padding-top:10px;text-align:center}
-.modal-actions{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border)}
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
 
-/* TOAST */
-.toast{background:var(--surface);border:1px solid var(--green);bottom:14px;color:var(--green);display:none;font-size:10px;left:50%;letter-spacing:1px;padding:8px 16px;position:fixed;transform:translateX(-50%);z-index:999}
-.toast.show{display:block;animation:tin .2s ease}
-@keyframes tin{from{transform:translateX(-50%) translateY(8px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
-.cursor{animation:cur .6s infinite}
-@keyframes cur{0%,100%{opacity:1}50%{opacity:0}}
+  /* ===== LAYOUT ===== */
+  .layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    height: calc(100vh - 84px);
+    margin-top: 84px;
+  }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .mode-row {
+    display: flex;
+    padding: 0.75rem;
+    gap: 0.4rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .mode-label {
+    font-size: 0.55rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0 0.75rem 0.5rem;
+  }
+
+  .mode-btn {
+    flex: 1;
+    padding: 0.45rem 0.5rem;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+  }
+
+  .mode-btn.active { background: var(--gold-dim); border-color: rgba(245,166,35,0.4); color: var(--gold); }
+  .mode-btn:hover:not(.active) { color: var(--text); border-color: var(--muted); }
+
+  .sb-section { padding: 0.5rem 0.75rem; flex: 1; overflow-y: auto; }
+
+  .sb-cat {
+    font-size: 0.55rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0.75rem 0 0.4rem;
+    display: block;
+  }
+
+  .doc-item {
+    padding: 0.65rem 0.75rem;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 0.35rem;
+  }
+
+  .doc-item:hover { border-color: var(--border); background: var(--surface2); }
+
+  .doc-item.selected {
+    border-color: rgba(245,166,35,0.4);
+    background: var(--gold-dim);
+  }
+
+  .doc-item-name {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--gold);
+    margin-bottom: 0.2rem;
+  }
+
+  .doc-item.selected .doc-item-name { color: var(--gold); }
+
+  .doc-item-meta { font-size: 0.6rem; color: var(--muted); line-height: 1.4; }
+
+  /* Upload zone */
+  .upload-zone {
+    margin: 0.5rem 0.75rem;
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    display: none;
+  }
+
+  .upload-zone.visible { display: block; }
+  .upload-zone:hover { border-color: var(--gold); background: var(--gold-glow); }
+  .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-zone-icon { font-size: 1.5rem; margin-bottom: 0.4rem; }
+  .upload-zone-text { font-size: 0.62rem; color: var(--muted); }
+
+  /* Status bar bottom of sidebar */
+  .sb-status {
+    border-top: 1px solid var(--border);
+    padding: 0.6rem 0.75rem;
+    font-size: 0.6rem;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  .sb-status .ready { color: var(--green); }
+
+  /* FIRE BUTTON */
+  .fire-btn {
+    margin: 0 0.75rem 0.75rem;
+    width: calc(100% - 1.5rem);
+    padding: 0.75rem;
+    background: var(--gold);
+    color: #0a0c08;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  .fire-btn:hover { background: #ffc043; }
+  .fire-btn:disabled { opacity: 0.5; cursor: default; }
+
+  /* ===== MAIN PANEL ===== */
+  .main-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* PIPELINE */
+  .pipeline-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .pipeline {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+
+  .pipe-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .pipe-circle {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    transition: all 0.4s;
+    position: relative;
+  }
+
+  .pipe-circle.active {
+    border-color: var(--gold);
+    background: var(--gold-dim);
+    box-shadow: 0 0 12px rgba(245,166,35,0.3);
+    animation: nodePulse 0.8s ease-in-out infinite;
+  }
+
+  @keyframes nodePulse {
+    0%,100% { box-shadow: 0 0 8px rgba(245,166,35,0.3); }
+    50% { box-shadow: 0 0 18px rgba(245,166,35,0.6); }
+  }
+
+  .pipe-circle.done {
+    border-color: var(--green);
+    background: var(--green-dim);
+  }
+
+  .pipe-label {
+    font-size: 0.52rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    transition: color 0.3s;
+  }
+
+  .pipe-circle.done ~ .pipe-label,
+  .pipe-node .pipe-circle.done + * { color: var(--green); }
+
+  .pipe-arrow {
+    font-size: 0.7rem;
+    color: var(--border);
+    margin: 0 0.4rem 1rem;
+    transition: color 0.4s;
+  }
+
+  .pipe-arrow.done { color: var(--green); }
+
+  .pipe-status {
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .pipe-status .count { color: var(--green); font-weight: 600; }
+
+  /* ENGINES GRID */
+  .engines-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    flex: 1;
+    overflow: hidden;
+    gap: 1px;
+    background: var(--border);
+  }
+
+  .engine {
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .engine-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0.55rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .engine-num {
+    font-size: 0.55rem;
+    color: var(--muted);
+    margin-right: 0.5rem;
+  }
+
+  .engine-name {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--white);
+    letter-spacing: 0.04em;
+  }
+
+  .engine-status {
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.18rem 0.55rem;
+    border-radius: 50px;
+  }
+
+  .es-idle { background: rgba(90,107,72,0.15); color: var(--muted); border: 1px solid var(--border); }
+  .es-running { background: var(--gold-dim); color: var(--gold); border: 1px solid rgba(245,166,35,0.3); animation: statusPulse 1s infinite; }
+  @keyframes statusPulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+  .es-complete { background: var(--green-dim); color: var(--green); border: 1px solid rgba(93,186,59,0.3); }
+  .es-error { background: rgba(224,92,74,0.1); color: var(--red); border: 1px solid rgba(224,92,74,0.25); }
+
+  .engine-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.85rem 1rem;
+    font-size: 0.72rem;
+    line-height: 1.7;
+    color: var(--text);
+    white-space: pre-wrap;
+    font-family: var(--mono);
+  }
+
+  .engine-placeholder {
+    color: var(--muted);
+    font-style: italic;
+    font-size: 0.68rem;
+  }
+
+  .engine-loading {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--gold);
+    font-size: 0.68rem;
+  }
+
+  .spinner {
+    width: 12px; height: 12px;
+    border: 2px solid var(--border);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .engine-footer {
+    border-top: 1px solid var(--border);
+    padding: 0.4rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    background: var(--surface);
+  }
+
+  .copy-btn {
+    font-family: var(--mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.2rem 0.55rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .copy-btn:hover { color: var(--gold); border-color: rgba(245,166,35,0.3); }
+
+  .token-count {
+    font-size: 0.55rem;
+    color: var(--muted);
+  }
+
+  /* ===== BOTTOM BAR ===== */
+  .bottom-bar {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    height: 38px;
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .bottom-status {
+    font-size: 0.6rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .bottom-status .live { color: var(--green); }
+  .bottom-status .item { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .bottom-actions { display: flex; gap: 0.35rem; flex-shrink: 0; }
+
+  .bar-btn {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.7rem;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .bar-btn:hover { color: var(--text); border-color: var(--muted); }
+  .bar-btn.primary { background: var(--gold-dim); color: var(--gold); border-color: rgba(245,166,35,0.3); }
+  .bar-btn.primary:hover { background: rgba(245,166,35,0.2); }
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
-<div class="hdr">
-  <div class="hdr-left">
-    <div class="hdr-title">⚡ FINOPS DOC SHOWCASE</div>
-    <div class="hdr-sub">4-ENGINE BNCA · MANAGER EXPORT · DAILY WORKFLOW</div>
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="tb-logo"><span class="tb-logo-icon">⚡</span> FINOPS DOC SHOWCASE</div>
+    <div class="tb-sub">4-Engine BNCA · Manager Export · Daily Workflow</div>
   </div>
-  <div class="hdr-right">
-    <div class="status-dot"></div>
-    <span style="color:var(--green);font-size:9px;letter-spacing:1px">NEURAL LINK · HC-STRATEGIST</span>
-    <a class="back-btn" href="/finops-suite/financial-ui.html?v=enterprise-ready">← HUB</a>
-    <a class="back-btn" href="/finops-suite/finops-main-strategist/index.html">STRATEGIST →</a>
+  <div class="topbar-right">
+    <div class="neural-link"><div class="nl-dot"></div> NEURAL LINK · HC-STRATEGIST</div>
+    <button class="tb-btn">→ HUB</button>
+    <button class="tb-btn">STRATEGIST →</button>
   </div>
 </div>
 
-<div class="shell">
+<!-- TAB BAR -->
+<div class="tabbar">
+  <div class="tab active" onclick="setTab(this)">DOCUMENTS</div>
+  <div class="tab" onclick="setTab(this)">MORNING</div>
+  <div class="tab" onclick="setTab(this)">MIDDAY</div>
+  <div class="tab" onclick="setTab(this)">EOD</div>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
 
   <!-- SIDEBAR -->
   <div class="sidebar">
-
-    <!-- WORKFLOW TABS -->
-    <div class="workflow-tabs">
-      <button class="wtab active" onclick="switchTab('docs',this)">Documents</button>
-      <button class="wtab" onclick="switchTab('morning',this)">Morning</button>
-      <button class="wtab" onclick="switchTab('midday',this)">Midday</button>
-      <button class="wtab" onclick="switchTab('eod',this)">EOD</button>
+    <div class="mode-row">
+      <button class="mode-btn active" id="modeS" onclick="setMode('sample')">◆ SAMPLE DOC</button>
+      <button class="mode-btn" id="modeU" onclick="setMode('upload')">↑ UPLOAD DOC</button>
     </div>
 
-    <!-- DOCS PANEL -->
-    <div class="workflow-panel active" id="tab-docs">
-      <div class="sidebar-section" style="border-top:none;padding-top:0">
-        <div class="sec-label">Mode</div>
-        <div class="mode-row">
-          <button class="mode-btn active" id="mode-sample" onclick="setMode('sample')">◈ Sample Doc</button>
-          <button class="mode-btn" id="mode-actual" onclick="setMode('actual')">↑ Upload Doc</button>
-        </div>
+    <div class="sb-section" id="sampleSection">
+      <span class="mode-label">Select Sample Document</span>
+
+      <span class="sb-cat">Reconciliation</span>
+      <div class="doc-item" onclick="selectDoc(this, 'bank-recon')">
+        <div class="doc-item-name">Bank Reconciliation Q1</div>
+        <div class="doc-item-meta">Q1 recon · $48K variance · 3 accounts flagged</div>
       </div>
 
-      <div id="panel-sample">
-        <div class="sidebar-section">
-          <div class="sec-label">Select Sample Document</div>
-          <div class="sample-grid" id="sample-grid"></div>
-        </div>
+      <span class="sb-cat">Payables</span>
+      <div class="doc-item selected" onclick="selectDoc(this, 'ap-aging')">
+        <div class="doc-item-name">AP Aging Report</div>
+        <div class="doc-item-meta">$312K outstanding · 22 vendors · 3 on credit hold</div>
       </div>
 
-      <div id="panel-actual" style="display:none">
-        <div class="sidebar-section">
-          <div class="sec-label">Upload Document</div>
-          <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
-            <div class="drop-icon">📄</div>
-            <div class="drop-title">Drop Document Here</div>
-            <div class="drop-sub">TXT · PDF · CSV · XLSX · DOC</div>
-            <div class="drop-file-name" id="dropFileName"></div>
-          </div>
-          <input type="file" id="fileInput" accept=".txt,.csv,.pdf,.xlsx,.doc,.docx"/>
-        </div>
+      <span class="sb-cat">General Ledger</span>
+      <div class="doc-item" onclick="selectDoc(this, 'gl-extract')">
+        <div class="doc-item-name">GL Extract Q1</div>
+        <div class="doc-item-meta">Revenue $2.4M vs $2.8M budget · -14.3% variance</div>
+      </div>
+
+      <span class="sb-cat">Receivables</span>
+      <div class="doc-item" onclick="selectDoc(this, 'ar-aging')">
+        <div class="doc-item-name">AR Aging Report</div>
+        <div class="doc-item-meta">$198K outstanding · 8 clients overdue 60+ days</div>
+      </div>
+
+      <span class="sb-cat">Close Checklist</span>
+      <div class="doc-item" onclick="selectDoc(this, 'month-end')">
+        <div class="doc-item-name">Month-End Close Checklist</div>
+        <div class="doc-item-meta">April 2025 · 70% complete · Payroll accrual pending</div>
+      </div>
+
+      <span class="sb-cat">Expense</span>
+      <div class="doc-item" onclick="selectDoc(this, 'expense')">
+        <div class="doc-item-name">Expense Report — Field Ops</div>
+        <div class="doc-item-meta">$8,420 total · 3 missing receipts · Flagged</div>
+      </div>
+
+      <span class="sb-cat">Financial Statements</span>
+      <div class="doc-item" onclick="selectDoc(this, 'income-stmt')">
+        <div class="doc-item-name">Income Statement Q1 2025</div>
+        <div class="doc-item-meta">Net income $142K · Gross margin 38% · Below target</div>
       </div>
     </div>
 
-    <!-- MORNING WORKFLOW -->
-    <div class="workflow-panel" id="tab-morning">
-      <div class="sec-label">Morning Workflow · Start of Day</div>
-      <div class="workflow-progress"><div class="workflow-progress-fill" id="morning-fill" style="width:0%"></div></div>
-      <div class="progress-label" id="morning-label">0 / 6 complete</div>
-      <div id="morning-steps"></div>
+    <!-- Upload zone -->
+    <div class="upload-zone" id="uploadZone">
+      <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.csv,.xlsx,.txt" onchange="handleUpload(event)">
+      <div class="upload-zone-icon">📂</div>
+      <div class="upload-zone-text">Drag & drop or click to upload<br>PDF · DOCX · XLSX · CSV · TXT</div>
     </div>
 
-    <!-- MIDDAY WORKFLOW -->
-    <div class="workflow-panel" id="tab-midday">
-      <div class="sec-label">Midday Workflow · Review & Action</div>
-      <div class="workflow-progress"><div class="workflow-progress-fill" id="midday-fill" style="width:0%"></div></div>
-      <div class="progress-label" id="midday-label">0 / 5 complete</div>
-      <div id="midday-steps"></div>
+    <div class="sb-status" id="sbStatus">
+      <span class="ready">✓</span> AP Aging Report — READY TO FIRE
     </div>
 
-    <!-- EOD WORKFLOW -->
-    <div class="workflow-panel" id="tab-eod">
-      <div class="sec-label">End of Day · Close & Report</div>
-      <div class="workflow-progress"><div class="workflow-progress-fill" id="eod-fill" style="width:0%"></div></div>
-      <div class="progress-label" id="eod-label">0 / 5 complete</div>
-      <div id="eod-steps"></div>
-    </div>
-
-    <!-- FIRE -->
-    <div class="fire-wrap">
-      <div class="fire-status" id="fire-status">SELECT A DOCUMENT TO BEGIN</div>
-      <button class="fire-btn" id="fire-btn" disabled onclick="fireAll()">⚡ FIRE ALL 4 ENGINES</button>
-    </div>
+    <button class="fire-btn" id="fireBtn" onclick="fireAllEngines()">
+      ⚡ FIRE ALL 4 ENGINES
+    </button>
   </div>
 
-  <!-- OUTPUT PANEL -->
-  <div class="main-output">
+  <!-- MAIN PANEL -->
+  <div class="main-panel">
 
     <!-- PIPELINE -->
     <div class="pipeline-bar">
-      <div class="pipe-node"><div class="pipe-dot" id="pipe0">📥</div><div class="pipe-lbl">Ingest</div></div>
-      <div class="pipe-arr" id="arr0">›</div>
-      <div class="pipe-node"><div class="pipe-dot" id="pipe1">🔍</div><div class="pipe-lbl">Parse</div></div>
-      <div class="pipe-arr" id="arr1">›</div>
-      <div class="pipe-node"><div class="pipe-dot" id="pipe2">🧠</div><div class="pipe-lbl">AI Analysis</div></div>
-      <div class="pipe-arr" id="arr2">›</div>
-      <div class="pipe-node"><div class="pipe-dot" id="pipe3">⚡</div><div class="pipe-lbl">BNCA</div></div>
-      <div class="pipe-arr" id="arr3">›</div>
-      <div class="pipe-node"><div class="pipe-dot" id="pipe4">📊</div><div class="pipe-lbl">Report</div></div>
-      <div style="margin-left:auto;display:flex;align-items:center;gap:16px">
-        <span style="color:var(--muted);font-size:9px" id="pipeline-status">STANDBY</span>
-        <span style="color:var(--muted);font-size:9px" id="engines-active">0 / 4 engines</span>
+      <div class="pipeline">
+        <div class="pipe-node">
+          <div class="pipe-circle" id="pipe-0">📥</div>
+          <div class="pipe-label">Ingest</div>
+        </div>
+        <div class="pipe-arrow" id="arr-0">›</div>
+        <div class="pipe-node">
+          <div class="pipe-circle" id="pipe-1">🔍</div>
+          <div class="pipe-label">Parse</div>
+        </div>
+        <div class="pipe-arrow" id="arr-1">›</div>
+        <div class="pipe-node">
+          <div class="pipe-circle" id="pipe-2">🧠</div>
+          <div class="pipe-label">AI Analysis</div>
+        </div>
+        <div class="pipe-arrow" id="arr-2">›</div>
+        <div class="pipe-node">
+          <div class="pipe-circle" id="pipe-3">⚡</div>
+          <div class="pipe-label">BNCA</div>
+        </div>
+        <div class="pipe-arrow" id="arr-3">›</div>
+        <div class="pipe-node">
+          <div class="pipe-circle" id="pipe-4">📋</div>
+          <div class="pipe-label">Report</div>
+        </div>
+      </div>
+      <div class="pipe-status">
+        <span class="count" id="completeCount">0</span> / 4 engines
       </div>
     </div>
 
-    <!-- 4 APP CARDS -->
-    <div class="apps-grid">
+    <!-- 4 ENGINES -->
+    <div class="engines-grid">
 
-      <!-- APP 01 -->
-      <div class="app-card">
-        <div class="app-hdr">
-          <span class="app-num">01</span>
-          <span class="app-name">Document Triage &amp; Flag Analysis</span>
-          <span class="app-badge badge-standby" id="badge1">STANDBY</span>
+      <!-- ENGINE 1 -->
+      <div class="engine">
+        <div class="engine-header">
+          <div><span class="engine-num">01</span><span class="engine-name">Document Triage & Flag Analysis</span></div>
+          <div class="engine-status es-idle" id="status-1">IDLE</div>
         </div>
-        <div class="app-body" id="body1">
-          <div class="app-idle"><div class="app-idle-icon">◈</div><div class="app-idle-txt">Awaiting Document</div></div>
+        <div class="engine-body" id="output-1">
+          <span class="engine-placeholder">Select a document and fire engines to begin analysis...</span>
         </div>
-        <div class="app-footer">
-          <button class="copy-btn" onclick="copyOut(1)">Copy</button>
-          <span class="tok-count" id="tok1"></span>
+        <div class="engine-footer">
+          <button class="copy-btn" onclick="copyEngine(1)">COPY</button>
+          <span class="token-count" id="tokens-1">—</span>
         </div>
       </div>
 
-      <!-- APP 02 -->
-      <div class="app-card">
-        <div class="app-hdr">
-          <span class="app-num">02</span>
-          <span class="app-name">Variance &amp; Risk Intelligence</span>
-          <span class="app-badge badge-standby" id="badge2">STANDBY</span>
+      <!-- ENGINE 2 -->
+      <div class="engine">
+        <div class="engine-header">
+          <div><span class="engine-num">02</span><span class="engine-name">Variance & Risk Intelligence</span></div>
+          <div class="engine-status es-idle" id="status-2">IDLE</div>
         </div>
-        <div class="app-body" id="body2">
-          <div class="app-idle"><div class="app-idle-icon">◈</div><div class="app-idle-txt">Awaiting Document</div></div>
+        <div class="engine-body" id="output-2">
+          <span class="engine-placeholder">Waiting for Engine 1 to complete...</span>
         </div>
-        <div class="app-footer">
-          <button class="copy-btn" onclick="copyOut(2)">Copy</button>
-          <span class="tok-count" id="tok2"></span>
-        </div>
-      </div>
-
-      <!-- APP 03 -->
-      <div class="app-card">
-        <div class="app-hdr">
-          <span class="app-num">03</span>
-          <span class="app-name">Controller Action Plan · BNCA</span>
-          <span class="app-badge badge-standby" id="badge3">STANDBY</span>
-        </div>
-        <div class="app-body" id="body3">
-          <div class="app-idle"><div class="app-idle-icon">◈</div><div class="app-idle-txt">Awaiting Document</div></div>
-        </div>
-        <div class="app-footer">
-          <button class="copy-btn" onclick="copyOut(3)">Copy Action Plan</button>
-          <span class="tok-count" id="tok3"></span>
+        <div class="engine-footer">
+          <button class="copy-btn" onclick="copyEngine(2)">COPY</button>
+          <span class="token-count" id="tokens-2">—</span>
         </div>
       </div>
 
-      <!-- APP 04 -->
-      <div class="app-card">
-        <div class="app-hdr">
-          <span class="app-num">04</span>
-          <span class="app-name">CFO Executive Intelligence</span>
-          <span class="app-badge badge-standby" id="badge4">STANDBY</span>
+      <!-- ENGINE 3 -->
+      <div class="engine">
+        <div class="engine-header">
+          <div><span class="engine-num">03</span><span class="engine-name">Controller Action Plan · BNCA</span></div>
+          <div class="engine-status es-idle" id="status-3">IDLE</div>
         </div>
-        <div class="app-body" id="body4">
-          <div class="app-idle"><div class="app-idle-icon">◈</div><div class="app-idle-txt">Awaiting Document</div></div>
+        <div class="engine-body" id="output-3">
+          <span class="engine-placeholder">Waiting for Engine 2 to complete...</span>
         </div>
-        <div class="app-footer">
-          <button class="copy-btn" onclick="copyOut(4)">Copy CFO Report</button>
-          <span class="tok-count" id="tok4"></span>
+        <div class="engine-footer">
+          <button class="copy-btn" onclick="copyEngine(3)">COPY ACTION PLAN</button>
+          <span class="token-count" id="tokens-3">—</span>
+        </div>
+      </div>
+
+      <!-- ENGINE 4 -->
+      <div class="engine">
+        <div class="engine-header">
+          <div><span class="engine-num">04</span><span class="engine-name">CFO Executive Intelligence</span></div>
+          <div class="engine-status es-idle" id="status-4">IDLE</div>
+        </div>
+        <div class="engine-body" id="output-4">
+          <span class="engine-placeholder">Waiting for Engine 3 to complete...</span>
+        </div>
+        <div class="engine-footer">
+          <button class="copy-btn" onclick="copyEngine(4)">COPY CFO REPORT</button>
+          <span class="token-count" id="tokens-4">—</span>
         </div>
       </div>
 
     </div>
 
-    <!-- STATUS BAR -->
-    <div class="status-bar">
-      <span class="status-dot" style="width:6px;height:6px;flex-shrink:0"></span>
-      <span class="status-seg">FINOPS NEURAL BRIDGE</span>
-      <span class="status-sep">·</span>
-      <span class="status-seg" id="doc-status">No document loaded</span>
-      <span class="status-sep">·</span>
-      <span class="status-seg" id="global-progress"></span>
-      <div class="export-bar" id="export-bar" style="display:none">
-        <button class="export-btn primary" onclick="saveReport()">💾 Save Report</button>
-        <button class="export-btn" onclick="openExportModal()">📄 Manager Export</button>
-        <button class="export-btn push-btn" onclick="pushToStrategist()">→ Push to Strategist</button>
-        <button class="export-btn" onclick="exportTxt()">⬇ Export TXT</button>
+    <!-- BOTTOM BAR -->
+    <div class="bottom-bar">
+      <div class="bottom-status">
+        <span class="live">●</span>
+        <span class="item" id="bottomMsg">FINOPS NEURAL BRIDGE · Select a document to begin</span>
+      </div>
+      <div class="bottom-actions">
+        <button class="bar-btn" onclick="saveReport()">💾 SAVE REPORT</button>
+        <button class="bar-btn" onclick="managerExport()">📤 MANAGER EXPORT</button>
+        <button class="bar-btn primary" onclick="pushToStrategist()">→ PUSH TO STRATEGIST</button>
+        <button class="bar-btn" onclick="exportTxt()">↓ EXPORT TXT</button>
       </div>
     </div>
+
   </div>
 </div>
-
-<!-- MANAGER EXPORT MODAL -->
-<div class="modal-bg" id="modal-bg" onclick="closeModal()">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-hdr">
-      <span class="modal-title">📄 Manager Export — Report Preview</span>
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
-    <div class="report-preview" id="report-preview"></div>
-    <div class="modal-actions">
-      <button class="export-btn primary" style="flex:1;padding:9px" onclick="printReport()">🖨 Print / Save as PDF</button>
-      <button class="export-btn" style="flex:1;padding:9px" onclick="copyReportText()">Copy Full Report</button>
-      <button class="export-btn" style="flex:1;padding:9px" onclick="closeModal()">Close</button>
-    </div>
-  </div>
-</div>
-
-<div class="toast" id="toast-el"></div>
 
 <script>
-// ── STATE ──
-let currentMode = 'sample';
-let selectedSampleId = null;
-let selectedFile = null;
-let outputs = {1:'',2:'',3:'',4:''};
-let currentLabel = '';
-let currentContent = '';
-
-// ── GROQ ──
-const GROQ_KEY = localStorage.getItem('finops_groq_key') || '';
-const GROQ_MODEL = localStorage.getItem('finops_groq_model') || 'llama3-70b-8192';
-
-// ── SAMPLES ──
-const SAMPLES = {
+// ===== DOCUMENT DATA =====
+const docs = {
   'bank-recon': {
-    label: 'Bank Reconciliation Q1',
-    type: 'RECONCILIATION',
-    desc: 'Q1 recon · $48K variance · 3 accounts flagged',
-    content: 'Bank Reconciliation Statement Q1 2026. Account: Operating Checking #1001. Statement Date: March 31, 2026. Bank Balance: $287,600. Deposits in Transit: $8,100. Outstanding Checks: $22,400. Adjusted Bank Balance: $273,300. Book Balance: $225,100. Difference: $48,200. NSF items: 3 ($4,200). Clearing items >90 days: 2 ($12,400). Accounts flagged: 1001, 1003, 1007. Notes: $48,200 variance requires immediate investigation. Possible timing differences and unposted deposits.'
+    name: 'Bank Reconciliation Q1',
+    context: `DOCUMENT TYPE: Bank Reconciliation Statement
+ACCOUNT: Operating Checking — First National Bank
+STATEMENT DATE: March 31, 2025
+BANK BALANCE: $284,720.00
++ Deposits in Transit: $32,400.00
+- Outstanding Checks: $18,650.00
+ADJUSTED BANK BALANCE: $298,470.00
+BOOK BALANCE: $250,320.00
+DIFFERENCE: $48,150.00
+FLAGGED ACCOUNTS: 3 accounts with unreconciled items
+NOTES: $48K variance unresolved. Two deposits in transit over 30 days old. One check outstanding since January — possible lost check. Controller review required.`
   },
   'ap-aging': {
-    label: 'AP Aging Report',
-    type: 'PAYABLES',
-    desc: '$312K outstanding · 22 vendors · 3 on credit hold',
-    content: 'Accounts Payable Aging Report. Period: April 30, 2026. Current (0-30 days): $88,400. 31-60 days: $74,200. 61-90 days: $51,800. 91-180 days: $63,400. 180+ days: $34,200. Total Outstanding: $312,000. Top vendors: MedSupply $44K (credit hold), StaffPro $38K (credit hold), LabCore $29K (credit hold), TechServices $22K, FacilitiesCo $18K. Total vendors: 22. Credit hold vendors: 3. Notes: 3 vendors on credit hold representing $111,000 — immediate action required.'
+    name: 'AP Aging Report',
+    context: `DOCUMENT TYPE: Accounts Payable Aging Report
+PERIOD: As of April 30, 2025
+TOTAL OUTSTANDING: $312,480.00
+VENDORS: 22 active vendors
+CURRENT (0-30 days): $148,200.00
+31-60 DAYS: $89,400.00
+61-90 DAYS: $52,880.00
+90+ DAYS (OVERDUE): $22,000.00
+CREDIT HOLD: 3 vendors on credit hold — Acme Supply ($14,200), TechParts Inc ($5,800), FlexStaff ($2,000)
+HIGH RISK: Acme Supply — $14,200 past due 94 days, threatening service suspension
+EARLY PAY DISCOUNTS AVAILABLE: 4 vendors offering 2/10 net 30 — $3,840 savings available if paid this week
+NOTES: AP manager approval required for all payments over $10,000. CFO review needed for credit hold vendors.`
   },
   'gl-extract': {
-    label: 'GL Extract Q1',
-    type: 'GENERAL LEDGER',
-    desc: 'Revenue $2.4M vs $2.8M budget · -14.3% variance',
-    content: 'General Ledger Extract Q1 2026. Revenue: $2,400,000 actual vs $2,800,000 budget (variance: -$400,000 / -14.3%). COGS: $1,100,000. Gross Profit: $1,300,000 (54.2% margin). Operating Expenses: $890,000. Net Income: $410,000. Department variances: Dept A -$180,000, Dept B -$82,000, Dept C +$14,000. AR Days Outstanding: 47 days (target: 35). Collections rate: 91.2%. Payroll variance: +$45,000 (3 unbudgeted FTEs). Notes: Revenue shortfall driven by delayed contract execution in Q1.'
+    name: 'GL Extract Q1',
+    context: `DOCUMENT TYPE: General Ledger Extract — Q1 2025
+PERIOD: January 1 – March 31, 2025
+TOTAL REVENUE: $2,420,000 vs Budget $2,820,000 — VARIANCE: -$400,000 (-14.3%)
+COGS: $1,500,400 — Gross Profit: $919,600 (38% margin)
+OPERATING EXPENSES:
+  Payroll: $480,200 (budgeted $460,000) — OVER by $20,200
+  Rent: $84,000 (on budget)
+  Utilities: $31,800 (budgeted $28,000) — OVER by $3,800
+  Marketing: $62,400 (budgeted $90,000) — UNDER by $27,600
+  Other: $118,800
+NET INCOME: $142,400
+FLAGGED: Revenue shortfall driven by Q1 project delays. Payroll overage due to overtime. Marketing underspend may impact Q2 pipeline.`
   },
-  'cash-flow': {
-    label: 'Cash Flow Statement',
-    type: 'TREASURY',
-    desc: 'Operating cash -$82K · investing -$140K · financing +$200K',
-    content: 'Cash Flow Statement Month Ending April 30, 2026. Operating Activities: Collections from customers $380,000. Payments to vendors -$312,000. Payroll -$95,000. Other operating -$55,400. Net operating cash flow: -$82,400. Investing Activities: Equipment purchase -$140,000. Net investing: -$140,000. Financing Activities: Credit line draw +$200,000. Net financing: +$200,000. Net change in cash: -$22,400. Beginning cash: $310,000. Ending cash: $287,600. Notes: Operating cash negative for 2nd consecutive month. Credit line now 68% utilized.'
+  'ar-aging': {
+    name: 'AR Aging Report',
+    context: `DOCUMENT TYPE: Accounts Receivable Aging Report
+PERIOD: As of April 30, 2025
+TOTAL OUTSTANDING: $198,640.00
+CLIENTS: 14 active, 8 with overdue balances
+CURRENT (0-30 days): $82,400.00
+31-60 DAYS: $54,200.00
+61-90 DAYS: $38,840.00
+90+ DAYS: $23,200.00
+HIGH RISK CLIENTS:
+  - Westside Holdings: $18,400 — 97 days overdue, no response to 3 collection attempts
+  - Delta Logistics: $12,200 — 78 days, disputed invoice
+  - Sunrise Group: $8,600 — 63 days, promised payment May 10
+WRITE-OFF RISK: $18,400 Westside Holdings — recommend escalation to collections
+DSO: 52 days (target: 35 days)`
   },
-  'invoice-audit': {
-    label: 'Invoice Audit Report',
-    type: 'AUDIT',
-    desc: '340 invoices reviewed · 18 exceptions · $44K at risk',
-    content: 'Invoice Audit Report Q1 2026. Total invoices reviewed: 340. Total value: $1,240,000. Exceptions found: 18. Duplicate payments detected: 3 invoices ($12,400). Missing PO references: 8 invoices ($18,200). Unapproved vendor payments: 4 invoices ($8,800). Invoices overdue >60 days: 3 ($4,800). Total at risk: $44,200 (3.6% of total). Top exception vendors: TechVendor ($8,200), OfficeSupply ($6,400), ConsultCo ($5,800). Notes: Duplicate payment control weakness identified — recommend 3-way match enforcement.'
+  'month-end': {
+    name: 'Month-End Close Checklist — April 2025',
+    context: `DOCUMENT TYPE: Month-End Close Checklist
+PERIOD: April 2025
+CLOSE STATUS: 70% Complete
+COMPLETED TASKS:
+  ✓ Bank Reconciliation — complete
+  ✓ Credit Card Reconciliation — complete
+  ✓ AP Reconciliation — complete
+  ✓ Prepaid Amortization — complete
+  ✓ Financial Statements Drafted — complete
+PENDING TASKS:
+  ✗ AR Aging Review — IN PROGRESS
+  ✗ Accrual Entries — NOT STARTED
+  ✗ Payroll Posting — NOT STARTED (payroll data not yet received from HR)
+  ✗ Approvals Completed — BLOCKED on payroll
+TARGET CLOSE DATE: May 10, 2025
+AT RISK: Payroll posting blocked — HR has not submitted April payroll data. Close deadline at risk.`
   },
-  'budget-variance': {
-    label: 'Budget Variance Q1',
-    type: 'PLANNING',
-    desc: 'Q1 OpEx over budget $92K across 4 departments',
-    content: 'Budget Variance Report Q1 2026. Total OpEx Budget: $840,000. Actual OpEx: $932,000. Variance: +$92,000 over budget (+10.9%). Department breakdown: Sales +$28,000 (trade show spend), IT +$34,000 (software licenses unplanned $22K + hardware), HR +$18,000 (3 unbudgeted FTEs), Facilities +$12,000 (HVAC repair). Headcount variance: +3 FTE unbudgeted. Travel & Entertainment: 140% of budget ($18,000 over). Software licenses: $22,000 unplanned. Notes: IT and Sales are primary drivers — recommend budget reforecast for Q2.'
+  'expense': {
+    name: 'Expense Report — Field Ops',
+    context: `DOCUMENT TYPE: Employee Expense Report
+EMPLOYEE: Marcus Webb — Field Operations Manager
+DEPARTMENT: Construction / Field Operations
+REPORT DATE: April 30, 2025
+TOTAL: $8,420.00
+EXPENSES:
+  04/08: Travel — Phoenix to Tucson — $340 — Receipt attached
+  04/12: Meals (team) — $1,840 — Receipt MISSING
+  04/15: Equipment rental — $3,200 — Receipt attached
+  04/18: Hotel (3 nights) — $780 — Receipt attached
+  04/22: Fuel — $290 — Receipt MISSING
+  04/28: Subcontractor meals — $1,970 — Receipt MISSING — FLAGGED (over $500 policy limit)
+POLICY VIOLATIONS: Subcontractor meal expense ($1,970) exceeds $500 policy limit — requires VP approval
+MISSING RECEIPTS: 3 items totaling $4,100
+STATUS: HOLD — cannot approve until receipts received and VP sign-off on policy exception`
+  },
+  'income-stmt': {
+    name: 'Income Statement Q1 2025',
+    context: `DOCUMENT TYPE: Income Statement (P&L)
+PERIOD: Q1 2025 (January – March)
+REVENUE: $2,420,000
+COGS: $1,500,400
+GROSS PROFIT: $919,600 (38% margin — target was 44%)
+OPERATING EXPENSES:
+  Payroll: $480,200
+  Rent: $84,000
+  Utilities: $31,800
+  Marketing: $62,400
+  G&A: $118,800
+  Total OpEx: $777,200
+EBITDA: $142,400
+NET INCOME: $142,400
+YEAR-OVER-YEAR: Revenue down 8.2% vs Q1 2024
+MARGIN ALERT: Gross margin fell from 44% target to 38% — 6 point gap driven by COGS overrun
+NOTES: Q1 underperformance driven by project delays, material cost increases (+12%), and overtime labor.`
   }
 };
 
-// ── WORKFLOW DATA ──
-const WORKFLOWS = {
-  morning: [
-    {time:'7:00–7:30 AM', title:'Pull overnight bank feed', desc:'Check for unmatched wires, NSF items, and timing differences before staff arrival.'},
-    {time:'7:30–8:00 AM', title:'Review AP aging exceptions', desc:'Flag any vendors 90+ days or on credit hold. Prioritize payment queue for the day.'},
-    {time:'8:00–8:30 AM', title:'Run BNCA on overnight docs', desc:'Process any documents received overnight through the 4-engine BNCA pipeline.'},
-    {time:'8:30–9:00 AM', title:'Check month-end close status', desc:'Review close checklist progress and identify any blockers needing immediate attention.'},
-    {time:'9:00–9:30 AM', title:'Send controller daily brief', desc:'Export manager report and push BNCA summary to strategist for executive visibility.'},
-    {time:'9:30–10:00 AM', title:'Clear compliance flags', desc:'Address any open compliance items, missing approvals, or documentation gaps.'},
-  ],
-  midday: [
-    {time:'11:00–11:30 AM', title:'AR collections follow-up', desc:'Contact overdue accounts. Log call notes. Update AR aging status in system.'},
-    {time:'11:30–12:00 PM', title:'Approve AP payment batch', desc:'Review and approve invoices in queue. Verify 3-way match before releasing payments.'},
-    {time:'1:00–1:30 PM', title:'Process expense reports', desc:'Review submitted expense reports. Flag missing receipts and policy violations.'},
-    {time:'1:30–2:00 PM', title:'Update GL entries', desc:'Post approved journal entries. Verify debits equal credits. Document support.'},
-    {time:'2:00–2:30 PM', title:'Run midday variance check', desc:'Compare actuals vs budget for key accounts. Flag significant variances to controller.'},
-  ],
-  eod: [
-    {time:'4:00–4:30 PM', title:'Reconcile daily cash position', desc:'Match all day\'s transactions. Resolve exceptions. Confirm ending cash balance.'},
-    {time:'4:30–5:00 PM', title:'Update month-end close checklist', desc:'Mark completed tasks. Document any new blockers. Update close readiness score.'},
-    {time:'5:00–5:15 PM', title:'Generate EOD BNCA summary', desc:'Process day\'s key documents through BNCA. Export controller report for review.'},
-    {time:'5:15–5:30 PM', title:'Push to Main Strategist', desc:'Send all BNCA outputs to Main Strategist for cross-node executive intelligence update.'},
-    {time:'5:30 PM', title:'Lock daily audit trail', desc:'Confirm all transactions logged. Save reports. Set up next-day priority queue.'},
-  ]
-};
+// ===== ENGINE PROMPTS =====
+function buildPrompts(doc) {
+  const ctx = `DOCUMENT: ${doc.name}\n\n${doc.context}`;
+  return [
+    {
+      num: 1,
+      name: 'Document Triage & Flag Analysis',
+      prompt: `You are the TSM FinOps AI — Engine 1: Document Triage & Flag Analysis.
 
-// ── AI PROMPTS ──
-const PROMPTS = {
-  app1: {
-    system: `You are a financial document triage AI for a FinOps operations team. Analyze the document and output EXACTLY this format:
+${ctx}
 
-DOCUMENT TYPE: [type]
-TRIAGE STATUS: [CLEAN / REVIEW NEEDED / EXCEPTION / CRITICAL]
+Analyze this financial document and provide:
+1. DOCUMENT TYPE & STATUS — what this is and current state
+2. CRITICAL FLAGS — any urgent issues (overdue items, missing data, compliance risks, policy violations)
+3. DATA COMPLETENESS — what's present vs missing
+4. RISK LEVEL — High / Medium / Low with brief rationale
+5. TRIAGE PRIORITY — what needs immediate attention vs can wait
 
-FLAGS DETECTED:
-• [specific flag with dollar amount if applicable]
-• [specific flag]
-• [specific flag]
+Be specific, use dollar amounts and dates from the document. Format clearly with those headings.`
+    },
+    {
+      num: 2,
+      name: 'Variance & Risk Intelligence',
+      prompt: `You are the TSM FinOps AI — Engine 2: Variance & Risk Intelligence.
 
-MISSING INFORMATION:
-• [missing item or "None detected"]
+${ctx}
 
-COMPLIANCE CONCERNS:
-• [regulatory or policy concern or "None"]
+Analyze the financial variances and risks in this document:
+1. KEY VARIANCES — identify all budget vs actual gaps, overages, shortfalls with exact amounts
+2. RISK ASSESSMENT — financial, operational, and compliance risks identified
+3. TREND INDICATORS — what patterns or trajectories are concerning
+4. EXPOSURE QUANTIFICATION — total dollar exposure at risk
+5. BENCHMARKS — how do these figures compare to healthy standards (DSO, margins, etc.)
 
-DATA QUALITY:
-• Completeness: [%]
-• Accuracy indicators: [notes]
+Be precise with numbers. Use percentage and dollar variances.`
+    },
+    {
+      num: 3,
+      name: 'Controller Action Plan · BNCA',
+      prompt: `You are the TSM FinOps AI — Engine 3: Controller Action Plan (Best Next Course of Action).
 
-PRIORITY SCORE: [1-10] | URGENCY: [CRITICAL/HIGH/MEDIUM/LOW]
-RECOMMENDED OWNER: [who should act on this]
+${ctx}
 
-Be specific. Cite exact amounts and dates from the document. Max 220 words.`,
-    user: doc => `Triage this financial document:\n\n${doc}`
-  },
-  app2: {
-    system: `You are a financial variance and risk intelligence AI. Analyze accounting documents for risks, variances, and anomalies. Output EXACTLY this format:
+Generate a prioritized Controller action plan:
+1. IMMEDIATE ACTIONS (Next 24 hours) — what must happen today
+2. THIS WEEK (Days 2-5) — scheduled follow-up actions
+3. THIS MONTH — longer-term corrective actions
+4. APPROVALS NEEDED — who needs to sign off on what
+5. ESCALATION TRIGGERS — what conditions require CFO involvement
 
-RISK LEVEL: [CRITICAL / HIGH / MEDIUM / LOW]
-RISK SCORE: [1-100]
+Be directive and specific. Name responsible parties where implied. Include deadlines.`
+    },
+    {
+      num: 4,
+      name: 'CFO Executive Intelligence',
+      prompt: `You are the TSM FinOps AI — Engine 4: CFO Executive Intelligence.
 
-VARIANCE ANALYSIS:
-• [specific variance vs budget/prior period with $ and %]
-• [trend analysis]
-• [benchmark comparison if applicable]
+${ctx}
 
-FINANCIAL RISKS:
-• [risk item + $ exposure + likelihood]
-• [risk item + $ exposure]
+Generate a CFO-level executive briefing:
+1. EXECUTIVE SUMMARY — 2-3 sentences, bottom-line impact
+2. FINANCIAL POSITION — key numbers a CFO needs at a glance
+3. STRATEGIC RISK — what this means for the business if unaddressed
+4. RECOMMENDED CFO ACTIONS — 3 specific decisions or directives
+5. BOARD/INVESTOR IMPLICATIONS — if applicable, what needs to be disclosed or considered
 
-ANOMALIES DETECTED:
-• [unusual pattern or transaction or "None"]
-
-KEY METRICS:
-• [calculated ratio or metric from the document]
-• [calculated ratio or metric]
-
-CASH IMPACT: $[amount] [positive/negative direction]
-P&L IMPACT: $[amount]
-
-ESCALATION REQUIRED: [Yes/No] — [to whom and why, or N/A]
-
-Be precise with numbers from the document. Max 220 words.`,
-    user: doc => `Perform variance and risk analysis:\n\n${doc}`
-  },
-  app3: {
-    system: `You are a Controller Action Plan AI and BNCA (Best Next Course of Action) engine. Generate a specific, prioritized action plan a controller or accounting manager must execute. Output EXACTLY this format:
-
-BNCA — CONTROLLER ACTION PLAN
-
-IMMEDIATE (Do Today):
-1. [specific action + owner + deadline + $ impact]
-2. [specific action + owner + deadline]
-3. [specific action + owner + deadline]
-
-THIS WEEK:
-1. [action + owner]
-2. [action + owner]
-
-APPROVAL / SIGNATURE REQUIRED:
-• [who must sign + what + by when]
-
-SYSTEM ENTRIES TO POST:
-• [what to enter + which system + account codes if known]
-
-COMMUNICATIONS TO SEND:
-• [who to notify + about what + urgency]
-
-DOCUMENTS TO GATHER:
-• [supporting docs needed for audit trail]
-
-ESTIMATED RESOLUTION: [X hours / X days]
-REVENUE PROTECTION: $[amount at risk if not acted on]
-
-Be directive. Use action verbs. Max 260 words.`,
-    user: doc => `Generate a Controller BNCA Action Plan for:\n\n${doc}`
-  },
-  app4: {
-    system: `You are a CFO Executive Intelligence AI. Translate accounting documents into board-level financial intelligence. Output EXACTLY this format:
-
-CFO EXECUTIVE BRIEF
-
-EXECUTIVE SUMMARY:
-[2 sentence board-level summary of what this means for the business]
-
-FINANCIAL IMPACT:
-• Cash Position Impact: $[amount] [direction]
-• P&L Impact: $[amount] [favorable/unfavorable]
-• Balance Sheet Effect: [description]
-• Working Capital: [impact]
-
-RISK EXPOSURE:
-• [primary risk] — $[exposure]
-• [secondary risk] — $[exposure]
-
-STRATEGIC IMPLICATIONS:
-[3 sentences on business impact, competitive or operational consequences]
-
-CFO DIRECTIVES:
-1. [strategic directive with timeline]
-2. [strategic directive with timeline]
-3. [directive]
-
-REPORTING IMPACT:
-• Month-end close: [affected/not affected + how]
-• Board reporting: [impact on next board package]
-• Audit readiness: [status]
-
-CONFIDENCE LEVEL: [XX%]
-RECOMMENDED BOARD VISIBILITY: [Yes/No — why]
-
-Be executive-level. Dollar-precise. Max 260 words.`,
-    user: doc => `Generate CFO executive intelligence from:\n\n${doc}`
-  }
-};
-
-// ── TAB SWITCHING ──
-function switchTab(tab, btn) {
-  document.querySelectorAll('.wtab').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.workflow-panel').forEach(p => p.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('tab-' + tab).classList.add('active');
+Write for a senior financial executive. Concise, strategic, high-impact.`
+    }
+  ];
 }
 
-// ── RENDER SAMPLES ──
-function renderSamples() {
-  const grid = document.getElementById('sample-grid');
-  grid.innerHTML = Object.entries(SAMPLES).map(([id, s]) => `
-    <div class="sample-card" onclick="selectSample('${id}',this)">
-      <div class="sc-type">${s.type}</div>
-      <div class="sc-name">${s.label}</div>
-      <div class="sc-desc">${s.desc}</div>
-    </div>`).join('');
+// ===== STATE =====
+let currentDoc = docs['ap-aging'];
+let currentMode = 'sample';
+let uploadedContent = null;
+let engineOutputs = { 1: '', 2: '', 3: '', 4: '' };
+let completedEngines = 0;
+
+// ===== MODE =====
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('modeS').className = 'mode-btn' + (mode === 'sample' ? ' active' : '');
+  document.getElementById('modeU').className = 'mode-btn' + (mode === 'upload' ? ' active' : '');
+  document.getElementById('sampleSection').style.display = mode === 'sample' ? '' : 'none';
+  document.getElementById('uploadZone').className = 'upload-zone' + (mode === 'upload' ? ' visible' : '');
 }
 
-function selectSample(id, el) {
-  document.querySelectorAll('.sample-card').forEach(c => c.classList.remove('selected'));
+// ===== SELECT DOC =====
+function selectDoc(el, key) {
+  document.querySelectorAll('.doc-item').forEach(d => d.classList.remove('selected'));
   el.classList.add('selected');
-  selectedSampleId = id;
-  currentLabel = SAMPLES[id].label;
-  currentContent = SAMPLES[id].content;
-  document.getElementById('fire-btn').disabled = false;
-  document.getElementById('fire-status').textContent = '✓ ' + currentLabel + ' — READY TO FIRE';
-  document.getElementById('doc-status').textContent = currentLabel + ' loaded';
+  currentDoc = docs[key];
+  uploadedContent = null;
+  updateStatus(`✓ ${currentDoc.name} — READY TO FIRE`);
+  setBottom(`FINOPS NEURAL BRIDGE · ${currentDoc.name} loaded · Ready to fire all 4 engines`);
 }
 
-// ── MODE SWITCH ──
-function setMode(m) {
-  currentMode = m;
-  selectedSampleId = null; selectedFile = null;
-  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('mode-' + m).classList.add('active');
-  document.getElementById('panel-sample').style.display = m === 'sample' ? '' : 'none';
-  document.getElementById('panel-actual').style.display = m === 'actual' ? '' : 'none';
-  document.getElementById('fire-btn').disabled = true;
-  document.getElementById('fire-status').textContent = 'SELECT A DOCUMENT TO BEGIN';
-}
+// ===== HANDLE UPLOAD =====
+async function handleUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
 
-// ── FILE UPLOAD ──
-const fi = document.getElementById('fileInput');
-const dz = document.getElementById('dropZone');
-fi.addEventListener('change', e => { if (e.target.files[0]) setFile(e.target.files[0]); });
-dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
-dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
-dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag-over'); if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]); });
+  updateStatus(`Loading: ${file.name}...`);
 
-async function setFile(f) {
-  selectedFile = f;
-  dz.classList.add('has-file');
-  document.getElementById('dropFileName').textContent = '📎 ' + f.name + ' (' + (f.size/1024).toFixed(1) + ' KB)';
-  currentLabel = f.name;
-  // Try to read text files directly
-  const ext = f.name.split('.').pop().toLowerCase();
-  if (['txt','csv'].includes(ext)) {
-    currentContent = await new Promise((res,rej) => { const r = new FileReader(); r.onload = e => res(e.target.result.slice(0,4000)); r.onerror = rej; r.readAsText(f); });
-  } else {
-    // Try server-side extraction
-    try {
-      const fd = new FormData(); fd.append('pdf', f);
-      const resp = await fetch('/api/extract-pdf', {method:'POST', body:fd});
-      const data = await resp.json();
-      currentContent = data.ok ? data.text : `[${ext.toUpperCase()} file — ${(f.size/1024).toFixed(1)}KB]`;
-    } catch {
-      currentContent = `[${ext.toUpperCase()} file — ${(f.size/1024).toFixed(1)}KB — paste content below if needed]`;
-    }
-  }
-  document.getElementById('fire-btn').disabled = false;
-  document.getElementById('fire-status').textContent = '✓ ' + f.name + ' — READY TO FIRE';
-  document.getElementById('doc-status').textContent = f.name + ' loaded';
-}
-
-// ── PIPELINE ──
-function setPipe(n) {
-  for (let i = 0; i <= 4; i++) {
-    const dot = document.getElementById('pipe' + i);
-    const arr = document.getElementById('arr' + i);
-    if (i < n) { dot.className = 'pipe-dot done'; if(arr) arr.className = 'pipe-arr active'; }
-    else if (i === n) { dot.className = 'pipe-dot active'; if(arr) arr.className = 'pipe-arr'; }
-    else { dot.className = 'pipe-dot'; if(arr) arr.className = 'pipe-arr'; }
+  try {
+    const text = await file.text();
+    uploadedContent = text.substring(0, 4000);
+    currentDoc = { name: file.name, context: uploadedContent };
+    updateStatus(`✓ ${file.name} — READY TO FIRE`);
+    setBottom(`FINOPS NEURAL BRIDGE · ${file.name} loaded · Ready to fire all 4 engines`);
+  } catch(err) {
+    updateStatus(`⚠ Error reading file: ${err.message}`);
   }
 }
-function pipeAll() { for(let i=0;i<=4;i++){ document.getElementById('pipe'+i).className='pipe-dot done'; const a=document.getElementById('arr'+i); if(a) a.className='pipe-arr active'; } }
 
-// ── TOAST ──
-function toast(msg) {
-  const el = document.getElementById('toast-el');
-  el.textContent = msg; el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 2800);
+// ===== PIPELINE =====
+async function animatePipeline(step) {
+  const nodes = ['pipe-0','pipe-1','pipe-2','pipe-3','pipe-4'];
+  const arrows = ['arr-0','arr-1','arr-2','arr-3'];
+
+  if (step === 'reset') {
+    nodes.forEach(n => { const el = document.getElementById(n); el.className = 'pipe-circle'; });
+    arrows.forEach(a => { const el = document.getElementById(a); el.className = 'pipe-arrow'; });
+    document.getElementById('completeCount').textContent = '0';
+    return;
+  }
+
+  if (step === 'start') {
+    document.getElementById('pipe-0').classList.add('active');
+    await sleep(400);
+    document.getElementById('pipe-0').classList.remove('active');
+    document.getElementById('pipe-0').classList.add('done');
+    document.getElementById('arr-0').classList.add('done');
+    document.getElementById('pipe-1').classList.add('active');
+    await sleep(400);
+    document.getElementById('pipe-1').classList.remove('active');
+    document.getElementById('pipe-1').classList.add('done');
+    document.getElementById('arr-1').classList.add('done');
+    document.getElementById('pipe-2').classList.add('active');
+  }
+
+  if (step === 'bnca') {
+    document.getElementById('pipe-2').classList.remove('active');
+    document.getElementById('pipe-2').classList.add('done');
+    document.getElementById('arr-2').classList.add('done');
+    document.getElementById('pipe-3').classList.add('active');
+  }
+
+  if (step === 'done') {
+    document.getElementById('pipe-3').classList.remove('active');
+    document.getElementById('pipe-3').classList.add('done');
+    document.getElementById('arr-3').classList.add('done');
+    document.getElementById('pipe-4').classList.add('active');
+    await sleep(500);
+    document.getElementById('pipe-4').classList.remove('active');
+    document.getElementById('pipe-4').classList.add('done');
+  }
 }
 
-// ── FIRE ALL ──
-async function fireAll() {
-  if (!currentContent) { toast('Select or upload a document first'); return; }
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-  outputs = {1:'',2:'',3:'',4:''};
-  [1,2,3,4].forEach(n => {
-    document.getElementById('body'+n).innerHTML = '<div class="app-idle"><div class="app-idle-icon" style="opacity:.5">⟳</div><div class="app-idle-txt">Processing…</div></div>';
-    document.getElementById('badge'+n).className = 'app-badge badge-active';
-    document.getElementById('badge'+n).textContent = 'ACTIVE';
-    document.getElementById('tok'+n).textContent = '';
+// ===== FIRE ALL ENGINES =====
+async function fireAllEngines() {
+  const btn = document.getElementById('fireBtn');
+  btn.disabled = true;
+  btn.textContent = '⚡ ENGINES FIRING...';
+
+  completedEngines = 0;
+  document.getElementById('completeCount').textContent = '0';
+
+  // Reset all engines
+  for (let i = 1; i <= 4; i++) {
+    setEngineStatus(i, 'idle');
+    setEngineOutput(i, `<span class="engine-placeholder">Queued...</span>`);
+    setTokens(i, '—');
+    engineOutputs[i] = '';
+  }
+
+  animatePipeline('reset');
+  await sleep(200);
+  animatePipeline('start');
+
+  const prompts = buildPrompts(currentDoc);
+  setBottom(`FINOPS NEURAL BRIDGE · ${currentDoc.name} loaded · All 4 engines firing...`);
+
+  // Fire engines sequentially (each feeds context forward)
+  for (let i = 0; i < prompts.length; i++) {
+    const p = prompts[i];
+    setEngineStatus(p.num, 'running');
+    setEngineOutput(p.num, `<div class="engine-loading"><div class="spinner"></div> Engine ${p.num} running — ${p.name}...</div>`);
+
+    if (i === 2) animatePipeline('bnca');
+
+    const result = await callClaude(p.prompt);
+    engineOutputs[p.num] = result;
+    setEngineOutput(p.num, result, true);
+    setEngineStatus(p.num, result.startsWith('⚠') ? 'error' : 'complete');
+    completedEngines++;
+    document.getElementById('completeCount').textContent = completedEngines;
+    setTokens(p.num, Math.floor(result.length / 4) + ' tokens');
+
+    await sleep(200);
+  }
+
+  animatePipeline('done');
+  setBottom(`FINOPS NEURAL BRIDGE · ${currentDoc.name} loaded · ✓ All 4 engines complete · ${new Date().toLocaleTimeString()}`);
+  btn.disabled = false;
+  btn.innerHTML = '⚡ FIRE ALL 4 ENGINES';
+}
+
+// ===== CLAUDE API =====
+async function callClaude(prompt) {
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await res.json();
+    if (data.error) return `⚠ API Error: ${data.error.message}`;
+    return data.content?.map(b => b.text || '').join('') || '⚠ No response received.';
+  } catch(err) {
+    return `⚠ Connection error: ${err.message}`;
+  }
+}
+
+// ===== UI HELPERS =====
+function setEngineStatus(num, state) {
+  const el = document.getElementById('status-' + num);
+  const map = {
+    idle: ['es-idle', 'IDLE'],
+    running: ['es-running', 'RUNNING'],
+    complete: ['es-complete', 'COMPLETE'],
+    error: ['es-error', 'ERROR']
+  };
+  el.className = 'engine-status ' + map[state][0];
+  el.textContent = map[state][1];
+}
+
+function setEngineOutput(num, content, isText) {
+  const el = document.getElementById('output-' + num);
+  if (isText) el.textContent = content;
+  else el.innerHTML = content;
+}
+
+function setTokens(num, val) {
+  document.getElementById('tokens-' + num).textContent = val;
+}
+
+function updateStatus(msg) {
+  document.getElementById('sbStatus').innerHTML = msg;
+}
+
+function setBottom(msg) {
+  document.getElementById('bottomMsg').textContent = msg;
+}
+
+function setTab(el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ===== COPY =====
+function copyEngine(num) {
+  const text = engineOutputs[num];
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector(`#output-${num}`).closest('.engine').querySelector('.copy-btn');
+    const orig = btn.textContent;
+    btn.textContent = 'COPIED!';
+    setTimeout(() => btn.textContent = orig, 1500);
   });
-
-  document.getElementById('export-bar').style.display = 'none';
-  document.getElementById('fire-btn').disabled = true;
-  document.getElementById('global-progress').textContent = 'Firing all 4 engines…';
-  document.getElementById('engines-active').textContent = '4 / 4 engines';
-  document.getElementById('pipeline-status').textContent = 'PROCESSING';
-
-  setPipe(0); await delay(300);
-  setPipe(1); await delay(300);
-  setPipe(2);
-
-  const engines = [1,2,3,4].map(n => runEngine(n));
-  await Promise.all(engines);
-
-  pipeAll();
-  document.getElementById('global-progress').textContent = '✓ All 4 engines complete';
-  document.getElementById('pipeline-status').textContent = 'COMPLETE';
-  document.getElementById('export-bar').style.display = 'flex';
-  document.getElementById('fire-btn').disabled = false;
-
-  // BNCA bridge report
-  if (typeof TSM_BNCA !== 'undefined') {
-    TSM_BNCA.report('finops_showcase', {
-      name: 'FinOps Doc Showcase',
-      subtitle: 'Last processed: ' + currentLabel,
-      status: 'READY',
-      metrics: { last_doc: currentLabel, engines: '4', status: 'complete' },
-      flags: ['Document processed: ' + currentLabel],
-      priority: 'LOW'
-    });
-  }
-
-  toast('✓ All 4 engines complete — ready to export');
 }
 
-async function runEngine(num) {
-  const prompt = PROMPTS['app'+num];
-  const bodyEl = document.getElementById('body'+num);
-  const badgeEl = document.getElementById('badge'+num);
-  const tokEl = document.getElementById('tok'+num);
-
-  bodyEl.innerHTML = '';
-  const outDiv = document.createElement('div');
-  outDiv.className = 'app-out';
-  bodyEl.appendChild(outDiv);
-
-  let full = '', tokens = 0;
-
-  // Try Groq first (user's own key), fallback to tsm-shell API
-  try {
-    let resp;
-    if (GROQ_KEY) {
-      resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
-        body: JSON.stringify({model: GROQ_MODEL, max_tokens:700, stream:true,
-          messages:[{role:'system',content:prompt.system},{role:'user',content:prompt.user(currentContent)}]})
-      });
-    } else {
-      resp = await fetch('https://tsm-shell.fly.dev/api/groq', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({
-          messages:[{role:'system',content:prompt.system},{role:'user',content:prompt.user(currentContent)}],
-          max_tokens:700, stream:false
-        })
-      });
-      const data = await resp.json();
-      full = data.content || data.reply || 'No response';
-      outDiv.textContent = full;
-      outputs[num] = full;
-      badgeEl.className = 'app-badge badge-done';
-      badgeEl.textContent = 'COMPLETE';
-      tokEl.textContent = Math.round(full.length/4) + ' tokens';
-      return;
-    }
-
-    const reader = resp.body.getReader(), dec = new TextDecoder();
-    while (true) {
-      const {done, value} = await reader.read(); if (done) break;
-      for (const line of dec.decode(value).split('\n')) {
-        if (!line.startsWith('data: ') || line.includes('[DONE]')) continue;
-        try {
-          const chunk = JSON.parse(line.slice(6)).choices?.[0]?.delta?.content || '';
-          full += chunk; tokens++;
-          outDiv.textContent = full + '▌';
-          bodyEl.scrollTop = bodyEl.scrollHeight;
-        } catch {}
-      }
-    }
-    outDiv.textContent = full;
-    outputs[num] = full;
-    badgeEl.className = 'app-badge badge-done';
-    badgeEl.textContent = 'COMPLETE';
-    tokEl.textContent = tokens + ' tokens';
-  } catch(e) {
-    outDiv.textContent = 'Engine ' + num + ' error: ' + e.message + '\n\nCheck API connectivity or add Groq key in Operations Suite settings.';
-    badgeEl.className = 'app-badge badge-error';
-    badgeEl.textContent = 'ERROR';
-    outputs[num] = '';
-  }
-}
-
-function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-// ── COPY ──
-function copyOut(num) {
-  if (outputs[num]) { navigator.clipboard.writeText(outputs[num]); toast('✓ Copied Engine 0'+num+' output'); }
-  else toast('No output yet');
-}
-
-// ── SAVE REPORT ──
-function saveReport() {
-  try {
-    const reports = JSON.parse(localStorage.getItem('tsm_finops_reports') || '[]');
-    reports.unshift({
-      id: Date.now(),
-      label: currentLabel,
-      saved: new Date().toLocaleString(),
-      outputs,
-      summary: outputs[3] || outputs[1] || ''
-    });
-    localStorage.setItem('tsm_finops_reports', JSON.stringify(reports.slice(0, 20)));
-    // Also update main strategist key
-    localStorage.setItem('tsm_finops_report', JSON.stringify({
-      summary: [
-        '=== TRIAGE ===\n' + outputs[1],
-        '=== VARIANCE & RISK ===\n' + outputs[2],
-        '=== CONTROLLER ACTION PLAN ===\n' + outputs[3],
-        '=== CFO BRIEF ===\n' + outputs[4]
-      ].join('\n\n'),
-      label: currentLabel,
-      ts: Date.now()
-    }));
-    toast('✓ Report saved to strategist memory');
-  } catch(e) { toast('Save failed: ' + e.message); }
-}
-
-// ── MANAGER EXPORT MODAL ──
-function openExportModal() {
-  const preview = document.getElementById('report-preview');
-  const now = new Date();
-  const riskMatch = (outputs[2] || '').match(/RISK LEVEL[:\s]+([A-Z]+)/i);
-  const risk = riskMatch ? riskMatch[1] : '—';
-  const flagMatch = (outputs[1] || '').match(/FLAGS DETECTED[\s\S]*?(?=MISSING|$)/i);
-  const scoreMatch = (outputs[4] || '').match(/CONFIDENCE[:\s]+(\d+%)/i);
-
-  preview.innerHTML = `
-    <div class="rpt-logo">
-      <div>
-        <div class="rpt-brand">TSM · FINOPS INTELLIGENCE</div>
-        <div style="color:#666;font-size:11px;margin-top:3px">Financial Operations · AI-Assisted Analysis</div>
-      </div>
-      <div class="rpt-date">
-        <div style="font-weight:700;color:#1a3a5c">${now.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</div>
-        <div style="color:#999;font-size:10px">${now.toLocaleTimeString()}</div>
-      </div>
-    </div>
-
-    <div class="rpt-title">${currentLabel}</div>
-    <div class="rpt-subtitle">FinOps BNCA Report · 4-Engine AI Analysis · Prepared for Management Review</div>
-
-    <div class="rpt-kpi-row">
-      <div class="rpt-kpi"><div class="rpt-kpi-val" style="color:${risk==='CRITICAL'?'#cc0000':risk==='HIGH'?'#cc6600':risk==='MEDIUM'?'#996600':'#006600'}">${risk}</div><div class="rpt-kpi-lbl">Risk Level</div></div>
-      <div class="rpt-kpi"><div class="rpt-kpi-val">4</div><div class="rpt-kpi-lbl">Engines Run</div></div>
-      <div class="rpt-kpi"><div class="rpt-kpi-val">${scoreMatch ? scoreMatch[1] : '—'}</div><div class="rpt-kpi-lbl">Confidence</div></div>
-      <div class="rpt-kpi"><div class="rpt-kpi-val" style="color:#006600">✓</div><div class="rpt-kpi-lbl">BNCA Complete</div></div>
-    </div>
-
-    ${outputs[1] ? `<div class="rpt-section"><div class="rpt-section-title">01 · Document Triage &amp; Flag Analysis</div><div class="rpt-body">${outputs[1]}</div></div>` : ''}
-    ${outputs[2] ? `<div class="rpt-section"><div class="rpt-section-title">02 · Variance &amp; Risk Intelligence</div><div class="rpt-body">${outputs[2]}</div></div>` : ''}
-    ${outputs[3] ? `<div class="rpt-section"><div class="rpt-section-title">03 · Controller Action Plan · BNCA</div><div class="rpt-body">${outputs[3]}</div></div>` : ''}
-    ${outputs[4] ? `<div class="rpt-section"><div class="rpt-section-title">04 · CFO Executive Intelligence</div><div class="rpt-body">${outputs[4]}</div></div>` : ''}
-
-    <div class="rpt-footer">
-      Generated by TSM FinOps Intelligence · tsm-shell.fly.dev · ${now.toLocaleString()}<br>
-      This report was produced by AI-assisted analysis. All findings should be reviewed by a qualified accounting professional before action.
-    </div>`;
-
-  document.getElementById('modal-bg').classList.add('open');
-}
-
-function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
-
-function printReport() {
-  const content = document.getElementById('report-preview').innerHTML;
-  const win = window.open('', '_blank');
-  win.document.write(`<!DOCTYPE html><html><head><title>${currentLabel} — FinOps Report</title><style>body{font-family:Arial,sans-serif;font-size:12px;line-height:1.6;color:#1a1a1a;max-width:800px;margin:0 auto;padding:20px}.rpt-logo{display:flex;justify-content:space-between;border-bottom:2px solid #1a3a5c;padding-bottom:14px;margin-bottom:20px}.rpt-brand{color:#1a3a5c;font-size:18px;font-weight:700;letter-spacing:2px}.rpt-kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}.rpt-kpi{background:#f5f8ff;border:1px solid #dde;padding:10px;text-align:center}.rpt-kpi-val{color:#1a3a5c;font-size:18px;font-weight:700}.rpt-kpi-lbl{color:#666;font-size:9px;letter-spacing:1px;margin-top:2px;text-transform:uppercase}.rpt-section{margin-bottom:18px}.rpt-section-title{background:#1a3a5c;color:#fff;font-size:10px;font-weight:700;letter-spacing:2px;padding:5px 10px;text-transform:uppercase;margin-bottom:8px}.rpt-body{color:#333;font-size:12px;line-height:1.7;white-space:pre-wrap}.rpt-footer{border-top:1px solid #ddd;color:#999;font-size:10px;margin-top:20px;padding-top:10px;text-align:center}@media print{body{max-width:100%}}</style></head><body>${content}</body></html>`);
-  win.document.close();
-  setTimeout(() => win.print(), 500);
-}
-
-function copyReportText() {
-  const text = [
-    `TSM FINOPS BNCA REPORT — ${currentLabel}`,
-    `Generated: ${new Date().toLocaleString()}`,
-    '='.repeat(60),
-    '\n01 · TRIAGE & FLAGS\n' + (outputs[1]||'—'),
-    '\n02 · VARIANCE & RISK\n' + (outputs[2]||'—'),
-    '\n03 · CONTROLLER ACTION PLAN\n' + (outputs[3]||'—'),
-    '\n04 · CFO EXECUTIVE BRIEF\n' + (outputs[4]||'—'),
-  ].join('\n');
-  navigator.clipboard.writeText(text);
-  toast('✓ Full report copied to clipboard');
-}
-
+// ===== EXPORT =====
 function exportTxt() {
-  const text = [
-    `TSM FINOPS BNCA REPORT`,
-    `Document: ${currentLabel}`,
-    `Generated: ${new Date().toLocaleString()}`,
-    '='.repeat(60),
-    '\n01 · TRIAGE & FLAG ANALYSIS\n' + (outputs[1]||'—'),
-    '\n02 · VARIANCE & RISK INTELLIGENCE\n' + (outputs[2]||'—'),
-    '\n03 · CONTROLLER ACTION PLAN · BNCA\n' + (outputs[3]||'—'),
-    '\n04 · CFO EXECUTIVE INTELLIGENCE\n' + (outputs[4]||'—'),
-  ].join('\n');
-  const blob = new Blob([text], {type:'text/plain'});
+  const all = Object.entries(engineOutputs).map(([n, t]) => {
+    const names = ['','Document Triage & Flag Analysis','Variance & Risk Intelligence','Controller Action Plan · BNCA','CFO Executive Intelligence'];
+    return `=== ENGINE ${n}: ${names[n]} ===\n\n${t || '(not run)'}`;
+  }).join('\n\n' + '='.repeat(60) + '\n\n');
+
+  const blob = new Blob([`FINOPS DOC SHOWCASE\nDocument: ${currentDoc.name}\nGenerated: ${new Date().toLocaleString()}\n\n${'='.repeat(60)}\n\n${all}`], { type: 'text/plain' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `finops-bnca-${currentLabel.replace(/\s+/g,'-').toLowerCase()}-${Date.now()}.txt`;
+  a.download = `finops-bnca-${Date.now()}.txt`;
   a.click();
-  toast('✓ Report exported');
+}
+
+function saveReport() {
+  exportTxt();
+}
+
+function managerExport() {
+  const engine3 = engineOutputs[3] || '(Controller action plan not yet generated)';
+  const engine4 = engineOutputs[4] || '(CFO report not yet generated)';
+  const blob = new Blob([`MANAGER EXPORT — FINOPS DOC SHOWCASE\nDocument: ${currentDoc.name}\nDate: ${new Date().toLocaleString()}\n\n=== CONTROLLER ACTION PLAN ===\n\n${engine3}\n\n=== CFO EXECUTIVE INTELLIGENCE ===\n\n${engine4}`], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `manager-export-${Date.now()}.txt`;
+  a.click();
 }
 
 function pushToStrategist() {
-  saveReport();
-  setTimeout(() => {
-    window.location.href = '/finops-suite/finops-main-strategist/index.html?v=doc-push-' + Date.now();
-  }, 500);
+  const msg = Object.entries(engineOutputs).map(([n,t]) => t).filter(Boolean).join('\n\n---\n\n');
+  if (!msg) { alert('Run the engines first.'); return; }
+  alert('✓ All engine outputs pushed to FinOps Strategist.\n\nIn production this would post to your strategist cross-app state.');
 }
-
-// ── RENDER WORKFLOWS ──
-function renderWorkflow(key) {
-  const steps = WORKFLOWS[key];
-  const el = document.getElementById(key + '-steps');
-  if (!el) return;
-  el.innerHTML = steps.map((s, i) => `
-    <div class="workflow-step">
-      <input type="checkbox" class="wchk" id="${key}-${i}" onchange="updateWorkflowProgress('${key}',${steps.length})"/>
-      <div class="wstep-body">
-        <div class="wstep-time">${s.time}</div>
-        <div class="wstep-title">${s.title}</div>
-        <div class="wstep-desc">${s.desc}</div>
-      </div>
-    </div>`).join('');
-}
-
-function updateWorkflowProgress(key, total) {
-  const done = document.querySelectorAll(`#${key}-steps .wchk:checked`).length;
-  const pct = Math.round(done/total*100);
-  document.getElementById(key+'-fill').style.width = pct + '%';
-  document.getElementById(key+'-label').textContent = done + ' / ' + total + ' complete';
-}
-
-// ── INIT ──
-renderSamples();
-renderWorkflow('morning');
-renderWorkflow('midday');
-renderWorkflow('eod');
 </script>
-
-<script src="/finops-suite/assets/bnca-bridge.js"></script>
 </body>
 </html>
