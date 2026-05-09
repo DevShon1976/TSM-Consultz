@@ -773,8 +773,8 @@ function runFullDemo(){
   window.__FINOPS_NODE_05_08_FIX__ = true;
 
   const ROUTES = {
-    "05": "/finops-showcase/index.html?v=compliance-shield",
-    "08": "/healthcare/poc-html/index.html?v=accounting-poc"
+    "05": "/finops-showcase/index.html?v=doc-showcase-fixed",
+    "08": "/finops-showcase/index.html?v=accounting-doc-poc"
   };
 
   function openNode(num){
@@ -841,6 +841,91 @@ function runFullDemo(){
   else fixCards();
 
   [500,1200,2500].forEach(ms=>setTimeout(fixCards,ms));
+})();
+</script>
+
+
+<script>
+(function(){
+  if(window.__FINOPS_HARD_REMAP_05_08__) return;
+  window.__FINOPS_HARD_REMAP_05_08__ = true;
+
+  const TARGETS = {
+    compliance: "/finops-showcase/index.html?v=doc-showcase-fixed",
+    accounting: "/finops-showcase/index.html?v=accounting-doc-poc"
+  };
+
+  function go(kind){
+    window.location.href = TARGETS[kind];
+  }
+
+  function hardWire(){
+    document.querySelectorAll("a,button,.btn,div,section,article").forEach(el=>{
+      const txt=(el.innerText||"").toLowerCase();
+      const href=(el.getAttribute && (el.getAttribute("href")||"")) || "";
+      const onclick=(el.getAttribute && (el.getAttribute("onclick")||"")) || "";
+
+      const isCompliance =
+        txt.includes("compliance shield") ||
+        txt.includes("open compliance") ||
+        href.includes("compliance-shield") ||
+        onclick.includes("compliance-shield");
+
+      const isAccounting =
+        txt.includes("accounting doc poc") ||
+        txt.includes("launch accounting poc") ||
+        href.includes("accounting-poc") ||
+        onclick.includes("accounting-poc") ||
+        href.includes("healthcare/poc-html");
+
+      if(isCompliance){
+        el.style.cursor="pointer";
+        el.setAttribute("href", TARGETS.compliance);
+        el.onclick=function(e){
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          go("compliance");
+          return false;
+        };
+      }
+
+      if(isAccounting){
+        el.style.cursor="pointer";
+        el.setAttribute("href", TARGETS.accounting);
+        el.onclick=function(e){
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          go("accounting");
+          return false;
+        };
+      }
+    });
+  }
+
+  document.addEventListener("click",function(e){
+    const el=e.target.closest("a,button,.btn,div,section,article");
+    if(!el) return;
+    const txt=(el.innerText||"").toLowerCase();
+
+    if(txt.includes("compliance shield") || txt.includes("open compliance")){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      go("compliance");
+      return false;
+    }
+
+    if(txt.includes("accounting doc poc") || txt.includes("launch accounting poc")){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      go("accounting");
+      return false;
+    }
+  },true);
+
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",hardWire);
+  else hardWire();
+
+  [300,900,1800,3000].forEach(ms=>setTimeout(hardWire,ms));
 })();
 </script>
 
