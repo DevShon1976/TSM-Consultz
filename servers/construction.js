@@ -17,8 +17,10 @@ const groq = async (prompt, maxTokens=800) => {
 router.post('/', async (req,res) => {
   try {
     const {query='',message='',messages=[],nodeKey='general',app='',factor='',sector=''} = req.body||{};
-    const q = query||message||messages.map(m=>m.content).join(' ');
-    const content = await groq(`Construction AI. Node: ${nodeKey||sector||'general'}. Factor: ${factor}. Query: ${q}. Focus: job costing, subcontractors, lien compliance, OSHA, project financials.`);
+    const userMsg = messages.filter(m=>m.role==='user').map(m=>m.content).join(' ');
+    const sysMsg = messages.filter(m=>m.role==='system').map(m=>m.content).join(' ');
+    const q = query||message||userMsg||'';
+    const content = await groq(sysMsg ? sysMsg + '\n\nUser: ' + q : `Construction AI. Node: ${nodeKey||sector||'general'}. Factor: ${factor}. Query: ${q}. Focus: job costing, subcontractors, lien compliance, OSHA, project financials.`);
     res.json({ok:true,content,reply:content,result:content,ts:new Date().toISOString()});
   } catch(e){res.status(500).json({ok:false,error:e.message});}
 });
