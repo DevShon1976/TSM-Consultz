@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>TSM FinOps · Financial Accounting POC</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+:root{
+  --bg:#07090f;--surface:#0d1117;--surface2:#111827;--surface3:#1a2235;
+  --border:#1e2d45;--border2:#2a3f5f;
+  --cyan:#00d4ff;--cyan2:#00a3c4;--cyan-lo:#003344;--cyan-faint:#001a24;
+  --amber:#f5a623;--amber2:#7a4f00;--amber-lo:#2a1800;
+  --green:#00e676;--green-lo:#003320;--red:#ff3d3d;--purple:#a855f7;
+  --text:#e2e8f0;--text-dim:#8fa3bc;--text-mute:#3d5470;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;min-height:100vh}
+
+/* TOPBAR */
+.topbar{align-items:center;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:12px;padding:0 20px;height:48px;position:sticky;top:0;z-index:100}
+.brand{align-items:center;display:flex;gap:8px}
+.brand-dot{background:var(--amber);border-radius:50%;height:7px;width:7px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(245,166,35,.4)}50%{box-shadow:0 0 0 5px rgba(245,166,35,0)}}
+.brand-name{color:var(--text);font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:2px;text-transform:uppercase}
+.brand-name span{color:var(--amber)}
+.topbar-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+.back-link{border:1px solid var(--border);color:var(--text-dim);font-family:var(--mono);font-size:9px;letter-spacing:1px;padding:4px 10px;text-decoration:none;text-transform:uppercase;transition:all .15s}
+.back-link:hover{border-color:var(--cyan);color:var(--cyan)}
+#ai-status{font-family:var(--mono);font-size:9px;color:var(--text-mute)}
+.key-btn{background:none;border:1px solid var(--amber2);color:var(--amber);cursor:pointer;font-family:var(--mono);font-size:9px;letter-spacing:1px;padding:4px 10px;text-transform:uppercase;transition:all .15s}
+.key-btn:hover{background:var(--amber-lo)}
+
+/* HERO */
+.hero{border-bottom:1px solid var(--border);padding:28px 24px 20px}
+.hero-badge{color:var(--amber);font-family:var(--mono);font-size:9px;letter-spacing:3px;margin-bottom:8px;text-transform:uppercase}
+.hero-title{font-size:28px;font-weight:700;color:var(--text);margin-bottom:6px}
+.hero-title span{color:var(--amber)}
+.hero-sub{color:var(--text-dim);font-size:13px;max-width:600px;line-height:1.6}
+.hero-stats{display:flex;gap:0;margin-top:16px;background:var(--border)}
+.hero-stat{background:var(--surface);padding:10px 20px;text-align:center;flex:1}
+.hero-stat-val{color:var(--amber);font-family:var(--mono);font-size:16px;font-weight:700;margin-bottom:2px}
+.hero-stat-lbl{color:var(--text-mute);font-family:var(--mono);font-size:8px;letter-spacing:1.5px;text-transform:uppercase}
+
+/* MAIN LAYOUT */
+.main{display:grid;grid-template-columns:320px 1fr;height:calc(100vh - 48px - 120px)}
+
+/* SIDEBAR */
+.sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sidebar-hdr{border-bottom:1px solid var(--border);padding:11px 14px}
+.sidebar-label{color:var(--text-mute);font-family:var(--mono);font-size:8px;letter-spacing:2px;margin-bottom:2px;text-transform:uppercase}
+.sidebar-title{color:var(--amber);font-size:12px;font-weight:600}
+
+/* DOC TYPE SELECTOR */
+.doc-tabs{border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:0;padding:8px}
+.doc-tab{background:none;border:1px solid var(--border);color:var(--text-mute);cursor:pointer;font-family:var(--mono);font-size:8px;letter-spacing:.5px;margin:2px;padding:4px 8px;text-transform:uppercase;transition:all .15s}
+.doc-tab:hover{border-color:var(--amber2);color:var(--amber)}
+.doc-tab.active{background:var(--amber-lo);border-color:var(--amber);color:var(--amber)}
+
+/* FORM AREA */
+.form-area{flex:1;overflow-y:auto;padding:12px}
+.field-group{margin-bottom:10px}
+.field-lbl{color:var(--text-dim);font-family:var(--mono);font-size:8px;letter-spacing:1px;margin-bottom:3px;text-transform:uppercase}
+.field{background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;outline:none;padding:6px 9px;transition:border-color .15s;width:100%}
+.field:focus{border-color:var(--amber)}
+.field::placeholder{color:var(--text-mute)}
+select.field option{background:var(--surface2)}
+.field-row{display:grid;gap:8px}
+.field-row-2{grid-template-columns:1fr 1fr}
+.field-row-3{grid-template-columns:1fr 1fr 1fr}
+.field-row-4{grid-template-columns:1fr 1fr 1fr 1fr}
+.textarea-field{background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;line-height:1.6;outline:none;padding:7px 9px;resize:vertical;transition:border-color .15s;width:100%}
+.textarea-field:focus{border-color:var(--amber)}
+.line-item-row{align-items:center;background:var(--bg);border:1px solid var(--border);display:grid;gap:6px;margin-bottom:4px;padding:5px 8px}
+.line-item-row-4{grid-template-columns:1fr 60px 80px 90px 28px}
+.line-item-row-3{grid-template-columns:80px 1fr 80px 28px}
+.line-item-row-2{grid-template-columns:100px 1fr 90px 80px 28px}
+.remove-btn{background:none;border:none;color:var(--text-mute);cursor:pointer;font-size:14px;transition:color .15s}
+.remove-btn:hover{color:var(--red)}
+.add-line-btn{background:none;border:1px dashed var(--border2);color:var(--text-mute);cursor:pointer;font-family:var(--mono);font-size:9px;letter-spacing:1px;padding:5px;text-transform:uppercase;transition:all .15s;width:100%}
+.add-line-btn:hover{border-color:var(--amber);color:var(--amber)}
+.section-divider{border-top:1px solid var(--border);margin:12px 0;padding-top:10px}
+.section-lbl{color:var(--amber);font-family:var(--mono);font-size:8px;letter-spacing:2px;margin-bottom:8px;text-transform:uppercase}
+.totals-row{align-items:center;display:flex;justify-content:space-between;padding:3px 0}
+.totals-lbl{color:var(--text-dim);font-family:var(--mono);font-size:10px}
+.totals-val{color:var(--text);font-family:var(--mono);font-size:11px;font-weight:600}
+.totals-val.total{color:var(--amber);font-size:13px}
+.chk-row{align-items:center;border-bottom:1px solid var(--border);display:flex;gap:9px;padding:7px 0}
+.chk{-webkit-appearance:none;appearance:none;background:var(--bg);border:1px solid var(--border2);cursor:pointer;flex-shrink:0;height:14px;position:relative;width:14px}
+.chk:checked{background:var(--green);border-color:var(--green)}
+.chk:checked::after{color:var(--bg);content:'✓';font-size:9px;left:2px;position:absolute;top:-1px}
+.chk-lbl{color:var(--text-dim);font-size:11px;flex:1}
+.chk-status{font-family:var(--mono);font-size:9px}
+
+/* FIRE BUTTON */
+.fire-bar{border-top:1px solid var(--border);padding:10px 12px;background:var(--surface)}
+.fire-btn{align-items:center;background:var(--amber);border:none;color:var(--bg);cursor:pointer;display:flex;font-family:var(--mono);font-size:11px;font-weight:700;gap:8px;justify-content:center;letter-spacing:2px;padding:11px;text-transform:uppercase;transition:all .2s;width:100%}
+.fire-btn:hover{background:#d48b1a;box-shadow:0 0 20px rgba(245,166,35,.3)}
+.fire-btn:disabled{background:var(--amber2);cursor:default}
+
+/* OUTPUT PANEL */
+.output-panel{display:flex;flex-direction:column;overflow:hidden}
+.output-hdr{align-items:center;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:10px;padding:10px 16px;position:sticky;top:0;z-index:10}
+.output-hdr-title{color:var(--text);font-size:12px;font-weight:600}
+.pipeline{align-items:center;display:flex;gap:0;margin-left:auto}
+.pipe-node{align-items:center;background:var(--surface2);border:1px solid var(--border);display:flex;flex-direction:column;padding:5px 10px;min-width:70px;text-align:center}
+.pipe-node.active{border-color:var(--amber);background:var(--amber-lo)}
+.pipe-node.done{border-color:var(--green);background:var(--green-lo)}
+.pipe-node-name{color:var(--text-mute);font-family:var(--mono);font-size:8px;letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+.pipe-node-icon{font-size:14px}
+.pipe-arrow{color:var(--border2);font-size:10px;padding:0 2px}
+.pipe-arrow.active{color:var(--amber)}
+
+/* OUTPUT APPS */
+.output-apps{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);flex:1;overflow:auto}
+.app-card{background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+.app-card-hdr{align-items:center;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:8px;padding:9px 13px}
+.app-num{color:var(--text-mute);font-family:var(--mono);font-size:9px;letter-spacing:1px}
+.app-name{color:var(--text);font-size:11px;font-weight:600;flex:1}
+.app-badge{font-family:var(--mono);font-size:8px;letter-spacing:1px;padding:2px 7px;text-transform:uppercase}
+.badge-standby{background:var(--surface3);border:1px solid var(--border2);color:var(--text-mute)}
+.badge-active{background:var(--amber-lo);border:1px solid var(--amber2);color:var(--amber);animation:badge-pulse .8s infinite}
+@keyframes badge-pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.badge-done{background:var(--green-lo);border:1px solid rgba(0,230,118,.3);color:var(--green)}
+.app-body{flex:1;overflow-y:auto;padding:12px}
+.app-idle{align-items:center;display:flex;flex-direction:column;gap:8px;justify-content:center;min-height:120px;opacity:.4}
+.app-idle-icon{font-size:24px}
+.app-idle-txt{color:var(--text-mute);font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase}
+.app-output{color:var(--text-dim);font-size:11px;line-height:1.8;white-space:pre-wrap;word-break:break-word}
+.app-footer{align-items:center;background:var(--surface);border-top:1px solid var(--border);display:flex;gap:8px;padding:7px 11px}
+.copy-btn{background:none;border:1px solid var(--border2);color:var(--text-mute);cursor:pointer;font-family:var(--mono);font-size:8px;letter-spacing:1px;padding:3px 9px;text-transform:uppercase;transition:all .15s}
+.copy-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+.token-count{color:var(--text-mute);font-family:var(--mono);font-size:9px;margin-left:auto}
+
+/* STATUS BAR */
+.status-bar{align-items:center;background:var(--surface);border-top:1px solid var(--border);display:flex;gap:10px;padding:6px 16px;position:sticky;bottom:0}
+.status-dot{background:var(--green);border-radius:50%;height:6px;width:6px;animation:pulse 2s infinite}
+.status-seg{color:var(--text-mute);font-family:var(--mono);font-size:9px;letter-spacing:1px}
+.status-seg span{color:var(--amber)}
+
+/* MODAL */
+.modal-bg{background:rgba(0,0,0,.7);bottom:0;display:none;left:0;position:fixed;right:0;top:0;z-index:800}
+.modal-bg.open{display:block}
+.modal{background:var(--surface);border:1px solid var(--border);left:50%;max-width:420px;padding:20px;position:fixed;top:50%;transform:translate(-50%,-50%);width:90%;z-index:801}
+.modal-title{color:var(--amber);font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:1px;margin-bottom:14px}
+
+/* TOAST */
+.toast{background:var(--surface);border:1px solid var(--amber);bottom:16px;color:var(--amber);display:none;font-family:var(--mono);font-size:10px;left:50%;letter-spacing:1px;padding:9px 18px;position:fixed;transform:translateX(-50%);z-index:999}
+.toast.show{display:block;animation:tin .2s ease}
+@keyframes tin{from{transform:translateX(-50%) translateY(8px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+.cursor{animation:blink .6s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-dot"></div>
+    <div class="brand-name">TSM · <span>FinOps</span> · Accounting POC</div>
+  </div>
+  <div class="topbar-right">
+    <span id="ai-status">GROQ: NO KEY</span>
+    <button class="key-btn" onclick="openModal()">⚙ GROQ KEY</button>
+    <a class="back-link" href="/finops-suite/financial-ui.html?v=enterprise-ready">← FinOps Hub</a>
+    <a class="back-link" href="/finops-operations.html">← Operations Suite</a>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">⚡ Financial Accounting · AI Document POC</div>
+  <div class="hero-title">Drop Any Accounting Doc. <span>Get Best Next Actions.</span></div>
+  <div class="hero-sub">10 financial document types processed through 4 AI engines — triage, variance analysis, compliance flags, and CFO-ready action plans. Instantly.</div>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="hero-stat-val">10</div><div class="hero-stat-lbl">Doc Types</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">4</div><div class="hero-stat-lbl">AI Engines</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">&lt;30s</div><div class="hero-stat-lbl">Processing Time</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">100%</div><div class="hero-stat-lbl">Structured Output</div></div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- SIDEBAR: DOC INPUT -->
+  <div class="sidebar">
+    <div class="sidebar-hdr">
+      <div class="sidebar-label">Step 1 · Select Document Type</div>
+      <div class="sidebar-title">Financial Accounting Documents</div>
+    </div>
+
+    <div class="doc-tabs">
+      <button class="doc-tab active" onclick="setDoc('invoice',this)">AP Invoice</button>
+      <button class="doc-tab" onclick="setDoc('po',this)">Purchase Order</button>
+      <button class="doc-tab" onclick="setDoc('expense',this)">Expense Report</button>
+      <button class="doc-tab" onclick="setDoc('bankrec',this)">Bank Recon</button>
+      <button class="doc-tab" onclick="setDoc('cc',this)">Credit Card</button>
+      <button class="doc-tab" onclick="setDoc('balance',this)">Balance Sheet</button>
+      <button class="doc-tab" onclick="setDoc('pl',this)">P&amp;L</button>
+      <button class="doc-tab" onclick="setDoc('je',this)">Journal Entry</button>
+      <button class="doc-tab" onclick="setDoc('ar',this)">AR Invoice</button>
+      <button class="doc-tab" onclick="setDoc('close',this)">Month-End Close</button>
+    </div>
+
+    <div class="form-area" id="form-area"></div>
+
+    <div class="fire-bar">
+      <div id="doc-status" style="color:var(--text-mute);font-family:var(--mono);font-size:9px;letter-spacing:1px;margin-bottom:7px;text-align:center">FILL DOCUMENT TO BEGIN PROCESSING</div>
+      <button class="fire-btn" id="fire-btn" onclick="fireAll()">⚡ PROCESS DOCUMENT — FIRE ALL 4 ENGINES</button>
+    </div>
+  </div>
+
+  <!-- OUTPUT PANEL -->
+  <div class="output-panel">
+    <div class="output-hdr">
+      <div class="output-hdr-title" id="output-title">Step 2 · Live AI Output — All 4 Engines</div>
+      <div class="pipeline">
+        <div class="pipe-node" id="pipe1"><div class="pipe-node-icon">📥</div><div class="pipe-node-name">Ingest</div></div>
+        <div class="pipe-arrow" id="arr1">›</div>
+        <div class="pipe-node" id="pipe2"><div class="pipe-node-icon">🔍</div><div class="pipe-node-name">Parse</div></div>
+        <div class="pipe-arrow" id="arr2">›</div>
+        <div class="pipe-node" id="pipe3"><div class="pipe-node-icon">🧠</div><div class="pipe-node-name">AI Analysis</div></div>
+        <div class="pipe-arrow" id="arr3">›</div>
+        <div class="pipe-node" id="pipe4"><div class="pipe-node-icon">⚡</div><div class="pipe-node-name">BNCA</div></div>
+        <div class="pipe-arrow" id="arr4">›</div>
+        <div class="pipe-node" id="pipe5"><div class="pipe-node-icon">📊</div><div class="pipe-node-name">Report</div></div>
+      </div>
+    </div>
+
+    <div class="output-apps">
+      <!-- APP 01 -->
+      <div class="app-card">
+        <div class="app-card-hdr">
+          <span class="app-num">01</span>
+          <span class="app-name">Document Triage &amp; Flag Analysis</span>
+          <span class="app-badge badge-standby" id="badge1">STANDBY</span>
+        </div>
+        <div class="app-body" id="body1">
+          <div class="app-idle"><div class="app-idle-icon">◈</div><div class="app-idle-txt">Awaiting Document</div></div>
+        </div>
+        <div class="app-footer">
+          <button class="copy-btn" onclick="copyOut(1)">Copy</button>
+          <span class="token-count" id="tok1"></span>
+        </div>
+      </div>
+
+      <!-- APP 02 -->
+      <div class="app-card">
+        <div class="app-card-hdr">
+          <span class="app-num">02</span>
+          <span class="app-name">Variance &amp; Risk Intelligence</span>
+          <span class="app-badge badge-standby" id="badge2">STANDBY</span>
+        </div>
+        <div class="app-body" id="body2">
+          <div class="app-idle"><div class="app-idle-icon">◈</div><div class="app-idle-txt">Awaiting Document</div></div>
+        </div>
+        <div class="app-footer">
+          <button class="copy-btn" onclick="copyOut(2)">Copy</button>
+          <span class="token-count" id="tok2"></span>
+        </div>
+      </div>
+
+      <!-- APP 03 -->
+      <div class="app-card">
+        <div class="app-card-hdr">
+          <span class="app-num">03</span>
+          <span class="app-name">Best Next Actions — Controller Plan</span>
+          <span class="app-badge badge-standby" id="badge3">STANDBY</span>
+        </div>
+        <div class="app-body" id="body3">
+          <div class="app-idle"><div class="app-idle-icon">◈</div><div class="app-idle-txt">Awaiting Document</div></div>
+        </div>
+        <div class="app-footer">
+          <button class="copy-btn" onclick="copyOut(3)">Copy Action Plan</button>
+          <span class="token-count" id="tok3"></span>
+        </div>
+      </div>
+
+      <!-- APP 04 -->
+      <div class="app-card">
+        <div class="app-card-hdr">
+          <span class="app-num">04</span>
+          <span class="app-name">CFO Executive Intelligence</span>
+          <span class="app-badge badge-standby" id="badge4">STANDBY</span>
+        </div>
+        <div class="app-body" id="body4">
+          <div class="app-idle"><div class="app-idle-icon">◈</div><div class="app-idle-txt">Awaiting Document</div></div>
+        </div>
+        <div class="app-footer">
+          <button class="copy-btn" onclick="copyOut(4)">Copy CFO Report</button>
+          <button class="copy-btn" onclick="exportAll()" style="border-color:var(--amber2);color:var(--amber)">⬇ Export All</button>
+          <span class="token-count" id="tok4"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="status-bar">
+      <div class="status-dot"></div>
+      <span class="status-seg">TSM FINOPS NEURAL BRIDGE</span>
+      <span style="color:var(--border2)">·</span>
+      <span class="status-seg" id="apps-active">0 / 4 Engines Active</span>
+      <span style="color:var(--border2)">·</span>
+      <span class="status-seg" id="doc-type-status">No document loaded</span>
+      <span style="color:var(--border2)">·</span>
+      <span class="status-seg" id="model-status" style="color:var(--amber)">groq: not connected</span>
+      <div style="margin-left:auto">
+        <span class="status-seg" id="global-progress"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal-bg" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">⚙ GROQ AI — API KEY</div>
+    <div style="margin-bottom:8px">
+      <div class="field-lbl">Groq API Key</div>
+      <input class="field" id="key-input" type="password" placeholder="gsk_…"/>
+      <div style="color:var(--text-mute);font-size:10px;margin-top:3px">Free key at console.groq.com</div>
+    </div>
+    <div style="margin-bottom:14px">
+      <div class="field-lbl">Model</div>
+      <select class="field" id="model-select">
+        <option value="llama-3.1-8b-instant">llama-3.1-8b-instant (fastest)</option>
+        <option value="llama3-70b-8192" selected>llama3-70b-8192 (recommended)</option>
+        <option value="mixtral-8x7b-32768">mixtral-8x7b-32768 (longest context)</option>
+      </select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="copy-btn" onclick="closeModal()" style="padding:8px">Cancel</button>
+      <button class="fire-btn" style="padding:8px;font-size:9px" onclick="saveKey()">Save &amp; Activate</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast-el"></div>
+
+<script>
+// ── STATE ──
+let groqKey = localStorage.getItem('finops_groq_key') || '';
+let groqModel = localStorage.getItem('finops_groq_model') || 'llama3-70b-8192';
+let currentDoc = 'invoice';
+let outputs = {1:'',2:'',3:'',4:''};
+
+// ── INIT ──
+if (groqKey) updateKeyStatus(true);
+
+// ── MODAL ──
+function openModal() { document.getElementById('modal-bg').classList.add('open'); document.getElementById('key-input').value = groqKey; document.getElementById('model-select').value = groqModel; }
+function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
+function saveKey() {
+  groqKey = document.getElementById('key-input').value.trim();
+  groqModel = document.getElementById('model-select').value;
+  localStorage.setItem('finops_groq_key', groqKey);
+  localStorage.setItem('finops_groq_model', groqModel);
+  updateKeyStatus(!!groqKey);
+  closeModal();
+  toast(groqKey ? '✓ Groq key saved — AI ready' : 'Key cleared');
+}
+function updateKeyStatus(ok) {
+  const el = document.getElementById('ai-status');
+  el.textContent = ok ? 'GROQ: CONNECTED' : 'GROQ: NO KEY';
+  el.style.color = ok ? 'var(--green)' : 'var(--text-mute)';
+  document.getElementById('model-status').textContent = ok ? `groq: ${groqModel}` : 'groq: not connected';
+  document.getElementById('model-status').style.color = ok ? 'var(--green)' : 'var(--amber)';
+}
+
+// ── TOAST ──
+function toast(msg) {
+  const el = document.getElementById('toast-el');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ══════════════════════════════════════════════
+// DOCUMENT FORMS
+// ══════════════════════════════════════════════
+const DOC_FORMS = {
+
+invoice: `
+<div class="field-group"><div class="field-lbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;padding:6px 0;letter-spacing:1px">VENDOR INVOICE (AP)</div></div>
+<div class="field-row field-row-2 mb8">
+  <div class="field-group"><div class="field-lbl">Invoice #</div><input class="field" placeholder="INV-00001" id="inv-num"/></div>
+  <div class="field-group"><div class="field-lbl">PO #</div><input class="field" placeholder="PO-00001" id="inv-po"/></div>
+</div>
+<div class="field-group mb8"><div class="field-lbl">Vendor</div><input class="field" placeholder="Vendor name" id="inv-vendor"/></div>
+<div class="field-group mb8"><div class="field-lbl">Bill To</div><input class="field" placeholder="Company / Dept" id="inv-billto"/></div>
+<div class="field-row field-row-2 mb8">
+  <div class="field-group"><div class="field-lbl">Invoice Date</div><input class="field" type="date" id="inv-date"/></div>
+  <div class="field-group"><div class="field-lbl">Due Date</div><input class="field" type="date" id="inv-due"/></div>
+</div>
+<div class="field-row field-row-2 mb8">
+  <div class="field-group"><div class="field-lbl">Terms</div><select class="field" id="inv-terms"><option>Net 30</option><option>Net 15</option><option>Net 60</option><option>Due on Receipt</option></select></div>
+  <div class="field-group"><div class="field-lbl">Status</div><select class="field" id="inv-status"><option>Pending Approval</option><option>Approved</option><option>On Hold</option><option>Disputed</option></select></div>
+</div>
+<div class="section-divider"><div class="section-lbl">Line Items</div>
+<div id="inv-lines"></div>
+<button class="add-line-btn" onclick="addLine('inv')">+ Add Line Item</button>
+</div>
+<div class="section-divider">
+<div class="totals-row"><span class="totals-lbl">Subtotal</span><span class="totals-val" id="inv-sub">$0.00</span></div>
+<div class="totals-row"><span class="totals-lbl">Tax (%)</span><input class="field" type="number" style="width:80px;display:inline" value="8.5" id="inv-tax-pct" oninput="calcInvTotal()"/></div>
+<div class="totals-row"><span class="totals-lbl">Tax Amount</span><span class="totals-val" id="inv-tax">$0.00</span></div>
+<div class="totals-row"><span class="totals-lbl">TOTAL DUE</span><span class="totals-val total" id="inv-total">$0.00</span></div>
+</div>
+<div class="field-group"><div class="field-lbl">Notes / Flags</div><textarea class="textarea-field" rows="2" placeholder="Missing receiving report, PO mismatch, etc." id="inv-notes"></textarea></div>`,
+
+po: `
+<div class="field-group"><div class="field-lbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;padding:6px 0;letter-spacing:1px">PURCHASE ORDER</div></div>
+<div class="field-row field-row-2 mb8">
+  <div class="field-group"><div class="field-lbl">PO #</div><input class="field" placeholder="PO-00001" id="po-num"/></div>
+  <div class="field-group"><div class="field-lbl">Date Issued</div><input class="field" type="date" id="po-date"/></div>
+</div>
+<div class="field-group mb8"><div class="field-lbl">Vendor</div><input class="field" placeholder="Vendor name" id="po-vendor"/></div>
+<div class="field-row field-row-2 mb8">
+  <div class="field-group"><div class="field-lbl">Project / Dept</div><input class="field" placeholder="Department or Project" id="po-dept"/></div>
+  <div class="field-group"><div class="field-lbl">Requested By</div><input class="field" placeholder="Name" id="po-reqby"/></div>
+</div>
+<div class="field-group mb8"><div class="field-lbl">Approved By</div><input class="field" placeholder="Approver name" id="po-approver"/></div>
+<div class="field-group mb8"><div class="field-lbl">Status</div><select class="field" id="po-status"><option>Pending Approval</option><option>Approved</option><option>Sent to Vendor</option><option>Partially Received</option><option>Closed</option></select></div>
+<div class="section-divider"><div class="section-lbl">Items Ordered</div>
+<div id="po-lines"></div>
+<button class="add-line-btn" onclick="addLine('po')">+ Add Item</button>
+</div>
+<div class="section-divider">
+<div class="totals-row"><span class="totals-lbl">PO Total</span><span class="totals-val total" id="po-total">$0.00</span></div>
+</div>
+<div class="field-group"><div class="field-lbl">Notes</div><textarea class="textarea-field" rows="2" placeholder="Delivery instructions, budget notes…" id="po-notes"></textarea></div>`,
+
+expense: `
+<div class="field-group"><div class="field-lbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;padding:6px 0;letter-spacing:1px">EMPLOYEE EXPENSE REPORT</div></div>
+<div class="field-row field-row-2 mb8">
+  <div class="field-group"><div class="field-lbl">Employee</div><input class="field" placeholder="Full name" id="exp-name"/></div>
+  <div class="field-group"><div class="field-lbl">Department</div><input class="field" placeholder="Department" id="exp-dept"/></div>
+</div>
+<div class="field-row field-row-2 mb8">
+  <div class="field-group"><div class="field-lbl">Report Date</div><input class="field" type="date" id="exp-date"/></div>
+  <div class="field-group"><div class="field-lbl">Manager</div><input class="field" placeholder="Approving manager" id="exp-mgr"/></div>
+</div>
+<div class="section-divider"><div class="section-lbl">Expense Line Items</div>
+<div id="exp-lines"></div>
+<button class="add-line-btn" onclick="addLine('exp')">+ Add Expense</button>
+</div>
+<div class="section-divider">
+<div class="totals-row"><span class="totals-lbl">TOTAL CLAIMED</span><span class="totals-val total" id="exp-total">$0.00</span></div>
+</div>
+<div class="field-group"><div class="field-lbl">Receipts Status</div><select class="field" id="exp-receipts"><option>All receipts attached</option><option>Some receipts missing</option><option>No receipts attached</option></select></div>
+<div class="field-group"><div class="field-lbl">Notes</div><textarea class="textarea-field" rows="2" placeholder="Policy exceptions, unusual items…" id="exp-notes"></textarea></div>`,
+
+bankrec: `
+<div class="field-group"><div class="field-lbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;padding:6px 0;letter-spacing:1px">BANK RECONCILIATION STATEMENT</div></div>
+<div class="field-row field-row-2 mb8">
+  <div class="field-group"><div class="field-lbl">Account</div><input class="field" placeholder="Operating Checking" id="br-acct"/></div>
+  <div class="field-group"><div class="field-lbl">Statement Date</div><input class="field" type="date" id="br-date"/></div>
+</div>
+<div class="section-divider"><div class="section-lbl">Bank Side</div>
+<div class="field-row field-row-2 mb8">
+  <div class="field-group"><div class="field-lbl">Bank Balance ($)</div><input class="field" type="number" placeholder="0.00" id="br-bank" oninput="calcBankRec()"/></div>
+  <div class="field-group"><div class="field-lbl">Deposits in Transit ($)</div><input class="field" type="number" placeholder="0.00" id="br-deposits" oninput="calcBankRec()"/></div>
+</div>
+<div class="field-group mb8"><div class="field-lbl">Outstanding Checks ($)</div><input class="field" type="number" placeholder="0.00" id="br-checks" oninput="calcBankRec()"/></div>
+<div class="totals-row"><span class="totals-lbl">Adjusted Bank Balance</span><span class="totals-val" id="br-adj-bank">$0.00</span></div>
+</div>
+<div class="section-divider"><div class="section-lbl">Book Side</div>
+<div class="field-row field-row-2 mb8">
+  <div class="field-group"><div class="field-lbl">Book Balance ($)</div><input class="field" type="number" placeholder="0.00" id="br-book" oninput="calcBankRec()"/></div>
+  <div class="field-group"><div class="field-lbl">Bank Fees ($)</div><input class="field" type="number" placeholder="0.00" id="br-fees" oninput="calcBankRec()"/></div>
+</div>
+<div class="totals-row"><span class="totals-lbl">Adjusted Book Balance</span><span class="totals-val" id="br-adj-book">$0.00</span></div>
+<div class="totals-row" style="margin-top:6px"><span class="totals-lbl">DIFFERENCE</span><span class="totals-val total" id="br-diff">$0.00</span></div>
+</div>
+<div class="field-group"><div class="field-lbl">Accounts Flagged</div><input class="field" type="number" placeholder="0" id="br-flags"/></div>
+<div class="field-group"><div class="field-lbl">Notes / Discrepancies</div><textarea class="textarea-field" rows="3" placeholder="Describe any discrepancies, missing deposits, timing differences…" id="br-notes"></textarea></div>`,
+
+cc: `
+<div class="field-group"><div class="field-lbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;padding:6px 0;letter-spacing:1px">CORPORATE CREDIT CARD STATEMENT</div></div>
+<div class="field-group mb8"><div class="field-lbl">Cardholder</div><input class="field" placeholder="Employee name" id="cc-holder"/></div>
+<div class="field-row field-row-2 mb8">
+  <div class="field-group"><div class="field-lbl">Period Start</div><input class="field" type="date" id="cc-start"/></div>
+  <div class="field-group"><div class="field-lbl">Period End</div><input class="field" type="date" id="cc-end"/></div>
+</div>
+<div class="field-row field-row-2 mb8">
+  <div class="field-group"><div class="field-lbl">Total Due ($)</div><input class="field" type="number" placeholder="0.00" id="cc-total"/></div>
+  <div class="field-group"><div class="field-lbl">Due Date</div><input class="field" type="date" id="cc-due"/></div>
+</div>
+<div class="section-divider"><div class="section-lbl">Transactions</div>
+<div id="cc-lines"></div>
+<button class="add-line-btn" onclick="addLine('cc')">+ Add Transaction</button>
+</div>
+<div class="field-group"><div class="field-lbl">Receipts Matched</div><select class="field" id="cc-receipts"><option>All matched</option><option>Some missing</option><option>Major gaps</option></select></div>
+<div class="field-group"><div class="field-lbl">Unapproved Vendors / Flags</div><textarea class="textarea-field" rows="2" placeholder="Flag any unapproved vendors, personal charges, policy violations…" id="cc-flags"></textarea></div>`,
+
+balance: `
+<div class="field-group"><div class="field-lbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;padding:6px 0;letter-spacing:1px">BALANCE SHEET</div></div>
+<div class="field-row field-row-2 mb8">
+  <div class="field-group"><div class="field-lbl">Company</div><input class="field" placeholder="Company name" id="bs-company"/></div>
+  <div class="field-group"><div class="field-lbl">Period Ending</div><input class="field" type="date" id="bs-date"/></div>
+</div>
+<div class="section-divider"><div class="section-lbl">Assets</div>
+<div class="field-row field-row-2 mb8">
+  <div class="field-group"><div class="field-lbl">Cash ($)</div><input class="field" type="number" placeholder="0.00" id="bs-cash" oninput="calcBS()"/></div>
+  <div class="field-group"><div class="field-lbl">Accounts Receivable ($)</div><input class="field" type="number" placeholder="0.00" id="bs-ar" oninput="calcBS()"/></div>
+</div>
+<div class="field-row field-row-2 mb8">
+  <div class="field-group"><div class="field-lbl">Inventory ($)</div><input class="field" type="number" placeholder="0.00" id="bs-inv" oninput="calcBS()"/></div>
+  <div class="field-group"><div class="field-lbl">Fixed Assets ($)</div><input class="field" type="number" placeholder="0.00" id="bs-fixed" oninput="calcBS()"/></div>
+</div>
+<div class="totals-row"><span class="totals-lbl">Total Assets</span><span class="totals-val" id="bs-total-assets">$0.00</span></div>
+</div>
+<div class="section-divider"><div class="section-lbl">Liabilities</div>
+<div class="field-row field-row-2 mb8">
+  <div class="field-group"><div class="field-lbl">Accounts Payable ($)</div><input class="field" type="number" placeholder="0.00" id="bs-ap" oninput="calcBS()"/></div>
+  <div class="field-group"><div class="field-lbl">Accrued Expenses ($)</div><input class="field" type="number" placeholder="0.00" id="bs-accrued" oninput="calcBS()"/></div>
+</div>
+<div class="field-group mb8"><div class="field-lbl">Long-Term Debt ($)</div><input class="field" type="number" placeholder="0.00" id="bs-debt" oninput="calcBS()"/></div>
+<div class="totals-row"><span class="totals-lbl">Total Liabilities</span><span class="totals-val" id="bs-total-liab">$0.00</span></div>
+</div>
+<div class="section-divider"><div class="section-lbl">Equity</div>
+<div class="field-row field-row-2 mb8">
+  <div class="field-group"><div class="field-lbl">Retained Earnings ($)</div><input class="field" type="number" placeholder="0.00" id="bs-retained" oninput="calcBS()"/></div>
+  <div class="field-group"><div class="field-lbl">Paid-In Capital ($)</div><input class="field" type="number" placeholder="0.00" id="bs-capital" oninput="calcBS()"/></div>
+</div>
+<div class="totals-row"><span class="totals-lbl">Total Equity</span><span class="totals-val" id="bs-total-eq">$0.00</span></div>
+<div class="totals-row" style="margin-top:6px"><span class="totals-lbl">Balance Check (Assets = Liab + Equity)</span><span class="totals-val total" id="bs-check">—</span></div>
+</div>
+<div class="field-group"><div class="field-lbl">Prior Period Notes / MoM Changes</div><textarea class="textarea-field" rows="2" placeholder="AP increased 14% MoM, cash decreased, etc." id="bs-notes"></textarea></div>`,
+
+pl: `
+<div class="field-group"><div class="field-lbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;padding:6px 0;letter-spacing:1px">INCOME STATEMENT (P&amp;L)</div></div>
+<div class="field-row field-row-2 mb8">
+  <div class="field-group"><div class="field-lbl">Company</div><input class="field" placeholder="Company name" id="pl-company"/></div>
+  <div class="field-group"><div class="field-lbl">Period</div><input class="field" placeholder="Q2 2026 / May 2026" id="pl-period"/></div>
+</div>
+<div class="section-divider"><div class="section-lbl">Revenue</div>
+<div class="field-row field-row-2 mb8">
+  <div class="field-group"><div class="field-lbl">Total Revenue ($)</div><input class="field" type="number" placeholder="0.00" id="pl-rev" oninput="calcPL()"/></div>
+  <div class="field-group"><div class="field-lbl">Revenue Budget ($)</div><input class="field" type="number" placeholder="0.00" id="pl-rev-bud" oninput="calcPL()"/></div>
+</div>
+<div class="field-group mb8"><div class="field-lbl">COGS ($)</div><input class="field" type="number" placeholder="0.00" id="pl-cogs" oninput="calcPL()"/></div>
+<div class="totals-row"><span class="totals-lbl">Gross Profit</span><span class="totals-val" id="pl-gross">$0.00</span></div>
+<div class="totals-row"><span class="totals-lbl">Gross Margin %</span><span class="totals-val" id="pl-margin">0%</span></div>
+</div>
+<div class="section-divider"><div class="section-lbl">Operating Expenses</div>
+<div class="field-row field-row-2 mb8">
+  <div class="field-group"><div class="field-lbl">Payroll ($)</div><input class="field" type="number" placeholder="0.00" id="pl-payroll" oninput="calcPL()"/></div>
+  <div class="field-group"><div class="field-lbl">Rent ($)</div><input class="field" type="number" placeholder="0.00" id="pl-rent" oninput="calcPL()"/></div>
+</div>
+<div class="field-row field-row-2 mb8">
+  <div class="field-group"><div class="field-lbl">Utilities ($)</div><input class="field" type="number" placeholder="0.00" id="pl-util" oninput="calcPL()"/></div>
+  <div class="field-group"><div class="field-lbl">Other OpEx ($)</div><input class="field" type="number" placeholder="0.00" id="pl-other" oninput="calcPL()"/></div>
+</div>
+<div class="totals-row"><span class="totals-lbl">Total OpEx</span><span class="totals-val" id="pl-total-opex">$0.00</span></div>
+<div class="totals-row" style="margin-top:6px"><span class="totals-lbl">NET INCOME</span><span class="totals-val total" id="pl-net">$0.00</span></div>
+</div>
+<div class="field-group"><div class="field-lbl">Variance Notes</div><textarea class="textarea-field" rows="2" placeholder="Gross margin below target, OpEx over budget, etc." id="pl-notes"></textarea></div>`,
+
+je: `
+<div class="field-group"><div class="field-lbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;padding:6px 0;letter-spacing:1px">JOURNAL ENTRY</div></div>
+<div class="field-row field-row-2 mb8">
+  <div class="field-group"><div class="field-lbl">JE #</div><input class="field" placeholder="JE-00001" id="je-num"/></div>
+  <div class="field-group"><div class="field-lbl">Date</div><input class="field" type="date" id="je-date"/></div>
+</div>
+<div class="field-row field-row-2 mb8">
+  <div class="field-group"><div class="field-lbl">Prepared By</div><input class="field" placeholder="Name" id="je-prep"/></div>
+  <div class="field-group"><div class="field-lbl">Approved By</div><input class="field" placeholder="Approver (required)" id="je-approver"/></div>
+</div>
+<div class="field-group mb8"><div class="field-lbl">Description / Purpose</div><input class="field" placeholder="Accrual entry, depreciation, correction, etc." id="je-desc"/></div>
+<div class="field-group mb8"><div class="field-lbl">Type</div><select class="field" id="je-type"><option>Accrual</option><option>Correction / Reversal</option><option>Depreciation</option><option>Payroll</option><option>Prepaid Amortization</option><option>Reclassification</option><option>Other</option></select></div>
+<div class="section-divider"><div class="section-lbl">Debit / Credit Lines</div>
+<div id="je-lines"></div>
+<button class="add-line-btn" onclick="addLine('je')">+ Add Line</button>
+</div>
+<div class="section-divider">
+<div class="totals-row"><span class="totals-lbl">Total Debits</span><span class="totals-val" id="je-debits">$0.00</span></div>
+<div class="totals-row"><span class="totals-lbl">Total Credits</span><span class="totals-val" id="je-credits">$0.00</span></div>
+<div class="totals-row"><span class="totals-lbl">BALANCE CHECK</span><span class="totals-val total" id="je-balance">—</span></div>
+</div>
+<div class="field-group"><div class="field-lbl">Supporting Documentation</div><select class="field" id="je-docs"><option>All supporting docs attached</option><option>Partial documentation</option><option>No documentation attached</option></select></div>`,
+
+ar: `
+<div class="field-group"><div class="field-lbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;padding:6px 0;letter-spacing:1px">ACCOUNTS RECEIVABLE INVOICE</div></div>
+<div class="field-row field-row-2 mb8">
+  <div class="field-group"><div class="field-lbl">Invoice #</div><input class="field" placeholder="AR-00001" id="ar-num"/></div>
+  <div class="field-group"><div class="field-lbl">Customer</div><input class="field" placeholder="Customer name" id="ar-customer"/></div>
+</div>
+<div class="field-row field-row-2 mb8">
+  <div class="field-group"><div class="field-lbl">Invoice Date</div><input class="field" type="date" id="ar-date"/></div>
+  <div class="field-group"><div class="field-lbl">Due Date</div><input class="field" type="date" id="ar-due"/></div>
+</div>
+<div class="field-group mb8"><div class="field-lbl">Status</div><select class="field" id="ar-status"><option>Sent</option><option>Pending</option><option>Overdue — 1-30 days</option><option>Overdue — 31-60 days</option><option>Overdue — 60+ days</option><option>Paid</option><option>Disputed</option></select></div>
+<div class="section-divider"><div class="section-lbl">Invoice Line Items</div>
+<div id="ar-lines"></div>
+<button class="add-line-btn" onclick="addLine('ar')">+ Add Line</button>
+</div>
+<div class="section-divider">
+<div class="totals-row"><span class="totals-lbl">INVOICE TOTAL</span><span class="totals-val total" id="ar-total">$0.00</span></div>
+</div>
+<div class="field-group"><div class="field-lbl">Days Overdue</div><input class="field" type="number" placeholder="0" id="ar-days"/></div>
+<div class="field-group"><div class="field-lbl">Collection Notes</div><textarea class="textarea-field" rows="2" placeholder="Contact attempts, disputes, payment arrangements…" id="ar-notes"></textarea></div>`,
+
+close: `
+<div class="field-group"><div class="field-lbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;padding:6px 0;letter-spacing:1px">MONTH-END CLOSE CHECKLIST</div></div>
+<div class="field-row field-row-2 mb8">
+  <div class="field-group"><div class="field-lbl">Period</div><input class="field" placeholder="May 2026" id="cl-period"/></div>
+  <div class="field-group"><div class="field-lbl">Close Owner</div><input class="field" placeholder="Controller name" id="cl-owner"/></div>
+</div>
+<div class="field-row field-row-2 mb8">
+  <div class="field-group"><div class="field-lbl">Target Close Date</div><input class="field" type="date" id="cl-target"/></div>
+  <div class="field-group"><div class="field-lbl">Current Status</div><select class="field" id="cl-status"><option>In Progress</option><option>On Track</option><option>At Risk</option><option>Complete</option></select></div>
+</div>
+<div class="section-divider"><div class="section-lbl">Close Tasks</div>
+<div id="close-tasks"></div>
+</div>
+<div class="section-divider">
+<div class="totals-row"><span class="totals-lbl">Tasks Complete</span><span class="totals-val" id="cl-complete">0 / 9</span></div>
+<div class="totals-row"><span class="totals-lbl">% Complete</span><span class="totals-val total" id="cl-pct">0%</span></div>
+</div>
+<div class="field-group"><div class="field-lbl">Blockers / Open Issues</div><textarea class="textarea-field" rows="3" placeholder="Waiting on payroll accrual, AR aging dispute, missing JE approval…" id="cl-blockers"></textarea></div>`,
+
+};
+
+// ── SET DOC TYPE ──
+function setDoc(type, btn) {
+  currentDoc = type;
+  document.querySelectorAll('.doc-tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.getElementById('form-area').innerHTML = DOC_FORMS[type] || '';
+  // Initialize dynamic elements
+  if (type === 'invoice') { addLine('inv'); addLine('inv'); }
+  else if (type === 'po') { addLine('po'); addLine('po'); }
+  else if (type === 'expense') { addLine('exp'); addLine('exp'); addLine('exp'); }
+  else if (type === 'cc') { addLine('cc'); addLine('cc'); addLine('cc'); }
+  else if (type === 'je') { addLine('je'); addLine('je'); }
+  else if (type === 'ar') { addLine('ar'); addLine('ar'); }
+  else if (type === 'close') { initCloseTasks(); }
+  document.getElementById('doc-status').textContent = 'FILL DOCUMENT FIELDS TO PROCESS';
+  document.getElementById('doc-type-status').textContent = type.toUpperCase() + ' loaded';
+}
+
+// ── LINE ITEM MANAGEMENT ──
+const lineConfigs = {
+  inv: {cols:['Description','Qty','Unit Cost ($)','Total'],types:['text','number','number','readonly'],id:'inv-lines',onchange:'calcInvTotal'},
+  po: {cols:['Item','Qty','Unit Cost ($)','Total'],types:['text','number','number','readonly'],id:'po-lines',onchange:'calcPOTotal'},
+  exp: {cols:['Date','Category','Description','Amount ($)'],types:['date','select-exp','text','number'],id:'exp-lines',onchange:'calcExpTotal'},
+  cc: {cols:['Date','Vendor','Amount ($)','Description','Receipt?'],types:['date','text','number','text','select-yn'],id:'cc-lines',onchange:null},
+  je: {cols:['Account','Debit ($)','Credit ($)'],types:['text','number','number'],id:'je-lines',onchange:'calcJE'},
+  ar: {cols:['Item / Service','Qty','Rate ($)','Total'],types:['text','number','number','readonly'],id:'ar-lines',onchange:'calcARTotal'},
+};
+
+function addLine(prefix) {
+  const cfg = lineConfigs[prefix]; if (!cfg) return;
+  const container = document.getElementById(cfg.id); if (!container) return;
+  const row = document.createElement('div');
+  row.className = 'line-item-row ' + (cfg.cols.length === 4 ? 'line-item-row-4' : cfg.cols.length === 5 ? 'line-item-row-2' : 'line-item-row-3');
+  row.innerHTML = cfg.types.map((t, i) => {
+    if (t === 'readonly') return `<input class="field" readonly placeholder="$0.00" style="color:var(--amber)"/>`;
+    if (t === 'select-exp') return `<select class="field" style="font-size:10px"><option>Travel</option><option>Meals</option><option>Lodging</option><option>Supplies</option><option>Software</option><option>Other</option></select>`;
+    if (t === 'select-yn') return `<select class="field" style="font-size:10px"><option>✓ Yes</option><option>✗ Missing</option></select>`;
+    if (t === 'number') return `<input class="field" type="number" placeholder="0" oninput="${cfg.onchange?cfg.onchange+'()':''}"/>`;
+    if (t === 'date') return `<input class="field" type="date"/>`;
+    return `<input class="field" type="text" placeholder="${cfg.cols[i]}"/>`;
+  }).join('') + `<button class="remove-btn" onclick="this.parentElement.remove();${cfg.onchange?cfg.onchange+'()':''}">✕</button>`;
+  container.appendChild(row);
+}
+
+// ── CALCULATIONS ──
+function calcInvTotal() {
+  let sub = 0;
+  document.querySelectorAll('#inv-lines .line-item-row').forEach(row => {
+    const inputs = row.querySelectorAll('input[type="number"]');
+    if (inputs.length >= 2) {
+      const qty = parseFloat(inputs[0].value) || 0;
+      const unit = parseFloat(inputs[1].value) || 0;
+      const total = qty * unit;
+      if (row.querySelector('input[readonly]')) row.querySelector('input[readonly]').value = '$' + total.toFixed(2);
+      sub += total;
+    }
+  });
+  const taxPct = parseFloat(document.getElementById('inv-tax-pct')?.value) || 0;
+  const tax = sub * taxPct / 100;
+  if(document.getElementById('inv-sub')) document.getElementById('inv-sub').textContent = '$' + sub.toFixed(2);
+  if(document.getElementById('inv-tax')) document.getElementById('inv-tax').textContent = '$' + tax.toFixed(2);
+  if(document.getElementById('inv-total')) document.getElementById('inv-total').textContent = '$' + (sub + tax).toFixed(2);
+}
+function calcPOTotal() {
+  let total = 0;
+  document.querySelectorAll('#po-lines .line-item-row').forEach(row => {
+    const inputs = row.querySelectorAll('input[type="number"]');
+    if (inputs.length >= 2) { const t = (parseFloat(inputs[0].value)||0) * (parseFloat(inputs[1].value)||0); if(row.querySelector('input[readonly]')) row.querySelector('input[readonly]').value = '$'+t.toFixed(2); total += t; }
+  });
+  if(document.getElementById('po-total')) document.getElementById('po-total').textContent = '$' + total.toFixed(2);
+}
+function calcExpTotal() {
+  let total = 0;
+  document.querySelectorAll('#exp-lines .line-item-row').forEach(row => {
+    const nums = row.querySelectorAll('input[type="number"]');
+    if (nums.length) total += parseFloat(nums[0].value) || 0;
+  });
+  if(document.getElementById('exp-total')) document.getElementById('exp-total').textContent = '$' + total.toFixed(2);
+}
+function calcARTotal() {
+  let total = 0;
+  document.querySelectorAll('#ar-lines .line-item-row').forEach(row => {
+    const inputs = row.querySelectorAll('input[type="number"]');
+    if (inputs.length >= 2) { const t = (parseFloat(inputs[0].value)||0) * (parseFloat(inputs[1].value)||0); if(row.querySelector('input[readonly]')) row.querySelector('input[readonly]').value = '$'+t.toFixed(2); total += t; }
+  });
+  if(document.getElementById('ar-total')) document.getElementById('ar-total').textContent = '$' + total.toFixed(2);
+}
+function calcBankRec() {
+  const bank = parseFloat(document.getElementById('br-bank')?.value) || 0;
+  const dep = parseFloat(document.getElementById('br-deposits')?.value) || 0;
+  const chk = parseFloat(document.getElementById('br-checks')?.value) || 0;
+  const book = parseFloat(document.getElementById('br-book')?.value) || 0;
+  const fees = parseFloat(document.getElementById('br-fees')?.value) || 0;
+  const adjBank = bank + dep - chk;
+  const adjBook = book - fees;
+  const diff = adjBank - adjBook;
+  if(document.getElementById('br-adj-bank')) document.getElementById('br-adj-bank').textContent = '$' + adjBank.toFixed(2);
+  if(document.getElementById('br-adj-book')) document.getElementById('br-adj-book').textContent = '$' + adjBook.toFixed(2);
+  const diffEl = document.getElementById('br-diff');
+  if(diffEl) { diffEl.textContent = '$' + Math.abs(diff).toFixed(2) + (diff !== 0 ? ' ⚠' : ' ✓'); diffEl.style.color = diff !== 0 ? 'var(--red)' : 'var(--green)'; }
+}
+function calcBS() {
+  const cash = parseFloat(document.getElementById('bs-cash')?.value) || 0;
+  const ar = parseFloat(document.getElementById('bs-ar')?.value) || 0;
+  const inv = parseFloat(document.getElementById('bs-inv')?.value) || 0;
+  const fixed = parseFloat(document.getElementById('bs-fixed')?.value) || 0;
+  const ap = parseFloat(document.getElementById('bs-ap')?.value) || 0;
+  const acc = parseFloat(document.getElementById('bs-accrued')?.value) || 0;
+  const debt = parseFloat(document.getElementById('bs-debt')?.value) || 0;
+  const ret = parseFloat(document.getElementById('bs-retained')?.value) || 0;
+  const cap = parseFloat(document.getElementById('bs-capital')?.value) || 0;
+  const assets = cash + ar + inv + fixed;
+  const liab = ap + acc + debt;
+  const eq = ret + cap;
+  if(document.getElementById('bs-total-assets')) document.getElementById('bs-total-assets').textContent = '$' + assets.toFixed(2);
+  if(document.getElementById('bs-total-liab')) document.getElementById('bs-total-liab').textContent = '$' + liab.toFixed(2);
+  if(document.getElementById('bs-total-eq')) document.getElementById('bs-total-eq').textContent = '$' + eq.toFixed(2);
+  const chk = document.getElementById('bs-check');
+  if(chk) { const balanced = Math.abs(assets - liab - eq) < 0.01; chk.textContent = balanced ? '✓ BALANCED' : `⚠ OFF BY $${Math.abs(assets - liab - eq).toFixed(2)}`; chk.style.color = balanced ? 'var(--green)' : 'var(--red)'; }
+}
+function calcPL() {
+  const rev = parseFloat(document.getElementById('pl-rev')?.value) || 0;
+  const revBud = parseFloat(document.getElementById('pl-rev-bud')?.value) || 0;
+  const cogs = parseFloat(document.getElementById('pl-cogs')?.value) || 0;
+  const payroll = parseFloat(document.getElementById('pl-payroll')?.value) || 0;
+  const rent = parseFloat(document.getElementById('pl-rent')?.value) || 0;
+  const util = parseFloat(document.getElementById('pl-util')?.value) || 0;
+  const other = parseFloat(document.getElementById('pl-other')?.value) || 0;
+  const gross = rev - cogs;
+  const margin = rev > 0 ? (gross / rev * 100).toFixed(1) : 0;
+  const opex = payroll + rent + util + other;
+  const net = gross - opex;
+  if(document.getElementById('pl-gross')) document.getElementById('pl-gross').textContent = '$' + gross.toFixed(2);
+  if(document.getElementById('pl-margin')) { document.getElementById('pl-margin').textContent = margin + '%'; document.getElementById('pl-margin').style.color = margin < 30 ? 'var(--red)' : margin < 50 ? 'var(--amber)' : 'var(--green)'; }
+  if(document.getElementById('pl-total-opex')) document.getElementById('pl-total-opex').textContent = '$' + opex.toFixed(2);
+  if(document.getElementById('pl-net')) { document.getElementById('pl-net').textContent = '$' + net.toFixed(2); document.getElementById('pl-net').style.color = net < 0 ? 'var(--red)' : 'var(--green)'; }
+}
+function calcJE() {
+  let debits = 0, credits = 0;
+  document.querySelectorAll('#je-lines .line-item-row').forEach(row => {
+    const nums = row.querySelectorAll('input[type="number"]');
+    if (nums.length >= 2) { debits += parseFloat(nums[0].value) || 0; credits += parseFloat(nums[1].value) || 0; }
+  });
+  if(document.getElementById('je-debits')) document.getElementById('je-debits').textContent = '$' + debits.toFixed(2);
+  if(document.getElementById('je-credits')) document.getElementById('je-credits').textContent = '$' + credits.toFixed(2);
+  const balEl = document.getElementById('je-balance');
+  if(balEl) { const balanced = Math.abs(debits - credits) < 0.01; balEl.textContent = balanced ? '✓ BALANCED' : `⚠ OUT OF BALANCE $${Math.abs(debits-credits).toFixed(2)}`; balEl.style.color = balanced ? 'var(--green)' : 'var(--red)'; }
+}
+
+// ── CLOSE TASKS ──
+const CLOSE_TASKS = ['Bank Reconciliation','AP Reconciliation','AR Aging Review','Credit Card Reconciliation','Prepaid Amortization Entries','Accrual Journal Entries','Payroll Posting & Verification','Financial Statements Drafted','Management Approvals Completed'];
+function initCloseTasks() {
+  const el = document.getElementById('close-tasks'); if (!el) return;
+  el.innerHTML = CLOSE_TASKS.map((t, i) => `
+    <div class="chk-row">
+      <input type="checkbox" class="chk" id="cl${i}" onchange="updateCloseProgress()"/>
+      <span class="chk-lbl">${t}</span>
+      <select style="background:var(--bg);border:1px solid var(--border);color:var(--text-mute);font-family:var(--mono);font-size:8px;padding:2px 5px;outline:none">
+        <option>Pending</option><option>In Progress</option><option>Complete</option><option>Blocked</option>
+      </select>
+    </div>`).join('');
+}
+function updateCloseProgress() {
+  const done = document.querySelectorAll('.chk:checked').length;
+  const total = CLOSE_TASKS.length;
+  if(document.getElementById('cl-complete')) document.getElementById('cl-complete').textContent = done + ' / ' + total;
+  if(document.getElementById('cl-pct')) { const pct = Math.round(done/total*100); document.getElementById('cl-pct').textContent = pct + '%'; document.getElementById('cl-pct').style.color = pct === 100 ? 'var(--green)' : pct > 60 ? 'var(--amber)' : 'var(--text)'; }
+}
+
+// ══════════════════════════════════════════════
+// DOCUMENT SERIALIZER — builds prompt text
+// ══════════════════════════════════════════════
+function serializeDoc() {
+  const g = id => document.getElementById(id)?.value || '';
+  const gText = id => document.getElementById(id)?.textContent || '';
+  const docTypes = {
+    invoice:`DOCUMENT TYPE: Vendor Invoice (AP)\nInvoice #: ${g('inv-num')}\nVendor: ${g('inv-vendor')}\nBill To: ${g('inv-billto')}\nDate: ${g('inv-date')} | Due: ${g('inv-due')}\nPO #: ${g('inv-po')} | Terms: ${g('inv-terms')} | Status: ${g('inv-status')}\nSubtotal: ${gText('inv-sub')} | Tax: ${gText('inv-tax')} | TOTAL DUE: ${gText('inv-total')}\nNotes: ${g('inv-notes')}`,
+    po:`DOCUMENT TYPE: Purchase Order\nPO #: ${g('po-num')}\nVendor: ${g('po-vendor')}\nDept/Project: ${g('po-dept')}\nRequested By: ${g('po-reqby')} | Approved By: ${g('po-approver')}\nStatus: ${g('po-status')}\nPO Total: ${gText('po-total')}\nNotes: ${g('po-notes')}`,
+    expense:`DOCUMENT TYPE: Employee Expense Report\nEmployee: ${g('exp-name')} | Dept: ${g('exp-dept')}\nDate: ${g('exp-date')} | Manager: ${g('exp-mgr')}\nTotal Claimed: ${gText('exp-total')}\nReceipts: ${g('exp-receipts')}\nNotes: ${g('exp-notes')}`,
+    bankrec:`DOCUMENT TYPE: Bank Reconciliation Statement\nAccount: ${g('br-acct')} | Date: ${g('br-date')}\nBank Balance → Adjusted: ${gText('br-adj-bank')}\nBook Balance → Adjusted: ${gText('br-adj-book')}\nDifference: ${gText('br-diff')}\nFlags: ${g('br-flags')} accounts\nNotes: ${g('br-notes')}`,
+    cc:`DOCUMENT TYPE: Corporate Credit Card Statement\nCardholder: ${g('cc-holder')}\nPeriod: ${g('cc-start')} to ${g('cc-end')}\nTotal Due: $${g('cc-total')} | Due: ${g('cc-due')}\nReceipts: ${g('cc-receipts')}\nFlags: ${g('cc-flags')}`,
+    balance:`DOCUMENT TYPE: Balance Sheet\nCompany: ${g('bs-company')} | Period: ${g('bs-date')}\nTotal Assets: ${gText('bs-total-assets')}\nTotal Liabilities: ${gText('bs-total-liab')}\nTotal Equity: ${gText('bs-total-eq')}\nBalance Check: ${gText('bs-check')}\nNotes: ${g('bs-notes')}`,
+    pl:`DOCUMENT TYPE: Income Statement (P&L)\nCompany: ${g('pl-company')} | Period: ${g('pl-period')}\nRevenue: $${g('pl-rev')} (Budget: $${g('pl-rev-bud')})\nGross Profit: ${gText('pl-gross')} | Margin: ${gText('pl-margin')}\nTotal OpEx: ${gText('pl-total-opex')}\nNet Income: ${gText('pl-net')}\nNotes: ${g('pl-notes')}`,
+    je:`DOCUMENT TYPE: Journal Entry\nJE #: ${g('je-num')} | Date: ${g('je-date')}\nPrepared By: ${g('je-prep')} | Approved By: ${g('je-approver') || 'MISSING — NOT APPROVED'}\nType: ${g('je-type')} | Description: ${g('je-desc')}\nTotal Debits: ${gText('je-debits')} | Total Credits: ${gText('je-credits')}\nBalance: ${gText('je-balance')}\nDocumentation: ${g('je-docs')}`,
+    ar:`DOCUMENT TYPE: Accounts Receivable Invoice\nInvoice #: ${g('ar-num')} | Customer: ${g('ar-customer')}\nDate: ${g('ar-date')} | Due: ${g('ar-due')}\nStatus: ${g('ar-status')} | Days Overdue: ${g('ar-days') || '0'}\nInvoice Total: ${gText('ar-total')}\nNotes: ${g('ar-notes')}`,
+    close:`DOCUMENT TYPE: Month-End Close Checklist\nPeriod: ${g('cl-period')} | Owner: ${g('cl-owner')}\nTarget Close: ${g('cl-target')} | Status: ${g('cl-status')}\nCompletion: ${gText('cl-complete')} (${gText('cl-pct')})\nBlockers: ${g('cl-blockers')}`,
+  };
+  return docTypes[currentDoc] || 'Unknown document type';
+}
+
+// ══════════════════════════════════════════════
+// AI PROMPTS PER APP
+// ══════════════════════════════════════════════
+const APP_PROMPTS = {
+  app1: {
+    system: `You are a financial document triage AI. You analyze accounting documents and identify issues, exceptions, missing information, and compliance flags. Output in this exact format:
+
+DOCUMENT TYPE: [type]
+TRIAGE STATUS: [CLEAN / REVIEW NEEDED / EXCEPTION / CRITICAL FLAG]
+
+FLAGS DETECTED:
+• [specific flag 1]
+• [specific flag 2]
+
+MISSING INFORMATION:
+• [missing item or "None detected"]
+
+COMPLIANCE CONCERNS:
+• [concern or "None"]
+
+PRIORITY SCORE: [1-10] | URGENCY: [CRITICAL/HIGH/MEDIUM/LOW]
+
+Be specific, cite amounts and dates. Max 200 words.`,
+    user: doc => `Analyze and triage this financial document:\n\n${doc}`
+  },
+  app2: {
+    system: `You are a financial variance and risk intelligence AI. You analyze accounting documents for financial risks, variances from budget/expectations, and anomalies. Output format:
+
+RISK LEVEL: [HIGH / MEDIUM / LOW]
+
+VARIANCE ANALYSIS:
+• [specific variance or metric]
+• [trend or comparison]
+
+FINANCIAL RISKS IDENTIFIED:
+• [risk item + dollar amount if applicable]
+
+ANOMALIES:
+• [unusual items or "None detected"]
+
+KEY METRICS:
+• [calculated metric 1]
+• [calculated metric 2]
+
+ESCALATION NEEDED: [Yes/No] — [to whom and why]
+
+Be specific with numbers. Max 200 words.`,
+    user: doc => `Perform variance and risk analysis on this financial document:\n\n${doc}`
+  },
+  app3: {
+    system: `You are a Controller Action Plan AI. You receive financial documents and generate the specific, prioritized next actions a controller or accounting manager must take. Output format:
+
+CONTROLLER ACTION PLAN
+
+IMMEDIATE ACTIONS (Today):
+1. [specific action + owner + deadline]
+2. [specific action + owner + deadline]
+
+SHORT-TERM ACTIONS (This Week):
+1. [action]
+2. [action]
+
+APPROVAL / SIGNATURE REQUIRED:
+• [who needs to sign off and what]
+
+SYSTEM ENTRIES NEEDED:
+• [what to post, where, when]
+
+COMMUNICATIONS REQUIRED:
+• [who to notify and about what]
+
+ESTIMATED RESOLUTION TIME: [X hours/days]
+
+Be directive and specific. Max 250 words.`,
+    user: doc => `Generate a Controller Action Plan for this financial document:\n\n${doc}`
+  },
+  app4: {
+    system: `You are a CFO Executive Intelligence AI. You translate accounting documents into executive-level financial intelligence. Output format:
+
+CFO EXECUTIVE SUMMARY
+[1-2 sentence board-level summary]
+
+FINANCIAL IMPACT:
+• Cash Impact: $[amount and direction]
+• P&L Impact: $[amount]
+• Balance Sheet Effect: [description]
+
+RISK EXPOSURE:
+• [risk + $ exposure]
+
+STRATEGIC IMPLICATIONS:
+[2-3 sentences on what this means for the business]
+
+RECOMMENDED CFO DIRECTIVES:
+1. [directive]
+2. [directive]
+
+MONTH-END / REPORTING IMPACT:
+[How this affects close, reporting, or audit readiness]
+
+Be executive-level, dollar-precise. Max 250 words.`,
+    user: doc => `Generate CFO executive intelligence from this financial document:\n\n${doc}`
+  }
+};
+
+// ══════════════════════════════════════════════
+// FIRE ALL 4 ENGINES
+// ══════════════════════════════════════════════
+async function fireAll() {
+  if (!groqKey) { openModal(); return; }
+  const docText = serializeDoc();
+
+  // Reset outputs
+  outputs = {1:'',2:'',3:'',4:''};
+  [1,2,3,4].forEach(n => {
+    document.getElementById('body'+n).innerHTML = '<div class="app-idle"><div class="app-idle-icon" style="opacity:.6">⟳</div><div class="app-idle-txt">Processing…</div></div>';
+    document.getElementById('badge'+n).className = 'app-badge badge-active';
+    document.getElementById('badge'+n).textContent = 'ACTIVE';
+    document.getElementById('tok'+n).textContent = '';
+  });
+
+  // Pipeline animation
+  ['pipe1','pipe2','pipe3','pipe4','pipe5'].forEach((id,i) => setTimeout(() => { document.getElementById(id).className = 'pipe-node active'; setTimeout(() => document.getElementById(id).className = 'pipe-node done', 1500); }, i*300));
+  ['arr1','arr2','arr3','arr4'].forEach((id,i) => setTimeout(() => document.getElementById(id).className = 'pipe-arrow active', i*300+200));
+
+  document.getElementById('apps-active').textContent = '4 / 4 Engines Active';
+  document.getElementById('global-progress').textContent = 'Firing all 4 engines…';
+  document.getElementById('output-title').textContent = `Processing: ${currentDoc.toUpperCase()} — All 4 Engines Live`;
+
+  const engines = [1,2,3,4].map(n => runEngine(n, docText));
+  await Promise.all(engines);
+
+  document.getElementById('global-progress').textContent = '✓ All 4 engines complete';
+  document.getElementById('apps-active').textContent = '4 / 4 Complete';
+  toast('✓ Document processed — all 4 engines complete');
+}
+
+async function runEngine(num, docText) {
+  const prompt = APP_PROMPTS['app'+num];
+  const bodyEl = document.getElementById('body'+num);
+  const badgeEl = document.getElementById('badge'+num);
+  const tokEl = document.getElementById('tok'+num);
+
+  bodyEl.innerHTML = '';
+  const outDiv = document.createElement('div');
+  outDiv.className = 'app-output';
+  bodyEl.appendChild(outDiv);
+
+  let full = '', tokens = 0;
+  try {
+    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + groqKey },
+      body: JSON.stringify({
+        model: groqModel, max_tokens: 700, stream: true,
+        messages: [{ role: 'system', content: prompt.system }, { role: 'user', content: prompt.user(docText) }]
+      })
+    });
+    const reader = resp.body.getReader(), dec = new TextDecoder();
+    while (true) {
+      const { done, value } = await reader.read(); if (done) break;
+      for (const line of dec.decode(value).split('\n')) {
+        if (!line.startsWith('data: ') || line.includes('[DONE]')) continue;
+        try {
+          const chunk = JSON.parse(line.slice(6)).choices?.[0]?.delta?.content || '';
+          full += chunk; tokens++;
+          outDiv.textContent = full + '▌';
+          bodyEl.scrollTop = bodyEl.scrollHeight;
+        } catch {}
+      }
+    }
+    outDiv.textContent = full;
+    outputs[num] = full;
+    badgeEl.className = 'app-badge badge-done';
+    badgeEl.textContent = 'COMPLETE';
+    tokEl.textContent = tokens + ' tokens';
+  } catch(e) {
+    outDiv.textContent = 'Error: ' + e.message;
+    badgeEl.className = 'app-badge badge-standby';
+    badgeEl.textContent = 'ERROR';
+  }
+}
+
+// ── COPY / EXPORT ──
+function copyOut(num) {
+  if (outputs[num]) { navigator.clipboard.writeText(outputs[num]); toast('✓ Copied App 0' + num + ' output'); }
+  else toast('No output yet — process a document first');
+}
+function exportAll() {
+  const doc = serializeDoc();
+  const all = `TSM FINOPS ACCOUNTING POC EXPORT\n${new Date().toLocaleString()}\nDocument Type: ${currentDoc.toUpperCase()}\n\n${'='.repeat(60)}\nDOCUMENT DATA:\n${'='.repeat(60)}\n${doc}\n\n${'='.repeat(60)}\nAPP 01 — TRIAGE & FLAGS:\n${'='.repeat(60)}\n${outputs[1]||'No output'}\n\n${'='.repeat(60)}\nAPP 02 — VARIANCE & RISK:\n${'='.repeat(60)}\n${outputs[2]||'No output'}\n\n${'='.repeat(60)}\nAPP 03 — CONTROLLER ACTION PLAN:\n${'='.repeat(60)}\n${outputs[3]||'No output'}\n\n${'='.repeat(60)}\nAPP 04 — CFO EXECUTIVE INTELLIGENCE:\n${'='.repeat(60)}\n${outputs[4]||'No output'}`;
+  const blob = new Blob([all], {type:'text/plain'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `finops-poc-${currentDoc}-${Date.now()}.txt`; a.click();
+  toast('✓ Full report exported');
+}
+
+// ── INIT ──
+setDoc('invoice', document.querySelector('.doc-tab.active'));
+</script>
+</body>
+</html>
