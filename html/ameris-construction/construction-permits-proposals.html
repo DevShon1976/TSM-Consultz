@@ -1104,3 +1104,36 @@ window.addEventListener('DOMContentLoaded', () => {
     console.log("Construction Suite Runtime Initialized.");
 });
 </script>
+
+<style>
+/* Force visibility for items that should be shown */
+.show-item { display: block !important; opacity: 1 !important; visibility: visible !important; }
+.hide-item { display: none !important; }
+</style>
+
+<script>
+// Overriding setFilter to handle the specific UI in your screenshot
+function setFilter(category) {
+    console.log("Active Filter: " + category);
+    
+    // 1. Update the button styles
+    document.querySelectorAll('.nav-chip, .filter-btn').forEach(btn => {
+        btn.style.backgroundColor = (btn.innerText.toLowerCase() === category.toLowerCase()) ? '#ffaa00' : '';
+        btn.style.color = (btn.innerText.toLowerCase() === category.toLowerCase()) ? '#000' : '';
+    });
+
+    // 2. Target the document cards (adjusting selector for your specific UI)
+    const cards = document.querySelectorAll('.category-card, [data-category], .featured-doc-card');
+    
+    cards.forEach(card => {
+        const cardCat = card.getAttribute('data-category') || "";
+        if (category === 'all' || cardCat.toLowerCase() === category.toLowerCase()) {
+            card.classList.remove('hide-item');
+            card.classList.add('show-item');
+        } else {
+            card.classList.remove('show-item');
+            card.classList.add('hide-item');
+        }
+    });
+}
+</script>
