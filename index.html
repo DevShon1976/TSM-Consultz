@@ -1,246 +1,448 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TSM Shell</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Share+Tech+Mono&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-  <style>
-    :root {
-      --bg:      #050c14;
-      --bg2:     #070d18;
-      --surface: #09131f;
-      --card:    #0b1825;
-      --border:  rgba(6,182,212,.13);
-      --border2: rgba(6,182,212,.28);
-      --cyan:    #06b6d4;
-      --cyan2:   #38bdf8;
-      --green:   #00ff88;
-      --amber:   #f59e0b;
-      --purple:  #a855f7;
-      --coral:   #f97316;
-      --red:     #f43f5e;
-      --txt:     #c2d8ec;
-      --txt2:    #607a94;
-      --glow:    0 0 28px rgba(6,182,212,.16);
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Construction Operations Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #070b0e;
+  --s1: #0b1015;
+  --s2: #0f1519;
+  --s3: #131a1f;
+  --border: #1a2530;
+  --border2: #243040;
+  --cyan: #00e5cc;
+  --cyan2: #00b8a5;
+  --green: #00ff88;
+  --amber: #f59e0b;
+  --orange: #fb923c;
+  --red: #ef4444;
+  --blue: #3b82f6;
+  --purple: #a78bfa;
+  --white: #e2eaf0;
+  --text: #b0c4d4;
+  --muted: #506070;
+  --mono: 'Share Tech Mono', monospace;
+  --orb: 'Orbitron', monospace;
+  --raj: 'Rajdhani', sans-serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--raj);
+  height:100vh;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ── SCANLINE OVERLAY ── */
+body::before {
+  content:'';
+  position:fixed;
+  top:0;left:0;width:100%;height:100%;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,229,204,.012) 2px,rgba(0,229,204,.012) 4px);
+  pointer-events:none;
+  z-index:9999;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  background:linear-gradient(90deg,#040a0d,#071018,#040a0d);
+  border-bottom:1px solid var(--cyan2);
+  padding:0 1.2rem;
+  height:42px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-shrink:0;
+  position:relative;
+}
+.topbar::after {
+  content:'';
+  position:absolute;
+  bottom:0;left:0;width:100%;height:1px;
+  background:linear-gradient(90deg,transparent,var(--cyan),var(--cyan2),var(--cyan),transparent);
+  animation:scanbar 4s linear infinite;
+}
+@keyframes scanbar { 0%{opacity:.4} 50%{opacity:1} 100%{opacity:.4} }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+@keyframes blink { 0%,100%{opacity:1} 49%{opacity:1} 50%{opacity:0} 99%{opacity:0} }
+@keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+@keyframes slideIn { from{opacity:0;transform:translateX(-6px)} to{opacity:1;transform:translateX(0)} }
+
+.logo {
+  font-family:var(--orb);
+  font-size:.8rem;
+  font-weight:900;
+  color:var(--cyan);
+  letter-spacing:.2rem;
+  display:flex;
+  align-items:center;
+  gap:.4rem;
+}
+.logo-sep { color:var(--muted); font-weight:400; }
+.logo-sub { color:var(--muted); font-weight:400; font-size:.7rem; }
+
+.topbar-right {
+  display:flex;
+  align-items:center;
+  gap:1rem;
+  font-family:var(--mono);
+  font-size:.55rem;
+}
+.tb-btn {
+  background:transparent;
+  border:1px solid var(--border2);
+  color:var(--text);
+  padding:.3rem .8rem;
+  font-family:var(--mono);
+  font-size:.55rem;
+  cursor:pointer;
+  letter-spacing:.1rem;
+  transition:all .15s;
+  text-transform:uppercase;
+}
+.tb-btn:hover { border-color:var(--cyan); color:var(--cyan); }
+.tb-btn.primary { border-color:var(--cyan2); color:var(--cyan); }
+.tb-btn.cmd { border-color:var(--amber); color:var(--amber); }
+
+/* ── MAIN LAYOUT ── */
+.main {
+  display:flex;
+  flex:1;
+  overflow:hidden;
+}
+
+/* ── LEFT SIDEBAR ── */
+.sidebar {
+  width:210px;
+  flex-shrink:0;
+  background:linear-gradient(180deg,#050d12,#040a0d);
+  border-right:1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  overflow-y:auto;
+  padding:.5rem 0;
+}
+.sidebar::-webkit-scrollbar { width:2px; }
+.sidebar::-webkit-scrollbar-thumb { background:var(--cyan2); }
+
+.sb-section {
+  padding:.4rem 1rem .2rem;
+  font-family:var(--mono);
+  font-size:.5rem;
+  color:var(--muted);
+  letter-spacing:.15rem;
+  text-transform:uppercase;
+  border-top:1px solid var(--border);
+  margin-top:.3rem;
+}
+.sb-section:first-child { border-top:none; margin-top:0; }
+
+.playbook-item {
+  padding:.45rem 1rem;
+  cursor:pointer;
+  border-left:2px solid transparent;
+  transition:all .15s;
+}
+.playbook-item:hover { background:rgba(0,229,204,.06); border-left-color:var(--cyan2); }
+.playbook-item.active { background:rgba(0,229,204,.1); border-left-color:var(--cyan); }
+.pb-title { font-size:.65rem; font-weight:600; color:var(--white); letter-spacing:.03rem; }
+.pb-sub { font-size:.55rem; color:var(--muted); margin-top:.1rem; }
+
+.sys-row {
+  padding:.3rem 1rem;
+  display:flex;
+  align-items:center;
+  gap:.4rem;
+  font-family:var(--mono);
+  font-size:.55rem;
+}
+.sys-dot {
+  width:5px; height:5px;
+  border-radius:50%;
+  flex-shrink:0;
+  animation:pulse 2s infinite;
+}
+.sys-label { color:var(--muted); }
+.sys-val { color:var(--cyan); margin-left:auto; }
+
+.how-to {
+  padding:.5rem 1rem;
+  font-size:.58rem;
+  color:var(--muted);
+  line-height:1.7;
+}
+.how-to-title {
+  font-family:var(--mono);
+  font-size:.5rem;
+  color:var(--cyan);
+  letter-spacing:.15rem;
+  margin-bottom:.4rem;
+  text-transform:uppercase;
+}
+.how-to ol { padding-left:1rem; }
+.how-to li { margin-bottom:.25rem; }
+
+/* ── CONTENT AREA ── */
+.content {
+  flex:1;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ── TAB BAR ── */
+.tabbar {
+  background:var(--s1);
+  border-bottom:1px solid var(--border);
+  padding:.4rem .75rem;
+  display:flex;
+  gap:.4rem;
+  flex-shrink:0;
+}
+.tab-btn {
+  font-family:var(--mono);
+  font-size:.55rem;
+  letter-spacing:.1rem;
+  padding:.3rem .8rem;
+  border:1px solid var(--border);
+  background:transparent;
+  color:var(--muted);
+  cursor:pointer;
+  transition:all .15s;
+  text-transform:uppercase;
+}
+.tab-btn:hover { border-color:var(--border2); color:var(--text); }
+.tab-btn.active { border-color:var(--cyan); color:var(--cyan); background:rgba(0,229,204,.08); }
+
+/* ── SPLIT AREA: MODULES + RIGHT PANEL ── */
+.workspace {
+  display:grid;
+  grid-template-columns:1fr 280px;
+  flex:1;
+  overflow:hidden;
+}
+
+/* ── MODULE GRID ── */
+.module-area {
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  border-right:1px solid var(--border);
+}
+
+.module-grid {
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:1px;
+  background:var(--border);
+  flex:1;
+  overflow-y:auto;
+  align-content:start;
+}
+.module-grid::-webkit-scrollbar { width:2px; }
+.module-grid::-webkit-scrollbar-thumb { background:var(--cyan2); }
+
+.mod-card {
+  background:var(--s1);
+  padding:.75rem;
+  cursor:pointer;
+  transition:all .15s;
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  gap:.3rem;
+  min-height:90px;
+}
+.mod-card::before {
+  content:'';
+  position:absolute;
+  top:0;left:0;
+  width:100%;height:2px;
+  background:var(--card-color,var(--cyan));
+  opacity:.4;
+}
+.mod-card:hover { background:var(--s2); }
+.mod-card:hover::before { opacity:1; }
+.mod-card.running { background:rgba(0,229,204,.04); }
+.mod-card.running::before { opacity:1; animation:pulse 1.5s infinite; }
+
+.mod-cat {
+  font-family:var(--mono);
+  font-size:.45rem;
+  color:var(--card-color,var(--cyan));
+  letter-spacing:.1rem;
+  opacity:.7;
+  text-transform:uppercase;
+}
+.mod-name {
+  font-size:.7rem;
+  font-weight:700;
+  color:var(--white);
+  letter-spacing:.02rem;
+  line-height:1.2;
+}
+.mod-desc {
+  font-size:.55rem;
+  color:var(--muted);
+  line-height:1.4;
+  margin-top:auto;
+}
+
+/* ── INTELLIGENCE FEED ── */
+.feed-bar {
+  background:var(--s1);
+  border-top:1px solid var(--border);
+  padding:.4rem .75rem;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-shrink:0;
+}
+.feed-label {
+  font-family:var(--mono);
+  font-size:.5rem;
+  color:var(--cyan);
+  letter-spacing:.15rem;
+  text-transform:uppercase;
+}
+.feed-status {
+  font-family:var(--mono);
+  font-size:.5rem;
+  color:var(--muted);
+}
+
+.feed-output {
+  height:160px;
+  overflow-y:auto;
+  padding:.6rem .75rem;
+  font-family:var(--mono);
+  font-size:.6rem;
+  line-height:1.7;
+  color:var(--text);
+  background:var(--bg);
+  border-top:1px solid var(--border);
+  flex-shrink:0;
+}
+.feed-output::-webkit-scrollbar { width:2px; }
+.feed-output::-webkit-scrollbar-thumb { background:var(--cyan2); }
+.feed-output .feed-tag { color:var(--cyan); font-weight:700; }
+.feed-output .feed-section { color:var(--amber); }
+.feed-output .feed-bold { color:var(--white); font-weight:700; }
+.feed-placeholder { color:var(--muted); font-style:italic; }
+
+/* ── RIGHT PANEL ── */
+.right-panel {
+  background:var(--s1);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+.rp-section {
+  border-bottom:1px solid var(--border);
+  padding:.6rem .75rem;
+}
+.rp-title {
+  font-family:var(--mono);
+  font-size:.5rem;
+  color:var(--cyan);
+  letter-spacing:.15rem;
+  text-transform:uppercase;
+  margin-bottom:.5rem;
+}
+
+.report-item {
+  padding:.35rem 0;
+  border-bottom:1px solid rgba(255,255,255,.04);
+  cursor:pointer;
+}
+.report-item:last-child { border-bottom:none; }
+.report-item:hover .ri-name { color:var(--cyan); }
+.ri-name { font-size:.6rem; color:var(--text); transition:color .15s; }
+.ri-date { font-family:var(--mono); font-size:.5rem; color:var(--muted); margin-top:.1rem; }
+
+.rp-textarea {
+  width:100%;
+  background:var(--s2);
+  border:1px solid var(--border2);
+  color:var(--text);
+  font-family:var(--mono);
+  font-size:.58rem;
+  padding:.5rem;
+  resize:none;
+  outline:none;
+  height:80px;
+  line-height:1.5;
+}
+.rp-textarea:focus { border-color:var(--cyan2); }
+.rp-textarea::placeholder { color:var(--muted); }
+
+.rp-btn {
+  width:100%;
+  margin-top:.4rem;
+  background:transparent;
+  border:1px solid var(--cyan2);
+  color:var(--cyan);
+  font-family:var(--mono);
+  font-size:.55rem;
+  padding:.4rem;
+  cursor:pointer;
+  letter-spacing:.1rem;
+  transition:all .15s;
+  text-transform:uppercase;
+}
+.rp-btn:hover { background:rgba(0,229,204,.1); }
+.rp-btn.danger { border-color:var(--border2); color:var(--muted); }
+.rp-btn.danger:hover { border-color:var(--red); color:var(--red); }
+
+.stat-row {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:.25rem 0;
+  font-size:.6rem;
+}
+.stat-label { color:var(--muted); }
+.stat-val { font-family:var(--mono); color:var(--white); }
+
+/* ── HIDDEN ── */
+.mod-card.hidden { display:none; }
+</style>
+<script>
+window.TSM_UI = {
+    runAudit: async (sector, factor) => {
+        const feed = document.querySelector('.intelligence-feed-output') || document.getElementById('intelligence-feed-output');
+        if (feed) feed.innerHTML = '<span style="color: #00ffff;">[STRATEGIST] Internal Link: Processing...</span>';
+        try {
+            const res = await fetch('/api/audit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: `auditops "${sector}" --factor "${factor}" --logic strategist` })
+            });
+            const data = await res.json();
+            if (feed) feed.innerText = `[STRATEGIST] ${data.output || "Analysis Complete."}`;
+        } catch (e) {
+            if (feed) feed.innerText = "[STRATEGIST] Local API Bridge Failed.";
+        }
     }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: var(--bg);
-      color: var(--txt);
-      font-family: 'Inter', sans-serif;
-      font-size: 14px;
-      min-height: 100vh;
-      overflow-x: hidden;
+};
+// Wire the sector cards to the auto-fill search prompt logic
+document.addEventListener('click', (e) => {
+    const card = e.target.closest('.module-card');
+    if (card) {
+        const sector = card.dataset.sector || "Construction";
+        const factor = card.querySelector('h3')?.innerText || "General Audit";
+        TSM_UI.runAudit(sector, factor);
     }
-    body::before {
-      content: '';
-      position: fixed; inset: 0;
-      background-image:
-        linear-gradient(rgba(6,182,212,.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(6,182,212,.025) 1px, transparent 1px);
-      background-size: 44px 44px;
-      pointer-events: none; z-index: 0;
-    }
-    header {
-      position: sticky; top: 0; z-index: 100;
-      background: rgba(5,12,20,.94);
-      backdrop-filter: blur(14px);
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 28px; height: 58px;
-    }
-    .logo-block { display: flex; align-items: center; gap: 14px; }
-    .logo-hex {
-      width: 36px; height: 36px;
-      background: linear-gradient(135deg, #0e7490 0%, var(--cyan) 100%);
-      clip-path: polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'Orbitron', monospace; font-size: 9px; font-weight: 800;
-      color: #fff; letter-spacing: 1px;
-    }
-    .logo-text  { font-family: 'Orbitron', monospace; font-size: 12px; font-weight: 600; color: var(--cyan2); letter-spacing: 2px; }
-    .logo-sub   { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--txt2); letter-spacing: 3px; }
-    .hdr-pills  { display: flex; gap: 12px; align-items: center; }
-    .hdr-pill {
-      font-family: 'Share Tech Mono', monospace; font-size: 9px; letter-spacing: 1.5px;
-      padding: 3px 10px; border-radius: 3px; border: 1px solid; cursor: pointer;
-      transition: background .15s;
-    }
-    .hdr-pill.cyan  { color: var(--cyan);  border-color: rgba(6,182,212,.3); }
-    .hdr-pill.cyan:hover { background: rgba(6,182,212,.1); }
-    .hdr-pill.green { color: var(--green); border-color: rgba(0,255,136,.3); }
-    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse-dot 2s ease-in-out infinite; }
-    @keyframes pulse-dot { 0%,100% { box-shadow: 0 0 0 0 rgba(0,255,136,.5); } 50% { box-shadow: 0 0 0 5px rgba(0,255,136,0); } }
-    .hdr-right { display: flex; align-items: center; gap: 16px; }
-    .hdr-status { display: flex; align-items: center; gap: 6px; font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--green); letter-spacing: 1px; }
-    main { position: relative; z-index: 1; max-width: 1320px; margin: 0 auto; padding: 36px 28px 80px; }
-    .hero { text-align: center; margin-bottom: 40px; }
-    .hero-eyebrow { font-family: 'Share Tech Mono', monospace; font-size: 9px; letter-spacing: 4px; color: var(--cyan); margin-bottom: 10px; }
-    .hero-title { font-family: 'Orbitron', monospace; font-size: clamp(20px, 3.5vw, 34px); font-weight: 800; color: #e4f0fc; letter-spacing: 2px; line-height: 1.15; margin-bottom: 6px; }
-    .hero-title span { color: var(--cyan); }
-    .hero-sub { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--txt2); letter-spacing: 3px; margin-bottom: 20px; }
-    .hero-divider { width: 200px; height: 1px; background: linear-gradient(90deg, transparent, var(--cyan), transparent); margin: 0 auto 32px; }
-    .model-badge {
-      display: inline-flex; align-items: center; gap: 8px;
-      font-family: 'Share Tech Mono', monospace; font-size: 9px; letter-spacing: 2px;
-      color: var(--cyan); border: 1px solid rgba(6,182,212,.3); border-radius: 4px;
-      padding: 5px 14px; background: rgba(6,182,212,.06);
-    }
-    .model-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--cyan); animation: pulse-dot 1.8s ease-in-out infinite; }
-    .bridge-banner {
-      background: rgba(245,158,11,.07); border: 1px solid rgba(245,158,11,.25);
-      border-radius: 6px; padding: 8px 16px; margin-bottom: 20px;
-      font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--amber);
-      letter-spacing: 1px; display: none; align-items: center; gap: 10px;
-    }
-    .bridge-banner.show { display: flex; }
-    .bridge-banner.ok { color: var(--green); background: rgba(0,255,136,.05); border-color: rgba(0,255,136,.2); }
-    .query-wrap { max-width: 820px; margin: 0 auto 36px; }
-    .query-label { font-family: 'Orbitron', monospace; font-size: 8px; letter-spacing: 3px; color: var(--txt2); margin-bottom: 6px; }
-    .query-bar { background: var(--surface); border: 1px solid var(--border2); border-radius: 6px; display: flex; align-items: center; gap: 10px; padding: 10px 16px; box-shadow: var(--glow); }
-    .query-bar input { flex: 1; background: transparent; border: none; outline: none; font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--txt); caret-color: var(--cyan); }
-    .query-bar input::placeholder { color: var(--txt2); }
-    .node-toggles { display: flex; gap: 6px; flex-wrap: wrap; }
-    .ntog { font-family: 'Share Tech Mono', monospace; font-size: 8px; letter-spacing: 1px; padding: 3px 8px; border-radius: 3px; border: 1px solid; cursor: pointer; transition: all .15s; user-select: none; }
-    .ntog.active.tax    { color: var(--amber);  border-color: rgba(245,158,11,.5); background: rgba(245,158,11,.1); }
-    .ntog.active.orders { color: var(--green);  border-color: rgba(0,255,136,.4);  background: rgba(0,255,136,.08); }
-    .ntog.active.ar     { color: var(--cyan);   border-color: rgba(6,182,212,.4);  background: rgba(6,182,212,.08); }
-    .ntog:not(.active)  { color: var(--txt2);   border-color: var(--border); }
-    .deploy-btn { background: var(--cyan); color: #050c14; border: none; border-radius: 4px; padding: 7px 18px; font-family: 'Orbitron', monospace; font-size: 10px; font-weight: 600; letter-spacing: 1px; cursor: pointer; transition: background .2s, transform .1s; white-space: nowrap; }
-    .deploy-btn:hover { background: var(--cyan2); }
-    .deploy-btn:active { transform: scale(.97); }
-    .deploy-btn:disabled { opacity: .5; cursor: not-allowed; }
-    .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 36px; }
-    @media (max-width: 700px) { .stats-row { grid-template-columns: repeat(3, 1fr); } }
-    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 14px 12px; text-align: center; }
-    .stat-val { font-family: 'Orbitron', monospace; font-size: 19px; font-weight: 800; color: var(--cyan); letter-spacing: 1px; }
-    .stat-lbl { font-family: 'Share Tech Mono', monospace; font-size: 8px; letter-spacing: 2px; color: var(--txt2); margin-top: 4px; }
-    .sec-label { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
-    .sec-label-text { font-family: 'Orbitron', monospace; font-size: 9px; font-weight: 600; letter-spacing: 3px; color: var(--txt2); text-transform: uppercase; white-space: nowrap; }
-    .sec-line { flex: 1; height: 1px; background: var(--border); }
-    .sec-badge { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--cyan); border: 1px solid var(--border2); border-radius: 3px; padding: 2px 8px; letter-spacing: 1px; }
-    .sovereign-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 36px; }
-    @media (max-width: 900px) { .sovereign-grid { grid-template-columns: 1fr; } }
-    .sov-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; transition: border-color .2s, box-shadow .2s; position: relative; }
-    .sov-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; opacity: 0; transition: opacity .2s; }
-    .sov-card:hover { box-shadow: 0 4px 36px rgba(6,182,212,.1); }
-    .sov-card:hover::before { opacity: 1; }
-    .sov-card.tax:hover { border-color: rgba(245,158,11,.35); }
-    .sov-card.tax::before { background: linear-gradient(90deg, var(--amber), #f97316); }
-    .sov-card.orders:hover { border-color: rgba(0,255,136,.3); }
-    .sov-card.orders::before { background: linear-gradient(90deg, var(--green), #00cc6a); }
-    .sov-card.ar:hover { border-color: var(--border2); }
-    .sov-card.ar::before { background: linear-gradient(90deg, var(--cyan), var(--cyan2)); }
-    .sov-head { display: flex; align-items: flex-start; justify-content: space-between; padding: 18px 20px 14px; border-bottom: 1px solid var(--border); gap: 10px; }
-    .sov-title { font-family: 'Orbitron', monospace; font-size: 11px; font-weight: 600; letter-spacing: 1.5px; color: #dceeff; line-height: 1.4; }
-    .sov-mod-badge { font-family: 'Share Tech Mono', monospace; font-size: 8px; letter-spacing: 1px; padding: 2px 7px; border-radius: 2px; border: 1px solid; white-space: nowrap; flex-shrink: 0; }
-    .mod-tax    { color: var(--amber);  border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.08); }
-    .mod-orders { color: var(--green);  border-color: rgba(0,255,136,.3);   background: rgba(0,255,136,.06); }
-    .mod-ar     { color: var(--cyan);   border-color: rgba(6,182,212,.3);   background: rgba(6,182,212,.06); }
-    .sov-body { padding: 14px 20px; flex: 1; }
-    .sov-desc { font-size: 11px; color: var(--txt2); line-height: 1.7; margin-bottom: 12px; }
-    .quick-prompts { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
-    .qp-btn { font-family: 'Share Tech Mono', monospace; font-size: 9px; letter-spacing: .5px; color: var(--txt2); background: rgba(6,182,212,.04); border: 1px solid var(--border); border-radius: 4px; padding: 6px 10px; text-align: left; cursor: pointer; transition: all .15s; display: flex; align-items: center; gap: 6px; }
-    .qp-btn:hover { background: rgba(6,182,212,.09); border-color: var(--border2); color: var(--txt); }
-    .qp-arrow { color: var(--cyan); font-size: 10px; }
-    .sov-input-row { display: flex; gap: 6px; }
-    .sov-input { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 7px 10px; font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--txt); outline: none; transition: border-color .15s; }
-    .sov-input:focus { border-color: var(--border2); }
-    .sov-input::placeholder { color: var(--txt2); }
-    .sov-run-btn { background: transparent; border: 1px solid; border-radius: 4px; padding: 7px 12px; font-family: 'Orbitron', monospace; font-size: 8px; font-weight: 600; letter-spacing: 1px; cursor: pointer; transition: background .15s; white-space: nowrap; }
-    .sov-run-btn.tax    { color: var(--amber);  border-color: rgba(245,158,11,.4); }
-    .sov-run-btn.tax:hover    { background: rgba(245,158,11,.1); }
-    .sov-run-btn.orders { color: var(--green);  border-color: rgba(0,255,136,.35); }
-    .sov-run-btn.orders:hover { background: rgba(0,255,136,.08); }
-    .sov-run-btn.ar     { color: var(--cyan);   border-color: rgba(6,182,212,.35); }
-    .sov-run-btn.ar:hover     { background: rgba(6,182,212,.08); }
-    .sov-response { margin: 10px 0 0; background: rgba(0,0,0,.3); border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; min-height: 60px; font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--txt); line-height: 1.8; display: none; white-space: pre-wrap; word-break: break-word; max-height: 340px; overflow-y: auto; }
-    .sov-response.active { display: block; }
-    .thinking-line { font-size: 9px; letter-spacing: 2px; margin-bottom: 8px; animation: blink .8s step-end infinite; }
-    .thinking-line.tax    { color: var(--amber); }
-    .thinking-line.orders { color: var(--green); }
-    .thinking-line.ar     { color: var(--cyan); }
-    .thinking-line.esd    { color: var(--purple); }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-    .sov-foot { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-top: 1px solid var(--border); }
-    .sov-url { font-family: 'Share Tech Mono', monospace; font-size: 8px; color: var(--txt2); letter-spacing: 1px; }
-    .open-app-lnk { font-family: 'Share Tech Mono', monospace; font-size: 8px; letter-spacing: 2px; padding: 4px 10px; border-radius: 3px; text-decoration: none; border: 1px solid; transition: background .15s; }
-    .open-app-lnk.amber  { color: var(--amber);  border-color: rgba(245,158,11,.35); }
-    .open-app-lnk.amber:hover  { background: rgba(245,158,11,.08); }
-    .open-app-lnk.green  { color: var(--green);  border-color: rgba(0,255,136,.3); }
-    .open-app-lnk.green:hover  { background: rgba(0,255,136,.07); }
-    .open-app-lnk.cyan   { color: var(--cyan);   border-color: rgba(6,182,212,.3); }
-    .open-app-lnk.cyan:hover   { background: rgba(6,182,212,.07); }
-    .open-app-lnk.purple { color: var(--purple); border-color: rgba(168,85,247,.3); }
-    .open-app-lnk.purple:hover { background: rgba(168,85,247,.07); }
-    /* ESD NODE GRID */
-    .esd-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 36px; }
-    @media (max-width: 1100px) { .esd-grid { grid-template-columns: repeat(3, 1fr); } }
-    @media (max-width: 700px)  { .esd-grid { grid-template-columns: repeat(2, 1fr); } }
-    .esd-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; transition: border-color .2s, box-shadow .2s; position: relative; }
-    .esd-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--purple), #c084fc); opacity: 0; transition: opacity .2s; }
-    .esd-card:hover { border-color: rgba(168,85,247,.35); box-shadow: 0 4px 24px rgba(168,85,247,.1); }
-    .esd-card:hover::before { opacity: 1; }
-    .esd-head { padding: 14px 16px 10px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; }
-    .esd-prefix { font-family: 'Share Tech Mono', monospace; font-size: 8px; letter-spacing: 2px; color: var(--purple); margin-bottom: 3px; }
-    .esd-name { font-family: 'Orbitron', monospace; font-size: 10px; font-weight: 600; letter-spacing: 1px; color: #dceeff; line-height: 1.3; }
-    .esd-badge { font-family: 'Share Tech Mono', monospace; font-size: 7px; letter-spacing: 1px; padding: 2px 6px; border-radius: 2px; border: 1px solid rgba(168,85,247,.35); background: rgba(168,85,247,.08); color: var(--purple); white-space: nowrap; flex-shrink: 0; }
-    .esd-body { padding: 12px 16px; flex: 1; }
-    .esd-desc { font-size: 10px; color: var(--txt2); line-height: 1.6; margin-bottom: 10px; }
-    .esd-quick { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
-    .esd-qp { font-family: 'Share Tech Mono', monospace; font-size: 8px; color: var(--txt2); background: rgba(168,85,247,.04); border: 1px solid var(--border); border-radius: 3px; padding: 5px 8px; text-align: left; cursor: pointer; transition: all .15s; display: flex; align-items: center; gap: 5px; }
-    .esd-qp:hover { background: rgba(168,85,247,.09); border-color: rgba(168,85,247,.3); color: var(--txt); }
-    .esd-qp-arrow { color: var(--purple); font-size: 9px; }
-    .esd-input-row { display: flex; gap: 5px; }
-    .esd-input { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 6px 8px; font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--txt); outline: none; transition: border-color .15s; }
-    .esd-input:focus { border-color: rgba(168,85,247,.4); }
-    .esd-input::placeholder { color: var(--txt2); }
-    .esd-run-btn { background: transparent; border: 1px solid rgba(168,85,247,.4); border-radius: 4px; padding: 6px 10px; font-family: 'Orbitron', monospace; font-size: 7px; font-weight: 600; letter-spacing: 1px; color: var(--purple); cursor: pointer; transition: background .15s; white-space: nowrap; }
-    .esd-run-btn:hover { background: rgba(168,85,247,.1); }
-    .esd-response { margin: 8px 0 0; background: rgba(0,0,0,.3); border: 1px solid var(--border); border-radius: 5px; padding: 10px 12px; min-height: 48px; font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--txt); line-height: 1.7; display: none; white-space: pre-wrap; word-break: break-word; max-height: 220px; overflow-y: auto; }
-    .esd-response.active { display: block; }
-    .esd-foot { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-top: 1px solid var(--border); }
-    /* SYNTHESIS */
-    .synthesis-panel { background: var(--surface); border: 1px solid var(--border2); border-radius: 10px; padding: 0; margin-bottom: 36px; overflow: hidden; display: none; }
-    .synthesis-panel.active { display: block; }
-    .synth-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--border); background: rgba(6,182,212,.04); }
-    .synth-title { font-family: 'Orbitron', monospace; font-size: 9px; letter-spacing: 3px; color: var(--cyan); }
-    .synth-close { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--txt2); cursor: pointer; }
-    .synth-close:hover { color: var(--red); }
-    .synth-body { padding: 20px; }
-    .synth-query { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--txt2); margin-bottom: 16px; letter-spacing: 1px; }
-    .synth-nodes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
-    @media (max-width: 700px) { .synth-nodes { grid-template-columns: 1fr; } }
-    .synth-node { background: rgba(0,0,0,.3); border: 1px solid var(--border); border-radius: 6px; padding: 12px; }
-    .synth-node-name { font-family: 'Orbitron', monospace; font-size: 8px; letter-spacing: 2px; margin-bottom: 8px; }
-    .synth-node-name.tax    { color: var(--amber); }
-    .synth-node-name.orders { color: var(--green); }
-    .synth-node-name.ar     { color: var(--cyan); }
-    .synth-node-txt { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--txt); line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
-    /* REPORT BUILDER */
-    .report-section { margin-bottom: 36px; }
-    .report-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
-    .report-select, .report-state-input { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 7px 12px; font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--txt); outline: none; transition: border-color .15s; }
-    .report-select:focus, .report-state-input:focus { border-color: var(--border2); }
-    .report-state-input { width: 220px; }
-    .build-btn { background: transparent; border: 1px solid var(--cyan); border-radius: 4px; padding: 7px 18px; font-family: 'Orbitron', monospace; font-size: 9px; font-weight: 600; letter-spacing: 1.5px; color: var(--cyan); cursor: pointer; transition: background .15s; }
-    .build-btn:hover { background: rgba(6,182,212,.1); }
-    .report-output { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 20px; font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--txt); line-height: 1.8; display: none; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
-    .report-output.active { display: block; }
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(6,182,212,.2); border-radius: 2px; }
-    footer { position: relative; z-index: 1; border-top: 1px solid var(--border); padding: 20px 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-    .footer-l, .footer-r a { font-family: 'Share Tech Mono', monospace; font-size: 9px; letter-spacing: 2px; color: var(--txt2); }
-    .footer-r { display: flex; gap: 18px; }
-    .footer-r a { text-decoration: none; transition: color .2s; }
-    .footer-r a:hover { color: var(--cyan); }
-    @media (max-width: 600px) { main { padding: 20px 14px 60px; } header { padding: 0 14px; } .hdr-pills { display: none; } }
-  </style>
-<script>const TSM_BRIDGE = 'https://tsm-shell.fly.dev';
+});
+console.log("TSM_UI: Direct Neural Link Established.");
+</script>
 <script>
 window.TSM_UI = {
     runAudit: async (sector, factor) => {
@@ -273,580 +475,701 @@ console.log("TSM_UI: Direct Neural Link Established.");
 <script>window.showTab = function(id, el) {document.querySelectorAll(".tab-content").forEach(c=>c.style.display="none");document.getElementById(id).style.display="block";document.querySelectorAll(".nav-tab").forEach(n=>n.classList.remove("active"));if(el)el.classList.add("active");}</script></head>
 <body>
 
-<header>
-  <div class="logo-block">
-    <div class="logo-hex">CT</div>
-    <div>
-      <div class="logo-text">CASE-TECH COMMAND</div>
-      <div class="logo-sub">SOVEREIGN INTELLIGENCE · TSM PLATFORM</div>
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">
+    AUDITOPS <span class="logo-sep">//</span> <span class="logo-sub">SOVEREIGN CORE</span>
+  </div>
+  <div class="topbar-right">
+    <a class="tb-btn" href="https://construction-pro.tsmatter.com" style="text-decoration:none;display:inline-flex;align-items:center;gap:.4rem" title="Go to Construction Pro">← PRO</a>
+    <button class="tb-btn" onclick="openHowTo()">HOW TO</button>
+    <button class="tb-btn primary" onclick="buildReport()">CUSTOM REPORT</button>
+    <button class="tb-btn" onclick="exportCurrent()">EXPORT CURRENT</button>
+    <button class="tb-btn cmd" onclick="openCommand()">— COMMAND</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- LEFT SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb-section">PLAYBOOKS</div>
+
+    <div class="playbook-item active" onclick="runPlaybook('material-theft',this)">
+      <div class="pb-title">Material Theft</div>
+      <div class="pb-sub">Loss Prevention</div>
     </div>
-  </div>
-  <div class="hdr-right">
-    <div class="hdr-pills">
-      <div class="hdr-pill cyan" onclick="scrollToSection('modules')">MODULES</div>
-      <div class="hdr-pill cyan" onclick="scrollToSection('esd-nodes')">ESD NODES</div>
-      <div class="hdr-pill cyan" onclick="scrollToSection('reports')">REPORTS</div>
-      <div class="hdr-pill green" onclick="window.open('https://financial.tsmatter.com','_blank')">FINANCIAL CMD ↗</div>
+    <div class="playbook-item" onclick="runPlaybook('safety-protocol',this)">
+      <div class="pb-title">Safety Protocol</div>
+      <div class="pb-sub">Site Compliance</div>
     </div>
-    <div class="hdr-status"><div class="status-dot"></div>SOVEREIGN · ONLINE</div>
-  </div>
-</header>
-
-<main>
-  <div class="hero">
-    <div class="hero-eyebrow">// TSM WHITELABEL · CASE-TECH CLIENT PORTAL · DIRECTOR WHITEHEAD</div>
-    <div class="hero-title">CASE-TECH<br><span>SOVEREIGN COMMAND</span></div>
-    <div class="hero-sub">case-tech.tsmatter.com · AI-NATIVE OPERATIONS · 15-STATE TAX · ORDER PIPELINE · AR/AP ENGINE</div>
-    <div class="hero-divider"></div>
-    <div class="model-badge"><div class="model-dot"></div>TSM NEURAL · SOVEREIGN INTELLIGENCE LAYER · LIVE</div>
-  </div>
-
-  <div class="bridge-banner" id="bridgeBanner">
-    <span id="bridgeBannerText">// Connecting to TSM Neural bridge…</span>
-  </div>
-
-  <div class="stats-row">
-    <div class="stat-card"><div class="stat-val" id="st-states">15</div><div class="stat-lbl">NEXUS STATES</div></div>
-    <div class="stat-card"><div class="stat-val" id="st-orders">—</div><div class="stat-lbl">ORDERS/DAY</div></div>
-    <div class="stat-card"><div class="stat-val" id="st-ar">—</div><div class="stat-lbl">AR OPEN ($K)</div></div>
-    <div class="stat-card"><div class="stat-val" id="st-exempt">—</div><div class="stat-lbl">EXEMPT CERTS</div></div>
-    <div class="stat-card"><div class="stat-val" id="st-auto">98%</div><div class="stat-lbl">AUTO-MATCH RATE</div></div>
-  </div>
-
-  <div class="query-wrap">
-    <div class="query-label">// TSM NEURAL — DEPLOY TO ALL SOVEREIGN NODES SIMULTANEOUSLY</div>
-    <div class="query-bar">
-      <div class="node-toggles">
-        <div class="ntog tax active" id="tog-tax" onclick="toggleNode('tax')">TAX</div>
-        <div class="ntog orders active" id="tog-orders" onclick="toggleNode('orders')">ORDERS</div>
-        <div class="ntog ar active" id="tog-ar" onclick="toggleNode('ar')">AR/AP</div>
-      </div>
-      <input id="masterQuery" placeholder="e.g. Export Q1 sales tax for 15 states, flag nexus risk…" onkeydown="if(event.key==='Enter')deployMaster()"/>
-      <button class="deploy-btn" id="masterBtn" onclick="deployMaster()">⚡ DEPLOY</button>
+    <div class="playbook-item" onclick="runPlaybook('subcontractor-exposure',this)">
+      <div class="pb-title">Subcontractor Exposure</div>
+      <div class="pb-sub">Financial / Liability</div>
     </div>
-  </div>
-
-  <div class="synthesis-panel" id="synthPanel">
-    <div class="synth-head">
-      <div class="synth-title">⚡ TSM NEURAL SYNTHESIS — ALL NODES RESPONDED</div>
-      <div class="synth-close" onclick="closeSynth()">✕ CLOSE</div>
+    <div class="playbook-item" onclick="runPlaybook('cash-flow-stress',this)">
+      <div class="pb-title">Cash Flow Stress Test</div>
+      <div class="pb-sub">Liquidity / Forecast</div>
     </div>
-    <div class="synth-body">
-      <div class="synth-query" id="synthQuery"></div>
-      <div class="synth-nodes">
-        <div class="synth-node"><div class="synth-node-name tax">⚖ 15-STATE TAX</div><div class="synth-node-txt" id="synth-tax">…</div></div>
-        <div class="synth-node"><div class="synth-node-name orders">📦 ORDER PIPELINE</div><div class="synth-node-txt" id="synth-orders">…</div></div>
-        <div class="synth-node"><div class="synth-node-name ar">💰 AR/AP ENGINE</div><div class="synth-node-txt" id="synth-ar">…</div></div>
-      </div>
+    <div class="playbook-item" onclick="runPlaybook('osha-audit',this)">
+      <div class="pb-title">OSHA Readiness Audit</div>
+      <div class="pb-sub">Inspection Prep</div>
     </div>
-  </div>
-
-  <div class="sec-label" id="modules">
-    <span class="sec-label-text">Sovereign Modules</span>
-    <div class="sec-line"></div>
-    <span class="sec-badge">TSM NEURAL · CASE-TECH SPECIFIC</span>
-  </div>
-
-  <div class="sovereign-grid">
-    <!-- TAX -->
-    <div class="sov-card tax">
-      <div class="sov-head">
-        <div><div style="font-size:22px;margin-bottom:4px;">⚖️</div><div class="sov-title">15-STATE TAX<br>NEXUS TRACKER</div></div>
-        <div class="sov-mod-badge mod-tax">AVATAX LAYER</div>
-      </div>
-      <div class="sov-body">
-        <div class="sov-desc">Automated nexus monitoring across all 15 states. Tracks sales volume against economic thresholds ($100K / 200 transactions). Exemption certificates auto-applied. Zero manual filing.</div>
-        <div class="quick-prompts">
-          <button class="qp-btn" onclick="runQuick('tax','Export Q1 sales tax liability breakdown for all 15 nexus states with filing deadlines')"><span class="qp-arrow">›</span> Q1 tax liability export · all 15 states</button>
-          <button class="qp-btn" onclick="runQuick('tax','Which states are at risk of triggering new economic nexus based on current sales velocity?')"><span class="qp-arrow">›</span> New nexus risk by sales velocity</button>
-          <button class="qp-btn" onclick="runQuick('tax','List all pending exemption certificates expiring in the next 60 days')"><span class="qp-arrow">›</span> Exemption certs expiring in 60 days</button>
-          <button class="qp-btn" onclick="runQuick('tax','Generate an audit-ready sales tax reconciliation for the current quarter')"><span class="qp-arrow">›</span> Audit-ready Q reconciliation</button>
-        </div>
-        <div class="sov-input-row">
-          <input class="sov-input" id="input-tax" placeholder="Custom tax / nexus query…" onkeydown="if(event.key==='Enter')runModule('tax')"/>
-          <button class="sov-run-btn tax" onclick="runModule('tax')">ANALYZE</button>
-        </div>
-        <div class="sov-response" id="resp-tax"></div>
-      </div>
-      <div class="sov-foot"><div class="sov-url">tax.tsmatter.com</div><a href="https://tax.tsmatter.com" target="_blank" class="open-app-lnk amber">OPEN APP ↗</a></div>
+    <div class="playbook-item" onclick="runPlaybook('lien-exposure',this)">
+      <div class="pb-title">Lien Exposure Review</div>
+      <div class="pb-sub">Legal / Title Risk</div>
+    </div>
+    <div class="playbook-item" onclick="runPlaybook('bid-strategy',this)">
+      <div class="pb-title">Bid Strategy Analysis</div>
+      <div class="pb-sub">Win Rate / Margin</div>
     </div>
 
-    <!-- ORDERS -->
-    <div class="sov-card orders">
-      <div class="sov-head">
-        <div><div style="font-size:22px;margin-bottom:4px;">📦</div><div class="sov-title">ORDER-TO-LABEL<br>PIPELINE</div></div>
-        <div class="sov-mod-badge mod-orders">FULFILLMENT ENGINE</div>
-      </div>
-      <div class="sov-body">
-        <div class="sov-desc">PDF hits /intake → system auto-populates tracking pipeline. Zero manual entry. One-click label generation with carrier rate shopping. 98% transaction auto-categorization via TSM Neural inference.</div>
-        <div class="quick-prompts">
-          <button class="qp-btn" onclick="runQuick('orders','Generate a shipping label with cheapest carrier rate for a 5lb package going to New York')"><span class="qp-arrow">›</span> Generate label · carrier rate shop</button>
-          <button class="qp-btn" onclick="runQuick('orders','Show me all orders in the intake queue that have not been labeled in the past 48 hours')"><span class="qp-arrow">›</span> Intake queue · unlabeled 48h</button>
-          <button class="qp-btn" onclick="runQuick('orders','Analyze fulfillment bottlenecks this month and suggest workflow improvements')"><span class="qp-arrow">›</span> Fulfillment bottleneck analysis</button>
-          <button class="qp-btn" onclick="runQuick('orders','Auto-categorize and record all receipts from this week using bank feed matching')"><span class="qp-arrow">›</span> Bank feed auto-match · receipts</button>
-        </div>
-        <div class="sov-input-row">
-          <input class="sov-input" id="input-orders" placeholder="Order / fulfillment / shipping query…" onkeydown="if(event.key==='Enter')runModule('orders')"/>
-          <button class="sov-run-btn orders" onclick="runModule('orders')">PROCESS</button>
-        </div>
-        <div class="sov-response" id="resp-orders"></div>
-      </div>
-      <div class="sov-foot"><div class="sov-url">case-tech.tsmatter.com/orders</div><a href="https://case-tech.tsmatter.com/orders" target="_blank" class="open-app-lnk green">OPEN APP ↗</a></div>
+    <div class="sb-section">SYSTEM</div>
+    <div class="sys-row">
+      <div class="sys-dot" style="background:var(--cyan)"></div>
+      <span class="sys-label">UPLINK</span>
+      <span class="sys-val">ACTIVE</span>
+    </div>
+    <div class="sys-row" id="sys-status-row">
+      <div class="sys-dot" style="background:var(--green)"></div>
+      <span class="sys-label" id="sys-status-text">SYSTEM READY</span>
     </div>
 
-    <!-- AR/AP -->
-    <div class="sov-card ar">
-      <div class="sov-head">
-        <div><div style="font-size:22px;margin-bottom:4px;">💰</div><div class="sov-title">AR/AP RECONCILIATION<br>ENGINE</div></div>
-        <div class="sov-mod-badge mod-ar">PREDICTIVE FINANCE</div>
-      </div>
-      <div class="sov-body">
-        <div class="sov-desc">Predictive AR — flags which customers are trending late before the invoice is due. Auto-matches bank deposits to open invoices. Anomaly detection fires instantly. AP auto-coding with audit trail.</div>
-        <div class="quick-prompts">
-          <button class="qp-btn" onclick="runQuick('ar','Run a risk analysis on all open AR and flag customers trending toward late payment')"><span class="qp-arrow">›</span> Risk analysis · AR late-pay prediction</button>
-          <button class="qp-btn" onclick="runQuick('ar','Auto-match all deposits from the past week against open invoices and flag discrepancies')"><span class="qp-arrow">›</span> Deposit → invoice auto-match</button>
-          <button class="qp-btn" onclick="runQuick('ar','Generate a 30-60-90 aging report with recommended collection actions')"><span class="qp-arrow">›</span> 30-60-90 aging · collection actions</button>
-          <button class="qp-btn" onclick="runQuick('ar','Update all customer records with latest payment status from QuickBooks sync')"><span class="qp-arrow">›</span> QuickBooks sync · customer update</button>
-        </div>
-        <div class="sov-input-row">
-          <input class="sov-input" id="input-ar" placeholder="AR/AP / reconciliation / QuickBooks query…" onkeydown="if(event.key==='Enter')runModule('ar')"/>
-          <button class="sov-run-btn ar" onclick="runModule('ar')">RECONCILE</button>
-        </div>
-        <div class="sov-response" id="resp-ar"></div>
-      </div>
-      <div class="sov-foot"><div class="sov-url">financial.tsmatter.com</div><a href="https://financial.tsmatter.com" target="_blank" class="open-app-lnk cyan">OPEN APP ↗</a></div>
+    <div class="sb-section">HOW TO GUIDE</div>
+    <div class="how-to">
+      <ol>
+        <li>Choose a module or playbook.</li>
+        <li>Use the top filters to narrow by category.</li>
+        <li>Click any module card to run analysis.</li>
+        <li>Review output in the Intelligence Feed.</li>
+        <li>Export the latest output or save it to report history.</li>
+        <li>Use Custom Report to combine multiple saved outputs.</li>
+      </ol>
     </div>
   </div>
 
-  <!-- ESD NODES -->
-  <div class="sec-label" id="esd-nodes">
-    <span class="sec-label-text">ESD Node Cluster</span>
-    <div class="sec-line"></div>
-    <span class="sec-badge" style="color:var(--purple);border-color:rgba(168,85,247,.3);">EXTENDED SERVICE DEPLOYMENT</span>
+  <!-- CONTENT AREA -->
+  <div class="content">
+
+    <!-- TAB BAR -->
+    <div class="tabbar">
+      <button class="tab-btn active" onclick="filterTab('ALL',this)">ALL</button>
+      <button class="tab-btn" onclick="filterTab('SAFETY',this)">SAFETY</button>
+      <button class="tab-btn" onclick="filterTab('FINANCE',this)">FINANCE</button>
+      <button class="tab-btn" onclick="filterTab('LOGISTICS',this)">LOGISTICS</button>
+      <button class="tab-btn" onclick="filterTab('COMPLIANCE',this)">COMPLIANCE</button>
+      <button class="tab-btn" onclick="filterTab('OPERATIONS',this)">OPERATIONS</button>
+      <button class="tab-btn" onclick="filterTab('GEOTECH',this)">GEOTECH</button>
+      <button class="tab-btn" onclick="filterTab('LEGAL',this)">LEGAL</button>
+    </div>
+
+    <!-- WORKSPACE -->
+    <div class="workspace">
+
+      <!-- MODULE GRID -->
+      <div class="module-area">
+        <div class="module-grid" id="moduleGrid">
+          <!-- SAFETY -->
+          <div class="mod-card" data-cat="SAFETY" style="--card-color:var(--red)" onclick="runModule(this,'OSHA Compliance Audit','Review all open safety incidents, OSHA compliance metrics, and fine exposure risk for a mid-size general contractor. Identify top 3 compliance gaps, estimate fine exposure in dollars, and provide a 30-day remediation plan. Use ► section markers.')">
+            <div class="mod-cat">SAFETY</div>
+            <div class="mod-name">OSHA Compliance Audit</div>
+            <div class="mod-desc">Fine exposure + 30-day remediation</div>
+          </div>
+          <div class="mod-card" data-cat="SAFETY" style="--card-color:var(--red)" onclick="runModule(this,'Incident Root Cause Analysis','Analyze patterns of recent jobsite incidents across fall hazards, equipment, and chemical exposure. Identify systemic root causes, calculate true cost of each incident type, and recommend targeted interventions with ROI. Use ► section markers.')">
+            <div class="mod-cat">SAFETY</div>
+            <div class="mod-name">Incident Root Cause</div>
+            <div class="mod-desc">Hidden costs + targeted interventions</div>
+          </div>
+          <div class="mod-card" data-cat="SAFETY" style="--card-color:var(--red)" onclick="runModule(this,'PPE & Safety Program ROI','Calculate the ROI of an enhanced PPE and safety training program for a construction company with 100+ workers. Include reduced incident rates, lower workers comp premiums, OSHA fine avoidance, and productivity gains. Use ► section markers.')">
+            <div class="mod-cat">SAFETY</div>
+            <div class="mod-name">PPE & Safety ROI</div>
+            <div class="mod-desc">12-month break-even + 3-year value</div>
+          </div>
+          <div class="mod-card" data-cat="SAFETY" style="--card-color:var(--red)" onclick="runModule(this,'OSHA 300 Log Audit','Audit an OSHA 300 log for recordkeeping accuracy, incident classification errors, and citation exposure. Identify misclassified recordable incidents, unreported cases, and documentation gaps. Estimate total fine exposure and provide a correction protocol. Use ► section markers.')">
+            <div class="mod-cat">SAFETY</div>
+            <div class="mod-name">OSHA 300 Log Audit</div>
+            <div class="mod-desc">Recordkeeping + citation exposure</div>
+          </div>
+
+          <!-- FINANCE -->
+          <div class="mod-card" data-cat="FINANCE" style="--card-color:var(--green)" onclick="runModule(this,'Cost Overrun Recovery Plan','Analyze a project 15% over budget with 40% work remaining. Identify cost overrun drivers, provide a concrete recovery plan, and estimate recoverable dollars for each action. Include quick wins vs structural fixes. Use ► section markers.')">
+            <div class="mod-cat">FINANCE</div>
+            <div class="mod-name">Cost Overrun Recovery</div>
+            <div class="mod-desc">Claw back margin — quick wins + fixes</div>
+          </div>
+          <div class="mod-card" data-cat="FINANCE" style="--card-color:var(--green)" onclick="runModule(this,'Cash Flow Optimization','Analyze cash flow optimization for a GC with $47M in active projects. Cover accelerating collections, front-loading, retainage recovery, financing options, and the 5 highest-impact levers to improve days cash on hand by 20+ days. Use ► section markers.')">
+            <div class="mod-cat">FINANCE</div>
+            <div class="mod-name">Cash Flow Optimization</div>
+            <div class="mod-desc">20+ day improvement on cash on hand</div>
+          </div>
+          <div class="mod-card" data-cat="FINANCE" style="--card-color:var(--green)" onclick="runModule(this,'Bid Margin Analysis','Analyze bidding strategy to maximize win rate AND profitability. Cover high-margin project types, competitor analysis, overhead allocation, hidden bid costs, and a bid scoring model. Provide specific percentage targets for each cost category. Use ► section markers.')">
+            <div class="mod-cat">FINANCE</div>
+            <div class="mod-name">Bid Margin Analysis</div>
+            <div class="mod-desc">Win rate + profitability optimization</div>
+          </div>
+          <div class="mod-card" data-cat="FINANCE" style="--card-color:var(--green)" onclick="runModule(this,'Retainage Release Strategy','Analyze retainage held and owed across all active projects and subcontracts. Model early release scenarios and calculate the cash flow benefit. Flag projects where retainage exceeds contract thresholds or statutory limits. Provide a step-by-step retainage recovery protocol. Use ► section markers.')">
+            <div class="mod-cat">FINANCE</div>
+            <div class="mod-name">Retainage Strategy</div>
+            <div class="mod-desc">Retention billing & release optimization</div>
+          </div>
+
+          <!-- LOGISTICS -->
+          <div class="mod-card" data-cat="LOGISTICS" style="--card-color:var(--cyan)" onclick="runModule(this,'Weather Risk Forecasting','Forecast weather-related delays for the next 30 days. Identify vulnerable activities and recommend schedule buffers or protective measures. Calculate the cost of each day of weather delay by trade. Use ► section markers.')">
+            <div class="mod-cat">LOGISTICS</div>
+            <div class="mod-name">Weather Risk</div>
+            <div class="mod-desc">Weather delay forecasting + mitigation</div>
+          </div>
+          <div class="mod-card" data-cat="LOGISTICS" style="--card-color:var(--cyan)" onclick="runModule(this,'Soil & Geotechnical Risk Analysis','Analyze geotechnical reports for bearing capacity adequacy, settlement risk, expansive soil conditions, groundwater depth, and compaction test results. Flag conditions requiring design modifications. Estimate cost impact of each risk. Use ► section markers.')">
+            <div class="mod-cat">LOGISTICS</div>
+            <div class="mod-name">Soil Report</div>
+            <div class="mod-desc">Geotech risk + bearing capacity</div>
+          </div>
+          <div class="mod-card" data-cat="LOGISTICS" style="--card-color:var(--cyan)" onclick="runModule(this,'Equipment Utilization Analysis','Analyze equipment utilization rates, idle time, and maintenance costs. Identify underutilized assets that can be demobilized, calculate own vs rent ROI threshold, and provide a fleet rebalancing strategy to reduce equipment costs 10-15%. Use ► section markers.')">
+            <div class="mod-cat">LOGISTICS</div>
+            <div class="mod-name">Tool Tracking</div>
+            <div class="mod-desc">Asset utilization + ROI analysis</div>
+          </div>
+          <div class="mod-card" data-cat="LOGISTICS" style="--card-color:var(--cyan)" onclick="runModule(this,'Underground Utility Conflict Analysis','Cross-reference excavation plans with utility as-builts and 811 locate data. Flag conflict zones by risk level and recommend potholing locations. Estimate cost and schedule impact of each identified conflict. Use ► section markers.')">
+            <div class="mod-cat">LOGISTICS</div>
+            <div class="mod-name">Utility Map</div>
+            <div class="mod-desc">811 data + excavation clash detection</div>
+          </div>
+          <div class="mod-card" data-cat="LOGISTICS" style="--card-color:var(--cyan)" onclick="runModule(this,'Traffic Flow & Site Access Analysis','Analyze site access logistics, traffic flow during construction, haul route planning, crane radius conflicts, and staging area optimization. Identify risks to schedule from access constraints. Use ► section markers.')">
+            <div class="mod-cat">LOGISTICS</div>
+            <div class="mod-name">Traffic Flow</div>
+            <div class="mod-desc">Site access + haul route optimization</div>
+          </div>
+          <div class="mod-card" data-cat="LOGISTICS" style="--card-color:var(--cyan)" onclick="runModule(this,'Supply Chain & Materials Optimization','Analyze material procurement, waste percentages, and over-ordering. Recommend substitutions or quantity adjustments to reduce cost by 10%. Cover supply chain risk, lead times, and procurement sequencing. Use ► section markers.')">
+            <div class="mod-cat">LOGISTICS</div>
+            <div class="mod-name">Supply Chain</div>
+            <div class="mod-desc">Procurement + waste reduction</div>
+          </div>
+          <div class="mod-card" data-cat="LOGISTICS" style="--card-color:var(--cyan)" onclick="runModule(this,'Materials Optimization Analysis','Analyze material waste, substitution opportunities, and procurement timing. Identify the top cost reduction opportunities across major material categories. Calculate total savings potential and provide a 60-day implementation plan. Use ► section markers.')">
+            <div class="mod-cat">LOGISTICS</div>
+            <div class="mod-name">Material Optimization</div>
+            <div class="mod-desc">Waste reduction + cost savings</div>
+          </div>
+
+          <!-- COMPLIANCE -->
+          <div class="mod-card" data-cat="COMPLIANCE" style="--card-color:var(--amber)" onclick="runModule(this,'Davis-Bacon Prevailing Wage Audit','Audit certified payroll for Davis-Bacon prevailing wage compliance, fringe benefit calculation accuracy, and deduction authorization completeness. Identify underpayment exposure and provide a correction protocol. Use ► section markers.')">
+            <div class="mod-cat">COMPLIANCE</div>
+            <div class="mod-name">Davis-Bacon Audit</div>
+            <div class="mod-desc">Prevailing wage + certified payroll</div>
+          </div>
+          <div class="mod-card" data-cat="COMPLIANCE" style="--card-color:var(--amber)" onclick="runModule(this,'Environmental Compliance Audit','Review SWPPP compliance documentation, stormwater discharge records, dust control measures, and hazmat handling logs. Identify items that could trigger EPA enforcement. Calculate fine exposure and provide a 30-day remediation checklist. Use ► section markers.')">
+            <div class="mod-cat">COMPLIANCE</div>
+            <div class="mod-name">Environmental Audit</div>
+            <div class="mod-desc">SWPPP + EPA + air quality</div>
+          </div>
+          <div class="mod-card" data-cat="COMPLIANCE" style="--card-color:var(--amber)" onclick="runModule(this,'Workforce Compliance Audit','Audit certified payroll for prevailing wage compliance, verify I-9 documentation status, and confirm OSHA 10/30 certifications are current for all workers on site. Identify underpayment exposure and flag workers with expired OSHA cards. Use ► section markers.')">
+            <div class="mod-cat">COMPLIANCE</div>
+            <div class="mod-name">Workforce Compliance</div>
+            <div class="mod-desc">I-9 + OSHA certs + prevailing wage</div>
+          </div>
+          <div class="mod-card" data-cat="COMPLIANCE" style="--card-color:var(--amber)" onclick="runModule(this,'Noise & Vibration Compliance','Review noise monitoring logs, vibration readings near sensitive structures, and city permit hour restrictions. Flag hours-of-operation violations or vibration threshold exceedances. Calculate fine exposure and project delay risk. Use ► section markers.')">
+            <div class="mod-cat">COMPLIANCE</div>
+            <div class="mod-name">Noise & Vibration</div>
+            <div class="mod-desc">Community impact + permit compliance</div>
+          </div>
+
+          <!-- OPERATIONS -->
+          <div class="mod-card" data-cat="OPERATIONS" style="--card-color:var(--purple)" onclick="runModule(this,'Critical Path Acceleration','A project is 4 days behind on the critical path. Provide a recovery schedule analysis: crash options and cost per day, fast-tracking opportunities, resource reallocation, and how to document delays for time extension claims. Use ► section markers.')">
+            <div class="mod-cat">OPERATIONS</div>
+            <div class="mod-name">Critical Path Accel.</div>
+            <div class="mod-desc">Crash options + delay documentation</div>
+          </div>
+          <div class="mod-card" data-cat="OPERATIONS" style="--card-color:var(--purple)" onclick="runModule(this,'RFI Constructive Change Analysis','Analyze an RFI log for constructive change order exposure, owner response delay patterns, and documentation gaps that weaken claims. Calculate the dollar value of unbilled constructive changes and assess compensable delay. Use ► section markers.')">
+            <div class="mod-cat">OPERATIONS</div>
+            <div class="mod-name">RFI Analysis</div>
+            <div class="mod-desc">Change order exposure + delay patterns</div>
+          </div>
+          <div class="mod-card" data-cat="OPERATIONS" style="--card-color:var(--purple)" onclick="runModule(this,'Labor Productivity Analysis','Analyze labor productivity for a GC with 127 field workers at 84% efficiency. Identify the top 5 productivity killers, calculate the dollar cost of each percentage point of lost productivity, and provide a 60-day action plan to reach 90%+ efficiency. Use ► section markers.')">
+            <div class="mod-cat">OPERATIONS</div>
+            <div class="mod-name">Labor Productivity</div>
+            <div class="mod-desc">60-day plan to reach 90%+ efficiency</div>
+          </div>
+          <div class="mod-card" data-cat="OPERATIONS" style="--card-color:var(--purple)" onclick="runModule(this,'Subcontractor Performance Review','Analyze subcontractor performance across 8 KPIs. Cover financial impact of underperforming subs, scoring system, strategies to improve mid-project, contract clauses that protect the GC, and how to build a preferred vendor program that improves margins 2-4% per project. Use ► section markers.')">
+            <div class="mod-cat">OPERATIONS</div>
+            <div class="mod-name">Subcontractor Review</div>
+            <div class="mod-desc">8-KPI scoring + preferred vendor ROI</div>
+          </div>
+          <div class="mod-card" data-cat="OPERATIONS" style="--card-color:var(--purple)" onclick="runModule(this,'Commissioning Readiness Assessment','Assess commissioning status for all MEP systems including TAB, controls, fire life safety, building envelope testing, and utility connections. Identify items blocking Certificate of Occupancy. Prioritize by lead time and calculate per-day CO delay cost. Use ► section markers.')">
+            <div class="mod-cat">OPERATIONS</div>
+            <div class="mod-name">Commissioning</div>
+            <div class="mod-desc">MEP startup + CO readiness</div>
+          </div>
+          <div class="mod-card" data-cat="OPERATIONS" style="--card-color:var(--purple)" onclick="runModule(this,'BIM Coordination Workflow Audit','Audit a BIM coordination workflow for RFI integration efficiency, model versioning control adequacy, and multi-discipline synchronization gaps. Identify RFIs resolved in the field without model updates and coordination meeting gaps. Quantify rework cost. Use ► section markers.')">
+            <div class="mod-cat">OPERATIONS</div>
+            <div class="mod-name">BIM Coordination</div>
+            <div class="mod-desc">Clash detection + version control</div>
+          </div>
+
+          <!-- GEOTECH -->
+          <div class="mod-card" data-cat="GEOTECH" style="--card-color:var(--orange)" onclick="runModule(this,'Concrete QC & Pour Log Audit','Review all concrete pour logs, cylinder break test results, slump tests, and temperature records. Flag pours with failing 28-day breaks, improper cure conditions, or out-of-spec slump. Calculate structural risk and remediation cost for each deficient pour. Use ► section markers.')">
+            <div class="mod-cat">GEOTECH</div>
+            <div class="mod-name">Concrete QC</div>
+            <div class="mod-desc">Mix design, cure & cylinder breaks</div>
+          </div>
+          <div class="mod-card" data-cat="GEOTECH" style="--card-color:var(--orange)" onclick="runModule(this,'Seismic & Wind Risk Assessment','Evaluate site seismic design category, wind exposure classification, and lateral system performance. Flag detailing deficiencies, missing special inspections, or submittals deviating from structural engineer requirements. Estimate liability exposure. Use ► section markers.')">
+            <div class="mod-cat">GEOTECH</div>
+            <div class="mod-name">Seismic & Wind Risk</div>
+            <div class="mod-desc">Lateral load gaps + special inspections</div>
+          </div>
+          <div class="mod-card" data-cat="GEOTECH" style="--card-color:var(--orange)" onclick="runModule(this,'Site Civil & Grading Review','Review site civil grading plans, compaction test results, drainage design, and as-built surveys. Identify areas failing compaction thresholds, inadequate drainage slopes, or grades outside spec. Calculate rework cost and schedule impact. Use ► section markers.')">
+            <div class="mod-cat">GEOTECH</div>
+            <div class="mod-name">Site Civil & Grading</div>
+            <div class="mod-desc">Drainage + compaction + grade tolerance</div>
+          </div>
+          <div class="mod-card" data-cat="GEOTECH" style="--card-color:var(--orange)" onclick="runModule(this,'Structural Monitoring Analysis','Analyze structural sensor data and inspection reports for unusual deflection, vibration, settlement, or load patterns. Flag readings outside design tolerances. Assess structural risk, estimate remediation cost, and recommend an accelerated monitoring protocol. Use ► section markers.')">
+            <div class="mod-cat">GEOTECH</div>
+            <div class="mod-name">Structural Monitoring</div>
+            <div class="mod-desc">Load, deflection & settlement</div>
+          </div>
+
+          <!-- LEGAL -->
+          <div class="mod-card" data-cat="LEGAL" style="--card-color:var(--blue)" onclick="runModule(this,'Lien & Contract Risk Audit','Audit the legal risk profile of a GC with 8 active projects. Cover mechanics lien deadlines, preliminary notice requirements, lien waiver mistakes, contract clauses that expose GCs to unlimited liability, insurance coverage gaps, and the 5 contract modifications that protect GC margin. Use ► section markers.')">
+            <div class="mod-cat">LEGAL</div>
+            <div class="mod-name">Lien & Contract Risk</div>
+            <div class="mod-desc">Filing deadlines + rights waiver value</div>
+          </div>
+          <div class="mod-card" data-cat="LEGAL" style="--card-color:var(--blue)" onclick="runModule(this,'Subcontractor Default Risk Scoring','Score all active subcontractors on payment history, schedule adherence, quality defects, and financial health indicators. Flag any at risk of default or bond claim. Calculate total exposure from underperforming subs and recommend mitigation. Use ► section markers.')">
+            <div class="mod-cat">LEGAL</div>
+            <div class="mod-name">Sub Default Risk</div>
+            <div class="mod-desc">Performance scoring + bond exposure</div>
+          </div>
+          <div class="mod-card" data-cat="LEGAL" style="--card-color:var(--blue)" onclick="runModule(this,'Dispute & Claim Strategy','A project has escalating disputes with an owner over $340K in extra costs. Outline the claim strategy: documentation requirements, notice obligations, claim calculation methodology including Eichleay formula, and negotiation vs arbitration analysis. Use ► section markers.')">
+            <div class="mod-cat">LEGAL</div>
+            <div class="mod-name">Dispute Strategy</div>
+            <div class="mod-desc">Eichleay formula + recovery rates</div>
+          </div>
+          <div class="mod-card" data-cat="LEGAL" style="--card-color:var(--blue)" onclick="runModule(this,'Insurance & Bonds Coverage Review','Review builders risk, GL, professional liability, and payment/performance bond status. Flag expiring policies within 60 days, coverage gaps relative to contract requirements, and open claims. Calculate total uninsured exposure and recommend corrective actions. Use ► section markers.')">
+            <div class="mod-cat">LEGAL</div>
+            <div class="mod-name">Insurance & Bonds</div>
+            <div class="mod-desc">Coverage gaps + open claims</div>
+          </div>
+        </div>
+
+        <!-- INTELLIGENCE FEED -->
+        <div class="feed-bar">
+          <span class="feed-label">INTELLIGENCE FEED</span>
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <button onclick="saveCurrentToReport()" style="font-family:var(--mono);font-size:.5rem;letter-spacing:.08rem;padding:.25rem .6rem;background:transparent;border:1px solid var(--cyan2);color:var(--cyan);cursor:pointer;text-transform:uppercase" title="Save current output to report builder">SAVE →</button>
+            <button onclick="copyFeedOutput()" style="font-family:var(--mono);font-size:.5rem;letter-spacing:.08rem;padding:.25rem .6rem;background:transparent;border:1px solid var(--border2);color:var(--muted);cursor:pointer;text-transform:uppercase" title="Copy to clipboard">COPY</button>
+            <span class="feed-status" id="feedStatus">SELECT A MODULE TO BEGIN</span>
+          </div>
+        </div>
+        <div class="feed-output" id="feedOutput">
+          <span class="feed-placeholder">Select a module or playbook above to run analysis. Output will appear here.</span>
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL -->
+      <div class="right-panel">
+
+        <div class="rp-section" style="max-height:180px;overflow-y:auto">
+          <div class="rp-title">REPORT HISTORY</div>
+          <div id="reportHistory">
+            <div style="font-size:.55rem;color:var(--muted);font-family:var(--mono)">No reports saved yet.</div>
+          </div>
+          <button class="rp-btn" style="margin-top:.5rem" onclick="saveCurrentFeed()">&#43; SAVE CURRENT OUTPUT</button>
+        </div>
+
+        <div class="rp-section" style="flex:1;overflow-y:auto">
+          <div class="rp-title">CUSTOM REPORT BUILDER</div>
+          <input
+            type="text"
+            id="reportTitle"
+            placeholder="Custom AuditOps Report"
+            style="width:100%;background:var(--s2);border:1px solid var(--border2);color:var(--white);font-family:var(--mono);font-size:.58rem;padding:.4rem .5rem;outline:none;margin-bottom:.4rem;"
+          >
+          <div style="font-size:.55rem;color:var(--muted);margin-bottom:.4rem;font-family:var(--mono)">Click history items to add. Edit freely.</div>
+          <textarea
+            class="rp-textarea"
+            id="reportContent"
+            placeholder="Select saved outputs or edit this report manually..."
+            style="height:90px"
+          ></textarea>
+          <button class="rp-btn" onclick="buildReport()">&#43; ADD ALL SAVED</button>
+          <button class="rp-btn" style="margin-top:.3rem;border-color:var(--green);color:var(--green)" onclick="exportReport()">&#8595; EXPORT REPORT (.TXT)</button>
+          <button class="rp-btn" style="margin-top:.3rem;border-color:var(--amber);color:var(--amber)" onclick="copyReport()">&#8853; COPY TO CLIPBOARD</button>
+          <button class="rp-btn danger" onclick="clearReport()">&#10005; CLEAR</button>
+        </div>
+
+        <div class="rp-section">
+          <div class="rp-title">SESSION SUMMARY</div>
+          <div class="stat-row">
+            <span class="stat-label">Modules</span>
+            <span class="stat-val" id="statModules">30</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Saved outputs</span>
+            <span class="stat-val" id="statSaved">0</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Last module</span>
+            <span class="stat-val" id="statLast" style="font-size:.5rem;color:var(--muted)">—</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
   </div>
-
-  <div class="esd-grid">
-
-    <!-- ESD-AR -->
-    <div class="esd-card">
-      <div class="esd-head">
-        <div><div class="esd-prefix">ESD-AR</div><div class="esd-name">ACCOUNTS<br>RECEIVABLE</div></div>
-        <div class="esd-badge">AR NODE</div>
-      </div>
-      <div class="esd-body">
-        <div class="esd-desc">Invoice aging, customer payment velocity, collections queue prioritization, AR-to-cash forecasting, and dispute resolution pipeline.</div>
-        <div class="esd-quick">
-          <button class="esd-qp" onclick="runESD('ar','Show me all open invoices aged 60+ days with recommended collection actions')"><span class="esd-qp-arrow">›</span> Open invoices 60d+ · collection queue</button>
-          <button class="esd-qp" onclick="runESD('ar','Generate AR cash flow forecast for next 30 days based on payment velocity')"><span class="esd-qp-arrow">›</span> AR cash flow forecast · 30 days</button>
-          <button class="esd-qp" onclick="runESD('ar','Flag all customers who have disputed an invoice in the past 90 days')"><span class="esd-qp-arrow">›</span> Dispute flags · 90-day review</button>
-        </div>
-        <div class="esd-input-row">
-          <input class="esd-input" id="input-esd-ar" placeholder="AR query…" onkeydown="if(event.key==='Enter')runESDModule('ar')"/>
-          <button class="esd-run-btn" onclick="runESDModule('ar')">RUN</button>
-        </div>
-        <div class="esd-response" id="resp-esd-ar"></div>
-      </div>
-      <div class="esd-foot"><div class="sov-url">esd-ar.tsmatter.com</div><a href="https://esd-ar.tsmatter.com" target="_blank" class="open-app-lnk purple">OPEN ↗</a></div>
-    </div>
-
-    <!-- ESD-CASHRECEIPTS -->
-    <div class="esd-card">
-      <div class="esd-head">
-        <div><div class="esd-prefix">ESD-CASHRECEIPTS</div><div class="esd-name">CASH<br>RECEIPTS</div></div>
-        <div class="esd-badge">RECEIPTS NODE</div>
-      </div>
-      <div class="esd-body">
-        <div class="esd-desc">Deposit logging, bank feed ingestion, receipt-to-invoice auto-matching, exception queue, and daily cash position reporting.</div>
-        <div class="esd-quick">
-          <button class="esd-qp" onclick="runESD('cashreceipts','Match all unmatched bank deposits from today against open invoices')"><span class="esd-qp-arrow">›</span> Match today's deposits · open invoices</button>
-          <button class="esd-qp" onclick="runESD('cashreceipts','Show me all unmatched receipts in the exception queue older than 3 days')"><span class="esd-qp-arrow">›</span> Exception queue · unmatched 3d+</button>
-          <button class="esd-qp" onclick="runESD('cashreceipts','Generate daily cash position report with bank feed reconciliation status')"><span class="esd-qp-arrow">›</span> Daily cash position report</button>
-        </div>
-        <div class="esd-input-row">
-          <input class="esd-input" id="input-esd-cashreceipts" placeholder="Cash receipts query…" onkeydown="if(event.key==='Enter')runESDModule('cashreceipts')"/>
-          <button class="esd-run-btn" onclick="runESDModule('cashreceipts')">RUN</button>
-        </div>
-        <div class="esd-response" id="resp-esd-cashreceipts"></div>
-      </div>
-      <div class="esd-foot"><div class="sov-url">esd-cashreceipts.tsmatter.com</div><a href="https://esd-cashreceipts.tsmatter.com" target="_blank" class="open-app-lnk purple">OPEN ↗</a></div>
-    </div>
-
-    <!-- ESD-SETUP -->
-    <div class="esd-card">
-      <div class="esd-head">
-        <div><div class="esd-prefix">ESD-SETUP</div><div class="esd-name">SYSTEM<br>SETUP</div></div>
-        <div class="esd-badge">SETUP NODE</div>
-      </div>
-      <div class="esd-body">
-        <div class="esd-desc">Client onboarding, GL chart-of-accounts mapping, entity config, integration key management, carrier accounts, and tax profiles.</div>
-        <div class="esd-quick">
-          <button class="esd-qp" onclick="runESD('setup','Run a full integration health check across all connected systems and flag any broken connections')"><span class="esd-qp-arrow">›</span> Integration health check · all systems</button>
-          <button class="esd-qp" onclick="runESD('setup','Show me all GL mappings that do not have a corresponding QuickBooks chart of accounts entry')"><span class="esd-qp-arrow">›</span> GL mapping gaps · QuickBooks alignment</button>
-          <button class="esd-qp" onclick="runESD('setup','List all active carrier accounts with current rate agreements and expiration dates')"><span class="esd-qp-arrow">›</span> Carrier accounts · rate agreements</button>
-        </div>
-        <div class="esd-input-row">
-          <input class="esd-input" id="input-esd-setup" placeholder="Setup / config query…" onkeydown="if(event.key==='Enter')runESDModule('setup')"/>
-          <button class="esd-run-btn" onclick="runESDModule('setup')">RUN</button>
-        </div>
-        <div class="esd-response" id="resp-esd-setup"></div>
-      </div>
-      <div class="esd-foot"><div class="sov-url">esd-setup.tsmatter.com</div><a href="https://esd-setup.tsmatter.com" target="_blank" class="open-app-lnk purple">OPEN ↗</a></div>
-    </div>
-
-    <!-- ESD-TIMESHEETS -->
-    <div class="esd-card">
-      <div class="esd-head">
-        <div><div class="esd-prefix">ESD-TIMESHEETS</div><div class="esd-name">TIMESHEETS<br>&amp; LABOR</div></div>
-        <div class="esd-badge">TIME NODE</div>
-      </div>
-      <div class="esd-body">
-        <div class="esd-desc">Staff time entry, project code allocation, multi-tier approval workflows, billable vs. non-billable tracking, and payroll export bridge.</div>
-        <div class="esd-quick">
-          <button class="esd-qp" onclick="runESD('timesheets','Show me all unapproved timesheets for the current pay period with staff names and hours')"><span class="esd-qp-arrow">›</span> Unapproved timesheets · current period</button>
-          <button class="esd-qp" onclick="runESD('timesheets','Generate billable vs non-billable utilization report for all staff this month')"><span class="esd-qp-arrow">›</span> Billable utilization · monthly report</button>
-          <button class="esd-qp" onclick="runESD('timesheets','Export payroll-ready timesheet data for this pay period in QuickBooks format')"><span class="esd-qp-arrow">›</span> Payroll export · QuickBooks format</button>
-        </div>
-        <div class="esd-input-row">
-          <input class="esd-input" id="input-esd-timesheets" placeholder="Timesheet query…" onkeydown="if(event.key==='Enter')runESDModule('timesheets')"/>
-          <button class="esd-run-btn" onclick="runESDModule('timesheets')">RUN</button>
-        </div>
-        <div class="esd-response" id="resp-esd-timesheets"></div>
-      </div>
-      <div class="esd-foot"><div class="sov-url">esd-timesheets.tsmatter.com</div><a href="https://esd-timesheets.tsmatter.com" target="_blank" class="open-app-lnk purple">OPEN ↗</a></div>
-    </div>
-
-    <!-- ESD-PMI -->
-    <div class="esd-card">
-      <div class="esd-head">
-        <div><div class="esd-prefix">ESD-PMI</div><div class="esd-name">PROJECT MGMT<br>INTELLIGENCE</div></div>
-        <div class="esd-badge">PMI NODE</div>
-      </div>
-      <div class="esd-body">
-        <div class="esd-desc">Project profitability, milestone tracking, budget burn-rate analysis, client deliverable status board, and cross-project resource allocation.</div>
-        <div class="esd-quick">
-          <button class="esd-qp" onclick="runESD('pmi','Show all active projects where budget burn rate exceeds 85% with projected overrun dates')"><span class="esd-qp-arrow">›</span> Budget burn alerts · overrun risk</button>
-          <button class="esd-qp" onclick="runESD('pmi','Generate project profitability report ranked by margin for all active engagements')"><span class="esd-qp-arrow">›</span> Project P&amp;L · margin ranking</button>
-          <button class="esd-qp" onclick="runESD('pmi','List all client deliverables due this week with current status and responsible staff')"><span class="esd-qp-arrow">›</span> Deliverables due this week · status</button>
-        </div>
-        <div class="esd-input-row">
-          <input class="esd-input" id="input-esd-pmi" placeholder="Project intelligence query…" onkeydown="if(event.key==='Enter')runESDModule('pmi')"/>
-          <button class="esd-run-btn" onclick="runESDModule('pmi')">RUN</button>
-        </div>
-        <div class="esd-response" id="resp-esd-pmi"></div>
-      </div>
-      <div class="esd-foot"><div class="sov-url">esd-pmi.tsmatter.com</div><a href="https://esd-pmi.tsmatter.com" target="_blank" class="open-app-lnk purple">OPEN ↗</a></div>
-    </div>
-
-  </div>
-
-  <!-- REPORT BUILDER -->
-  <div class="sec-label" id="reports">
-    <span class="sec-label-text">Sovereign Report Builder</span>
-    <div class="sec-line"></div>
-    <span class="sec-badge">TSM NEURAL · EXPORT-READY</span>
-  </div>
-  <div class="report-section">
-    <div class="report-row">
-      <select class="report-select" id="reportType">
-        <option value="">— Select Report Type —</option>
-        <option value="q1-tax">Q1 Multi-State Sales Tax Export</option>
-        <option value="ar-aging">AR Aging Analysis (30/60/90)</option>
-        <option value="ap-reconcile">AP Reconciliation + Audit Trail</option>
-        <option value="nexus-risk">Economic Nexus Risk Assessment</option>
-        <option value="fulfillment">Fulfillment Performance Summary</option>
-        <option value="qb-sync">QuickBooks Migration Readiness</option>
-        <option value="exempt-cert">Exemption Certificate Inventory</option>
-        <option value="cashflow">Cash Flow Forecast (Next 90 Days)</option>
-        <option value="esd-timesheets">ESD Timesheet Utilization Report</option>
-        <option value="esd-pmi">ESD Project P&amp;L Summary</option>
-        <option value="esd-cashreceipts">ESD Cash Receipts Reconciliation</option>
-      </select>
-      <input class="report-state-input" id="reportContext" placeholder="States, client name, date range…"/>
-      <button class="build-btn" onclick="buildReport()">📄 BUILD REPORT</button>
-    </div>
-    <div class="report-output" id="reportOutput"></div>
-  </div>
-</main>
-
-<footer>
-  <div class="footer-l">CASE-TECH SOVEREIGN COMMAND · TSM PLATFORM · DIRECTOR WHITEHEAD</div>
-  <div class="footer-r">
-    <a href="https://financial.tsmatter.com" target="_blank">FINANCIAL CMD</a>
-    <a href="https://tax.tsmatter.com" target="_blank">TAX</a>
-    <a href="https://compliance.tsmatter.com" target="_blank">COMPLIANCE</a>
-    <a href="https://strategist.tsmatter.com" target="_blank">STRATEGIST</a>
-    <a href="https://zero-trust.tsmatter.com" target="_blank">ZERO TRUST</a>
-  </div>
-</footer>
+</div>
 
 <script>
-/*
-  TSM NEURAL ENGINE
-  Routes through: https://tsm-core.fly.dev/v1/chat  (Groq Llama 3.3-70B-Versatile)
-  Underlying model is intentionally not disclosed in the UI.
+// ── STATE ──────────────────────────────────────────────────
+let savedOutputs = [];
+let runningCard = null;
+const GROQ_KEY = '';  // served via /api/chat proxy
 
-  Bridge expected request format:
-    POST /v1/chat
-    Content-Type: application/json
-    { "system": "...", "message": "...", "stream": true, "max_tokens": 900 }
+const SYSTEM = `You are the TSM Construction Intelligence Strategist — an elite AI for construction company owners, GCs, project managers, and developers. You have expert-level knowledge of:
+- OSHA compliance, safety programs, incident analysis, and workers comp optimization
+- Construction finance: cost codes, job costing, cash flow, change order management, retainage
+- Project management: critical path, schedule recovery, RFI management, BIM coordination
+- Legal: lien law (all 50 states), subcontract risk, dispute resolution, Eichleay formula claims
+- Geotech: soil reports, compaction testing, concrete QC, seismic design categories
+- Compliance: Davis-Bacon, SWPPP, EPA, prevailing wage, OSHA 300 logs
+- Equipment: fleet optimization, own vs rent analysis, utilization metrics
+- Subcontractor management: performance scoring, default risk, preferred vendor programs
+Always respond with ► section headers. Every analysis must include specific dollar amounts, timelines, and actionable recommendations. Be direct, expert, and commercially precise.`;
 
-  Bridge SSE streaming response (preferred):
-    data: {"delta": "chunk text"}
-    data: [DONE]
-
-  Bridge non-streaming JSON response (fallback):
-    { "response": "full text" }
-    or: { "content": "..." }
-    or OpenAI-shape: { "choices": [{ "message": { "content": "..." } }] }
-
-  Set useFallback: true during development if bridge is not yet running.
-  CORS: bridge must return Access-Control-Allow-Origin: * (or portal domain)
-*/
-const CONFIG = {
-  bridgeUrl: '/api/ai/query',
-  stream: true,
-  maxTokens: 900,
-  useFallback: false
+const PLAYBOOKS = {
+  'material-theft': 'Analyze material theft and loss prevention for a construction site. Cover: the most commonly stolen materials and their replacement costs, surveillance and inventory control systems with ROI, subcontractor accountability protocols, insurance claim procedures, and how to build a loss prevention program that reduces shrinkage by 60-80%. Include specific dollar amounts for a mid-size commercial project. Use ► section markers.',
+  'safety-protocol': 'Perform a comprehensive safety protocol audit for a construction company. Cover: OSHA 300 log accuracy, required safety programs and documentation, toolbox talk frequency and documentation, PPE compliance enforcement, incident reporting procedures, and the 5 most common OSHA citations in commercial construction. Estimate total fine exposure and provide a 30-day remediation checklist. Use ► section markers.',
+  'subcontractor-exposure': 'Analyze subcontractor financial and legal exposure for a GC with 15 active subcontracts. Cover: payment bond adequacy, retainage structure, lien waiver collection procedures, insurance certificate compliance, the top 5 sub default risk indicators, and the GC liability exposure from underperforming subs. Calculate total exposure and provide a risk mitigation protocol. Use ► section markers.',
+  'cash-flow-stress': 'Perform a cash flow stress test for a construction company with $12M in backlog and $1.8M cash position. Model 3 scenarios: (1) owner payment delayed 30 days on 2 projects, (2) major subcontractor default requiring replacement, (3) materials price spike of 15%. For each scenario: calculate the cash impact, identify the break point, and provide a specific liquidity response plan. Use ► section markers.',
+  'osha-audit': 'Perform a complete OSHA inspection readiness audit for a commercial construction site. Cover: documentation requirements (SDS, HAZCOM, emergency action plan), required postings, personal fall arrest system compliance, scaffold inspection records, equipment pre-use inspection logs, confined space program, and lockout/tagout procedures. Flag the top 10 most likely citations and their penalty ranges. Use ► section markers.',
+  'lien-exposure': 'Analyze lien and title risk for a GC with 8 active projects. Cover: preliminary notice requirements by state for all tier subs and suppliers, lien deadline calculation methodology, conditional vs unconditional lien release tracking, joint check agreement procedures, retainage lien rights, and the dollar value of lien rights commonly lost through procedural errors. Provide a lien calendar and release tracking protocol. Use ► section markers.',
+  'bid-strategy': 'Analyze bidding strategy to maximize both win rate and profitability for a $25M annual volume GC. Cover: how to identify high-margin project types, estimating accuracy improvement strategies, overhead allocation methodology, the hidden bid costs most contractors miss, competitor analysis approach, and how to build a bid scoring model that targets 18-22% gross margin. Provide specific percentage targets for each cost category. Use ► section markers.'
 };
 
-const SYSTEM_PROMPTS = {
-  tax: `You are the Sovereign Tax Intelligence Engine for Case-Tech, a multi-state sales tax and compliance specialist.
-Specialties: AvaTax/Avalara nexus monitoring across 15+ states, economic nexus thresholds ($100K revenue OR 200 transactions), exemption certificate lifecycle, sales tax filing calendars, product taxability rules, audit-ready reconciliation.
-Rules: Respond with precise, structured, actionable intelligence. Use short labeled sections. Format numbers as currency. Flag risks with ⚠. Give specific operational steps only — no generic advice.`,
+// ── TAB FILTER ─────────────────────────────────────────────
+function filterTab(cat, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.mod-card').forEach(card => {
+    if (cat === 'ALL') {
+      card.classList.remove('hidden');
+    } else {
+      card.classList.toggle('hidden', card.dataset.cat !== cat);
+    }
+  });
+}
 
-  orders: `You are the Sovereign Order-to-Label Pipeline Engine for Case-Tech, a fulfillment and operations specialist.
-Specialties: PDF intake → tracking pipeline (zero manual entry), carrier rate shopping (USPS/UPS/FedEx/DHL), label generation with optimal carrier selection, bank feed ingestion and 98%+ transaction auto-categorization, receipt digitization, fulfillment bottleneck analysis, QuickBooks sync.
-Rules: Respond with precise operational steps. Include example carrier rates and automation triggers. Flag manual-entry elimination with ✓ AUTOMATED. No generic advice.`,
+// ── RUN MODULE ─────────────────────────────────────────────
+async function runModule(card, title, prompt) {
+  if (runningCard) runningCard.classList.remove('running');
+  runningCard = card;
+  card.classList.add('running');
 
-  ar: `You are the Sovereign AR/AP Reconciliation Engine for Case-Tech, a predictive accounts receivable and payable specialist.
-Specialties: Predictive AR (flag late payers before due date), 30-60-90 aging analysis, bank deposit auto-matching, AP auto-coding with GL classification and audit trail, QuickBooks bi-directional sync, cash flow forecasting.
-Rules: Respond with precise structured financial intelligence. Include specific dollar thresholds and timing. Flag at-risk customers with ⚠. Flag automated actions with ✓ AUTO.`,
+  const feed = document.getElementById('feedOutput');
+  const status = document.getElementById('feedStatus');
+  document.getElementById('statLast').textContent = title;
+  status.textContent = 'Completed: ' + title;
 
-  'esd-ar': `You are the ESD-AR Node for Case-Tech. Specialties: accounts receivable management, invoice aging, customer payment history and velocity, collections queue prioritization, AR-to-cash forecasting, dispute tracking, and credit risk scoring. Provide structured, actionable AR intelligence. Flag collection risks with ⚠.`,
+  feed.innerHTML = `<span class="feed-tag">[STRATEGIST] ${title}</span>\n\n<span style="color:var(--muted)">Analyzing...</span>`;
 
-  'esd-cashreceipts': `You are the ESD-CashReceipts Node for Case-Tech. Specialties: bank deposit logging, bank feed ingestion and parsing, receipt-to-invoice auto-matching, exception queue management, unmatched deposit investigation, daily cash position reporting. Provide structured, actionable cash receipts intelligence.`,
-
-  'esd-setup': `You are the ESD-Setup Node for Case-Tech. Specialties: client entity setup and onboarding, GL chart-of-accounts mapping, integration key management (AvaTax, QuickBooks, carriers), carrier account configuration, tax profile setup, integration health monitoring. Provide structured, step-by-step configuration guidance.`,
-
-  'esd-timesheets': `You are the ESD-Timesheets Node for Case-Tech. Specialties: staff time entry, project code allocation, approval workflows, billable vs. non-billable analysis, overtime alerts, payroll export preparation, labor cost reporting. Provide structured, actionable timesheet and labor intelligence.`,
-
-  'esd-pmi': `You are the ESD-PMI Node for Case-Tech. Specialties: project profitability analysis, milestone and deliverable tracking, budget burn-rate monitoring, resource allocation, client deliverable status, cross-project risk assessment. Provide structured project intelligence. Flag budget risks with ⚠. Include margin data where relevant.`
-};
-
-const REPORT_PROMPTS = {
-  'q1-tax': 'Generate a detailed Q1 multi-state sales tax export report. Include: per-state liability totals, filing deadlines, nexus status, economic threshold progress, exemption certificate issues, and recommended immediate actions. Make it audit-ready and export-formatted.',
-  'ar-aging': 'Generate a complete AR aging analysis in 30/60/90+ day buckets. For each bucket: typical customer profile, recommended collection action, escalation trigger, estimated recovery rate, and automated follow-up sequence. Include cash flow impact.',
-  'ap-reconcile': 'Generate a full AP reconciliation report with audit trail. Include: vendor payment status, GL coding verification, duplicate detection, unapproved payables, and recommended month-end close steps.',
-  'nexus-risk': 'Generate an economic nexus risk assessment for all 15 states. Include: current threshold progress per state, projected trigger dates based on velocity, recommended proactive registration steps, and penalty risk.',
-  'fulfillment': 'Generate a fulfillment performance summary. Include: order processing time benchmarks, carrier utilization rates, label generation speed, error rates vs. industry standard, and top 3 workflow improvements.',
-  'qb-sync': 'Generate a QuickBooks migration readiness assessment. Include: data fields that auto-map, fields requiring manual review, AR/AP balance verification steps, chart of accounts alignment, and estimated migration timeline.',
-  'exempt-cert': 'Generate an exemption certificate inventory report. Include: certificates by state, expiration timeline, at-risk expirations (60/30/7 days), customers without certificates who should have them, and automated renewal workflow.',
-  'cashflow': 'Generate a 90-day cash flow forecast. Include: expected AR collections by week, AP obligations due, projected ending balance, risk scenarios (high/medium/low collection), and recommended actions to improve cash position.',
-  'esd-timesheets': 'Generate a full timesheet utilization report for the current period. Include: billable vs. non-billable breakdown by staff, project code allocation, overtime flags, approval status, and payroll export readiness.',
-  'esd-pmi': 'Generate a project P&L summary for all active engagements. Include: revenue recognized vs. budgeted, margin by project, burn rate alerts, upcoming milestones at risk, and resource allocation recommendations.',
-  'esd-cashreceipts': 'Generate a cash receipts reconciliation report. Include: matched vs. unmatched deposits, exception queue summary, bank feed sync status, daily cash position trend, and recommended actions for unmatched items.'
-};
-
-let bridgeOk = null;
-
-async function checkBridge() {
-  const banner = document.getElementById('bridgeBanner');
-  const txt = document.getElementById('bridgeBannerText');
   try {
-    const res = await fetch('/api/ai/query'.replace('/v1/chat', '/health'), {
-      method: 'GET', signal: AbortSignal.timeout(4000)
-    });
-    if (res.ok) {
-      bridgeOk = true;
-      banner.className = 'bridge-banner show ok';
-      txt.textContent = '✓ TSM Neural bridge online · tsm-shell.fly.dev connected';
-      setTimeout(() => banner.classList.remove('show'), 4000);
-    } else { warnBridge(banner, txt); }
-  } catch(e) { warnBridge(banner, txt); }
-}
-
-function warnBridge(banner, txt) {
-  bridgeOk = false;
-  banner.className = 'bridge-banner show';
-  if (CONFIG.useFallback) {
-    txt.textContent = '⚠ Bridge unreachable — running in simulation mode';
-    setTimeout(() => banner.classList.remove('show'), 6000);
-  } else {
-    txt.textContent = '⚠ TSM Neural bridge unreachable — check //app/scripts config at tsm-shell.fly.dev';
-  }
-}
-
-window.addEventListener('load', checkBridge);
-
-function animCount(el, target, suffix) {
-  const start = Date.now(), dur = 1200;
-  (function tick() {
-    const p = Math.min((Date.now()-start)/dur, 1);
-    const ease = 1-Math.pow(1-p, 3);
-    el.textContent = Math.round(ease*target) + suffix;
-    if (p<1) requestAnimationFrame(tick);
-  })();
-}
-window.addEventListener('load', () => {
-  setTimeout(()=>animCount(document.getElementById('st-orders'), 148, ''), 300);
-  setTimeout(()=>animCount(document.getElementById('st-ar'), 284, 'K'), 500);
-  setTimeout(()=>animCount(document.getElementById('st-exempt'), 63, ''), 700);
-});
-
-const activeNodes = { tax: true, orders: true, ar: true };
-function toggleNode(n) {
-  activeNodes[n] = !activeNodes[n];
-  document.getElementById('tog-'+n).classList.toggle('active', activeNodes[n]);
-}
-
-async function callAI(systemPrompt, userMessage, onChunk, onDone) {
-  if (CONFIG.useFallback || bridgeOk === false) {
-    await simulateResponse(systemPrompt, userMessage, onChunk, onDone);
-    return;
-  }
-  try {
-    const res = await fetch('/api/ai/query', {
+    const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        system: systemPrompt,
-        message: userMessage,
-        stream: CONFIG.stream,
-        max_tokens: CONFIG.maxTokens
+        messages: [
+          { role: 'system', content: SYSTEM },
+          { role: 'user', content: prompt }
+        ]
       })
     });
-    if (!res.ok) {
-      const errText = await res.text().catch(()=>'');
-      if (CONFIG.useFallback) { await simulateResponse(systemPrompt, userMessage, onChunk, onDone); }
-      else { onChunk('[Bridge error ' + res.status + ' — verify tsm-shell.fly.dev/v1/chat is live and CORS is open]\n' + errText.slice(0,200)); onDone(); }
-      return;
-    }
-    const ct = res.headers.get('content-type') || '';
-    if (ct.includes('text/event-stream') || CONFIG.stream) {
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buf = '';
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buf += decoder.decode(value, { stream: true });
-        const lines = buf.split('\n');
-        buf = lines.pop();
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          const json = line.slice(6).trim();
-          if (json === '[DONE]') continue;
-          try {
-            const p = JSON.parse(json);
-            const t = p.delta || p.text || p.content || p.choices?.[0]?.delta?.content || '';
-            if (t) onChunk(t);
-          } catch(e) {}
-        }
-      }
-    } else {
-      const data = await res.json();
-      const text = data.response || data.content || data.text || data.choices?.[0]?.message?.content || JSON.stringify(data);
-      onChunk(text);
-    }
-    onDone();
-  } catch(err) {
-    if (CONFIG.useFallback) { await simulateResponse(systemPrompt, userMessage, onChunk, onDone); }
-    else { onChunk('[Connection error: ' + err.message + ']\nVerify tsm-shell.fly.dev is reachable and CORS headers include your portal domain.'); onDone(); }
+    const data = await res.json();
+    const text = data.answer || data.response || data.content ||
+      (data.choices && data.choices[0]?.message?.content) || 'No response received.';
+
+    const formatted = `<span class="feed-tag">[STRATEGIST] ${title}</span>\n\n` +
+      text.replace(/►\s*/g, '<span class="feed-section">►</span> ')
+          .replace(/\*\*(.*?)\*\*/g, '<span class="feed-bold">$1</span>');
+
+    feed.innerHTML = formatted;
+    feed.scrollTop = 0;
+
+    // Auto-save to report history
+    saveOutput(title, text);
+    card.classList.remove('running');
+    setStatus('Analysis complete — ' + title);
+  } catch(e) {
+    feed.innerHTML = `<span style="color:var(--red)">[ERROR] Analysis failed: ${e.message}</span>\n<span style="color:var(--muted)">Check network connection and API configuration.</span>`;
+    card.classList.remove('running');
+    setStatus('ERROR — check connection');
   }
 }
 
-const SIM = {
-  tax: ['Q1 TAX LIABILITY — ALL 15 STATES\n\nTX: $14,220 | CA: $9,810 | FL: $6,340 | NY: $5,880\nOH: $3,120 | IL: $2,940 | WA: $2,610 | PA: $2,480\nNJ: $2,200 | GA: $1,980 | NC: $1,740 | VA: $1,560\nAZ: $1,340 | CO: $1,180 | TN: $980\n\nTOTAL: $58,380\n\n⚠ OH approaching 200-transaction threshold (187 YTD). Breach in ~23 days.\n⚠ 3 exemption certs expiring in 47 days — renewal queue flagged.\n✓ AUTO: Filing profiles staged for all 15 states.'],
-  orders: ['LABEL GENERATED ✓ AUTOMATED\n\n5.0 lb → New York, NY 10001\n\nUPS Ground:   $8.42  (4 days)  ← SELECTED\nFedEx Ground: $9.17  (4 days)\nUSPS Priority: $11.30 (2 days)\nDHL Express:  $24.80 (1 day)\n\nTracking: 1Z999AA10123456784\n✓ AUTOMATED: Filed to pipeline. QB sync queued.'],
-  ar: ['AR PREDICTIVE RISK\n\n⚠ HIGH RISK:\n  Acme Logistics — INV $12,400 due 8 days, 3 prior lates\n  Vertex Supply  — INV $8,200 due 5 days, velocity slowing\n\n✓ AUTO: 3 soft reminders → T-5 days\n✓ AUTO: 2 escalations   → T+3 days\n1 hold flag — awaiting your approval\n\nPROJECTED RECOVERY THIS WEEK: $34,200'],
-  'esd-ar': ['ESD-AR ACTIVE\n\nOPEN 60d+: 8 invoices · $28,400 total\n\nPriority 1: Vertex Inc    $12,100 (87d) — formal demand\nPriority 2: Summit Co     $9,800  (72d) — escalation call\nPriority 3: Redline LLC   $6,500  (63d) — second reminder\n\nAR FORECAST 30d:\n  Expected:  $84,200\n  At-risk:   $22,300\n  Probable:  $71,400\n\n⚠ 2 accounts flagged for credit hold.'],
-  'esd-cashreceipts': ["ESD-CASHRECEIPTS ACTIVE\n\nTODAY'S DEPOSITS: $31,240 · 9 transactions\n  ✓ MATCHED: 7 deposits ($27,040)\n  ⚠ EXCEPTIONS: 2 deposits ($4,200) — no invoice match\n\n  $3,200 — Wire 'VTXS CORP' → possible Vertex Supply?\n  $1,000 — ACH 'ADV PMT' → create prepayment invoice?\n\nCASH POSITION: $142,800 · Bank feed synced 4 min ago"],
-  'esd-setup': ['ESD-SETUP ACTIVE\n\nINTEGRATION HEALTH:\n  ✓ AvaTax API    — connected (v22.6)\n  ✓ QuickBooks    — synced 12 min ago\n  ✓ UPS           — active (expires Dec 2025)\n  ✓ FedEx         — active (expires Mar 2026)\n  ✓ USPS          — active\n  ⚠ DHL           — API key rotation due in 14 days\n\nGL GAPS: 2 unmapped accounts\n  5210 "Freight Expense" — not in QB CoA\n  4320 "Misc Revenue"   — ambiguous, review needed'],
-  'esd-timesheets': ['ESD-TIMESHEETS ACTIVE\n\nPAY PERIOD Apr 1–15:\n  Total: 312 hrs\n  Billable: 274 hrs (87.8%)\n  Non-billable: 38 hrs (12.2%)\n\nAPPROVALS:\n  ✓ Approved: 8 of 11 staff\n  ⚠ Pending: Torres, McKinley, Pham — deadline today\n\n⚠ Torres: 52 hrs logged — OT authorization required\n\nPAYROLL EXPORT: Ready for 8 approved staff · QB format available'],
-  'esd-pmi': ['ESD-PMI ACTIVE\n\nACTIVE PROJECTS (8):\n  ✓ CASE-TECH Fulfillment Ops — 74% budget · on track\n  ✓ Ameris Portal Buildout    — 61% budget · on track\n  ⚠ Honor Portal Integration  — 91% budget · OVERRUN RISK\n  ⚠ HC Command Dashboard      — 88% budget · monitor\n\nDELIVERABLES THIS WEEK:\n  Mon: HC Command v2 API spec — Torres (in progress)\n  Wed: Ameris UAT             — McKinley (on track)\n  Fri: CASE-TECH Q1 report    — Pham ⚠ NOT STARTED\n\nPORTFOLIO MARGIN: 34.2%']
-};
+// ── RUN PLAYBOOK ───────────────────────────────────────────
+async function runPlaybook(key, el) {
+  document.querySelectorAll('.playbook-item').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  const prompt = PLAYBOOKS[key];
+  const title = el.querySelector('.pb-title').textContent;
+  if (!prompt) return;
 
-async function simulateResponse(systemPrompt, userMessage, onChunk, onDone) {
-  const key = Object.keys(SIM).find(k => systemPrompt.toLowerCase().includes(k.replace('-',''))) || 'tax';
-  const pool = SIM[key];
-  const full = pool[Math.floor(Math.random() * pool.length)];
-  for (const ch of full) { await new Promise(r => setTimeout(r, 9)); onChunk(ch); }
-  onDone();
+  const feed = document.getElementById('feedOutput');
+  document.getElementById('statLast').textContent = title;
+  document.getElementById('feedStatus').textContent = 'Running: ' + title;
+  feed.innerHTML = `<span class="feed-tag">[PLAYBOOK] ${title}</span>\n\n<span style="color:var(--muted)">Running playbook analysis...</span>`;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [
+          { role: 'system', content: SYSTEM },
+          { role: 'user', content: prompt }
+        ]
+      })
+    });
+    const data = await res.json();
+    const text = data.answer || data.response || data.content ||
+      (data.choices && data.choices[0]?.message?.content) || 'No response received.';
+
+    feed.innerHTML = `<span class="feed-tag">[PLAYBOOK] ${title}</span>\n\n` +
+      text.replace(/►\s*/g, '<span class="feed-section">►</span> ')
+          .replace(/\*\*(.*?)\*\*/g, '<span class="feed-bold">$1</span>');
+    feed.scrollTop = 0;
+    saveOutput(title, text);
+    setStatus('Playbook complete — ' + title);
+  } catch(e) {
+    feed.innerHTML = `<span style="color:var(--red)">[ERROR] ${e.message}</span>`;
+    setStatus('ERROR');
+  }
 }
 
-async function runModule(mod, query) {
-  const input = query || document.getElementById('input-'+mod).value.trim();
-  if (!input) return;
-  const el = document.getElementById('resp-'+mod);
-  el.className = 'sov-response active';
-  el.innerHTML = '<div class="thinking-line ' + mod + '">' +
-    (mod==='tax' ? '// TSM NEURAL · NEXUS ANALYSIS…' : mod==='orders' ? '// TSM NEURAL · PIPELINE PROCESSING…' : '// TSM NEURAL · AR/AP RECONCILING…') + '</div>';
-  await callAI(SYSTEM_PROMPTS[mod], input, (c) => {
-    const t = el.querySelector('.thinking-line'); if (t) t.remove();
-    el.textContent += c; el.scrollTop = el.scrollHeight;
-  }, () => {});
+// ── SAVE OUTPUT ────────────────────────────────────────────
+function saveOutput(title, text) {
+  savedOutputs.push({ title, text, time: new Date() });
+  document.getElementById('statSaved').textContent = savedOutputs.length;
+
+  const hist = document.getElementById('reportHistory');
+  const item = document.createElement('div');
+  item.className = 'report-item';
+  item.innerHTML = `<div class="ri-name">${title}</div><div class="ri-date">${new Date().toLocaleString()}</div>`;
+  item.onclick = () => loadToReport(title, text);
+  if (hist.querySelector('[style]')) hist.innerHTML = '';
+  hist.insertBefore(item, hist.firstChild);
 }
 
-function runQuick(mod, query) { document.getElementById('input-'+mod).value = query; runModule(mod, query); }
-
-async function runESDModule(node, query) {
-  const input = query || document.getElementById('input-esd-'+node).value.trim();
-  if (!input) return;
-  const el = document.getElementById('resp-esd-'+node);
-  el.className = 'esd-response active';
-  el.innerHTML = '<div class="thinking-line esd">// TSM NEURAL · ESD-' + node.toUpperCase() + ' PROCESSING…</div>';
-  await callAI(SYSTEM_PROMPTS['esd-'+node], input, (c) => {
-    const t = el.querySelector('.thinking-line'); if (t) t.remove();
-    el.textContent += c; el.scrollTop = el.scrollHeight;
-  }, () => {});
+function loadToReport(title, text) {
+  const current = document.getElementById('reportContent').value;
+  document.getElementById('reportContent').value =
+    (current ? current + '\n\n---\n\n' : '') + `## ${title}\n\n${text}`;
 }
 
-function runESD(node, query) { document.getElementById('input-esd-'+node).value = query; runESDModule(node, query); }
+// ── REPORT ACTIONS ─────────────────────────────────────────
+function buildReport() {
+  if (savedOutputs.length === 0) {
+    alert('Run some analyses first, then use Custom Report to combine them.');
+    return;
+  }
+  const combined = savedOutputs.map(o => `## ${o.title}\n\n${o.text}`).join('\n\n---\n\n');
+  document.getElementById('reportContent').value = combined;
+}
 
-async function deployMaster() {
-  const q = document.getElementById('masterQuery').value.trim();
-  if (!q) return;
-  const btn = document.getElementById('masterBtn');
-  btn.disabled = true; btn.textContent = '…';
-  const panel = document.getElementById('synthPanel');
-  document.getElementById('synthQuery').textContent = '// QUERY: ' + q;
-  panel.classList.add('active');
-  const targets = Object.keys(activeNodes).filter(n => activeNodes[n]);
-  ['tax','orders','ar'].forEach(n => {
-    document.getElementById('synth-'+n).textContent = targets.includes(n) ? '// TSM Neural analyzing…' : '// Node disabled';
+function exportReport() {
+  const title = document.getElementById('reportTitle').value || 'Construction Intelligence Report';
+  const content = document.getElementById('reportContent').value;
+  if (!content.trim()) { alert('No content to export.'); return; }
+  const blob = new Blob([`# ${title}\n\nGenerated: ${new Date().toLocaleString()}\n\n${content}`],
+    { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = title.replace(/\s+/g,'-').toLowerCase() + '.txt';
+  a.click();
+}
+
+function exportCurrent() {
+  const content = document.getElementById('feedOutput').innerText;
+  if (!content || content.includes('Select a module')) { alert('No output to export.'); return; }
+  const blob = new Blob([content], { type: 'text/plain' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'intelligence-output.txt'; a.click();
+}
+
+function clearReport() {
+  document.getElementById('reportContent').value = '';
+  document.getElementById('reportTitle').value = '';
+}
+
+function openHowTo() {
+  alert('HOW TO USE CONSTRUCTION INTELLIGENCE:\n\n1. Choose a MODULE CATEGORY using the top tabs (Safety, Finance, Logistics, etc.)\n2. Click any MODULE CARD to run an AI analysis\n3. Review output in the INTELLIGENCE FEED\n4. Outputs auto-save to REPORT HISTORY on the right\n5. Click a report history item to load it into the CUSTOM REPORT BUILDER\n6. Use EXPORT REPORT to download your combined report\n7. PLAYBOOKS (left sidebar) run multi-topic analyses\n\nFor best results: run multiple related modules, then use Custom Report to combine insights into a single deliverable.');
+}
+
+function openCommand() {
+  const cmd = prompt('SOVEREIGN COMMAND — Enter analysis request:');
+  if (!cmd) return;
+  runModule({classList:{add:()=>{},remove:()=>{}}}, 'Custom Command', cmd);
+}
+
+function setStatus(msg) {
+  document.getElementById('sys-status-text').textContent = msg;
+  setTimeout(() => document.getElementById('sys-status-text').textContent = 'SYSTEM READY', 5000);
+}
+
+// ── SAVE CURRENT FEED TO REPORT ───────────────────────────
+function saveCurrentToReport() {
+  const feed = document.getElementById('feedOutput');
+  const text = feed.innerText;
+  if (!text || text.includes('Select a module')) {
+    setStatus('Nothing to save — run a module first');
+    return;
+  }
+  const lastMod = document.getElementById('statLast').textContent || 'Analysis';
+  loadToReport(lastMod, text);
+  setStatus('Saved to report builder ✓');
+
+  // Flash the right panel
+  const rp = document.getElementById('reportContent');
+  rp.style.borderColor = 'var(--cyan)';
+  setTimeout(() => rp.style.borderColor = '', 1500);
+}
+
+function copyFeedOutput() {
+  const feed = document.getElementById('feedOutput');
+  const text = feed.innerText;
+  if (!text || text.includes('Select a module')) return;
+  navigator.clipboard.writeText(text).then(() => setStatus('Copied to clipboard ✓'));
+}
+
+// ── SAVE CURRENT FEED MANUALLY ────────────────────────────
+function saveCurrentFeed() {
+  const feed = document.getElementById('feedOutput');
+  const text = feed.innerText;
+  if (!text || text.includes('Select a module')) {
+    alert('Run a module first, then save the output.');
+    return;
+  }
+  const lastLabel = document.getElementById('statLast').textContent;
+  const title = lastLabel !== '—' ? lastLabel : 'Manual Save ' + new Date().toLocaleTimeString();
+  saveOutput(title, text);
+  setStatus('Output saved: ' + title);
+}
+
+// ── COPY REPORT TO CLIPBOARD ───────────────────────────────
+function copyReport() {
+  const content = document.getElementById('reportContent').value;
+  if (!content.trim()) { alert('No content to copy.'); return; }
+  navigator.clipboard.writeText(content).then(() => {
+    setStatus('Report copied to clipboard');
+  }).catch(() => {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = content;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    setStatus('Report copied to clipboard');
   });
-  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  await Promise.all(targets.map(mod =>
-    callAI(SYSTEM_PROMPTS[mod], 'From your domain (' + mod + '), give targeted intelligence for: ' + q,
-      (c) => { const el = document.getElementById('synth-'+mod); if (el.textContent.includes('analyzing')) el.textContent = ''; el.textContent += c; }, () => {})
-  ));
-  btn.disabled = false; btn.textContent = '⚡ DEPLOY';
 }
 
-function closeSynth() { document.getElementById('synthPanel').classList.remove('active'); }
-
-async function buildReport() {
-  const type = document.getElementById('reportType').value;
-  const ctx = document.getElementById('reportContext').value.trim();
-  if (!type) { alert('Select a report type.'); return; }
-  const out = document.getElementById('reportOutput');
-  out.className = 'report-output active';
-  out.textContent = '// TSM NEURAL REPORT ENGINE GENERATING…\n\n';
-  const prompt = REPORT_PROMPTS[type] + (ctx ? '\n\nContext: ' + ctx : '');
-  const sys = type.includes('tax')||type.includes('nexus')||type.includes('exempt') ? SYSTEM_PROMPTS.tax
-    : type.includes('timesheets') ? SYSTEM_PROMPTS['esd-timesheets']
-    : type.includes('pmi') ? SYSTEM_PROMPTS['esd-pmi']
-    : type.includes('cashreceipts') ? SYSTEM_PROMPTS['esd-cashreceipts']
-    : type.includes('ar')||type.includes('ap')||type.includes('qb')||type.includes('cashflow') ? SYSTEM_PROMPTS.ar
-    : SYSTEM_PROMPTS.orders;
-  await callAI(sys, prompt, (c) => {
-    if (out.textContent.includes('GENERATING')) out.textContent = out.textContent.replace('// TSM NEURAL REPORT ENGINE GENERATING…\n\n','');
-    out.textContent += c; out.scrollTop = out.scrollHeight;
-  }, () => {});
-}
-
-function scrollToSection(id) { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }); }
+// ── INIT ───────────────────────────────────────────────────
+document.getElementById('statModules').textContent =
+  document.querySelectorAll('.mod-card').length;
 </script>
-<script>window.ui = new TSM_UI();</script></body>
-</html>
+<script>window.ui = new TSM_UI();</script>
+<div id="tsm-ai-widget" style="position:fixed;bottom:16px;right:16px;z-index:9999;width:340px;font-family:'Share Tech Mono',monospace">
+  <div id="tsm-ai-toggle" onclick="document.getElementById('tsm-ai-panel').style.display=document.getElementById('tsm-ai-panel').style.display==='none'?'flex':'none'" style="background:#0a1628;border:1px solid rgba(0,229,255,0.3);border-radius:3px;padding:7px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:9px;color:#00e5ff;letter-spacing:.1em;box-shadow:0 0 20px rgba(0,229,255,0.1)">
+    <span style="width:6px;height:6px;border-radius:50%;background:#00e676;animation:tsmpulse 2s infinite;flex-shrink:0"></span>
+    TSM AI · CONSTRUCTION NODE · LIVE
+  </div>
+  <div id="tsm-ai-panel" style="display:none;flex-direction:column;gap:0;background:#070d18;border:1px solid rgba(0,229,255,0.2);border-radius:3px;margin-top:4px;overflow:hidden;box-shadow:0 0 40px rgba(0,0,0,0.6)">
+    <div style="padding:8px 12px;border-bottom:1px solid rgba(0,229,255,0.08);font-size:8px;color:#5a7a9a;letter-spacing:.1em">// TSM AI COMMAND · /api/construction/query</div>
+    <div id="tsm-ai-msgs" style="max-height:240px;overflow-y:auto;padding:8px 12px;display:flex;flex-direction:column;gap:6px;font-size:10px;line-height:1.6;scrollbar-width:thin;scrollbar-color:rgba(0,229,255,0.1) transparent"></div>
+    <div id="tsm-ai-think" style="display:none;padding:4px 12px;font-size:8px;color:#00b8d4;letter-spacing:.08em;animation:tsmpulse 1s infinite">// AI PROCESSING…</div>
+    <div style="display:flex;gap:0;border-top:1px solid rgba(0,229,255,0.08)">
+      <input id="tsm-ai-input" placeholder="Ask construction AI…" onkeydown="if(event.key==='Enter')tsmAsk()" style="flex:1;background:transparent;border:none;outline:none;padding:8px 12px;font-family:'Share Tech Mono',monospace;font-size:10px;color:#c8d8e8;caret-color:#00e5ff" />
+      <button onclick="tsmAsk()" style="background:transparent;border:none;border-left:1px solid rgba(0,229,255,0.08);padding:8px 12px;font-family:'Share Tech Mono',monospace;font-size:8px;color:#00e5ff;cursor:pointer;letter-spacing:.08em">SEND</button>
+    </div>
+  </div>
+</div>
+<style>
+@keyframes tsmpulse{0%,100%{opacity:1}50%{opacity:.3}}
+#tsm-ai-msgs::-webkit-scrollbar{width:2px}
+#tsm-ai-msgs::-webkit-scrollbar-thumb{background:rgba(0,229,255,0.15)}
+</style>
+<script>
+async function tsmAsk() {
+  var input = document.getElementById('tsm-ai-input');
+  var msgs = document.getElementById('tsm-ai-msgs');
+  var think = document.getElementById('tsm-ai-think');
+  var q = input.value.trim();
+  if (!q) return;
+  input.value = '';
 
+  var uDiv = document.createElement('div');
+  uDiv.style.cssText = 'color:#00b8d4;border-left:2px solid rgba(0,229,255,0.3);padding-left:6px';
+  uDiv.textContent = q;
+  msgs.appendChild(uDiv);
+
+  think.style.display = 'block';
+  msgs.scrollTop = msgs.scrollHeight;
+
+  try {
+    var res = await fetch('/api/construction/query', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ question: q, app: 'construction', maxTokens: 1024 })
+    });
+    var data = await res.json();
+    var text = data.answer || data.response || 'No response.';
+    think.style.display = 'none';
+
+    var aDiv = document.createElement('div');
+    aDiv.style.cssText = 'color:#c8d8e8;border-left:2px solid rgba(0,229,255,0.08);padding-left:6px;white-space:pre-wrap';
+    msgs.appendChild(aDiv);
+
+    var words = text.split(' ');
+    for (var i = 0; i < words.length; i++) {
+      aDiv.textContent += (i===0?'':' ') + words[i];
+      msgs.scrollTop = msgs.scrollHeight;
+      if (i%8===0) await new Promise(function(r){setTimeout(r,15)});
+    }
+  } catch(e) {
+    think.style.display = 'none';
+    var eDiv = document.createElement('div');
+    eDiv.style.color = '#ff4d6d';
+    eDiv.textContent = 'Error: ' + e.message;
+    msgs.appendChild(eDiv);
+  }
+}
+// Also wire callAI if it exists on the page
+if (typeof callAI === 'undefined') {
+  window.callAI = async function(systemPrompt, userMessage, onChunk, onDone) {
+    try {
+      var res = await fetch('/api/construction/query', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ question: userMessage, context: systemPrompt, app: 'construction', maxTokens: 1024 })
+      });
+      var data = await res.json();
+      var text = data.answer || data.response || 'No response.';
+      if (onChunk) {
+        var words = text.split(' ');
+        for (var i = 0; i < words.length; i++) {
+          onChunk((i===0?'':' ') + words[i]);
+          if (i%8===0) await new Promise(function(r){setTimeout(r,15)});
+        }
+      }
+      if (onDone) onDone();
+    } catch(e) {
+      if (onChunk) onChunk('[AI Error] ' + e.message);
+      if (onDone) onDone();
+    }
+  };
+}
+</script>
+
+<script src="/tsm-ai-client.js"></script>
+<script>
+  window.APP_CONFIG = { sector: "CONSTRUCTION", level: "PRO", logic: "strategist" };
+</script>
+</body>
+</html>
