@@ -1171,3 +1171,30 @@ function setFilter(arg) {
     });
 }
 </script>
+
+<script>
+function setFilter(arg) {
+    let category = (typeof arg === 'string') ? arg : arg.innerText.trim();
+    console.log("Filtering List By: " + category);
+
+    // 1. Force the UI to show 'ALL' or the specific category
+    const rows = document.querySelectorAll('tr, .featured-doc-card, .category-card');
+    
+    rows.forEach(item => {
+        // Look for the category text inside the third column of the table or a data-attribute
+        const cellText = item.querySelector('td:nth-child(2)')?.innerText.trim() || 
+                         item.getAttribute('data-category') || 
+                         "";
+
+        const isMatch = category.toLowerCase() === 'all' || 
+                        cellText.toLowerCase().includes(category.toLowerCase().split(' ')[0]);
+
+        if (isMatch) {
+            item.style.setProperty('display', (item.tagName === 'TR' ? 'table-row' : 'block'), 'important');
+            item.style.opacity = "1";
+        } else {
+            item.style.setProperty('display', 'none', 'important');
+        }
+    });
+}
+</script>
