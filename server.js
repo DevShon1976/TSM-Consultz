@@ -353,6 +353,10 @@ app.use('/api/groq', aiLimiter);
 app.use('/api/hc',        require('./servers/healthcare'));
 app.use('/api/insurance', require('./servers/insurance'));
 app.use('/api/construction', require('./servers/construction'));
+// AI proxy routes for construction apps
+app.use('/api/audit', require('./servers/construction'));
+app.use('/api/chat', require('./servers/construction'));
+
 app.use('/api/finops',    require('./servers/finops'));
 app.use('/api',           require('./servers/shared'));
 
