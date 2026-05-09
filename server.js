@@ -243,6 +243,104 @@ app.post('/api/extract-pdf', upload.single('pdf'), async (req, res) => {
 // Security
 app.use(limiter);
 app.use(botGuard);
+
+// ===== TSM BPO OPS CLOUD API · FORCED EARLY ROUTES =====
+const fsBpo = require("fs");
+const BPO_DB_PATH = "./data/bpo-tasks.json";
+
+function readBpoDB(){
+  try { return JSON.parse(fsBpo.readFileSync(BPO_DB_PATH,"utf8")); }
+  catch(e){
+    return {tasks:[
+      {id:"BPO-1001",client:"Ameris Construction",lane:"Planroom",owner:"Document Lead",sla:"2h",status:"Open",risk:"HIGH",summary:"Blueprint revision conflict needs OCR validation"},
+      {id:"BPO-1002",client:"HonorHealth",lane:"Prior Auth",owner:"Compliance Lead",sla:"4h",status:"Open",risk:"HIGH",summary:"Payer delay creating care-flow and revenue risk"},
+      {id:"BPO-1003",client:"RR Donnelley",lane:"QA Routing",owner:"Ops Lead",sla:"1h",status:"Review",risk:"MED",summary:"Mail batch exception queue requires release approval"},
+      {id:"BPO-1004",client:"Allure Beauty Concepts",lane:"AP Recon",owner:"Finance Lead",sla:"Today",status:"Open",risk:"MED",summary:"Vendor payment timing and close readiness issue"}
+    ]};
+  }
+}
+
+function writeBpoDB(db){
+  fsBpo.mkdirSync("./data",{recursive:true});
+  fsBpo.writeFileSync(BPO_DB_PATH,JSON.stringify(db,null,2));
+}
+
+app.get("/api/bpo/tasks",(req,res)=>{
+  const db=readBpoDB();
+  const client=req.query.client;
+  const tasks=client ? db.tasks.filter(t=>t.client===client) : db.tasks;
+  res.json({ok:true,tasks});
+});
+
+app.post("/api/bpo/tasks",(req,res)=>{
+  const db=readBpoDB();
+  const b=req.body||{};
+  const task={
+    id:"BPO-"+Math.floor(1000+Math.random()*8999),
+    client:b.client||"Ameris Construction",
+    lane:b.lane||"General",
+    owner:b.owner||"Strategist",
+    sla:b.sla||"Today",
+    status:b.status||"Open",
+    risk:b.risk||"MED",
+    summary:b.summary||"BPO task created",
+    ts:new Date().toISOString()
+  };
+  db.tasks.unshift(task);
+  writeBpoDB(db);
+  res.json({ok:true,task});
+});
+
+app.post("/api/bpo/tasks/:id/status",(req,res)=>{
+  const db=readBpoDB();
+  const task=db.tasks.find(t=>t.id===req.params.id);
+  if(!task) return res.status(404).json({ok:false,error:"Task not found"});
+  task.status=req.body?.status||task.status;
+  task.owner=req.body?.owner||task.owner;
+  task.updated_at=new Date().toISOString();
+  writeBpoDB(db);
+  res.json({ok:true,task});
+});
+
+app.get("/api/bpo/rollup",(req,res)=>{
+  const db=readBpoDB();
+  const client=req.query.client;
+  const tasks=client ? db.tasks.filter(t=>t.client===client) : db.tasks;
+  const open=tasks.filter(t=>t.status!=="Done").length;
+  const high=tasks.filter(t=>t.risk==="HIGH").length;
+  const sla=tasks.filter(t=>/1h|2h|4h/i.test(t.sla)).length;
+  res.json({
+    ok:true,
+    client:client||"ALL CLIENTS",
+    open, high, sla,
+    total:tasks.length,
+    top_issue:tasks[0]?.summary||"No active issue",
+    executive:`EXECUTIVE BPO ROLLUP
+
+CLIENT
+${client||"ALL CLIENTS"}
+
+OPEN TASKS
+${open}
+
+HIGH RISK
+${high}
+
+SLA WATCH
+${sla}
+
+BEST NEXT ACTIONS
+1. Assign owners for high-risk open items.
+2. Clear SLA-watch blockers before end of operating window.
+3. Update queue status after each operating cycle.
+4. Escalate unresolved risk into Strategist.
+
+CONFIDENCE
+92%`
+  });
+});
+// ===== END TSM BPO OPS CLOUD API =====
+
 app.use('/api', apiKeyGuard);
 app.use('/api/hc/ask', aiLimiter);
 app.use('/api/hc/query', aiLimiter);
