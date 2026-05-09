@@ -1137,3 +1137,37 @@ function setFilter(category) {
     });
 }
 </script>
+
+<script>
+/** 
+ * Refined Filter Logic 
+ * Extracts category name from element if passed as an object
+ */
+function setFilter(arg) {
+    // Determine if we received a string name or a clicked element
+    let category = (typeof arg === 'string') ? arg : arg.innerText.trim();
+    console.log("Filtering List By: " + category);
+
+    // 1. Highlight the active chip/button
+    document.querySelectorAll('.filter-chip, .nav-chip, .filter-btn').forEach(btn => {
+        if (btn.innerText.trim().toLowerCase() === category.toLowerCase()) {
+            btn.classList.add('active-filter'); // Ensure you have this class in CSS
+            btn.style.borderBottom = "2px solid #ffaa00";
+        } else {
+            btn.classList.remove('active-filter');
+            btn.style.borderBottom = "none";
+        }
+    });
+
+    // 2. Filter Table Rows and Cards
+    const rows = document.querySelectorAll('tr[data-category], .featured-doc-card');
+    rows.forEach(item => {
+        const itemCat = item.getAttribute('data-category') || "";
+        if (category.toLowerCase() === 'all' || itemCat.toLowerCase() === category.toLowerCase()) {
+            item.style.display = (item.tagName === 'TR') ? 'table-row' : 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+</script>
