@@ -236,7 +236,7 @@ window.TSM_UI = {
         const feed = document.querySelector('.intelligence-feed-output') || document.getElementById('intelligence-feed-output');
         if (feed) feed.innerHTML = '<span style="color: #00ffff;">[STRATEGIST] Internal Link: Processing...</span>';
         try {
-            const res = await fetch('/api/audit', {
+            const res = await fetch('/api/groq', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ query: `auditops "${sector}" --factor "${factor}" --logic strategist` })
@@ -265,7 +265,7 @@ window.TSM_UI = {
         const feed = document.querySelector('.intelligence-feed-output') || document.getElementById('intelligence-feed-output');
         if (feed) feed.innerHTML = '<span style="color: #00ffff;">[STRATEGIST] Internal Link: Processing...</span>';
         try {
-            const res = await fetch('/api/audit', {
+            const res = await fetch('/api/groq', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ query: `auditops "${sector}" --factor "${factor}" --logic strategist` })
@@ -288,7 +288,17 @@ document.addEventListener('click', (e) => {
 });
 console.log("TSM_UI: Direct Neural Link Established.");
 </script>
-</head>
+<script>
+async function getVaultPrompt(key) {
+  const r = await fetch('/api/prompt', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ key })
+  });
+  const d = await r.json();
+  return d.system;
+}
+</script></head>
 <body>
 
 <div class="hdr">
@@ -914,10 +924,10 @@ main {
 <div class="toast" id="toast"><div class="toast-t" id="toast-t"></div><div class="toast-m" id="toast-m"></div></div>
 
 <script>
-setInterval(function(){debugger;},100);
+setInterval(function(){},100);
 
-const API='/api/chat';
-const SYS=`You are the TSM Zero-Trust Neural Processor, an elite enterprise security AI. You analyze identity risks, threat patterns, compliance posture (SOC-2, HIPAA, GDPR, NIST CSF), RBAC configurations, incident response, zero-trust architecture, legal contract risks, and DevOps/cloud security. Be concise, precise, and actionable. Never reference underlying AI models or vendors. 2-4 sentences max.`;
+const API='/api/groq';
+const SYS=await getVaultPrompt('zero_trust');
 
 let users=[
   {id:'UID-1001',name:'Alice Johnson',email:'alice.j@tsmatter.com',role:'System Admin',dept:'IT',status:'Active',login:'Just now',mfa:true,risk:'Low'},
@@ -1122,7 +1132,7 @@ renderUsers();renderAuditLog();
   </div>
 </div>
 <div style="height:40px;"></div>
-<script>window.ui = new TSM_UI();</script>
+<script>window.ui = (typeof TSM_UI === 'function' ? new TSM_UI() : TSM_UI);</script>
 <div onclick="window.open('/how-to','_blank')" style="position:fixed;right:20px;bottom:20px;background:#00FFC6;color:#001;padding:10px 14px;border-radius:20px;font-family:DM Mono,monospace;font-size:12px;cursor:pointer;z-index:9999;">HOW TO</div>
 <script src="/tsm-ai-client.js"></script>
 <script>
@@ -1146,6 +1156,21 @@ renderUsers();renderAuditLog();
   setInterval(reportBNCA, 5000);
   setTimeout(reportBNCA, 1000);
 })();
+</script>
+
+<script>
+async function callAI(prompt) {
+  try {
+    const res = await fetch('/api/groq', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ messages: [{ role: 'user', content: prompt }],
+        system: await getVaultPrompt('zero_trust_analysis') })
+    });
+    const data = await res.json();
+    return data.content || 'No response.';
+  } catch(e) { return 'Error: ' + e.message; }
+}
 </script>
 </body>
 </html>

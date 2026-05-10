@@ -159,7 +159,7 @@ window.TSM_UI = {
         const feed = document.querySelector('.intelligence-feed-output') || document.getElementById('intelligence-feed-output');
         if (feed) feed.innerHTML = '<span style="color: #00ffff;">[STRATEGIST] Internal Link: Processing...</span>';
         try {
-            const res = await fetch('/api/audit', {
+            const res = await fetch('/api/groq', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ query: `auditops "${sector}" --factor "${factor}" --logic strategist` })
@@ -188,7 +188,7 @@ window.TSM_UI = {
         const feed = document.querySelector('.intelligence-feed-output') || document.getElementById('intelligence-feed-output');
         if (feed) feed.innerHTML = '<span style="color: #00ffff;">[STRATEGIST] Internal Link: Processing...</span>';
         try {
-            const res = await fetch('/api/audit', {
+            const res = await fetch('/api/groq', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ query: `auditops "${sector}" --factor "${factor}" --logic strategist` })
@@ -211,7 +211,17 @@ document.addEventListener('click', (e) => {
 });
 console.log("TSM_UI: Direct Neural Link Established.");
 </script>
-</head>
+<script>
+async function getVaultPrompt(key) {
+  const r = await fetch('/api/prompt', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ key })
+  });
+  const d = await r.json();
+  return d.system;
+}
+</script></head>
 <body>
 
 <div class="topbar">
@@ -876,102 +886,19 @@ function serializeDoc() {
 // ══════════════════════════════════════════════
 const APP_PROMPTS = {
   app1: {
-    system: `You are a financial document triage AI. You analyze accounting documents and identify issues, exceptions, missing information, and compliance flags. Output in this exact format:
-
-DOCUMENT TYPE: [type]
-TRIAGE STATUS: [CLEAN / REVIEW NEEDED / EXCEPTION / CRITICAL FLAG]
-
-FLAGS DETECTED:
-• [specific flag 1]
-• [specific flag 2]
-
-MISSING INFORMATION:
-• [missing item or "None detected"]
-
-COMPLIANCE CONCERNS:
-• [concern or "None"]
-
-PRIORITY SCORE: [1-10] | URGENCY: [CRITICAL/HIGH/MEDIUM/LOW]
-
-Be specific, cite amounts and dates. Max 200 words.`,
+    system: await getVaultPrompt('doc_triage'),
     user: doc => `Analyze and triage this financial document:\n\n${doc}`
   },
   app2: {
-    system: `You are a financial variance and risk intelligence AI. You analyze accounting documents for financial risks, variances from budget/expectations, and anomalies. Output format:
-
-RISK LEVEL: [HIGH / MEDIUM / LOW]
-
-VARIANCE ANALYSIS:
-• [specific variance or metric]
-• [trend or comparison]
-
-FINANCIAL RISKS IDENTIFIED:
-• [risk item + dollar amount if applicable]
-
-ANOMALIES:
-• [unusual items or "None detected"]
-
-KEY METRICS:
-• [calculated metric 1]
-• [calculated metric 2]
-
-ESCALATION NEEDED: [Yes/No] — [to whom and why]
-
-Be specific with numbers. Max 200 words.`,
+    system: await getVaultPrompt('doc_variance'),
     user: doc => `Perform variance and risk analysis on this financial document:\n\n${doc}`
   },
   app3: {
-    system: `You are a Controller Action Plan AI. You receive financial documents and generate the specific, prioritized next actions a controller or accounting manager must take. Output format:
-
-CONTROLLER ACTION PLAN
-
-IMMEDIATE ACTIONS (Today):
-1. [specific action + owner + deadline]
-2. [specific action + owner + deadline]
-
-SHORT-TERM ACTIONS (This Week):
-1. [action]
-2. [action]
-
-APPROVAL / SIGNATURE REQUIRED:
-• [who needs to sign off and what]
-
-SYSTEM ENTRIES NEEDED:
-• [what to post, where, when]
-
-COMMUNICATIONS REQUIRED:
-• [who to notify and about what]
-
-ESTIMATED RESOLUTION TIME: [X hours/days]
-
-Be directive and specific. Max 250 words.`,
+    system: await getVaultPrompt('doc_controller'),
     user: doc => `Generate a Controller Action Plan for this financial document:\n\n${doc}`
   },
   app4: {
-    system: `You are a CFO Executive Intelligence AI. You translate accounting documents into executive-level financial intelligence. Output format:
-
-CFO EXECUTIVE SUMMARY
-[1-2 sentence board-level summary]
-
-FINANCIAL IMPACT:
-• Cash Impact: $[amount and direction]
-• P&L Impact: $[amount]
-• Balance Sheet Effect: [description]
-
-RISK EXPOSURE:
-• [risk + $ exposure]
-
-STRATEGIC IMPLICATIONS:
-[2-3 sentences on what this means for the business]
-
-RECOMMENDED CFO DIRECTIVES:
-1. [directive]
-2. [directive]
-
-MONTH-END / REPORTING IMPACT:
-[How this affects close, reporting, or audit readiness]
-
-Be executive-level, dollar-precise. Max 250 words.`,
+    system: await getVaultPrompt('doc_cfo'),
     user: doc => `Generate CFO executive intelligence from this financial document:\n\n${doc}`
   }
 };

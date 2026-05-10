@@ -953,7 +953,7 @@ window.TSM_UI = {
         const feed = document.querySelector('.intelligence-feed-output') || document.getElementById('intelligence-feed-output');
         if (feed) feed.innerHTML = '<span style="color: #00ffff;">[STRATEGIST] Internal Link: Processing...</span>';
         try {
-            const res = await fetch('/api/audit', {
+            const res = await fetch('/api/groq', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ query: `auditops "${sector}" --factor "${factor}" --logic strategist` })
@@ -982,7 +982,7 @@ window.TSM_UI = {
         const feed = document.querySelector('.intelligence-feed-output') || document.getElementById('intelligence-feed-output');
         if (feed) feed.innerHTML = '<span style="color: #00ffff;">[STRATEGIST] Internal Link: Processing...</span>';
         try {
-            const res = await fetch('/api/audit', {
+            const res = await fetch('/api/groq', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ query: `auditops "${sector}" --factor "${factor}" --logic strategist` })
@@ -1033,7 +1033,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
 <!-- TSM NEURAL CORE KEY BAR -->
 <div class="key-bar">
   <span class="key-label">⚡ TSM NEURAL CORE API KEY:</span>
-  <input type="password" class="key-input" id="tsm-neural-coreKey" placeholder="gsk_...  (required for AI features)" />
+  <input type="password" class="key-input" id="tsmNeuralCoreKey" placeholder="gsk_...  (required for AI features)" />
   <button class="key-save" onclick="saveKey()">SET KEY</button>
   <span class="key-status" id="keyStatus"></span>
 </div>
@@ -1609,8 +1609,8 @@ console.log("TSM_UI: Direct Neural Link Established.");
 
 <script>
 // ─── STATE ───────────────────────────────────────────────────────────────────
-let tsm-neural-coreKey = localStorage.getItem('tsm_tsm-neural-core_key') || '';
-const TSM NEURAL CORE_URL = 'https://api.tsm-neural-core.com/openai/v1/chat/completions';
+let tsmNeuralCoreKey = localStorage.getItem('tsm_tsm-neural-core_key') || '';
+const TSM_NEURAL_CORE_URL = '/api/groq';
 const MODEL = 'llama-3.3-70b-versatile';
 const chatHistory = [];
 
@@ -1635,8 +1635,8 @@ Provide specific, actionable, expert-level compliance guidance. Reference specif
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 window.onload = () => {
-  if (tsm-neural-coreKey) {
-    document.getElementById('tsm-neural-coreKey').value = tsm-neural-coreKey;
+  if (tsmNeuralCoreKey) {
+    document.getElementById('tsmNeuralCoreKey').value = tsmNeuralCoreKey;
     document.getElementById('keyStatus').textContent = '✓ KEY SET';
     document.getElementById('keyStatus').className = 'key-status ok';
     document.getElementById('aiEngineStatus').textContent = 'LIVE';
@@ -1654,9 +1654,9 @@ function updateClock() {
 }
 
 function saveKey() {
-  tsm-neural-coreKey = document.getElementById('tsm-neural-coreKey').value.trim();
-  if (!tsm-neural-coreKey) { alert('Enter a TSM Neural Core API key'); return; }
-  localStorage.setItem('tsm_tsm-neural-core_key', tsm-neural-coreKey);
+  tsmNeuralCoreKey = document.getElementById('tsmNeuralCoreKey').value.trim();
+  if (!tsmNeuralCoreKey) { alert('Enter a TSM Neural Core API key'); return; }
+  localStorage.setItem('tsm_tsm-neural-core_key', tsmNeuralCoreKey);
   document.getElementById('keyStatus').textContent = '✓ KEY SET';
   document.getElementById('keyStatus').className = 'key-status ok';
   document.getElementById('aiEngineStatus').textContent = 'LIVE';
@@ -1748,19 +1748,19 @@ function renderMiniChart() {
 }
 
 // ─── TSM NEURAL CORE API ─────────────────────────────────────────────────────────────────
-async function tsm-neural-coreChat(messages, maxTokens = 2048) {
-  if (!tsm-neural-coreKey) {
+async function tsmNeuralCoreChat(messages, maxTokens = 2048) {
+  if (!tsmNeuralCoreKey) {
     alert('Set your TSM Neural Core API key first (top bar)');
     throw new Error('No API key');
   }
-  const res = await fetch(TSM NEURAL CORE_URL, {
+  const res = await fetch(TSM_NEURAL_CORE_URL, {
     method: 'POST',
-    headers: { 'Authorization': `Bearer ${tsm-neural-coreKey}`, 'Content-Type': 'application/json' },
+    headers: { 'Authorization': `Bearer ${tsmNeuralCoreKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ model: MODEL, messages, temperature: 0.4, max_tokens: maxTokens })
   });
   const data = await res.json();
   if (data.error) throw new Error(data.error.message);
-  return data.choices[0].message.content;
+  return data.content || data.choices?.[0]?.message?.content || "";
 }
 
 // ─── CHAT ─────────────────────────────────────────────────────────────────────
@@ -1773,7 +1773,7 @@ async function sendChat() {
   chatHistory.push({ role: 'user', content: msg });
   const thinking = addChatMsg('thinking', '🧠 Analyzing...');
   try {
-    const reply = await tsm-neural-coreChat([{ role: 'system', content: SYSTEM }, ...chatHistory.slice(-10)]);
+    const reply = await tsmNeuralCoreChat([{ role: 'system', content: SYSTEM }, ...chatHistory.slice(-10)]);
     thinking.remove();
     addChatMsg('ai', reply);
     chatHistory.push({ role: 'assistant', content: reply });
@@ -1805,7 +1805,7 @@ async function quickAction(prompt) {
   chatHistory.push({ role: 'user', content: prompt });
   const thinking = addChatMsg('thinking', '🧠 Analyzing...');
   try {
-    const reply = await tsm-neural-coreChat([{ role: 'system', content: SYSTEM }, ...chatHistory.slice(-10)]);
+    const reply = await tsmNeuralCoreChat([{ role: 'system', content: SYSTEM }, ...chatHistory.slice(-10)]);
     thinking.remove();
     addChatMsg('ai', reply);
     chatHistory.push({ role: 'assistant', content: reply });
@@ -1819,7 +1819,7 @@ async function quickAction(prompt) {
 async function aiFrameworkAnalysis(fw) {
   showModal(`${fw} — AI Analysis`, '🧠 Generating analysis...');
   try {
-    const result = await tsm-neural-coreChat([
+    const result = await tsmNeuralCoreChat([
       { role: 'system', content: SYSTEM },
       { role: 'user', content: `Provide a comprehensive ${fw} compliance analysis for our organization. Include: current risk areas, specific regulatory requirements, gap assessment, and top 5 immediate action items. Be specific and cite regulation sections.` }
     ], 3000);
@@ -1835,7 +1835,7 @@ async function askFramework(fw, question) {
   outputEl.style.display = 'block';
   outputEl.textContent = '🧠 Analyzing...';
   try {
-    const result = await tsm-neural-coreChat([
+    const result = await tsmNeuralCoreChat([
       { role: 'system', content: SYSTEM },
       { role: 'user', content: question }
     ], 2048);
@@ -1860,7 +1860,7 @@ async function generateAuditReport() {
   output.textContent = '🧠 Generating audit report...';
 
   try {
-    const result = await tsm-neural-coreChat([
+    const result = await tsmNeuralCoreChat([
       { role: 'system', content: SYSTEM },
       { role: 'user', content: `Generate a professional ${type} for: ${org}\n\nContext: ${context}\n\nStructure the report with:\n1. EXECUTIVE SUMMARY\n2. SCOPE & METHODOLOGY\n3. KEY FINDINGS (with severity ratings)\n4. RISK MATRIX\n5. COMPLIANCE GAPS BY FRAMEWORK\n6. FINANCIAL EXPOSURE ANALYSIS\n7. REMEDIATION ROADMAP (prioritized)\n8. TIMELINE & RESOURCE REQUIREMENTS\n9. CONCLUSIONS\n\nBe specific, cite regulations, include dollar amounts where relevant.` }
     ], 4096);
@@ -1878,7 +1878,7 @@ async function aiScanRisks() {
   const spinner = document.getElementById('riskSpinner');
   spinner.style.display = 'inline-block';
   try {
-    const result = await tsm-neural-coreChat([
+    const result = await tsmNeuralCoreChat([
       { role: 'system', content: SYSTEM },
       { role: 'user', content: 'Based on current compliance status (94% overall, SOX critical, OIG overdue, ISO A.12.6 gap), identify any additional hidden risk flags that may not be immediately obvious. Return as JSON array with format: [{severity:"critical|high|medium", text:"description"}]' }
     ], 1024);
@@ -1914,7 +1914,7 @@ async function aiRemediate(issue) {
   showTab('remediation', document.querySelector('.nav-item:nth-child(15)'));
 
   try {
-    const result = await tsm-neural-coreChat([
+    const result = await tsmNeuralCoreChat([
       { role: 'system', content: SYSTEM },
       { role: 'user', content: `Generate a detailed remediation plan for this compliance issue: "${issue}"\n\nProvide:\n1. Immediate actions (24-48 hours)\n2. Short-term fixes (1-2 weeks)\n3. Long-term controls (30-90 days)\n4. Regulatory citations\n5. Resource requirements\n6. Success metrics\n\nBe specific and actionable.` }
     ], 2048);
@@ -1956,7 +1956,7 @@ async function aiAnalyzeAlerts() {
   const spinner = document.getElementById('alertSpinner');
   spinner.style.display = 'inline-block';
   try {
-    const result = await tsm-neural-coreChat([
+    const result = await tsmNeuralCoreChat([
       { role: 'system', content: SYSTEM },
       { role: 'user', content: 'Triage our 3 critical compliance alerts in priority order with immediate action steps:\n1. SOX Mapping Endpoint Failure ($240K)\n2. OIG Exclusion Screening overdue 47 staff ($1.9M)\n3. ISO A.12.6 patches >90 days\n4. HIPAA BAA gap 2 vendors\n\nProvide a clear action matrix with owner, timeline, and success criteria for each.' }
     ], 2048);
@@ -1968,7 +1968,7 @@ async function aiAnalyzeAlerts() {
 async function aiGenerateScorecard() {
   showModal('Compliance Scorecard Report', '🧠 Generating...');
   try {
-    const result = await tsm-neural-coreChat([
+    const result = await tsmNeuralCoreChat([
       { role: 'system', content: SYSTEM },
       { role: 'user', content: 'Generate a full executive compliance scorecard report covering all 11 active frameworks. Include overall score analysis, top risks, trending, and strategic recommendations for Q2 2026.' }
     ], 3000);
@@ -2034,6 +2034,27 @@ function refreshEndpoints() {
   setInterval(reportBNCA, 5000);
   setTimeout(reportBNCA, 1000);
 })();
+</script>
+
+<script>
+function showTab(name, el) {
+  document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  var tab = document.getElementById('tab-' + name) || document.getElementById(name);
+  if (tab) tab.style.display = 'block';
+  if (el) el.classList.add('active');
+}
+function aiAnalyzeAlerts() {
+  var out = document.querySelector('.ai-output, #ai-output, .synthesis-output');
+  if (out) out.textContent = 'Analyzing compliance alerts...';
+  fetch('/api/groq', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ messages: [{ role: 'user', content: 'Analyze the current compliance alerts and provide prioritized remediation steps for HIPAA, SOX, AML/KYC, and GDPR issues. Be specific and actionable.' }] })
+  }).then(r => r.json())
+    .then(d => { if (out) out.textContent = d.content || 'Analysis complete.'; })
+    .catch(e => { if (out) out.textContent = 'Error: ' + e.message; });
+}
 </script>
 </body>
 </html>

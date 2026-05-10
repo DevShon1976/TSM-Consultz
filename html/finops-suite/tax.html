@@ -269,7 +269,7 @@ window.TSM_UI = {
         const feed = document.querySelector('.intelligence-feed-output') || document.getElementById('intelligence-feed-output');
         if (feed) feed.innerHTML = '<span style="color: #00ffff;">[STRATEGIST] Internal Link: Processing...</span>';
         try {
-            const res = await fetch('/api/audit', {
+            const res = await fetch('/api/groq', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ query: `auditops "${sector}" --factor "${factor}" --logic strategist` })
@@ -298,7 +298,7 @@ window.TSM_UI = {
         const feed = document.querySelector('.intelligence-feed-output') || document.getElementById('intelligence-feed-output');
         if (feed) feed.innerHTML = '<span style="color: #00ffff;">[STRATEGIST] Internal Link: Processing...</span>';
         try {
-            const res = await fetch('/api/audit', {
+            const res = await fetch('/api/groq', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ query: `auditops "${sector}" --factor "${factor}" --logic strategist` })
@@ -321,7 +321,17 @@ document.addEventListener('click', (e) => {
 });
 console.log("TSM_UI: Direct Neural Link Established.");
 </script>
-</head>
+<script>
+async function getVaultPrompt(key) {
+  const r = await fetch('/api/prompt', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ key })
+  });
+  const d = await r.json();
+  return d.system;
+}
+</script></head>
 <body>
 
 <!-- TICKER -->
@@ -887,16 +897,7 @@ async function runFullAnalysis(){
   if(!domains.length){alert('Enable at least one domain connector.');return;}
   setOutputLoading('multi-output');
   document.getElementById('stat-savings').textContent='...';
-  const prompt=`You are TSM AuditOps Pro, an AI tax intelligence platform. Run a comprehensive 2025 multi-domain tax analysis for the following active domains: ${domains.join(', ')}. AI Temperature: ${aiTemp} (${aiTemp<0.4?'conservative':'aiTemp>0.7?aggressive':'balanced'}). 
-
-For each domain:
-1. Identify key optimization opportunities
-2. Flag tax cliffs with [CLIFF: description]
-3. Highlight tax benefits with [BENEFIT: description]
-4. Provide specific dollar estimates where possible
-5. Cross-reference domains for compound strategies
-
-Format with clear domain headers. Be specific with 2025 tax law numbers.`;
+  const prompt=await getVaultPrompt('tax_analysis');
   const reply=await callAI(prompt);
   setOutput('multi-output',reply);
   document.getElementById('stat-savings').textContent='AI';
@@ -913,23 +914,7 @@ async function runReturnPrep(){
   const capgains=document.getElementById('rp-capgains').value;
   const mortgage=document.getElementById('rp-mortgage').value;
   setOutputLoading('return-output');
-  const prompt=`You are TSM AuditOps Pro. Prepare a 2025 tax return analysis for:
-Filing Type: ${type}
-Filing Status: ${status}
-W-2/Wages: ${w2}
-Business Income: ${biz}
-Capital Gains: ${capgains}
-Mortgage Interest: ${document.getElementById('rp-mortgage').value}
-Charitable: ${document.getElementById('rp-charity').value}
-Retirement: ${document.getElementById('rp-retirement').value}
-HSA: ${document.getElementById('rp-hsa').value}
-
-Provide:
-1. Standard vs itemized deduction comparison
-2. Estimated tax liability and effective rate
-3. Tax cliffs [CLIFF: ...] near their income level
-4. Tax benefits [BENEFIT: ...] they qualify for
-5. Top 3 optimization strategies before filing`;
+  const prompt=await getVaultPrompt('tax_return');
   const reply=await callAI(prompt);
   setOutput('return-output',reply);
   updateSavingsBreakdown(reply);
@@ -947,7 +932,7 @@ async function runAuditPreset(){
   const el=document.getElementById('audit-output');
   el.className='preset-output-area has-output';
   el.innerHTML='<div style="font-family:var(--mono);font-size:12px;color:var(--text)"><span class="spinner"></span> Running '+activePreset+'...</div>';
-  const prompt=`You are TSM AuditOps Pro running the "${activePreset}" audit framework. Apply 2025 IRS rules and thresholds.${context?'\n\nClient data/context:\n'+context:'\n\nProvide a thorough framework analysis with key risk areas, IRS scrutiny points, documentation requirements, and optimization opportunities.'}`;
+  const prompt=await getVaultPrompt('tax_framework');
   const reply=await callAI(prompt);
   el.innerHTML='<div class="output-text" style="font-size:12px;width:100%">'+reply.replace(/\n/g,'<br>')+'</div>';
 }
@@ -960,15 +945,7 @@ async function runEntityOptimizer(){
   const employees=document.getElementById('eo-employees').value;
   const revenue=document.getElementById('eo-revenue').value;
   setOutputLoading('entity-output');
-  const prompt=`You are TSM AuditOps Pro. Run an entity structure optimization analysis for:
-Current Entity: ${type}
-Net Business Income: ${nbi}
-Owner W-2 Salary: ${salary}
-State: ${state}
-Employees: ${employees}
-Annual Revenue: ${revenue}
-
-Compare tax burden across entity types. Calculate SE tax savings, QBI deduction impact, FICA optimization, and recommend optimal structure with estimated annual tax savings.`;
+  const prompt=await getVaultPrompt('tax_entity');
   const reply=await callAI(prompt);
   setOutput('entity-output',reply);
 }
@@ -981,7 +958,7 @@ async function entityPreset(name){
 
 async function runFICA(){
   setOutputLoading('entity-output');
-  const reply=await callAI('You are TSM AuditOps Pro. Run a comprehensive FICA optimization analysis for 2025. Cover: Social Security wage base $176,100, Medicare surtax thresholds, S-Corp salary optimization strategy, self-employment tax reduction techniques, and specific dollar savings calculations.');
+  const reply=await callAI(await getVaultPrompt('tax_fica'));
   setOutput('entity-output',reply);
 }
 

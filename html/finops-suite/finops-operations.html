@@ -244,7 +244,7 @@ window.TSM_UI = {
         const feed = document.querySelector('.intelligence-feed-output') || document.getElementById('intelligence-feed-output');
         if (feed) feed.innerHTML = '<span style="color: #00ffff;">[STRATEGIST] Internal Link: Processing...</span>';
         try {
-            const res = await fetch('/api/audit', {
+            const res = await fetch('/api/groq', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ query: `auditops "${sector}" --factor "${factor}" --logic strategist` })
@@ -273,7 +273,7 @@ window.TSM_UI = {
         const feed = document.querySelector('.intelligence-feed-output') || document.getElementById('intelligence-feed-output');
         if (feed) feed.innerHTML = '<span style="color: #00ffff;">[STRATEGIST] Internal Link: Processing...</span>';
         try {
-            const res = await fetch('/api/audit', {
+            const res = await fetch('/api/groq', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ query: `auditops "${sector}" --factor "${factor}" --logic strategist` })
@@ -296,7 +296,17 @@ document.addEventListener('click', (e) => {
 });
 console.log("TSM_UI: Direct Neural Link Established.");
 </script>
-</head>
+<script>
+async function getVaultPrompt(key) {
+  const r = await fetch('/api/prompt', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ key })
+  });
+  const d = await r.json();
+  return d.system;
+}
+</script></head>
 <body>
 
 <!-- TOPBAR -->
@@ -731,13 +741,13 @@ let aiModel = localStorage.getItem('finops_groq_model') || 'llama3-70b-8192';
 let aiHistory = [], aiCtx = 'general', currentMod = 'cashiering';
 
 const CTX_PROMPTS = {
-  general: 'You are a TSM FinOps Operations AI. Expert in financial operations, client service, cashiering, compliance, and wealth management. Be concise and actionable.',
-  cashiering: 'You are a cashiering operations AI. Expert in transaction processing, cash reconciliation, exception handling, and audit compliance in regulated financial services. Provide precise, compliance-aware guidance.',
-  requests: 'You are a client service operations AI. Expert in financial service request triage, SLA management, and client communication in wealth management.',
-  inbox: 'You are a financial client communications AI. Draft professional, warm, compliant correspondence for a wealth management firm. Be accurate and personable.',
-  clients: 'You are a CRM AI for a wealth management firm. Expert in Redtail CRM, client data integrity, account management, and KYC/AML requirements.',
-  portfolio: 'You are a portfolio review AI for a wealth management advisor. Expert in performance analysis, client narratives, and quarterly review preparation.',
-  compliance: 'You are a financial compliance AI. Expert in SEC, FINRA, and state securities regulations, document retention, suitability, and AML/KYC for RIAs. Provide precise regulatory guidance.',
+  general: await getVaultPrompt('ops_general'),
+  cashiering: await getVaultPrompt('ops_cashiering'),
+  requests: await getVaultPrompt('ops_requests'),
+  inbox: await getVaultPrompt('ops_inbox'),
+  clients: await getVaultPrompt('ops_clients'),
+  portfolio: await getVaultPrompt('ops_portfolio'),
+  compliance: await getVaultPrompt('ops_compliance'),
 };
 
 const CTX_LABELS = {cashiering:'Cashiering',requests:'Service Requests',inbox:'Client Inbox',clients:'Client Records',portfolio:'Portfolio Prep',compliance:'Compliance'};

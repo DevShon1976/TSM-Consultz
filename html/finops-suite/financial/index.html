@@ -255,10 +255,10 @@ window.TSM_UI = {
         const feed = document.querySelector('.intelligence-feed-output') || document.getElementById('intelligence-feed-output');
         if (feed) feed.innerHTML = '<span style="color: #00ffff;">[STRATEGIST] Internal Link: Processing...</span>';
         try {
-            const res = await fetch('/api/audit', {
+            const res = await fetch('/api/groq', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query: `auditops "${sector}" --factor "${factor}" --logic strategist` })
+                body: JSON.stringify({ messages: [{ role: 'user', content: `Analyze the ${factor} area for ${sector}. Provide key risks and actions.` }] })
             });
             const data = await res.json();
             if (feed) feed.innerText = `[STRATEGIST] ${data.output || "Analysis Complete."}`;
@@ -284,10 +284,10 @@ window.TSM_UI = {
         const feed = document.querySelector('.intelligence-feed-output') || document.getElementById('intelligence-feed-output');
         if (feed) feed.innerHTML = '<span style="color: #00ffff;">[STRATEGIST] Internal Link: Processing...</span>';
         try {
-            const res = await fetch('/api/audit', {
+            const res = await fetch('/api/groq', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query: `auditops "${sector}" --factor "${factor}" --logic strategist` })
+                body: JSON.stringify({ messages: [{ role: 'user', content: `Analyze the ${factor} area for ${sector}. Provide key risks and actions.` }] })
             });
             const data = await res.json();
             if (feed) feed.innerText = `[STRATEGIST] ${data.output || "Analysis Complete."}`;
@@ -800,7 +800,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
 <script>
 // ── PROXY CONFIG — key lives on the server, never in the browser ──
 // The spoke-factory proxy at /api/chat handles auth with TSM NEURAL CORE_API_KEY
-const SPOKE_URL = '/api/chat';   // same origin → nginx proxies to port 3016
+const SPOKE_URL = '/api/groq';   // same origin → nginx proxies to port 3016
 
 const conversations = { dashboard:[], reports:[], audit:[], invoices:[], health:[], howto:[] };
 const activePresets = {};
@@ -816,7 +816,7 @@ function switchTab(name) {
 }
 
 // ── SPOKE PROXY CALL (key lives on server) ────────────────────
-async function callTSM Neural Core(messages, onChunk) {
+async function callTSMNeuralCore(messages, onChunk) {
   // Strip the system message — the spoke injects its own SYSTEM_PROMPT
   const history = messages.filter(m => m.role !== 'system');
   const lastUser = [...history].reverse().find(m => m.role === 'user');
@@ -826,7 +826,7 @@ async function callTSM Neural Core(messages, onChunk) {
   const resp = await fetch(SPOKE_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message: msg, conversationHistory, stream: false })
+    body: JSON.stringify({ messages: [{ role: 'user', content: msg }] })
   });
 
   if (!resp.ok) {
@@ -836,8 +836,7 @@ async function callTSM Neural Core(messages, onChunk) {
 
   const data = await resp.json();
   // spoke returns: { success, answer, data, response, result, choices }
-  const text = data.answer || data.data || data.response || data.result
-    || data.choices?.[0]?.message?.content || '';
+  const text = data.content || data.answer || data.data || data.response || data.result || data.choices?.[0]?.message?.content || '';
 
   if (!text) throw new Error('Empty response from AI');
 
@@ -905,7 +904,7 @@ async function sendTabMessage(tab) {
     // Push a placeholder so render shows streaming text
     convo.push({ role: 'assistant', content: '' });
     const lastIdx = convo.length - 1;
-    const full = await callTSM Neural Core(apiMsgs, text => {
+    const full = await callTSMNeuralCore(apiMsgs, text => {
       convo[lastIdx].content = text;
       renderMessages(`${tab}-messages`, convo, null);
     });
@@ -940,7 +939,7 @@ async function sendDashMessage() {
   try {
     convo.push({ role: 'assistant', content: '' });
     const lastIdx = convo.length - 1;
-    await callTSM Neural Core(apiMsgs, text => {
+    await callTSMNeuralCore(apiMsgs, text => {
       convo[lastIdx].content = text;
       renderMessages('dash-messages', convo, null);
     });
@@ -994,7 +993,7 @@ async function runAutoQuery(tab, prompt) {
   try {
     convo.push({ role: 'assistant', content: '' });
     const lastIdx = convo.length - 1;
-    await callTSM Neural Core(apiMsgs, text => {
+    await callTSMNeuralCore(apiMsgs, text => {
       convo[lastIdx].content = text;
       renderMessages(`${tab}-messages`, convo, null);
     });
@@ -1025,7 +1024,7 @@ async function viewReport(context) {
 
   const prompt = `Provide a detailed AI analysis of this report: ${context}. Include key findings, risk factors, recommendations, and compliance implications.`;
   try {
-    await callTSM Neural Core([{ role: 'user', content: prompt }], text => {
+    await callTSMNeuralCore([{ role: 'user', content: prompt }], text => {
       contentEl.innerHTML = `<div class="msg ai"><div class="msg-label">⚡ FINANCIAL AI</div><div class="msg-bubble">${escHtml(text)}</div></div>`;
       contentEl.scrollTop = contentEl.scrollHeight;
     });
@@ -1055,7 +1054,7 @@ function toggleHowto(el) {
   });
 });
 </script>
-<script>window.ui = new TSM_UI();</script>
+<script>window.ui = (typeof TSM_UI === "function" ? new TSM_UI() : TSM_UI);</script>
 <!-- ASC 958 FUND ACCOUNTING MODULE -->
 <style id="asc958-financial-css">
 #asc958Module{
@@ -1186,6 +1185,15 @@ Includes:
   setInterval(reportBNCA, 10000);
   setTimeout(reportBNCA, 1500);
 })();
+</script>
+
+<script>
+function loadPreset(el, title, prompt) {
+  document.querySelectorAll('.preset').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  var input = document.getElementById('query-input') || document.querySelector('textarea');
+  if (input) input.value = prompt;
+}
 </script>
 </body>
 </html>
