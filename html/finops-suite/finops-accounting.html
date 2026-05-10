@@ -885,23 +885,16 @@ function serializeDoc() {
 // AI PROMPTS PER APP
 // ══════════════════════════════════════════════
 const APP_PROMPTS = {
-  app1: {
-    system: await getVaultPrompt('doc_triage'),
-    user: doc => `Analyze and triage this financial document:\n\n${doc}`
-  },
-  app2: {
-    system: await getVaultPrompt('doc_variance'),
-    user: doc => `Perform variance and risk analysis on this financial document:\n\n${doc}`
-  },
-  app3: {
-    system: await getVaultPrompt('doc_controller'),
-    user: doc => `Generate a Controller Action Plan for this financial document:\n\n${doc}`
-  },
-  app4: {
-    system: await getVaultPrompt('doc_cfo'),
-    user: doc => `Generate CFO executive intelligence from this financial document:\n\n${doc}`
-  }
+  app1: { user: doc => `Analyze and triage this financial document:\n\n${doc}`, key: 'doc_triage' },
+  app2: { user: doc => `Perform variance and risk analysis on this financial document:\n\n${doc}`, key: 'doc_variance' },
+  app3: { user: doc => `Generate a Controller Action Plan for this financial document:\n\n${doc}`, key: 'doc_controller' },
+  app4: { user: doc => `Generate CFO executive intelligence from this financial document:\n\n${doc}`, key: 'doc_cfo' }
 };
+async function getAppPrompt(appKey) {
+  const p = APP_PROMPTS[appKey];
+  p.system = p.system || await getVaultPrompt(p.key);
+  return p;
+}
 
 // ══════════════════════════════════════════════
 // FIRE ALL 4 ENGINES
@@ -936,7 +929,7 @@ async function fireAll() {
 }
 
 async function runEngine(num, docText) {
-  const prompt = APP_PROMPTS['app'+num];
+  const prompt = await getAppPrompt('app'+num);
   const bodyEl = document.getElementById('body'+num);
   const badgeEl = document.getElementById('badge'+num);
   const tokEl = document.getElementById('tok'+num);
