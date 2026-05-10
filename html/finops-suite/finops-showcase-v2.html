@@ -594,7 +594,17 @@ document.addEventListener('click', (e) => {
 });
 console.log("TSM_UI: Direct Neural Link Established.");
 </script>
-</head>
+<script>
+async function getVaultPrompt(key) {
+  const r = await fetch('/api/prompt', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ key })
+  });
+  const d = await r.json();
+  return d.system;
+}
+</script></head>
 <body>
 
 <!-- TOP BAR -->
@@ -938,66 +948,22 @@ function buildPrompts(doc) {
     {
       num: 1,
       name: 'Document Triage & Flag Analysis',
-      prompt: `You are the TSM FinOps AI — Engine 1: Document Triage & Flag Analysis.
-
-${ctx}
-
-Analyze this financial document and provide:
-1. DOCUMENT TYPE & STATUS — what this is and current state
-2. CRITICAL FLAGS — any urgent issues (overdue items, missing data, compliance risks, policy violations)
-3. DATA COMPLETENESS — what's present vs missing
-4. RISK LEVEL — High / Medium / Low with brief rationale
-5. TRIAGE PRIORITY — what needs immediate attention vs can wait
-
-Be specific, use dollar amounts and dates from the document. Format clearly with those headings.`
+      prompt: await getVaultPrompt('the_tsm_finops_triage')
     },
     {
       num: 2,
       name: 'Variance & Risk Intelligence',
-      prompt: `You are the TSM FinOps AI — Engine 2: Variance & Risk Intelligence.
-
-${ctx}
-
-Analyze the financial variances and risks in this document:
-1. KEY VARIANCES — identify all budget vs actual gaps, overages, shortfalls with exact amounts
-2. RISK ASSESSMENT — financial, operational, and compliance risks identified
-3. TREND INDICATORS — what patterns or trajectories are concerning
-4. EXPOSURE QUANTIFICATION — total dollar exposure at risk
-5. BENCHMARKS — how do these figures compare to healthy standards (DSO, margins, etc.)
-
-Be precise with numbers. Use percentage and dollar variances.`
+      prompt: await getVaultPrompt('the_tsm_finops_variance')
     },
     {
       num: 3,
       name: 'Controller Action Plan · BNCA',
-      prompt: `You are the TSM FinOps AI — Engine 3: Controller Action Plan (Best Next Course of Action).
-
-${ctx}
-
-Generate a prioritized Controller action plan:
-1. IMMEDIATE ACTIONS (Next 24 hours) — what must happen today
-2. THIS WEEK (Days 2-5) — scheduled follow-up actions
-3. THIS MONTH — longer-term corrective actions
-4. APPROVALS NEEDED — who needs to sign off on what
-5. ESCALATION TRIGGERS — what conditions require CFO involvement
-
-Be directive and specific. Name responsible parties where implied. Include deadlines.`
+      prompt: await getVaultPrompt('the_tsm_finops_controller')
     },
     {
       num: 4,
       name: 'CFO Executive Intelligence',
-      prompt: `You are the TSM FinOps AI — Engine 4: CFO Executive Intelligence.
-
-${ctx}
-
-Generate a CFO-level executive briefing:
-1. EXECUTIVE SUMMARY — 2-3 sentences, bottom-line impact
-2. FINANCIAL POSITION — key numbers a CFO needs at a glance
-3. STRATEGIC RISK — what this means for the business if unaddressed
-4. RECOMMENDED CFO ACTIONS — 3 specific decisions or directives
-5. BOARD/INVESTOR IMPLICATIONS — if applicable, what needs to be disclosed or considered
-
-Write for a senior financial executive. Concise, strategic, high-impact.`
+      prompt: await getVaultPrompt('the_tsm_finops_cfo')
     }
   ];
 }
