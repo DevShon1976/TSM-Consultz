@@ -401,6 +401,52 @@
     .hero-stats { gap: 2rem; }
   }
 </style>
+
+<script src="/html/tsm-bnca-bridge.js"></script>
+<script>
+// TSM AI Caller
+async function tsmAI(prompt, maxTokens) {
+  try {
+    const res = await fetch('/api/financial/query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: prompt, maxTokens: maxTokens || 512 })
+    });
+    if (!res.ok) throw new Error('Server ' + res.status);
+    const d = await res.json();
+    return d.answer || 'No response.';
+  } catch(e) { return '[AI Error] ' + e.message; }
+}
+
+// Live stat updater — pulls from BNCA bridge
+async function refreshLiveStats() {
+  if (!window.TSM_BNCA) return;
+  const entries = window.TSM_BNCA.readAll();
+  const ready = entries.filter(e => e.status === 'READY').length;
+  const total = 8;
+  // Update nodes reporting stat
+  const nodeEl = document.getElementById('live-nodes');
+  if (nodeEl) nodeEl.textContent = ready + ' / ' + total;
+  // Update last-seen
+  const tsEl = document.getElementById('live-ts');
+  if (tsEl) tsEl.textContent = new Date().toLocaleTimeString();
+}
+
+// BNCA reporter — pitch deck phones home too
+(function() {
+  if (!window.TSM_BNCA) return;
+  window.TSM_BNCA.report('tsm_pitch_deck', {
+    status: 'READY',
+    label: 'TSM FinOps Pitch Deck',
+    url: window.location.href,
+    timestamp: Date.now()
+  });
+})();
+
+// Poll live stats every 5s
+setInterval(refreshLiveStats, 5000);
+window.addEventListener('DOMContentLoaded', refreshLiveStats);
+</script>
 </head>
 <body>
 
@@ -432,7 +478,7 @@
       <div class="hero-stat-label">AR at Risk · Detected Now</div>
     </div>
     <div>
-      <div class="hero-stat-val">5/5</div>
+      <div class="hero-stat-val" id="live-nodes">5/5</div>
       <div class="hero-stat-label">Nodes Reporting Live</div>
     </div>
     <div>
@@ -580,7 +626,7 @@
         <div class="url-name">Financial Command</div>
         <div class="url-desc">AR risk · AP invoices · compliance score · strategist feed</div>
       </div>
-      <a class="url-link" href="https://tsm-shell.fly.dev/finops-suite/financial-command/index.html" target="_blank">Open →</a>
+      <a class="url-link" href="https://tsm-shell.fly.dev/finops-suite/financial-command/index.html" target="_blank" onclick="window.TSM_BNCA&&window.TSM_BNCA.report('pitch_click_'+Date.now(),{status:'CLICKED',url:this.href,timestamp:Date.now()})">Open →</a>
     </div>
     <div class="url-card">
       <div>
@@ -588,7 +634,7 @@
         <div class="url-name">Financial Intel</div>
         <div class="url-desc">ASC 958 · HRSA $480K grant · Form 990 · compliance exposure</div>
       </div>
-      <a class="url-link" href="https://tsm-shell.fly.dev/finops-suite/financial-intel/index.html" target="_blank">Open →</a>
+      <a class="url-link" href="https://tsm-shell.fly.dev/finops-suite/financial-intel/index.html" target="_blank" onclick="window.TSM_BNCA&&window.TSM_BNCA.report('pitch_click_'+Date.now(),{status:'CLICKED',url:this.href,timestamp:Date.now()})">Open →</a>
     </div>
     <div class="url-card">
       <div>
@@ -596,7 +642,7 @@
         <div class="url-name">Controller Action Plan — FinOps Strategist</div>
         <div class="url-desc">Prioritized executive output · build accounting report · export PDF-ready</div>
       </div>
-      <a class="url-link" href="https://tsm-shell.fly.dev/finops-suite/finops-main-strategist/index.html" target="_blank">Open →</a>
+      <a class="url-link" href="https://tsm-shell.fly.dev/finops-suite/finops-main-strategist/index.html" target="_blank" onclick="window.TSM_BNCA&&window.TSM_BNCA.report('pitch_click_'+Date.now(),{status:'CLICKED',url:this.href,timestamp:Date.now()})">Open →</a>
     </div>
     <div class="url-card">
       <div>
@@ -604,7 +650,7 @@
         <div class="url-name">Tax Prep</div>
         <div class="url-desc">Vendor threshold review · W-9 completeness · deadline monitoring</div>
       </div>
-      <a class="url-link" href="https://tsm-shell.fly.dev/finops-suite/tax-prep/index.html" target="_blank">Open →</a>
+      <a class="url-link" href="https://tsm-shell.fly.dev/finops-suite/tax-prep/index.html" target="_blank" onclick="window.TSM_BNCA&&window.TSM_BNCA.report('pitch_click_'+Date.now(),{status:'CLICKED',url:this.href,timestamp:Date.now()})">Open →</a>
     </div>
     <div class="url-card">
       <div>
@@ -612,7 +658,7 @@
         <div class="url-name">Compliance Shield</div>
         <div class="url-desc">Missing approvals · supporting docs · controller-ready audit trail</div>
       </div>
-      <a class="url-link" href="https://tsm-shell.fly.dev/finops-suite/compliance/index.html" target="_blank">Open →</a>
+      <a class="url-link" href="https://tsm-shell.fly.dev/finops-suite/compliance/index.html" target="_blank" onclick="window.TSM_BNCA&&window.TSM_BNCA.report('pitch_click_'+Date.now(),{status:'CLICKED',url:this.href,timestamp:Date.now()})">Open →</a>
     </div>
     <div class="url-card">
       <div>
@@ -620,7 +666,7 @@
         <div class="url-name">Zero Trust</div>
         <div class="url-desc">Who has access · permission review · system integrity</div>
       </div>
-      <a class="url-link" href="https://tsm-shell.fly.dev/finops-suite/zero-trust/index.html" target="_blank">Open →</a>
+      <a class="url-link" href="https://tsm-shell.fly.dev/finops-suite/zero-trust/index.html" target="_blank" onclick="window.TSM_BNCA&&window.TSM_BNCA.report('pitch_click_'+Date.now(),{status:'CLICKED',url:this.href,timestamp:Date.now()})">Open →</a>
     </div>
     <div class="url-card" style="border-color: rgba(0,224,255,.35);">
       <div>
@@ -628,7 +674,7 @@
         <div class="url-name">FinOps Hub — Financial UI</div>
         <div class="url-desc">Every node · cross-suite apps · staff accountant guide · pilot enrollment</div>
       </div>
-      <a class="url-link" href="https://tsm-shell.fly.dev/finops-suite/financial-ui.html" target="_blank">Open →</a>
+      <a class="url-link" href="https://tsm-shell.fly.dev/finops-suite/financial-ui.html" target="_blank" onclick="window.TSM_BNCA&&window.TSM_BNCA.report('pitch_click_'+Date.now(),{status:'CLICKED',url:this.href,timestamp:Date.now()})">Open →</a>
     </div>
     <div class="url-card">
       <div>
@@ -636,7 +682,7 @@
         <div class="url-name">FinOps Operations Suite</div>
         <div class="url-desc">Cashiering · service requests · client inbox · CRM · quarterly portfolio · compliance center</div>
       </div>
-      <a class="url-link" href="https://tsm-shell.fly.dev/finops-suite/finops-operations/index.html" target="_blank">Open →</a>
+      <a class="url-link" href="https://tsm-shell.fly.dev/finops-suite/finops-operations/index.html" target="_blank" onclick="window.TSM_BNCA&&window.TSM_BNCA.report('pitch_click_'+Date.now(),{status:'CLICKED',url:this.href,timestamp:Date.now()})">Open →</a>
     </div>
     <div class="url-card" style="border-color: rgba(0,224,255,.25);">
       <div>
@@ -644,7 +690,7 @@
         <div class="url-name">Accounting Doc POC</div>
         <div class="url-desc">Drop any doc — instant AI triage · variance analysis · controller action plan · CFO intelligence · &lt;30s output</div>
       </div>
-      <a class="url-link" href="https://tsm-shell.fly.dev/finops-suite/accounting-doc-poc/index.html" target="_blank">Open →</a>
+      <a class="url-link" href="https://tsm-shell.fly.dev/finops-suite/accounting-doc-poc/index.html" target="_blank" onclick="window.TSM_BNCA&&window.TSM_BNCA.report('pitch_click_'+Date.now(),{status:'CLICKED',url:this.href,timestamp:Date.now()})">Open →</a>
     </div>
   </div>
 </section>
@@ -815,6 +861,36 @@
     <a class="btn-outline" href="https://tsm-shell.fly.dev/finops-suite/financial-ui.html" target="_blank">Book Walkthrough ↗</a>
     <a class="btn-outline" href="https://tsm-shell.fly.dev/finops-suite/finops-main-strategist/index.html" target="_blank">Open Controller Action Plan ↗</a>
   </div>
+  
+<div style="margin-top:2.5rem; padding:2rem; background:#0c1520; border:1px solid rgba(0,224,255,.2);">
+  <div style="font-family:'IBM Plex Mono',monospace; font-size:.7rem; letter-spacing:.15em; text-transform:uppercase; color:#00e0ff; margin-bottom:1rem;">LIVE AI BRIEFING</div>
+  <div id="pitch-ai-output" style="font-family:'IBM Plex Mono',monospace; font-size:.85rem; color:#7a9baa; min-height:60px; margin-bottom:1rem;">[READY] Click to generate live executive briefing...</div>
+  <button onclick="runPitchAI()" style="font-family:'IBM Plex Mono',monospace; font-size:.75rem; letter-spacing:.12em; text-transform:uppercase; background:#00e0ff; color:#070d12; border:none; padding:12px 24px; cursor:pointer; font-weight:600;">
+    ⚡ GENERATE LIVE BRIEFING
+  </button>
+</div>
+<script>
+async function runPitchAI() {
+  const el = document.getElementById('pitch-ai-output');
+  el.textContent = '[GENERATING...]';
+  el.style.color = '#00e0ff';
+  const result = await tsmAI(
+    'You are the TSM FinOps Executive Briefing AI. Generate a 3-sentence executive summary of why a growing organization should choose TSM Financial Operations over hiring a Staff Accountant. Include: cost savings, immediate value, and risk reduction. Be specific and persuasive.',
+    512
+  );
+  el.textContent = result;
+  el.style.color = '#e8f4f8';
+  // Report to BNCA
+  if (window.TSM_BNCA) {
+    window.TSM_BNCA.report('pitch_ai_briefing', {
+      status: 'FIRED',
+      output: result.slice(0, 100),
+      timestamp: Date.now()
+    });
+  }
+}
+</script>
+
   <div style="margin-top: 3rem; font-family: 'IBM Plex Mono', monospace; font-size: .7rem; letter-spacing: .15em; color: var(--text-muted); text-transform: uppercase; text-align: center;">
     TSM Financial Operations · $1,750/mo Operations Layer · Executive Reporting<span class="blink"> _</span>
   </div>
