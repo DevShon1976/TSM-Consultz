@@ -3518,6 +3518,20 @@ app.get('/api/finops/report', (req, res) => {
 });
 
 
+
+// ── FinOps Showcase Engine Route ─────────────────────────────
+app.post('/api/finops/engine', async function(req, res) {
+  var body = req.body || {};
+  var system = body.system || 'You are a financial analysis AI.';
+  var user = body.user || '';
+  try {
+    var a = await groqChat(system, user, body.maxTokens || 1024);
+    return res.json({ ok: true, answer: a });
+  } catch(e) {
+    return res.status(500).json({ ok: false, error: e.message });
+  }
+});
+// ─────────────────────────────────────────────────────────────
 app.use((req, res) => {
   if (req.path.startsWith('/api/')) {
 
@@ -3628,20 +3642,6 @@ app.get('/api/music/platform', (_req, res) => {
 
 
 
-
-// ── FinOps Showcase Engine Route ─────────────────────────────
-app.post('/api/finops/engine', async function(req, res) {
-  var body = req.body || {};
-  var system = body.system || 'You are a financial analysis AI.';
-  var user = body.user || '';
-  try {
-    var a = await groqChat(system, user, body.maxTokens || 1024);
-    return res.json({ ok: true, answer: a });
-  } catch(e) {
-    return res.status(500).json({ ok: false, error: e.message });
-  }
-});
-// ─────────────────────────────────────────────────────────────
 res.status(404).json({ ok: false, error: 'API route not found' });
   }
 
