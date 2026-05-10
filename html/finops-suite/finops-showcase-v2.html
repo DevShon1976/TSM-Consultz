@@ -921,13 +921,14 @@ async function getVaultPrompt(key) {
 }
 
 async function buildEnginePrompt(def) {
-  const system = def.system || '';
+  const system = def.system || 'You are a financial analysis AI.';
   const ctx = 'DOCUMENT: ' + currentDoc.name + '\n\n' + currentDoc.context;
   const prior = [1,2,3]
     .filter(function(n) { return n < def.num && engineOutputs[n]; })
     .map(function(n) { return '--- ENGINE ' + n + ' ---\n' + engineOutputs[n]; })
     .join('\n\n');
-  return [system, ctx, prior].filter(Boolean).join('\n\n').slice(0, 3500);
+  const user = [ctx, prior].filter(Boolean).join('\n\n').slice(0, 3000);
+  return { system: system, user: user };
 }
 
 function setMode(mode) {
@@ -1022,8 +1023,8 @@ async function fireAllEngines() {
     setEngineStatus(def.num, 'running');
     setEngineOutput(def.num, '<div class="engine-loading"><div class="spinner"></div> Engine ' + def.num + ' running — ' + def.name + '...</div>');
     if (j === 2) animatePipeline('bnca');
-    var prompt = await buildEnginePrompt(def);
-    var result = await callGroq(prompt);
+    var p = await buildEnginePrompt(def);
+    var result = await callGroq(p.system, p.user);
     engineOutputs[def.num] = result;
     setEngineOutput(def.num, result, true);
     setEngineStatus(def.num, result.startsWith('Warning') ? 'error' : 'complete');
@@ -1039,12 +1040,12 @@ async function fireAllEngines() {
   btn.innerHTML = '&#9889; FIRE ALL 4 ENGINES';
 }
 
-async function callGroq(prompt) {
+async function callGroq(system, user) {
   try {
-    const res = await fetch('/api/financial/query', {
+    const res = await fetch('/api/finops/engine', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: prompt, maxTokens: 1024 })
+      body: JSON.stringify({ system: system, user: user, maxTokens: 1024 })
     });
     if (!res.ok) return 'Warning: Server ' + res.status;
     const data = await res.json();
