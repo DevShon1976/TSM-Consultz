@@ -889,10 +889,10 @@ ALERT: Gross margin 6pts below target — COGS overrun from material costs (+12%
 };
 
 const ENGINE_DEFS = [
-  { num:1, name:'Document Triage & Flag Analysis',   key:'the_tsm_finops_triage'     },
-  { num:2, name:'Variance & Risk Intelligence',      key:'the_tsm_finops_variance'   },
-  { num:3, name:'Controller Action Plan - BNCA',     key:'the_tsm_finops_controller' },
-  { num:4, name:'CFO Executive Intelligence',        key:'the_tsm_finops_cfo'        }
+  { num:1, name:'Document Triage & Flag Analysis',   system:'You are a financial document triage AI. Identify document type, flag issues, missing info, compliance risks. Output: DOCUMENT TYPE / ISSUES FOUND / COMPLIANCE FLAGS / MISSING INFO / PRIORITY.' },
+  { num:2, name:'Variance & Risk Intelligence',      system:'You are a financial variance and risk intelligence AI. Analyze for financial risks, variances from budget, and anomalies. Output: VARIANCE SUMMARY / RISK FACTORS / ANOMALIES / RECOMMENDED ACTION.' },
+  { num:3, name:'Controller Action Plan - BNCA',     system:'You are a Controller Action Plan AI. Generate specific prioritized next actions a controller must take. Output: IMMEDIATE ACTIONS / THIS WEEK / THIS MONTH / ESCALATE TO.' },
+  { num:4, name:'CFO Executive Intelligence',        system:'You are a CFO Executive Intelligence AI. Translate document into executive-level intelligence. Output: EXECUTIVE SUMMARY / FINANCIAL IMPACT / STRATEGIC RISK / BOARD-LEVEL FLAG.' }
 ];
 
 let currentDoc = docs['ap-aging'];
@@ -921,7 +921,7 @@ async function getVaultPrompt(key) {
 }
 
 async function buildEnginePrompt(def) {
-  const system = await getVaultPrompt(def.key);
+  const system = def.system || '';
   const ctx = 'DOCUMENT: ' + currentDoc.name + '\n\n' + currentDoc.context;
   const prior = [1,2,3]
     .filter(function(n) { return n < def.num && engineOutputs[n]; })
