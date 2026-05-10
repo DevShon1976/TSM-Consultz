@@ -120,6 +120,9 @@ BOARD-LEVEL FLAG: [yes/no and why]`,
 
 
 // Prompt vault API endpoint
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true }));
+
 app.post('/api/prompt', (req, res) => {
   const { key, user_content, context } = req.body;
   if (!PROMPT_VAULT[key]) return res.status(400).json({ error: 'Unknown prompt key' });
@@ -148,7 +151,6 @@ app.use('/api/music/chain', aiLimiter);
 app.use('/api/ai/query', aiLimiter);
 
 // Body size limit
-app.use(express.json({ limit: '50kb' }));
 
 // Basic security headers
 app.use((_req, res, next) => {
