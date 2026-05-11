@@ -8,8 +8,7 @@ const groq = async (prompt, maxTokens=800) => {
     headers:{'Authorization':'Bearer '+process.env.GROQ_API_KEY,'Content-Type':'application/json'},
     body:JSON.stringify({model:process.env.TSM_MODEL||'llama-3.1-8b-instant',messages:[{role:'user',content:prompt}],max_tokens:maxTokens,temperature:0.7})
   });
-  const d = await r.json();
-  return d.choices?.[0]?.message?.content || 'AI unavailable';
+  const d = await r.json();  return d.choices?.[0]?.message?.content || 'AI unavailable';
 };
 
 

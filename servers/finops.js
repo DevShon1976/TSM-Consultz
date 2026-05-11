@@ -8,8 +8,7 @@ const groq = async (prompt, maxTokens=800) => {
     headers:{'Authorization':'Bearer '+process.env.GROQ_API_KEY,'Content-Type':'application/json'},
     body:JSON.stringify({model:process.env.TSM_MODEL||'llama-3.1-8b-instant',messages:[{role:'user',content:prompt}],max_tokens:maxTokens,temperature:0.7})
   });
-  const d = await r.json();
-  return d.choices?.[0]?.message?.content || 'AI unavailable';
+  const d = await r.json();  return d.choices?.[0]?.message?.content || 'AI unavailable';
 };
 
 router.get('/copilot',      (req,res) => res.json({ok:true,status:'FinOps Copilot online'}));
@@ -54,4 +53,24 @@ router.post('/upload-doc', async (req,res) => {
 });
 router.post('/export-pdf', (req,res) => res.json({ok:true,message:'PDF export queued'}));
 
+const _strategistLog = [];
+router.post('/strategist/push', async (req,res) => {
+  try {
+    const {source='unknown',content='',context={}} = req.body||{};
+    const entry = {id:'rpt_'+Date.now(),source,content:content.slice(0,3000),context,ts:new Date().toISOString()};
+    _strategistLog.unshift(entry);
+    if(_strategistLog.length>50) _strategistLog.pop();
+    const summary = await groq('FinOps Strategist. Source: '+source+'. Report: '+content.slice(0,1500)+'. Return: executive summary, top 3 actions, risk flags, controller note.',900);
+    entry.summary = summary;
+    res.json({ok:true,id:entry.id,summary,ts:entry.ts});
+  } catch(e){res.status(500).json({ok:false,error:e.message});}
+});
+router.get('/strategist/reports', (req,res) => res.json({ok:true,reports:_strategistLog.slice(0,20)}));
+router.post('/bnca/report', (req,res) => {
+  try {
+    const entry = {id:'bnca_'+Date.now(),...(req.body||{}),ts:new Date().toISOString()};
+    _strategistLog.unshift(entry);
+    res.json({ok:true,id:entry.id});
+  } catch(e){res.status(500).json({ok:false,error:e.message});}
+});
 module.exports = router;

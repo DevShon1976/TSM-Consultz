@@ -7,6 +7,7 @@ window.TSM_BNCA=(function(){
       const idx=JSON.parse(localStorage.getItem(IK)||'[]');
       if(!idx.includes(id)){idx.push(id);localStorage.setItem(IK,JSON.stringify(idx));}
       console.log('[TSM_BNCA] reported:',id);
+      fetch('/api/finops/bnca/report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(e)}).catch(()=>{});
     }catch(e){console.warn('[TSM_BNCA] write failed',e);}
   }
   function readAll(){

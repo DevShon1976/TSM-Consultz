@@ -548,7 +548,7 @@ window.TSM_UI = {
                 body: JSON.stringify({ query: `auditops "${sector}" --factor "${factor}" --logic strategist` })
             });
             const data = await res.json();
-            if (feed) feed.innerText = `[STRATEGIST] ${data.output || "Analysis Complete."}`;
+            if (feed) feed.innerText = `[STRATEGIST] ${data.content || data.reply || data.output || "Analysis Complete."}`;
         } catch (e) {
             if (feed) feed.innerText = "[STRATEGIST] Local API Bridge Failed.";
         }
@@ -577,7 +577,7 @@ window.TSM_UI = {
                 body: JSON.stringify({ query: `auditops "${sector}" --factor "${factor}" --logic strategist` })
             });
             const data = await res.json();
-            if (feed) feed.innerText = `[STRATEGIST] ${data.output || "Analysis Complete."}`;
+            if (feed) feed.innerText = `[STRATEGIST] ${data.content || data.reply || data.output || "Analysis Complete."}`;
         } catch (e) {
             if (feed) feed.innerText = "[STRATEGIST] Local API Bridge Failed.";
         }
@@ -1147,9 +1147,7 @@ async function callClaude(prompt) {
     const res = await fetch('/api/financial/query', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: [{ role: 'user', content: prompt.slice(0, 3000) }], max_tokens: 1000
-      })
+      body: JSON.stringify({ query: prompt.slice(0, 2500), max_tokens: 800 })
     });
 
     const data = await res.json();

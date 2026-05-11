@@ -8,8 +8,7 @@ const groq = async (prompt, maxTokens=800) => {
     headers:{'Authorization':'Bearer '+process.env.GROQ_API_KEY,'Content-Type':'application/json'},
     body:JSON.stringify({model:process.env.TSM_MODEL||'llama-3.1-8b-instant',messages:[{role:'user',content:prompt}],max_tokens:maxTokens,temperature:0.7})
   });
-  const d = await r.json();
-  return d.choices?.[0]?.message?.content || 'AI unavailable';
+  const d = await r.json();  return d.choices?.[0]?.message?.content || 'AI unavailable';
 };
 
 const q = b => b.query||b.message||b.prompt||(b.messages||[]).map(m=>m.content).join(' ')||'';
@@ -31,6 +30,19 @@ router.post('/honor/dee/dashboard', async (req,res) => { try { const content=awa
 router.get('/honor/dee/dashboard',  (req,res) => res.json({ok:true,status:'DEE Dashboard online',nodes:[],alerts:[]}));
 
 // Groq passthrough
+
+router.post('/prompt', (req,res) => {
+  const prompts = {
+    tax_analysis: 'You are a senior tax analyst AI. Provide detailed, actionable tax analysis.',
+    tax_return: 'You are a tax return preparation AI. Identify deductions, credits, and filing requirements.',
+    tax_framework: 'You are a tax framework AI. Apply relevant tax codes and frameworks to the analysis.',
+    tax_entity: 'You are a tax entity structure AI. Analyze entity optimization and pass-through strategies.',
+    tax_fica: 'You are a payroll tax AI. Analyze FICA, payroll compliance, and reasonable compensation.'
+  };
+  const key = req.body?.key||'';
+  res.json({ok:true, system: prompts[key]||'You are a financial AI assistant. Be concise and actionable.', prompt: prompts[key]||''});
+});
+
 router.post('/groq', async (req,res) => { try { const {messages=[],prompt='',max_tokens=800}=req.body||{}; const msgs=messages.length?messages:[{role:'user',content:prompt}]; const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Authorization':'Bearer '+process.env.GROQ_API_KEY,'Content-Type':'application/json'},body:JSON.stringify({model:process.env.TSM_MODEL||'llama-3.1-8b-instant',messages:msgs,max_tokens,temperature:0.7})}); const d=await r.json(); const content=d.choices?.[0]?.message?.content||'AI unavailable'; res.json({ok:true,content,reply:content,choices:d.choices,ts:new Date().toISOString()}); } catch(e){res.status(500).json({ok:false,error:e.message});}});
 
 // Mortgage / Legal
@@ -76,3 +88,13 @@ module.exports.authMiddleware = (req, res, next) => {
   // Allow internal suite pages through without key
   next();
 };
+
+// Alias: /api/financial/query → same groq handler
+router.post('/query', async (req,res) => {
+  try {
+    const body = req.body||{};
+    const prompt = body.prompt||body.query||body.content||JSON.stringify(body);
+    const content = await groq(prompt, body.max_tokens||800);
+    res.json({ok:true, content, reply:content, response:content, ts:new Date().toISOString()});
+  } catch(e){ res.status(500).json({ok:false,error:e.message}); }
+});
