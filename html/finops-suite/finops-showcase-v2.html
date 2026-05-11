@@ -253,6 +253,12 @@ body{font-family:var(--mono);background:var(--bg);color:var(--text);min-height:1
       <div class="upload-zone-text">Drag & drop or click to upload<br>PDF · DOCX · XLSX · CSV · TXT</div>
     </div>
     <div class="sb-status" id="sbStatus"><span class="ready">✓</span> AP Aging Report — READY TO FIRE</div>
+    <div style="margin:0 .75rem .5rem;display:flex;flex-direction:column;gap:4px">
+      <div style="font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Groq API Key</div>
+      <input id="groqKeyDocs" type="password" placeholder="gsk_•••••••••••••••••••"
+        style="background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:.62rem;padding:6px 8px;outline:none;width:100%;border-radius:3px;"
+        onfocus="this.style.borderColor='rgba(245,166,35,.5)'" onblur="this.style.borderColor='var(--border)'">
+    </div>
     <button class="fire-btn" id="fireBtn" onclick="fireAllEngines()">⚡ FIRE ALL 4 ENGINES</button>
   </div>
 
@@ -805,15 +811,52 @@ function setMode(mode){
   document.getElementById('sampleSection').style.display=mode==='sample'?'':'none';
   document.getElementById('uploadZone').classList.toggle('visible',mode==='upload');
 }
-function handleUpload(e){
+// Load PDF.js from CDN once
+function loadPdfJs(cb){
+  if(window.pdfjsLib){ cb(); return; }
+  const s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+  s.onload=()=>{ window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; cb(); };
+  document.head.appendChild(s);
+}
+
+async function extractPdfText(file){
+  return new Promise((resolve)=>{
+    loadPdfJs(async ()=>{
+      try{
+        const buf = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({data:buf}).promise;
+        let text='';
+        for(let i=1;i<=Math.min(pdf.numPages,20);i++){
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          text += content.items.map(s=>s.str).join(' ')+'\n';
+        }
+        resolve(text.trim()||null);
+      }catch(e){ resolve(null); }
+    });
+  });
+}
+
+async function handleUpload(e){
   const file=e.target.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    uploadedContent=ev.target.result;
-    currentDoc={name:file.name,context:uploadedContent.substring(0,3000)};
-    document.getElementById('sbStatus').innerHTML=`<span class="ready">✓</span> ${file.name} — READY TO FIRE`;
-  };
-  reader.readAsText(file);
+  const isPDF = file.name.toLowerCase().endsWith('.pdf');
+  document.getElementById('sbStatus').innerHTML=`⏳ Reading ${file.name}...`;
+
+  let content='';
+  if(isPDF){
+    content = await extractPdfText(file);
+    if(!content){
+      // fallback: tell AI the filename and let it reason
+      content=`UPLOADED PDF: ${file.name}\nSIZE: ${(file.size/1024).toFixed(1)}KB\nCould not extract text (encrypted or image-based PDF). Analyze based on filename context and document type.`;
+    }
+  } else {
+    content = await file.text();
+  }
+
+  uploadedContent=content;
+  currentDoc={name:file.name, context:`UPLOADED DOCUMENT: ${file.name}\n\n${content.substring(0,4000)}`};
+  document.getElementById('sbStatus').innerHTML=`<span class="ready">✓</span> ${file.name} — READY TO FIRE`;
 }
 
 function buildPrompts(doc){
@@ -827,10 +870,11 @@ function buildPrompts(doc){
 }
 
 async function fireAllEngines(){
-  const key = document.getElementById('groqKeyMorning')?.value.trim() ||
+  const key = document.getElementById('groqKeyDocs')?.value.trim() ||
+              document.getElementById('groqKeyMorning')?.value.trim() ||
               document.getElementById('groqKeyMidday')?.value.trim() ||
               document.getElementById('groqKeyEod')?.value.trim();
-  if(!key){ alert('Enter your Groq API key in any workflow tab first.'); return; }
+  if(!key){ alert('Enter your Groq API key above the Fire button.'); return; }
 
   completeCount=0;
   document.getElementById('completeCount').textContent='0';
