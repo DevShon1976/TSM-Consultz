@@ -222,25 +222,21 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 .cat-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px}
 .cat-items{font-size:11px;color:var(--text-dim);line-height:1.5}
 </style>
-
 <script>
 window.TSM_UI = {
     runAudit: async (sector, factor) => {
         const feed = document.querySelector('.intelligence-feed-output') || document.getElementById('intelligence-feed-output');
-        if (feed) feed.innerHTML = '<span style="color: #00ffff;">[STRATEGIST] Processing...</span>';
+        if (feed) feed.innerHTML = '<span style="color: #00ffff;">[STRATEGIST] Internal Link: Processing...</span>';
         try {
-            const res = await fetch('/api/financial/query', {
+            const res = await fetch('/api/audit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    system: 'You are a FinOps strategist and controller. Be specific, actionable, and concise.',
-                    messages: [{ role: 'user', content: `Analyze the "${factor}" module for sector: ${sector}. Provide key risks, immediate actions, and financial impact. Under 200 words.` }]
-                })
+                body: JSON.stringify({ query: `auditops "${sector}" --factor "${factor}" --logic strategist` })
             });
             const data = await res.json();
-            if (feed) feed.innerText = data.content || "Analysis complete.";
+            if (feed) feed.innerText = `[STRATEGIST] ${data.output || "Analysis Complete."}`;
         } catch (e) {
-            if (feed) feed.innerText = "[STRATEGIST] Bridge error: " + e.message;
+            if (feed) feed.innerText = "[STRATEGIST] Local API Bridge Failed.";
         }
     }
 };
@@ -255,56 +251,34 @@ document.addEventListener('click', (e) => {
 });
 console.log("TSM_UI: Direct Neural Link Established.");
 </script>
-
-<style>
-#node-05 *, #node-08 * {
-    pointer-events: none; /* Children won't steal the click */
-}
-#node-05, #node-08 {
-    pointer-events: auto !important; /* The card itself handles everything */
-}
-</style>
-
-<style>
-.node-shield {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 9999;
-    cursor: pointer;
-    background: rgba(0,0,0,0);
-}
-.active-node { position: relative; }
-</style>
-
 <script>
-// Clear any rogue service workers
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(regs => {
-        for(let reg of regs) reg.unregister();
-    });
-}
-
-// Global Force-Nav function
-window.forceNav = function(target) {
-    console.log("Sovereign Link: Forcing jump to " + target);
-    window.location.href = target + '?v=1778379301';
+window.TSM_UI = {
+    runAudit: async (sector, factor) => {
+        const feed = document.querySelector('.intelligence-feed-output') || document.getElementById('intelligence-feed-output');
+        if (feed) feed.innerHTML = '<span style="color: #00ffff;">[STRATEGIST] Internal Link: Processing...</span>';
+        try {
+            const res = await fetch('/api/audit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: `auditops "${sector}" --factor "${factor}" --logic strategist` })
+            });
+            const data = await res.json();
+            if (feed) feed.innerText = `[STRATEGIST] ${data.output || "Analysis Complete."}`;
+        } catch (e) {
+            if (feed) feed.innerText = "[STRATEGIST] Local API Bridge Failed.";
+        }
+    }
 };
-</script>
-
-<style>
-  .click-shield {
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    z-index: 9999; cursor: pointer;
-  }
-  .node-card { position: relative; }
-</style>
-
-<script>
-async function tsmAI(s,u,m){try{const r=await fetch('/api/financial/query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:s?(s+'\n\n'+u):u,maxTokens:m||1024})});if(!r.ok)throw new Error('Server '+r.status);const d=await r.json();return d.content||d.reply||d.response||d.answer||'No response.';}catch(e){return'[AI Error] '+e.message;}}
+// Wire the sector cards to the auto-fill search prompt logic
+document.addEventListener('click', (e) => {
+    const card = e.target.closest('.module-card');
+    if (card) {
+        const sector = card.dataset.sector || "Construction";
+        const factor = card.querySelector('h3')?.innerText || "General Audit";
+        TSM_UI.runAudit(sector, factor);
+    }
+});
+console.log("TSM_UI: Direct Neural Link Established.");
 </script>
 </head>
 <body>
@@ -378,7 +352,94 @@ async function tsmAI(s,u,m){try{const r=await fetch('/api/financial/query',{meth
     <div class="section-label">Your modules</div>
     <div class="module-grid">
 
-      
+      <div class="mod-card" onclick="window.location.href='/finops-suite/financial-command/index.html'" style="cursor:pointer">
+        <div class="mod-num"><span class="mod-num-n">01</span> · Daily Dashboard <span class="mod-badge">Start here</span></div>
+        <div class="mod-title">Financial Command</div>
+        <div class="mod-subtitle">Your daily operating floor</div>
+        <div class="mod-desc">Shows what's at risk right now. AR priority, AP invoices, compliance score, and strategist next action. Open this to start your day.</div>
+        <div class="mod-metrics">
+          <span class="metric hot">$18.4K AR risk</span>
+          <span class="metric warn">12 AP invoices</span>
+          <span class="metric ok">6 security gaps</span>
+        </div>
+        <button class="mod-btn" onclick="window.location.href='/finops-suite/financial-command/index.html'">Open daily accounting dashboard →</button>
+      </div>
+
+      <div class="mod-card" onclick="window.location.href='/finops-suite/financial/index.html'" style="cursor:pointer">
+        <div class="mod-num"><span class="mod-num-n">02</span> · Find problems</div>
+        <div class="mod-title">Financial Intel</div>
+        <div class="mod-subtitle">ASC 958 · Fund accounting</div>
+        <div class="mod-desc">Shows what's wrong in financial reports. Fund accounting, grant restrictions, report status, Form 990, and compliance exposure.</div>
+        <div class="mod-metrics">
+          <span class="metric hot">$480K HRSA grant</span>
+          <span class="metric hot">OVERDUE report</span>
+          <span class="metric warn">84% Form 990</span>
+        </div>
+        <button class="mod-btn" onclick="window.location.href='/finops-suite/financial/index.html'">Open financial intel →</button>
+      </div>
+
+      <div class="mod-card" onclick="window.location.href='/finops-suite/finops-main-strategist/index.html'" style="cursor:pointer">
+        <div class="mod-num"><span class="mod-num-n">03</span> · Next actions</div>
+        <div class="mod-title">Controller Action Plan</div>
+        <div class="mod-subtitle">FinOps Strategist · BNCA</div>
+        <div class="mod-desc">Turns accounting work into executive action. Prioritized next steps, outcome summary, and controller-ready recommendations.</div>
+        <div class="mod-metrics">
+          <span class="metric ok">5/5 nodes reporting</span>
+          <span class="metric ok">12–18 hrs saved</span>
+        </div>
+        <button class="mod-btn" onclick="window.location.href='/finops-suite/finops-main-strategist/index.html'">Open controller action plan →</button>
+      </div>
+
+      <div class="mod-card" onclick="window.location.href='/finops-suite/tax.html'" style="cursor:pointer">
+        <div class="mod-num"><span class="mod-num-n">04</span> · Avoid penalties</div>
+        <div class="mod-title">Tax Prep</div>
+        <div class="mod-subtitle">1099 · Filing readiness</div>
+        <div class="mod-desc">Shows vendor + filing readiness. 1099/W-9 readiness, vendor threshold review, tax deadline windows, and filing risk.</div>
+        <div class="mod-metrics">
+          <span class="metric warn">W-9 gaps</span>
+          <span class="metric warn">Threshold review</span>
+        </div>
+        <button class="mod-btn" onclick="window.location.href='/finops-suite/tax.html'">Open tax prep →</button>
+      </div>
+
+      <div class="mod-card" onclick="window.location.href='/finops-suite/compliance.html'" style="cursor:pointer">
+        <div class="mod-num"><span class="mod-num-n">05</span> · Avoid audit risk</div>
+        <div class="mod-title">Compliance Shield</div>
+        <div class="mod-subtitle">Audit support · Docs</div>
+        <div class="mod-desc">Shows missing docs and approval gaps. Approvals, supporting documents, audit trail, policy gaps, and controller review risk.</div>
+        <div class="mod-metrics">
+          <span class="metric hot">Missing approvals</span>
+          <span class="metric warn">Policy gaps</span>
+        </div>
+        <button class="mod-btn" onclick="window.location.href='/finops-suite/compliance.html'">Open compliance →</button>
+      </div>
+
+      <div class="mod-card" onclick="window.location.href='/finops-suite/zero-trust.html'" style="cursor:pointer">
+        <div class="mod-num"><span class="mod-num-n">06</span> · Protect access</div>
+        <div class="mod-title">Zero Trust</div>
+        <div class="mod-subtitle">Access · Security posture</div>
+        <div class="mod-desc">Shows who shouldn't have access. Permission review, QuickBooks access risk, financial data exposure, and security posture.</div>
+        <div class="mod-metrics">
+          <span class="metric hot">6 access gaps</span>
+          <span class="metric warn">QB exposure</span>
+        </div>
+        <button class="mod-btn" onclick="window.location.href='/finops-suite/zero-trust.html'">Open zero trust →</button>
+      </div>
+
+
+      <div class="mod-card" onclick="window.location.href='/finops-suite/finops-operations.html'" style="cursor:pointer">
+        <div class="mod-num"><span class="mod-num-n">07</span> · Day-to-day ops</div>
+        <div class="mod-title">FinOps Operations Suite</div>
+        <div class="mod-subtitle">Cashiering · Requests · CRM · Compliance</div>
+        <div class="mod-desc">6-module operations layer: cashiering workbench, service request tracker, client inbox, client records hub, quarterly portfolio prep, and compliance center.</div>
+        <div class="mod-metrics">
+          <span class="metric hot">3 exceptions</span>
+          <span class="metric warn">11 open requests</span>
+          <span class="metric ok">CRM synced</span>
+        </div>
+        <button class="mod-btn" onclick="window.location.href='/finops-suite/finops-operations.html'">Open operations suite →</button>
+      </div>
+    </div>
 
     <!-- 30-SECOND CLOSE -->
     <div class="section-label">Positioning</div>
@@ -693,43 +754,249 @@ function runFullDemo(){
 <div onclick="window.open('/how-to','_blank')" style="position:fixed;right:20px;bottom:20px;background:#00FFC6;color:#001;padding:10px 14px;border-radius:20px;font-family:DM Mono,monospace;font-size:12px;cursor:pointer;z-index:9999;">HOW TO</div>
 
 
+<script>
+(function(){
+  if(window.__FINOPS_NODE_05_08_FIX__) return;
+  window.__FINOPS_NODE_05_08_FIX__ = true;
 
+  const ROUTES = {
+    "05": "/finops-suite/finops-showcase-v2.html?v=accounting-doc-poc-fixed",
+    "08": "/finops-suite/finops-showcase-v2.html?v=accounting-doc-poc"
+  };
 
+  function openNode(num){
+    const url = ROUTES[num];
+    if(url) window.location.href = url;
+  }
 
+  function fixCards(){
+    document.querySelectorAll("*").forEach(el=>{
+      const txt=(el.innerText||"").toLowerCase();
 
+      const is05 = txt.includes("05") && txt.includes("compliance shield");
+      const is08 = txt.includes("08") && txt.includes("accounting doc poc");
 
+      if(!is05 && !is08) return;
 
+      el.style.cursor="pointer";
+      el.style.pointerEvents="auto";
 
+      el.onclick=function(e){
+        const t=(e.target.innerText||"").toLowerCase();
+        if(is05 && (t.includes("open compliance") || txt.includes("compliance shield"))){
+          e.preventDefault();
+          e.stopPropagation();
+          openNode("05");
+          return false;
+        }
+        if(is08 && (t.includes("launch accounting") || txt.includes("accounting doc poc"))){
+          e.preventDefault();
+          e.stopPropagation();
+          openNode("08");
+          return false;
+        }
+      };
+    });
+
+    document.querySelectorAll("button,a,.btn,div").forEach(el=>{
+      const txt=(el.innerText||"").toLowerCase().trim();
+
+      if(txt.includes("open compliance")){
+        el.onclick=function(e){
+          e.preventDefault();
+          e.stopPropagation();
+          openNode("05");
+          return false;
+        };
+      }
+
+      if(txt.includes("launch accounting poc")){
+        el.onclick=function(e){
+          e.preventDefault();
+          e.stopPropagation();
+          openNode("08");
+          return false;
+        };
+      }
+    });
+  }
+
+  window.openFinopsNode05 = ()=>openNode("05");
+  window.openFinopsNode08 = ()=>openNode("08");
+
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",fixCards);
+  else fixCards();
+
+  [500,1200,2500].forEach(ms=>setTimeout(fixCards,ms));
+})();
+</script>
 
 
 <script>
-window.addEventListener('mousedown', function(e) {
-    const card05 = e.target.closest('#node-05');
-    const card08 = e.target.closest('#node-08');
-    
-    if (card05) {
-        console.log("Forcing Navigation to Compliance...");
-        window.location.href = 'compliance.html';
-    }
-    if (card08) {
-        console.log("Forcing Navigation to Showcase...");
-        window.location.href = 'finops-showcase-v2.html';
-    }
-}, true); // The 'true' here is key—it captures the click before any other script can stop it.
-</script>
-<script src="/groq-bridge.js"></script>
+(function(){
+  if(window.__FINOPS_HARD_REMAP_05_08__) return;
+  window.__FINOPS_HARD_REMAP_05_08__ = true;
 
-// BNCA Node Reporter — wires this node to the strategist
-(function() {
-  if (!window.TSM_BNCA) return;
-  var nodeId = document.title.replace(/[^a-z0-9]/gi,'_').toLowerCase() || 'finops_node';
-  window.TSM_BNCA.report(nodeId, {
-    status: 'READY',
-    url: window.location.href,
-    label: document.title,
-    timestamp: Date.now()
-  });
-  console.log('[TSM] Node reported to strategist:', nodeId);
+  const TARGETS = {
+    compliance: "/finops-suite/finops-showcase-v2.html?v=accounting-doc-poc-fixed",
+    accounting: "/finops-suite/finops-showcase-v2.html?v=accounting-doc-poc"
+  };
+
+  function go(kind){
+    window.location.href = TARGETS[kind];
+  }
+
+  function hardWire(){
+    document.querySelectorAll("a,button,.btn,div,section,article").forEach(el=>{
+      const txt=(el.innerText||"").toLowerCase();
+      const href=(el.getAttribute && (el.getAttribute("href")||"")) || "";
+      const onclick=(el.getAttribute && (el.getAttribute("onclick")||"")) || "";
+
+      const isCompliance =
+        txt.includes("compliance shield") ||
+        txt.includes("open compliance") ||
+        href.includes("compliance-shield") ||
+        onclick.includes("compliance-shield");
+
+      const isAccounting =
+        txt.includes("accounting doc poc") ||
+        txt.includes("launch accounting poc") ||
+        href.includes("accounting-poc") ||
+        onclick.includes("accounting-poc") ||
+        href.includes("healthcare/poc-html");
+
+      if(isCompliance){
+        el.style.cursor="pointer";
+        el.setAttribute("href", TARGETS.compliance);
+        el.onclick=function(e){
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          go("compliance");
+          return false;
+        };
+      }
+
+      if(isAccounting){
+        el.style.cursor="pointer";
+        el.setAttribute("href", TARGETS.accounting);
+        el.onclick=function(e){
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          go("accounting");
+          return false;
+        };
+      }
+    });
+  }
+
+  document.addEventListener("click",function(e){
+    const el=e.target.closest("a,button,.btn,div,section,article");
+    if(!el) return;
+    const txt=(el.innerText||"").toLowerCase();
+
+    if(txt.includes("compliance shield") || txt.includes("open compliance")){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      go("compliance");
+      return false;
+    }
+
+    if(txt.includes("accounting doc poc") || txt.includes("launch accounting poc")){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      go("accounting");
+      return false;
+    }
+  },true);
+
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",hardWire);
+  else hardWire();
+
+  [300,900,1800,3000].forEach(ms=>setTimeout(hardWire,ms));
 })();
+</script>
+
+
+<script>
+(function(){
+  if(window.__FINOPS_CORRECT_05_08_TARGETS__) return;
+  window.__FINOPS_CORRECT_05_08_TARGETS__ = true;
+
+  const TARGET_05 = "/finops-suite/compliance.html?v=compliance";
+  const TARGET_08 = "/finops-suite/finops-showcase-v2.html?v=accounting-doc-poc";
+
+  function go(url){ window.location.href = url; }
+
+  function wire(){
+    document.querySelectorAll("a,button,.btn,div,section,article").forEach(el=>{
+      const txt=(el.innerText||"").toLowerCase();
+      const href=(el.getAttribute && (el.getAttribute("href")||"")) || "";
+      const onclick=(el.getAttribute && (el.getAttribute("onclick")||"")) || "";
+
+      const is05 =
+        txt.includes("05") && txt.includes("compliance shield") ||
+        txt.includes("open compliance") ||
+        href.includes("compliance-shield") ||
+        onclick.includes("compliance-shield");
+
+      const is08 =
+        txt.includes("08") && txt.includes("accounting doc poc") ||
+        txt.includes("launch accounting poc") ||
+        href.includes("accounting-poc") ||
+        onclick.includes("accounting-poc") ||
+        href.includes("healthcare/poc-html");
+
+      if(is05){
+        el.style.cursor="pointer";
+        if(el.tagName==="A") el.setAttribute("href", TARGET_05);
+        el.onclick=function(e){
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          go(TARGET_05);
+          return false;
+        };
+      }
+
+      if(is08){
+        el.style.cursor="pointer";
+        if(el.tagName==="A") el.setAttribute("href", TARGET_08);
+        el.onclick=function(e){
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          go(TARGET_08);
+          return false;
+        };
+      }
+    });
+  }
+
+  document.addEventListener("click",function(e){
+    const el=e.target.closest("a,button,.btn,div,section,article");
+    if(!el) return;
+
+    const txt=(el.innerText||"").toLowerCase();
+
+    if(txt.includes("open compliance") || txt.includes("compliance shield")){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      go(TARGET_05);
+      return false;
+    }
+
+    if(txt.includes("launch accounting poc") || txt.includes("accounting doc poc")){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      go(TARGET_08);
+      return false;
+    }
+  },true);
+
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",wire);
+  else wire();
+
+  [300,900,1800,3000].forEach(ms=>setTimeout(wire,ms));
+})();
+</script>
+
 </body>
 </html>
