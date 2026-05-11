@@ -490,4 +490,82 @@ CONFIDENCE
   });
 });
 
+
+// ===============================
+// HC STRATEGIST MEMORY API
+// ===============================
+const fsHC = require("fs");
+const HC_MEM_PATH = "./data/hc-strategist-memory.json";
+
+function hcReadMemory(){
+  try { return JSON.parse(fsHC.readFileSync(HC_MEM_PATH,"utf8")); }
+  catch(e){ return {items:[]}; }
+}
+function hcWriteMemory(db){
+  fsHC.mkdirSync("./data",{recursive:true});
+  fsHC.writeFileSync(HC_MEM_PATH,JSON.stringify(db,null,2));
+}
+
+app.get("/api/hc/strategist-memory",(req,res)=>{
+  const db=hcReadMemory();
+  res.json({ok:true,items:db.items});
+});
+
+app.post("/api/hc/strategist-memory",(req,res)=>{
+  const db=hcReadMemory();
+  const b=req.body||{};
+  const item={
+    id:"HC-"+Math.floor(1000+Math.random()*8999),
+    node:b.node||"HC Node",
+    action:b.action||"Node action",
+    risk:b.risk||"MED",
+    owner:b.owner||"HC Strategist",
+    status:b.status||"Open",
+    summary:b.summary||"Node issue relayed to strategist",
+    ts:new Date().toISOString()
+  };
+  db.items.unshift(item);
+  hcWriteMemory(db);
+  res.json({ok:true,item});
+});
+
+app.get("/api/hc/strategist-rollup",(req,res)=>{
+  const db=hcReadMemory();
+  const items=db.items||[];
+  const open=items.filter(x=>x.status!=="Done").length;
+  const high=items.filter(x=>x.risk==="HIGH").length;
+  const nodes=[...new Set(items.map(x=>x.node))];
+  res.json({
+    ok:true,
+    open,
+    high,
+    nodes:nodes.length,
+    total:items.length,
+    top_issue:items[0]?.summary||"No node issue relayed yet",
+    executive:`HC STRATEGIST ROLLUP
+
+OPEN ITEMS
+${open}
+
+HIGH RISK
+${high}
+
+NODES REPORTING
+${nodes.length}
+
+TOP ISSUE
+${items[0]?.summary||"No node issue relayed yet"}
+
+BEST NEXT COURSE OF ACTION
+1. Assign accountable owner by node.
+2. Clear high-risk blockers first.
+3. Document handoff evidence.
+4. Refresh BNCA after next operating cycle.
+
+CONFIDENCE
+92%`
+  });
+});
+// ===============================
+
 app.listen(PORT, () => console.log(`TSM server v3.0 on port ${PORT}`));
