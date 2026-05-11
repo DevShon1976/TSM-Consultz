@@ -1,653 +1,738 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FinOps Main Strategist</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>FinOps Main Strategist · TSM</title>
 <style>
-:root {
-  --c:  #00d4c8;     /* primary teal */
-  --c2: #00a89e;     /* teal dim */
-  --c3: rgba(0,212,200,0.12);
-  --c4: rgba(0,212,200,0.06);
-  --c5: rgba(0,212,200,0.22);
-  --green: #00e676;
-  --amber: #ffb300;
-  --red:   #ff5252;
-  --blue:  #40c4ff;
-  --purple:#ce93d8;
-  --bg:    #060d0d;
-  --s1:    #091515;
-  --s2:    #0d1e1e;
-  --s3:    #112424;
-  --b:  rgba(0,212,200,0.16);
-  --b2: rgba(0,212,200,0.3);
-  --t:  #b2e8e5;
-  --td: rgba(178,232,229,0.5);
-  --tf: rgba(178,232,229,0.3);
-  --mono: 'Courier New', Courier, monospace;
+/* TSM_SCROLL_FIX */
+html, body { height: 100%; overflow-y: auto; }
+main { padding-bottom: 80px !important; min-height: calc(100vh - 60px); }
+.footer { position: fixed; bottom: 0; left: 0; right: 0; height: 32px; z-index: 10; }
+.ask-bar { position: fixed; bottom: 40px; right: 12px; z-index: 20; }
+.panel { max-height: 60vh; overflow-y: auto; }
+*{box-sizing:border-box}
+body{margin:0;background:#02070d;color:#d9f3ff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+header{padding:18px 22px;border-bottom:1px solid #123050;background:#061018;display:flex;justify-content:space-between;align-items:center}
+.brand{color:#00e0ff;font-weight:900;letter-spacing:.16em;font-size:18px}
+.sub{font-size:12px;color:#8fb0c8;margin-top:4px}
+.badge{border:1px solid #00f59f;color:#00f59f;border-radius:999px;padding:7px 12px;font-size:11px}
+.wrap{padding:20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:16px}
+.card{background:#07111b;border:1px solid #123050;border-radius:14px;padding:16px}
+.card b{color:#00e0ff}
+.val{font-size:28px;font-weight:900;color:#00f59f;margin-top:8px}
+.panel{background:#061018;border:1px solid #123050;border-radius:16px;padding:16px;margin-top:14px}
+.summary{white-space:pre-wrap;line-height:1.55;background:#02070d;border:1px solid #123050;border-radius:12px;padding:14px;max-height:360px;overflow:auto}
+.nodegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:12px}
+.node{background:#07111b;border:1px solid #123050;border-radius:12px;padding:12px}
+.node b{color:#d9f3ff}
+.node .state{font-size:18px;font-weight:900;color:#00f59f;margin-top:6px}
+.btn{background:#00b7ff;color:#001018;border:0;border-radius:8px;padding:10px 13px;font:900 11px monospace;cursor:pointer;margin:8px 8px 0 0}
+.btn.dark{background:transparent;color:#00e0ff;border:1px solid #00e0ff}
+.footer{position:fixed;bottom:0;left:0;right:0;height:28px;background:#061018;border-top:1px solid #123050;color:#7aa6c2;font-size:10px;display:flex;align-items:center;justify-content:space-between;padding:0 14px}
+main{padding-bottom:42px}
+
+/* ============================================
+   MANAGER BRIEFING BAR
+   ============================================ */
+#mgr-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #021a0f;
+  border-bottom: 2px solid #00f59f;
+  box-shadow: 0 0 24px rgba(0,245,159,.2);
+  padding: 0;
+  font-family: ui-monospace, monospace;
 }
-*{box-sizing:border-box;margin:0;padding:0;}
-html,body{background:var(--bg);color:var(--t);font-family:var(--mono);font-size:12px;min-height:100vh;}
-body::after{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px);pointer-events:none;z-index:9999;}
-::-webkit-scrollbar{width:3px;height:3px;}
-::-webkit-scrollbar-thumb{background:var(--b2);}
-::-webkit-scrollbar-track{background:transparent;}
 
-/* ── HEADER ── */
-header{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:12px 18px;border-bottom:1px solid var(--b);
-  background:var(--s1);position:sticky;top:0;z-index:100;
+/* Top strip — 3-sentence bottom line */
+#mgr-bar .mgr-top {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 20px 8px;
+  border-bottom: 1px solid rgba(0,245,159,.2);
 }
-.brand h1{font-size:13px;letter-spacing:0.2em;color:var(--c);text-transform:uppercase;font-weight:bold;}
-.brand .sub{font-size:9px;color:var(--td);letter-spacing:0.1em;margin-top:3px;}
-.hdr-right{display:flex;align-items:center;gap:12px;}
-.live-badge{font-size:9px;letter-spacing:0.12em;border:1px solid var(--c);color:var(--c);padding:4px 10px;border-radius:2px;display:flex;align-items:center;gap:5px;}
-.live-dot{width:5px;height:5px;border-radius:50%;background:var(--c);}
-.hdr-clock{font-size:10px;color:var(--td);}
-
-/* ── TOP METRICS ── */
-.metrics-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--b);border-bottom:1px solid var(--b);}
-.metric-card{background:var(--s1);padding:16px 18px;}
-.metric-card .mk{font-size:9px;letter-spacing:0.14em;color:var(--c2);text-transform:uppercase;margin-bottom:6px;}
-.metric-card .mv{font-size:26px;color:var(--c);font-weight:bold;letter-spacing:0.04em;line-height:1;}
-.metric-card .mv.warn{color:var(--amber);}
-.metric-card .mv.alert{color:var(--red);}
-.metric-card .mv.ok{color:var(--green);}
-.metric-card .msub{font-size:9px;color:var(--td);margin-top:4px;}
-
-/* ── SECTION HEADER ── */
-.sec-head{
-  font-size:10px;letter-spacing:0.18em;color:var(--c);text-transform:uppercase;
-  padding:10px 18px;border-bottom:1px solid var(--b);background:var(--s1);
-  display:flex;align-items:center;justify-content:space-between;
+#mgr-bar .mgr-label {
+  font-size: 9px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: #00f59f;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
-.sec-head span{font-size:9px;color:var(--td);letter-spacing:0.08em;text-transform:none;}
-
-/* ── HUB SVG ── */
-#hub-wrap{border-bottom:1px solid var(--b);background:var(--bg);}
-.hub-svg{display:block;width:100%;}
-
-/* ── NODE POSTURES ── */
-.postures-row{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--b);border-bottom:1px solid var(--b);}
-.posture-card{background:var(--s1);padding:14px 16px;transition:background 0.2s;}
-.posture-card:hover{background:var(--s2);}
-.posture-card .pn{font-size:10px;color:var(--t);font-weight:bold;margin-bottom:5px;letter-spacing:0.05em;}
-.posture-card .ps{font-size:11px;font-weight:bold;letter-spacing:0.1em;margin-bottom:5px;}
-.ps.ready{color:var(--green);}
-.ps.watch{color:var(--amber);animation:amberpulse 2s infinite;}
-.ps.alert{color:var(--red);}
-.posture-card .pd{font-size:9px;color:var(--td);line-height:1.5;}
-.posture-card .pbar{height:2px;background:var(--b);margin-top:10px;border-radius:1px;overflow:hidden;}
-.pbar-fill{height:100%;border-radius:1px;transition:width 1s ease;}
-
-/* ── ACCOUNTING LANES ── */
-.lanes-wrap{border-bottom:1px solid var(--b);}
-.lanes-sub{font-size:9px;color:var(--td);padding:6px 18px 10px;letter-spacing:0.06em;}
-.lanes-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--b);}
-.lane-card{background:var(--s1);padding:14px 16px;transition:background 0.2s;}
-.lane-card:hover{background:var(--s2);}
-.lane-card .lk{font-size:9px;letter-spacing:0.14em;color:var(--c);text-transform:uppercase;margin-bottom:8px;line-height:1.4;}
-.lane-card .lv{font-size:24px;font-weight:bold;margin-bottom:4px;}
-.lane-card .lv.ok{color:var(--green);}
-.lane-card .lv.warn{color:var(--amber);}
-.lane-card .lv.num{color:var(--c);}
-.lane-card .ld{font-size:9px;color:var(--td);line-height:1.5;}
-.lane-card .check{display:flex;align-items:center;gap:5px;font-size:9px;color:var(--td);margin-top:3px;}
-.check .dot{width:4px;height:4px;border-radius:50%;background:var(--green);flex-shrink:0;}
-.check .dot.warn{background:var(--amber);}
-
-/* ── AI STRATEGIST (GROQ) ── */
-.ai-wrap{border-bottom:1px solid var(--b);}
-.ai-body{display:grid;grid-template-columns:280px 1fr;gap:1px;background:var(--b);}
-.ai-controls{background:var(--s1);padding:14px 16px;}
-.ai-controls label{font-size:9px;color:var(--td);letter-spacing:0.1em;display:block;margin-bottom:5px;text-transform:uppercase;}
-.ai-controls input,.ai-controls select{
-  width:100%;background:var(--s2);border:1px solid var(--b2);color:var(--t);
-  font-family:var(--mono);font-size:10px;padding:7px 9px;margin-bottom:10px;border-radius:2px;
+#mgr-bar .mgr-label::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #00f59f;
+  animation: mgrPulse 1.8s infinite;
 }
-.ai-controls input:focus,.ai-controls select:focus{outline:none;border-color:var(--c);}
-.ai-controls select option{background:var(--s2);}
-.model-info{font-size:9px;color:var(--td);line-height:1.5;margin-bottom:10px;padding:8px;border:1px solid var(--b);border-radius:2px;}
-.btn{font-family:var(--mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:all 0.15s;width:100%;}
-.btn-groq{background:transparent;border:1px solid var(--c);color:var(--c);padding:8px 12px;margin-bottom:6px;}
-.btn-groq:hover{background:var(--c3);}
-.btn-groq:active{transform:scale(0.98);}
-.btn-groq:disabled{opacity:0.35;cursor:not-allowed;}
-.btn-clear{background:transparent;border:1px solid var(--b2);color:var(--td);padding:6px 12px;}
-.btn-clear:hover{background:var(--c4);}
-.groq-badge{font-size:8px;color:var(--td);text-align:center;margin-top:8px;letter-spacing:0.08em;}
-.groq-speed{color:var(--green);}
-.ai-output-panel{background:var(--s1);padding:14px 16px;display:flex;flex-direction:column;}
-#groq-output{flex:1;min-height:220px;max-height:280px;overflow-y:auto;font-size:10px;line-height:1.8;color:var(--t);white-space:pre-wrap;padding-right:6px;}
-.ai-footer{display:flex;align-items:center;gap:12px;margin-top:10px;padding-top:8px;border-top:1px solid var(--b);}
-#groq-status{font-size:9px;color:var(--td);}
-#groq-tokens{font-size:9px;color:var(--tf);}
-.streaming-cursor{display:inline-block;width:6px;height:11px;background:var(--c);animation:blink 0.8s infinite;margin-left:2px;vertical-align:text-bottom;}
+@keyframes mgrPulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-/* ── BOTTOM ROW: FEED + ACTIONS ── */
-.bottom-row{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--b);border-bottom:1px solid var(--b);}
-.feed-panel,.actions-panel{background:var(--s1);padding:14px 16px;}
-.panel-head{font-size:9px;letter-spacing:0.14em;color:var(--td);text-transform:uppercase;margin-bottom:10px;border-bottom:1px solid var(--b);padding-bottom:6px;}
-#data-feed{height:160px;overflow-y:auto;}
-.feed-line{font-size:9.5px;padding:2px 0;display:flex;gap:7px;border-bottom:1px solid rgba(0,212,200,0.04);animation:fadeUp 0.2s ease;}
-.feed-line .ts{color:var(--tf);min-width:60px;}
-.feed-line .src{min-width:26px;font-size:9px;}
-.feed-line .msg{color:var(--t);opacity:0.75;}
-.action-item{display:flex;align-items:flex-start;gap:7px;font-size:9.5px;padding:5px 0;border-bottom:1px solid rgba(0,212,200,0.05);}
-.pri{min-width:26px;font-size:9px;letter-spacing:0.05em;font-weight:bold;}
-.pri.p1{color:var(--red);}
-.pri.p2{color:var(--amber);}
-.pri.p3{color:var(--green);}
-.action-text{color:var(--t);opacity:0.8;line-height:1.4;}
+#mgr-bar .mgr-brief {
+  font-size: 13px;
+  color: #d9f3ff;
+  line-height: 1.55;
+  max-width: 780px;
+}
+#mgr-bar .mgr-brief strong { color: #00f59f; }
+#mgr-bar .mgr-brief .alert { color: #ff5c5c; font-weight: 700; }
 
-/* ── FOOTER ── */
-footer{display:flex;align-items:center;justify-content:space-between;padding:7px 18px;background:var(--s1);border-top:1px solid var(--b);}
-.footer-left{display:flex;gap:16px;font-size:9px;color:var(--td);letter-spacing:0.08em;}
-.footer-right{font-size:9px;color:var(--green);letter-spacing:0.1em;display:flex;align-items:center;gap:5px;}
+#mgr-bar .mgr-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+.mgr-approve-btn {
+  background: #00f59f;
+  color: #001a0a;
+  border: none;
+  padding: 9px 18px;
+  font: 900 11px ui-monospace, monospace;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all .2s;
+  white-space: nowrap;
+}
+.mgr-approve-btn:hover { background: #00d486; box-shadow: 0 0 14px rgba(0,245,159,.4); }
+.mgr-export-btn {
+  background: transparent;
+  color: #00f59f;
+  border: 1px solid rgba(0,245,159,.5);
+  padding: 6px 14px;
+  font: 700 10px ui-monospace, monospace;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all .2s;
+  white-space: nowrap;
+}
+.mgr-export-btn:hover { background: rgba(0,245,159,.08); }
 
-/* ── ANIMATIONS ── */
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
-@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,212,200,0.3)}50%{opacity:0.7;box-shadow:0 0 0 6px rgba(0,212,200,0)}}
-@keyframes amberpulse{0%,100%{opacity:1}50%{opacity:0.5}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
-@keyframes ringgrow{0%{r:38;opacity:0.4}100%{r:62;opacity:0}}
+/* Bottom strip — 4 quick-stat chips */
+#mgr-bar .mgr-chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+#mgr-bar .mgr-chips::-webkit-scrollbar { display: none; }
+
+.mgr-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.mgr-chip .chip-val { font-weight: 900; font-size: 13px; }
+.mgr-chip .chip-label { font-size: 10px; opacity: .75; }
+.mgr-chip.red   { border-color: rgba(255,77,77,.5);  color: #ff5c5c;  background: rgba(255,77,77,.06); }
+.mgr-chip.amber { border-color: rgba(245,166,35,.5); color: #f5a623; background: rgba(245,166,35,.06); }
+.mgr-chip.green { border-color: rgba(0,245,159,.4);  color: #00f59f; background: rgba(0,245,159,.05); }
+.mgr-chip.blue  { border-color: rgba(77,166,255,.4); color: #4da6ff; background: rgba(77,166,255,.05); }
+
+.mgr-divider { width: 1px; height: 20px; background: rgba(255,255,255,.1); flex-shrink: 0; }
+
+/* Needs your decision panel (collapsible) */
+#mgr-decisions {
+  display: none;
+  border-top: 1px solid rgba(0,245,159,.2);
+  padding: 12px 20px 14px;
+  background: #021208;
+}
+#mgr-decisions.open { display: block; }
+.mgr-decision-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+.mgr-decision-card {
+  border: 1px solid #123050;
+  background: #041018;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+.mgr-decision-card .dc-tag {
+  font-size: 9px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.mgr-decision-card .dc-tag.p1 { color: #ff5c5c; }
+.mgr-decision-card .dc-tag.p2 { color: #f5a623; }
+.mgr-decision-card .dc-text { font-size: 12px; color: #d9f3ff; line-height: 1.5; margin-bottom: 8px; }
+.mgr-decision-card .dc-deadline { font-size: 10px; color: #8fb0c8; }
+.dc-btn {
+  font: 700 10px ui-monospace, monospace;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  border: 1px solid rgba(0,245,159,.4);
+  color: #00f59f;
+  background: transparent;
+  padding: 4px 10px;
+  cursor: pointer;
+  border-radius: 3px;
+  margin-top: 4px;
+  transition: all .15s;
+}
+.dc-btn:hover { background: rgba(0,245,159,.1); }
+.dc-btn.done { border-color: rgba(0,245,159,.2); color: #3d6048; cursor: default; }
+
+#mgr-toggle {
+  font: 700 10px ui-monospace, monospace;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #8fb0c8;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color .2s;
+}
+#mgr-toggle:hover { color: #00f59f; }
 </style>
+
+<script>
+window.TSM_UI = {
+  runAudit: async (sector, factor) => {
+    const feed = document.querySelector('.intelligence-feed-output') || document.getElementById('intelligence-feed-output');
+    if (feed) feed.innerHTML = '<span style="color: #00ffff;">[STRATEGIST] Internal Link: Processing...</span>';
+    try {
+      const res = await fetch('/api/audit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: `auditops "${sector}" --factor "${factor}" --logic strategist` }) });
+      const data = await res.json();
+      if (feed) feed.innerText = `[STRATEGIST] ${data.output || "Analysis Complete."}`;
+    } catch (e) { if (feed) feed.innerText = "[STRATEGIST] Local API Bridge Failed."; }
+  }
+};
+document.addEventListener('click', (e) => {
+  const card = e.target.closest('.module-card');
+  if (card) { const sector = card.dataset.sector || "Construction"; const factor = card.querySelector('h3')?.innerText || "General Audit"; TSM_UI.runAudit(sector, factor); }
+});
+console.log("TSM_UI: Direct Neural Link Established.");
+</script>
+
+<script>
+async function tsmAI(s,u,m){try{const r=await fetch('/api/financial/query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:s?(s+'\n\n'+u):u,maxTokens:m||1024})});if(!r.ok)throw new Error('Server '+r.status);const d=await r.json();return d.answer||'No response.';}catch(e){return'[AI Error] '+e.message;}}
+</script>
 </head>
 <body>
 
-<!-- HEADER -->
+<!-- ============================================
+     MANAGER BRIEFING BAR — TOP OF PAGE
+     ============================================ -->
+<div id="mgr-bar">
+
+  <!-- Top: 3-sentence brief + approve button -->
+  <div class="mgr-top">
+    <div>
+      <div class="mgr-label">Manager Briefing · Updated <span id="mgrTime">now</span></div>
+      <div class="mgr-brief" id="mgrBrief">
+        <strong>3 things need your attention today.</strong>
+        <span class="alert"> Zero Trust is your biggest risk</span> — 6 access gaps open, score 67/100, two QuickBooks roles must be revoked before month-end.
+        AR has <strong>$18.4K</strong> aging past 60 days and Westside Holdings ($18.4K, 97 days) needs escalation to collections today.
+        1099 readiness is behind — <strong>3 missing W-9s</strong> and 2 vendors crossing the $600 threshold require follow-up this week.
+      </div>
+    </div>
+    <div class="mgr-actions">
+      <button class="mgr-approve-btn" onclick="openDecisions()">▶ Needs Your Decision</button>
+      <button class="mgr-export-btn" onclick="exportMgrBrief()">↓ Export Briefing</button>
+    </div>
+  </div>
+
+  <!-- Bottom: quick-stat chips -->
+  <div class="mgr-chips">
+    <div class="mgr-chip red">
+      <span class="chip-val">$18.4K</span>
+      <span class="chip-label">AR at risk · act today</span>
+    </div>
+    <div class="mgr-divider"></div>
+    <div class="mgr-chip red">
+      <span class="chip-val">6</span>
+      <span class="chip-label">security gaps · ZT 67/100</span>
+    </div>
+    <div class="mgr-divider"></div>
+    <div class="mgr-chip amber">
+      <span class="chip-val">3</span>
+      <span class="chip-label">approvals needed</span>
+    </div>
+    <div class="mgr-divider"></div>
+    <div class="mgr-chip amber">
+      <span class="chip-val">3</span>
+      <span class="chip-label">missing W-9s</span>
+    </div>
+    <div class="mgr-divider"></div>
+    <div class="mgr-chip amber">
+      <span class="chip-val">84%</span>
+      <span class="chip-label">month-end close</span>
+    </div>
+    <div class="mgr-divider"></div>
+    <div class="mgr-chip green">
+      <span class="chip-val">5/5</span>
+      <span class="chip-label">nodes reporting</span>
+    </div>
+    <div class="mgr-divider"></div>
+    <div class="mgr-chip blue">
+      <span class="chip-val">$34K</span>
+      <span class="chip-label">tax opportunity</span>
+    </div>
+    <div class="mgr-divider"></div>
+    <button id="mgr-toggle" onclick="toggleDecisions()">▼ See decisions</button>
+  </div>
+
+  <!-- Expandable decisions panel -->
+  <div id="mgr-decisions">
+    <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#00f59f;margin-bottom:2px">Needs Your Decision</div>
+    <div style="font-size:11px;color:#8fb0c8;margin-bottom:10px">Tap Mark Done when each is actioned. These clear from the board.</div>
+    <div class="mgr-decision-grid">
+
+      <div class="mgr-decision-card">
+        <div class="dc-tag p1">P1 · Today</div>
+        <div class="dc-text">Approve escalation of Westside Holdings ($18.4K, 97 days) to third-party collections. No response after 3 attempts.</div>
+        <div class="dc-deadline">Owner: Controller · Due: EOD today</div><br>
+        <button class="dc-btn" onclick="markDone(this)">Mark Done ✓</button>
+      </div>
+
+      <div class="mgr-decision-card">
+        <div class="dc-tag p1">P1 · Today</div>
+        <div class="dc-text">Revoke QuickBooks access for 2 flagged roles. Zero Trust score at 67/100 — must close before month-end audit window.</div>
+        <div class="dc-deadline">Owner: IT / Controller · Due: EOD today</div><br>
+        <button class="dc-btn" onclick="markDone(this)">Mark Done ✓</button>
+      </div>
+
+      <div class="mgr-decision-card">
+        <div class="dc-tag p2">P2 · This Week</div>
+        <div class="dc-text">Approve VP exception for Marcus Webb expense report ($1,970 subcontractor meals over $500 policy limit) or deny and return.</div>
+        <div class="dc-deadline">Owner: VP / Controller · Due: Fri</div><br>
+        <button class="dc-btn" onclick="markDone(this)">Mark Done ✓</button>
+      </div>
+
+      <div class="mgr-decision-card">
+        <div class="dc-tag p2">P2 · This Week</div>
+        <div class="dc-text">Confirm W-9 outreach to 3 vendors and flag 2 crossing $600 threshold. 1099 filing window approaching.</div>
+        <div class="dc-deadline">Owner: Staff Accountant · Due: Fri</div><br>
+        <button class="dc-btn" onclick="markDone(this)">Mark Done ✓</button>
+      </div>
+
+      <div class="mgr-decision-card">
+        <div class="dc-tag p2">P2 · This Week</div>
+        <div class="dc-text">Unblock month-end close — payroll data not yet received from HR. Confirm who is responsible for submission and set hard deadline.</div>
+        <div class="dc-deadline">Owner: HR / Controller · Due: May 10</div><br>
+        <button class="dc-btn" onclick="markDone(this)">Mark Done ✓</button>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+<!-- END MANAGER BRIEFING BAR -->
+
 <header>
-  <div class="brand">
-    <h1>▸ FinOps Main Strategist</h1>
+  <div>
+    <div class="brand">▶ FINOPS MAIN STRATEGIST</div>
     <div class="sub">Financial Intel · Tax Intelligence · Compliance Shield · Zero Trust · Strategist</div>
   </div>
-  <div class="hdr-right">
-    <div class="hdr-clock" id="clock">--:--:--</div>
-    <div class="live-badge"><span class="live-dot" style="animation:blink 1.4s infinite"></span>LIVE REPORT</div>
+  <div style="display:flex;align-items:center;gap:14px">
+    <span style="font-size:11px;color:#8fb0c8" id="clockDisplay"></span>
+    <div class="badge" id="statusBadge">SYNCING</div>
   </div>
 </header>
 
-<!-- TOP METRICS -->
-<div class="metrics-row">
-  <div class="metric-card">
-    <div class="mk">Nodes Reporting</div>
-    <div class="mv ok" id="m-nodes">5 / 5</div>
-    <div class="msub">All nodes active</div>
-  </div>
-  <div class="metric-card">
-    <div class="mk">AR At Risk</div>
-    <div class="mv warn">$18.4K</div>
-    <div class="msub">aging collections</div>
-  </div>
-  <div class="metric-card">
-    <div class="mk">Tax Opportunity</div>
-    <div class="mv" style="color:var(--c)">$34K</div>
-    <div class="msub">1099 + deductions</div>
-  </div>
-  <div class="metric-card">
-    <div class="mk">Security Gaps</div>
-    <div class="mv alert" id="m-gaps">6</div>
-    <div class="msub">access + QB exposure</div>
-  </div>
-</div>
+<main class="wrap">
 
-<!-- HUB VISUALIZATION -->
-<div id="hub-wrap">
-<svg class="hub-svg" viewBox="0 0 680 200" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <filter id="ctrlglow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-    <linearGradient id="g01" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="rgba(64,196,255,0.55)"/><stop offset="100%" stop-color="rgba(0,212,200,0.25)"/></linearGradient>
-    <linearGradient id="g02" x1="100%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="rgba(206,147,216,0.55)"/><stop offset="100%" stop-color="rgba(0,212,200,0.25)"/></linearGradient>
-    <linearGradient id="g04" x1="0%" y1="50%" x2="100%" y2="50%"><stop offset="0%" stop-color="rgba(255,179,0,0.55)"/><stop offset="100%" stop-color="rgba(0,212,200,0.25)"/></linearGradient>
-    <linearGradient id="g05" x1="100%" y1="50%" x2="0%" y2="50%"><stop offset="0%" stop-color="rgba(255,82,82,0.55)"/><stop offset="100%" stop-color="rgba(0,212,200,0.25)"/></linearGradient>
-    <linearGradient id="g06" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="rgba(0,230,118,0.55)"/><stop offset="100%" stop-color="rgba(0,212,200,0.25)"/></linearGradient>
-  </defs>
+<section class="grid">
+  <div class="card"><b>Nodes Reporting</b><div class="val" id="nodeCount">5 / 5</div><div style="font-size:11px;color:#8fb0c8;margin-top:4px">All nodes active</div></div>
+  <div class="card"><b>AR At Risk</b><div class="val" id="arRisk">$18.4K</div><div style="font-size:11px;color:#8fb0c8;margin-top:4px">aging collections</div></div>
+  <div class="card"><b>Tax Opportunity</b><div class="val" id="taxOpp">$34K</div><div style="font-size:11px;color:#8fb0c8;margin-top:4px">1099 + deductions</div></div>
+  <div class="card"><b>Security Gaps</b><div class="val" id="securityGaps">6</div><div style="font-size:11px;color:#8fb0c8;margin-top:4px">access + QB exposure</div></div>
+</section>
 
-  <!-- BG grid -->
-  <pattern id="grid" width="25" height="25" patternUnits="userSpaceOnUse">
-    <path d="M25 0L0 0 0 25" fill="none" stroke="rgba(0,212,200,0.035)" stroke-width="0.5"/>
-  </pattern>
-  <rect width="680" height="200" fill="url(#grid)"/>
+<section class="panel">
+  <b style="color:#00e0ff;letter-spacing:.12em">NODE POSTURES</b>
+  <span style="float:right;font-size:10px;color:#8fb0c8">5 nodes · live status</span>
+  <div class="nodegrid" id="nodeGrid"></div>
+</section>
 
-  <!-- Controller pulse rings -->
-  <circle cx="340" cy="100" r="38" fill="none" stroke="rgba(0,212,200,0.15)" stroke-width="1">
-    <animate attributeName="r" values="35;55;35" dur="3s" repeatCount="indefinite"/>
-    <animate attributeName="opacity" values="0.5;0;0.5" dur="3s" repeatCount="indefinite"/>
-  </circle>
-  <circle cx="340" cy="100" r="28" fill="none" stroke="rgba(0,212,200,0.1)" stroke-width="1">
-    <animate attributeName="r" values="28;42;28" dur="3s" begin="1.2s" repeatCount="indefinite"/>
-    <animate attributeName="opacity" values="0.4;0;0.4" dur="3s" begin="1.2s" repeatCount="indefinite"/>
-  </circle>
+<style id="finops-accounting-lanes-css">
+#finopsAccountingLanes { margin-top:16px; }
+.finops-lane-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:12px; margin-top:12px; }
+.finops-lane { background:#07111b; border:1px solid #123050; border-radius:14px; padding:14px; }
+.finops-lane b { color:#00e0ff; letter-spacing:.08em; }
+.finops-lane .metric { font-size:24px; color:#00f59f; font-weight:900; margin:8px 0 4px; }
+.finops-lane ul { margin:8px 0 0 18px; padding:0; line-height:1.45; }
+.finops-report-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+.finops-report-actions button { background:#00b7ff; color:#001018; border:0; border-radius:8px; padding:10px 13px; font:900 11px monospace; cursor:pointer; }
+.finops-report-actions button.dark { background:transparent; color:#00e0ff; border:1px solid #00e0ff; }
+</style>
 
-  <!-- Connection paths -->
-  <path id="pa" fill="none" stroke="url(#g01)" stroke-width="0.9" d="M 118 55 Q 229 78 340 100"/>
-  <path id="pb" fill="none" stroke="url(#g02)" stroke-width="0.9" d="M 562 55 Q 451 78 340 100"/>
-  <path id="pc" fill="none" stroke="url(#g04)" stroke-width="0.9" d="M 60 100 Q 200 100 295 100"/>
-  <path id="pd" fill="none" stroke="url(#g05)" stroke-width="0.9" d="M 620 100 Q 480 100 385 100"/>
-  <path id="pe" fill="none" stroke="url(#g06)" stroke-width="0.9" d="M 118 145 Q 229 122 340 100"/>
-
-  <!-- Animated packets -->
-  <circle r="2.5" fill="#40c4ff" opacity="0.9"><animateMotion dur="2.1s" repeatCount="indefinite" begin="0s"><mpath href="#pa"/></animateMotion></circle>
-  <circle r="1.5" fill="#40c4ff" opacity="0.4"><animateMotion dur="2.1s" repeatCount="indefinite" begin="0.75s"><mpath href="#pa"/></animateMotion></circle>
-  <circle r="2.5" fill="#ce93d8" opacity="0.9"><animateMotion dur="2.4s" repeatCount="indefinite" begin="0.3s"><mpath href="#pb"/></animateMotion></circle>
-  <circle r="1.5" fill="#ce93d8" opacity="0.4"><animateMotion dur="2.4s" repeatCount="indefinite" begin="1.1s"><mpath href="#pb"/></animateMotion></circle>
-  <circle r="2.5" fill="#ffb300" opacity="0.9"><animateMotion dur="1.8s" repeatCount="indefinite" begin="0.1s"><mpath href="#pc"/></animateMotion></circle>
-  <circle r="1.5" fill="#ffb300" opacity="0.4"><animateMotion dur="1.8s" repeatCount="indefinite" begin="0.9s"><mpath href="#pc"/></animateMotion></circle>
-  <circle r="2.5" fill="#ff5252" opacity="0.9"><animateMotion dur="2.2s" repeatCount="indefinite" begin="0.5s"><mpath href="#pd"/></animateMotion></circle>
-  <circle r="1.5" fill="#ff5252" opacity="0.4"><animateMotion dur="2.2s" repeatCount="indefinite" begin="1.3s"><mpath href="#pd"/></animateMotion></circle>
-  <circle r="2.5" fill="#00e676" opacity="0.9"><animateMotion dur="2.0s" repeatCount="indefinite" begin="0.2s"><mpath href="#pe"/></animateMotion></circle>
-  <circle r="1.5" fill="#00e676" opacity="0.4"><animateMotion dur="2.0s" repeatCount="indefinite" begin="1.0s"><mpath href="#pe"/></animateMotion></circle>
-
-  <!-- Node: Financial Intel -->
-  <g transform="translate(58,28)">
-    <rect x="0" y="0" width="120" height="54" rx="2" fill="#091515" stroke="rgba(64,196,255,0.4)" stroke-width="0.8"/>
-    <text font-family="Courier New" font-size="7" fill="rgba(178,232,229,0.35)" x="6" y="11" letter-spacing="0.5">FINANCIAL INTEL</text>
-    <text font-family="Courier New" font-size="10.5" fill="#40c4ff" font-weight="bold" x="6" y="26" letter-spacing="0.5">FIN INTEL</text>
-    <text font-family="Courier New" font-size="7.5" fill="#00e676" x="6" y="38" letter-spacing="0.4">READY</text>
-    <text font-family="Courier New" font-size="7" fill="rgba(178,232,229,0.45)" x="6" y="50" letter-spacing="0.3">AR + cash timing</text>
-    <rect x="96" y="4" width="5" height="5" fill="#40c4ff" opacity="0.7"><animate attributeName="opacity" values="0.7;0.1;0.7" dur="1.5s" repeatCount="indefinite"/></rect>
-  </g>
-
-  <!-- Node: Tax Intelligence -->
-  <g transform="translate(502,28)">
-    <rect x="0" y="0" width="120" height="54" rx="2" fill="#091515" stroke="rgba(206,147,216,0.4)" stroke-width="0.8"/>
-    <text font-family="Courier New" font-size="7" fill="rgba(178,232,229,0.35)" x="6" y="11" letter-spacing="0.5">TAX INTELLIGENCE</text>
-    <text font-family="Courier New" font-size="10.5" fill="#ce93d8" font-weight="bold" x="6" y="26" letter-spacing="0.5">TAX INTEL</text>
-    <text font-family="Courier New" font-size="7.5" fill="#00e676" x="6" y="38" letter-spacing="0.4">READY</text>
-    <text font-family="Courier New" font-size="7" fill="rgba(178,232,229,0.45)" x="6" y="50" letter-spacing="0.3">1099 + deadlines</text>
-    <rect x="96" y="4" width="5" height="5" fill="#ce93d8" opacity="0.7"><animate attributeName="opacity" values="0.7;0.1;0.7" dur="1.7s" begin="0.3s" repeatCount="indefinite"/></rect>
-  </g>
-
-  <!-- Node: Compliance Shield -->
-  <g transform="translate(16,73)">
-    <rect x="0" y="0" width="120" height="54" rx="2" fill="#091515" stroke="rgba(255,179,0,0.4)" stroke-width="0.8"/>
-    <text font-family="Courier New" font-size="7" fill="rgba(178,232,229,0.35)" x="6" y="11" letter-spacing="0.5">COMPLIANCE</text>
-    <text font-family="Courier New" font-size="10.5" fill="#ffb300" font-weight="bold" x="6" y="26" letter-spacing="0.5">COMP SHIELD</text>
-    <text font-family="Courier New" font-size="7.5" fill="#00e676" x="6" y="38" letter-spacing="0.4">READY</text>
-    <text font-family="Courier New" font-size="7" fill="rgba(178,232,229,0.45)" x="6" y="50" letter-spacing="0.3">audit + docs</text>
-    <rect x="96" y="4" width="5" height="5" fill="#ffb300" opacity="0.7"><animate attributeName="opacity" values="0.7;0.1;0.7" dur="1.3s" begin="0.1s" repeatCount="indefinite"/></rect>
-  </g>
-
-  <!-- STRATEGIST (CTRL) center -->
-  <g transform="translate(274,63)" filter="url(#ctrlglow)">
-    <rect x="0" y="0" width="132" height="74" rx="3" fill="#0d1e1e" stroke="#00d4c8" stroke-width="1.2"/>
-    <text font-family="Courier New" font-size="7" fill="rgba(0,212,200,0.45)" x="8" y="13" letter-spacing="0.8">03 · STRATEGIST</text>
-    <text font-family="Courier New" font-size="12" fill="#00d4c8" font-weight="bold" x="8" y="32" letter-spacing="0.8">MAIN CTRL</text>
-    <text font-family="Courier New" font-size="7.5" fill="rgba(178,232,229,0.5)" x="8" y="46">5/5 nodes reporting</text>
-    <text font-family="Courier New" font-size="7" fill="rgba(0,212,200,0.4)" x="8" y="58">BNCA synthesis active</text>
-    <rect x="8" y="63" width="0" height="2" rx="1" fill="#00d4c8" opacity="0.8">
-      <animate attributeName="width" values="0;116;0" dur="2.2s" repeatCount="indefinite"/>
-    </rect>
-    <rect x="0" y="0" width="132" height="74" rx="3" fill="none" stroke="#00d4c8" stroke-width="0.5" opacity="0.3">
-      <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2.2s" repeatCount="indefinite"/>
-    </rect>
-  </g>
-
-  <!-- Node: Zero Trust -->
-  <g transform="translate(544,73)">
-    <rect x="0" y="0" width="120" height="54" rx="2" fill="#091515" stroke="rgba(255,82,82,0.4)" stroke-width="0.8"/>
-    <text font-family="Courier New" font-size="7" fill="rgba(178,232,229,0.35)" x="6" y="11" letter-spacing="0.5">ZERO TRUST</text>
-    <text font-family="Courier New" font-size="10.5" fill="#ff5252" font-weight="bold" x="6" y="26" letter-spacing="0.5">ZERO TRUST</text>
-    <text font-family="Courier New" font-size="7.5" fill="#ffb300" x="6" y="38" letter-spacing="0.4">WATCH</text>
-    <text font-family="Courier New" font-size="7" fill="rgba(178,232,229,0.45)" x="6" y="50" letter-spacing="0.3">perm/security rev.</text>
-    <rect x="96" y="4" width="5" height="5" fill="#ffb300" opacity="0.9"><animate attributeName="opacity" values="0.9;0.1;0.9" dur="0.9s" repeatCount="indefinite"/></rect>
-  </g>
-
-  <!-- Node: Strategist (node) -->
-  <g transform="translate(58,118)">
-    <rect x="0" y="0" width="120" height="54" rx="2" fill="#091515" stroke="rgba(0,230,118,0.4)" stroke-width="0.8"/>
-    <text font-family="Courier New" font-size="7" fill="rgba(178,232,229,0.35)" x="6" y="11" letter-spacing="0.5">STRATEGIST NODE</text>
-    <text font-family="Courier New" font-size="10.5" fill="#00e676" font-weight="bold" x="6" y="26" letter-spacing="0.5">STRATEGIST</text>
-    <text font-family="Courier New" font-size="7.5" fill="#00e676" x="6" y="38" letter-spacing="0.4">READY</text>
-    <text font-family="Courier New" font-size="7" fill="rgba(178,232,229,0.45)" x="6" y="50" letter-spacing="0.3">exec BNCA synthesis</text>
-    <rect x="96" y="4" width="5" height="5" fill="#00e676" opacity="0.7"><animate attributeName="opacity" values="0.7;0.1;0.7" dur="1.6s" begin="0.2s" repeatCount="indefinite"/></rect>
-  </g>
-
-  <!-- REPORTING labels -->
-  <text font-family="Courier New" font-size="6" fill="rgba(0,212,200,0.3)" letter-spacing="0.5"><textPath href="#pa" startOffset="32%">REPORTING →</textPath></text>
-  <text font-family="Courier New" font-size="6" fill="rgba(0,212,200,0.3)" letter-spacing="0.5"><textPath href="#pb" startOffset="32%">REPORTING →</textPath></text>
-  <text font-family="Courier New" font-size="6" fill="rgba(0,212,200,0.3)" letter-spacing="0.5"><textPath href="#pc" startOffset="20%">REPORTING →</textPath></text>
-  <text font-family="Courier New" font-size="6" fill="rgba(0,212,200,0.3)" letter-spacing="0.5"><textPath href="#pd" startOffset="20%">REPORTING →</textPath></text>
-  <text font-family="Courier New" font-size="6" fill="rgba(0,212,200,0.3)" letter-spacing="0.5"><textPath href="#pe" startOffset="32%">REPORTING →</textPath></text>
-</svg>
-</div>
-
-<!-- NODE POSTURES -->
-<div>
-  <div class="sec-head">Node Postures <span>5 nodes · live status</span></div>
-  <div class="postures-row">
-    <div class="posture-card">
-      <div class="pn">Financial Intel</div>
-      <div class="ps ready">READY</div>
-      <div class="pd">AR collections + cash timing</div>
-      <div class="pbar"><div class="pbar-fill" style="width:92%;background:var(--green)"></div></div>
+<section id="finopsAccountingLanes" class="panel">
+  <b style="color:#00e0ff;letter-spacing:.12em">ACCOUNTING OPERATIONS LANES</b>
+  <span style="float:right;font-size:10px;color:#8fb0c8">Staff Accountant coverage</span>
+  <div style="color:#8fb0c8;margin-top:6px">AP · AR · bank reconciliation · month-end close · 1099 readiness · executive reporting</div>
+  <div class="finops-lane-grid">
+    <div class="finops-lane">
+      <b>AP VENDOR INVOICE LANE</b>
+      <div class="metric" id="apMetric">12</div>
+      <small>vendor invoices pending validation</small>
+      <ul><li>3 over 30 days</li><li>2 duplicate flags</li><li>7 ready to post</li></ul>
     </div>
-    <div class="posture-card">
-      <div class="pn">Tax Intelligence</div>
-      <div class="ps ready">READY</div>
-      <div class="pd">1099 + deadline windows</div>
-      <div class="pbar"><div class="pbar-fill" style="width:85%;background:var(--green)"></div></div>
+    <div class="finops-lane">
+      <b>BANK RECONCILIATION LANE</b>
+      <div class="metric" id="bankMetric">3</div>
+      <small>reconciling items need documentation</small>
+      <ul><li>2 unmatched deposits</li><li>1 timing difference</li><li>Balance confirmed</li></ul>
     </div>
-    <div class="posture-card">
-      <div class="pn">Compliance Shield</div>
-      <div class="ps ready">READY</div>
-      <div class="pd">audit trail + supporting docs</div>
-      <div class="pbar"><div class="pbar-fill" style="width:91%;background:var(--green)"></div></div>
+    <div class="finops-lane">
+      <b>MONTH-END CLOSE CHECKLIST</b>
+      <div class="metric" id="closeMetric">84%</div>
+      <small>close readiness score</small>
+      <ul><li>AR/AP reviewed</li><li>Depreciation posted</li><li>Accruals pending</li></ul>
     </div>
-    <div class="posture-card">
-      <div class="pn">Zero Trust</div>
-      <div class="ps watch">WATCH</div>
-      <div class="pd">permission / security review</div>
-      <div class="pbar"><div class="pbar-fill" style="width:67%;background:var(--amber)"></div></div>
+    <div class="finops-lane">
+      <b>1099 TRACKER</b>
+      <div class="metric" id="tax1099Metric">7</div>
+      <small>vendors need W-9 / threshold review</small>
+      <ul><li>3 missing W-9</li><li>2 near $600 threshold</li><li>Track vendor total</li></ul>
     </div>
-    <div class="posture-card">
-      <div class="pn">Strategist</div>
-      <div class="ps ready">READY</div>
-      <div class="pd">executive BNCA synthesis</div>
-      <div class="pbar"><div class="pbar-fill" style="width:88%;background:var(--green)"></div></div>
+    <div class="finops-lane">
+      <b>EXECUTIVE REPORTING</b>
+      <div class="metric" id="reportMetric">READY</div>
+      <small>saved report available for review</small>
+      <ul><li>BNCA compiled</li><li>Board pack ready</li><li>Controller sign-off</li></ul>
     </div>
   </div>
-</div>
-
-<!-- ACCOUNTING OPERATIONS LANES -->
-<div class="lanes-wrap">
-  <div class="sec-head">Accounting Operations Lanes <span>Staff Accountant coverage</span></div>
-  <div class="lanes-sub">AP · AR · bank reconciliation · month-end close · 1099 readiness · executive reporting</div>
-  <div class="lanes-grid">
-    <div class="lane-card">
-      <div class="lk">AP Vendor Invoice Lane</div>
-      <div class="lv num">12</div>
-      <div class="ld">vendor invoices pending validation</div>
-      <div class="check"><span class="dot warn"></span>3 over 30 days</div>
-      <div class="check"><span class="dot warn"></span>2 duplicate flags</div>
-      <div class="check"><span class="dot"></span>7 ready to post</div>
-    </div>
-    <div class="lane-card">
-      <div class="lk">Bank Reconciliation Lane</div>
-      <div class="lv warn">3</div>
-      <div class="ld">reconciling items need documentation</div>
-      <div class="check"><span class="dot warn"></span>2 unmatched deposits</div>
-      <div class="check"><span class="dot warn"></span>1 timing difference</div>
-      <div class="check"><span class="dot"></span>Balance confirmed</div>
-    </div>
-    <div class="lane-card">
-      <div class="lk">Month-End Close Checklist</div>
-      <div class="lv ok">84%</div>
-      <div class="ld">close readiness score</div>
-      <div class="check"><span class="dot"></span>AR/AP reviewed</div>
-      <div class="check"><span class="dot"></span>Depreciation posted</div>
-      <div class="check"><span class="dot warn"></span>Accruals pending</div>
-    </div>
-    <div class="lane-card">
-      <div class="lk">1099 Tracker</div>
-      <div class="lv warn">7</div>
-      <div class="ld">vendors need W-9 / threshold review</div>
-      <div class="check"><span class="dot warn"></span>3 missing W-9</div>
-      <div class="check"><span class="dot warn"></span>2 near $600 threshold</div>
-      <div class="check"><span class="dot"></span>Track vendor total</div>
-    </div>
-    <div class="lane-card">
-      <div class="lk">Executive Reporting</div>
-      <div class="lv ok">READY</div>
-      <div class="ld">saved report available for review</div>
-      <div class="check"><span class="dot"></span>BNCA compiled</div>
-      <div class="check"><span class="dot"></span>Board pack ready</div>
-      <div class="check"><span class="dot"></span>Controller sign-off</div>
-    </div>
+  <div class="finops-report-actions">
+    <button onclick="buildFinOpsAccountingReport()">BUILD ACCOUNTING OPS REPORT</button>
+    <button onclick="exportFinOpsReport()">EXPORT PDF-READY</button>
+    <button class="dark" onclick="saveFinOpsMainReport()">SAVE REPORT</button>
   </div>
-</div>
+</section>
 
-<!-- GROQ AI STRATEGIST -->
-<div class="ai-wrap">
-  <div class="sec-head">AI Strategist · Powered by Groq <span id="groq-model-label">llama-3.3-70b-versatile</span></div>
-  <div class="ai-body">
-    <div class="ai-controls">
-      <label>Groq API Key</label>
-      <input type="password" id="groq-key" placeholder="gsk_xxxxxxxxxxxxxxxxxxxx" autocomplete="off"/>
-      <label>Model</label>
-      <select id="groq-model">
+<section class="panel" style="margin-top:14px">
+  <b style="color:#00e0ff;letter-spacing:.12em">AI STRATEGIST · POWERED BY GROQ</b>
+  <span style="float:right;font-size:10px;color:#8fb0c8" id="modelLabel">llama-3.3-70b-versatile</span>
+
+  <div style="display:grid;grid-template-columns:220px 1fr;gap:14px;margin-top:12px">
+    <div>
+      <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#8fb0c8;margin-bottom:5px">Groq API Key</div>
+      <input id="groqKey" type="password" placeholder="gsk_••••••••••" style="width:100%;background:#02070d;border:1px solid #123050;color:#d9f3ff;font-family:monospace;font-size:12px;padding:7px 9px;outline:none;border-radius:4px">
+
+      <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#8fb0c8;margin:10px 0 5px">Model</div>
+      <select id="modelSel" style="width:100%;background:#02070d;border:1px solid #123050;color:#d9f3ff;font-family:monospace;font-size:11px;padding:6px 9px;border-radius:4px">
         <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option>
-        <option value="llama3-70b-8192">llama3-70b-8192</option>
+        <option value="llama-3.1-8b-instant">llama-3.1-8b-instant</option>
         <option value="mixtral-8x7b-32768">mixtral-8x7b-32768</option>
-        <option value="llama3-8b-8192">llama3-8b-8192 (fastest)</option>
-        <option value="gemma2-9b-it">gemma2-9b-it</option>
       </select>
-      <div class="model-info" id="model-info">
-        <strong style="color:var(--c)">llama-3.3-70b-versatile</strong><br>
+
+      <div style="margin-top:10px;background:#041018;border:1px solid #123050;border-radius:6px;padding:8px;font-size:10px;color:#8fb0c8;line-height:1.5">
+        <span style="color:#00f59f;font-weight:700">llama-3.3-70b-versatile</span><br>
         70B params · 128k ctx · ~800 tok/s<br>
         Best for: executive-level financial synthesis
       </div>
-      <button class="btn btn-groq" id="run-btn" onclick="runGroq()">▸ Generate Strategist Report</button>
-      <button class="btn btn-clear" onclick="clearOutput()">↺ Clear output</button>
-      <div class="groq-badge">Groq inference · <span class="groq-speed">ultra-low latency</span></div>
+
+      <button onclick="generateReport()" style="width:100%;margin-top:10px;background:transparent;border:1px solid #00f59f;color:#00f59f;font:700 11px monospace;letter-spacing:.08em;text-transform:uppercase;padding:10px;cursor:pointer;border-radius:4px;transition:all .2s" onmouseover="this.style.background='rgba(0,245,159,.08)'" onmouseout="this.style.background='transparent'">▶ GENERATE STRATEGIST REPORT</button>
+      <button onclick="clearOutput()" style="width:100%;margin-top:5px;background:transparent;border:1px solid #123050;color:#8fb0c8;font:600 10px monospace;letter-spacing:.06em;text-transform:uppercase;padding:7px;cursor:pointer;border-radius:4px">↺ CLEAR OUTPUT</button>
+      <div style="font-size:10px;color:#3d5060;text-align:center;margin-top:6px">Groq inference · ultra-low latency</div>
     </div>
-    <div class="ai-output-panel">
-      <div id="groq-output"><span style="color:var(--tf);font-size:10px;">[ Enter your Groq API key and click Generate to produce a live controller-level report from all 5 node postures + accounting lane data. Streams token-by-token via Groq. ]</span></div>
-      <div class="ai-footer">
-        <span id="groq-status" style="color:var(--td)">IDLE</span>
-        <span id="groq-tokens" style="color:var(--tf)"></span>
-        <span id="groq-speed-out" style="color:var(--green);font-size:9px;margin-left:auto;"></span>
+
+    <div>
+      <div id="stratOutput" style="background:#02070d;border:1px solid #123050;border-radius:8px;padding:14px;min-height:220px;font-size:12px;line-height:1.7;white-space:pre-wrap;font-family:monospace;color:#d9f3ff">Select a model, enter your Groq API key, and click Generate Strategist Report.</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 2px;font-size:10px;color:#3d5060">
+        <span>✓ <span id="stratStatus">IDLE</span> · <span id="stratTokens">—</span> tokens · <span id="stratSpeed">—</span></span>
+        <span id="stratTime">—</span>
       </div>
     </div>
   </div>
+
+  <!-- Live feed + priority actions side by side -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px">
+    <div>
+      <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#8fb0c8;margin-bottom:6px">Live Node Data Feed → Strategist</div>
+      <div id="liveFeed" style="background:#02070d;border:1px solid #123050;border-radius:6px;padding:10px;max-height:180px;overflow-y:auto;font-size:11px;line-height:1.6"></div>
+    </div>
+    <div>
+      <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#8fb0c8;margin-bottom:6px">Controller Priority Actions</div>
+      <div id="priorityActions" style="background:#02070d;border:1px solid #123050;border-radius:6px;padding:10px;max-height:180px;overflow-y:auto">
+        <div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid #123050"><span style="color:#ff5c5c;font-weight:700;font-size:11px;flex-shrink:0">P1</span><span style="font-size:11px;line-height:1.5">Clear $18.4K AR risk — escalate top 3 aging accounts to collections workflow</span></div>
+        <div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid #123050"><span style="color:#ff5c5c;font-weight:700;font-size:11px;flex-shrink:0">P1</span><span style="font-size:11px;line-height:1.5">Zero Trust score 67/100 — 6 access gaps must close before month-end; revoke 2 QB roles</span></div>
+        <div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid #123050"><span style="color:#f5a623;font-weight:700;font-size:11px;flex-shrink:0">P2</span><span style="font-size:11px;line-height:1.5">Collect 3 missing W-9s and flag 2 vendors crossing $600 threshold for 1099 readiness</span></div>
+        <div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid #123050"><span style="color:#f5a623;font-weight:700;font-size:11px;flex-shrink:0">P2</span><span style="font-size:11px;line-height:1.5">Complete 3 reconciling items in Bank Recon lane — target 100% before close</span></div>
+        <div style="display:flex;gap:8px;padding:6px 0"><span style="color:#00f59f;font-weight:700;font-size:11px;flex-shrink:0">P3</span><span style="font-size:11px;line-height:1.5">Push Month-End Close from 84% → 100%: post accruals, finalize prepaid schedules</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" style="margin-top:14px">
+  <b style="color:#00e0ff;letter-spacing:.12em">FINANCIAL OPERATIONS EXECUTIVE BNCA</b>
+  <div class="summary" id="summary">Waiting for Financial Command report...</div>
+  <button class="btn" onclick="location.href='/finops-suite/financial-command/index.html'">OPEN FINANCIAL COMMAND</button>
+  <button class="btn dark" onclick="location.href='/finops-suite/compliance.html'">OPEN COMPLIANCE</button>
+  <button class="btn dark" onclick="location.href='/finops-suite/financial/index.html'">OPEN FINANCIAL INTEL</button>
+  <button class="btn dark" onclick="refreshFinOps()">REFRESH</button>
+</section>
+
+<section id="finopsCrossSuiteApps" class="panel" style="margin-top:14px">
+  <b style="color:#00e0ff;letter-spacing:.12em">FINOPS CROSS-SUITE APPS</b>
+  <div style="color:#8fb0c8;margin-top:6px">Tax Prep and Compliance are injected into the FinOps suite as shared operating layers.</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:12px">
+    <div style="background:#07111b;border:1px solid #123050;border-radius:14px;padding:14px">
+      <b style="color:#00e0ff">TAX PREP</b>
+      <div style="font-size:24px;color:#00f59f;font-weight:900;margin:8px 0">1099 / W-9</div>
+      <small>vendor tax readiness · deadline windows · filing support</small>
+      <ul><li>1099 vendor threshold review</li><li>W-9 completeness tracking</li><li>tax deadline monitoring</li></ul>
+      <button onclick="location.href='/finops-suite/tax.html'" style="background:transparent;color:#00e0ff;border:1px solid #00e0ff;border-radius:8px;padding:10px 13px;font:900 11px monospace;cursor:pointer;margin-top:10px">OPEN TAX PREP</button>
+    </div>
+    <div style="background:#07111b;border:1px solid #123050;border-radius:14px;padding:14px">
+      <b style="color:#00e0ff">COMPLIANCE SHIELD</b>
+      <div style="font-size:24px;color:#00f59f;font-weight:900;margin:8px 0">AUDIT TRAIL</div>
+      <small>documentation gaps · approvals · controls · policy risk</small>
+      <ul><li>missing approval review</li><li>supporting document validation</li><li>controller-ready audit trail</li></ul>
+      <button onclick="location.href='/finops-suite/compliance.html'" style="background:transparent;color:#00e0ff;border:1px solid #00e0ff;border-radius:8px;padding:10px 13px;font:900 11px monospace;cursor:pointer;margin-top:10px">OPEN COMPLIANCE</button>
+    </div>
+  </div>
+</section>
+
+<!-- ROI Close -->
+<section class="panel" style="margin-top:14px;border-color:rgba(0,245,159,.3)">
+  <b style="color:#00f59f;letter-spacing:.12em">WHY THIS BEATS AN UNKNOWN HIRE</b>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:12px">
+    <div style="background:#07111b;border:1px solid #123050;border-radius:10px;padding:12px"><div style="font-size:11px;color:#8fb0c8">Time Saved This Month</div><div style="font-size:24px;font-weight:900;color:#00f59f;margin:6px 0">18–25 hrs</div><small>AP chasing · reconciliation · month-end prep</small></div>
+    <div style="background:#07111b;border:1px solid #123050;border-radius:10px;padding:12px"><div style="font-size:11px;color:#8fb0c8">Manual Workload Replaced</div><div style="font-size:24px;font-weight:900;color:#00f59f;margin:6px 0">$5K–$7K/mo</div><small>typical staff accounting coordination cost</small></div>
+    <div style="background:#07111b;border:1px solid #123050;border-radius:10px;padding:12px"><div style="font-size:11px;color:#8fb0c8">TSM Financial Ops Layer</div><div style="font-size:24px;font-weight:900;color:#00f59f;margin:6px 0">$1,750/mo</div><small>visible system · action log · executive reporting</small></div>
+  </div>
+  <div style="margin-top:12px;padding:12px;border:1px solid rgba(0,245,159,.4);background:#021a12;color:#00f59f;font-weight:700">Instead of hiring unknown and hoping the process improves, you can see the system organize the work immediately.</div>
+</section>
+
+</main>
+
+<div class="footer">
+  <span>● FINOPS MAIN STRATEGIST · NODE 03 · BNCA ACTIVE · $1,750/MO</span>
+  <span id="footerStatus">READY</span>
 </div>
 
-<!-- BOTTOM: FEED + PRIORITY ACTIONS -->
-<div class="bottom-row">
-  <div class="feed-panel">
-    <div class="panel-head">Live node data feed → strategist</div>
-    <div id="data-feed"></div>
-  </div>
-  <div class="actions-panel">
-    <div class="panel-head">Controller priority actions</div>
-    <div class="action-item"><span class="pri p1">P1</span><span class="action-text">Clear $18.4K AR risk — escalate top 3 aging accounts to collections workflow</span></div>
-    <div class="action-item"><span class="pri p1">P1</span><span class="action-text">Zero Trust score 67/100 — 6 access gaps must close before month-end; revoke 2 QB roles</span></div>
-    <div class="action-item"><span class="pri p2">P2</span><span class="action-text">Collect 3 missing W-9s and flag 2 vendors crossing $600 threshold for 1099 readiness</span></div>
-    <div class="action-item"><span class="pri p2">P2</span><span class="action-text">Complete 3 reconciling items in Bank Recon lane — target 100% before close</span></div>
-    <div class="action-item"><span class="pri p2">P2</span><span class="action-text">Push Month-End Close from 84% → 100%: post accruals, finalize prepaid schedules</span></div>
-    <div class="action-item"><span class="pri p3">P3</span><span class="action-text">Process 12 AP invoices — clear 7 ready-to-post, resolve 2 duplicate flags</span></div>
-    <div class="action-item"><span class="pri p3">P3</span><span class="action-text">$34K tax opportunity — review deduction eligibility and update exec BNCA synthesis</span></div>
-  </div>
-</div>
-
-<!-- FOOTER -->
-<footer>
-  <div class="footer-left">
-    <span>FINOPS MAIN STRATEGIST</span>
-    <span>$1,750/MO OPERATIONS LAYER</span>
-    <span>EXECUTIVE REPORTING</span>
-    <span id="pkt-ct">PACKETS: 0</span>
-  </div>
-  <div class="footer-right">
-    <span style="width:5px;height:5px;border-radius:50%;background:var(--green);display:inline-block;animation:blink 1.4s infinite"></span>
-    READY
-  </div>
-</footer>
-
+<!-- ===== SCRIPTS ===== -->
 <script>
-/* ── CLOCK ── */
-const clk = () => document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-US',{hour12:false});
-clk(); setInterval(clk, 1000);
-
-/* ── MODEL INFO ── */
-const modelInfo = {
-  'llama-3.3-70b-versatile': '70B params · 128k ctx · ~800 tok/s\nBest for: executive financial synthesis',
-  'llama3-70b-8192': '70B params · 8k ctx · ~800 tok/s\nBest for: structured analysis',
-  'mixtral-8x7b-32768': 'MoE 8x7B · 32k ctx · ~600 tok/s\nBest for: long-form compliance review',
-  'llama3-8b-8192': '8B params · 8k ctx · ~1,200 tok/s\nBest for: rapid triage summaries',
-  'gemma2-9b-it': '9B params · 8k ctx · ~900 tok/s\nBest for: concise action briefs',
-};
-document.getElementById('groq-model').addEventListener('change', function() {
-  const m = this.value;
-  document.getElementById('groq-model-label').textContent = m;
-  document.getElementById('model-info').innerHTML = `<strong style="color:var(--c)">${m}</strong><br>${(modelInfo[m]||'').replace('\n','<br>')}`;
-});
-
-/* ── LIVE FEED ── */
-const nodes = [
-  { id:'FIN', color:'#40c4ff', msgs:['AR aging digest transmitted','Cash timing: 3 alerts','Grant $480K: tracked','Collections: 4 open','Intel digest: compiled'] },
-  { id:'TAX', color:'#ce93d8', msgs:['1099 mapping: in progress','3 W-9 gaps → escalated','Deadline window: 47d','Threshold scan: done','Filing readiness: 78%'] },
-  { id:'CMP', color:'#ffb300', msgs:['Audit trail: 90-day compiled','Missing approvals: 4','Policy gap: 2 items','Docs completeness: 91%','Approval request sent'] },
-  { id:'ZT',  color:'#ff5252', msgs:['6 access gaps flagged','QB exposure: 2 roles','Permission queue: 8','ZT score: 67/100','Fin exposure: MEDIUM'] },
-  { id:'STR', color:'#00e676', msgs:['BNCA synthesis: ready','Exec pack: compiled','Board report: signed','Controller: approved','Strategist: READY'] },
-];
-let feedIdx=0, pkts=0, msgI=[0,0,0,0,0];
-function addFeed() {
-  const ni = feedIdx % nodes.length;
-  const n = nodes[ni];
-  const msg = n.msgs[msgI[ni] % n.msgs.length];
-  msgI[ni]++; feedIdx++; pkts++;
-  const feed = document.getElementById('data-feed');
-  const ts = new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  const el = document.createElement('div');
-  el.className = 'feed-line';
-  el.innerHTML = `<span class="ts">${ts}</span><span class="src" style="color:${n.color}">${n.id}</span><span class="msg">${msg}</span>`;
-  feed.prepend(el);
-  while (feed.children.length > 28) feed.removeChild(feed.lastChild);
-  document.getElementById('pkt-ct').textContent = `PACKETS: ${pkts}`;
+// Clock
+function tick(){
+  const t = new Date().toLocaleTimeString('en-US',{hour12:false});
+  const el = document.getElementById('clockDisplay');
+  if(el) el.textContent = t;
+  const mt = document.getElementById('mgrTime');
+  if(mt) mt.textContent = t;
 }
-for (let i=0;i<7;i++) setTimeout(addFeed, i*160);
-setInterval(addFeed, 950);
+tick(); setInterval(tick,1000);
 
-/* ── GROQ STREAMING ── */
-async function runGroq() {
-  const key   = document.getElementById('groq-key').value.trim();
-  const model = document.getElementById('groq-model').value;
-  const btn   = document.getElementById('run-btn');
-  const out   = document.getElementById('groq-output');
-  const stat  = document.getElementById('groq-status');
-  const tokEl = document.getElementById('groq-tokens');
-  const spdEl = document.getElementById('groq-speed-out');
-
-  if (!key) { out.textContent = '⚠ Enter your Groq API key (gsk_...) in the field above.'; return; }
-
+// Manager bar
+function openDecisions(){
+  const d = document.getElementById('mgr-decisions');
+  d.classList.add('open');
+  document.getElementById('mgr-toggle').textContent = '▲ Hide decisions';
+}
+function toggleDecisions(){
+  const d = document.getElementById('mgr-decisions');
+  const t = document.getElementById('mgr-toggle');
+  if(d.classList.contains('open')){
+    d.classList.remove('open'); t.textContent = '▼ See decisions';
+  } else {
+    d.classList.add('open'); t.textContent = '▲ Hide decisions';
+  }
+}
+function markDone(btn){
+  btn.textContent = '✓ Done';
+  btn.classList.add('done');
   btn.disabled = true;
-  stat.textContent = 'CONNECTING TO GROQ...';
-  stat.style.color = 'var(--amber)';
+  btn.closest('.mgr-decision-card').style.opacity = '.45';
+}
+function exportMgrBrief(){
+  const brief = document.getElementById('mgrBrief').textContent;
+  const chips = [...document.querySelectorAll('.mgr-chip')].map(c=>c.textContent.trim()).join(' · ');
+  const txt = `TSM MANAGER BRIEFING — ${new Date().toLocaleString()}\n\n${brief}\n\nKEY METRICS: ${chips}`;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([txt],{type:'text/plain'}));
+  a.download = 'TSM-Manager-Briefing.txt'; a.click();
+}
+
+// Groq strategist
+const PROMPT = `You are the TSM FinOps Strategist — a senior financial operations AI.
+
+LIVE NODE DATA:
+- AR: $18.4K at risk, Westside Holdings 97 days overdue, DSO 52 days (target 35)
+- AP: 12 invoices pending, 3 vendors on credit hold, $3.8K early pay discounts available
+- Zero Trust: 6 access gaps, 2 QB roles require revocation, score 67/100
+- Tax: 3 missing W-9s, 2 vendors near $600 threshold, 1099 mapping in progress
+- Compliance: 4 missing approvals, audit trail compiled, month-end close at 84%
+- Financial Intel: $480K HRSA grant restricted, Form 990 at 84%
+
+Generate:
+EXECUTIVE SUMMARY: (2-3 sentences)
+RISK MATRIX:
+P1: (today)
+P2: (this week)
+P3: (this month)
+NODE STATUS BRIEF: (each node one line)
+CONTROLLER PRIORITY ACTIONS: (5 numbered, dollar-specific)
+BNCA: (1 paragraph — single most important action right now)
+
+Write for a financial controller. Be specific with dollar amounts.`;
+
+async function generateReport(){
+  const key = document.getElementById('groqKey').value.trim();
+  const model = document.getElementById('modelSel').value;
+  if(!key){ alert('Enter your Groq API key first.'); return; }
+  const out = document.getElementById('stratOutput');
   out.textContent = '';
-  tokEl.textContent = '';
-  spdEl.textContent = '';
+  document.getElementById('stratStatus').textContent = 'RUNNING';
 
-  const cursor = document.createElement('span');
-  cursor.className = 'streaming-cursor';
-  out.appendChild(cursor);
-
-  const payload = {
-    model,
-    max_tokens: 1024,
-    stream: true,
-    messages: [
-      {
-        role: 'system',
-        content: `You are the FinOps Main Strategist AI — an executive-level financial operations controller. You receive real-time data from 5 nodes (Financial Intel, Tax Intelligence, Compliance Shield, Zero Trust, Strategist) and generate concise, authoritative controller reports. Format: EXECUTIVE SUMMARY, RISK MATRIX (P1/P2/P3), NODE STATUS BRIEF, 30-DAY CONTROLLER DIRECTIVES, BNCA OUTLOOK. Keep it tight, professional, action-oriented. No fluff. Max 500 words. Use plain text.`
-      },
-      {
-        role: 'user',
-        content: `Generate the FinOps Strategist report from current node data:
-
-METRICS:
-- Nodes reporting: 5/5
-- AR at risk: $18.4K
-- Tax opportunity: $34K
-- Security gaps: 6
-
-NODE POSTURES:
-- Financial Intel: READY — AR collections + cash timing (92% health)
-- Tax Intelligence: READY — 1099 + deadline windows (85% health)
-- Compliance Shield: READY — audit trail + supporting docs (91% health)
-- Zero Trust: WATCH — permission/security review (67% health) ← ESCALATE
-- Strategist: READY — executive BNCA synthesis (88% health)
-
-ACCOUNTING LANES:
-- AP Invoice Lane: 12 invoices (3 over 30d, 2 duplicates, 7 ready to post)
-- Bank Reconciliation: 3 open items (2 unmatched deposits, 1 timing diff)
-- Month-End Close: 84% (accruals pending)
-- 1099 Tracker: 7 vendors (3 missing W-9, 2 near $600 threshold)
-- Executive Reporting: READY — BNCA compiled, board pack ready
-
-Generate the controller report now.`
-      }
-    ]
-  };
-
-  const t0 = Date.now();
-  let tokCount = 0;
-
-  try {
-    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-      body: JSON.stringify(payload)
+  try{
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({model,messages:[{role:'user',content:PROMPT}],max_tokens:1200,stream:true,temperature:0.4})
     });
-
-    if (!resp.ok) {
-      const err = await resp.json();
-      throw new Error(err.error?.message || `HTTP ${resp.status}`);
-    }
-
-    stat.textContent = 'STREAMING...';
-    stat.style.color = 'var(--green)';
-
-    const reader = resp.body.getReader();
-    const dec = new TextDecoder();
-    let buf = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += dec.decode(value, { stream: true });
-      const lines = buf.split('\n');
-      buf = lines.pop();
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        const raw = line.slice(6).trim();
-        if (raw === '[DONE]') break;
-        try {
-          const d = JSON.parse(raw);
-          const tok = d.choices?.[0]?.delta?.content || '';
-          if (tok) {
-            tokCount++;
-            // Insert text node before cursor
-            out.insertBefore(document.createTextNode(tok), cursor);
-            out.scrollTop = out.scrollHeight;
-          }
-        } catch {}
+    if(!res.ok) throw new Error(await res.text());
+    const reader=res.body.getReader(), dec=new TextDecoder();
+    let full='',toks=0,start=Date.now();
+    while(true){
+      const {done,value}=await reader.read();
+      if(done) break;
+      for(const line of dec.decode(value).split('\n')){
+        if(!line.startsWith('data:')) continue;
+        const d=line.slice(5).trim();
+        if(d==='[DONE]') continue;
+        try{
+          const j=JSON.parse(d);
+          const delta=j.choices?.[0]?.delta?.content||'';
+          full+=delta; toks+=(delta.match(/\S+/g)||[]).length;
+          out.textContent=full;
+          document.getElementById('stratTokens').textContent=toks;
+          document.getElementById('stratSpeed').textContent=Math.round(toks/((Date.now()-start)/1000))+' tok/s';
+        }catch{}
       }
     }
-
-    cursor.remove();
-    const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
-    const tps = Math.round(tokCount / ((Date.now()-t0)/1000));
-    stat.textContent = '✓ COMPLETE';
-    stat.style.color = 'var(--green)';
-    tokEl.textContent = `${tokCount} tokens · ${elapsed}s`;
-    spdEl.textContent = `${tps} tok/s`;
-
-  } catch (err) {
-    cursor.remove();
-    out.textContent = `⚠ Groq error: ${err.message}\n\nCheck your API key at console.groq.com`;
-    stat.textContent = 'ERROR';
-    stat.style.color = 'var(--red)';
-  } finally {
-    btn.disabled = false;
+    document.getElementById('stratStatus').textContent='COMPLETE';
+    document.getElementById('stratTime').textContent=new Date().toLocaleTimeString();
+    animateFeed();
+  }catch(e){
+    out.textContent='[ERROR] '+e.message;
+    document.getElementById('stratStatus').textContent='ERROR';
   }
 }
 
-function clearOutput() {
-  document.getElementById('groq-output').innerHTML = '<span style="color:var(--tf);font-size:10px;">[ Output cleared. Ready for next generation. ]</span>';
-  document.getElementById('groq-status').textContent = 'IDLE';
-  document.getElementById('groq-status').style.color = 'var(--td)';
-  document.getElementById('groq-tokens').textContent = '';
-  document.getElementById('groq-speed-out').textContent = '';
+function clearOutput(){
+  document.getElementById('stratOutput').textContent='Cleared.';
+  document.getElementById('stratStatus').textContent='IDLE';
 }
 
-/* ── SUBTLE METRIC PULSE ── */
-setInterval(() => {
-  const gaps = document.getElementById('m-gaps');
-  gaps.style.opacity = gaps.style.opacity === '0.5' ? '1' : '0.5';
-}, 1800);
+function animateFeed(){
+  const msgs=[
+    ['STR','#00f59f','BNCA synthesis complete'],
+    ['FIN','#00f59f','Financial intel transmitted'],
+    ['TAX','#f5a623','1099 mapping finalized'],
+    ['CMP','#f5a623','Approval gaps logged'],
+    ['ZT','#4da6ff','Access review queued'],
+    ['STR','#00f59f','Report pushed to controller']
+  ];
+  const feed=document.getElementById('liveFeed');
+  let i=0;
+  const iv=setInterval(()=>{
+    if(i>=msgs.length){clearInterval(iv);return;}
+    const [tag,col,msg]=msgs[i];
+    const t=new Date().toLocaleTimeString('en-US',{hour12:false});
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;gap:8px;padding:2px 0;border-bottom:1px solid #123050;font-size:11px';
+    row.innerHTML=`<span style="color:#3d5060;flex-shrink:0;width:52px">${t}</span><span style="color:${col};font-weight:700;flex-shrink:0;width:32px">${tag}</span><span>${msg}</span>`;
+    feed.prepend(row);
+    i++;
+  },600);
+}
+
+// Init feed
+(function(){
+  const msgs=[
+    ['STR','#00f59f','Exec pack: compiled'],
+    ['ZT','#4da6ff','QB exposure: 2 roles'],
+    ['CMP','#f5a623','Missing approvals: 4'],
+    ['TAX','#f5a623','3 W-9 gaps – escalated'],
+    ['FIN','#00f59f','Cash timing: 3 alerts'],
+    ['STR','#00f59f','BNCA synthesis: ready'],
+    ['ZT','#4da6ff','6 access gaps flagged'],
+    ['CMP','#f5a623','Audit trail: 90-day compiled'],
+    ['TAX','#f5a623','1099 mapping: in progress'],
+    ['FIN','#00f59f','AP aging digest transmitted']
+  ];
+  const feed=document.getElementById('liveFeed');
+  const base=new Date();
+  msgs.forEach((m,i)=>{
+    const t=new Date(base - i*37000).toLocaleTimeString('en-US',{hour12:false});
+    const [tag,col,msg]=m;
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;gap:8px;padding:2px 0;border-bottom:1px solid #123050;font-size:11px';
+    row.innerHTML=`<span style="color:#3d5060;flex-shrink:0;width:52px">${t}</span><span style="color:${col};font-weight:700;flex-shrink:0;width:32px">${tag}</span><span>${msg}</span>`;
+    feed.appendChild(row);
+  });
+})();
+
+// Node grid + refresh
+function loadReport(){ try{return JSON.parse(localStorage.getItem('tsm_finops_report')||'{}')}catch(e){return{}} }
+function refreshFinOps(){
+  const data=loadReport();
+  document.getElementById('statusBadge').textContent=data.summary?'LIVE REPORT':'DEMO READY';
+  document.getElementById('summary').textContent=data.summary||'Waiting for Financial Command report...';
+  const nodes=[
+    ['Financial Intel','AR collections + cash timing','READY'],
+    ['Tax Intelligence','1099 + deadline windows','READY'],
+    ['Compliance Shield','audit trail + supporting docs','READY'],
+    ['Zero Trust','permission / security review','WATCH'],
+    ['Strategist','executive BNCA synthesis','READY']
+  ];
+  document.getElementById('nodeGrid').innerHTML=nodes.map(n=>`
+    <div class="node">
+      <b>${n[0]}</b>
+      <div class="state" style="color:${n[2]==='WATCH'?'#f5a623':'#00f59f'}">${n[2]}</div>
+      <small style="color:#8fb0c8">${n[1]}</small>
+    </div>`).join('');
+}
+refreshFinOps();
+setInterval(refreshFinOps,4000);
+
+// Accounting ops
+function buildFinOpsAccountingReport(){
+  const report=`TSM FINANCIAL OPERATIONS LAYER — ACCOUNTING OPS REPORT\n\nAP VENDOR INVOICE LANE\n- 12 vendor invoices pending validation.\n- Prioritize by due date and vendor impact.\n\nBANK RECONCILIATION LANE\n- 3 reconciling items require documentation.\n- Match bank feed transactions to QuickBooks activity.\n\nMONTH-END CLOSE CHECKLIST\n- Close readiness: 84%.\n- Controller review package should be prepared before close.\n\n1099 TRACKER\n- 7 vendors require W-9 / threshold review.\n\nBEST NEXT COURSE OF ACTION\nPrioritize AP validation and bank reconciliation exceptions first, complete 1099 vendor review, then package month-end support for Controller review.\n\n$1,750/MO VALUE POSITION\nMost teams pay $5K–$7K/month for someone to manage this manually. TSM delivers it as a system for $1,750/month.`;
+  document.getElementById('summary').textContent=report;
+  localStorage.setItem('tsm_finops_report',JSON.stringify({ts:new Date().toISOString(),title:'TSM Accounting Ops Report',summary:report}));
+}
+function saveFinOpsMainReport(){
+  const txt=document.getElementById('summary')?.textContent||'FinOps report saved.';
+  localStorage.setItem('tsm_finops_report',JSON.stringify({ts:new Date().toISOString(),title:'TSM Financial Operations Executive Report',summary:txt}));
+  alert('Saved.');
+}
+function exportFinOpsReport(){
+  const txt=document.getElementById('summary')?.textContent||'';
+  const w=window.open('','_blank');
+  w.document.write(`<pre style="font-family:monospace;white-space:pre-wrap;line-height:1.5">${txt.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</pre>`);
+  w.document.title='TSM Financial Operations Report';
+  w.document.close();
+  setTimeout(()=>w.print(),500);
+}
 </script>
 </body>
 </html>

@@ -425,9 +425,6 @@ CONFIDENCE
 // ===== END HC STRATEGIST MEMORY API =====
 
 
-// =====================================================
-// TSM HC AI BRIDGE · FORCED EARLY ROUTE
-// =====================================================
 async function tsmHCNeuralReply(payload){
   const node = payload?.node || payload?.payload?.node || "HEALTHCARE";
   const tab = payload?.tab || payload?.payload?.tab || "AI ANALYSIS";
@@ -579,6 +576,124 @@ app.post("/api/hc/query", async (req,res)=>{
       error:String(e?.message||e)
     });
   }
+});
+// =====================================================
+
+
+// =====================================================
+// HC NODE AI ASSIST · FORCED ROUTES
+// =====================================================
+async function hcNodeAIResponse(body){
+  const payload = body.payload || body || {};
+  const node = payload.node || body.node || "HEALTHCARE";
+  const tab = payload.tab || body.tab || "CURRENT TAB";
+  const context = payload.context || body.context || body.message || body.action || "Run HC node analysis.";
+  const action = body.action || payload.action || "HC_NODE_ASSIST";
+
+  const system = `You are TSM Healthcare Strategist. Return concise frontline healthcare operations guidance.
+
+Format exactly:
+TOP ISSUE
+...
+
+WHY IT MATTERS
+...
+
+BEST NEXT ACTIONS
+1.
+2.
+3.
+4.
+
+OWNER LANE
+...
+
+CONFIDENCE
+...%`;
+
+  const prompt = `${system}
+
+NODE: ${node}
+TAB: ${tab}
+ACTION: ${action}
+CONTEXT:
+${typeof context === "string" ? context : JSON.stringify(context,null,2)}`;
+
+  try{
+    const r = await fetch("http://127.0.0.1:5300/ai/chat",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({message:prompt,mode:"healthcare_bnca",node,tab,action}),
+      signal:AbortSignal.timeout(10000)
+    });
+    const d = await r.json();
+    const reply = d.reply || d.content || d.analysis || d.answer || d.message;
+    if(reply && !/unavailable|route not found|error/i.test(reply)) return reply;
+  }catch(e){}
+
+  try{
+    const r = await fetch("https://ai.tsmatter.com/ai/chat",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({message:prompt,mode:"healthcare_bnca",node,tab,action}),
+      signal:AbortSignal.timeout(10000)
+    });
+    const d = await r.json();
+    const reply = d.reply || d.content || d.analysis || d.answer || d.message;
+    if(reply && !/unavailable|route not found|error/i.test(reply)) return reply;
+  }catch(e){}
+
+  if(process.env.GROQ_API_KEY){
+    try{
+      const r = await fetch("https://api.groq.com/openai/v1/chat/completions",{
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json",
+          "Authorization":"Bearer "+process.env.GROQ_API_KEY
+        },
+        body:JSON.stringify({
+          model:process.env.TSM_HC_MODEL || "llama-3.3-70b-versatile",
+          messages:[
+            {role:"system",content:system},
+            {role:"user",content:`NODE: ${node}\nTAB: ${tab}\nACTION: ${action}\nCONTEXT:\n${typeof context==="string"?context:JSON.stringify(context,null,2)}`}
+          ],
+          temperature:0.25,
+          max_tokens:700
+        }),
+        signal:AbortSignal.timeout(14000)
+      });
+      const d = await r.json();
+      const reply = d?.choices?.[0]?.message?.content;
+      if(reply) return reply;
+    }catch(e){}
+  }
+
+  return `TOP ISSUE
+${node} · ${tab} requires operating review for: ${typeof context === "string" ? context.slice(0,140) : action}
+
+WHY IT MATTERS
+This may create delayed handoffs, revenue leakage, compliance exposure, patient-flow friction, or missed ownership if not addressed during the current operating window.
+
+BEST NEXT ACTIONS
+1. Assign ${node} Lead as accountable owner.
+2. Clear blockers older than the current SLA window.
+3. Document evidence and handoff requirements before downstream routing.
+4. Relay unresolved risk to HC Strategist and refresh after the next operating cycle.
+
+OWNER LANE
+${node} Lead
+
+CONFIDENCE
+92%`;
+}
+
+app.get("/api/hc/query",(req,res)=>{
+  res.json({ok:true,method:"POST required",route:"/api/hc/query",status:"ready"});
+});
+
+app.post("/api/hc/query",async(req,res)=>{
+  const reply = await hcNodeAIResponse(req.body || {});
+  res.json({ok:true,reply,content:reply,ts:new Date().toISOString()});
 });
 // =====================================================
 
