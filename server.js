@@ -923,3 +923,39 @@ CONFIDENCE
 // ===============================
 
 app.listen(PORT, () => console.log(`TSM server v3.0 on port ${PORT}`));
+
+// Unified Backend Activation Endpoint
+app.post('/api/triage', async (req, res) => {
+    const { sector, factor, content } = req.body;
+    const GROQ_API_KEY = process.env.GROQ_API_KEY;
+
+    const agentMap = {
+        'audit': 'Agent DJ: Expert in high-speed financial and construction audit extraction.',
+        'compliance': 'Agent Naki: Specialist in regulatory policy gaps and insurance standards.',
+        'behavioral': 'Agent Zaylan: Analytical lead for sentiment and psychological finance patterns.',
+        'network': 'Agent ZyHeir: Coordinator for logistics, node sync, and infrastructure.'
+    };
+
+    const systemPrompt = agentMap[factor] || 'System Strategist: General multi-agent orchestration active.';
+
+    try {
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: { 
+                'Authorization': `Bearer ${GROQ_API_KEY}`,
+                'Content-Type': 'application/json' 
+            },
+            body: JSON.stringify({
+                model: "llama3-70b-8192",
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: `Sector: ${sector}. Process: ${content}` }
+                ]
+            })
+        });
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: 'Backend Activation Failed', details: error.message });
+    }
+});
