@@ -9,7 +9,7 @@ window.runAI = async function(node='operations') {
   if (out) out.innerHTML = "⏳ Running AI Analysis...";
 
   try {
-    const res = await fetch('/api/hc/ask', {
+    const res = await fetch('/api/hc/query', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({

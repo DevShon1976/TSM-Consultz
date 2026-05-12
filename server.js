@@ -9,7 +9,7 @@ require('./groq-route')(app);
 // =====================================================
 // HEALTHCARE ASK · FORCED FIRST SAFE BNCA ROUTE
 // =====================================================
-app.post('/api/hc/ask', express.json({limit:'1mb'}), async (req, res) => {
+app.post('/api/hc/query', express.json({limit:'1mb'}), async (req, res) => {
   const body = req.body || {};
   const node = String(body.nodeKey || body.node || 'operations').toLowerCase().replace(/^hc-/, '');
 
@@ -698,7 +698,7 @@ app.post("/api/hc/query",async(req,res)=>{
 // =====================================================
 
 app.use('/api', apiKeyGuard);
-app.use('/api/hc/ask', aiLimiter);
+app.use('/api/hc/query', aiLimiter);
 app.use('/api/hc/query', aiLimiter);
 app.use('/api/finops/copilot', aiLimiter);
 app.use('/api/insurance/query', aiLimiter);

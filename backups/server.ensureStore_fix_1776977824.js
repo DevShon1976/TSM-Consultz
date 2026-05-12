@@ -958,7 +958,7 @@ async function callGroq(systemPrompt, userMessage) {
   }
 }
 
-app.post('/api/hc/ask', async (req,res)=>{
+app.post('/api/hc/query', async (req,res)=>{
   try{
     const {query='',system='',location='',nodeKey=''} = req.body||{};
     const state = readJson(HC_NODE_STATE_FILE,{});

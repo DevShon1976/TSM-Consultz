@@ -336,7 +336,7 @@ Write the ${formatLabel} for the ${audienceLabel} now. Sharp, specific, sendable
   }
 });
 
-router.post('/api/hc/ask', async (req,res)=>{
+router.post('/api/hc/query', async (req,res)=>{
   try{
     const {query='',system='',location='',nodeKey=''} = req.body||{};
     const state = readJson(HC_NODE_STATE_FILE,{});

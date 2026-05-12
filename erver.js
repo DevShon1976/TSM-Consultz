@@ -158,6 +158,6 @@
 [32m+[m[32m});[m
 [32m+[m
 [32m+[m
- app.post('/api/hc/ask', async (req,res)=>{[m
+ app.post('/api/hc/query', async (req,res)=>{[m
    try{[m
      const {query='',system='',location=''} = req.body||{};[m

@@ -284,7 +284,7 @@ Prioritize by dollar recovery opportunity.`
     _chatHistory: [],
     _model: 'claude-sonnet-4-20250514',
     _maxTokens: 1000,
-    _apiEndpoint: '/api/hc/ask',
+    _apiEndpoint: '/api/hc/query',
 
     /* ── INIT ──────────────────────────────────────────────── */
     init(profileId, nodeId, overrideData) {
