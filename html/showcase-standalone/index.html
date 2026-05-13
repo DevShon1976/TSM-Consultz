@@ -25,7 +25,7 @@
 
         <!-- Main Workspace -->
         <div style="flex: 1; padding: 40px; display: flex; flex-direction: column;">
-            <div id="preview-stage" style="background: #111; border: 2px dashed #f1c40f; padding: 60px; text-align: center; border-radius: 12px; margin-bottom: 30px;">
+            <div id="preview-stage" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);" style="background: #111; border: 2px dashed #f1c40f; padding: 60px; text-align: center; border-radius: 12px; margin-bottom: 30px; cursor: pointer;">
                 <p id="preview-text" style="color: #888;">Select a document to preview content...</p>
             </div>
             
@@ -71,6 +71,20 @@ async function fireEngines() {
         document.getElementById("exec").innerHTML = "92% Confidence Score - Schedule Impact: Low"; 
     } catch (err) { 
         panels.forEach(id => document.getElementById(id).innerHTML = "Error processing document."); 
+    } 
+}
+function dragOverHandler(ev) { ev.preventDefault(); } 
+async function dropHandler(ev) { 
+    ev.preventDefault(); 
+    const file = ev.dataTransfer.items ? ev.dataTransfer.items[0].getAsFile() : ev.dataTransfer.files[0]; 
+    if (file) { 
+        document.getElementById("preview-text").innerHTML = `<strong style="color:#f1c40f">UPLOADING: ${file.name}</strong><br><br>[SCANNING FOR STRUCTURAL DATA...]`; 
+        selected = { name: file.name, type: "Uploaded PDF" }; 
+        
+        // Simulate extraction delay 
+        setTimeout(() => { 
+            document.getElementById("preview-text").innerHTML = `<strong style="color:#f1c40f">READY: ${file.name}</strong><br><br>[OCR COMPLETE]<br>- Structural Text Extracted<br>- Tables Parsed<br>- Ready for 4-Engine Analysis`; 
+        }, 1500); 
     } 
 }
     </script>
