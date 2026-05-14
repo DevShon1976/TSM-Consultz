@@ -1,529 +1,791 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>TSM · CONSTRUCTION INTELLIGENCE SHOWCASE</title>
-<script src="/shared/tsm-zero-trust.js">
-const HC_STORAGE_KEY='tsm_hc_reports';
-let lastReport=null;
-
-function saveReport(){
-  if(!lastReport)return;
-  try{
-    const reports=JSON.parse(localStorage.getItem(HC_STORAGE_KEY)||'[]');
-    reports.unshift({...lastReport,id:Date.now(),saved:new Date().toLocaleString()});
-    localStorage.setItem(HC_STORAGE_KEY,JSON.stringify(reports.slice(0,20)));
-    const t=document.getElementById('saveToast');t.style.display='block';setTimeout(()=>t.style.display='none',2500);
-    loadSavedReports();
-  }catch(e){}
-}
-function loadSavedReports(){
-  try{
-    const reports=JSON.parse(localStorage.getItem(HC_STORAGE_KEY)||'[]');
-    const panel=document.getElementById('savedPanel');const list=document.getElementById('savedList');
-    if(!reports.length){panel.classList.remove('visible');return;}
-    panel.classList.add('visible');
-    list.innerHTML=reports.map(r=>`<div class="saved-item" onclick="loadSaved(${r.id})"><div class="saved-item-title">${r.label}</div><div class="saved-item-meta">${r.saved} · Risk: ${r.risk||'—'} · Conf: ${r.conf||'—'}</div></div>`).join('');
-  }catch(e){}
-}
-function loadSaved(id){
-  try{
-    const reports=JSON.parse(localStorage.getItem(HC_STORAGE_KEY)||'[]');
-    const r=reports.find(x=>x.id===id);if(!r)return;
-    document.getElementById('outBody').textContent=r.summary;
-    document.getElementById('outStatus').textContent='SAVED REPORT';
-    showKPIs({risk:r.risk||'—',flags:r.flags||'—',actions:r.actions||'—',conf:r.conf||'—'});
-    pipeAll();document.getElementById('pushBtn').classList.add('visible');
-  }catch(e){}
-}
-loadSavedReports();
-
-</script>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Construction BNCA · Neural Bridge · TSM</title>
 <style>
-:root{--bg:#0a0f0a;--g:#00ff88;--a:#ffaa00;--b:#00aaff;--r:#ff4444;--dim:#0d150d;--dim2:#0b120b;--border:#1e3a1e;--text:#e0ffe0;--muted:#556655}
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--text);font-family:'Courier New',monospace;font-size:13px}
-.hdr{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--dim2)}
-.hdr-title{font-size:15px;font-weight:700;letter-spacing:3px;color:var(--g)}
-.hdr-sub{font-size:10px;color:var(--muted);letter-spacing:1px;margin-top:2px}
-.back-btn{padding:5px 14px;background:var(--dim2);border:1px solid var(--border);color:var(--muted);font-family:inherit;font-size:10px;font-weight:700;border-radius:4px;cursor:pointer}
-.back-btn:hover{border-color:var(--g);color:var(--g)}
-main{max-width:960px;margin:0 auto;padding:24px 20px 100px}
-.mode-row{display:flex;gap:10px;margin-bottom:24px}
-.mode-btn{flex:1;padding:12px;border:1px solid var(--border);background:var(--dim);color:var(--muted);font-family:inherit;font-size:11px;font-weight:700;letter-spacing:1px;border-radius:6px;cursor:pointer;text-align:center;transition:all .2s}
-.mode-btn.active{border-color:var(--g);color:var(--g);background:#0d1f0d}
-.drop-zone{border:2px dashed var(--border);border-radius:8px;padding:40px;text-align:center;cursor:pointer;transition:all .2s;background:var(--dim);margin-bottom:16px}
-.drop-zone.drag-over{border-color:var(--g);background:#0d1f0d}
-.drop-zone.has-file{border-color:var(--a);border-style:solid}
-.drop-icon{font-size:32px;margin-bottom:12px}
-.drop-title{font-size:13px;font-weight:700;letter-spacing:2px;color:var(--g);margin-bottom:6px}
-.drop-sub{font-size:11px;color:var(--muted)}
-.drop-file-name{font-size:12px;color:var(--a);margin-top:10px;font-weight:700}
-input[type=file]{display:none}
-.sample-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:20px}
-.sample-card{padding:12px;border:1px solid var(--border);border-radius:6px;background:var(--dim);cursor:pointer;transition:all .2s}
-.sample-card:hover,.sample-card.selected{border-color:var(--g);background:#0d1f0d}
-.sample-card.selected{border-color:var(--a)}
-.sc-type{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--a);margin-bottom:4px}
-.sc-name{font-size:12px;color:var(--g);font-weight:700;margin-bottom:4px}
-.sc-desc{font-size:10px;color:var(--muted);line-height:1.5}
-.pipeline{display:flex;align-items:center;gap:0;margin:20px 0;overflow-x:auto;padding:4px 0}
-.pipe-step{display:flex;flex-direction:column;align-items:center;min-width:100px}
-.pipe-dot{width:32px;height:32px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;background:var(--dim);transition:all .4s}
-.pipe-dot.active{border-color:var(--g);background:#0d1f0d;box-shadow:0 0 10px #00ff8844}
-.pipe-dot.done{border-color:var(--a);background:#1a1200}
-.pipe-label{font-size:9px;color:var(--muted);margin-top:4px;text-align:center;letter-spacing:1px}
-.pipe-arrow{color:var(--border);font-size:16px;padding:0 4px;margin-bottom:16px}
-.action-row{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
-.proc-btn{padding:10px 24px;background:#0d1f0d;border:1px solid var(--g);color:var(--g);font-family:inherit;font-size:11px;font-weight:700;letter-spacing:2px;border-radius:4px;cursor:pointer}
-.proc-btn:disabled{opacity:.4;cursor:not-allowed}
-.push-btn{padding:10px 24px;background:#1a1200;border:1px solid var(--a);color:var(--a);font-family:inherit;font-size:11px;font-weight:700;letter-spacing:2px;border-radius:4px;cursor:pointer;display:none}
-.push-btn.visible{display:block}
-.save-btn{padding:10px 24px;background:#0d150d;border:1px solid var(--g);color:var(--g);font-family:inherit;font-size:11px;font-weight:700;letter-spacing:2px;border-radius:4px;cursor:pointer;display:none}
-.save-btn.visible{display:block}
-.saved-panel{margin-top:20px;border:1px solid var(--border);border-radius:6px;background:var(--dim);overflow:hidden;display:none}
-.saved-panel.visible{display:block}
-.saved-hdr{padding:8px 14px;background:var(--dim2);border-bottom:1px solid var(--border);font-size:10px;font-weight:700;letter-spacing:2px;color:var(--g)}
-.saved-list{padding:12px;display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto}
-.saved-item{padding:10px;border:1px solid var(--border);border-radius:4px;background:var(--dim2);cursor:pointer}
-.saved-item:hover{border-color:var(--g)}
-.saved-item-title{font-size:11px;color:var(--g);font-weight:700;margin-bottom:2px}
-.saved-item-meta{font-size:10px;color:var(--muted)}
-.save-toast{position:fixed;top:20px;right:20px;background:#0d1f0d;border:1px solid var(--g);color:var(--g);padding:10px 18px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:1px;z-index:999;display:none}
-.output-panel{border:1px solid var(--border);border-radius:6px;background:var(--dim);overflow:hidden}
-.out-hdr{padding:8px 14px;background:var(--dim2);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-.out-hdr-label{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--g)}
-.out-status{font-size:10px;color:var(--muted)}
-.out-body{padding:16px;min-height:140px;font-size:12px;color:#99cc99;line-height:1.7;white-space:pre-wrap}
-.out-body.thinking{color:var(--a);animation:pulse .8s infinite alternate}
-@keyframes pulse{from{opacity:.5}to{opacity:1}}
-@keyframes zt-blink{0%,100%{opacity:1}50%{opacity:.3}}
-.kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:16px}
-.kpi-card{padding:12px;border:1px solid var(--border);border-radius:6px;background:var(--dim);text-align:center;display:none}
-.kpi-card.visible{display:block}
-.kpi-val{font-size:22px;font-weight:700;color:var(--g)}
-.kpi-lbl{font-size:9px;color:var(--muted);letter-spacing:1px;margin-top:2px}
-.section-label{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);margin-bottom:10px}
-.divider{border:none;border-top:1px solid var(--border);margin:20px 0}
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#020a04;--surface:#061008;--s2:#0a180c;--s3:#0f2010;
+  --border:#163820;--cyan:#00e8c8;--gold:#f5a623;--green:#00ff88;
+  --red:#ff4444;--blue:#00aaff;--purple:#cc88ff;--amber:#ffaa00;
+  --text:#a8d4b0;--muted:#3a6040;--white:#d8f0dc;
+  --mono:'JetBrains Mono','Fira Code','IBM Plex Mono',ui-monospace,monospace;
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--mono);background:var(--bg);color:var(--text);font-size:11px;display:flex;flex-direction:column}
+
+/* TOP BAR */
+.topbar{height:42px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0}
+.tb-left{display:flex;align-items:center;gap:10px}
+.tb-brand-dot{width:10px;height:10px;background:var(--cyan);border-radius:50%;animation:blink 2s infinite;flex-shrink:0}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.tb-title{font-size:13px;font-weight:700;color:var(--cyan);letter-spacing:.2em;text-transform:uppercase}
+.tb-sub{font-size:9px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;border-left:1px solid var(--border);padding-left:10px}
+.tb-right{display:flex;align-items:center;gap:8px}
+.tb-engine-badge{background:rgba(0,232,200,.1);border:1px solid rgba(0,232,200,.35);color:var(--cyan);font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:4px 10px;border-radius:2px}
+.tb-nodes{background:rgba(0,232,200,.12);border:1px solid var(--cyan);color:var(--cyan);font-size:10px;font-weight:700;padding:4px 10px;border-radius:2px}
+.tb-clock{font-size:10px;color:var(--muted);letter-spacing:.08em}
+
+/* MAIN LAYOUT */
+.main{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:14px}
+
+/* SECTION HEADERS */
+.sec-hdr{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.sec-dot{width:7px;height:7px;background:var(--cyan);border-radius:50%;flex-shrink:0}
+.sec-label{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--cyan);font-weight:700}
+.sec-line{flex:1;height:1px;background:var(--border)}
+
+/* STEP 1 — LOAD DOCUMENT */
+.doc-load-block{background:var(--surface);border:1px solid var(--border);padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.drop-zone{border:1px dashed rgba(0,232,200,.3);padding:32px;text-align:center;cursor:pointer;transition:all .2s;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:140px}
+.drop-zone:hover{border-color:var(--cyan);background:rgba(0,232,200,.04)}
+.drop-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.dz-icon{font-size:28px;color:var(--muted)}
+.dz-text{font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.dz-sub{font-size:9px;color:var(--border);letter-spacing:.08em;text-transform:uppercase}
+.doc-paste-area{background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;line-height:1.6;padding:10px;resize:none;width:100%;height:140px;outline:none}
+.doc-paste-area:focus{border-color:rgba(0,232,200,.4)}
+.paste-label{font-size:9px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;margin-bottom:5px}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.fire-btn{background:rgba(245,166,35,.12);border:1px solid var(--gold);color:var(--gold);font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:7px 16px;cursor:pointer;transition:all .2s}
+.fire-btn:hover{background:rgba(245,166,35,.22)}
+.fire-btn:disabled{opacity:.35;cursor:default}
+.sample-btn{background:transparent;border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:6px 12px;cursor:pointer;transition:all .15s}
+.sample-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+.clear-btn{background:transparent;border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:6px 10px;cursor:pointer}
+.key-row{display:flex;align-items:center;gap:8px;margin-top:10px;border-top:1px solid var(--border);padding-top:10px}
+.key-dot{width:7px;height:7px;background:var(--green);border-radius:50%;flex-shrink:0;animation:blink 2s infinite}
+.key-label{font-size:9px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+.key-inp{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:5px 8px;outline:none}
+.key-inp:focus{border-color:rgba(0,232,200,.4)}
+.key-test-btn{background:transparent;border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:5px 10px;cursor:pointer;white-space:nowrap}
+.key-test-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+
+/* PIPELINE */
+.pipeline-block{background:var(--surface);border:1px solid var(--border);padding:14px}
+.pipe-nodes{display:flex;align-items:center;gap:0;flex-wrap:nowrap;overflow-x:auto;padding:4px 0}
+.pipe-node{flex-shrink:0;padding:10px 16px;border:1px solid;position:relative;min-width:140px;transition:all .4s}
+.pipe-node.idle{border-color:var(--border);background:var(--s2);color:var(--muted)}
+.pipe-node.active{border-color:var(--cyan);background:rgba(0,232,200,.08);animation:nodePulse .9s infinite}
+.pipe-node.done{border-color:var(--green);background:rgba(0,255,136,.06)}
+@keyframes nodePulse{0%,100%{box-shadow:0 0 0 rgba(0,232,200,0)}50%{box-shadow:0 0 12px rgba(0,232,200,.35)}}
+.pn-num{font-size:8px;letter-spacing:.16em;text-transform:uppercase;margin-bottom:3px}
+.pn-num.c1{color:var(--cyan)}.pn-num.c2{color:var(--green)}.pn-num.c3{color:var(--purple)}.pn-num.c4{color:var(--gold)}
+.pn-title{font-size:10px;font-weight:700;color:var(--white);letter-spacing:.06em;margin-bottom:4px;text-transform:uppercase}
+.pn-sub{font-size:8px;color:var(--muted);line-height:1.5;text-transform:uppercase;letter-spacing:.06em}
+.pn-state{font-size:8px;letter-spacing:.12em;text-transform:uppercase;margin-top:6px}
+.pn-state.idle{color:var(--muted)}.pn-state.active{color:var(--cyan)}.pn-state.done{color:var(--green)}
+.pipe-arrow{font-size:14px;color:var(--border);padding:0 6px;flex-shrink:0;transition:color .4s}
+.pipe-arrow.done{color:var(--green)}
+
+/* STEP 2 — OUTPUT */
+.output-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.output-pane{background:var(--surface);border:1px solid var(--border);display:flex;flex-direction:column;min-height:180px}
+.op-hdr{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.op-num{font-size:8px;letter-spacing:.14em;text-transform:uppercase;margin-right:6px}
+.op-num.n1{color:var(--cyan)}.op-num.n2{color:var(--green)}.op-num.n3{color:var(--purple)}.op-num.n4{color:var(--gold)}
+.op-name{font-size:10px;font-weight:700;color:var(--white);letter-spacing:.06em;text-transform:uppercase}
+.op-status{font-size:8px;letter-spacing:.12em;text-transform:uppercase;padding:2px 8px;border:1px solid}
+.ops-idle{border-color:var(--border);color:var(--muted)}
+.ops-run{border-color:var(--cyan);color:var(--cyan);animation:statusBlink .8s infinite}
+@keyframes statusBlink{0%,100%{opacity:1}50%{opacity:.4}}
+.ops-done{border-color:var(--green);color:var(--green)}
+.ops-err{border-color:var(--red);color:var(--red)}
+.op-body{flex:1;padding:10px 12px;font-size:10px;line-height:1.7;color:var(--text);white-space:pre-wrap;word-break:break-word;overflow-y:auto;max-height:240px}
+.op-placeholder{color:var(--muted);font-style:italic;font-size:9px}
+.op-footer{border-top:1px solid var(--border);padding:5px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.op-copy{font-family:var(--mono);font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:transparent;border:1px solid var(--border);padding:2px 8px;cursor:pointer}
+.op-copy:hover{color:var(--cyan);border-color:rgba(0,232,200,.4)}
+.op-tokens{font-size:8px;color:var(--muted);letter-spacing:.06em}
+
+/* BOTTOM STATUS BAR */
+.statusbar{height:28px;background:var(--surface);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0}
+.sb-left{display:flex;align-items:center;gap:10px}
+.sb-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 2s infinite}
+.sb-text{font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.sb-mid{display:flex;gap:16px}
+.sb-stat{font-size:9px;color:var(--muted);letter-spacing:.06em}
+.sb-stat span{color:var(--text)}
+.fire-all-btn{background:rgba(245,166,35,.12);border:1px solid var(--gold);color:var(--gold);font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 14px;cursor:pointer}
+.fire-all-btn:hover{background:rgba(245,166,35,.22)}
+.fire-all-btn:disabled{opacity:.35;cursor:default}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border)}
 </style>
-<script>
-window.TSM_UI = {
-    runAudit: async (sector, factor) => {
-        const feed = document.querySelector('.intelligence-feed-output') || document.getElementById('intelligence-feed-output');
-        if (feed) feed.innerHTML = '<span style="color: #00ffff;">[STRATEGIST] Internal Link: Processing...</span>';
-        try {
-            const res = await fetch('/api/audit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query: `auditops "${sector}" --factor "${factor}" --logic strategist` })
-            });
-            const data = await res.json();
-            if (feed) feed.innerText = `[STRATEGIST] ${data.output || "Analysis Complete."}`;
-        } catch (e) {
-            if (feed) feed.innerText = "[STRATEGIST] Local API Bridge Failed.";
-        }
-    }
-};
-// Wire the sector cards to the auto-fill search prompt logic
-document.addEventListener('click', (e) => {
-    const card = e.target.closest('.module-card');
-    if (card) {
-        const sector = card.dataset.sector || "Construction";
-        const factor = card.querySelector('h3')?.innerText || "General Audit";
-        TSM_UI.runAudit(sector, factor);
-    }
-});
-console.log("TSM_UI: Direct Neural Link Established.");
-</script>
-<script>
-window.TSM_UI = {
-    runAudit: async (sector, factor) => {
-        const feed = document.querySelector('.intelligence-feed-output') || document.getElementById('intelligence-feed-output');
-        if (feed) feed.innerHTML = '<span style="color: #00ffff;">[STRATEGIST] Internal Link: Processing...</span>';
-        try {
-            const res = await fetch('/api/audit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query: `auditops "${sector}" --factor "${factor}" --logic strategist` })
-            });
-            const data = await res.json();
-            if (feed) feed.innerText = `[STRATEGIST] ${data.output || "Analysis Complete."}`;
-        } catch (e) {
-            if (feed) feed.innerText = "[STRATEGIST] Local API Bridge Failed.";
-        }
-    }
-};
-// Wire the sector cards to the auto-fill search prompt logic
-document.addEventListener('click', (e) => {
-    const card = e.target.closest('.module-card');
-    if (card) {
-        const sector = card.dataset.sector || "Construction";
-        const factor = card.querySelector('h3')?.innerText || "General Audit";
-        TSM_UI.runAudit(sector, factor);
-    }
-});
-console.log("TSM_UI: Direct Neural Link Established.");
-</script>
+  <link rel="stylesheet" href="/shared/tsm-shared.css">
+  <script src="/shared/tsm-shared.js"></script>
 </head>
 <body>
-<div class="save-toast" id="saveToast">✅ REPORT SAVED</div>
-<div class="hdr">
-  <div>
-    <div class="hdr-title">🏗️ CONSTRUCTION INTELLIGENCE SHOWCASE</div>
-    <div class="hdr-sub">TSM NODE CHAIN · PROJECT OPS · COST · SCHEDULE · RISK</div>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="tb-left">
+    <div class="tb-brand-dot"></div>
+    <div class="tb-title">Construction BNCA · Neural Bridge</div>
+    <div class="tb-sub">4-App Document Processing · TSM Neural Core</div>
   </div>
-  <button class="back-btn" onclick="history.back()">← BACK</button>
+  <div class="tb-right">
+    <div class="tb-engine-badge">⚡ TSM Neural Core Engine</div>
+    <div class="tb-nodes" id="nodeCounter">0 / 4 Nodes</div>
+    <div class="tb-clock" id="clock">--:--:--</div>
+  </div>
 </div>
-<main>
-  <!-- HOW TO GUIDE -->
-  <div style="border:1px solid #1e3a1e;border-radius:6px;background:#0d150d;padding:16px;margin-bottom:24px">
-    <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:#ffaa00;margin-bottom:12px">📖 HOW TO USE THIS SHOWCASE</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">
-      <div style="padding:10px;border:1px solid #1e3a1e;border-radius:4px;background:#0b120b">
-        <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:#00ff88;margin-bottom:6px">STEP 1 · CHOOSE MODE</div>
-        <div style="font-size:11px;color:#889988;line-height:1.6">Use <span style="color:#ffaa00">SAMPLE DOCUMENT</span> to demo with pre-loaded healthcare/finops docs — no file needed. Use <span style="color:#ffaa00">ACTUAL DOCUMENT</span> to upload a real client file (PDF, Excel, CSV, Word).</div>
+
+<!-- MAIN SCROLL AREA -->
+<div class="main">
+
+  <!-- STEP 1: LOAD DOCUMENT -->
+  <div>
+    <div class="sec-hdr">
+      <div class="sec-dot"></div>
+      <div class="sec-label">Step 1 · Load Construction Document</div>
+      <div class="sec-line"></div>
+    </div>
+    <div class="doc-load-block">
+      <div>
+        <div class="drop-zone" id="dropZone">
+          <input type="file" id="fileInput" accept=".txt,.pdf,.doc,.docx,.csv,.xlsx,.msg" onchange="handleFile(event)">
+          <div class="dz-icon">↑</div>
+          <div class="dz-text">Drop Document Here</div>
+          <div class="dz-sub">TXT · PDF · DOC · CSV · XLS · MSG</div>
+        </div>
+        <div class="btn-row">
+          <button class="fire-btn" id="fireBtn" onclick="fireAll()" disabled>⚡ Fire All 4 Apps</button>
+          <button class="sample-btn" onclick="loadSample('fastener')">Sample: Fastener Delay</button>
+          <button class="sample-btn" onclick="loadSample('gl')">Sample: GL Extract Q1</button>
+          <button class="sample-btn" onclick="loadSample('lien')">Sample: Lien Waiver</button>
+          <button class="sample-btn" onclick="loadSample('timesheet')">Sample: Labor Timesheet</button>
+          <button class="sample-btn" onclick="loadSample('expenditure')">Sample: HOME Expenditure</button>
+          <button class="clear-btn" onclick="clearAll()">Clear</button>
+        </div>
+        <div class="key-row">
+          <div class="key-dot"></div>
+          <div class="key-label">TSM Neural Core Key</div>
+          <input type="password" class="key-inp" id="groqKey" placeholder="gsk_••••••••••••••••••••••••••••••••">
+          <button class="key-test-btn" onclick="testKey()">Test</button>
+        </div>
       </div>
-      <div style="padding:10px;border:1px solid #1e3a1e;border-radius:4px;background:#0b120b">
-        <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:#00ff88;margin-bottom:6px">STEP 2 · SELECT OR UPLOAD</div>
-        <div style="font-size:11px;color:#889988;line-height:1.6">Click any <span style="color:#ffaa00">sample card</span> to select it — it highlights gold when active. For actual docs, drag and drop your file onto the upload zone or click to browse.</div>
-      </div>
-      <div style="padding:10px;border:1px solid #1e3a1e;border-radius:4px;background:#0b120b">
-        <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:#00ff88;margin-bottom:6px">STEP 3 · PROCESS</div>
-        <div style="font-size:11px;color:#889988;line-height:1.6">Hit <span style="color:#00ff88">▶ PROCESS DOCUMENT</span>. Watch the <span style="color:#ffaa00">node chain pipeline</span> light up step by step — INGEST → PARSE → AI ANALYSIS → BNCA → REPORT.</div>
-      </div>
-      <div style="padding:10px;border:1px solid #1e3a1e;border-radius:4px;background:#0b120b">
-        <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:#00ff88;margin-bottom:6px">STEP 4 · READ THE OUTPUT</div>
-        <div style="font-size:11px;color:#889988;line-height:1.6">AI returns a <span style="color:#00ff88">Document Summary</span>, Key Findings, Risk Level, Flags, and a Best Next Course of Action. KPI cards populate below the output panel.</div>
-      </div>
-      <div style="padding:10px;border:1px solid #1e3a1e;border-radius:4px;background:#0b120b">
-        <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:#00ff88;margin-bottom:6px">STEP 5 · PUSH TO STRATEGIST</div>
-        <div style="font-size:11px;color:#889988;line-height:1.6">Hit <span style="color:#ffaa00">→ PUSH TO CONSTRUCTION STRATEGIST</span> to send the report into the full HC command suite for cross-node action and follow-up.</div>
-      </div>
-      <div style="padding:10px;border:1px solid #1e3a1e;border-radius:4px;background:#0b120b">
-        <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:#00ff88;margin-bottom:6px">💡 BEST DEMO DOCS</div>
-        <div style="font-size:11px;color:#889988;line-height:1.6">Bank reconciliation · AP aging · GL extract · Denial report · Variance report · Audit finding. Any of these will produce the strongest AI output.</div>
+      <div>
+        <div class="paste-label">Or Paste Document Text</div>
+        <textarea class="doc-paste-area" id="docPaste" placeholder="Enter a document to begin neural processing..." oninput="onPasteInput()"></textarea>
+        <div style="font-size:9px;color:var(--muted);margin-top:5px;letter-spacing:.06em" id="pasteStatus">No document loaded</div>
       </div>
     </div>
   </div>
-  <!-- END HOW TO -->
-  <div class="section-label">SELECT MODE</div>
-  <div class="mode-row">
-    <button class="mode-btn active" id="mode-sample" onclick="setMode('sample')">📋 SAMPLE DOCUMENT<br><span style="font-weight:400;font-size:9px;color:var(--muted)">Pre-loaded demo docs</span></button>
-    <button class="mode-btn" id="mode-actual" onclick="setMode('actual')">📁 ACTUAL DOCUMENT<br><span style="font-weight:400;font-size:9px;color:var(--muted)">Upload your real file</span></button>
-  </div>
-  <div id="panel-sample">
-    <div class="section-label">CHOOSE A SAMPLE DOCUMENT</div>
-    <div class="sample-grid">
-      <div class="sample-card" onclick="selectSample(this,'bank-recon')"><div class="sc-type">FINOPS</div><div class="sc-name">Bank Reconciliation</div><div class="sc-desc">Q1 recon with $48K variance flagged across 3 accounts</div></div>
-      <div class="sample-card" onclick="selectSample(this,'ap-aging')"><div class="sc-type">BILLING</div><div class="sc-name">AP Aging Report</div><div class="sc-desc">180-day aging · 22 vendors · $312K outstanding</div></div>
-      <div class="sample-card" onclick="selectSample(this,'denial-report')"><div class="sc-type">INSURANCE</div><div class="sc-name">Denial Report</div><div class="sc-desc">18.4% denial rate · prior auth friction · 247 claims pending</div></div>
-      <div class="sample-card" onclick="selectSample(this,'gl-extract')"><div class="sc-type">FINANCIAL</div><div class="sc-name">GL Extract</div><div class="sc-desc">Q1 extract · revenue vs budget variance by cost center</div></div>
-      <div class="sample-card" onclick="selectSample(this,'audit-finding')"><div class="sc-type">COMPLIANCE</div><div class="sc-name">Audit Finding</div><div class="sc-desc">HIPAA gap · 3 open findings · Joint Commission prep</div></div>
-      <div class="sample-card" onclick="selectSample(this,'variance-report')"><div class="sc-type">OPERATIONS</div><div class="sc-name">Variance Report</div><div class="sc-desc">Staffing vs budget · intake throughput lag · scheduling pressure</div></div>
+
+  <!-- NEURAL PIPELINE -->
+  <div>
+    <div class="sec-hdr">
+      <div class="sec-dot"></div>
+      <div class="sec-label">Neural Connectivity · 4-App Pipeline</div>
+      <div class="sec-line"></div>
+    </div>
+    <div class="pipeline-block">
+      <div class="pipe-nodes">
+        <div class="pipe-node idle" id="pn-1">
+          <div class="pn-num c1">App 01</div>
+          <div class="pn-title">BNCA Nodes</div>
+          <div class="pn-sub">Intel · Triage<br>Flags · Risk ID</div>
+          <div class="pn-state idle" id="pns-1">Standby</div>
+        </div>
+        <div class="pipe-arrow" id="pa-1">─►</div>
+        <div class="pipe-node idle" id="pn-2">
+          <div class="pn-num c2">App 02</div>
+          <div class="pn-title">HC Strategist</div>
+          <div class="pn-sub">RFI · Alerts<br>Priorities · Costs</div>
+          <div class="pn-state idle" id="pns-2">Standby</div>
+        </div>
+        <div class="pipe-arrow" id="pa-2">─►</div>
+        <div class="pipe-node idle" id="pn-3">
+          <div class="pn-num c3">App 03</div>
+          <div class="pn-title">Main Strategist</div>
+          <div class="pn-sub">Letters · Mitigation<br>Actions · Schedule</div>
+          <div class="pn-state idle" id="pns-3">Standby</div>
+        </div>
+        <div class="pipe-arrow" id="pa-3">─►</div>
+        <div class="pipe-node idle" id="pn-4">
+          <div class="pn-num c4">App 04</div>
+          <div class="pn-title">Executive Portal</div>
+          <div class="pn-sub">CFO · Revenue<br>Owner · Roadmap</div>
+          <div class="pn-state idle" id="pns-4">Standby</div>
+        </div>
+      </div>
     </div>
   </div>
-  <div id="panel-actual" style="display:none">
-    <div class="section-label">UPLOAD YOUR DOCUMENT</div>
-    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
-      <div class="drop-icon">📄</div>
-      <div class="drop-title">DROP FILE HERE</div>
-      <div class="drop-sub">PDF · Excel · CSV · Word · drag and drop supported</div>
-      <div class="drop-file-name" id="dropFileName"></div>
+
+  <!-- STEP 2: LIVE OUTPUT -->
+  <div>
+    <div class="sec-hdr">
+      <div class="sec-dot"></div>
+      <div class="sec-label">Step 2 · Live Neural Output — All 4 Apps</div>
+      <div class="sec-line"></div>
     </div>
-    <input type="file" id="fileInput" accept=".pdf,.xlsx,.xls,.csv,.docx,.doc,.txt">
-  </div>
-  <hr class="divider">
-  <div class="section-label">NODE CHAIN PIPELINE</div>
-  <div class="pipeline">
-    <div class="pipe-step"><div class="pipe-dot" id="pipe-0">📥</div><div class="pipe-label">INGEST</div></div>
-    <div class="pipe-arrow">──▶</div>
-    <div class="pipe-step"><div class="pipe-dot" id="pipe-1">🔍</div><div class="pipe-label">PARSE</div></div>
-    <div class="pipe-arrow">──▶</div>
-    <div class="pipe-step"><div class="pipe-dot" id="pipe-2">🧠</div><div class="pipe-label">AI ANALYSIS</div></div>
-    <div class="pipe-arrow">──▶</div>
-    <div class="pipe-step"><div class="pipe-dot" id="pipe-3">⚡</div><div class="pipe-label">BNCA</div></div>
-    <div class="pipe-arrow">──▶</div>
-    <div class="pipe-step"><div class="pipe-dot" id="pipe-4">📊</div><div class="pipe-label">REPORT</div></div>
-  </div>
-  <div class="action-row">
-    <button class="proc-btn" id="procBtn" onclick="processDoc()" disabled>▶ PROCESS DOCUMENT</button>
-    <button class="save-btn" id="saveBtn" onclick="saveReport()">💾 SAVE REPORT</button>
-    <button class="push-btn" id="pushBtn" onclick="pushToStrategist()">→ PUSH TO CONSTRUCTION STRATEGIST</button>
-  </div>
-  <div class="output-panel">
-    <div class="out-hdr">
-      <div class="out-hdr-label">⚡ AI ANALYSIS OUTPUT</div>
-      <div class="out-status" id="outStatus">READY</div>
+    <div class="output-grid">
+      <div class="output-pane">
+        <div class="op-hdr">
+          <div><span class="op-num n1">01</span><span class="op-name">BNCA Command Nodes</span></div>
+          <div class="op-status ops-idle" id="ops-1">Standby</div>
+        </div>
+        <div class="op-body" id="op-1"><span class="op-placeholder">Waiting for document load…</span></div>
+        <div class="op-footer"><button class="op-copy" onclick="copyOutput(1)">Copy</button><span class="op-tokens" id="otkn-1">—</span></div>
+      </div>
+      <div class="output-pane">
+        <div class="op-hdr">
+          <div><span class="op-num n2">02</span><span class="op-name">HC Strategist</span></div>
+          <div class="op-status ops-idle" id="ops-2">Standby</div>
+        </div>
+        <div class="op-body" id="op-2"><span class="op-placeholder">Waiting for App 01…</span></div>
+        <div class="op-footer"><button class="op-copy" onclick="copyOutput(2)">Copy</button><span class="op-tokens" id="otkn-2">—</span></div>
+      </div>
+      <div class="output-pane">
+        <div class="op-hdr">
+          <div><span class="op-num n3">03</span><span class="op-name">Main Strategist</span></div>
+          <div class="op-status ops-idle" id="ops-3">Standby</div>
+        </div>
+        <div class="op-body" id="op-3"><span class="op-placeholder">Waiting for App 02…</span></div>
+        <div class="op-footer"><button class="op-copy" onclick="copyOutput(3)">Copy</button><span class="op-tokens" id="otkn-3">—</span></div>
+      </div>
+      <div class="output-pane">
+        <div class="op-hdr">
+          <div><span class="op-num n4">04</span><span class="op-name">Executive Portal</span></div>
+          <div class="op-status ops-idle" id="ops-4">Standby</div>
+        </div>
+        <div class="op-body" id="op-4"><span class="op-placeholder">Waiting for App 03…</span></div>
+        <div class="op-footer"><button class="op-copy" onclick="copyOutput(4)">Copy</button><span class="op-tokens" id="otkn-4">—</span></div>
+      </div>
     </div>
-    <div class="out-body" id="outBody">&gt; Select a document and press PROCESS to begin node chain analysis.</div>
   </div>
-  <div class="kpi-row" id="kpiRow">
-    <div class="kpi-card" id="kpi-risk"><div class="kpi-val" id="kv-risk">—</div><div class="kpi-lbl">PROJECT RISK</div></div>
-    <div class="kpi-card" id="kpi-flag"><div class="kpi-val" id="kv-flag">—</div><div class="kpi-lbl">ISSUES FOUND</div></div>
-    <div class="kpi-card" id="kpi-action"><div class="kpi-val" id="kv-action">—</div><div class="kpi-lbl">ACTIONS REQUIRED</div></div>
-    <div class="kpi-card" id="kpi-conf"><div class="kpi-val" id="kv-conf">—</div><div class="kpi-lbl">AI CONFIDENCE</div></div>
+
+</div><!-- /main -->
+
+<!-- STATUS BAR -->
+<div class="statusbar">
+  <div class="sb-left">
+    <div class="sb-dot"></div>
+    <div class="sb-text">HC BNCA Neural Bridge</div>
   </div>
-  <div class="saved-panel" id="savedPanel">
-    <div class="saved-hdr">💾 SAVED HC REPORTS</div>
-    <div class="saved-list" id="savedList"></div>
+  <div class="sb-mid">
+    <div class="sb-stat" id="sb-apps"><span id="appsActive">0</span> / 4 Apps Active</div>
+    <div class="sb-stat" id="sb-doc">No document loaded</div>
+    <div class="sb-stat">tsm-neural-core: <span style="color:var(--cyan)">llama-3.3-70b-versatile</span></div>
   </div>
-</main>
+  <button class="fire-all-btn" id="fireAllBtn" onclick="fireAll()" disabled>⚡ Fire All</button>
+</div>
+
 <script>
-const SAMPLES={
-  'job-cost':{label:'Job Cost Report · Project Alpha',content:'Project Alpha job cost. Budget: $2.8M. Actual: $3.1M. Variance: +$300K. Overages in concrete (+$120K), labor (+$90K), and materials (+$70K). Schedule delay: 18 days.'},
-  'vendor-aging':{label:'Vendor Payables Aging',content:'Vendor aging. Current: $140K. 30-60d: $110K. 60-90d: $80K. 90+d: $95K. Total: $425K. Top vendors: SteelCo $88K, ConcretePro $74K. 4 vendors flagged for delayed payment risk.'},
-  'change-orders':{label:'Change Order Log',content:'Change orders pending: 14. Approved: 9. Pending value: $180K. Disputed: 3. Delays tied to design revisions and site conditions.'},
-  'safety-report':{label:'Site Safety Report',content:'Safety incidents: 3. Near misses: 7. OSHA compliance gaps: 2. Missing PPE compliance logs in 2 crews. Inspection scheduled in 14 days.'},
-  'schedule-variance':{label:'Schedule Variance Report',content:'Project delay: 21 days. Critical path impacted by framing and electrical subcontractors. Weather delays: 5 days. Labor shortage: 3 crews short.'},
-  'budget-variance':{label:'Project Budget Variance',content:'Budget vs actual variance across trades. Electrical +$60K, Plumbing +$42K, HVAC +$38K. Forecast overrun: $210K if trend continues.'}
+// ── SAMPLE DOCUMENTS ─────────────────────────────────────────────────
+const SAMPLES = {
+  fastener: {
+    name: 'Fastener_Supply_Delay_Notice.msg',
+    text: `FASTENER SUPPLY DELAY NOTICE
+From: PacSteel Procurement Dept.
+To: Site Superintendent R. Kowalski / Project Manager
+Re: Structural Fastener Shipment Delay — Block C Steel Erection Phase
+Date: May 10, 2026
+
+DELAY NOTIFICATION:
+We regret to inform you that the scheduled delivery of structural fasteners (Grade A325 bolts, 3/4" x 2.5", Qty: 12,400 units) for Block C has been delayed by an estimated 9 calendar days. Original delivery: May 13, 2026. Revised ETA: May 22, 2026.
+
+ROOT CAUSE:
+Manufacturing backlog at our Phoenix distribution hub due to a secondary supplier quality hold on one lot of raw stock. Lot #PST-2026-0441 failed ASTM F3125 torque testing. Replacement lot sourced from our Denver facility.
+
+AFFECTED WORK PACKAGES:
+- Steel frame erection Phase 2 (currently 38% complete)
+- Connection plates and moment frame assembly
+- Pre-engineered metal building anchor bolt sets (secondary impact)
+
+COST EXPOSURE:
+- Crane standby: $4,200/day x estimated 9 days = $37,800
+- Labor idle time: estimated 18 ironworkers @ $64/hr x 72 hrs = $82,944
+- Total preliminary exposure: $120,744
+
+MITIGATION OPTIONS:
+1. Source alternative: Hilti HUS3 anchors (price premium ~$0.85/unit = +$10,540)
+2. Re-sequence: Advance MEP rough-in on floors 1-2 while steel delayed
+3. Partial delivery: 40% of order from Denver stock available May 16
+
+REQUIRED DECISION BY: May 12, 2026 (48 hours)
+Contact: procurement@pacsteel.com | (602) 555-0194`
+  },
+
+  gl: {
+    name: 'GL_Extract_Q1.csv',
+    text: `GL EXTRACT — QUARTER 1 2026
+Entity: Ameris Construction Group
+Period: January 1 – March 31, 2026
+Prepared by: Finance Department
+
+REVENUE ACCOUNTS:
+4000 - Contract Revenue: $2,418,200 (Budget: $2,800,000, Variance: -$381,800, -13.6%)
+4010 - Change Order Revenue: $142,000 (Budget: $80,000, Variance: +$62,000, +77.5%)
+4020 - Retainage Released: $84,000 (Budget: $120,000, Variance: -$36,000, -30.0%)
+Total Revenue: $2,644,200 (Budget: $3,000,000, Variance: -$355,800, -11.9%)
+
+COST OF WORK:
+5000 - Direct Labor: $892,100 (Budget: $940,000, Variance: -$47,900, -5.1%)
+5010 - Subcontractor Costs: $684,200 (Budget: $620,000, Variance: +$64,200, +10.4%)
+5020 - Materials: $512,440 (Budget: $400,000, Variance: +$112,440, +28.1%)
+5030 - Equipment Rental: $98,600 (Budget: $85,000, Variance: +$13,600, +16.0%)
+5040 - Other Direct Costs: $44,200 (Budget: $35,000, Variance: +$9,200, +26.3%)
+Total Cost of Work: $2,231,540 (Budget: $2,080,000, Variance: +$151,540, +7.3%)
+
+GROSS PROFIT: $412,660 (Budget: $920,000, Variance: -$507,340, -55.1%)
+GROSS MARGIN: 15.6% (Budget: 30.7%)
+
+G&A EXPENSES:
+6000 - Salaries/Admin: $124,200
+6010 - Insurance: $38,400
+6020 - Office/Facilities: $22,100
+6030 - Professional Fees: $18,800
+6040 - Depreciation: $48,000
+Total G&A: $251,500
+
+NET INCOME: $161,160 (Budget: $668,500, Variance: -$507,340)
+EBITDA: $209,160
+
+BALANCE SHEET ITEMS:
+1100 - Cash: $284,200
+1200 - AR: $918,400 (60+ days: $198,000)
+1300 - Costs in Excess of Billings (Underbilling): $342,100
+1400 - Billings in Excess of Costs (Overbilling): $0
+2100 - AP: $312,000 (90+ days: $27,000)
+2200 - Accrued Liabilities: $84,200
+3000 - Equity: $1,247,800`
+  },
+
+  lien: {
+    name: 'Subcontractor_Final_Lien_Waiver.pdf',
+    text: `CONDITIONAL WAIVER AND RELEASE ON FINAL PAYMENT
+(Arizona Revised Statutes § 33-1008)
+
+Project: Block C Commercial Development — Ameris Construction Group
+Owner: Ameris Properties LLC
+General Contractor: Apex Build Co.
+Subcontractor: Meridian MEP Services LLC
+Contract No.: SUB-2024-0118
+Claimant: Meridian MEP Services LLC, 4820 W. Camelback Rd., Phoenix AZ 85031
+
+THROUGH DATE: March 31, 2026
+
+CONDITIONAL WAIVER — AMOUNT CLAIMED:
+Final payment amount: $31,500.00
+Total contract value: $284,000.00
+Previously received: $252,500.00
+Retainage held: $14,200.00
+Balance due (including retainage): $45,700.00
+
+This document constitutes the conditional waiver and release of lien rights of the above-named Claimant on the above-described property to the extent of the payment received as described above.
+
+STATUS FLAGS:
+- Contract expiration: April 30, 2026 (EXPIRED — requires renewal before payment release)
+- Retainage release: Pending final inspection sign-off (Inspector: City of Phoenix, permit #PHX-2026-0441)
+- Notice of Completion filed: NO — required before unconditional waiver
+- Disputed amount: $3,200 — MEP coordination change order (pending GC approval)
+
+REQUIRED ACTIONS BEFORE PAYMENT:
+1. Renew MEP Services Agreement (expired April 30, 2026)
+2. Obtain Notice of Completion from City of Phoenix
+3. Resolve $3,200 coordination dispute (RFI-2024-019)
+4. Final inspection sign-off on floors 1-4 MEP rough-in
+
+Subcontractor Signature: _________________________ Date: ___________
+GC Representative Signature: _____________________ Date: ___________
+Owner Representative Signature: __________________ Date: ___________`
+  },
+
+  timesheet: {
+    name: 'Weekly_Labor_Timesheet_Site_A.csv',
+    text: `WEEKLY LABOR TIMESHEET — SITE A (BLOCK C)
+Week Ending: May 10, 2026
+Superintendent: R. Kowalski
+Project: Ameris Block C Commercial Development
+
+EMPLOYEE ID, NAME, TRADE, MON, TUE, WED, THU, FRI, SAT, TOTAL HRS, RATE, GROSS, NOTES
+EMP-001, J. Torres, Ironworker Foreman, 8, 8, 8, 8, 8, 4, 44, $82.00, $3,854.00, OT x1.5 Sat
+EMP-002, M. Vasquez, Ironworker, 8, 8, 8, 8, 8, 0, 40, $68.00, $2,720.00,
+EMP-003, D. Washington, Ironworker, 8, 8, 8, 8, 8, 4, 44, $68.00, $3,192.00, OT x1.5 Sat
+EMP-004, A. Nguyen, Ironworker, 8, 8, 8, 8, 0, 0, 32, $68.00, $2,176.00, Absent Fri-unexcused
+EMP-005, R. Santos, Carpenter Foreman, 8, 8, 8, 8, 8, 0, 40, $76.00, $2,888.00,
+EMP-006, L. Kim, Carpenter, 8, 8, 8, 8, 8, 0, 40, $62.00, $2,480.00,
+EMP-007, T. Brown, Carpenter, 8, 8, 8, 8, 8, 0, 40, $62.00, $2,480.00,
+EMP-008, F. Okonkwo, Laborer, 8, 8, 8, 8, 8, 8, 48, $48.00, $2,688.00, OT x1.5 over 40
+EMP-009, C. Martinez, Laborer, 8, 8, 8, 8, 8, 0, 40, $48.00, $1,920.00,
+EMP-010, B. Johnson, Equipment Op., 8, 8, 8, 8, 8, 0, 40, $72.00, $2,880.00,
+EMP-011, P. Reyes, Equipment Op., 8, 8, 8, 0, 0, 0, 24, $72.00, $1,728.00, Fastener delay idle time Wed-Fri
+EMP-012, S. Ahmed, Concrete Finisher, 0, 0, 8, 8, 8, 0, 24, $64.00, $1,536.00, Started Wed
+EMP-013, G. Williams, Safety Officer, 8, 8, 8, 8, 8, 4, 44, $58.00, $2,552.00, OT x1.5 Sat
+
+TOTALS:
+Total hours worked: 500
+Regular hours: 464
+Overtime hours: 36
+Gross payroll: $31,094.00
+Employer payroll taxes (est. 15.3%): $4,757.38
+Workers comp (est. 8.2%): $2,549.71
+Total labor burden: $38,401.09
+
+FLAGS:
+- EMP-004 unexcused absence Friday — supervisor notification required
+- EMP-011 idle time (16 hrs) due to fastener supply delay — cost code to delay claim
+- Overtime trending 15% above budget this period
+- Certified payroll required: yes (federal HOME program involvement)
+- Davis-Bacon compliance check: pending for EMP-008 rate verification`
+  },
+
+  expenditure: {
+    name: 'HOME_Expenditure_Log.xlsx',
+    text: `HOME INVESTMENT PARTNERSHIPS PROGRAM — EXPENDITURE LOG
+Grantee: Ameris Construction Group / City of Phoenix HOME Program
+Project: Block C Affordable Housing Component (Units 101-124)
+Grant Number: PHX-HOME-2024-0089
+Federal Award Amount: $1,240,000
+Period: January 1 – April 30, 2026
+
+EXPENDITURE DETAIL:
+Date, Category, Description, Vendor, Amount, Cumulative, HUD Code, Status
+01/08/26, Hard Costs, Foundation excavation, Apex Build Co., $84,200, $84,200, 1484.1, Approved
+01/22/26, Hard Costs, Concrete pour - foundations, Apex Build Co., $112,400, $196,600, 1484.1, Approved
+02/05/26, Hard Costs, Rebar and structural steel, PacSteel Inc., $168,800, $365,400, 1484.1, Approved
+02/18/26, Soft Costs, Architectural/engineering fees, Design Group AZ, $38,400, $403,800, 1484.3, Approved
+03/04/26, Hard Costs, Framing materials, BuildRight LLC, $94,200, $498,000, 1484.1, Approved
+03/14/26, Hard Costs, MEP rough-in, Meridian MEP, $142,000, $640,000, 1484.2, FLAGGED - contract expired
+03/28/26, Soft Costs, Environmental review, EnviroCheck AZ, $12,400, $652,400, 1484.3, Approved
+04/10/26, Hard Costs, Roofing - affordable units, SkyLine Roofing, $88,200, $740,600, 1484.1, Pending - bid review
+04/22/26, Admin, Grant administration, Internal staff, $24,000, $764,600, 1484.4, Approved
+04/30/26, Hard Costs, Electrical - units 101-112, Sierra Electrical, $62,400, $827,000, 1484.2, Pending
+
+DRAWDOWN SUMMARY:
+Total awarded: $1,240,000
+Total drawn to date: $827,000
+Remaining balance: $413,000
+Draw request in process: $62,400 (Sierra Electrical)
+Projected final draw: Q3 2026
+
+COMPLIANCE FLAGS:
+- Meridian MEP $142,000 draw: contract expired April 30, 2026 — HUD may disallow
+- Davis-Bacon certified payroll: weeks of 3/28, 4/4, 4/11 not yet submitted to HUD
+- Section 3 hiring requirement: 25% threshold — current: 18% (below target)
+- Environmental review expiration: December 31, 2026 — monitor
+- HOME match requirement: $248,000 (20%) — current match documented: $186,000 (gap: $62,000)
+
+NEXT DRAW REQUIREMENTS:
+1. Resolve Meridian MEP contract status before submitting
+2. Submit 3 weeks of certified payroll to HUD compliance portal
+3. Document additional match sources ($62,000 gap)
+4. Complete Section 3 hiring plan update`
+  }
 };
-let currentMode='sample', selectedSampleId=null, selectedFile=null;
 
-function setMode(m){
-  currentMode=m; selectedSampleId=null; selectedFile=null;
-  document.getElementById('procBtn').disabled=true;
-  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('mode-'+m).classList.add('active');
-  document.getElementById('panel-sample').style.display=m==='sample'?'':'none';
-  document.getElementById('panel-actual').style.display=m==='actual'?'':'none';
-  resetOutput();
+// ── STATE ──────────────────────────────────────────────────────────
+let currentDoc = null;
+let currentDocName = 'No document loaded';
+let running = false;
+let appsActive = 0;
+
+// ── CLOCK ──────────────────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
 }
-function selectSample(el,id){
-  document.querySelectorAll('.sample-card').forEach(c=>c.classList.remove('selected'));
-  el.classList.add('selected'); selectedSampleId=id;
-  document.getElementById('procBtn').disabled=false;
+setInterval(updateClock, 1000); updateClock();
+
+// ── DOCUMENT LOADING ──────────────────────────────────────────────
+function loadSample(key) {
+  const s = SAMPLES[key];
+  currentDoc = s.text;
+  currentDocName = s.name;
+  document.getElementById('docPaste').value = s.text;
+  document.getElementById('pasteStatus').textContent = s.name + ' — loaded';
+  document.getElementById('sb-doc').textContent = s.name;
+  document.getElementById('fireBtn').disabled = false;
+  document.getElementById('fireAllBtn').disabled = false;
+  resetOutputs();
 }
-const fi=document.getElementById('fileInput');
-const dz=document.getElementById('dropZone');
-fi.addEventListener('change',e=>{if(e.target.files[0])setFile(e.target.files[0])});
-dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over')});
-dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
-dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');if(e.dataTransfer.files[0])setFile(e.dataTransfer.files[0])});
-function setFile(f){selectedFile=f;dz.classList.add('has-file');document.getElementById('dropFileName').textContent='📎 '+f.name+' ('+(f.size/1024).toFixed(1)+' KB)';document.getElementById('procBtn').disabled=false;}
-function setPipe(step){document.querySelectorAll('.pipe-dot').forEach((d,i)=>{if(i<step)d.className='pipe-dot done';else if(i===step)d.className='pipe-dot active';else d.className='pipe-dot'});}
-function pipeAll(){document.querySelectorAll('.pipe-dot').forEach(d=>d.className='pipe-dot done');}
-function resetOutput(){document.getElementById('outBody').textContent='> Select a document and press PROCESS to begin.';document.getElementById('outBody').className='out-body';document.getElementById('outStatus').textContent='READY';document.getElementById('pushBtn').classList.remove('visible');document.getElementById('saveBtn')?.classList.remove('visible');lastReport=null;document.querySelectorAll('.kpi-card').forEach(k=>k.classList.remove('visible'));document.querySelectorAll('.pipe-dot').forEach(d=>d.className='pipe-dot');}
-function showKPIs(o){document.getElementById('kv-risk').textContent=o.risk;document.getElementById('kv-flag').textContent=o.flags;document.getElementById('kv-action').textContent=o.actions;document.getElementById('kv-conf').textContent=o.conf;document.querySelectorAll('.kpi-card').forEach(k=>k.classList.add('visible'));}
-function delay(ms){return new Promise(r=>setTimeout(r,ms));}
-function pushToStrategist(){location.href='/construction-main-strategist/index.html?v=doc-upload-'+Date.now();}
 
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  currentDocName = file.name;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    currentDoc = ev.target.result;
+    document.getElementById('docPaste').value = currentDoc;
+    document.getElementById('pasteStatus').textContent = file.name + ' — loaded (' + Math.round(file.size/1024) + ' KB)';
+    document.getElementById('sb-doc').textContent = file.name;
+    document.getElementById('fireBtn').disabled = false;
+    document.getElementById('fireAllBtn').disabled = false;
+    resetOutputs();
+  };
+  reader.readAsText(file);
+}
 
-function readFileText(file){
-  return new Promise((resolve, reject)=>{
-    const ext = file.name.split('.').pop().toLowerCase();
-    if(['txt','csv'].includes(ext)){
-      const r = new FileReader();
-      r.onload = e => resolve(e.target.result.slice(0, 3000));
-      r.onerror = () => resolve('[unreadable]');
-      r.readAsText(file);
-    } else if(ext === 'pdf'){
-      // Send to tsm-core for extraction
-      const fd = new FormData();
-      fd.append('doc', file);
-      fetch('https://tsm-shell.fly.dev/api/finops/upload-doc', {method:'POST', body:fd})
-        .then(r=>r.json())
-        .then(d=>resolve(d.text||d.summary||d.report?.summary||'[PDF processed — no text extracted]'))
-        .catch(()=>resolve('[PDF uploaded — text extraction unavailable]'));
-    } else {
-      // Excel/Word — send to tsm-core, fallback to filename-based analysis
-      const fd = new FormData();
-      fd.append('doc', file);
-      fetch('https://tsm-shell.fly.dev/api/finops/upload-doc', {method:'POST', body:fd})
-        .then(r=>r.json())
-        .then(d=>resolve(d.text||d.summary||d.report?.summary||`[${ext.toUpperCase()} file processed]`))
-        .catch(()=>resolve(`[${ext.toUpperCase()} file — ${(file.size/1024).toFixed(1)}KB — ready for analysis]`));
-    }
+function onPasteInput() {
+  const val = document.getElementById('docPaste').value.trim();
+  currentDoc = val || null;
+  currentDocName = val ? 'Pasted document' : 'No document loaded';
+  document.getElementById('pasteStatus').textContent = val ? 'Manual input — ' + val.length + ' chars' : 'No document loaded';
+  document.getElementById('sb-doc').textContent = currentDocName;
+  document.getElementById('fireBtn').disabled = !val;
+  document.getElementById('fireAllBtn').disabled = !val;
+  if (val) resetOutputs();
+}
+
+function clearAll() {
+  currentDoc = null; currentDocName = 'No document loaded';
+  document.getElementById('docPaste').value = '';
+  document.getElementById('pasteStatus').textContent = 'No document loaded';
+  document.getElementById('sb-doc').textContent = 'No document loaded';
+  document.getElementById('fireBtn').disabled = true;
+  document.getElementById('fireAllBtn').disabled = true;
+  resetOutputs();
+}
+
+function resetOutputs() {
+  appsActive = 0;
+  document.getElementById('nodeCounter').textContent = '0 / 4 Nodes';
+  document.getElementById('appsActive').textContent = '0';
+  [1,2,3,4].forEach(i => {
+    setNodeState(i,'idle');
+    setOpStatus(i,'idle','Standby');
+    const ob = document.getElementById('op-'+i);
+    ob.innerHTML = '<span class="op-placeholder">' + (i===1?'Waiting for document load…':'Waiting for App 0'+(i-1)+'…') + '</span>';
+    document.getElementById('otkn-'+i).textContent = '—';
+    const pa = document.getElementById('pa-'+i);
+    if (pa) pa.className = 'pipe-arrow';
   });
 }
 
-async function processDoc(){
-  const btn=document.getElementById('procBtn');
-  btn.disabled=true; resetOutput();
-  const ob=document.getElementById('outBody');
-  const os=document.getElementById('outStatus');
-
-  if(currentMode==='actual'&&selectedFile){
-    ob.className='out-body thinking'; ob.textContent='> Uploading to FinOps node chain...'; os.textContent='UPLOADING'; setPipe(0);
-    try{
-      // Read file contents for AI analysis
-      await delay(400); setPipe(1); ob.textContent='> Reading file...'; os.textContent='PARSING';
-      const fileText = await readFileText(selectedFile);
-      await delay(400); setPipe(2); ob.textContent='> AI node chain analyzing...'; os.textContent='ANALYZING';
-      await runAI(selectedFile.name, fileText, ob, os);
-    }catch(e){
-      await runAI(selectedFile.name, null, ob, os);
-    }
-    btn.disabled=false; return;
+// ── KEY TEST ──────────────────────────────────────────────────────
+async function testKey() {
+  const key = document.getElementById('groqKey').value.trim();
+  if (!key) { alert('Enter a Groq API key first'); return; }
+  const btn = document.querySelector('.key-test-btn');
+  btn.textContent = 'Testing...'; btn.style.color = 'var(--cyan)';
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:10,messages:[{role:'user',content:'ping'}]})
+    });
+    if(res.ok){fetch('/admin/set-key',{method:'POST',headers:{'Content-Type':'application/json','x-admin-token':'TSM_ADMIN_2026'},body:JSON.stringify({key})}).catch(()=>{});}
+    btn.textContent = res.ok ? '✓ Saved' : '✗ Error';
+    btn.style.color = res.ok ? 'var(--green)' : 'var(--red)';
+  } catch(e) {
+    btn.textContent = '✗ Failed'; btn.style.color = 'var(--red)';
   }
-  if(!selectedSampleId){btn.disabled=false;return;}
-  const s=SAMPLES[selectedSampleId];
-  await runAI(s.label,s.content,ob,os);
-  btn.disabled=false;
+  setTimeout(()=>{btn.textContent='Test';btn.style.color='';},3000);
 }
 
-async function runAI(label,content,ob,os){
-  ob.className='out-body thinking'; ob.textContent='> Ingesting...'; os.textContent='INGESTING'; setPipe(0);
-  await delay(500); setPipe(1); ob.textContent='> Parsing structure...'; os.textContent='PARSING';
-  await delay(600); setPipe(2); ob.textContent='> TSM AI node chain analyzing...'; os.textContent='ANALYZING';
-  const prompt=content
-    ?`You are a TSMatter financial and operational analyst AI. Analyze this document:\n\nDocument: ${label}\nContent: ${content}\n\nReturn in this exact format:\nDOCUMENT SUMMARY\n[2-3 sentences]\n\nKEY FINDINGS\n• [finding 1]\n• [finding 2]\n• [finding 3]\n\nPROJECT RISK: [LOW/MEDIUM/HIGH/CRITICAL]\n[one sentence why]\n\nFLAGS: [number]\n\nBEST NEXT COURSE OF ACTION\n1. [action]\n2. [action]\n3. [action]\n\nAI CONFIDENCE: [XX%]`
-    :`You are a TSMatter analyst. File uploaded: "${label}". Generate a realistic analysis in TSMatter terminal style with: DOCUMENT SUMMARY, KEY FINDINGS (3 bullets), PROJECT RISK, FLAGS count, BEST NEXT COURSE OF ACTION (3 steps), AI CONFIDENCE %.`;
-  try{
-    const res=await fetch('https://tsm-core.fly.dev/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({app:'doc-showcase',messages:[{role:'user',content:prompt}]})});
-    const data=await res.json();
-    const text=data.reply||'No response.';
-    await delay(400); setPipe(3); os.textContent='GENERATING BNCA';
-    await delay(400); pipeAll();
-    ob.className='out-body'; ob.textContent=text; os.textContent='COMPLETE';
-    const rm=text.match(/PROJECT RISK[:\s]+([A-Z]+)/i);
-    const fm=text.match(/FLAGS[:\s]+(\d+)/i);
-    const cm=text.match(/AI CONFIDENCE[:\s]+(\d+%)/i);
-    const am=(text.match(/^\d+\./gm)||[]).length;
-    showKPIs({risk:rm?rm[1]:'HIGH',flags:fm?fm[1]:'3',actions:am||3,conf:cm?cm[1]:'88%'});
-    document.getElementById('pushBtn').classList.add('visible');
-    document.getElementById('saveBtn').classList.add('visible');
-    lastReport={label,summary:text,risk:rm?rm[1]:'HIGH',flags:fm?fm[1]:'3',actions:am||3,conf:cm?cm[1]:'88%'};
-    window.__FINOPS_UPLOADED_REPORT__={summary:text,label};
-  }catch(e){
-    pipeAll(); ob.className='out-body';
-    ob.textContent='> Analysis complete (offline mode).\n\nDocument: '+label+'\n\nConnect to live AI endpoint for full analysis.\n\nBEST NEXT COURSE OF ACTION\n1. Verify tsm-core.fly.dev connectivity\n2. Re-run with active session\n3. Push to strategist for manual review';
-    os.textContent='OFFLINE';
-    showKPIs({risk:'—',flags:'—',actions:'3',conf:'—'});
-    document.getElementById('pushBtn').classList.add('visible');
+// ── PIPELINE STATE ────────────────────────────────────────────────
+function setNodeState(i, state) {
+  const pn = document.getElementById('pn-'+i);
+  const pns = document.getElementById('pns-'+i);
+  pn.className = 'pipe-node ' + state;
+  pns.className = 'pn-state ' + state;
+  const labels = {idle:'Standby', active:'Processing…', done:'Complete'};
+  pns.textContent = labels[state] || state;
+  if (state==='done' && i<4) {
+    const pa = document.getElementById('pa-'+i);
+    if(pa) pa.className='pipe-arrow done';
   }
 }
 
-const HC_STORAGE_KEY='tsm_hc_reports';
-let lastReport=null;
-
-function saveReport(){
-  if(!lastReport)return;
-  try{
-    const reports=JSON.parse(localStorage.getItem(HC_STORAGE_KEY)||'[]');
-    reports.unshift({...lastReport,id:Date.now(),saved:new Date().toLocaleString()});
-    localStorage.setItem(HC_STORAGE_KEY,JSON.stringify(reports.slice(0,20)));
-    const t=document.getElementById('saveToast');t.style.display='block';setTimeout(()=>t.style.display='none',2500);
-    loadSavedReports();
-  }catch(e){}
+function setOpStatus(i, cls, label) {
+  const el = document.getElementById('ops-'+i);
+  el.className = 'op-status ops-'+cls;
+  el.textContent = label;
 }
-function loadSavedReports(){
-  try{
-    const reports=JSON.parse(localStorage.getItem(HC_STORAGE_KEY)||'[]');
-    const panel=document.getElementById('savedPanel');const list=document.getElementById('savedList');
-    if(!reports.length){panel.classList.remove('visible');return;}
-    panel.classList.add('visible');
-    list.innerHTML=reports.map(r=>`<div class="saved-item" onclick="loadSaved(${r.id})"><div class="saved-item-title">${r.label}</div><div class="saved-item-meta">${r.saved} · Risk: ${r.risk||'—'} · Conf: ${r.conf||'—'}</div></div>`).join('');
-  }catch(e){}
-}
-function loadSaved(id){
-  try{
-    const reports=JSON.parse(localStorage.getItem(HC_STORAGE_KEY)||'[]');
-    const r=reports.find(x=>x.id===id);if(!r)return;
-    document.getElementById('outBody').textContent=r.summary;
-    document.getElementById('outStatus').textContent='SAVED REPORT';
-    showKPIs({risk:r.risk||'—',flags:r.flags||'—',actions:r.actions||'—',conf:r.conf||'—'});
-    pipeAll();document.getElementById('pushBtn').classList.add('visible');
-  }catch(e){}
-}
-loadSavedReports();
 
-</script>
+// ── APP CONFIGURATIONS ────────────────────────────────────────────
+const APPS = [
+  {
+    id:1,
+    name:'BNCA Command Nodes',
+    color:'--cyan',
+    system:`You are a construction BNCA (Bottom-Line Construction Analysis) Command Node — the first app in a 4-app neural bridge for a construction site management platform. Your role is document triage and risk identification.
 
-<script id="construction-doc-4engine-wire">
-(function(){
-  if(window.__CONSTRUCTION_DOC_4ENGINE_WIRE__) return;
-  window.__CONSTRUCTION_DOC_4ENGINE_WIRE__=true;
+Analyze the provided construction document and output:
+1. DOCUMENT TYPE — identify what this is
+2. CRITICAL FLAGS — list every risk, anomaly, violation, or missing item with specific amounts, dates, or names
+3. FINANCIAL EXPOSURE — total dollar exposure identified
+4. COMPLIANCE RISKS — regulatory, contractual, or safety issues
+5. IMMEDIATE ACTIONS REQUIRED — what must happen in the next 48 hours
 
-  async function callConstructionDocAPI(context){
-    const r=await fetch("/api/construction/doc-showcase",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        document: window.__selectedConstructionDoc || "construction document",
-        context: context || "Run full 4-engine construction document analysis."
+Be specific. Use numbers, names, and dates from the document. Format clearly with section headers.`,
+    prompt: (doc, name) => `Construction document: ${name}\n\nDocument content:\n${doc}\n\nRun BNCA Command Node triage. Identify all flags, risks, and required actions.`
+  },
+  {
+    id:2,
+    name:'HC Strategist',
+    color:'--green',
+    system:`You are the HC Strategist — App 02 in a construction BNCA neural bridge. You receive triage output and produce operational strategy.
+
+Your output:
+1. RFI / CHANGE ORDER IMPACTS — what RFIs or change orders are triggered
+2. COST ALERTS — breakdown of cost impacts with line items
+3. VENDOR / SUBCONTRACTOR ALERTS — any vendor issues, disputes, or required communications
+4. SCHEDULE PRIORITIES — what tasks must be re-sequenced or escalated
+5. MITIGATION OPTIONS — 3 ranked options to address the situation with cost/time comparison
+
+Be tactical and specific. Reference specific dollar amounts, vendors, and dates.`,
+    prompt: (doc, name) => `Construction document: ${name}\n\nDocument:\n${doc}\n\nProduce operational strategy: RFI impacts, cost alerts, vendor issues, schedule priorities, and mitigation options.`
+  },
+  {
+    id:3,
+    name:'Main Strategist',
+    color:'--purple',
+    system:`You are the Main Strategist — App 03 in a construction BNCA neural bridge. You produce formal correspondence, mitigation plans, and action items.
+
+Your output:
+1. FORMAL NOTICE / LETTER DRAFT — a professional letter to the relevant party (GC, owner, vendor, inspector) addressing the situation
+2. MITIGATION PLAN — step-by-step plan with owners, deadlines, and cost codes
+3. SCHEDULE IMPACT ANALYSIS — how this affects the critical path and float
+4. LEGAL / CONTRACTUAL CONSIDERATIONS — any contract clause or lien/bond implications
+5. FIELD ACTION ITEMS — specific instructions for site supervisor
+
+Use professional construction industry language. Be specific with names, dates, and dollar amounts.`,
+    prompt: (doc, name) => `Construction document: ${name}\n\nDocument:\n${doc}\n\nProduce formal correspondence, mitigation plan, schedule impact analysis, legal considerations, and field action items.`
+  },
+  {
+    id:4,
+    name:'Executive Portal',
+    color:'--gold',
+    system:`You are the Executive Portal — App 04 in a construction BNCA neural bridge. You produce the owner/CFO-level brief and financial roadmap.
+
+Your output:
+1. EXECUTIVE SUMMARY — 3 sentences: situation, financial impact, required decision
+2. FINANCIAL DASHBOARD — key numbers: total exposure, cash impact, schedule cost, mitigation cost
+3. OWNER DECISIONS REQUIRED — specific yes/no decisions the owner must make, with deadlines
+4. REVENUE / CASH FLOW IMPACT — effect on project billings, draw requests, retainage
+5. FORWARD ROADMAP — next 30/60/90 day outlook with financial milestones
+
+Write for an owner audience. Clear, decisive, no jargon. Numbers front and center.`,
+    prompt: (doc, name) => `Construction document: ${name}\n\nDocument:\n${doc}\n\nProduce executive brief, financial dashboard, owner decisions, cash flow impact, and 30/60/90 roadmap.`
+  }
+];
+
+// ── FIRE ENGINE ───────────────────────────────────────────────────
+async function streamApp(app, key) {
+  const bodyEl = document.getElementById('op-'+app.id);
+  const tokenEl = document.getElementById('otkn-'+app.id);
+
+  setNodeState(app.id, 'active');
+  setOpStatus(app.id, 'run', 'Processing…');
+  bodyEl.textContent = '';
+
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body: JSON.stringify({
+        model:'llama-3.3-70b-versatile',
+        max_tokens:900,
+        temperature:0.35,
+        stream:true,
+        messages:[
+          {role:'system', content:app.system},
+          {role:'user',   content:app.prompt(currentDoc, currentDocName)}
+        ]
       })
     });
-    return await r.json();
-  }
 
-  function findPanels(){
-    const labels=[
-      "Document Triage & Flag Analysis",
-      "Variance & Risk Intelligence",
-      "Controller Action Plan",
-      "CFO Executive Intelligence",
-      "Executive Intelligence"
-    ];
-    return labels.map(label=>{
-      const all=[...document.querySelectorAll("*")];
-      const h=all.find(el=>(el.textContent||"").includes(label));
-      if(!h) return null;
-      let box=h.closest("section,article,.card,.panel,div") || h.parentElement;
-      return box;
-    }).filter(Boolean);
-  }
-
-  function writePanels(engines){
-    const panels=findPanels();
-    engines.forEach((e,i)=>{
-      const panel=panels[i];
-      if(!panel) return;
-      let pre=panel.querySelector("pre,.engine-output,.output");
-      if(!pre){
-        pre=document.createElement("pre");
-        pre.className="engine-output";
-        pre.style.cssText="white-space:pre-wrap;color:#dff7ff;background:#050b12;border:1px solid rgba(255,196,0,.28);border-radius:12px;padding:14px;min-height:170px;overflow:auto";
-        panel.appendChild(pre);
-      }
-      pre.textContent=e.content || e.reply || "No output";
-      const status=[...panel.querySelectorAll("*")].find(x=>(x.textContent||"").trim().toUpperCase()==="IDLE");
-      if(status) status.textContent="COMPLETE";
-    });
-  }
-
-  window.runConstructionDoc4Engines = async function(){
-    const btn=[...document.querySelectorAll("button,a")].find(b=>/fire all|process document|run/i.test((b.textContent||"").toLowerCase()));
-    if(btn) btn.textContent="RUNNING 4 ENGINES...";
-    try{
-      const data=await callConstructionDocAPI("Run full construction document 4-engine BNCA.");
-      if(data.ok && data.engines) writePanels(data.engines);
-      if(btn) btn.textContent="✓ 4 ENGINES COMPLETE";
-    }catch(e){
-      if(btn) btn.textContent="⚠ LOCAL FALLBACK COMPLETE";
+    if (!res.ok) {
+      const err = await res.json().catch(()=>({error:{message:res.statusText}}));
+      bodyEl.textContent = '[Groq Error ' + res.status + '] ' + (err.error?.message || res.statusText);
+      setOpStatus(app.id,'err','Error'); setNodeState(app.id,'idle');
+      return false;
     }
-  };
 
-  function wire(){
-    document.querySelectorAll("button,a").forEach(el=>{
-      const t=(el.textContent||"").toLowerCase();
-      if(/fire all|process document|run all|4 engine|4-engine/.test(t)){
-        if(el.dataset.doc4wire) return;
-        el.dataset.doc4wire="true";
-        el.addEventListener("click",e=>{
-          e.preventDefault();
-          window.runConstructionDoc4Engines();
-        },true);
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let full = '';
+    bodyEl.textContent = '';
+
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      const chunk = dec.decode(value);
+      for (const line of chunk.split('\n')) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (data === '[DONE]') break;
+        try {
+          const delta = JSON.parse(data).choices?.[0]?.delta?.content || '';
+          full += delta;
+          bodyEl.textContent = full + '▌';
+          bodyEl.scrollTop = bodyEl.scrollHeight;
+        } catch {}
       }
-    });
-
-    if(!document.getElementById("doc-4engine-test-btn")){
-      const b=document.createElement("button");
-      b.id="doc-4engine-test-btn";
-      b.textContent="⚡ RUN 4-ENGINE BNCA";
-      b.style.cssText="position:fixed;right:22px;bottom:92px;z-index:99999;background:#ffc400;color:#001;border:0;border-radius:14px;padding:13px 16px;font-weight:950;box-shadow:0 0 24px rgba(255,196,0,.35)";
-      b.onclick=window.runConstructionDoc4Engines;
-      document.body.appendChild(b);
     }
+    bodyEl.textContent = full;
+    const words = full.split(/\s+/).length;
+    tokenEl.textContent = '~' + words + ' tokens';
+    setOpStatus(app.id,'done','Complete');
+    setNodeState(app.id,'done');
+    appsActive++;
+    document.getElementById('appsActive').textContent = appsActive;
+    document.getElementById('nodeCounter').textContent = appsActive + ' / 4 Nodes';
+    return true;
+
+  } catch(e) {
+    bodyEl.textContent = '[Network Error] ' + e.message;
+    setOpStatus(app.id,'err','Error');
+    setNodeState(app.id,'idle');
+    return false;
+  }
+}
+
+// ── FIRE ALL ──────────────────────────────────────────────────────
+async function fireAll() {
+  if (running) return;
+  const key = document.getElementById('groqKey').value.trim();
+  if (!key) { alert('Enter your Groq API key in the TSM Neural Core Key field'); return; }
+  if (!currentDoc) { alert('Load a document first'); return; }
+
+  running = true;
+  appsActive = 0;
+  document.getElementById('appsActive').textContent = '0';
+  document.getElementById('nodeCounter').textContent = '0 / 4 Nodes';
+
+  const fireBtn = document.getElementById('fireBtn');
+  const fireAllBtn = document.getElementById('fireAllBtn');
+  fireBtn.disabled = true; fireAllBtn.disabled = true;
+  fireBtn.textContent = '⟳ Running Neural Bridge…';
+
+  // Reset all
+  [1,2,3,4].forEach(i => {
+    setNodeState(i,'idle');
+    setOpStatus(i,'idle','Standby');
+    document.getElementById('op-'+i).textContent = '';
+    document.getElementById('otkn-'+i).textContent = '—';
+    const pa = document.getElementById('pa-'+i);
+    if(pa) pa.className='pipe-arrow';
+  });
+
+  // Run sequentially
+  for (const app of APPS) {
+    const ok = await streamApp(app, key);
+    if (!ok) break;
   }
 
-  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",wire);
-  else wire();
+  running = false;
+  fireBtn.disabled = false; fireAllBtn.disabled = false;
+  fireBtn.textContent = '⚡ Fire All 4 Apps';
+}
 
-  [800,1800,3200].forEach(ms=>setTimeout(wire,ms));
-  console.log("Construction 4-engine doc showcase wire installed");
-})();
+// ── COPY ──────────────────────────────────────────────────────────
+function copyOutput(id) {
+  const text = document.getElementById('op-'+id)?.textContent;
+  if (!text || !text.trim()) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector(`[onclick="copyOutput(${id})"]`);
+    if(btn){btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy',1500);}
+  });
+}
 </script>
-
 </body>
 </html>

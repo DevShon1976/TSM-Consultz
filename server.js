@@ -877,6 +877,26 @@ app.get('/api/status', (req,res) => res.json({
   suites: ['healthcare','finops','insurance'], version: '3.0.0'
 }));
 
+
+// ── Groq streaming proxy ──────────────────────────────────────────
+app.post('/api/groq/stream', express.json({limit:'2mb'}), async (req, res) => {
+  const key = process.env.GROQ_API_KEY;
+  if (!key) return res.status(503).json({error:'No API key configured'});
+  try {
+    const upstream = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {'Authorization':'Bearer '+key,'Content-Type':'application/json'},
+      body: JSON.stringify({...req.body, stream: true})
+    });
+    res.setHeader('Content-Type','text/event-stream');
+    res.setHeader('Cache-Control','no-cache');
+    upstream.body.pipeTo(new WritableStream({
+      write(chunk){ res.write(chunk); },
+      close(){ res.end(); }
+    }));
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
 // 404
 app.use('/api', (req,res) => res.status(404).json({ ok: false, error: 'API route not found', path: req.path }));
 app.use((req,res) => res.status(404).send('Not found: ' + req.path));
@@ -1065,6 +1085,40 @@ CONFIDENCE
   });
 });
 // ===============================
+
+
+// ── Admin: live key updater ─────────────────────────────
+const ADMIN_TOKEN = process.env.TSM_ADMIN_TOKEN || 'TSM_ADMIN_2026';
+app.post('/admin/set-key', express.json(), (req, res) => {
+  if (req.headers['x-admin-token'] !== ADMIN_TOKEN)
+    return res.status(401).json({ ok:false, error:'Unauthorized' });
+  const { key } = req.body || {};
+  if (!key || !key.startsWith('gsk_'))
+    return res.status(400).json({ ok:false, error:'Invalid key' });
+  process.env.GROQ_API_KEY = key;
+  console.log('[ADMIN] GROQ_API_KEY updated live');
+  res.json({ ok:true });
+});
+app.use('/admin', express.static(require('path').join(__dirname,'html','admin')));
+
+// ── Groq streaming proxy (pipeline uses this — no client key needed) ──
+app.post('/api/groq/stream', express.json({limit:'2mb'}), async (req, res) => {
+  const key = process.env.GROQ_API_KEY;
+  if (!key) return res.status(503).json({error:'No API key configured'});
+  try {
+    const upstream = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {'Authorization':'Bearer '+key,'Content-Type':'application/json'},
+      body: JSON.stringify({...req.body, stream: true})
+    });
+    res.setHeader('Content-Type','text/event-stream');
+    res.setHeader('Cache-Control','no-cache');
+    upstream.body.pipeTo(new WritableStream({
+      write(chunk){ res.write(chunk); },
+      close(){ res.end(); }
+    }));
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
 
 app.listen(PORT, () => console.log(`TSM server v3.0 on port ${PORT}`));
 
