@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Construction Suite · How To Guide · TSM</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050c14;--surf:#0a1420;--surf2:#0d1928;--border:rgba(0,229,255,.08);--border2:rgba(0,229,255,.14);
+  --cyan:#00e5ff;--cyan2:rgba(0,229,255,.6);--green:#00ff88;--amber:#ffb300;--red:#ff4444;--purple:#a855f7;
+  --muted:#3a5a7a;--text:#b0cce0;--white:#e8f4ff;
+  --mono:'JetBrains Mono',monospace;--head:'Barlow Condensed',sans-serif;--body:'Barlow',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:14px;line-height:1.6;min-height:100vh}
+
+/* ── TOPBAR ── */
+.topbar{position:sticky;top:0;z-index:100;background:rgba(5,12,20,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;padding:.6rem 1.5rem}
+.topbar-brand{font-family:var(--mono);font-size:.6rem;letter-spacing:.2em;color:var(--cyan)}
+.topbar-nav{display:flex;gap:.5rem}
+.topbar-link{font-family:var(--mono);font-size:.55rem;letter-spacing:.1em;color:var(--muted);padding:.3rem .6rem;border:1px solid transparent;text-decoration:none;transition:all .2s;cursor:pointer}
+.topbar-link:hover,.topbar-link.active{color:var(--cyan);border-color:var(--border2)}
+
+/* ── HERO ── */
+.hero{padding:4rem 1.5rem 2.5rem;max-width:960px;margin:0 auto}
+.hero-eyebrow{font-family:var(--mono);font-size:.55rem;letter-spacing:.2em;color:var(--cyan);margin-bottom:1rem}
+.hero-title{font-family:var(--head);font-size:clamp(2.5rem,6vw,4.5rem);font-weight:900;line-height:.95;letter-spacing:-.01em;color:var(--white);margin-bottom:1rem}
+.hero-title span{color:var(--cyan)}
+.hero-desc{font-size:1rem;color:var(--text);max-width:580px;line-height:1.7;margin-bottom:2rem}
+.hero-stats{display:flex;gap:2rem;flex-wrap:wrap}
+.hero-stat{border-left:2px solid var(--cyan);padding-left:1rem}
+.hero-stat-num{font-family:var(--head);font-size:1.8rem;font-weight:800;color:var(--cyan);line-height:1}
+.hero-stat-label{font-family:var(--mono);font-size:.5rem;letter-spacing:.12em;color:var(--muted);margin-top:.2rem}
+
+/* ── SECTION ── */
+.section{max-width:960px;margin:0 auto;padding:2.5rem 1.5rem}
+.section-eyebrow{font-family:var(--mono);font-size:.5rem;letter-spacing:.18em;color:var(--cyan);margin-bottom:.6rem}
+.section-title{font-family:var(--head);font-size:2rem;font-weight:800;color:var(--white);margin-bottom:.4rem}
+.section-desc{color:var(--text);max-width:600px;margin-bottom:2rem;font-size:.9rem}
+.divider{border:none;border-top:1px solid var(--border);margin:0 1.5rem}
+
+/* ── TAB NAV ── */
+.tab-nav{display:flex;gap:0;border-bottom:1px solid var(--border2);margin-bottom:2rem;overflow-x:auto}
+.tab-btn{font-family:var(--mono);font-size:.55rem;letter-spacing:.1em;padding:.6rem 1.2rem;border:none;background:transparent;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s;text-transform:uppercase}
+.tab-btn.active{color:var(--cyan);border-bottom-color:var(--cyan)}
+.tab-btn:hover:not(.active){color:var(--text)}
+.tab-pane{display:none}
+.tab-pane.active{display:block}
+
+/* ── WORKFLOW ── */
+.wf-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1px;background:var(--border)}
+.wf-col{background:var(--bg);padding:0}
+.wf-col-head{background:var(--surf);padding:.6rem 1rem;border-bottom:1px solid var(--border2);display:flex;justify-content:space-between;align-items:center}
+.wf-col-title{font-family:var(--mono);font-size:.55rem;letter-spacing:.12em;color:var(--cyan);font-weight:700}
+.wf-col-meta{font-family:var(--mono);font-size:.5rem;color:var(--muted)}
+.wf-col-body{padding:.5rem}
+.wf-col-footer{background:var(--surf2);padding:.4rem 1rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-family:var(--mono);font-size:.5rem;color:var(--muted)}
+
+/* ── TASK ── */
+.wf-task{display:grid;grid-template-columns:auto auto 1fr;grid-template-rows:auto auto auto;gap:.15rem .5rem;padding:.5rem .4rem;border:1px solid transparent;border-radius:4px;margin-bottom:.35rem;cursor:pointer;transition:all .2s;align-items:start}
+.wf-task:hover{border-color:var(--border2);background:var(--surf)}
+.wf-task.done{opacity:.5}
+.wf-task.done .wf-check{color:var(--green);border-color:var(--green)}
+.wf-check{width:16px;height:16px;border:1px solid var(--border2);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:.5rem;color:transparent;grid-row:1;flex-shrink:0;margin-top:1px;transition:all .2s}
+.wf-badge{font-family:var(--mono);font-size:.45rem;letter-spacing:.06em;padding:.1rem .3rem;border:1px solid;grid-row:1;align-self:center}
+.tb-p1{color:var(--red);border-color:var(--red)}
+.tb-p2{color:var(--amber);border-color:var(--amber)}
+.tb-p3{color:var(--muted);border-color:var(--muted)}
+.wf-name{font-size:.7rem;font-weight:600;color:var(--white);grid-column:3;grid-row:1;line-height:1.3}
+.wf-desc{font-size:.6rem;color:var(--text);grid-column:2/-1;grid-row:2;line-height:1.5}
+.wf-owner{font-family:var(--mono);font-size:.5rem;color:var(--muted);grid-column:2/-1;grid-row:3}
+.progress-wrap{height:2px;background:rgba(0,229,255,.08);margin:.25rem .4rem;border-radius:1px;overflow:hidden}
+.progress-bar{height:100%;width:0%;background:var(--cyan);transition:width .4s}
+
+/* ── PIPELINE ── */
+.pipeline{display:flex;align-items:stretch;gap:0;border:1px solid var(--border2);overflow:hidden;border-radius:4px;margin-bottom:1.5rem}
+.pipe-node{flex:1;padding:1rem;background:var(--surf);border-right:1px solid var(--border2);min-width:0}
+.pipe-node:last-child{border-right:none}
+.pipe-node-num{font-family:var(--mono);font-size:.45rem;letter-spacing:.12em;color:var(--muted)}
+.pipe-node-title{font-family:var(--head);font-size:1rem;font-weight:800;color:var(--white);margin:.2rem 0 .1rem}
+.pipe-node-sub{font-size:.6rem;color:var(--muted);font-family:var(--mono)}
+.pipe-node-desc{font-size:.65rem;color:var(--text);margin-top:.5rem;line-height:1.5}
+.pipe-node.n1{border-top:2px solid var(--cyan)}
+.pipe-node.n2{border-top:2px solid var(--green)}
+.pipe-node.n3{border-top:2px solid var(--purple)}
+.pipe-node.n4{border-top:2px solid var(--amber)}
+
+/* ── FEATURE GRID ── */
+.feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-bottom:2rem}
+.feature-card{background:var(--surf);border:1px solid var(--border);border-radius:4px;padding:1.2rem;transition:border-color .2s}
+.feature-card:hover{border-color:var(--border2)}
+.feature-icon{font-size:1.2rem;margin-bottom:.6rem}
+.feature-label{font-family:var(--mono);font-size:.45rem;letter-spacing:.12em;color:var(--cyan);margin-bottom:.3rem}
+.feature-title{font-size:.85rem;font-weight:600;color:var(--white);margin-bottom:.4rem}
+.feature-desc{font-size:.7rem;color:var(--text);line-height:1.5}
+
+/* ── STEP CARDS ── */
+.step-list{display:flex;flex-direction:column;gap:.5rem}
+.step-card{border:1px solid var(--border);background:var(--surf);border-radius:4px;overflow:hidden}
+.step-head{display:flex;align-items:center;gap:1rem;padding:.8rem 1rem;cursor:pointer;transition:background .2s}
+.step-head:hover{background:var(--surf2)}
+.step-num{font-family:var(--head);font-size:1.8rem;font-weight:900;color:var(--border2);line-height:1;flex-shrink:0;width:40px}
+.step-title{font-size:.85rem;font-weight:600;color:var(--white);flex:1}
+.step-chev{color:var(--muted);font-size:.6rem;transition:transform .3s;flex-shrink:0}
+.step-card.open .step-chev{transform:rotate(90deg)}
+.step-body{display:none;padding:0 1rem 1rem;border-top:1px solid var(--border)}
+.step-card.open .step-body{display:block}
+.step-desc{font-size:.75rem;color:var(--text);line-height:1.6;margin:.8rem 0}
+.step-tip{background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);border-radius:4px;padding:.6rem .8rem;font-size:.7rem;color:var(--text);margin-top:.6rem}
+.step-tip strong{color:var(--cyan)}
+
+/* ── URL BAR ── */
+.url-bar{display:flex;align-items:center;gap:.5rem;background:var(--surf2);border:1px solid var(--border);border-radius:4px;padding:.4rem .8rem;margin:.6rem 0;font-family:var(--mono);font-size:.6rem}
+.url-lock{color:var(--green);font-size:.7rem}
+.url-text{color:var(--cyan);flex:1}
+.url-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
+.url-stat{color:var(--green);font-size:.5rem;letter-spacing:.1em}
+
+/* ── CALLOUT ── */
+.callout{background:rgba(0,229,255,.03);border:1px solid rgba(0,229,255,.1);border-radius:4px;padding:.7rem 1rem;margin:.8rem 0;font-size:.7rem;color:var(--text);line-height:1.6}
+.callout strong{color:var(--cyan)}
+
+/* ── KEY FIELD ── */
+.key-bar{display:flex;align-items:center;gap:.5rem;background:var(--surf2);border:1px solid var(--border2);border-radius:4px;padding:.4rem .8rem;margin-bottom:1.5rem}
+.key-label{font-family:var(--mono);font-size:.5rem;letter-spacing:.1em;color:var(--muted);white-space:nowrap}
+.key-input{flex:1;background:transparent;border:none;color:var(--cyan);font-family:var(--mono);font-size:.65rem;outline:none}
+.key-btn{font-family:var(--mono);font-size:.5rem;letter-spacing:.08em;padding:.3rem .7rem;background:transparent;border:1px solid var(--cyan2);color:var(--cyan);cursor:pointer;text-transform:uppercase;transition:all .2s}
+.key-btn:hover{background:rgba(0,229,255,.08)}
+
+/* ── MISC ── */
+.tag{display:inline-block;font-family:var(--mono);font-size:.45rem;letter-spacing:.1em;padding:.15rem .4rem;border:1px solid;border-radius:2px;margin:.15rem}
+.tag-cyan{color:var(--cyan);border-color:rgba(0,229,255,.3)}
+.tag-green{color:var(--green);border-color:rgba(0,255,136,.3)}
+.tag-amber{color:var(--amber);border-color:rgba(255,179,0,.3)}
+.arow{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.8rem}
+.ab{font-family:var(--mono);font-size:.55rem;letter-spacing:.08em;padding:.4rem .8rem;border-radius:3px;text-decoration:none;cursor:pointer;border:1px solid;transition:all .2s}
+.ab-cyan{background:rgba(0,229,255,.1);border-color:rgba(0,229,255,.3);color:var(--cyan)}
+.ab-cyan:hover{background:rgba(0,229,255,.2)}
+.ab-green{background:rgba(0,255,136,.1);border-color:rgba(0,255,136,.3);color:var(--green)}
+.ab-ghost{background:transparent;border-color:var(--border2);color:var(--muted)}
+.ab-ghost:hover{color:var(--text);border-color:var(--border2)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;margin-right:.4rem}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-brand">TSM · CONSTRUCTION SUITE · HOW TO</div>
+  <nav class="topbar-nav">
+    <a class="topbar-link" href="#overview">OVERVIEW</a>
+    <a class="topbar-link" href="#daily">DAILY OPS</a>
+    <a class="topbar-link" href="#pipeline">4-NODE PIPELINE</a>
+    <a class="topbar-link" href="#modules">MODULES</a>
+    <a class="topbar-link" href="#walkthrough">WALKTHROUGH</a>
+    <a class="topbar-link" href="/construction-suite/construction-pro.html">↗ LAUNCH APP</a>
+  </nav>
+</div>
+
+<!-- HERO -->
+<section class="hero" id="overview">
+  <div class="hero-eyebrow">// CONSTRUCTION SUITE · OPERATOR GUIDE</div>
+  <h1 class="hero-title">How To Run<br><span>AuditOps Pro</span></h1>
+  <p class="hero-desc">A complete operator guide for the TSM Construction Suite — daily workflows, 4-node AI pipeline, document intelligence, and module-by-module playbooks.</p>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="hero-stat-num">11</div><div class="hero-stat-label">ACTIVE MODULES</div></div>
+    <div class="hero-stat"><div class="hero-stat-num">4</div><div class="hero-stat-label">AI PIPELINE NODES</div></div>
+    <div class="hero-stat"><div class="hero-stat-num">7</div><div class="hero-stat-label">PLAYBOOK CATEGORIES</div></div>
+    <div class="hero-stat"><div class="hero-stat-num">&lt;30s</div><div class="hero-stat-label">ANALYSIS TIME</div></div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- SUITE FEATURES -->
+<section class="section">
+  <div class="section-eyebrow">// WHAT'S IN THE SUITE</div>
+  <h2 class="section-title">Suite Overview</h2>
+  <p class="section-desc">Four integrated tools covering every construction intelligence workflow — from daily site audits to executive reporting.</p>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="feature-icon">⚡</div>
+      <div class="feature-label">PRIMARY APP</div>
+      <div class="feature-title">AuditOps Pro</div>
+      <div class="feature-desc">Main command dashboard. Select playbooks, click module cards, and run the 4-node AI pipeline. All 11 modules live here.</div>
+      <div class="arow" style="margin-top:.8rem"><a class="ab ab-cyan" href="/construction-suite/construction-pro.html">OPEN ↗</a></div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📄</div>
+      <div class="feature-label">DOCUMENT ENGINE</div>
+      <div class="feature-title">BNCA Neural Bridge</div>
+      <div class="feature-desc">Drop any construction document — contract, timesheet, lien waiver, GL extract — and fire all 4 AI engines simultaneously against it.</div>
+      <div class="arow" style="margin-top:.8rem"><a class="ab ab-cyan" href="/construction-suite/document-showcase.html">OPEN ↗</a></div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🧠</div>
+      <div class="feature-label">AI ENGINE</div>
+      <div class="feature-title">4-Node Pipeline</div>
+      <div class="feature-desc">BNCA Command Nodes → HC Strategist → Main Strategist → Executive Portal. Each node builds on the last. Full analysis in under 30 seconds.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📊</div>
+      <div class="feature-label">REPORTING</div>
+      <div class="feature-title">Custom Report Builder</div>
+      <div class="feature-desc">Save any output, combine multiple analyses, build custom AuditOps reports, and export as .TXT or copy to clipboard.</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- DAILY WORKFLOWS -->
+<section class="section" id="daily">
+  <div class="section-eyebrow">// DAILY OPERATIONS</div>
+  <h2 class="section-title">Daily Workflows</h2>
+  <p class="section-desc">Structured workflows for morning setup, midday operations, and EOD reporting. Click any task to mark complete.</p>
+
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('morning',this)">🌅 MORNING  8AM–12PM</button>
+    <button class="tab-btn" onclick="switchTab('midday',this)">☀️ MIDDAY  12PM–4PM</button>
+    <button class="tab-btn" onclick="switchTab('eod',this)">🌆 EOD  4PM–6PM</button>
+  </div>
+
+  <!-- MORNING -->
+  <div class="tab-pane active" id="pane-morning">
+    <div class="wf-grid">
+      <div class="wf-col">
+        <div class="wf-col-head"><span class="wf-col-title">SITE AUDIT / SAFETY</span><span class="wf-col-meta" id="safety-meta">0 / 4 done</span></div>
+        <div class="wf-col-body">
+          <div class="progress-wrap"><div class="progress-bar" id="safety-bar"></div></div>
+          <div class="wf-task" onclick="tick(this,'safety',0)"><div class="wf-check">✓</div><div class="wf-badge tb-p1">P1</div><div class="wf-name">Run OSHA Compliance Audit module</div><div class="wf-desc">Open AuditOps Pro → Safety tab → OSHA Compliance Audit. Fire pipeline. Review flags and immediate actions from BNCA node.</div><div class="wf-owner">Owner: Site Supervisor · Due: 9:00 AM</div></div>
+          <div class="wf-task" onclick="tick(this,'safety',1)"><div class="wf-check">✓</div><div class="wf-badge tb-p1">P1</div><div class="wf-name">Check Incident Root Cause — any new events</div><div class="wf-desc">Run Incident Root Cause module for any safety events from prior shift. Document in Intelligence Feed. Save to report builder.</div><div class="wf-owner">Owner: Safety Manager · Due: 9:30 AM</div></div>
+          <div class="wf-task" onclick="tick(this,'safety',2)"><div class="wf-check">✓</div><div class="wf-badge tb-p2">P2</div><div class="wf-name">Review PPE & Safety ROI output</div><div class="wf-desc">Pull weekly PPE ROI analysis. Note any cost exposure from non-compliance. Forward Executive Portal summary to superintendent.</div><div class="wf-owner">Owner: Safety Manager · Due: 10:00 AM</div></div>
+          <div class="wf-task" onclick="tick(this,'safety',3)"><div class="wf-check">✓</div><div class="wf-badge tb-p2">P2</div><div class="wf-name">Verify OSHA 300 Log current</div><div class="wf-desc">Run OSHA 300 Log module. Confirm all recordable incidents are entered. Flag any pending entries for immediate completion.</div><div class="wf-owner">Owner: HR / Safety · Due: 11:00 AM</div></div>
+        </div>
+        <div class="wf-col-footer"><span>Safety · OSHA Compliance Active</span><span id="safety-count">0/4</span></div>
+      </div>
+      <div class="wf-col">
+        <div class="wf-col-head"><span class="wf-col-title">FINANCE / COST CONTROL</span><span class="wf-col-meta" id="finance-meta">0 / 3 done</span></div>
+        <div class="wf-col-body">
+          <div class="progress-wrap"><div class="progress-bar" id="finance-bar"></div></div>
+          <div class="wf-task" onclick="tick(this,'finance',0)"><div class="wf-check">✓</div><div class="wf-badge tb-p1">P1</div><div class="wf-name">Run Cost Overrun Recovery module</div><div class="wf-desc">Finance tab → Cost Overrun Recovery. Pipeline identifies overrun drivers, cost codes, and mitigation options ranked by impact.</div><div class="wf-owner">Owner: Project Manager · Due: 9:00 AM</div></div>
+          <div class="wf-task" onclick="tick(this,'finance',1)"><div class="wf-check">✓</div><div class="wf-badge tb-p1">P1</div><div class="wf-name">Check Cash Flow Optimization</div><div class="wf-desc">Review 30-day cash flow position. Main Strategist node produces draw request timing, retainage release schedule, and vendor payment strategy.</div><div class="wf-owner">Owner: Controller · Due: 10:00 AM</div></div>
+          <div class="wf-task" onclick="tick(this,'finance',2)"><div class="wf-check">✓</div><div class="wf-badge tb-p2">P2</div><div class="wf-name">Review Bid Margin Analysis</div><div class="wf-desc">Run Bid Margin Analysis module. Compare actuals to bid. Executive Portal node produces CFO-ready variance summary and forward margin outlook.</div><div class="wf-owner">Owner: Estimator / PM · Due: 11:00 AM</div></div>
+        </div>
+        <div class="wf-col-footer"><span>Finance · Cost Control Active</span><span id="finance-count">0/3</span></div>
+      </div>
+      <div class="wf-col">
+        <div class="wf-col-head"><span class="wf-col-title">LOGISTICS / SITE OPS</span><span class="wf-col-meta" id="logistics-meta">0 / 3 done</span></div>
+        <div class="wf-col-body">
+          <div class="progress-wrap"><div class="progress-bar" id="logistics-bar"></div></div>
+          <div class="wf-task" onclick="tick(this,'logistics',0)"><div class="wf-check">✓</div><div class="wf-badge tb-p1">P1</div><div class="wf-name">Check Weather Risk module</div><div class="wf-desc">Logistics tab → Weather Risk. Review delay forecasting and pipeline mitigation options. Flag any schedule impact for superintendent.</div><div class="wf-owner">Owner: Site Super · Due: 8:00 AM</div></div>
+          <div class="wf-task" onclick="tick(this,'logistics',1)"><div class="wf-check">✓</div><div class="wf-badge tb-p2">P2</div><div class="wf-name">Run Tool Tracking audit</div><div class="wf-desc">Tool Tracking module identifies asset utilization gaps and ROI exposure. Export to superintendent for field action items.</div><div class="wf-owner">Owner: Foreman · Due: 9:30 AM</div></div>
+          <div class="wf-task" onclick="tick(this,'logistics',2)"><div class="wf-check">✓</div><div class="wf-badge tb-p3">P3</div><div class="wf-name">Review Soil Report if active work</div><div class="wf-desc">Run Soil Report module for any active earthwork. Benchtech risk / bearing capacity analysis flags geotechnical risk before excavation.</div><div class="wf-owner">Owner: Site Engineer · Due: 11:00 AM</div></div>
+        </div>
+        <div class="wf-col-footer"><span>Logistics · Site Ops Active</span><span id="logistics-count">0/3</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MIDDAY -->
+  <div class="tab-pane" id="pane-midday">
+    <div class="wf-grid">
+      <div class="wf-col">
+        <div class="wf-col-head"><span class="wf-col-title">COMPLIANCE / LEGAL</span><span class="wf-col-meta" id="compliance-meta">0 / 3 done</span></div>
+        <div class="wf-col-body">
+          <div class="progress-wrap"><div class="progress-bar" id="compliance-bar"></div></div>
+          <div class="wf-task" onclick="tick(this,'compliance',0)"><div class="wf-check">✓</div><div class="wf-badge tb-p1">P1</div><div class="wf-name">Run Lien Exposure Review</div><div class="wf-desc">Legal tab → Lien Exposure Review. Identifies sub-tier lien risk, conditional/unconditional waiver status, and joint check requirements.</div><div class="wf-owner">Owner: PM / Legal · Due: 1:00 PM</div></div>
+          <div class="wf-task" onclick="tick(this,'compliance',1)"><div class="wf-check">✓</div><div class="wf-badge tb-p1">P1</div><div class="wf-name">Check OSHA Readiness score</div><div class="wf-desc">Run OSHA Readiness Audit. Main Strategist node produces inspection readiness checklist and priority corrective actions.</div><div class="wf-owner">Owner: Safety Manager · Due: 2:00 PM</div></div>
+          <div class="wf-task" onclick="tick(this,'compliance',2)"><div class="wf-check">✓</div><div class="wf-badge tb-p2">P2</div><div class="wf-name">Review Subcontractor Exposure</div><div class="wf-desc">Compliance tab → Subcontractor Exposure. Flags financial/liability risk from sub performance, insurance gaps, and payment disputes.</div><div class="wf-owner">Owner: PM · Due: 3:00 PM</div></div>
+        </div>
+        <div class="wf-col-footer"><span>Compliance · Legal Risk Active</span><span id="compliance-count">0/3</span></div>
+      </div>
+      <div class="wf-col">
+        <div class="wf-col-head"><span class="wf-col-title">DOCUMENT INTELLIGENCE</span><span class="wf-col-meta" id="docs-meta">0 / 3 done</span></div>
+        <div class="wf-col-body">
+          <div class="progress-wrap"><div class="progress-bar" id="docs-bar"></div></div>
+          <div class="wf-task" onclick="tick(this,'docs',0)"><div class="wf-check">✓</div><div class="wf-badge tb-p1">P1</div><div class="wf-name">Upload weekly timesheets to Neural Bridge</div><div class="wf-desc">Open Document Showcase. Drop current week timesheets. Fire All 4 Apps for labor burden, overtime flag, and Davis-Bacon compliance check.</div><div class="wf-owner">Owner: Payroll / PM · Due: 12:30 PM</div></div>
+          <div class="wf-task" onclick="tick(this,'docs',1)"><div class="wf-check">✓</div><div class="wf-badge tb-p2">P2</div><div class="wf-name">Process any new lien waivers</div><div class="wf-desc">Drop lien waiver PDFs into Neural Bridge. BNCA node validates waiver type, amount, and sub-tier compliance. Main Strat drafts release letter.</div><div class="wf-owner">Owner: PM / Legal · Due: 2:00 PM</div></div>
+          <div class="wf-task" onclick="tick(this,'docs',2)"><div class="wf-check">✓</div><div class="wf-badge tb-p2">P2</div><div class="wf-name">Run GL Extract through pipeline</div><div class="wf-desc">Drop current period GL extract. All 4 engines analyze cost code alignment, variance flags, and budget vs actual. Save Executive output to report builder.</div><div class="wf-owner">Owner: Controller · Due: 3:30 PM</div></div>
+        </div>
+        <div class="wf-col-footer"><span>Documents · Neural Bridge Active</span><span id="docs-count">0/3</span></div>
+      </div>
+      <div class="wf-col">
+        <div class="wf-col-head"><span class="wf-col-title">REPORTING / STRATEGY</span><span class="wf-col-meta" id="strategy-meta">0 / 2 done</span></div>
+        <div class="wf-col-body">
+          <div class="progress-wrap"><div class="progress-bar" id="strategy-bar"></div></div>
+          <div class="wf-task" onclick="tick(this,'strategy',0)"><div class="wf-check">✓</div><div class="wf-badge tb-p2">P2</div><div class="wf-name">Build Custom Report from saved outputs</div><div class="wf-desc">In AuditOps Pro right panel → Custom Report Builder. Add saved analyses from morning modules. Click + Add All Saved to compile.</div><div class="wf-owner">Owner: PM / Controller · Due: 3:00 PM</div></div>
+          <div class="wf-task" onclick="tick(this,'strategy',1)"><div class="wf-check">✓</div><div class="wf-badge tb-p3">P3</div><div class="wf-name">Run Retainage Release Strategy</div><div class="wf-desc">Finance tab → Retainage Strategy. Pipeline calculates release eligibility, billing vs. retention, and GC negotiation position.</div><div class="wf-owner">Owner: PM / Controller · Due: 4:00 PM</div></div>
+        </div>
+        <div class="wf-col-footer"><span>Strategy · Report Build Active</span><span id="strategy-count">0/2</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EOD -->
+  <div class="tab-pane" id="pane-eod">
+    <div class="wf-grid">
+      <div class="wf-col">
+        <div class="wf-col-head"><span class="wf-col-title">WRAP-UP / CLOSE</span><span class="wf-col-meta" id="wrap-meta">0 / 2 done</span></div>
+        <div class="wf-col-body">
+          <div class="progress-wrap"><div class="progress-bar" id="wrap-bar"></div></div>
+          <div class="wf-task" onclick="tick(this,'wrap',0)"><div class="wf-check">✓</div><div class="wf-badge tb-p1">P1</div><div class="wf-name">Confirm all P1 pipeline outputs saved</div><div class="wf-desc">Review report history panel. Any P1 module output not saved must be re-run and saved before shutdown. Export final report as .TXT.</div><div class="wf-owner">Owner: PM · Due: 5:00 PM</div></div>
+          <div class="wf-task" onclick="tick(this,'wrap',1)"><div class="wf-check">✓</div><div class="wf-badge tb-p2">P2</div><div class="wf-name">Send Custom Report to superintendent / owner</div><div class="wf-desc">Export Custom AuditOps Report. Copy to clipboard or export .TXT. Attach to daily report email with 3-line executive summary.</div><div class="wf-owner">Owner: Controller / PM · Due: 5:30 PM</div></div>
+        </div>
+        <div class="wf-col-footer"><span>Wrap-Up · All P1s must be saved</span><span id="wrap-count">0/2</span></div>
+      </div>
+      <div class="wf-col">
+        <div class="wf-col-head"><span class="wf-col-title">EXECUTIVE REPORTING</span><span class="wf-col-meta" id="exec-meta">0 / 2 done</span></div>
+        <div class="wf-col-body">
+          <div class="progress-wrap"><div class="progress-bar" id="exec-bar"></div></div>
+          <div class="wf-task" onclick="tick(this,'exec',0)"><div class="wf-check">✓</div><div class="wf-badge tb-p1">P1</div><div class="wf-name">Run Bid Strategy Analysis — EOD update</div><div class="wf-desc">Final pipeline run on Bid Strategy Analysis. Executive Portal node produces owner-facing dashboard: exposure, decisions required, 30/60/90 roadmap.</div><div class="wf-owner">Owner: Estimator / PM · Due: 4:30 PM</div></div>
+          <div class="wf-task" onclick="tick(this,'exec',1)"><div class="wf-check">✓</div><div class="wf-badge tb-p2">P2</div><div class="wf-name">Export and distribute to ownership</div><div class="wf-desc">Copy Executive Portal tab output. Format into owner brief. Distribute via email with Bid Margin delta, open risk count, and next-day priorities.</div><div class="wf-owner">Owner: PM · Due: 5:00 PM</div></div>
+        </div>
+        <div class="wf-col-footer"><span>Exec · Owner Handoff Active</span><span id="exec-count">0/2</span></div>
+      </div>
+      <div class="wf-col">
+        <div class="wf-col-head"><span class="wf-col-title">TOMORROW PREP</span><span class="wf-col-meta" id="prep-meta">0 / 2 done</span></div>
+        <div class="wf-col-body">
+          <div class="progress-wrap"><div class="progress-bar" id="prep-bar"></div></div>
+          <div class="wf-task" onclick="tick(this,'prep',0)"><div class="wf-check">✓</div><div class="wf-badge tb-p2">P2</div><div class="wf-name">Note carryover items in Custom Report</div><div class="wf-desc">Add unresolved items to Custom Report Builder with status. Leave in shared report for morning team. Note any P1 escalations outstanding.</div><div class="wf-owner">Owner: PM · Due: 5:30 PM</div></div>
+          <div class="wf-task" onclick="tick(this,'prep',1)"><div class="wf-check">✓</div><div class="wf-badge tb-p3">P3</div><div class="wf-name">Queue tomorrow's priority modules</div><div class="wf-desc">Identify which playbook tabs to prioritize AM. If Cash Flow alert active, lead with Finance. If inspection pending, lead with Safety/Compliance.</div><div class="wf-owner">Owner: PM · Due: 6:00 PM</div></div>
+        </div>
+        <div class="wf-col-footer"><span>Prep · Queue tomorrow's priorities</span><span id="prep-count">0/2</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- 4-NODE PIPELINE -->
+<section class="section" id="pipeline">
+  <div class="section-eyebrow">// AI ENGINE</div>
+  <h2 class="section-title">The 4-Node Pipeline</h2>
+  <p class="section-desc">Every module click triggers all four AI nodes in sequence. Each builds on the previous. Full executive analysis in under 30 seconds.</p>
+
+  <div class="pipeline">
+    <div class="pipe-node n1">
+      <div class="pipe-node-num">APP 01</div>
+      <div class="pipe-node-title">BNCA NODES</div>
+      <div class="pipe-node-sub">INTEL · TRIAGE · FLAGS · RISK ID</div>
+      <div class="pipe-node-desc">Document triage and risk identification. Lists every risk, anomaly, violation, or missing item with specific amounts, dates, and names. Outputs financial exposure total and 48-hour action items.</div>
+    </div>
+    <div class="pipe-node n2">
+      <div class="pipe-node-num">APP 02</div>
+      <div class="pipe-node-title">HC STRATEGIST</div>
+      <div class="pipe-node-sub">RFI · ALERTS · COSTS · PRIORITIES</div>
+      <div class="pipe-node-desc">Operational strategy layer. Identifies RFI and change order impacts, cost alert line items, vendor/subcontractor issues, schedule re-sequencing needs, and 3 ranked mitigation options with cost/time comparison.</div>
+    </div>
+    <div class="pipe-node n3">
+      <div class="pipe-node-num">APP 03</div>
+      <div class="pipe-node-title">MAIN STRATEGIST</div>
+      <div class="pipe-node-sub">LETTERS · MITIGATION · ACTIONS · SCHEDULE</div>
+      <div class="pipe-node-desc">Formal correspondence and mitigation planning. Drafts professional notice letters, step-by-step mitigation plans with owners and deadlines, schedule impact analysis on critical path, and legal/contractual considerations.</div>
+    </div>
+    <div class="pipe-node n4">
+      <div class="pipe-node-num">APP 04</div>
+      <div class="pipe-node-title">EXECUTIVE PORTAL</div>
+      <div class="pipe-node-sub">CFO · REVENUE · ROADMAP · DECISIONS</div>
+      <div class="pipe-node-desc">Owner and CFO-level brief. 3-sentence executive summary, financial dashboard with key numbers, specific yes/no decisions required with deadlines, cash flow and retainage impact, and 30/60/90 day forward roadmap.</div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>How to use the pipeline tabs:</strong> After a module runs, use the <span class="tag tag-cyan">01 BNCA</span> <span class="tag tag-green">02 STRATEGIST</span> <span class="tag tag-cyan">03 MAIN STRAT</span> <span class="tag tag-amber">04 EXECUTIVE</span> tabs in the Intelligence Feed to switch between all four outputs. Each tab can be saved individually to the Report Builder using the <strong>SAVE →</strong> button.
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- MODULE GUIDE -->
+<section class="section" id="modules">
+  <div class="section-eyebrow">// MODULE REFERENCE</div>
+  <h2 class="section-title">All 11 Modules</h2>
+  <p class="section-desc">Each module is pre-configured with a specific AI prompt chain. Click any card in AuditOps Pro to run the full pipeline against that module's context.</p>
+
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('mod-safety',this)">SAFETY</button>
+    <button class="tab-btn" onclick="switchTab('mod-finance',this)">FINANCE</button>
+    <button class="tab-btn" onclick="switchTab('mod-logistics',this)">LOGISTICS</button>
+    <button class="tab-btn" onclick="switchTab('mod-compliance',this)">COMPLIANCE</button>
+    <button class="tab-btn" onclick="switchTab('mod-legal',this)">LEGAL</button>
+    <button class="tab-btn" onclick="switchTab('mod-geotech',this)">GEOTECH</button>
+    <button class="tab-btn" onclick="switchTab('mod-operations',this)">OPERATIONS</button>
+  </div>
+
+  <div class="tab-pane active" id="pane-mod-safety">
+    <div class="feature-grid">
+      <div class="feature-card"><div class="feature-label">SAFETY · 01</div><div class="feature-title">OSHA Compliance Audit</div><div class="feature-desc">Flags OSHA violations with specific regulation citations, fine exposure estimates, and corrective action timelines. Includes 48-hour action plan from BNCA node.</div><div style="margin-top:.6rem"><span class="tag tag-cyan">Fine Exposure</span><span class="tag tag-green">30-Day Remediation</span></div></div>
+      <div class="feature-card"><div class="feature-label">SAFETY · 02</div><div class="feature-title">Incident Root Cause</div><div class="feature-desc">Root cause analysis for safety incidents. Hidden costs, targeted interventions, OSHA recordability determination, and corrective action documentation for audit trail.</div><div style="margin-top:.6rem"><span class="tag tag-cyan">Root Cause</span><span class="tag tag-amber">Hidden Costs</span></div></div>
+      <div class="feature-card"><div class="feature-label">SAFETY · 03</div><div class="feature-title">PPE & Safety ROI</div><div class="feature-desc">13-month break-even and 3-year ROI analysis on PPE programs. Identifies cost of non-compliance vs. program investment. Executive Portal outputs owner-ready safety investment brief.</div><div style="margin-top:.6rem"><span class="tag tag-green">13-Month Break-Even</span><span class="tag tag-cyan">3-Year ROI</span></div></div>
+      <div class="feature-card"><div class="feature-label">SAFETY · 04</div><div class="feature-title">OSHA 300 Log</div><div class="feature-desc">Recordkeeping and citation exposure analysis. Flags missing entries, recordability questions, and audit readiness gaps. Main Strategist drafts OSHA response letters if citations pending.</div><div style="margin-top:.6rem"><span class="tag tag-cyan">Recordkeeping</span><span class="tag tag-amber">Citation Exposure</span></div></div>
+    </div>
+  </div>
+
+  <div class="tab-pane" id="pane-mod-finance">
+    <div class="feature-grid">
+      <div class="feature-card"><div class="feature-label">FINANCE · 01</div><div class="feature-title">Cost Overrun Recovery</div><div class="feature-desc">Identifies overrun drivers by cost code, calculates margin back, and surfaces quick-win recovery options. HC Strategist ranks 3 mitigation paths. Executive Portal shows owner impact.</div><div style="margin-top:.6rem"><span class="tag tag-cyan">Margin Back</span><span class="tag tag-green">Quick-Win Recovery</span></div></div>
+      <div class="feature-card"><div class="feature-label">FINANCE · 02</div><div class="feature-title">Cash Flow Optimization</div><div class="feature-desc">30-day cash flow improvement plan. Draw request timing, retainage release scheduling, early pay discount capture, and vendor payment sequencing to protect project liquidity.</div><div style="margin-top:.6rem"><span class="tag tag-green">30-Day Plan</span><span class="tag tag-cyan">Draw Timing</span></div></div>
+      <div class="feature-card"><div class="feature-label">FINANCE · 03</div><div class="feature-title">Bid Margin Analysis</div><div class="feature-desc">Win rate vs. profitability optimization analysis. Compares bid assumptions to actuals, identifies margin bleed sources, and produces forward-looking bid strategy recommendations.</div><div style="margin-top:.6rem"><span class="tag tag-cyan">Win Rate</span><span class="tag tag-amber">Margin Optimization</span></div></div>
+      <div class="feature-card"><div class="feature-label">FINANCE · 04</div><div class="feature-title">Retainage Strategy</div><div class="feature-desc">Retention billing vs. release analysis, GC negotiation position, joint check structuring, and sub-tier retainage flow-through strategy. Executive Portal outputs CFO retainage dashboard.</div><div style="margin-top:.6rem"><span class="tag tag-green">Release Eligibility</span><span class="tag tag-cyan">GC Negotiation</span></div></div>
+    </div>
+  </div>
+
+  <div class="tab-pane" id="pane-mod-logistics">
+    <div class="feature-grid">
+      <div class="feature-card"><div class="feature-label">LOGISTICS · 01</div><div class="feature-title">Weather Risk</div><div class="feature-desc">Weather delay forecasting and mitigation planning. Schedule float analysis, Force Majeure documentation triggers, and owner notification requirements based on contract type.</div><div style="margin-top:.6rem"><span class="tag tag-cyan">Delay Forecast</span><span class="tag tag-amber">Force Majeure</span></div></div>
+      <div class="feature-card"><div class="feature-label">LOGISTICS · 02</div><div class="feature-title">Soil Report</div><div class="feature-desc">Geotechnical risk analysis. Benchtech risk ratings, bearing capacity flags, unsuitable soil cost exposure, and schedule impact from changed subsurface conditions.</div><div style="margin-top:.6rem"><span class="tag tag-cyan">Bearing Capacity</span><span class="tag tag-green">Schedule Impact</span></div></div>
+      <div class="feature-card"><div class="feature-label">LOGISTICS · 03</div><div class="feature-title">Tool Tracking</div><div class="feature-desc">Asset utilization and ROI analysis. Identifies underutilized equipment, rental vs. own cost comparison, and theft/loss exposure. BNCA node flags BIT data anomalies.</div><div style="margin-top:.6rem"><span class="tag tag-cyan">Utilization ROI</span><span class="tag tag-amber">BIT Anomalies</span></div></div>
+      <div class="feature-card"><div class="feature-label">LOGISTICS · 04</div><div class="feature-title">Utility Map</div><div class="feature-desc">811 strike detection and avoidance workflow. Activation clock detection, service exposure mapping, and emergency response protocol generation from Main Strategist node.</div><div style="margin-top:.6rem"><span class="tag tag-green">811 Detection</span><span class="tag tag-cyan">Activation Clock</span></div></div>
+    </div>
+  </div>
+
+  <div class="tab-pane" id="pane-mod-compliance">
+    <div class="feature-grid">
+      <div class="feature-card"><div class="feature-label">COMPLIANCE · 01</div><div class="feature-title">Subcontractor Exposure</div><div class="feature-desc">Financial and liability risk from sub performance. Insurance gap detection, payment dispute flags, default risk assessment, and GC exposure analysis from HC Strategist.</div></div>
+      <div class="feature-card"><div class="feature-label">COMPLIANCE · 02</div><div class="feature-title">Cash Flow Stress Test</div><div class="feature-desc">Liability and pressure testing of project cash position. Identifies single-point-of-failure payment dependencies and models cash floor scenarios under delayed revenue.</div></div>
+    </div>
+  </div>
+
+  <div class="tab-pane" id="pane-mod-legal">
+    <div class="feature-grid">
+      <div class="feature-card"><div class="feature-label">LEGAL · 01</div><div class="feature-title">Lien Exposure Review</div><div class="feature-desc">Sub-tier lien risk, conditional/unconditional waiver status, joint check requirements, and preliminary notice compliance. Main Strategist drafts lien release demand letters.</div><div style="margin-top:.6rem"><span class="tag tag-cyan">Lien Risk</span><span class="tag tag-amber">Waiver Status</span></div></div>
+      <div class="feature-card"><div class="feature-label">LEGAL · 02</div><div class="feature-title">Bid Strategy Analysis</div><div class="feature-desc">Win/Bid ratio analysis with profitability optimization. Executive Portal produces owner-facing bid position dashboard with decisions required on pursuit strategy.</div><div style="margin-top:.6rem"><span class="tag tag-green">Win/Bid Ratio</span><span class="tag tag-cyan">Pursuit Strategy</span></div></div>
+    </div>
+  </div>
+
+  <div class="tab-pane" id="pane-mod-geotech">
+    <div class="feature-grid">
+      <div class="feature-card"><div class="feature-label">GEOTECH · 01</div><div class="feature-title">OSHA Readiness Audit</div><div class="feature-desc">Inspection Prep readiness scoring. Priority corrective action list, documentation gap flags, and inspector question simulation from Main Strategist node.</div></div>
+    </div>
+  </div>
+
+  <div class="tab-pane" id="pane-mod-operations">
+    <div class="feature-grid">
+      <div class="feature-card"><div class="feature-label">OPERATIONS · 01</div><div class="feature-title">Material Theft</div><div class="feature-desc">Site security and theft exposure analysis. Inventory control gap identification, security plan development, and Davis-Bacon prevailing wage verification for labor compliance.</div></div>
+      <div class="feature-card"><div class="feature-label">OPERATIONS · 02</div><div class="feature-title">Safety Protocol</div><div class="feature-desc">Bid compliance and safety protocol review. Site-specific safety plan gaps, SSSP compliance check, and subcontractor safety pre-qualification scoring.</div></div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- STEP-BY-STEP WALKTHROUGH -->
+<section class="section" id="walkthrough">
+  <div class="section-eyebrow">// GETTING STARTED</div>
+  <h2 class="section-title">Step-by-Step Walkthrough</h2>
+  <p class="section-desc">Six steps from opening the suite to sending an executive report. Follow in order your first time.</p>
+
+  <div class="step-list">
+    <div class="step-card open" id="st1">
+      <div class="step-head" onclick="toggleStep('st1')"><div class="step-num">01</div><div class="step-title">Open AuditOps Pro — Your Daily Command Center</div><div class="step-chev">▶</div></div>
+      <div class="step-body">
+        <p class="step-desc">AuditOps Pro is your primary interface. Open it every morning. The left sidebar shows your active playbook and system status. The center grid shows all available modules organized by category. The right panel is your Report History and Custom Report Builder.</p>
+        <div class="url-bar"><span class="url-lock">🔒</span><span class="url-text">tsm-shell.fly.dev/construction-suite/construction-pro.html</span><div class="url-dot"></div><span class="url-stat">LIVE</span></div>
+        <div class="arow"><a class="ab ab-cyan" href="/construction-suite/construction-pro.html">▶ LAUNCH AUDITOPS PRO</a></div>
+        <div class="callout"><strong>First time?</strong> The Neural Core Key field at the top of the Intelligence Feed is hidden — AI runs server-side automatically. Just click any module card to start.</div>
+      </div>
+    </div>
+
+    <div class="step-card" id="st2">
+      <div class="step-head" onclick="toggleStep('st2')"><div class="step-num">02</div><div class="step-title">Select a Playbook from the Left Sidebar</div><div class="step-chev">▶</div></div>
+      <div class="step-body">
+        <p class="step-desc">The left sidebar lists your active playbooks — preset scenario contexts like Material Theft, Safety Protocol, OSHA Readiness Audit, Lien Exposure Review, Cash Flow Stress Test, and Bid Strategy Analysis. Selecting a playbook sets the context for the pipeline — all 4 nodes will frame their analysis around that scenario.</p>
+        <div class="callout"><strong>Pro tip:</strong> Match your playbook to your current P1 issue. If you have a lien dispute active, select Lien Exposure Review before clicking any module card — the pipeline will tailor all 4 outputs to that context.</div>
+      </div>
+    </div>
+
+    <div class="step-card" id="st3">
+      <div class="step-head" onclick="toggleStep('st3')"><div class="step-num">03</div><div class="step-title">Click a Module Card — Pipeline Fires Automatically</div><div class="step-chev">▶</div></div>
+      <div class="step-body">
+        <p class="step-desc">Click any module card in the center grid — OSHA Compliance Audit, Cost Overrun Recovery, Lien Exposure Review, etc. The 4-node pipeline fires immediately. Watch the node indicators progress: BNCA → HC Strategist → Main Strategist → Executive Portal. Each completes in sequence, streaming output directly into the Intelligence Feed tabs.</p>
+        <div class="callout"><strong>Tab switching:</strong> While the pipeline runs, click the <strong>01 BNCA</strong> / <strong>02 STRATEGIST</strong> / <strong>03 MAIN STRAT</strong> / <strong>04 EXECUTIVE</strong> tabs to read each node's output as it completes — you don't have to wait for all 4 to finish.</div>
+      </div>
+    </div>
+
+    <div class="step-card" id="st4">
+      <div class="step-head" onclick="toggleStep('st4')"><div class="step-num">04</div><div class="step-title">Use the Document Showcase for File-Based Analysis</div><div class="step-chev">▶</div></div>
+      <div class="step-body">
+        <p class="step-desc">For document-specific analysis — timesheets, lien waivers, GL extracts, subcontractor invoices, OSHA citations — use the BNCA Neural Bridge. Drop any file (PDF, CSV, XLSX, image scan) or paste raw text. Select your document type from the left panel, then click Fire All 4 Apps.</p>
+        <div class="url-bar"><span class="url-lock">🔒</span><span class="url-text">tsm-shell.fly.dev/construction-suite/document-showcase.html</span><div class="url-dot"></div><span class="url-stat">LIVE</span></div>
+        <div class="arow"><a class="ab ab-cyan" href="/construction-suite/document-showcase.html">▶ OPEN NEURAL BRIDGE</a></div>
+        <div class="callout"><strong>Supported formats:</strong> <span class="tag tag-cyan">PDF</span><span class="tag tag-cyan">CSV</span><span class="tag tag-cyan">XLSX</span><span class="tag tag-cyan">JPG/PNG scans</span><span class="tag tag-cyan">Plain text paste</span> — or use the 5 preloaded sample documents: Fastener Delay, GL Extract Q1, Lien Waiver, Labor Timesheet, HOME Expenditure.</div>
+      </div>
+    </div>
+
+    <div class="step-card" id="st5">
+      <div class="step-head" onclick="toggleStep('st5')"><div class="step-num">05</div><div class="step-title">Save Outputs and Build Your Custom Report</div><div class="step-chev">▶</div></div>
+      <div class="step-body">
+        <p class="step-desc">After any pipeline run, click <strong>SAVE →</strong> in the Intelligence Feed to add that output to your Report History. The right panel tracks all saved outputs with timestamps. Use the Custom Report Builder input to name your report, then click <strong>+ Add All Saved</strong> to compile everything into one document. Export as .TXT or copy to clipboard.</p>
+        <div class="callout"><strong>Report flow:</strong> Run 3–4 modules throughout the day → Save each output → At EOD, compile into Custom AuditOps Report → Export .TXT → Send to superintendent / owner / CFO.</div>
+      </div>
+    </div>
+
+    <div class="step-card" id="st6">
+      <div class="step-head" onclick="toggleStep('st6')"><div class="step-num">06</div><div class="step-title">Distribute the Executive Portal Output</div><div class="step-chev">▶</div></div>
+      <div class="step-body">
+        <p class="step-desc">The Executive Portal (App 04) output is designed for owner and CFO audiences — no jargon, numbers front and center, specific decisions required. Copy the Executive Portal tab output from any module run and include it in your daily owner report, board package, or pre-construction meeting brief.</p>
+        <div class="callout"><strong>What's in the Executive Portal output:</strong> Executive Summary (3 sentences) · Financial Dashboard (exposure, cash impact, mitigation cost) · Owner Decisions Required (with deadlines) · Revenue/Cash Flow Impact · 30/60/90 Day Roadmap.</div>
+        <div class="arow"><a class="ab ab-cyan" href="/construction-suite/construction-pro.html">▶ OPEN AUDITOPS PRO</a><a class="ab ab-ghost" href="/construction-suite/document-showcase.html">▶ OPEN NEURAL BRIDGE</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- FOOTER -->
+<section class="section" style="padding-top:1.5rem;padding-bottom:3rem">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+    <div>
+      <div style="font-family:var(--mono);font-size:.5rem;letter-spacing:.15em;color:var(--muted)">TSM SHELL · CONSTRUCTION SUITE · OPERATOR GUIDE</div>
+      <div style="font-family:var(--mono);font-size:.5rem;color:var(--muted);margin-top:.3rem"><span class="live-dot"></span>SYSTEM LIVE · 4 NODES ACTIVE · 11 MODULES READY</div>
+    </div>
+    <div class="arow">
+      <a class="ab ab-cyan" href="/construction-suite/construction-pro.html">AUDITOPS PRO ↗</a>
+      <a class="ab ab-ghost" href="/construction-suite/document-showcase.html">NEURAL BRIDGE ↗</a>
+      <a class="ab ab-ghost" href="/construction-suite/suite-index.html">SUITE INDEX ↗</a>
+    </div>
+  </div>
+</section>
+
+<script>
+// ── TAB SWITCHING ────────────────────────────────────────────────
+function switchTab(id, btn) {
+  const parent = btn.closest('.section') || document;
+  parent.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  const pane = document.getElementById('pane-' + id);
+  if (pane) pane.classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── STEP CARDS ───────────────────────────────────────────────────
+function toggleStep(id) {
+  const card = document.getElementById(id);
+  card.classList.toggle('open');
+}
+
+// ── TASK TICKING ─────────────────────────────────────────────────
+const counts = {};
+function tick(el, group, idx) {
+  el.classList.toggle('done');
+  if (!counts[group]) counts[group] = 0;
+  counts[group] += el.classList.contains('done') ? 1 : -1;
+  counts[group] = Math.max(0, counts[group]);
+
+  // Update progress bar
+  const bar = document.getElementById(group + '-bar');
+  const tasks = document.querySelectorAll(`[onclick*="tick(this,'${group}'"]`);
+  const total = tasks.length;
+  const done = counts[group];
+  if (bar) bar.style.width = (done / total * 100) + '%';
+
+  // Update count labels
+  const meta = document.getElementById(group + '-meta');
+  const count = document.getElementById(group + '-count');
+  const label = `${done} / ${total} done`;
+  if (meta) meta.textContent = label;
+  if (count) count.textContent = `${done}/${total}`;
+
+  el.querySelector('.wf-check').style.color = el.classList.contains('done') ? 'var(--green)' : 'transparent';
+}
+
+// ── TOPBAR ACTIVE ────────────────────────────────────────────────
+document.querySelectorAll('.topbar-link[href^="#"]').forEach(link => {
+  link.addEventListener('click', function() {
+    document.querySelectorAll('.topbar-link').forEach(l => l.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
