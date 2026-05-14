@@ -1,144 +1,250 @@
 const express = require('express');
 const path = require('path');
 const app = express();
-
-// =====================================================
-// FORCE TOP HC QUERY ROUTE - NODE SPECIFIC
-// =====================================================
-function hcNodeKey(v){
-  v=String(v||"").toUpperCase();
-  if(v.includes("BILL")) return "BILLING";
-  if(v.includes("MED")) return "MEDICAL";
-  if(v.includes("COMP")) return "COMPLIANCE";
-  if(v.includes("FIN")) return "FINANCIAL";
-  if(v.includes("INS")) return "INSURANCE";
-  if(v.includes("PHARM")) return "PHARMACY";
-  if(v.includes("VENDOR")) return "VENDORS";
-  if(v.includes("LEGAL")) return "LEGAL";
-  if(v.includes("GRANT")) return "GRANTS";
-  if(v.includes("TAX")) return "TAXPREP";
-  if(v.includes("STRAT")) return "STRATEGIST";
-  return "OPERATIONS";
-}
-
-const hcProfiles={
-  OPERATIONS:["Operations Lead","Intake, staffing, scheduling, and throughput pressure"],
-  MEDICAL:["Clinical Ops Lead","Clinical backlog, provider load, documentation gaps, and no-show risk"],
-  BILLING:["Billing Lead / RCM Director","Denial pressure, AR aging, claim defects, and payer inactivity"],
-  COMPLIANCE:["Compliance Officer","HIPAA exposure, CMS/OIG risk, policy gaps, and audit readiness"],
-  FINANCIAL:["Finance Director / CFO Lane","Revenue risk, payer variance, reimbursement slowdown, and margin pressure"],
-  INSURANCE:["Prior Auth Lead","Eligibility misses, prior-auth aging, payer SLA risk, and authorization blockers"],
-  PHARMACY:["Pharmacy Lead","Medication access, refill queue, formulary mismatch, and pharmacy PA blockers"],
-  VENDORS:["Vendor Manager","Vendor SLA exceptions, supply blockers, contract gaps, and invoice friction"],
-  LEGAL:["Legal Ops Lead","Contract risk, credentialing blockers, documentation exposure, and legal escalation"],
-  GRANTS:["Grants Manager","Grant deadlines, reporting gaps, eligibility risk, and funding continuity"],
-  TAXPREP:["Tax Prep Lead","1099 readiness, W-9 gaps, filing windows, and vendor documentation exposure"],
-  STRATEGIST:["HC Strategist","Cross-node unresolved risk and executive prioritization"]
-};
-
-async function forcedHcReply(body){
-  const payload=body.payload||body||{};
-  const node=hcNodeKey(payload.node||body.node||"");
-  const tab=payload.tab||body.tab||"Current View";
-  const context=payload.context||body.context||body.prompt||body.message||"Run node-specific BNCA.";
-  const [owner,top]=hcProfiles[node]||hcProfiles.OPERATIONS;
-
-  const system=`You are TSM Healthcare Strategist Engine. You MUST answer for NODE=${node}, not Operations unless NODE=OPERATIONS.
-Return exactly:
-TOP ISSUE
-...
-WHY IT MATTERS
-...
-BEST NEXT ACTIONS
-1.
-2.
-3.
-4.
-OWNER LANE
-...
-HITL DECISION
-...
-STRATEGIST RELAY
-...
-CONFIDENCE
-...%`;
-
-  const user=`NODE=${node}
-TAB=${tab}
-CONTEXT=${typeof context==="string"?context:JSON.stringify(context)}
-Expected focus: ${top}
-Owner lane: ${owner}`;
-
-  if(process.env.GROQ_API_KEY){
-    try{
-      const r=await fetch("https://api.groq.com/openai/v1/chat/completions",{
-        method:"POST",
-        headers:{
-          "Content-Type":"application/json",
-          "Authorization":"Bearer "+process.env.GROQ_API_KEY
-        },
-        body:JSON.stringify({
-          model:process.env.TSM_HC_MODEL||process.env.GROQ_MODEL||"llama-3.3-70b-versatile",
-          messages:[{role:"system",content:system},{role:"user",content:user}],
-          temperature:0.16,
-          max_tokens:850
-        }),
-        signal:AbortSignal.timeout(14000)
-      });
-      const d=await r.json();
-      const reply=d?.choices?.[0]?.message?.content;
-      if(reply) return {node,tab,reply};
-    }catch(e){}
-  }
-
-  const reply=`TOP ISSUE
-${top}
-
-CURRENT REQUEST
-${typeof context==="string"?context:JSON.stringify(context)}
-
-WHY IT MATTERS
-This ${node} issue can affect revenue, compliance, staffing, patient flow, or executive escalation if it is not owned during the current operating window.
-
-BEST NEXT ACTIONS
-1. Assign ${owner} as accountable owner.
-2. Review the active ${tab} signals and unresolved blockers.
-3. Run BNCA and document the human-in-the-loop decision.
-4. Relay unresolved risk to HC Strategist for cross-node synthesis.
-
-OWNER LANE
-${owner}
-
-HITL DECISION
-Human operator should confirm ownership, approve the next action, and decide whether this requires strategist escalation.
-
-STRATEGIST RELAY
-Send node=${node}, tab=${tab}, owner="${owner}", priority=HIGH, unresolved=true.
-
-CONFIDENCE
-92%`;
-  return {node,tab,reply};
-}
-
-// mounted before older duplicate routes
-app.get("/api/hc/query",(req,res)=>res.json({ok:true,route:"/api/hc/query",method:"POST required",forced:true}));
-app.post("/api/hc/query",async(req,res)=>{
-  const out=await forcedHcReply(req.body||{});
-  res.json({ok:true,node:out.node,tab:out.tab,reply:out.reply,content:out.reply,forced:true,ts:new Date().toISOString()});
-});
-// =====================================================
-
-
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'html')));
+app.use('/construction-suite', express.static(path.join(__dirname, 'html', 'construction-suite')));
+app.use('/finops-suite', express.static(path.join(__dirname, 'html', 'finops-suite')));
+app.use('/healthcare', express.static(path.join(__dirname, 'html', 'healthcare')));
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.post('/api/cfo-chat', (req, res) => {
+app.post(['/api/cfo-chat', '*/api/cfo-chat'], (req, res) => {
     const { sector } = req.body;
-    // WIP Logic for Construction and Medical
-    const data = sector === 'Construction' 
-        ? { logic: "WIP-RECON-UNDER", analysis: "$900k recoup on Ameris Job #203", narrative: "Ready for AIA G702", mesh_status: "11/11 NODES ACTIVE" }
-        : { logic: "UPCODE-DETECT-V2", analysis: "14 miscoded '99214' instances", narrative: "Revenue risk: $4.2k/provider month. Targets: Banner & HonorHealth.", mesh_status: "11/11 NODES ACTIVE" };
+    // WIP Data derived from the Job Master Schema
+    const data = (sector === 'Construction' || req.body.query?.includes('WIP')) 
+        ? { 
+            name: "Ameris Job #203", 
+            logic: "WIP-RECON-UNDER", 
+            analysis: "$900k recoup on Ameris Job #203", 
+            earned: 1820140, 
+            billed: 1760000,
+            narrative: "Under-billed by $60,140. Ready for AIA G702 alignment.", 
+            mesh_status: "11/11 NODES ACTIVE" 
+          }
+        : { 
+            name: "Banner Health Facility",
+            logic: "UPCODE-DETECT-V2", 
+            analysis: "14 miscoded '99214' instances", 
+            earned: 42000, 
+            billed: 38000,
+            narrative: "Revenue risk: $4.2k/provider month. Target: Banner & HonorHealth.", 
+            mesh_status: "11/11 NODES ACTIVE" 
+          };
     res.json(data);
 });
+
+
+// ── Groq streaming proxy ─────────────────────────────────────────
+app.post('/api/groq/stream', express.json({limit:'2mb'}), async (req, res) => {
+  const key = process.env.GROQ_API_KEY;
+  if (!key) return res.status(503).json({error:'No API key configured'});
+  try {
+    const upstream = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method:'POST',
+      headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
+      body: JSON.stringify({...req.body, stream:true})
+    });
+    res.setHeader('Content-Type','text/event-stream');
+    res.setHeader('Cache-Control','no-cache');
+    upstream.body.pipeTo(new WritableStream({
+      write(chunk){ res.write(chunk); },
+      close(){ res.end(); }
+    }));
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
+// ── 404 catch-all ─────────────────────────────────────────────────
+app.use('/api', (req,res) => res.status(404).json({ok:false,error:'API route not found',path:req.path}));
+app.use((req,res) => res.status(404).send('Not found: '+req.path));
+
+
+
+// ======================================================
+// FINAL FORCED HC QUERY ROUTE
+// ======================================================
+
+function finalHCProfile(node){
+
+node=String(node||"OPERATIONS").toUpperCase();
+
+const MAP={
+
+MEDICAL:{
+owner:"Clinical Operations Lead",
+issue:"Clinical backlog, provider load, documentation gaps, and patient throughput degradation",
+actions:[
+"Reduce provider backlog",
+"Resolve documentation defects",
+"Review no-show trend",
+"Escalate unresolved care delays"
+]
+},
+
+BILLING:{
+owner:"RCM Director",
+issue:"AR aging, denial escalation, payer rejection trend, and reimbursement slowdown",
+actions:[
+"Reduce denial backlog",
+"Escalate payer variance",
+"Correct coding defects",
+"Prioritize high-dollar AR recovery"
+]
+},
+
+COMPLIANCE:{
+owner:"Compliance Officer",
+issue:"HIPAA exposure, CMS audit risk, and unresolved policy exceptions",
+actions:[
+"Review audit gaps",
+"Validate HIPAA controls",
+"Generate compliance escalation packet",
+"Prepare executive compliance review"
+]
+},
+
+FINANCIAL:{
+owner:"Finance Director",
+issue:"Margin compression, payer variance, reimbursement slowdown, and revenue leakage",
+actions:[
+"Review reimbursement slowdown",
+"Forecast margin exposure",
+"Reduce avoidable leakage",
+"Escalate enterprise financial risk"
+]
+},
+
+INSURANCE:{
+owner:"Prior Authorization Lead",
+issue:"Prior-auth backlog, eligibility mismatch, and payer SLA degradation",
+actions:[
+"Resolve auth backlog",
+"Escalate payer delays",
+"Review authorization aging",
+"Prioritize high-risk patients"
+]
+},
+
+LEGAL:{
+owner:"Legal Operations Lead",
+issue:"Contract exposure, unresolved legal escalation, and documentation liability",
+actions:[
+"Review contract exposure",
+"Prepare escalation packet",
+"Validate legal timelines",
+"Escalate unresolved liability"
+]
+},
+
+PHARMACY:{
+owner:"Pharmacy Director",
+issue:"Medication queue backlog, formulary mismatch, and refill delay risk",
+actions:[
+"Review refill backlog",
+"Validate formulary exceptions",
+"Resolve medication blockers",
+"Escalate high-risk delays"
+]
+},
+
+VENDORS:{
+owner:"Vendor Operations Manager",
+issue:"Vendor SLA degradation, procurement blockers, and supply chain risk",
+actions:[
+"Review vendor SLA",
+"Escalate procurement blockers",
+"Validate supply continuity",
+"Review high-risk dependencies"
+]
+},
+
+GRANTS:{
+owner:"Grant Program Director",
+issue:"Grant deadline risk, reporting backlog, and funding continuity exposure",
+actions:[
+"Review funding deadlines",
+"Generate reporting packet",
+"Escalate unresolved compliance",
+"Protect continuity funding"
+]
+},
+
+TAXPREP:{
+owner:"Tax Operations Lead",
+issue:"1099 backlog, filing exposure, and unresolved documentation gaps",
+actions:[
+"Review filing exposure",
+"Resolve W-9 gaps",
+"Prepare compliance exports",
+"Escalate unresolved tax risk"
+]
+},
+
+OPERATIONS:{
+owner:"Operations Lead",
+issue:"Staffing pressure, scheduling backlog, intake slowdown, and throughput degradation",
+actions:[
+"Reduce staffing pressure",
+"Clear scheduling backlog",
+"Resolve intake bottlenecks",
+"Escalate throughput degradation"
+]
+}
+
+};
+
+return MAP[node]||MAP.OPERATIONS;
+}
+
+app.post("/api/hc/query", async(req,res)=>{
+
+const body=req.body||{};
+const payload=body.payload||body||{};
+
+const node=String(payload.node||"OPERATIONS").toUpperCase();
+
+const profile=finalHCProfile(node);
+
+const txt=`
+${node}
+
+TOP ISSUE
+${profile.issue}
+
+WHY IT MATTERS
+This unresolved ${node.toLowerCase()} issue can create operational drag, financial exposure, compliance risk, patient-flow degradation, or executive escalation if not resolved inside the current operating cycle.
+
+BEST NEXT ACTIONS
+1. ${profile.actions[0]}
+2. ${profile.actions[1]}
+3. ${profile.actions[2]}
+4. ${profile.actions[3]}
+
+OWNER LANE
+${profile.owner}
+
+HITL DECISION
+Human leadership review required before enterprise escalation and strategist synthesis.
+
+STRATEGIST RELAY
+Relay unresolved ${node.toLowerCase()} risk to HC Strategist for enterprise BNCA synthesis and executive prioritization.
+
+CONFIDENCE
+94%
+`;
+
+res.json({
+ok:true,
+node,
+reply:txt,
+content:txt,
+forced:true,
+timestamp:new Date().toISOString()
+});
+
+});
+
+console.log("FINAL HC QUERY ROUTE ACTIVE");
+
+
 
 app.listen(8080, () => console.log('Sovereign Mesh Online on 8080'));

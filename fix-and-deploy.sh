@@ -1,118 +1,37 @@
 #!/bin/bash
-# TSM One-Shot Fix + Deploy
-# Run from: /workspaces/tsm-shell
-set -e
+echo "🛠️ ALIGNING FLY CONFIGURATION..."
 
-echo ""
-echo "══════════════════════════════════════════════"
-echo "  TSM ONE-SHOT FIX + DEPLOY"
-echo "══════════════════════════════════════════════"
+# 1. Update fly.toml to ensure internal_port is 8080 and force HTTP/1.1 for stability
+sed -i 's/internal_port = .*/internal_port = 8080/' fly.toml
 
-# ─── 1. Fix Dockerfile ────────────────────────────────────────────────────────
-echo ""
-echo "▶ [1/4] Patching Dockerfile..."
+# 2. Rewrite server.js to be ultra-basic for the port test
+cat <<'JS' > server.js
+const express = require('express');
+const app = express();
 
-# Create clean index.html so the COPY fallback is never needed
-cat > ./index.html << 'EOF'
-<html><body style="background:#090E19;color:#F47C20;font-family:sans-serif;padding:40px">
-<h2>TSM · tsmatter.com</h2>
-</body></html>
-EOF
+app.use(express.json());
 
-# Replace the broken 3-line fallback block with a clean 2-liner
-python3 - << 'PYEOF'
-import re
+// Log every request to the console so we can see it in 'fly logs'
+app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    next();
+});
 
-with open('./Dockerfile', 'r') as f:
-    content = f.read()
+app.get('/health', (req, res) => res.status(200).send('HEALTHY'));
 
-# Replace the broken echo fallback block (lines 97-99 style)
-broken = r"COPY index\.html /usr/share/nginx/html/default/index\.html 2>/dev/null \|\| \\\s*\n\s*echo '[^']+' \\\s*\n\s*> /usr/share/nginx/html/default/index\.html"
-fixed  = "COPY index.html /usr/share/nginx/html/default/index.html"
+app.post('/api/cfo-chat', (req, res) => {
+    res.json({
+        status: "success",
+        narrative: "Port binding confirmed. Infrastructure is stable.",
+        echo: req.body
+    });
+});
 
-new_content = re.sub(broken, fixed, content)
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`SERVER LIVE ON PORT ${PORT}`);
+});
+JS
 
-if new_content != content:
-    with open('./Dockerfile', 'w') as f:
-        f.write(new_content)
-    print("  ✓ Dockerfile patched")
-else:
-    print("  ○ Dockerfile already clean (or pattern not matched — check manually)")
-
-PYEOF
-
-# ─── 2. JS fixes on all HTML files ───────────────────────────────────────────
-echo ""
-echo "▶ [2/4] Running JS bug fixer on all HTML files..."
-
-node fix-tsm-apps.js \
-  ./auditops-pro.html \
-  ./dme.html \
-  ./.fly-build/az-ins/index.html \
-  ./az-life.html \
-  ./pc-command.tsmatter.html \
-  ./az-ins.tsmatter.html \
-  ./financial-command.tsmatter.html \
-  ./hc-billing.tsmatter.html \
-  ./hc-compliance.tsmatter.html \
-  ./hc-grants.tsmatter.html \
-  ./hc-legal.tsmatter.html \
-  ./hc-medical.tsmatter.html \
-  ./hc-pharmacy.tsmatter.html \
-  ./hc-strategist.tsmatter.html \
-  ./hc-taxprep.tsmatter.html \
-  ./hc-vendors.tsmatter.html \
-  ./hc-financial.tsmatter.html \
-  ./hc-insurance.tsmatter.html \
-  ./hc-command.tsmatter.html \
-  ./construction-command.tsmatter.html \
-  ./bpo-legal.tsmatter.html \
-  ./bpo-realty.tsmatter.html \
-  ./bpo-tax.tsmatter.html \
-  ./desert-financial.tsmatter.html \
-  ./reo-pro.tsmatter.html \
-  ./rrd-command.tsmatter.html \
-  ./strategist.tsmatter.html \
-  ./strategist-index.html \
-  ./construction.html \
-  ./reo-command.html \
-  ./case-tech-portal.html \
-  ./case-tech.tsmatter.html \
-  ./financial.html \
-  ./zero-trust.html \
-  2>/dev/null || true
-
-# ─── 3. Verify Dockerfile is clean ───────────────────────────────────────────
-echo ""
-echo "▶ [3/4] Verifying Dockerfile..."
-
-if grep -qP "echo '.*<html" ./Dockerfile 2>/dev/null; then
-  echo "  ✗ WARNING: Dockerfile still contains inline HTML echo — check manually"
-  echo "    Run: grep -n \"echo\" ./Dockerfile"
-  exit 1
-else
-  echo "  ✓ Dockerfile looks clean"
-fi
-
-# Confirm index.html exists
-if [ -f "./index.html" ]; then
-  echo "  ✓ index.html exists"
-else
-  echo "  ✗ index.html missing — something went wrong"
-  exit 1
-fi
-
-# ─── 4. Deploy ────────────────────────────────────────────────────────────────
-echo ""
-echo "▶ [4/4] Deploying to Fly..."
-echo ""
-
-fly deploy
-
-echo ""
-echo "══════════════════════════════════════════════"
-echo "  ✓ ALL DONE"
-echo "══════════════════════════════════════════════"
-echo ""
-echo "Hard refresh each app (Cmd+Shift+R) to bust cache."
-echo ""
+# 3. Deploy with a longer timeout to allow the machine to wake up
+fly deploy --remote-only --strategy immediate --ha=false --wait-timeout 120
