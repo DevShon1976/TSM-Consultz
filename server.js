@@ -2,6 +2,171 @@ const express = require('express');
 const path = require('path');
 const app = express();
 app.use(express.json());
+
+
+
+
+
+
+
+
+
+// =====================================================
+// TSM SOVEREIGN MESH
+// =====================================================
+const TSM_MESH = {
+  HEALTHCARE: {
+    owner: "HC Strategist",
+    controller: "Healthcare Command",
+    risks: ["Revenue leakage", "Denial escalation", "Patient throughput degradation", "Compliance exposure"]
+  },
+  CONSTRUCTION: {
+    owner: "Construction Strategist",
+    controller: "Construction Command",
+    risks: ["Permit delays", "Schedule variance", "Cost overrun", "Supply chain disruption"]
+  },
+  FINANCE: {
+    owner: "Financial Strategist",
+    controller: "Financial Command",
+    risks: ["Margin compression", "Payer variance", "Cash flow slowdown", "Revenue forecasting deviation"]
+  }
+};
+
+function buildMeshBNCA(sector, context) {
+  const cfg = TSM_MESH[sector] || TSM_MESH.HEALTHCARE;
+  const riskLines = cfg.risks.map(r => `• ${r}`).join("\n");
+
+  return `${sector} BNCA SYNTHESIS
+
+TOP ISSUE
+${context || "Operational degradation detected"}
+
+WHY IT MATTERS
+This issue impacts executive KPIs, operational throughput, financial performance, compliance posture, and strategist escalation readiness.
+
+BEST NEXT ACTIONS
+1. Assign accountable owner lane.
+2. Resolve blockers inside SLA window.
+3. Relay unresolved escalation to strategist.
+4. Generate executive briefing packet.
+
+OWNER LANE
+${cfg.owner}
+
+CONTROLLER
+${cfg.controller}
+
+ENTERPRISE RISKS
+${riskLines}
+
+HITL DECISION
+Human leadership review required before enterprise escalation.
+
+STRATEGIST RELAY
+Signal routed into strategist synthesis layer for enterprise prioritization.
+
+CONFIDENCE
+94%`;
+}
+
+app.get("/api/hc/query", (req, res) => {
+  res.json({ ok: true, route: "/api/hc/query", method: "POST required", mesh: true });
+});
+
+app.post("/api/hc/query", (req, res) => {
+  const payload = (req.body && (req.body.payload || req.body)) || {};
+  const reply = buildMeshBNCA("HEALTHCARE", payload.context || payload.action || payload.prompt);
+  res.json({ ok: true, sector: "HEALTHCARE", node: payload.node || "HC NODE", reply, content: reply, mesh: true, timestamp: new Date().toISOString() });
+});
+
+app.get("/api/hc/strategist-rollup", (req, res) => {
+  res.json({
+    ok: true,
+    controller: "HC STRATEGIST",
+    status: "ROLLUP ACTIVE",
+    nodes_online: 11,
+    executive_escalations: 3,
+    bnca: "Enterprise healthcare synthesis complete",
+    mesh: true,
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.post("/api/hc/strategist-rollup", (req, res) => {
+  res.json({
+    ok: true,
+    controller: "HC STRATEGIST",
+    status: "ROLLUP ACTIVE",
+    nodes_online: 11,
+    executive_escalations: 3,
+    bnca: "Enterprise healthcare synthesis complete",
+    mesh: true,
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.get("/api/construction/query", (req, res) => {
+  res.json({ ok: true, route: "/api/construction/query", method: "POST required", mesh: true });
+});
+
+app.post("/api/construction/query", (req, res) => {
+  const payload = (req.body && (req.body.payload || req.body)) || {};
+  const reply = buildMeshBNCA("CONSTRUCTION", payload.context || payload.action || payload.prompt);
+  res.json({ ok: true, sector: "CONSTRUCTION", node: payload.node || "CONSTRUCTION NODE", reply, content: reply, mesh: true, timestamp: new Date().toISOString() });
+});
+
+app.get("/api/construction/strategist-rollup", (req, res) => {
+  res.json({
+    ok: true,
+    controller: "CONSTRUCTION STRATEGIST",
+    status: "ROLLUP ACTIVE",
+    nodes_online: 8,
+    executive_escalations: 2,
+    bnca: "Construction enterprise synthesis complete",
+    mesh: true,
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.post("/api/construction/strategist-rollup", (req, res) => {
+  res.json({
+    ok: true,
+    controller: "CONSTRUCTION STRATEGIST",
+    status: "ROLLUP ACTIVE",
+    nodes_online: 8,
+    executive_escalations: 2,
+    bnca: "Construction enterprise synthesis complete",
+    mesh: true,
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.get("/api/finance/query", (req, res) => {
+  res.json({ ok: true, route: "/api/finance/query", method: "POST required", mesh: true });
+});
+
+app.post("/api/finance/query", (req, res) => {
+  const payload = (req.body && (req.body.payload || req.body)) || {};
+  const reply = buildMeshBNCA("FINANCE", payload.context || payload.action || payload.prompt);
+  res.json({ ok: true, sector: "FINANCE", node: payload.node || "FINANCE NODE", reply, content: reply, mesh: true, timestamp: new Date().toISOString() });
+});
+
+app.get("/api/finance/strategist-rollup", (req, res) => {
+  res.json({
+    ok: true,
+    controller: "FINANCIAL STRATEGIST",
+    status: "ROLLUP ACTIVE",
+    nodes_online: 6,
+    executive_escalations: 2,
+    bnca: "Finance enterprise synthesis complete",
+    mesh: true,
+    timestamp: new Date().toISOString()
+  });
+});
+
+console.log("TSM SOVEREIGN MESH ACTIVE");
+
+
 app.use(express.static(path.join(__dirname, 'html')));
 app.use('/construction-suite', express.static(path.join(__dirname, 'html', 'construction-suite')));
 app.use('/finops-suite', express.static(path.join(__dirname, 'html', 'finops-suite')));
@@ -34,27 +199,14 @@ app.post(['/api/cfo-chat', '*/api/cfo-chat'], (req, res) => {
 });
 
 
-// ── Groq streaming proxy ─────────────────────────────────────────
-app.post('/api/groq/stream', express.json({limit:'2mb'}), async (req, res) => {
-  const key = process.env.GROQ_API_KEY;
-  if (!key) return res.status(503).json({error:'No API key configured'});
-  try {
-    const upstream = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method:'POST',
-      headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
-      body: JSON.stringify({...req.body, stream:true})
-    });
-    res.setHeader('Content-Type','text/event-stream');
-    res.setHeader('Cache-Control','no-cache');
-    upstream.body.pipeTo(new WritableStream({
-      write(chunk){ res.write(chunk); },
-      close(){ res.end(); }
-    }));
-  } catch(e){ res.status(500).json({error:e.message}); }
-});
+
 
 // ── 404 catch-all ─────────────────────────────────────────────────
-app.use('/api', (req,res) => res.status(404).json({ok:false,error:'API route not found',path:req.path}));
+// WIP sub-routes mounted on /api (before catch-all)
+const apiRouter = require('express').Router();
+require('./wip-routes')(apiRouter);
+apiRouter.use((req,res) => res.status(404).json({ok:false,error:'API route not found',path:req.path}));
+app.use('/api', apiRouter);
 app.use((req,res) => res.status(404).send('Not found: '+req.path));
 
 
@@ -195,56 +347,34 @@ actions:[
 return MAP[node]||MAP.OPERATIONS;
 }
 
-app.post("/api/hc/query", async(req,res)=>{
-
-const body=req.body||{};
-const payload=body.payload||body||{};
-
-const node=String(payload.node||"OPERATIONS").toUpperCase();
-
-const profile=finalHCProfile(node);
-
-const txt=`
-${node}
-
-TOP ISSUE
-${profile.issue}
-
-WHY IT MATTERS
-This unresolved ${node.toLowerCase()} issue can create operational drag, financial exposure, compliance risk, patient-flow degradation, or executive escalation if not resolved inside the current operating cycle.
-
-BEST NEXT ACTIONS
-1. ${profile.actions[0]}
-2. ${profile.actions[1]}
-3. ${profile.actions[2]}
-4. ${profile.actions[3]}
-
-OWNER LANE
-${profile.owner}
-
-HITL DECISION
-Human leadership review required before enterprise escalation and strategist synthesis.
-
-STRATEGIST RELAY
-Relay unresolved ${node.toLowerCase()} risk to HC Strategist for enterprise BNCA synthesis and executive prioritization.
-
-CONFIDENCE
-94%
-`;
-
-res.json({
-ok:true,
-node,
-reply:txt,
-content:txt,
-forced:true,
-timestamp:new Date().toISOString()
-});
-
-});
 
 console.log("FINAL HC QUERY ROUTE ACTIVE");
 
 
+
+
+
+
+
+
+
+// ── Groq streaming proxy ─────────────────────────────────────────
+app.post('/api/groq/stream', express.json({limit:'2mb'}), async (req, res) => {
+  const key = process.env.GROQ_API_KEY;
+  if (!key) return res.status(503).json({error:'No API key configured'});
+  try {
+    const upstream = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method:'POST',
+      headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
+      body: JSON.stringify({...req.body, stream:true})
+    });
+    res.setHeader('Content-Type','text/event-stream');
+    res.setHeader('Cache-Control','no-cache');
+    upstream.body.pipeTo(new WritableStream({
+      write(chunk){ res.write(chunk); },
+      close(){ res.end(); }
+    }));
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
 
 app.listen(8080, () => console.log('Sovereign Mesh Online on 8080'));
