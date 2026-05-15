@@ -1358,4 +1358,57 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+
+<script id="wip-narrative-format-final">
+(function(){
+  if(window.__WIP_NARRATIVE_FORMAT_FINAL__) return;
+  window.__WIP_NARRATIVE_FORMAT_FINAL__ = true;
+
+  function findNarrativeBox(){
+    return document.querySelector("#narrativeOutput")
+      || document.querySelector("[data-narrative-output]")
+      || [...document.querySelectorAll("pre,div")]
+        .find(el => (el.textContent || "").includes("BNCA SYNTHESIS"));
+  }
+
+  const oldRun = window.runNarrative;
+  window.runNarrative = async function(){
+    if(typeof oldRun === "function"){
+      await oldRun();
+    }
+
+    setTimeout(()=>{
+      const box=findNarrativeBox();
+      if(!box) return;
+
+      box.style.whiteSpace="pre-wrap";
+      box.style.lineHeight="1.55";
+      box.style.fontSize="12px";
+      box.style.padding="14px";
+      box.style.border="1px solid rgba(0,255,198,.18)";
+      box.style.borderRadius="12px";
+      box.style.background="#06111b";
+
+      let t=box.textContent || "";
+      t=t
+        .replace(/(BNCA SYNTHESIS)/g,"$1\n\n")
+        .replace(/(TOP ISSUE)/g,"\n$1\n")
+        .replace(/(WHY IT MATTERS)/g,"\n$1\n")
+        .replace(/(BEST NEXT ACTIONS)/g,"\n$1\n")
+        .replace(/(OWNER LANE)/g,"\n$1\n")
+        .replace(/(CONTROLLER)/g,"\n$1\n")
+        .replace(/(ENTERPRISE RISKS)/g,"\n$1\n")
+        .replace(/(HITL DECISION)/g,"\n$1\n")
+        .replace(/(STRATEGIST RELAY)/g,"\n$1\n")
+        .replace(/(CONFIDENCE)/g,"\n$1\n")
+        .replace(/\n{3,}/g,"\n\n");
+
+      box.textContent=t.trim();
+    },500);
+  };
+
+  console.log("WIP narrative formatter online");
+})();
+</script>
+
 </body>
