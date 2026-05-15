@@ -721,4 +721,47 @@ CONFIDENCE
   res.json({ok:true,sector:"INSURANCE",reply:txt,content:txt,mesh:true,timestamp:new Date().toISOString()});
 });
 
+
+// TSM_FINOPS_QUERY_NODE01_FINAL
+app.all("/api/finance/query",(req,res)=>{
+  const payload=(req.body&&(req.body.payload||req.body))||{};
+  const context=payload.context || "FinOps WIP review";
+  const txt=`FINOPS BNCA SYNTHESIS
+
+TOP ISSUE
+${context}
+
+WHY IT MATTERS
+This issue impacts close readiness, cash visibility, AP/AR exposure, reconciliation accuracy, executive KPIs, and controller decision timing.
+
+BEST NEXT ACTIONS
+1. Assign Financial Accounting owner lane.
+2. Resolve reconciliation blockers inside the current operating window.
+3. Push unresolved exposure to FinOps Strategist.
+4. Generate CFO-ready executive briefing packet.
+
+OWNER LANE
+Financial Accounting Lead
+
+CONTROLLER
+FinOps Command
+
+ENTERPRISE RISKS
+• AP/AR exposure
+• Reconciliation variance
+• Cashflow slowdown
+• Close-readiness risk
+• Compliance drift
+
+HITL DECISION
+Human controller review required before enterprise escalation.
+
+STRATEGIST RELAY
+Signal routed to FinOps Strategist for executive BNCA synthesis.
+
+CONFIDENCE
+94%`;
+  res.json({ok:true,sector:"FINOPS",node:"NODE 01 · FINANCIAL ACCOUNTING",reply:txt,content:txt,mesh:true,timestamp:new Date().toISOString()});
+});
+
 app.listen(8080, () => console.log('Sovereign Mesh Online on 8080'));
