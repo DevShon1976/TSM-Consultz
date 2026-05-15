@@ -176,6 +176,80 @@ body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:13
 .risk-high{background:rgba(255,68,85,.15);color:#ff4455}
 </style>
 
+
+<script id="wip-safe-function-shim">
+(function(){
+  if(window.__WIP_SAFE_FUNCTION_SHIM__) return;
+  window.__WIP_SAFE_FUNCTION_SHIM__ = true;
+
+  const routes = {
+    healthcare: "/api/hc/query",
+    construction: "/api/construction/query",
+    finops: "/api/finance/query",
+    insurance: "/api/finance/query"
+  };
+
+  window.setSector = window.setSector || function(sector){
+    sector = String(sector || "construction").toLowerCase();
+    document.body.setAttribute("data-active-sector", sector);
+
+    document.querySelectorAll("[data-sector]").forEach(el=>{
+      el.style.display = el.getAttribute("data-sector") === sector ? "" : "none";
+    });
+
+    console.log("WIP sector selected:", sector);
+  };
+
+  window.runNarrative = window.runNarrative || async function(){
+    const sector = document.body.getAttribute("data-active-sector") || "construction";
+    const route = routes[sector] || routes.construction;
+
+    const narrativeBox =
+      document.querySelector("#narrativeOutput") ||
+      document.querySelector("[data-narrative-output]") ||
+      [...document.querySelectorAll("pre, .narrative, .output, div")]
+        .find(el => (el.textContent || "").includes("Select an entity"));
+
+    if(narrativeBox) narrativeBox.textContent = "Running strategist relay...";
+
+    try{
+      const res = await fetch(route,{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          payload:{
+            sector:sector.toUpperCase(),
+            source:"WIP_DASHBOARD",
+            context:"Generate WIP executive narrative, HITL BNCA, owner lane, strategist relay, and CFO-ready next actions."
+          }
+        })
+      });
+      const data = await res.json();
+      const txt = data.reply || data.content || JSON.stringify(data,null,2);
+      if(narrativeBox) narrativeBox.textContent = txt;
+      console.log("WIP narrative complete", data);
+    }catch(e){
+      if(narrativeBox) narrativeBox.textContent = "Strategist relay unavailable. Local dashboard still active.";
+      console.warn(e);
+    }
+  };
+
+  window.TSM_MESH_CONTROLLER = window.TSM_MESH_CONTROLLER || {
+    async relay(sector, context){
+      const key = String(sector || "healthcare").toLowerCase();
+      const res = await fetch(routes[key] || routes.healthcare,{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({payload:{sector:key.toUpperCase(),context,source:"WIP_DASHBOARD",hitl:true}})
+      });
+      return await res.json();
+    }
+  };
+
+  console.log("WIP SAFE FUNCTION SHIM ONLINE");
+})();
+</script>
+
 </head>
 <body class="sector-construction">
 
