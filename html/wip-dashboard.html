@@ -1079,4 +1079,116 @@ window.addEventListener('DOMContentLoaded', () => {
 })();
 </script>
 
+
+<script id="wip-export-home-bar">
+(function(){
+  if(window.__WIP_EXPORT_HOME_BAR__) return;
+  window.__WIP_EXPORT_HOME_BAR__ = true;
+
+  function getOutput(){
+    const txt = [...document.querySelectorAll("pre, .narrative, div")]
+      .map(x => (x.innerText || x.textContent || "").trim())
+      .filter(t => /BNCA|TOP ISSUE|BEST NEXT ACTIONS|OWNER LANE|STRATEGIST RELAY|CONFIDENCE/i.test(t))
+      .sort((a,b)=>b.length-a.length)[0] || "No WIP output found.";
+    return txt;
+  }
+
+  function download(name, content, type="text/plain"){
+    const blob = new Blob([content], {type});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function saveOutput(){
+    const item = {
+      title:"TSM WIP Strategist Output",
+      sector:document.body.getAttribute("data-active-sector") || "current",
+      output:getOutput(),
+      saved_at:new Date().toISOString(),
+      source:"wip-dashboard"
+    };
+    const list = JSON.parse(localStorage.getItem("tsm_wip_saved_outputs") || "[]");
+    list.unshift(item);
+    localStorage.setItem("tsm_wip_saved_outputs", JSON.stringify(list.slice(0,25)));
+    alert("Saved WIP output locally.");
+  }
+
+  function exportTxt(){
+    download("tsm-wip-strategist-output.txt", getOutput());
+  }
+
+  function exportJson(){
+    const item = {
+      sector:document.body.getAttribute("data-active-sector") || "current",
+      output:getOutput(),
+      exported_at:new Date().toISOString(),
+      source:"TSM WIP Intelligence Dashboard"
+    };
+    download("tsm-wip-strategist-output.json", JSON.stringify(item,null,2), "application/json");
+  }
+
+  async function copyOutput(){
+    await navigator.clipboard.writeText(getOutput());
+    alert("Copied WIP output.");
+  }
+
+  function goHome(){
+    location.href="/";
+  }
+
+  function openSector(path){
+    location.href=path;
+  }
+
+  function inject(){
+    if(document.getElementById("wip-export-bar")) return;
+
+    const bar=document.createElement("div");
+    bar.id="wip-export-bar";
+    bar.style.cssText=`
+      position:fixed;left:50%;bottom:18px;transform:translateX(-50%);
+      z-index:9999;display:flex;gap:8px;flex-wrap:wrap;align-items:center;
+      background:#06111b;border:1px solid rgba(0,255,198,.28);
+      box-shadow:0 0 28px rgba(0,255,198,.16);
+      padding:10px;border-radius:16px;font-family:Inter,system-ui,Arial;
+    `;
+
+    const btn=(txt,fn,bg="#00ffc6",fg="#001")=>{
+      const b=document.createElement("button");
+      b.textContent=txt;
+      b.style.cssText=`border:0;border-radius:10px;padding:9px 11px;background:${bg};color:${fg};font-weight:900;cursor:pointer`;
+      b.onclick=fn;
+      return b;
+    };
+
+    bar.append(
+      btn("← Home", goHome, "#102030", "#dff"),
+      btn("Healthcare", ()=>openSector("/healthcare/index.html?v=wip-return"), "#00ffc6"),
+      btn("Construction", ()=>openSector("/construction-suite/construction-hub.html?v=wip-return"), "#ffc400"),
+      btn("FinOps", ()=>openSector("/finops-suite/financial-ui.html?v=wip-return"), "#00aaff", "#fff"),
+      btn("Executive", ()=>openSector("/healthcare/executive-portal/index.html?v=wip-return"), "#b56cff", "#fff"),
+      btn("Save", saveOutput),
+      btn("Export TXT", exportTxt, "#ffc400"),
+      btn("Export JSON", exportJson, "#b56cff", "#fff"),
+      btn("Copy", copyOutput, "#102030", "#dff")
+    );
+
+    document.body.appendChild(bar);
+  }
+
+  window.wipSaveOutput=saveOutput;
+  window.wipExportTxt=exportTxt;
+  window.wipExportJson=exportJson;
+  window.wipCopyOutput=copyOutput;
+
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",inject);
+  else inject();
+
+  setTimeout(inject,800);
+})();
+</script>
+
 </body>
