@@ -1190,4 +1190,98 @@ function switchSector(s) {
   Universal Healthcare RCM WIP · Prior Auth Denial · Claim Scrubbing Hold · Coding Review Queue
 </div>
 
+
+<script id="tsm-wip-bootstrap">
+window.WIP_ENTITIES = [
+{
+  id:"ENC-8821",
+  title:"Prior Auth Denial",
+  percent:85,
+  expected:4200,
+  collected:0,
+  gap:-4200,
+  risk:"CRIT",
+  narrative:"Missing prior authorization documentation."
+},
+{
+  id:"ENC-8912",
+  title:"Claim Scrubbing Hold",
+  percent:30,
+  expected:2750,
+  collected:0,
+  gap:-2750,
+  risk:"HIGH",
+  narrative:"Claim held in scrubbing queue."
+},
+{
+  id:"ENC-8834",
+  title:"Coding Review Queue",
+  percent:60,
+  expected:1850,
+  collected:1480,
+  gap:-370,
+  risk:"MED",
+  narrative:"Coding modifier review pending."
+},
+{
+  id:"ENC-8750",
+  title:"Payer Adjudication",
+  percent:90,
+  expected:6100,
+  collected:5490,
+  gap:-610,
+  risk:"LOW",
+  narrative:"Payer processing active."
+}
+];
+
+window.TSM_MESH_CONTROLLER = true;
+
+window.initializeWIPDashboard = function(){
+
+  const matrix = document.querySelector('#wipMatrix');
+  const entities = document.querySelector('#activeEntities');
+  const flags = document.querySelector('#activeFlags');
+
+  if(matrix){
+    matrix.innerHTML = window.WIP_ENTITIES.map(e => `
+      <div class="wip-row">
+        <div>${e.id}</div>
+        <div>${e.title}</div>
+        <div>${e.percent}%</div>
+        <div>$${e.expected.toLocaleString()}</div>
+        <div class="risk-${e.risk.toLowerCase()}">${e.risk}</div>
+      </div>
+    `).join('');
+  }
+
+  if(entities){
+    entities.innerHTML = window.WIP_ENTITIES.map(e => `
+      <div class="entity-card">
+        <b>${e.title}</b><br>
+        ${e.percent}% stage · Risk ${e.risk}
+      </div>
+    `).join('');
+  }
+
+  if(flags){
+    flags.innerHTML = `
+      <div class="flag critical">Prior Auth Risk</div>
+      <div class="flag high">Claim Scrubbing Hold</div>
+      <div class="flag med">Coding Review Queue</div>
+    `;
+  }
+
+  console.log("TSM WIP HYDRATION ONLINE");
+};
+
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    if(window.initializeWIPDashboard){
+      window.initializeWIPDashboard();
+    }
+  }, 250);
+});
+</script>
+
 </body>
