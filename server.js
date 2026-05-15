@@ -679,4 +679,46 @@ app.all("/api/wip/sector-ai",(req,res)=>{
 });
 
 
+
+// TSM_INSURANCE_QUERY_ROUTE_FINAL
+app.all("/api/insurance/query",(req,res)=>{
+  const payload=(req.body&&(req.body.payload||req.body))||{};
+  const context=payload.context || "Insurance WIP review";
+  const txt=`INSURANCE WIP BNCA SYNTHESIS
+
+TOP ISSUE
+${context}
+
+WHY IT MATTERS
+This WIP signal impacts claim leakage, reserve accuracy, compliance posture, audit exposure, policyholder experience, and executive escalation readiness.
+
+BEST NEXT ACTIONS
+1. Assign Insurance Strategist owner lane.
+2. Resolve policy / claim blockers inside SLA window.
+3. Package audit evidence for compliance review.
+4. Push unresolved risk into insurance controller review.
+
+OWNER LANE
+Insurance Strategist
+
+CONTROLLER
+Insurance Command
+
+ENTERPRISE RISKS
+• Claims leakage
+• Policy verification gaps
+• Reserve variance
+• Audit exposure
+
+HITL DECISION
+Human leadership review required before enterprise escalation.
+
+STRATEGIST RELAY
+Signal routed to Insurance Strategist for main-suite synthesis.
+
+CONFIDENCE
+94%`;
+  res.json({ok:true,sector:"INSURANCE",reply:txt,content:txt,mesh:true,timestamp:new Date().toISOString()});
+});
+
 app.listen(8080, () => console.log('Sovereign Mesh Online on 8080'));
