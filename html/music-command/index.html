@@ -935,42 +935,68 @@ pre,.output,.lyrics-output,.song-output,.blueprint-output{max-height:none!import
   <div id="zaySongBankClean" style="margin-top:12px;color:#cfa8ff">No saved songs yet.</div>
 </section>
 
+
+
+
 <script id="zay-clean-studio-js">
 (function(){
-  if(window.__ZAY_CLEAN_STUDIO__) return;
-  window.__ZAY_CLEAN_STUDIO__=true;
+  console.log("ZAY Clean Studio Runtime Repair loading");
 
   let taps=[], cadenceTimer=null, audioCtx=null, bpm=88, beat=0;
 
-  function input(){
-    return [...document.querySelectorAll("textarea")]
-      .map(x=>x.value.trim()).find(Boolean) || "";
+  function q(sel){ return document.querySelector(sel); }
+  function qa(sel){ return [...document.querySelectorAll(sel)]; }
+
+  function getConcept(){
+    const fields = qa("textarea,input").map(x => (x.value || "").trim()).filter(Boolean);
+    return fields[0] || localStorage.getItem("zay-current-concept") || "Motivational rap about pressure, hustle, and no fakeness.";
   }
 
-  function outBox(){
-    return document.querySelector("#zaySongOutput")
-      || document.querySelector("#lyrics-output")
-      || document.querySelector("#song-output")
-      || document.querySelector(".song-output")
-      || document.querySelector("pre");
+  function findOutput(){
+    return q("#zayProductionOutput") ||
+      q("#zaySongOutput") ||
+      q("#lyrics-output") ||
+      q("#song-output") ||
+      q(".song-output") ||
+      q(".output") ||
+      qa("pre").find(p => (p.innerText||"").length > 20) ||
+      qa("pre")[0];
+  }
+
+  function ensureOutput(){
+    let out = findOutput();
+    if(out) return out;
+
+    out = document.createElement("pre");
+    out.id = "zayRuntimeOutput";
+    out.style.cssText = "white-space:pre-wrap;margin:18px 24px;padding:16px;background:#08000e;border:1px solid rgba(181,108,255,.35);border-radius:16px;color:#f7eaff;min-height:260px;";
+    const anchor = q("#zayCleanTools") || q("main") || document.body;
+    anchor.parentNode.insertBefore(out, anchor.nextSibling);
+    return out;
   }
 
   function write(txt){
-    const o=outBox();
-    if(o){ o.textContent=txt; o.style.whiteSpace="pre-wrap"; }
-    localStorage.setItem("zay-last-output",txt);
+    const out = ensureOutput();
+    out.textContent = txt;
+    out.style.whiteSpace = "pre-wrap";
+    out.scrollIntoView({behavior:"smooth",block:"center"});
+    localStorage.setItem("zay-last-output", txt);
+    localStorage.setItem("zay-current-song", txt);
   }
 
   function beep(freq=880,dur=.055,type="sine"){
     audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
     const osc=audioCtx.createOscillator();
     const gain=audioCtx.createGain();
-    osc.type=type; osc.frequency.value=freq;
+    osc.type=type;
+    osc.frequency.value=freq;
     gain.gain.setValueAtTime(.0001,audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(.22,audioCtx.currentTime+.01);
     gain.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+dur);
-    osc.connect(gain); gain.connect(audioCtx.destination);
-    osc.start(); osc.stop(audioCtx.currentTime+dur+.02);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime+dur+.02);
   }
 
   window.zayTapTempo=function(){
@@ -980,29 +1006,32 @@ pre,.output,.lyrics-output,.song-output,.blueprint-output{max-height:none!import
     if(taps.length>=2){
       const diffs=taps.slice(1).map((t,i)=>t-taps[i]);
       const avg=diffs.reduce((a,b)=>a+b,0)/diffs.length;
-      bpm=Math.round(60000/avg);
+      bpm=Math.max(55,Math.min(160,Math.round(60000/avg)));
     }
-    document.getElementById("zayTapStatus").textContent=`Tapped BPM: ${bpm} · Delivery pocket: ${bpm<82?'laid-back':bpm>98?'urgent/aggressive':'steady mid-tempo bounce'}`;
+    const status=q("#zayTapStatus");
+    if(status) status.textContent=`Tapped BPM: ${bpm} · Delivery pocket: ${bpm<82?'laid-back':bpm>98?'urgent/aggressive':'steady mid-tempo bounce'}`;
     beep(1000,.04);
-  }
+  };
 
   window.zayPlayCadenceGuide=function(){
-    zayStopCadenceGuide();
+    window.zayStopCadenceGuide();
     beat=0;
     const interval=60000/bpm;
-    document.getElementById("zayTapStatus").textContent=`Playing cadence guide at ${bpm} BPM · count 1-2-3-4, punch on 1 and 3.`;
+    const status=q("#zayTapStatus");
+    if(status) status.textContent=`Playing cadence guide at ${bpm} BPM · punch on 1 and 3.`;
     cadenceTimer=setInterval(()=>{
       beat=(beat%4)+1;
       if(beat===1) beep(1200,.07,"square");
       else if(beat===3) beep(920,.055,"triangle");
       else beep(620,.045,"sine");
     }, interval);
-  }
+  };
 
   window.zayStopCadenceGuide=function(){
     if(cadenceTimer){ clearInterval(cadenceTimer); cadenceTimer=null; }
-    document.getElementById("zayTapStatus").textContent=`Stopped. Current pocket: ${bpm} BPM.`;
-  }
+    const status=q("#zayTapStatus");
+    if(status) status.textContent=`Stopped. Current pocket: ${bpm} BPM.`;
+  };
 
   window.zaySpeakCadenceCues=function(){
     const text=`ZAY cadence guide. Tempo ${bpm} BPM. Count one, two, three, four. Punch Grindin and Slavin on beat one. Pause before Rule One. Double the final hook. Keep adlibs low under the verse.`;
@@ -1011,18 +1040,31 @@ pre,.output,.lyrics-output,.song-output,.blueprint-output{max-height:none!import
       const u=new SpeechSynthesisUtterance(text);
       u.rate=.92; u.pitch=.82;
       speechSynthesis.speak(u);
+    } else {
+      write(text);
     }
-  }
+  };
 
   window.zayBuildSongClean=function(){
-    const raw=input();
+    const raw=getConcept();
     write(`TITLE: Rule 1 No Fakeness
+
+SONG DNA
+BPM: ${bpm}
+Pocket: Southern motivational bounce
+Delivery: confident, gritty, controlled
+Cadence: punch beat 1 and 3, pause before Rule 1
 
 [HOOK]
 Grindin' n slavin', still misbehavin',
 Fresh n clean even missed on shavin'.
 Some fear hustle, some can't take struggle,
 Real ones know when it's time for muscle.
+
+I plan for greatness, rule one: no fakeness,
+Real is what you feel, that's pill, so take this.
+Built from the bottom where the pressure'll break kids,
+Now the whole room quiet every time the bass hits.
 
 [VERSE 1]
 ${raw}
@@ -1033,6 +1075,11 @@ If I fall, I still wake.
 Every risk that I take
 Put my name on the gate.
 
+No fake, no fear,
+I made pain disappear.
+Now the mission so clear,
+Whole team right here.
+
 [FINAL HOOK]
 Repeat hook with stacked doubles, low adlibs, and wide choir pad.
 
@@ -1041,7 +1088,7 @@ ADLIBS
 
 DAW POCKET
 ${bpm} BPM · punch beat 1 and 3 · pause before Rule 1.`);
-  }
+  };
 
   window.zayHooksClean=function(){
     write(`CONCEPT HOOKS
@@ -1052,7 +1099,7 @@ ${bpm} BPM · punch beat 1 and 3 · pause before Rule 1.`);
 
 ZAY PICK
 Use Hook 1. It keeps your identity and has the strongest bounce.`);
-  }
+  };
 
   window.zayAdlibsClean=function(){
     write(`ADLIBS + BRIDGE
@@ -1068,7 +1115,7 @@ If I bend, I won't break,
 If I fall, I still wake.
 Every risk that I take
 Put my name on the gate.`);
-  }
+  };
 
   window.zayProducerNotesClean=function(){
     write(`ZAY PRODUCER NOTES
@@ -1078,8 +1125,9 @@ Put my name on the gate.`);
 • Pause before "Rule 1."
 • Double the final hook.
 • Keep verse adlibs low and gritty.
-• Use choir pad or filtered soul sample behind final hook.`);
-  }
+• Use choir pad or filtered soul sample behind final hook.
+• Delivery should feel confident, not rushed.`);
+  };
 
   window.zayDAWClean=function(){
     write(`DAW MODE
@@ -1099,36 +1147,80 @@ Markers:
 3:18 Outro
 
 Tracks:
-Lead vocal · Hook doubles · Adlibs · Choir pad · 808 · Snare · FX risers`);
-  }
+Lead vocal
+Hook doubles L/R
+Low adlibs
+Hype adlibs
+Choir pad
+808
+Snare
+FX risers`);
+  };
 
   window.zaySaveClean=function(){
-    const txt=localStorage.getItem("zay-last-output")||"";
+    const txt=localStorage.getItem("zay-last-output") || ensureOutput().textContent || "";
     const bank=JSON.parse(localStorage.getItem("zay-song-bank")||"[]");
-    const title=(txt.match(/TITLE:\s*(.*)/)||[])[1]||"Untitled Song";
+    const title=(txt.match(/TITLE:\\s*(.*)/)||[])[1] || "Untitled Song";
     bank.unshift({title,content:txt,ts:Date.now(),bpm});
     localStorage.setItem("zay-song-bank",JSON.stringify(bank.slice(0,20)));
     renderBank();
-  }
+  };
 
   window.zayExportClean=function(){
-    const txt=localStorage.getItem("zay-last-output")||"";
+    const txt=localStorage.getItem("zay-last-output") || ensureOutput().textContent || "";
     const a=document.createElement("a");
     a.href=URL.createObjectURL(new Blob([txt],{type:"text/plain"}));
     a.download="zay-song-package.txt";
     a.click();
-  }
+  };
 
   function renderBank(){
-    const el=document.getElementById("zaySongBankClean");
+    const el=q("#zaySongBankClean");
     if(!el) return;
     const bank=JSON.parse(localStorage.getItem("zay-song-bank")||"[]");
     if(!bank.length){ el.textContent="No saved songs yet."; return; }
-    el.innerHTML=bank.map((s,i)=>`<div style="padding:8px;border-top:1px solid rgba(255,255,255,.08);cursor:pointer" onclick="document.querySelector('pre').textContent=JSON.parse(localStorage.getItem('zay-song-bank'))[${i}].content"><b>${s.title}</b> · ${s.bpm||88} BPM<br><small>${new Date(s.ts).toLocaleString()}</small></div>`).join("");
+    el.innerHTML=bank.map((s,i)=>`
+      <div style="padding:8px;border-top:1px solid rgba(255,255,255,.08);cursor:pointer" data-song-idx="${i}">
+        <b>${s.title}</b> · ${s.bpm||88} BPM<br><small>${new Date(s.ts).toLocaleString()}</small>
+      </div>`).join("");
+    el.querySelectorAll("[data-song-idx]").forEach(x=>{
+      x.onclick=()=>{
+        const i=Number(x.dataset.songIdx);
+        const b=JSON.parse(localStorage.getItem("zay-song-bank")||"[]");
+        write(b[i].content);
+      };
+    });
   }
 
-  renderBank();
-  console.log("ZAY clean studio + cadence guide online");
+  function bindButtons(){
+    const map=[
+      ["Build Complete Song", window.zayBuildSongClean],
+      ["Concept Hooks", window.zayHooksClean],
+      ["Adlibs + Bridge", window.zayAdlibsClean],
+      ["Producer Notes", window.zayProducerNotesClean],
+      ["DAW Mode", window.zayDAWClean],
+      ["Save Song", window.zaySaveClean],
+      ["Export TXT", window.zayExportClean],
+      ["Tap Tempo", window.zayTapTempo],
+      ["Play Cadence Guide", window.zayPlayCadenceGuide],
+      ["Stop", window.zayStopCadenceGuide],
+      ["Speak Cadence Cues", window.zaySpeakCadenceCues]
+    ];
+    qa("button").forEach(btn=>{
+      const txt=(btn.innerText||"").trim();
+      const hit=map.find(([label])=>txt.includes(label));
+      if(hit){
+        btn.onclick=hit[1];
+        btn.dataset.zayRuntimeBound="1";
+      }
+    });
+  }
+
+  window.addEventListener("DOMContentLoaded",()=>{bindButtons();renderBank();});
+  setTimeout(()=>{bindButtons();renderBank();},500);
+  setTimeout(()=>{bindButtons();renderBank();},1500);
+
+  console.log("ZAY Clean Studio Runtime Repair online");
 })();
 </script>
 
