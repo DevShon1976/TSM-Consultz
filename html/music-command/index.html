@@ -501,7 +501,7 @@ Be specific, creative, and make it feel like a real producer session.`;
 
   try {
     const d = await apiCall('/music/structure', { query: prompt, genre: DNA.genre, mood: DNA.mood });
-    DNA.structure = d.content || d.reply || 'Blueprint unavailable.';
+    DNA.structure = d.blueprint || d.structure || d.content || d.reply || 'Blueprint unavailable.';
     streamOutput('structure-out', DNA.structure);
     markDone(1);
     goStep(2);
@@ -1115,6 +1115,262 @@ This works best as a motivational street anthem, not a sad record. Keep it confi
   }
 
   console.log("ZY best-of-both guide online");
+})();
+</script>
+
+
+<section id="zay-production-os">
+  <style>
+    #zay-production-os{margin:22px;padding:20px;background:linear-gradient(135deg,rgba(181,108,255,.16),rgba(255,0,200,.05));border:1px solid rgba(181,108,255,.38);border-radius:22px;color:#f7eaff;font-family:Inter,system-ui,Arial}
+    #zay-production-os h2{margin:8px 0;color:white;font-size:30px}
+    .zay-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
+    .zay-card{background:#100018;border:1px solid rgba(181,108,255,.28);border-radius:16px;padding:14px}
+    .zay-ey{color:#d86cff;font-size:11px;letter-spacing:.15em;font-weight:950;text-transform:uppercase}
+    .zay-btn{background:#b56cff;color:white;border:0;border-radius:10px;padding:10px 12px;font-weight:900;cursor:pointer;margin:4px}
+    .zay-btn.gold{background:#ffc400;color:#111}.zay-btn.green{background:#00ffc6;color:#001}.zay-btn.dark{background:#180024;color:#f7eaff;border:1px solid rgba(181,108,255,.3)}
+    #zay-production-os textarea{width:100%;min-height:120px;background:#08000e;border:1px solid rgba(181,108,255,.35);border-radius:14px;color:#f7eaff;padding:12px}
+    #zayProductionOutput{white-space:pre-wrap;min-height:260px;max-height:520px;overflow:auto;background:#08000e;border:1px solid rgba(181,108,255,.25);border-radius:14px;padding:14px}
+    .song-row{padding:10px;border-bottom:1px solid rgba(255,255,255,.08);cursor:pointer}
+    .song-row:hover{background:rgba(181,108,255,.12)}
+    @media(max-width:900px){.zay-grid{grid-template-columns:1fr}}
+  </style>
+
+  <div class="zay-ey">STATE OF THE ART · MUSIC COMMAND STUDIO</div>
+  <h2>Song Bank + DAW Mode + ZAY Producer Session Engine</h2>
+
+  <div class="zay-grid">
+    <div class="zay-card">
+      <div class="zay-ey">Raw Lyric / Concept</div>
+      <textarea id="zayStudioInput">Grindin' n Slavin' while Misbavin'!
+Feelin' so Fresh n So Clean even Missed on Shavin'!
+Some look at the Hustle! n Cant Stand the Struggle,
+Those Real in the Field see A Time for Muscle!
+I Plan for Greatest! Rule 1: No Fakeness!
+Real is What You FEEL! That's Pill! So Take This!</textarea>
+
+      <div style="margin-top:10px">
+        <button class="zay-btn green" onclick="zayAutopilot()">Build My Song</button>
+        <button class="zay-btn" onclick="zayHookCompare()">Compare Hooks</button>
+        <button class="zay-btn" onclick="zayDAWMode()">DAW Mode</button>
+        <button class="zay-btn" onclick="zaySessionNotes()">Producer Session</button>
+        <button class="zay-btn gold" onclick="zayReleasePackage()">Release Package</button>
+        <button class="zay-btn dark" onclick="zaySaveSong()">Save Song</button>
+        <button class="zay-btn dark" onclick="zayExportPackage()">Export Package</button>
+      </div>
+    </div>
+
+    <div class="zay-card">
+      <div class="zay-ey">Song Bank</div>
+      <div id="zaySongBank"></div>
+      <div style="margin-top:10px">
+        <button class="zay-btn dark" onclick="zayClearBank()">Clear Bank</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="zay-card" style="margin-top:14px">
+    <div class="zay-ey">Production Output</div>
+    <pre id="zayProductionOutput">Ready. Paste lyrics, then click Build My Song.</pre>
+  </div>
+</section>
+
+<script id="zay-production-os-js">
+(function(){
+  if(window.__ZAY_PRODUCTION_OS__) return;
+  window.__ZAY_PRODUCTION_OS__=true;
+
+  function input(){return document.getElementById("zayStudioInput")?.value?.trim()||""}
+  function out(txt){document.getElementById("zayProductionOutput").textContent=txt;localStorage.setItem("zay_current_song",txt);return txt}
+  function bank(){return JSON.parse(localStorage.getItem("zay_song_bank")||"[]")}
+  function setBank(x){localStorage.setItem("zay_song_bank",JSON.stringify(x));renderBank()}
+
+  window.zayAutopilot=function(){
+    const raw=input();
+    out(`TITLE: Rule 1: No Fakeness
+
+SONG DNA
+Genre: Southern cinematic rap
+Mood: Motivational / gritty / confident
+BPM: 86
+Key: F minor
+Cadence: short punchlines + bounce pocket
+Commercial Score: 86/100
+Radio Score: 78/100
+Aggression: 72/100
+Melodic Potential: 81/100
+
+[INTRO]
+Yeah...
+ZAY, let it breathe.
+Fresh out the struggle.
+Still clean with it.
+
+[HOOK]
+Grindin' n slavin', still misbehavin',
+Feelin' so fresh n so clean, even missed on shavin'.
+Some look at the hustle, can't stand the struggle,
+Those real in the field see a time for muscle.
+
+I plan for greatness, rule one: no fakeness,
+Real is what you feel, that's pill, so take this.
+Built from the bottom where the pressure'll break kids,
+Now the whole room quiet every time the bass hits.
+
+[VERSE 1]
+Late nights, cold floors, notebook full of missions,
+Had to turn pain into purpose, faith into precision.
+They was talkin' from the side, I was locked in position,
+I was buildin' up a life while they begged for permission.
+
+Fresh but I ain't shave, still a king in the making,
+Worked through the storm while the whole ground shaking.
+Some people love shine but they hate when you patient,
+They don't see the grind, only see celebration.
+
+[BRIDGE]
+If I bend, I won't break,
+If I fall, I still wake.
+Every risk that I take
+Put my name on the gate.
+
+[FINAL HOOK]
+Repeat hook with stacked doubles, hype adlibs, and choir pad.
+
+ADLIB STACK
+(Yeah!) (Too real!) (No fakeness!) (Bass hit!) (Talk to 'em!)
+
+DAW ARRANGEMENT
+0:00 Intro
+0:12 Hook
+0:38 Verse 1
+1:18 Hook
+1:44 Verse 2
+2:24 Bridge
+2:48 Final Hook
+3:18 Outro
+
+SOURCE LYRIC
+${raw}`);
+  }
+
+  window.zayHookCompare=function(){
+    out(`MULTI-HOOK COMPARISON
+
+HOOK A — Original Bounce
+Grindin' n slavin', still misbehavin',
+Feelin' so fresh n so clean, even missed on shavin'.
+Score: Catchy 91 · Commercial 82 · Dark 66 · Club 74 · Viral 79
+
+HOOK B — Cleaner Radio
+Rule one: no fake when the pressure get real,
+Truth in my chest, that's the pill you can feel.
+Score: Catchy 84 · Commercial 88 · Dark 58 · Club 67 · Viral 72
+
+HOOK C — Aggressive
+Fresh out the fire, still clean with the cadence,
+Made for the greatness, no room for the fakeness.
+Score: Catchy 86 · Commercial 79 · Dark 76 · Club 80 · Viral 81
+
+ZAY PICK
+Use Hook A for identity. Borrow Hook B as bridge/pre-hook.`);
+  }
+
+  window.zayDAWMode=function(){
+    out(`DAW MODE EXPORT NOTES
+
+Tempo: 86 BPM
+Key: F minor
+DAW Targets: FL Studio · Pro Tools · Logic · Ableton
+
+TRACK LAYOUT
+1. Lead Vocal
+2. Hook Double L
+3. Hook Double R
+4. Low Adlibs
+5. Hype Adlibs
+6. Bridge Stack
+7. Choir Pad
+8. Piano/Sample
+9. 808
+10. Kick/Snare/Hats
+
+ARRANGEMENT MARKERS
+INTRO 0:00–0:12
+HOOK 0:12–0:38
+VERSE 1 0:38–1:18
+HOOK 1:18–1:44
+VERSE 2 1:44–2:24
+BRIDGE 2:24–2:48
+FINAL HOOK 2:48–3:18
+OUTRO 3:18–3:30
+
+RECORDING CUES
+Pause before “Rule one.”
+Double “No fakeness.”
+Stack “Bass hits” on final hook.`);
+  }
+
+  window.zaySessionNotes=function(){
+    out(`ZAY PRODUCER SESSION NOTES
+
+1. Hook is strong — keep original language.
+2. Verse 1 needs controlled hunger, not yelling.
+3. Second verse should sound more executive and elevated.
+4. Bridge needs emotional lift before final hook.
+5. Adlibs should answer the lead vocal, not crowd it.
+6. Final hook needs doubles + choir pad + lower octave stack.
+
+LIVE DIRECTION
+“Punch Grindin’ n Slavin’ with bounce.”
+“Pause before Rule 1.”
+“Cut any filler bar that doesn’t move the story.”
+“Make the final hook feel like victory.”`);
+  }
+
+  window.zayReleasePackage=function(){
+    out(`RELEASE PACKAGE
+
+Song Title: Rule 1: No Fakeness
+Positioning: Motivational hustle anthem
+Short-form Hook: “Rule one: no fakeness”
+Cover Concept: Dark streetlight, clean fit, notebook/blueprint glow
+Spotify Pitch: A gritty motivational rap record about pressure, discipline, and staying real through the climb.
+TikTok Ideas:
+1. Before/after grind montage
+2. Studio hook performance
+3. “Rule 1” motivational caption series
+
+IG CAPTION
+Rule 1: No fakeness. Pressure made the sound.
+
+HASHTAGS
+#RuleOneNoFakeness #ZAYProducer #MusicCommand #HustleAnthem #IndependentArtist`);
+  }
+
+  window.zaySaveSong=function(){
+    const songs=bank();
+    const title=(document.getElementById("zayProductionOutput").textContent.match(/TITLE:\s*(.*)/)||[])[1]||"Untitled Song";
+    songs.unshift({title,ts:new Date().toISOString(),content:document.getElementById("zayProductionOutput").textContent});
+    setBank(songs.slice(0,25));
+  }
+
+  window.zayExportPackage=function(){
+    const txt=document.getElementById("zayProductionOutput").textContent;
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(new Blob([txt],{type:"text/plain"}));
+    a.download="zay-song-production-package.txt";
+    a.click();
+  }
+
+  window.zayClearBank=function(){setBank([])}
+
+  function renderBank(){
+    const el=document.getElementById("zaySongBank"); if(!el) return;
+    const songs=bank();
+    el.innerHTML=songs.length?songs.map((s,i)=>`<div class="song-row" onclick="document.getElementById('zayProductionOutput').textContent=${JSON.stringify("${CONTENT}")}.replace('${CONTENT}', JSON.parse(localStorage.getItem('zay_song_bank'))[${i}].content)"><b>${s.title}</b><br><small>${new Date(s.ts).toLocaleString()}</small></div>`).join(""):"<div style='color:#c9a8df'>No saved songs yet.</div>";
+  }
+
+  renderBank();
 })();
 </script>
 
