@@ -2,580 +2,753 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>ZAY Music Command Center</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TSM Music Command · Producer Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700;800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:#070b10;color:#eaffff;font-family:Inter,system-ui,Arial}
-.app{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
-.side{background:#101015;border-right:1px solid #242434;padding:22px}
-.logo{width:38px;height:38px;border-radius:10px;background:#ffd84d;color:#000;display:grid;place-items:center;font-weight:900;margin-bottom:12px}
-h1{font-size:18px;margin:0 0 4px}
-.sub{font-size:11px;color:#7d8794;letter-spacing:1.6px;text-transform:uppercase}
-.nav{margin-top:34px;display:grid;gap:10px}
-.nav button{background:#171720;color:#bfc9d8;border:1px solid #29293a;padding:12px;text-align:left;border-radius:9px;cursor:pointer}
-.nav button.active{border-color:#ffc400;color:#ffc400;background:#241f10}
-.agent{margin-top:34px;border:1px solid #3a275a;background:#171221;border-radius:12px;padding:14px}
-.agent b{color:#fff}
-.agent small{color:#ffc400}
-.main{padding:0 22px 22px}
-.top{height:76px;border-bottom:1px solid #242434;display:flex;align-items:center;justify-content:space-between}
-.tabs{display:flex;gap:10px}
-.tabs button{background:#15151f;color:#777;border:0;padding:14px 20px;border-radius:8px;letter-spacing:1px}
-.tabs button.active{background:#2b2210;color:#ffc400;border:1px solid #ffc400}
-.online{border:1px solid #00ffc6;color:#00ffc6;border-radius:999px;padding:10px 18px;font-size:12px}
-.panel{margin-top:22px;border:1px solid #2e1a66;background:#130725;border-radius:14px;overflow:hidden}
-.panelHead{padding:16px;background:#1b0b3c;border-bottom:1px solid #402080;display:flex;justify-content:space-between;align-items:center}
-.steps{display:flex;gap:8px;flex-wrap:wrap}
-.step{border:1px solid #4f2c90;color:#a988ff;border-radius:999px;padding:5px 10px;font-size:12px}
-.step.on{border-color:#00ffc6;color:#00ffc6}
-.workspace{display:grid;grid-template-columns:1fr 360px;gap:18px;margin-top:18px}
-.card{border:1px solid #20303d;background:#0d1218;border-radius:14px;padding:16px}
-textarea{width:100%;height:190px;background:#121216;color:#fff;border:1px solid #333744;border-radius:10px;padding:14px;font-family:ui-monospace,Menlo,monospace;line-height:1.45;resize:vertical}
-input{width:100%;background:#121216;color:#fff;border:1px solid #333744;border-radius:10px;padding:12px;font-family:inherit;outline:none}
-.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-.btn{border:0;border-radius:10px;padding:12px 15px;font-weight:900;cursor:pointer;font-family:inherit;font-size:13px}
-.primary{background:#00ffc6;color:#001}
-.secondary{background:#1b1b25;color:#dce7ff;border:1px solid #33384b}
-.gold{background:#ffc400;color:#111}
-.output{margin-top:18px;border:1px solid rgba(0,255,198,.25);background:rgba(0,255,198,.035);border-radius:14px;padding:16px;min-height:260px;line-height:1.55}
-.outHead{display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:10px;margin-bottom:12px}
-.outTitle{color:#00ffc6;font-weight:900;letter-spacing:1px}
-.live{color:#00ffc6;font-size:11px}
-.section{margin:14px 0}
-.sectionTitle{font-weight:900;letter-spacing:1px;margin-bottom:5px;font-size:12px}
-.hook{color:#00ffc6}.adlibs{color:#ff9d00}.bridge{color:#9fe7ff}.note{color:#ffc400}
-.rail h3{font-size:13px;color:#ffc400;letter-spacing:1.5px;margin:0 0 10px}
-.kpi{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
-.kpi div{border:1px solid #263647;background:#101923;border-radius:10px;padding:10px}
-.kpi b{color:#00ffc6;font-size:18px;display:block;margin-bottom:2px}
-.kpi small{font-size:11px;color:#5a7a8a}
-.bankItem{border:1px solid #253449;border-radius:10px;padding:10px;margin-top:8px;font-size:12px;color:#b7d9e8;word-break:break-word}
-.bankTime{color:#3d5470;font-size:10px;margin-bottom:4px}
-.chat{position:fixed;left:270px;right:20px;bottom:12px;display:flex;gap:8px;background:#0a0d14;border:1px solid #4b1f8f;border-radius:10px;padding:8px;z-index:999}
-.chat input{flex:1;margin:0}
-.err{color:#ff5c7a;padding:10px;background:rgba(255,92,122,.08);border:1px solid rgba(255,92,122,.2);border-radius:8px;font-size:13px}
-
-/* TSM Assistant */
-.assistant{border:1px solid rgba(155,92,255,.35);background:#0f0a1e;border-radius:14px;padding:14px;margin-top:14px}
-.assistant h3{font-size:13px;color:#9b5cff;letter-spacing:1.5px;margin:0 0 10px}
-.guide-step{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:background .15s;border-radius:6px;padding:8px}
-.guide-step:last-child{border-bottom:none}
-.guide-step:hover{background:rgba(155,92,255,.08)}
-.guide-step.done .step-num{background:#00ffc6;color:#001;border-color:#00ffc6}
-.guide-step.active .step-num{background:#9b5cff;color:#fff;border-color:#9b5cff;box-shadow:0 0 10px rgba(155,92,255,.4)}
-.step-num{width:22px;height:22px;border-radius:50%;border:1px solid #3a275a;color:#9b5cff;font-size:10px;font-weight:900;display:grid;place-items:center;flex-shrink:0;margin-top:1px;transition:all .2s}
-.step-body{}
-.step-label{font-size:12px;font-weight:700;color:#c8d7ff;margin-bottom:2px}
-.step-desc{font-size:11px;color:#4a6070;line-height:1.45}
-.step-action{margin-top:6px}
-.step-action button{background:#9b5cff;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer}
-.step-action button:hover{background:#b07aff}
-.tsm-bubble{background:#1a0f2e;border:1px solid rgba(155,92,255,.3);border-radius:10px;padding:10px 12px;font-size:12px;color:#c8d7ff;line-height:1.55;margin-top:10px;min-height:36px}
-.tsm-bubble b{color:#9b5cff}
-
-
-@media(max-width:980px){
-  .app{grid-template-columns:1fr}
-  .side{display:none}
-  .workspace{grid-template-columns:1fr}
-  .chat{left:12px}
+:root{
+  --bg:#08040f;--surf:#0f0818;--surf2:#150d20;--b1:rgba(168,85,247,.08);--b2:rgba(168,85,247,.18);
+  --purple:#a855f7;--pink:#ec4899;--cyan:#00e5ff;--gold:#f5c842;--green:#00ff88;--red:#ff4455;
+  --muted:#4a2a6a;--text:#c090e0;--white:#f0e0ff;
+  --mono:'JetBrains Mono',monospace;--head:'Syne',sans-serif;--body:'Barlow',sans-serif;
 }
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh}
+
+/* TOPBAR */
+.topbar{background:rgba(8,4,15,.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--b2);display:flex;align-items:center;justify-content:space-between;padding:.55rem 1.2rem;position:sticky;top:0;z-index:100}
+.tb-brand{font-family:var(--mono);font-size:.55rem;letter-spacing:.2em;color:var(--purple)}
+.tb-nav{display:flex;gap:.3rem}
+.tb-link{font-family:var(--mono);font-size:.48rem;letter-spacing:.08em;color:var(--muted);padding:.28rem .6rem;border:1px solid transparent;text-decoration:none;transition:all .2s}
+.tb-link:hover{color:var(--purple);border-color:var(--b2)}
+.tb-status{font-family:var(--mono);font-size:.48rem;color:var(--green);display:flex;align-items:center;gap:.35rem}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:260px 1fr 300px;height:calc(100vh - 41px)}
+@media(max-width:1100px){.layout{grid-template-columns:200px 1fr}}
+@media(max-width:800px){.layout{grid-template-columns:1fr}}
+
+/* LEFT: STEPS PANEL */
+.steps-panel{border-right:1px solid var(--b1);background:var(--surf);overflow-y:auto;padding:1rem .8rem}
+.sp-title{font-family:var(--mono);font-size:.48rem;letter-spacing:.15em;color:var(--purple);margin-bottom:1rem}
+.step-item{display:flex;gap:.6rem;align-items:flex-start;padding:.5rem .4rem;border-radius:4px;cursor:pointer;margin-bottom:.25rem;transition:all .2s;border:1px solid transparent}
+.step-item:hover{background:var(--surf2);border-color:var(--b1)}
+.step-item.active{background:rgba(168,85,247,.1);border-color:var(--b2)}
+.step-item.done .step-num{background:var(--green);color:#040810;border-color:var(--green)}
+.step-num{width:22px;height:22px;border-radius:50%;border:1px solid var(--muted);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.45rem;color:var(--muted);flex-shrink:0;transition:all .2s}
+.step-item.active .step-num{border-color:var(--purple);color:var(--purple)}
+.step-info{flex:1}
+.step-label{font-family:var(--mono);font-size:.42rem;letter-spacing:.1em;color:var(--muted)}
+.step-name{font-size:.75rem;font-weight:600;color:var(--white);margin:.1rem 0}
+.step-desc{font-size:.6rem;color:var(--muted);line-height:1.4}
+.step-item.done .step-name{color:var(--green)}
+
+/* CENTER: STUDIO */
+.studio{display:flex;flex-direction:column;overflow:hidden}
+.studio-head{border-bottom:1px solid var(--b1);padding:.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;background:var(--surf2)}
+.sh-title{font-family:var(--head);font-size:1.1rem;font-weight:700;color:var(--white)}
+.sh-sub{font-family:var(--mono);font-size:.45rem;letter-spacing:.1em;color:var(--muted);margin-top:.15rem}
+.studio-body{flex:1;overflow-y:auto;padding:1.2rem}
+
+/* PANELS */
+.panel{display:none}
+.panel.active{display:block}
+
+/* INPUTS */
+.field-label{font-family:var(--mono);font-size:.45rem;letter-spacing:.1em;color:var(--purple);margin-bottom:.4rem;display:block}
+.field-input{width:100%;background:var(--surf2);border:1px solid var(--b2);color:var(--white);font-family:var(--mono);font-size:.7rem;padding:.5rem .7rem;border-radius:4px;outline:none;transition:border-color .2s;margin-bottom:.8rem}
+.field-input:focus{border-color:var(--purple)}
+textarea.field-input{resize:vertical;min-height:80px;line-height:1.6}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+.pill-group{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.8rem}
+.pill{font-family:var(--mono);font-size:.45rem;letter-spacing:.06em;padding:.25rem .6rem;border:1px solid var(--b2);color:var(--muted);cursor:pointer;border-radius:20px;transition:all .2s;background:transparent}
+.pill.active{background:rgba(168,85,247,.2);border-color:var(--purple);color:var(--purple)}
+.pill:hover:not(.active){border-color:var(--b2);color:var(--text)}
+
+/* BUTTONS */
+.btn{font-family:var(--mono);font-size:.52rem;letter-spacing:.1em;padding:.45rem 1rem;border-radius:4px;cursor:pointer;border:1px solid;transition:all .2s;text-transform:uppercase}
+.btn-primary{background:var(--purple);color:#fff;border-color:var(--purple)}
+.btn-primary:hover{opacity:.85}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-ghost{background:transparent;border-color:var(--b2);color:var(--muted)}
+.btn-ghost:hover{color:var(--text);border-color:var(--b2)}
+.btn-green{background:var(--green);color:#040810;border-color:var(--green)}
+.btn-row{display:flex;gap:.5rem;margin-top:1rem;flex-wrap:wrap}
+
+/* OUTPUT CARDS */
+.output-card{background:var(--surf2);border:1px solid var(--b2);border-radius:4px;overflow:hidden;margin-bottom:.8rem}
+.oc-head{background:rgba(168,85,247,.08);padding:.45rem .7rem;border-bottom:1px solid var(--b1);display:flex;justify-content:space-between;align-items:center}
+.oc-title{font-family:var(--mono);font-size:.48rem;letter-spacing:.1em;color:var(--purple)}
+.oc-copy{font-family:var(--mono);font-size:.42rem;padding:.18rem .45rem;border:1px solid var(--b2);color:var(--muted);cursor:pointer;background:transparent;transition:all .2s}
+.oc-copy:hover{color:var(--white)}
+.oc-body{padding:.7rem;font-family:var(--mono);font-size:.65rem;color:var(--text);line-height:1.8;white-space:pre-wrap;min-height:60px}
+.oc-placeholder{color:var(--muted);font-style:italic;font-family:var(--mono);font-size:.6rem}
+
+/* HOOK GRID */
+.hook-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin:.6rem 0}
+.hook-card{background:var(--surf);border:1px solid var(--b1);border-radius:3px;padding:.5rem .6rem;cursor:pointer;transition:all .2s}
+.hook-card:hover{border-color:var(--purple);background:rgba(168,85,247,.06)}
+.hook-card.selected{border-color:var(--purple);background:rgba(168,85,247,.12)}
+.hook-num{font-family:var(--mono);font-size:.42rem;color:var(--muted);margin-bottom:.15rem}
+.hook-text{font-size:.65rem;color:var(--white);line-height:1.5}
+
+/* RIGHT: ASSISTANT */
+.assistant-panel{border-left:1px solid var(--b1);background:var(--surf);display:flex;flex-direction:column}
+.ap-head{background:var(--surf2);border-bottom:1px solid var(--b1);padding:.6rem .8rem}
+.ap-title{font-family:var(--mono);font-size:.5rem;letter-spacing:.12em;color:var(--purple)}
+.ap-sub{font-family:var(--mono);font-size:.42rem;color:var(--muted);margin-top:.1rem}
+.chat-feed{flex:1;overflow-y:auto;padding:.6rem .7rem;display:flex;flex-direction:column;gap:.5rem}
+.msg{display:flex;gap:.4rem;align-items:flex-start}
+.msg-avatar{width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.55rem;font-weight:700;font-family:var(--mono);margin-top:1px}
+.msg-zay .msg-avatar{background:linear-gradient(135deg,var(--purple),var(--pink));color:#fff}
+.msg-user .msg-avatar{background:var(--surf2);border:1px solid var(--b2);color:var(--muted)}
+.msg-bubble{background:var(--surf2);border:1px solid var(--b1);border-radius:0 6px 6px 6px;padding:.45rem .6rem;font-size:.62rem;color:var(--text);line-height:1.55;max-width:calc(100% - 30px)}
+.msg-user .msg-bubble{background:rgba(168,85,247,.08);border-color:var(--b2);border-radius:6px 0 6px 6px}
+.msg-user{flex-direction:row-reverse}
+.chat-input-row{border-top:1px solid var(--b1);padding:.5rem .6rem;display:flex;gap:.4rem}
+.chat-input{flex:1;background:var(--surf2);border:1px solid var(--b2);color:var(--white);font-family:var(--mono);font-size:.6rem;padding:.4rem .6rem;border-radius:4px;outline:none}
+.chat-input:focus{border-color:var(--purple)}
+.chat-send{font-family:var(--mono);font-size:.5rem;padding:.38rem .7rem;background:var(--purple);color:#fff;border:none;cursor:pointer;border-radius:3px}
+
+/* PROGRESS */
+.progress-bar-wrap{height:3px;background:rgba(168,85,247,.12);border-radius:2px;margin:1rem 0;overflow:hidden}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--purple),var(--pink));transition:width .5s;border-radius:2px}
+
+/* SONG PREVIEW */
+.song-preview{background:linear-gradient(135deg,rgba(168,85,247,.1),rgba(236,72,153,.05));border:1px solid var(--b2);border-radius:6px;padding:1.2rem;margin-top:.8rem}
+.sp-section{font-family:var(--mono);font-size:.45rem;letter-spacing:.12em;color:var(--purple);margin:.6rem 0 .2rem}
+.sp-text{font-size:.7rem;color:var(--white);line-height:1.7}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes thinking{0%,100%{opacity:.4}50%{opacity:1}}
+.thinking span{animation:thinking 1s infinite}
+.thinking span:nth-child(2){animation-delay:.2s}
+.thinking span:nth-child(3){animation-delay:.4s}
 </style>
-<script>
-window.TSM_UI = {
-    runAudit: async (sector, factor) => {
-        const feed = document.querySelector('.intelligence-feed-output') || document.getElementById('intelligence-feed-output');
-        if (feed) feed.innerHTML = '<span style="color: #00ffff;">[STRATEGIST] Internal Link: Processing...</span>';
-        try {
-            const res = await fetch('/api/audit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query: `auditops "${sector}" --factor "${factor}" --logic strategist` })
-            });
-            const data = await res.json();
-            if (feed) feed.innerText = `[STRATEGIST] ${data.output || "Analysis Complete."}`;
-        } catch (e) {
-            if (feed) feed.innerText = "[STRATEGIST] Local API Bridge Failed.";
-        }
-    }
-};
-// Wire the sector cards to the auto-fill search prompt logic
-document.addEventListener('click', (e) => {
-    const card = e.target.closest('.module-card');
-    if (card) {
-        const sector = card.dataset.sector || "Construction";
-        const factor = card.querySelector('h3')?.innerText || "General Audit";
-        TSM_UI.runAudit(sector, factor);
-    }
-});
-console.log("TSM_UI: Direct Neural Link Established.");
-</script>
-<script>
-window.TSM_UI = {
-    runAudit: async (sector, factor) => {
-        const feed = document.querySelector('.intelligence-feed-output') || document.getElementById('intelligence-feed-output');
-        if (feed) feed.innerHTML = '<span style="color: #00ffff;">[STRATEGIST] Internal Link: Processing...</span>';
-        try {
-            const res = await fetch('/api/audit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query: `auditops "${sector}" --factor "${factor}" --logic strategist` })
-            });
-            const data = await res.json();
-            if (feed) feed.innerText = `[STRATEGIST] ${data.output || "Analysis Complete."}`;
-        } catch (e) {
-            if (feed) feed.innerText = "[STRATEGIST] Local API Bridge Failed.";
-        }
-    }
-};
-// Wire the sector cards to the auto-fill search prompt logic
-document.addEventListener('click', (e) => {
-    const card = e.target.closest('.module-card');
-    if (card) {
-        const sector = card.dataset.sector || "Construction";
-        const factor = card.querySelector('h3')?.innerText || "General Audit";
-        TSM_UI.runAudit(sector, factor);
-    }
-});
-console.log("TSM_UI: Direct Neural Link Established.");
-</script>
 </head>
 <body>
 
-
-<div class="app">
-  <aside class="side">
-    <div class="logo">ZAY</div>
-    <h1>Music Command Center</h1>
-    <div class="sub">Artist DNA · AI Collaboration</div>
-    <div class="nav">
-      <button class="active">📝 Draft + Analysis</button>
-      <button>✂️ Revision Mode</button>
-      <button>✨ Generate</button>
-      <button>📁 Song Bank</button>
-      <button>🧬 Artist DNA</button>
-      <button>🛠 Studio Tools</button>
-    </div>
-    <div class="agent">
-      <b>ZAY</b><br>
-      <small>Cadence · Bounce · Live Feel</small>
-    </div>
-
-  </aside>
-
-  <main class="main">
-    <div class="top">
-      <div class="tabs">
-        <button class="active">DRAFT + ANALYSIS</button>
-        <button>REVISION MODE</button>
-        <button>GENERATE</button>
-        <button>SONG BANK</button>
-        <button>ARTIST DNA</button>
-      </div>
-      <div class="online">● Agents Online</div>
-    </div>
-
-    <section class="panel">
-      <div class="panelHead">
-        <div>
-          <div class="steps">
-            <span class="step on">1 · DNA</span>
-            <span class="step on">2 · Draft</span>
-            <span class="step">3 · Generate</span>
-            <span class="step">4 · Revise</span>
-            <span class="step">5 · Ad-libs</span>
-            <span class="step">6 · Bank</span>
-            <span class="step">7 · Export</span>
-          </div>
-          <div style="margin-top:12px;color:#c8d7ff;font-size:13px">
-            Paste your lyrics, then run a full producer pass. ZAY returns hook, adlibs, bridge, and producer note.
-          </div>
-        </div>
-        <button class="btn secondary" onclick="loadSample()">Load Sample</button>
-      </div>
-    </section>
-
-    <div class="workspace">
-      <section>
-        <div class="card">
-          <h3 style="color:#00ffc6;margin-top:0;margin-bottom:12px">PASTE YOUR DRAFT</h3>
-          <textarea id="draft" placeholder="Paste your lyrics here..."></textarea>
-          <input id="request" value="Return HOOK, ADLIBS, BRIDGE, PRODUCER NOTE." style="margin-top:10px">
-          <div class="actions">
-            <button class="btn primary" onclick="runProducerPass()">🎛 Full Producer Pass</button>
-            <button class="btn gold" onclick="runHookOnly()">Hook Options</button>
-            <button class="btn secondary" onclick="saveToBank()">💾 Save to Bank</button>
-            <button class="btn secondary" onclick="copyOutput()">Copy</button>
-          </div>
-        </div>
-
-        <div class="output">
-          <div class="outHead">
-            <div class="outTitle">ZAY PRODUCER OUTPUT</div>
-            <div class="live" id="liveStatus">READY</div>
-          </div>
-          <div id="outputBody" style="color:#4a6070">Paste lyrics and run the session.</div>
-        </div>
-      </section>
-
-      <aside class="rail">
-        <div class="card">
-          <h3>SESSION SIGNALS</h3>
-          <div class="kpi">
-            <div><b id="hookScore">--</b><small>Hook Strength</small></div>
-            <div><b id="cadenceScore">--</b><small>Cadence</small></div>
-            <div><b id="structureScore">--</b><small>Structure</small></div>
-            <div><b id="bankCount">0</b><small>Banked</small></div>
-          </div>
-          <div style="font-size:12px;color:#8fa9be">Powered by TSM Neural Core</div>
-        </div>
-
-        <div class="card" style="margin-top:14px">
-          <h3>SONG BANK</h3>
-          <div id="bank"></div>
-        </div>
-
-        <!-- TSM Assistant Guide -->
-        <div class="assistant">
-          <h3>🤖 TSM ASSISTANT</h3>
-          <div class="tsm-bubble" id="tsmBubble">Hey! I'm your song-building guide. Start by pasting your draft lyrics, then I'll walk you through each step to create a full track. 🎵</div>
-          <div style="margin-top:12px;display:flex;flex-direction:column;gap:2px" id="guideSteps">
-
-            <div class="guide-step active" id="gs1" onclick="guideGo(1)">
-              <div class="step-num" id="sn1">1</div>
-              <div class="step-body">
-                <div class="step-label">Paste Your Draft</div>
-                <div class="step-desc">Add your raw lyrics to the textarea. Hit "Load Sample" to use the demo track.</div>
-                <div class="step-action"><button onclick="loadSampleGuide()">Load Sample Draft</button></div>
-              </div>
-            </div>
-
-            <div class="guide-step" id="gs2" onclick="guideGo(2)">
-              <div class="step-num" id="sn2">2</div>
-              <div class="step-body">
-                <div class="step-label">Run Full Producer Pass</div>
-                <div class="step-desc">ZAY analyzes your draft and returns Hook, Adlibs, Bridge + Producer Note.</div>
-                <div class="step-action"><button onclick="runProducerPass();advanceGuide(3)">Run Now →</button></div>
-              </div>
-            </div>
-
-            <div class="guide-step" id="gs3" onclick="guideGo(3)">
-              <div class="step-num" id="sn3">3</div>
-              <div class="step-body">
-                <div class="step-label">Explore Hook Options</div>
-                <div class="step-desc">Get 4 distinct hook variations to find the one that hits hardest.</div>
-                <div class="step-action"><button onclick="runHookOnly();advanceGuide(4)">Get Hook Options →</button></div>
-              </div>
-            </div>
-
-            <div class="guide-step" id="gs4" onclick="guideGo(4)">
-              <div class="step-num" id="sn4">4</div>
-              <div class="step-body">
-                <div class="step-label">Revise with ZAY Coach</div>
-                <div class="step-desc">Ask ZAY to improve specific lines, adjust flow, or punch up the energy.</div>
-                <div class="step-action"><button onclick="coachGuide()">Ask ZAY →</button></div>
-              </div>
-            </div>
-
-            <div class="guide-step" id="gs5" onclick="guideGo(5)">
-              <div class="step-num" id="sn5">5</div>
-              <div class="step-body">
-                <div class="step-label">Build Full Song Structure</div>
-                <div class="step-desc">Generate the complete song: Verse 1, Hook, Verse 2, Bridge, Outro.</div>
-                <div class="step-action"><button onclick="buildFullSong()">Build Full Song →</button></div>
-              </div>
-            </div>
-
-            <div class="guide-step" id="gs6" onclick="guideGo(6)">
-              <div class="step-num" id="sn6">6</div>
-              <div class="step-body">
-                <div class="step-label">Save to Song Bank</div>
-                <div class="step-desc">Bank your finished output so nothing gets lost between sessions.</div>
-                <div class="step-action"><button onclick="saveToBank();advanceGuide(7)">Save to Bank →</button></div>
-              </div>
-            </div>
-
-            <div class="guide-step" id="gs7" onclick="guideGo(7)">
-              <div class="step-num" id="sn7">7</div>
-              <div class="step-body">
-                <div class="step-label">Copy & Export</div>
-                <div class="step-desc">Copy the full song to clipboard and take it to your DAW or notes.</div>
-                <div class="step-action"><button onclick="copyOutput()">Copy Full Song →</button></div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </aside>
-    </div>
-  </main>
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tb-brand">TSM · MUSIC COMMAND · PRODUCER STUDIO</div>
+  <nav class="tb-nav">
+    <a class="tb-link" href="/music">HOME</a>
+    <a class="tb-link" href="/html/music-command/how-to-guide.html">HOW TO</a>
+    <a class="tb-link" href="/html/music-command/marketing.html">MARKETING</a>
+  </nav>
+  <div class="tb-status"><div class="dot"></div><span>ZAY PRODUCER ONLINE</span></div>
 </div>
 
-<div class="chat">
-  <input id="coachInput" placeholder="Ask ZAY — next step, improve a line, rate my draft...">
-  <button class="btn primary" onclick="coach()">➜</button>
-</div>
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- STEPS PANEL -->
+  <div class="steps-panel">
+    <div class="sp-title">// SONG CREATION STEPS</div>
+
+    <div class="step-item active" id="step-btn-1" onclick="goStep(1)">
+      <div class="step-num">1</div>
+      <div class="step-info">
+        <div class="step-label">FOUNDATION</div>
+        <div class="step-name">Song Concept</div>
+        <div class="step-desc">Genre, mood, theme, artist style</div>
+      </div>
+    </div>
+
+    <div class="step-item" id="step-btn-2" onclick="goStep(2)">
+      <div class="step-num">2</div>
+      <div class="step-info">
+        <div class="step-label">STRUCTURE</div>
+        <div class="step-name">Song Blueprint</div>
+        <div class="step-desc">AI builds your arrangement</div>
+      </div>
+    </div>
+
+    <div class="step-item" id="step-btn-3" onclick="goStep(3)">
+      <div class="step-num">3</div>
+      <div class="step-info">
+        <div class="step-label">HOOKS</div>
+        <div class="step-name">Hook Generator</div>
+        <div class="step-desc">10 hook options to choose from</div>
+      </div>
+    </div>
+
+    <div class="step-item" id="step-btn-4" onclick="goStep(4)">
+      <div class="step-num">4</div>
+      <div class="step-info">
+        <div class="step-label">LYRICS</div>
+        <div class="step-name">Write the Song</div>
+        <div class="step-desc">Full lyrics with your chosen hook</div>
+      </div>
+    </div>
+
+    <div class="step-item" id="step-btn-5" onclick="goStep(5)">
+      <div class="step-num">5</div>
+      <div class="step-info">
+        <div class="step-label">REVISION</div>
+        <div class="step-name">Polish & Refine</div>
+        <div class="step-desc">AI revision with your notes</div>
+      </div>
+    </div>
+
+    <div class="step-item" id="step-btn-6" onclick="goStep(6)">
+      <div class="step-num">6</div>
+      <div class="step-info">
+        <div class="step-label">STRATEGY</div>
+        <div class="step-name">Release Plan</div>
+        <div class="step-desc">Distribution, marketing, playlists</div>
+      </div>
+    </div>
+
+    <div class="step-item" id="step-btn-7" onclick="goStep(7)">
+      <div class="step-num">7</div>
+      <div class="step-info">
+        <div class="step-label">EXPORT</div>
+        <div class="step-name">Song Package</div>
+        <div class="step-desc">Full song + strategy export</div>
+      </div>
+    </div>
+
+    <div style="margin-top:1.2rem;padding:.6rem;background:rgba(168,85,247,.06);border:1px solid var(--b1);border-radius:4px">
+      <div style="font-family:var(--mono);font-size:.42rem;letter-spacing:.1em;color:var(--purple);margin-bottom:.4rem">SONG DNA</div>
+      <div style="font-size:.6rem;color:var(--muted)" id="dna-preview">No concept yet. Start at Step 1.</div>
+    </div>
+  </div>
+
+  <!-- STUDIO CENTER -->
+  <div class="studio">
+    <div class="studio-head">
+      <div>
+        <div class="sh-title" id="studio-title">Song Concept</div>
+        <div class="sh-sub" id="studio-sub">Tell ZAY what you're creating — genre, mood, theme, artist vibe</div>
+      </div>
+      <div class="progress-bar-wrap" style="width:200px;margin:0">
+        <div class="progress-bar" id="progress-bar" style="width:14%"></div>
+      </div>
+    </div>
+    <div class="studio-body">
+
+      <!-- STEP 1: CONCEPT -->
+      <div class="panel active" id="panel-1">
+        <span class="field-label">GENRE</span>
+        <div class="pill-group" id="genre-pills">
+          <div class="pill active" onclick="togglePill(this,'genre')">Hip-Hop</div>
+          <div class="pill" onclick="togglePill(this,'genre')">R&B</div>
+          <div class="pill" onclick="togglePill(this,'genre')">Pop</div>
+          <div class="pill" onclick="togglePill(this,'genre')">Trap</div>
+          <div class="pill" onclick="togglePill(this,'genre')">Afrobeats</div>
+          <div class="pill" onclick="togglePill(this,'genre')">Gospel</div>
+          <div class="pill" onclick="togglePill(this,'genre')">Latin</div>
+          <div class="pill" onclick="togglePill(this,'genre')">Drill</div>
+        </div>
+
+        <span class="field-label">MOOD</span>
+        <div class="pill-group" id="mood-pills">
+          <div class="pill active" onclick="togglePill(this,'mood')">Motivational</div>
+          <div class="pill" onclick="togglePill(this,'mood')">Dark</div>
+          <div class="pill" onclick="togglePill(this,'mood')">Romantic</div>
+          <div class="pill" onclick="togglePill(this,'mood')">Aggressive</div>
+          <div class="pill" onclick="togglePill(this,'mood')">Melancholy</div>
+          <div class="pill" onclick="togglePill(this,'mood')">Triumphant</div>
+          <div class="pill" onclick="togglePill(this,'mood')">Chill</div>
+          <div class="pill" onclick="togglePill(this,'mood')">Spiritual</div>
+        </div>
+
+        <div class="field-row">
+          <div>
+            <span class="field-label">ARTIST / STYLE REFERENCE</span>
+            <input class="field-input" id="artist-ref" placeholder="e.g. Drake, Kendrick, SZA, Rod Wave...">
+          </div>
+          <div>
+            <span class="field-label">SONG TITLE (optional)</span>
+            <input class="field-input" id="song-title" placeholder="Leave blank to let ZAY name it">
+          </div>
+        </div>
+
+        <span class="field-label">WHAT IS THIS SONG ABOUT?</span>
+        <textarea class="field-input" id="song-theme" placeholder="Describe the story, emotion, or message. The more detail, the better ZAY can write for you..."></textarea>
+
+        <span class="field-label">PERSONAL LINE OR PHRASE (optional)</span>
+        <input class="field-input" id="personal-line" placeholder="Any specific line you want included, or leave blank">
+
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="runStep1()">⚡ BUILD MY SONG BLUEPRINT</button>
+        </div>
+      </div>
+
+      <!-- STEP 2: STRUCTURE -->
+      <div class="panel" id="panel-2">
+        <div class="output-card">
+          <div class="oc-head"><span class="oc-title">SONG STRUCTURE · AI BLUEPRINT</span><button class="oc-copy" onclick="copyOC('structure-out')">COPY</button></div>
+          <div class="oc-body" id="structure-out"><span class="oc-placeholder">Run Step 1 first to generate your blueprint.</span></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="runStep3()">⚡ GENERATE 10 HOOKS</button>
+          <button class="btn btn-ghost" onclick="rerunStructure()">↺ REGENERATE</button>
+        </div>
+      </div>
+
+      <!-- STEP 3: HOOKS -->
+      <div class="panel" id="panel-3">
+        <div style="font-family:var(--mono);font-size:.6rem;color:var(--text);margin-bottom:.6rem">Pick the hook that hits hardest — ZAY will build your full song around it.</div>
+        <div class="hook-grid" id="hook-grid">
+          <div style="color:var(--muted);font-family:var(--mono);font-size:.6rem;grid-column:1/-1">Run Step 2 first to generate hooks.</div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="write-song-btn" onclick="runStep4()" disabled>⚡ WRITE FULL SONG</button>
+          <button class="btn btn-ghost" onclick="runStep3()">↺ NEW HOOKS</button>
+        </div>
+      </div>
+
+      <!-- STEP 4: LYRICS -->
+      <div class="panel" id="panel-4">
+        <div class="output-card">
+          <div class="oc-head"><span class="oc-title">FULL SONG LYRICS</span><button class="oc-copy" onclick="copyOC('lyrics-out')">COPY</button></div>
+          <div class="oc-body" id="lyrics-out"><span class="oc-placeholder">Pick a hook in Step 3 first.</span></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="goStep(5)">REFINE WITH NOTES →</button>
+          <button class="btn btn-ghost" onclick="runStep4()">↺ REWRITE</button>
+        </div>
+      </div>
+
+      <!-- STEP 5: REVISION -->
+      <div class="panel" id="panel-5">
+        <span class="field-label">YOUR REVISION NOTES</span>
+        <textarea class="field-input" id="revision-notes" placeholder="What should ZAY change? e.g. 'Make verse 2 harder', 'Change the hook to mention loyalty', 'Add an ad-lib section'..."></textarea>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="runStep5()">⚡ REVISE SONG</button>
+        </div>
+        <div class="output-card" style="margin-top:.8rem">
+          <div class="oc-head"><span class="oc-title">REVISED VERSION</span><button class="oc-copy" onclick="copyOC('revision-out')">COPY</button></div>
+          <div class="oc-body" id="revision-out"><span class="oc-placeholder">Add notes and click Revise.</span></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="goStep(6)">BUILD RELEASE PLAN →</button>
+        </div>
+      </div>
+
+      <!-- STEP 6: STRATEGY -->
+      <div class="panel" id="panel-6">
+        <div class="output-card">
+          <div class="oc-head"><span class="oc-title">RELEASE STRATEGY · MARKETING PLAN</span><button class="oc-copy" onclick="copyOC('strategy-out')">COPY</button></div>
+          <div class="oc-body" id="strategy-out"><span class="oc-placeholder">Generating your release plan…</span></div>
+        </div>
+        <div class="output-card">
+          <div class="oc-head"><span class="oc-title">INDUSTRY GUIDANCE · NEXT STEPS</span><button class="oc-copy" onclick="copyOC('guidance-out')">COPY</button></div>
+          <div class="oc-body" id="guidance-out"><span class="oc-placeholder">Loading guidance…</span></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="goStep(7)">EXPORT FULL PACKAGE →</button>
+          <button class="btn btn-ghost" onclick="runStep6()">↺ REGENERATE PLAN</button>
+        </div>
+      </div>
+
+      <!-- STEP 7: EXPORT -->
+      <div class="panel" id="panel-7">
+        <div class="song-preview" id="song-export-preview">
+          <div style="font-family:var(--head);font-size:1.2rem;color:var(--white);margin-bottom:.3rem" id="export-title">Your Song</div>
+          <div style="font-family:var(--mono);font-size:.48rem;color:var(--purple);margin-bottom:.8rem" id="export-meta">— —</div>
+          <div class="sp-section">HOOK</div>
+          <div class="sp-text" id="export-hook">—</div>
+          <div class="sp-section">FULL LYRICS</div>
+          <div class="sp-text" id="export-lyrics">—</div>
+          <div class="sp-section">RELEASE STRATEGY</div>
+          <div class="sp-text" id="export-strategy">—</div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-green" onclick="exportTXT()">⬇ EXPORT .TXT</button>
+          <button class="btn btn-primary" onclick="copyAll()">⎘ COPY FULL PACKAGE</button>
+          <button class="btn btn-ghost" onclick="startOver()">↺ NEW SONG</button>
+        </div>
+      </div>
+
+    </div><!-- /studio-body -->
+  </div><!-- /studio -->
+
+  <!-- RIGHT: ZAY ASSISTANT -->
+  <div class="assistant-panel">
+    <div class="ap-head">
+      <div class="ap-title">ZAY · TSM PRODUCER ASSISTANT</div>
+      <div class="ap-sub">Ask anything about your song, industry, or next steps</div>
+    </div>
+    <div class="chat-feed" id="chat-feed">
+      <div class="msg msg-zay">
+        <div class="msg-avatar">Z</div>
+        <div class="msg-bubble">What's good. I'm ZAY — your TSM Producer. I'm here every step of the way. Start by telling me what kind of song you want to make. Genre, mood, what it's about — give me something to work with and I'll build it out for you.</div>
+      </div>
+    </div>
+    <div class="chat-input-row">
+      <input class="chat-input" id="chat-input" placeholder="Ask ZAY anything…" onkeydown="if(e.key==='Enter')sendChat()">
+      <button class="chat-send" onclick="sendChat()">SEND</button>
+    </div>
+  </div>
+
+</div><!-- /layout -->
 
 <script>
-const sample = `Grindin' n Slavin' while Misbavin'!
-Feelin' so Fresh n So Clean even Missed on Shavin'!
-Some look at the Hustle! n Cant Stand the Struggle,
-Those Real in the Field see A Time for Muscle!
-I Plan for Greatest! Rule 1: No Fakeness!
-Real is What You FEEL! That's Pill! So Take This!`;
+// ── STATE ────────────────────────────────────────────────────────
+const DNA = {
+  genre: 'Hip-Hop', mood: 'Motivational',
+  artist: '', title: '', theme: '', personalLine: '',
+  structure: '', selectedHook: '', lyrics: '',
+  revised: '', strategy: '', guidance: '',
+};
+let currentStep = 1;
 
-const TSM_ENDPOINT = 'https://tsm-shell.fly.dev/api/music/agent-pass';
-
-// ── Helpers ──────────────────────────────────────────────────────
-function loadSample() { document.getElementById('draft').value = sample; }
-
-function esc(s) {
-  return String(s||'').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-}
-
-function extractSection(text, name) {
-  const re = new RegExp(name + '[:\\s]+', 'i');
-  if (!re.test(text)) return null;
-  let after = text.split(re)[1] || '';
-  const stops = ['HOOK','ADLIBS','ADLIB','BRIDGE','PRODUCER NOTE','HOOK OPTION'];
-  for (const stop of stops) {
-    if (stop.toLowerCase() === name.toLowerCase()) continue;
-    const idx = after.search(new RegExp('\\b' + stop + '[:\\s]', 'i'));
-    if (idx > -1) after = after.slice(0, idx);
-  }
-  return after.trim() || null;
-}
-
-function setLoading(msg) {
-  document.getElementById('liveStatus').textContent = '●';
-  document.getElementById('outputBody').innerHTML = `<div style="color:#4a6070;animation:none">${msg}</div>`;
-}
-function showError(msg) {
-  document.getElementById('liveStatus').textContent = 'ERROR';
-  document.getElementById('outputBody').innerHTML = `<div class="err">⚠ ${esc(msg)}</div>`;
-}
-
-function scoreFrom(text) {
-  const words = text.split(/\s+/).length;
-  const hook = extractSection(text, 'HOOK');
-  const sections = ['HOOK','ADLIBS','BRIDGE','PRODUCER NOTE'].filter(s => extractSection(text, s));
-  document.getElementById('hookScore').textContent      = hook ? Math.min(99, 68 + Math.floor(hook.length / 9)) : '--';
-  document.getElementById('cadenceScore').textContent   = Math.min(99, 58 + Math.floor(words / 3));
-  document.getElementById('structureScore').textContent = Math.min(99, sections.length * 23 + 8);
-}
-
-function render(text) {
-  const hook   = extractSection(text, 'HOOK');
-  const adlibs = extractSection(text, 'ADLIBS') || extractSection(text, 'ADLIB');
-  const bridge = extractSection(text, 'BRIDGE');
-  const note   = extractSection(text, 'PRODUCER NOTE');
-
-  let html = '';
-  if (hook)   html += `<div class="section"><div class="sectionTitle hook">🎯 HOOK</div><div>${esc(hook).replace(/\n/g,'<br>')}</div></div>`;
-  if (adlibs) html += `<div class="section"><div class="sectionTitle adlibs">🎤 ADLIBS</div><div>${esc(adlibs).replace(/\n/g,'<br>')}</div></div>`;
-  if (bridge) html += `<div class="section"><div class="sectionTitle bridge">🌉 BRIDGE</div><div>${esc(bridge).replace(/\n/g,'<br>')}</div></div>`;
-  if (note)   html += `<div class="section"><div class="sectionTitle note">📝 PRODUCER NOTE</div><div>${esc(note).replace(/\n/g,'<br>')}</div></div>`;
-  if (!html)  html  = `<div style="white-space:pre-wrap;line-height:1.7">${esc(text)}</div>`;
-
-  document.getElementById('outputBody').innerHTML = html;
-  document.getElementById('liveStatus').textContent = 'DONE';
-  window.__LAST_ZAY__ = text;
-  scoreFrom(text);
-}
-
-// ── TSM Neural Core — server-side proxy, key never touches browser ─
-async function callTSM(step, message) {
-  const draft = document.getElementById('draft').value.trim() || sample;
-  const res = await fetch(TSM_ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ agent: 'ZAY', step, draft, message })
-  });
-  if (!res.ok) throw new Error(`TSM Neural Core error ${res.status}`);
-  const data = await res.json();
-  return data.reply || data.content || '';
-}
-
-// ── Actions ───────────────────────────────────────────────────────
-async function runProducerPass() {
-  const req = document.getElementById('request').value.trim() || 'Return HOOK, ADLIBS, BRIDGE, PRODUCER NOTE.';
-  setLoading('ZAY is producing...');
-  try {
-    const reply = await callTSM('Full Producer Pass', req);
-    if (reply) { render(reply); advanceGuide(3); }
-  } catch(e) { showError(e.message); }
-}
-
-async function runHookOnly() {
-  setLoading('ZAY is writing hook options...');
-  try {
-    const reply = await callTSM('Draft', 'Return 4 hook options and producer note only.');
-    if (reply) {
-      document.getElementById('outputBody').innerHTML = `<div style="white-space:pre-wrap;line-height:1.8">${esc(reply)}</div>`;
-      document.getElementById('liveStatus').textContent = 'DONE';
-      window.__LAST_ZAY__ = reply;
-      advanceGuide(4);
-    }
-  } catch(e) { showError(e.message); }
-}
-
-async function coach() {
-  const msg = document.getElementById('coachInput').value.trim();
-  if (!msg) return;
-  setLoading('ZAY is on it...');
-  document.getElementById('coachInput').value = '';
-  try {
-    const reply = await callTSM('Producer Coach', msg);
-    if (reply) {
-      document.getElementById('outputBody').innerHTML = `<div style="white-space:pre-wrap;line-height:1.7">${esc(reply)}</div>`;
-      document.getElementById('liveStatus').textContent = 'DONE';
-      window.__LAST_ZAY__ = reply;
-      if (currentGuideStep <= 4) advanceGuide(5);
-    }
-  } catch(e) { showError(e.message); }
-}
-
-// Pre-load sample so users see content immediately
-window.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('draft').value = sample;
-});
-
-function saveToBank() {
-  const text = window.__LAST_ZAY__ || '';
-  if (!text) return;
-  const bank = document.getElementById('bank');
-  const item = document.createElement('div');
-  item.className = 'bankItem';
-  item.innerHTML = `<div class="bankTime">${new Date().toLocaleTimeString()}</div>${esc(text.slice(0,160))}${text.length > 160 ? '…' : ''}`;
-  bank.prepend(item);
-  document.getElementById('bankCount').textContent = bank.children.length;
-}
-
-function copyOutput() {
-  const text = window.__LAST_ZAY__ || document.getElementById('outputBody').innerText;
-  navigator.clipboard.writeText(text).then(() => {
-    const btns = document.querySelectorAll('.btn.secondary');
-    btns.forEach(b => { if (b.textContent.includes('Copy')) { b.textContent = '✓ Copied'; setTimeout(() => b.textContent = 'Copy', 1500); }});
-  });
-}
-
-document.getElementById('coachInput').addEventListener('keydown', e => { if (e.key === 'Enter') coach(); });
-
-// ── TSM Assistant Guide ───────────────────────────────────────────
-const tsmMessages = {
-  1: "Great! Paste your raw lyrics in the box above — or hit <b>Load Sample Draft</b> to use the demo track. Once your lyrics are in, move to Step 2. 🎤",
-  2: "Now hit <b>Run Full Producer Pass</b>. ZAY will analyze your draft and return a Hook, Adlibs, Bridge, and Producer Note all at once. This is the core of your song. 🎛",
-  3: "Nice output! Now try <b>Hook Options</b> to get 4 variations of your hook. Pick the one that feels most natural when you say it out loud. 🎯",
-  4: "Use the chat bar at the bottom to talk to ZAY directly. Try: <i>\"make the hook harder\"</i>, <i>\"punch up line 2\"</i>, or <i>\"add more energy to the bridge\"</i>. ✏️",
-  5: "Time to build the <b>full song structure</b>. Hit the button and ZAY will arrange everything into Verse 1 → Hook → Verse 2 → Bridge → Outro. 🎼",
-  6: "Your song is built! Hit <b>Save to Bank</b> to store this version. You can bank multiple versions and compare them. 💾",
-  7: "Last step — <b>Copy Full Song</b> and take it to your DAW, voice memo, or notes app. Your track is ready. 🔥"
+const STEPS = {
+  1: { title: 'Song Concept', sub: 'Tell ZAY what you\'re creating — genre, mood, theme, artist vibe', pct: 14 },
+  2: { title: 'Song Blueprint', sub: 'AI-generated structure for your track', pct: 28 },
+  3: { title: 'Hook Generator', sub: 'Pick the hook that hits hardest', pct: 42 },
+  4: { title: 'Full Song Lyrics', sub: 'ZAY writes your complete song around your chosen hook', pct: 57 },
+  5: { title: 'Polish & Refine', sub: 'Give ZAY revision notes and get a tighter version', pct: 71 },
+  6: { title: 'Release Strategy', sub: 'Distribution, marketing, and playlist targeting plan', pct: 85 },
+  7: { title: 'Song Package Export', sub: 'Your complete song + strategy, ready to use', pct: 100 },
 };
 
-let currentGuideStep = 1;
+// ── NAVIGATION ───────────────────────────────────────────────────
+function goStep(n) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.step-item').forEach(s => s.classList.remove('active'));
+  document.getElementById('panel-' + n).classList.add('active');
+  document.getElementById('step-btn-' + n).classList.add('active');
+  const s = STEPS[n];
+  document.getElementById('studio-title').textContent = s.title;
+  document.getElementById('studio-sub').textContent = s.sub;
+  document.getElementById('progress-bar').style.width = s.pct + '%';
+  currentStep = n;
+  if (n === 6 && !DNA.strategy) runStep6();
+  if (n === 7) buildExport();
+}
 
-function advanceGuide(step) {
-  currentGuideStep = step;
-  // Mark previous steps done
-  for (let i = 1; i < step; i++) {
-    document.getElementById('gs'+i)?.classList.remove('active');
-    document.getElementById('gs'+i)?.classList.add('done');
-    document.getElementById('sn'+i).textContent = '✓';
+function markDone(n) {
+  document.getElementById('step-btn-' + n).classList.add('done');
+}
+
+function updateDNA() {
+  const g = document.querySelector('#genre-pills .pill.active')?.textContent || DNA.genre;
+  const m = document.querySelector('#mood-pills .pill.active')?.textContent || DNA.mood;
+  DNA.genre = g; DNA.mood = m;
+  DNA.artist = document.getElementById('artist-ref').value;
+  DNA.title  = document.getElementById('song-title').value;
+  DNA.theme  = document.getElementById('song-theme').value;
+  DNA.personalLine = document.getElementById('personal-line').value;
+  document.getElementById('dna-preview').textContent =
+    `${g} · ${m}${DNA.artist ? ' · ' + DNA.artist : ''}${DNA.title ? ' · "' + DNA.title + '"' : ''}`;
+}
+
+function togglePill(el, group) {
+  document.querySelectorAll(`#${group}-pills .pill`).forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ── API CALLS ────────────────────────────────────────────────────
+async function apiCall(endpoint, body) {
+  const r = await fetch('/api' + endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': 'TSM_PRO_ALPHA_2026' },
+    body: JSON.stringify(body),
+  });
+  return r.json();
+}
+
+function setOutput(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
+}
+function streamOutput(id, text) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = '';
+  let i = 0;
+  const iv = setInterval(() => {
+    el.textContent = text.slice(0, i) + '▌';
+    el.scrollTop = el.scrollHeight;
+    i += 8;
+    if (i >= text.length) { clearInterval(iv); el.textContent = text; }
+  }, 12);
+}
+
+// ── STEP 1: BUILD BLUEPRINT ──────────────────────────────────────
+async function runStep1() {
+  updateDNA();
+  if (!DNA.theme.trim()) {
+    zayMessage("Tell me what the song is about first — give me a theme, story, or emotion to work with.");
+    return;
   }
-  // Set current active
-  for (let i = step; i <= 7; i++) {
-    document.getElementById('gs'+i)?.classList.remove('done','active');
-  }
-  document.getElementById('gs'+step)?.classList.add('active');
-  document.getElementById('gs'+step)?.scrollIntoView({behavior:'smooth', block:'nearest'});
-  // Update bubble
-  document.getElementById('tsmBubble').innerHTML = tsmMessages[step] || '';
-}
+  const btn = document.querySelector('#panel-1 .btn-primary');
+  btn.disabled = true; btn.textContent = 'ZAY IS BUILDING…';
+  zayMessage(`Got it. ${DNA.genre}, ${DNA.mood} vibes${DNA.artist ? ', ' + DNA.artist + ' style' : ''}. Let me build your blueprint…`);
 
-function guideGo(step) {
-  advanceGuide(step);
-}
+  const prompt = `You are ZAY, an elite music producer and songwriter AI for TSM Music Command.
+Artist style: ${DNA.artist || 'versatile'}
+Genre: ${DNA.genre}
+Mood: ${DNA.mood}
+Theme/Story: ${DNA.theme}
+${DNA.personalLine ? 'Must include this line: ' + DNA.personalLine : ''}
+${DNA.title ? 'Song title: ' + DNA.title : ''}
 
-function loadSampleGuide() {
-  loadSample();
-  advanceGuide(2);
-}
+Create a detailed SONG BLUEPRINT with:
+1. SUGGESTED TITLE (if none given)
+2. CONCEPT SUMMARY (2-3 sentences)
+3. SONG STRUCTURE (Intro / Verse 1 / Pre-Hook / Hook / Verse 2 / Bridge / Outro with bar counts)
+4. PRODUCTION NOTES (BPM range, key, instruments, vibe)
+5. LYRICAL DIRECTION (themes per section, tone, key words/phrases to hit)
+6. ARTIST DIRECTION (delivery style, ad-libs, energy)
 
-function coachGuide() {
-  document.getElementById('coachInput').focus();
-  document.getElementById('tsmBubble').innerHTML = tsmMessages[4];
-}
+Be specific, creative, and make it feel like a real producer session.`;
 
-// Watch draft textarea — when user types, advance to step 2
-document.getElementById('draft').addEventListener('input', function() {
-  if (this.value.trim().length > 20 && currentGuideStep === 1) advanceGuide(2);
-});
-
-async function buildFullSong() {
-  const draft = document.getElementById('draft').value.trim() || sample;
-  setLoading('ZAY is building your full song structure...');
-  advanceGuide(6);
   try {
-    const res = await fetch(TSM_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        agent: 'ZAY',
-        step: 'Full Song Build',
-        draft,
-        message: `Build a complete song structure using this draft. Return clearly labeled sections:
+    const d = await apiCall('/music/structure', { query: prompt, genre: DNA.genre, mood: DNA.mood });
+    DNA.structure = d.content || d.reply || 'Blueprint unavailable.';
+    streamOutput('structure-out', DNA.structure);
+    markDone(1);
+    goStep(2);
+    zayMessage("Blueprint is locked in. Check it out — this is your song's foundation. When you're ready, I'll generate 10 hooks for you to choose from.");
+  } catch(e) {
+    setOutput('structure-out', 'Error: ' + e.message);
+  }
+  btn.disabled = false; btn.textContent = '⚡ BUILD MY SONG BLUEPRINT';
+}
 
-VERSE 1:
-(use and expand the original draft lines)
+function rerunStructure() { runStep1(); }
+
+// ── STEP 3: HOOKS ───────────────────────────────────────────────
+async function runStep3() {
+  if (!DNA.structure) { zayMessage("Build your blueprint first — Step 1."); return; }
+  document.getElementById('hook-grid').innerHTML = '<div style="color:var(--muted);font-family:var(--mono);font-size:.6rem;grid-column:1/-1" class="thinking"><span>.</span><span>.</span><span>.</span> Generating hooks</div>';
+  document.getElementById('write-song-btn').disabled = true;
+  goStep(3);
+  zayMessage("Generating 10 hooks for you. Pick the one that hits hardest — that's what I'll build the whole song around.");
+
+  try {
+    const d = await apiCall('/music/hooks/generate10', {
+      genre: DNA.genre, mood: DNA.mood, theme: DNA.theme,
+      artist: DNA.artist, structure: DNA.structure.slice(0, 500),
+    });
+    const hooks = d.hooks || [];
+    if (!hooks.length) { document.getElementById('hook-grid').innerHTML = '<div style="color:var(--red);font-family:var(--mono);font-size:.6rem">Hook generation failed. Try again.</div>'; return; }
+    document.getElementById('hook-grid').innerHTML = hooks.map((h, i) => `
+      <div class="hook-card" id="hc-${i}" onclick="selectHook(${i}, this)">
+        <div class="hook-num">#${i+1}</div>
+        <div class="hook-text">${h}</div>
+      </div>`).join('');
+    markDone(2);
+    zayMessage(`Here are your 10 hooks. Click the one that feels right — I'll write the full song around it.`);
+  } catch(e) {
+    document.getElementById('hook-grid').innerHTML = `<div style="color:var(--red)">${e.message}</div>`;
+  }
+}
+
+function selectHook(i, el) {
+  document.querySelectorAll('.hook-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  DNA.selectedHook = el.querySelector('.hook-text').textContent;
+  document.getElementById('write-song-btn').disabled = false;
+  zayMessage(`Hook ${i+1} selected. That's the one. Hit "Write Full Song" and I'll build the whole thing around it.`);
+}
+
+// ── STEP 4: LYRICS ───────────────────────────────────────────────
+async function runStep4() {
+  if (!DNA.selectedHook) { zayMessage("Pick a hook first."); return; }
+  const btn = document.getElementById('write-song-btn');
+  btn.disabled = true; btn.textContent = 'ZAY IS WRITING…';
+  goStep(4);
+  setOutput('lyrics-out', '▌');
+  zayMessage(`Writing your full song now. Hook locked: "${DNA.selectedHook.slice(0,40)}…"`);
+
+  const prompt = `You are ZAY, an elite songwriter AI for TSM Music Command.
+Genre: ${DNA.genre} | Mood: ${DNA.mood} | Style: ${DNA.artist || 'versatile'}
+Theme: ${DNA.theme}
+HOOK (use exactly): ${DNA.selectedHook}
+${DNA.personalLine ? 'Must include: ' + DNA.personalLine : ''}
+Structure: ${DNA.structure.slice(0,400)}
+
+Write a COMPLETE SONG with:
+- [INTRO] if applicable
+- [VERSE 1] (16 bars)
+- [PRE-HOOK] (4-8 bars)
+- [HOOK] (using the exact hook provided, 8 bars)
+- [VERSE 2] (16 bars)
+- [PRE-HOOK]
+- [HOOK]
+- [BRIDGE] (8 bars, optional)
+- [OUTRO/HOOK]
+
+Make it feel real, emotional, and specific. Use internal rhymes, wordplay, and storytelling.
+Label each section clearly.`;
+
+  try {
+    const d = await apiCall('/music/song', { query: prompt, hook: DNA.selectedHook, genre: DNA.genre });
+    DNA.lyrics = d.content || d.reply || '';
+    streamOutput('lyrics-out', DNA.lyrics);
+    markDone(3); markDone(4);
+    zayMessage("Song is written. Read through it — if anything needs to change, go to Step 5 and give me your notes. Otherwise let's build your release plan.");
+  } catch(e) {
+    setOutput('lyrics-out', 'Error: ' + e.message);
+  }
+  btn.disabled = false; btn.textContent = '⚡ WRITE FULL SONG';
+}
+
+// ── STEP 5: REVISION ─────────────────────────────────────────────
+async function runStep5() {
+  const notes = document.getElementById('revision-notes').value.trim();
+  if (!notes) { zayMessage("Tell me what to change — be specific."); return; }
+  if (!DNA.lyrics) { zayMessage("Write the song first in Step 4."); return; }
+  setOutput('revision-out', '▌');
+  zayMessage(`On it. Revising based on your notes: "${notes.slice(0,60)}…"`);
+
+  try {
+    const d = await apiCall('/music/revision/run', {
+      lyrics: DNA.lyrics, notes, genre: DNA.genre, hook: DNA.selectedHook,
+    });
+    DNA.revised = d.content || d.reply || '';
+    streamOutput('revision-out', DNA.revised);
+    markDone(5);
+    zayMessage("Revision done. Compare it to the original — if it's better, use this version for export.");
+  } catch(e) {
+    setOutput('revision-out', 'Error: ' + e.message);
+  }
+}
+
+// ── STEP 6: STRATEGY ─────────────────────────────────────────────
+async function runStep6() {
+  setOutput('strategy-out', '▌');
+  setOutput('guidance-out', '▌');
+  const finalLyrics = DNA.revised || DNA.lyrics;
+
+  try {
+    const [s, g] = await Promise.all([
+      apiCall('/music/strategy', {
+        genre: DNA.genre, mood: DNA.mood, artist: DNA.artist,
+        title: DNA.title, theme: DNA.theme,
+        query: `Release strategy for a ${DNA.genre} song: "${DNA.title || 'Untitled'}" — ${DNA.theme}. Include: release timeline, DSP strategy, playlist targeting, social media rollout, sync licensing opportunities, and marketing angles.`,
+      }),
+      apiCall('/music/guidance', {
+        genre: DNA.genre, artist: DNA.artist, theme: DNA.theme,
+        query: `Industry guidance for an independent artist releasing a ${DNA.genre} track. Career development, networking, monetization, and next steps after release.`,
+      }),
+    ]);
+    DNA.strategy = s.content || s.reply || '';
+    DNA.guidance = g.content || g.reply || '';
+    streamOutput('strategy-out', DNA.strategy);
+    streamOutput('guidance-out', DNA.guidance);
+    markDone(6);
+    zayMessage("Release plan and guidance are ready. When you're satisfied, go to Step 7 to export your full song package.");
+  } catch(e) {
+    setOutput('strategy-out', 'Error: ' + e.message);
+  }
+}
+
+// ── STEP 7: EXPORT ───────────────────────────────────────────────
+function buildExport() {
+  const final = DNA.revised || DNA.lyrics;
+  document.getElementById('export-title').textContent = DNA.title || 'Untitled Song';
+  document.getElementById('export-meta').textContent = `${DNA.genre} · ${DNA.mood}${DNA.artist ? ' · ' + DNA.artist + ' style' : ''}`;
+  document.getElementById('export-hook').textContent = DNA.selectedHook || '—';
+  document.getElementById('export-lyrics').textContent = final || '—';
+  document.getElementById('export-strategy').textContent = DNA.strategy || '—';
+  markDone(7);
+}
+
+function exportTXT() {
+  const final = DNA.revised || DNA.lyrics;
+  const text = `TSM MUSIC COMMAND — SONG PACKAGE
+Generated by ZAY Producer AI
+=====================================
+
+TITLE: ${DNA.title || 'Untitled'}
+GENRE: ${DNA.genre} | MOOD: ${DNA.mood}
+STYLE REF: ${DNA.artist || 'N/A'}
+THEME: ${DNA.theme}
 
 HOOK:
-(the catchiest hook, punchy and repeatable)
+${DNA.selectedHook}
 
-VERSE 2:
-(new verse that continues the story/energy)
+FULL LYRICS:
+${final}
 
-BRIDGE:
-(4-8 lines that shift the emotional register)
+RELEASE STRATEGY:
+${DNA.strategy}
 
-ADLIBS:
-(6-8 short adlib call-outs for live energy)
+INDUSTRY GUIDANCE:
+${DNA.guidance}
 
-OUTRO:
-(2-4 closing lines that bring it home)
-
-PRODUCER NOTE:
-(overall song rating, strongest section, one thing to tighten)`
-      })
-    });
-    if (!res.ok) throw new Error(`TSM Neural Core error ${res.status}`);
-    const data = await res.json();
-    const text = data.reply || data.content || '';
-    if (text) {
-      // Render full song with all sections
-      const sections = [
-        ['VERSE 1','#a988ff'],
-        ['HOOK','#00ffc6'],
-        ['VERSE 2','#a988ff'],
-        ['BRIDGE','#9fe7ff'],
-        ['ADLIBS','#ff9d00'],
-        ['OUTRO','#c8d7ff'],
-        ['PRODUCER NOTE','#ffc400']
-      ];
-      let html = '';
-      for (const [name, color] of sections) {
-        const content = extractSection(text, name);
-        if (content) html += `<div class="section"><div class="sectionTitle" style="color:${color}">${name}</div><div>${esc(content).replace(/\n/g,'<br>')}</div></div>`;
-      }
-      if (!html) html = `<div style="white-space:pre-wrap;line-height:1.7">${esc(text)}</div>`;
-      document.getElementById('outputBody').innerHTML = html;
-      document.getElementById('liveStatus').textContent = 'DONE';
-      window.__LAST_ZAY__ = text;
-      scoreFrom(text);
-      document.getElementById('tsmBubble').innerHTML = "🔥 Full song is built! Review each section, then <b>Save to Bank</b> to lock it in.";
-    }
-  } catch(e) { showError(e.message); }
+SONG BLUEPRINT:
+${DNA.structure}
+=====================================
+TSM Music Command · tsm-shell.fly.dev`;
+  const blob = new Blob([text], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (DNA.title || 'song-package').replace(/\s+/g, '-').toLowerCase() + '.txt';
+  a.click();
 }
+
+function copyAll() {
+  const final = DNA.revised || DNA.lyrics;
+  navigator.clipboard.writeText(`${DNA.title || 'Untitled'}\n\nHOOK:\n${DNA.selectedHook}\n\nLYRICS:\n${final}\n\nSTRATEGY:\n${DNA.strategy}`);
+  zayMessage("Full package copied to clipboard.");
+}
+
+function copyOC(id) {
+  const el = document.getElementById(id);
+  if (el) navigator.clipboard.writeText(el.textContent);
+}
+
+function startOver() {
+  Object.keys(DNA).forEach(k => DNA[k] = '');
+  DNA.genre = 'Hip-Hop'; DNA.mood = 'Motivational';
+  document.querySelectorAll('.step-item').forEach(s => { s.classList.remove('done','active'); });
+  document.querySelectorAll('.oc-body').forEach(el => el.innerHTML = '<span class="oc-placeholder">—</span>');
+  goStep(1);
+  zayMessage("Fresh start. What are we making?");
+}
+
+// ── ZAY CHAT ─────────────────────────────────────────────────────
+function zayMessage(text) {
+  const feed = document.getElementById('chat-feed');
+  const msg = document.createElement('div');
+  msg.className = 'msg msg-zay';
+  msg.innerHTML = `<div class="msg-avatar">Z</div><div class="msg-bubble">${text}</div>`;
+  feed.appendChild(msg);
+  feed.scrollTop = feed.scrollHeight;
+}
+
+function userMessage(text) {
+  const feed = document.getElementById('chat-feed');
+  const msg = document.createElement('div');
+  msg.className = 'msg msg-user';
+  msg.innerHTML = `<div class="msg-avatar">U</div><div class="msg-bubble">${text}</div>`;
+  feed.appendChild(msg);
+  feed.scrollTop = feed.scrollHeight;
+}
+
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  userMessage(text);
+
+  // Build context from current DNA
+  const context = `Current song context: Genre=${DNA.genre}, Mood=${DNA.mood}, Artist=${DNA.artist||'none'}, Theme=${DNA.theme||'not set yet'}, Step=${currentStep}/7, Has lyrics=${!!DNA.lyrics}`;
+
+  try {
+    const d = await apiCall('/music/coach', {
+      query: `${context}\n\nUser: ${text}\n\nRespond as ZAY, a real producer/artist coach. Keep it direct, real, and helpful. Under 80 words.`,
+    });
+    const reply = d.content || d.reply || "Let me think on that.";
+    zayMessage(reply);
+  } catch(e) {
+    zayMessage("Connection dropped for a sec. Ask me again.");
+  }
+}
+
+document.getElementById('chat-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') sendChat();
+});
 </script>
 </body>
 </html>
