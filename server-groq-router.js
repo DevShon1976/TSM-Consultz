@@ -12,7 +12,7 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 async function processLiveHealthcareStream(rawInputLog) {
     console.log("\n================================================================================");
     console.log("⚡ Sovereign System Node: Initializing Real-Time Groq Inference Engine...");
-    console.log("🦾 TARGET MATRIX MODEL: llama3-8b-8192 [STRICT SYSTEM SCHEMA ENFORCEMENT]");
+    console.log("🦾 TARGET MATRIX MODEL: llama-3.1-8b-instant [STRICT SYSTEM SCHEMA ENFORCEMENT]");
     console.log("================================================================================\n");
 
     if (!process.env.GROQ_API_KEY) {
@@ -49,7 +49,7 @@ async function processLiveHealthcareStream(rawInputLog) {
                     content: `Compile this real operational data update stream directly into the vendor array blueprint format: ${rawInputLog}`
                 }
             ],
-            model: "llama3-8b-8192",
+            model: "llama-3.1-8b-instant",
             temperature: 0.1,
             response_format: { type: "json_object" } // Lock the LLM architecture into native JSON output mode
         });
