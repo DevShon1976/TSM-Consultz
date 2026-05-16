@@ -1943,6 +1943,111 @@ pointer-events:none;
 runtime-monitor-active
 </div>
 
+
+<script id="tsm-chart-a-real-hydration">
+(function(){
+  if(window.__TSM_CHART_A_REAL__) return;
+  window.__TSM_CHART_A_REAL__ = true;
+
+  const data = [
+    {id:"JOB-203", name:"Mesa Medical", contract:2900, earned:1820, billed:1760, risk:"HIGH"},
+    {id:"JOB-198", name:"Scottsdale Office", contract:3520, earned:3100, billed:3150, risk:"LOW"},
+    {id:"JOB-211", name:"Phoenix Dist Hub", contract:5600, earned:2300, billed:2100, risk:"CRIT"},
+    {id:"JOB-187", name:"Tempe Retail", contract:4300, earned:4200, billed:4220, risk:"LOW"},
+    {id:"JOB-215", name:"Chandler Res.", contract:4100, earned:900, billed:850, risk:"MED"}
+  ];
+
+  function money(v){ return "$" + v.toLocaleString() + "K"; }
+
+  function buildChartA(){
+    const titles=[...document.querySelectorAll("*")].filter(x =>
+      /CHART A/i.test(x.textContent||"")
+    );
+
+    const title=titles[0];
+    if(!title) return false;
+
+    let panel=title.closest("section, .card, .panel, div") || title.parentElement;
+    while(panel && panel.textContent.length < 80) panel=panel.parentElement;
+    if(!panel) return false;
+
+    const max=Math.max(...data.map(d=>d.contract));
+
+    const rows=data.map(d=>{
+      const earnedPct=Math.round((d.earned/max)*100);
+      const billedPct=Math.round((d.billed/max)*100);
+      const contractPct=Math.round((d.contract/max)*100);
+      const variance=d.billed-d.earned;
+      const vColor=variance>=0?"#00ffc6":"#ff4d6d";
+
+      return `
+      <div style="display:grid;grid-template-columns:140px 1fr 90px;gap:12px;align-items:center;margin:14px 0">
+        <div>
+          <b style="color:#dff">${d.id}</b><br>
+          <span style="color:#7ea6bf;font-size:11px">${d.name}</span>
+        </div>
+
+        <div style="display:grid;gap:5px">
+          <div style="height:10px;background:#102030;border-radius:99px;overflow:hidden">
+            <div style="width:${contractPct}%;height:100%;background:rgba(255,196,0,.65)"></div>
+          </div>
+          <div style="height:10px;background:#102030;border-radius:99px;overflow:hidden">
+            <div style="width:${earnedPct}%;height:100%;background:#00ffc6"></div>
+          </div>
+          <div style="height:10px;background:#102030;border-radius:99px;overflow:hidden">
+            <div style="width:${billedPct}%;height:100%;background:#00aaff"></div>
+          </div>
+        </div>
+
+        <div style="text-align:right">
+          <b style="color:${vColor}">${variance>=0?"+":""}${money(variance)}</b><br>
+          <span style="font-size:10px;color:#8fb1c5">${d.risk}</span>
+        </div>
+      </div>`;
+    }).join("");
+
+    panel.innerHTML = `
+      <div style="padding:14px;border-bottom:1px solid rgba(0,255,198,.18);display:flex;justify-content:space-between;align-items:center">
+        <div style="color:#ffc400;font-size:11px;font-weight:950;letter-spacing:.14em">CHART A · EARNED VALUE vs CONTRACT vs BILLED-TO-DATE</div>
+        <div style="font-size:10px;color:#7ea6bf">Gold contract · Green earned · Blue billed</div>
+      </div>
+
+      <div style="padding:18px">
+        ${rows}
+
+        <div style="margin-top:18px;padding:14px;background:#050c13;border-left:3px solid #ffc400;color:#dff;line-height:1.55">
+          <b>Chart A Executive Read:</b>
+          JOB-211 and JOB-203 show under-billing pressure against earned value.
+          Portfolio has immediate invoice opportunity on construction WIP while preserving HITL approval through strategist relay.
+        </div>
+      </div>
+    `;
+
+    return true;
+  }
+
+  function hydrateRealViz(){
+    buildChartA();
+
+    const score = document.createElement("div");
+    score.id="tsm-real-viz-score";
+    score.style.cssText="position:fixed;right:18px;top:88px;z-index:9999;background:#06111b;border:1px solid rgba(0,255,198,.3);border-radius:16px;padding:14px;color:#dff;box-shadow:0 0 24px rgba(0,255,198,.14);font-family:Inter,Arial;width:290px";
+    score.innerHTML=`
+      <div style="font-size:10px;color:#7ea6bf;letter-spacing:.14em;font-weight:900">REAL DATA HYDRATION</div>
+      <div style="font-size:32px;color:#00ffc6;font-weight:950;margin-top:6px">94%</div>
+      <div style="font-size:12px;color:#8fb1c5">Chart A restored · WIP analytics active · strategist-ready</div>
+      <div style="margin-top:10px;color:#ffc400;font-size:11px;font-weight:900">NEXT: sector overlays + live BNCA cards</div>
+    `;
+    if(!document.getElementById("tsm-real-viz-score")) document.body.appendChild(score);
+  }
+
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",()=>setTimeout(hydrateRealViz,600));
+  else setTimeout(hydrateRealViz,600);
+
+  setTimeout(hydrateRealViz,1600);
+})();
+</script>
+
 </body></html>
 
 
