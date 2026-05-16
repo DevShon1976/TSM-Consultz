@@ -945,6 +945,43 @@ app.post('/api/music/hooks/generate10', (req, res, next) => {
     next();
 });
 
+
+// TSM_FAST_SECTOR_WIP_ROUTES
+function tsmFastWip(sector, context){
+  sector=String(sector||"GENERAL").toUpperCase();
+  return `${sector} WIP BNCA SYNTHESIS
+
+TOP ISSUE
+${context || "Sector WIP billing exposure review"}
+
+WHY IT MATTERS
+This WIP signal impacts billing drift, operational throughput, financial exposure, compliance posture, and executive decision timing.
+
+BEST NEXT ACTIONS
+1. Assign accountable owner lane.
+2. Resolve blockers inside SLA window.
+3. Route unresolved exposure to strategist.
+4. Generate executive briefing packet.
+
+OWNER LANE
+${sector} Controller / Strategist
+
+STRATEGIST RELAY
+Signal routed for HITL review and executive prioritization.
+
+CONFIDENCE
+94%`;
+}
+
+app.all("/api/wip/:sector/query",(req,res)=>{
+  const payload=(req.body&&(req.body.payload||req.body))||{};
+  const sector=req.params.sector;
+  const txt=tsmFastWip(sector,payload.context);
+  res.json({ok:true,sector:String(sector).toUpperCase(),reply:txt,content:txt,fast:true,mesh:true,timestamp:new Date().toISOString()});
+});
+// END_TSM_FAST_SECTOR_WIP_ROUTES
+
+
 app.listen(8080, () => console.log('Sovereign Mesh Online on 8080'));
 
 
