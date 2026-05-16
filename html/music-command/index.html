@@ -866,6 +866,32 @@ Real is What You FEEL! That's Pill! So Take This!</textarea>
     <div style="display:flex;gap:8px;margin-top:8px">
       <button onclick="zyAskAssistant()">Ask ZAY</button>
       <button onclick="zyUseCurrentSong()">Use Current Song</button>
+      
+      <div id="audio-assistance-panel" class="p-4 mt-4 rounded-xl border border-purple-500/20 bg-black/40 backdrop-blur-md space-y-4 text-left">
+          <div class="flex items-center justify-between border-b border-gray-800 pb-2">
+              <h4 class="text-xs uppercase tracking-wider text-purple-400 font-mono flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Audio Guidance Matrix
+              </h4>
+              <span id="assistance-bpm-display" class="text-xs text-gray-400 font-mono">BPM: 95</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+              <button id="toggle-metro-btn" type="button" class="flex items-center justify-center gap-2 px-3 py-2 text-xs font-mono rounded bg-purple-950/40 border border-purple-800/40 text-purple-300 hover:bg-purple-900/40 transition">
+                  Start Metronome
+              </button>
+              <button id="play-cadence-btn" type="button" class="flex items-center justify-center gap-2 px-3 py-2 text-xs font-mono rounded bg-fuchsia-950/40 border border-fuchsia-800/40 text-fuchsia-300 hover:bg-fuchsia-900/40 transition">
+                  Speak Cadence
+              </button>
+          </div>
+
+          <div class="space-y-1">
+              <label class="text-[10px] text-gray-500 font-mono block">Delivery Pocket Visualizer</label>
+              <div class="h-1.5 w-full bg-gray-900 rounded-full overflow-hidden relative">
+                  <div id="cadence-visual-bar" class="h-full w-0 bg-gradient-to-r from-purple-500 to-fuchsia-500 transition-all duration-300 ease-out"></div>
+              </div>
+              <div id="cadence-pocket-label" class="text-[10px] text-gray-400 italic font-mono">Style: Parsing active metadata...</div>
+          </div>
+      </div>
     </div>
     <pre id="zyAssistantOutput">Ready. Ask about hooks, cadence, adlibs, structure, bridge, radio polish, or release plan.</pre>
   </div>
@@ -1119,255 +1145,354 @@ This works best as a motivational street anthem, not a sad record. Keep it confi
 </script>
 
 
-<section id="zay-production-os">
-  <style>
-    #zay-production-os{margin:22px;padding:20px;background:linear-gradient(135deg,rgba(181,108,255,.16),rgba(255,0,200,.05));border:1px solid rgba(181,108,255,.38);border-radius:22px;color:#f7eaff;font-family:Inter,system-ui,Arial}
-    #zay-production-os h2{margin:8px 0;color:white;font-size:30px}
-    .zay-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
-    .zay-card{background:#100018;border:1px solid rgba(181,108,255,.28);border-radius:16px;padding:14px}
-    .zay-ey{color:#d86cff;font-size:11px;letter-spacing:.15em;font-weight:950;text-transform:uppercase}
-    .zay-btn{background:#b56cff;color:white;border:0;border-radius:10px;padding:10px 12px;font-weight:900;cursor:pointer;margin:4px}
-    .zay-btn.gold{background:#ffc400;color:#111}.zay-btn.green{background:#00ffc6;color:#001}.zay-btn.dark{background:#180024;color:#f7eaff;border:1px solid rgba(181,108,255,.3)}
-    #zay-production-os textarea{width:100%;min-height:120px;background:#08000e;border:1px solid rgba(181,108,255,.35);border-radius:14px;color:#f7eaff;padding:12px}
-    #zayProductionOutput{white-space:pre-wrap;min-height:260px;max-height:520px;overflow:auto;background:#08000e;border:1px solid rgba(181,108,255,.25);border-radius:14px;padding:14px}
-    .song-row{padding:10px;border-bottom:1px solid rgba(255,255,255,.08);cursor:pointer}
-    .song-row:hover{background:rgba(181,108,255,.12)}
-    @media(max-width:900px){.zay-grid{grid-template-columns:1fr}}
-  </style>
 
-  <div class="zay-ey">STATE OF THE ART · MUSIC COMMAND STUDIO</div>
-  <h2>Song Bank + DAW Mode + ZAY Producer Session Engine</h2>
 
-  <div class="zay-grid">
-    <div class="zay-card">
-      <div class="zay-ey">Raw Lyric / Concept</div>
-      <textarea id="zayStudioInput">Grindin' n Slavin' while Misbavin'!
-Feelin' so Fresh n So Clean even Missed on Shavin'!
-Some look at the Hustle! n Cant Stand the Struggle,
-Those Real in the Field see A Time for Muscle!
-I Plan for Greatest! Rule 1: No Fakeness!
-Real is What You FEEL! That's Pill! So Take This!</textarea>
+<script>
+// --- TSM Native Audio Engine & Cadence Simulation Pipeline ---
+let tsmAudioCtx = null;
+let metroTimer = null;
+let metroActive = false;
+let systemBpm = 95;
 
-      <div style="margin-top:10px">
-        <button class="zay-btn green" onclick="zayAutopilot()">Build My Song</button>
-        <button class="zay-btn" onclick="zayHookCompare()">Compare Hooks</button>
-        <button class="zay-btn" onclick="zayDAWMode()">DAW Mode</button>
-        <button class="zay-btn" onclick="zaySessionNotes()">Producer Session</button>
-        <button class="zay-btn gold" onclick="zayReleasePackage()">Release Package</button>
-        <button class="zay-btn dark" onclick="zaySaveSong()">Save Song</button>
-        <button class="zay-btn dark" onclick="zayExportPackage()">Export Package</button>
-      </div>
-    </div>
+const tsmDeliveryProfiles = {
+    'cardi b': { rate: 1.15, pitch: 0.95, text: "Staccato, aggressive, heavy emphasis on downbeats." },
+    'aggressive': { rate: 1.20, pitch: 0.85, text: "Rapid-fire delivery, tight rhythmic pocket, sharp enunciation." },
+    'melodic': { rate: 0.95, pitch: 1.10, text: "Smooth melodic delivery, slightly behind the beat, drawn out vowels." },
+    'default': { rate: 1.0, pitch: 1.0, text: "Steady mid-tempo structural cadence delivery." }
+};
 
-    <div class="zay-card">
-      <div class="zay-ey">Song Bank</div>
-      <div id="zaySongBank"></div>
-      <div style="margin-top:10px">
-        <button class="zay-btn dark" onclick="zayClearBank()">Clear Bank</button>
-      </div>
-    </div>
+function playMetroClick(time) {
+    if (!tsmAudioCtx) tsmAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = tsmAudioCtx.createOscillator();
+    const gainNode = tsmAudioCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(650, time);
+    gainNode.gain.setValueAtTime(0.12, time);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, time + 0.04);
+    osc.connect(gainNode);
+    gainNode.connect(tsmAudioCtx.destination);
+    osc.start(time);
+    osc.stop(time + 0.04);
+}
+
+function syncMetronomeEngine() {
+    const btn = document.getElementById('toggle-metro-btn');
+    if (!btn) return;
+    if (metroActive) {
+        clearInterval(metroTimer);
+        metroActive = false;
+        btn.innerText = "Start Metronome";
+        btn.className = btn.className.replace('text-green-400 bg-purple-900/60', 'text-purple-300 bg-purple-950/40');
+    } else {
+        if (!tsmAudioCtx) tsmAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const intervalMs = (60 / systemBpm) * 1000;
+        metroTimer = setInterval(() => playMetroClick(tsmAudioCtx.currentTime), intervalMs);
+        metroActive = true;
+        btn.innerText = "Stop Metronome";
+        btn.className = btn.className.replace('text-purple-300 bg-purple-950/40', 'text-green-400 bg-purple-900/60');
+    }
+}
+
+function runCadenceSimulation() {
+    if (!('speechSynthesis' in window)) return alert("Browser text-to-speech engine unavailable.");
+    window.speechSynthesis.cancel();
+
+    const textBlock = document.getElementById('full-lyrics-content')?.innerText || document.body.innerText;
+    const cleanLines = textBlock.split('\n').filter(l => l.trim() && !l.startsWith('[')).slice(0, 4).join('\n');
+    
+    const activeDNA = window.DNA || {};
+    const styleStr = (activeDNA.style || activeDNA.genre || 'default').toLowerCase();
+    const profileKey = Object.keys(tsmDeliveryProfiles).find(k => styleStr.includes(k)) || 'default';
+    const activeProfile = tsmDeliveryProfiles[profileKey];
+
+    const utterance = new SpeechSynthesisUtterance(cleanLines || "No operational lyrics parsed.");
+    utterance.rate = activeProfile.rate;
+    utterance.pitch = activeProfile.pitch;
+
+    const visualBar = document.getElementById('cadence-visual-bar');
+    if (visualBar) {
+        utterance.onstart = () => {
+            visualBar.style.width = '100%';
+            visualBar.style.transitionDuration = `${(cleanLines.length * 0.06) / activeProfile.rate}s`;
+        };
+        utterance.onend = () => {
+            visualBar.style.width = '0%';
+            visualBar.style.transitionDuration = '0.2s';
+        };
+    }
+    window.speechSynthesis.speak(utterance);
+}
+
+// Hook state listener dynamically into the system loop
+function initAudioAssistanceMatrix() {
+    const activeDNA = window.DNA || {};
+    systemBpm = activeDNA.bpm || (activeDNA.style?.toLowerCase().includes('aggressive') ? 112 : 90);
+    
+    const bpmDisp = document.getElementById('assistance-bpm-display');
+    if (bpmDisp) bpmDisp.innerText = `BPM: ${systemBpm}`;
+
+    const styleStr = (activeDNA.style || activeDNA.genre || 'default').toLowerCase();
+    const profileKey = Object.keys(tsmDeliveryProfiles).find(k => styleStr.includes(k)) || 'default';
+    
+    const labelDisp = document.getElementById('cadence-pocket-label');
+    if (labelDisp) labelDisp.innerText = `Delivery Pocket: ${tsmDeliveryProfiles[profileKey].text}`;
+
+    const metroBtn = document.getElementById('toggle-metro-btn');
+    const speechBtn = document.getElementById('play-cadence-btn');
+    
+    if (metroBtn) metroBtn.onclick = syncMetronomeEngine;
+    if (speechBtn) speechBtn.onclick = runCadenceSimulation;
+}
+
+// Intercept execution pipeline automatically when user captures the song data object
+const originalZyUseCurrentSong = window.zyUseCurrentSong;
+window.zyUseCurrentSong = function() {
+    if (typeof originalZyUseCurrentSong === 'function') originalZyUseCurrentSong();
+    setTimeout(initAudioAssistanceMatrix, 200);
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(initAudioAssistanceMatrix, 1000);
+});
+</script>
+
+<style id="zay-compact-tools-style">
+#zayCompactTools{
+  margin-top:18px;
+  padding:16px;
+  border:1px solid rgba(181,108,255,.25);
+  border-radius:18px;
+  background:linear-gradient(135deg,rgba(25,0,35,.96),rgba(10,0,18,.98));
+}
+#zayCompactTools .tool-row{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:12px;
+}
+#zayCompactTools button{
+  border:0;
+  border-radius:12px;
+  padding:12px 16px;
+  font-weight:900;
+  cursor:pointer;
+  color:white;
+}
+.zay-green{background:#00ffc6;color:#001!important}
+.zay-purple{background:#b56cff}
+.zay-gold{background:#ffc400;color:#111!important}
+.zay-dark{background:#1a0828;border:1px solid rgba(181,108,255,.3)}
+#zaySongBankCompact{
+  margin-top:14px;
+  max-height:180px;
+  overflow:auto;
+  border-top:1px solid rgba(255,255,255,.08);
+  padding-top:10px;
+}
+.zay-song-item{
+  padding:10px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+  cursor:pointer;
+}
+.zay-song-item:hover{
+  background:rgba(181,108,255,.1);
+}
+</style>
+
+<section id="zayCompactTools">
+  <div style="font-size:11px;letter-spacing:.16em;color:#d86cff;font-weight:900;text-transform:uppercase">
+    Producer OS Tools
   </div>
 
-  <div class="zay-card" style="margin-top:14px">
-    <div class="zay-ey">Production Output</div>
-    <pre id="zayProductionOutput">Ready. Paste lyrics, then click Build My Song.</pre>
+  <div class="tool-row">
+    <button class="zay-green" onclick="zayBuildComplete()">Build Complete Song</button>
+    <button class="zay-purple" onclick="zayHooks()">Generate Hooks</button>
+    <button class="zay-purple" onclick="zayAdlibs()">Adlibs + Bridge</button>
+    <button class="zay-purple" onclick="zayProducer()">Producer Recommendations</button>
+    <button class="zay-gold" onclick="zayDAW()">DAW Mode</button>
+    <button class="zay-dark" onclick="zayRelease()">Release Package</button>
+    <button class="zay-dark" onclick="zaySave()">Save Song</button>
+    <button class="zay-dark" onclick="zayExport()">Export TXT</button>
   </div>
+
+  <div id="zaySongBankCompact"></div>
 </section>
 
-<script id="zay-production-os-js">
+<script id="zay-compact-tools-js">
 (function(){
-  if(window.__ZAY_PRODUCTION_OS__) return;
-  window.__ZAY_PRODUCTION_OS__=true;
+  if(window.__ZAY_COMPACT_TOOLS__) return;
+  window.__ZAY_COMPACT_TOOLS__ = true;
 
-  function input(){return document.getElementById("zayStudioInput")?.value?.trim()||""}
-  function out(txt){document.getElementById("zayProductionOutput").textContent=txt;localStorage.setItem("zay_current_song",txt);return txt}
-  function bank(){return JSON.parse(localStorage.getItem("zay_song_bank")||"[]")}
-  function setBank(x){localStorage.setItem("zay_song_bank",JSON.stringify(x));renderBank()}
+  function getText(){
+    return (
+      document.querySelector("textarea")?.value ||
+      ""
+    ).trim();
+  }
 
-  window.zayAutopilot=function(){
-    const raw=input();
-    out(`TITLE: Rule 1: No Fakeness
+  function setOutput(txt){
+    const target =
+      document.querySelector("#lyrics-output") ||
+      document.querySelector("#song-output") ||
+      document.querySelector("pre");
 
-SONG DNA
-Genre: Southern cinematic rap
-Mood: Motivational / gritty / confident
-BPM: 86
-Key: F minor
-Cadence: short punchlines + bounce pocket
-Commercial Score: 86/100
-Radio Score: 78/100
-Aggression: 72/100
-Melodic Potential: 81/100
+    if(target){
+      target.textContent = txt;
+    } else {
+      alert(txt.slice(0,500));
+    }
 
-[INTRO]
-Yeah...
-ZAY, let it breathe.
-Fresh out the struggle.
-Still clean with it.
+    localStorage.setItem("zay-last-output", txt);
+  }
+
+  function getBank(){
+    return JSON.parse(localStorage.getItem("zay-song-bank") || "[]");
+  }
+
+  function saveBank(x){
+    localStorage.setItem("zay-song-bank", JSON.stringify(x));
+    renderBank();
+  }
+
+  window.zayBuildComplete = function(){
+    const t = getText();
+
+    setOutput(`TITLE: Rule 1 No Fakeness
 
 [HOOK]
-Grindin' n slavin', still misbehavin',
-Feelin' so fresh n so clean, even missed on shavin'.
-Some look at the hustle, can't stand the struggle,
-Those real in the field see a time for muscle.
-
-I plan for greatness, rule one: no fakeness,
-Real is what you feel, that's pill, so take this.
-Built from the bottom where the pressure'll break kids,
-Now the whole room quiet every time the bass hits.
+Grindin' n slavin', still misbehavin'
+Fresh n clean even missed on shavin'
+Some fear hustle, some can't take struggle
+Real ones know when it's time for muscle
 
 [VERSE 1]
-Late nights, cold floors, notebook full of missions,
-Had to turn pain into purpose, faith into precision.
-They was talkin' from the side, I was locked in position,
-I was buildin' up a life while they begged for permission.
-
-Fresh but I ain't shave, still a king in the making,
-Worked through the storm while the whole ground shaking.
-Some people love shine but they hate when you patient,
-They don't see the grind, only see celebration.
+${t}
 
 [BRIDGE]
-If I bend, I won't break,
-If I fall, I still wake.
-Every risk that I take
-Put my name on the gate.
+Pressure made diamonds from all of my scars
+Stayed independent while reaching for stars
 
-[FINAL HOOK]
-Repeat hook with stacked doubles, hype adlibs, and choir pad.
+[ADLIBS]
+(Yeah!)
+(Too real!)
+(No fakeness!)
+(Pressure!)
+(Go!)
 
-ADLIB STACK
-(Yeah!) (Too real!) (No fakeness!) (Bass hit!) (Talk to 'em!)
+[OUTRO]
+Built from the grind — now the whole room watching.`)
+  }
 
-DAW ARRANGEMENT
+  window.zayHooks = function(){
+    setOutput(`HOOK OPTIONS
+
+1. Rule one: no fake when the pressure get real
+2. Grind mode activated — pain turned steel
+3. Fresh out the struggle with scars that heal
+4. Built for the hustle — that's why I don't kneel`)
+  }
+
+  window.zayAdlibs = function(){
+    setOutput(`ADLIB STACKS
+
+(Haha)
+(Yeah!)
+(Too real!)
+(Pressure!)
+(Talk to em!)
+(Go!)
+(Still standing!)
+
+BRIDGE IDEA
+
+Ain't no fear when the lights get low
+Built from pain now the whole world know`)
+  }
+
+  window.zayProducer = function(){
+    setOutput(`ZAY PRODUCER NOTES
+
+• Hook strongest part
+• Double “No Fakeness”
+• Add pause before final punchline
+• Lower beat during bridge
+• Add choir pad to final hook
+• Keep vocal aggressive but controlled`)
+  }
+
+  window.zayDAW = function(){
+    setOutput(`DAW MODE
+
+BPM: 86
+KEY: F Minor
+
+ARRANGEMENT
 0:00 Intro
 0:12 Hook
-0:38 Verse 1
-1:18 Hook
-1:44 Verse 2
-2:24 Bridge
-2:48 Final Hook
-3:18 Outro
+0:38 Verse
+1:20 Bridge
+1:40 Final Hook
 
-SOURCE LYRIC
-${raw}`);
+TRACKS
+- Lead vocal
+- Hook doubles
+- Adlib stack
+- Choir pad
+- 808
+- FX risers`)
   }
 
-  window.zayHookCompare=function(){
-    out(`MULTI-HOOK COMPARISON
+  window.zayRelease = function(){
+    setOutput(`RELEASE PACKAGE
 
-HOOK A — Original Bounce
-Grindin' n slavin', still misbehavin',
-Feelin' so fresh n so clean, even missed on shavin'.
-Score: Catchy 91 · Commercial 82 · Dark 66 · Club 74 · Viral 79
+TikTok Hook:
+"Rule one: no fake when the pressure get real"
 
-HOOK B — Cleaner Radio
-Rule one: no fake when the pressure get real,
-Truth in my chest, that's the pill you can feel.
-Score: Catchy 84 · Commercial 88 · Dark 58 · Club 67 · Viral 72
+Spotify Pitch:
+Motivational cinematic rap anthem about hustle and pressure.
 
-HOOK C — Aggressive
-Fresh out the fire, still clean with the cadence,
-Made for the greatness, no room for the fakeness.
-Score: Catchy 86 · Commercial 79 · Dark 76 · Club 80 · Viral 81
-
-ZAY PICK
-Use Hook A for identity. Borrow Hook B as bridge/pre-hook.`);
+Visual Theme:
+Dark purple neon + streetlight realism`)
   }
 
-  window.zayDAWMode=function(){
-    out(`DAW MODE EXPORT NOTES
+  window.zaySave = function(){
+    const out = localStorage.getItem("zay-last-output") || "Untitled";
+    const bank = getBank();
 
-Tempo: 86 BPM
-Key: F minor
-DAW Targets: FL Studio · Pro Tools · Logic · Ableton
+    bank.unshift({
+      title: (out.match(/TITLE:\s*(.*)/)||[])[1] || "Untitled Song",
+      content: out,
+      ts: Date.now()
+    });
 
-TRACK LAYOUT
-1. Lead Vocal
-2. Hook Double L
-3. Hook Double R
-4. Low Adlibs
-5. Hype Adlibs
-6. Bridge Stack
-7. Choir Pad
-8. Piano/Sample
-9. 808
-10. Kick/Snare/Hats
-
-ARRANGEMENT MARKERS
-INTRO 0:00–0:12
-HOOK 0:12–0:38
-VERSE 1 0:38–1:18
-HOOK 1:18–1:44
-VERSE 2 1:44–2:24
-BRIDGE 2:24–2:48
-FINAL HOOK 2:48–3:18
-OUTRO 3:18–3:30
-
-RECORDING CUES
-Pause before “Rule one.”
-Double “No fakeness.”
-Stack “Bass hits” on final hook.`);
+    saveBank(bank.slice(0,20));
   }
 
-  window.zaySessionNotes=function(){
-    out(`ZAY PRODUCER SESSION NOTES
-
-1. Hook is strong — keep original language.
-2. Verse 1 needs controlled hunger, not yelling.
-3. Second verse should sound more executive and elevated.
-4. Bridge needs emotional lift before final hook.
-5. Adlibs should answer the lead vocal, not crowd it.
-6. Final hook needs doubles + choir pad + lower octave stack.
-
-LIVE DIRECTION
-“Punch Grindin’ n Slavin’ with bounce.”
-“Pause before Rule 1.”
-“Cut any filler bar that doesn’t move the story.”
-“Make the final hook feel like victory.”`);
-  }
-
-  window.zayReleasePackage=function(){
-    out(`RELEASE PACKAGE
-
-Song Title: Rule 1: No Fakeness
-Positioning: Motivational hustle anthem
-Short-form Hook: “Rule one: no fakeness”
-Cover Concept: Dark streetlight, clean fit, notebook/blueprint glow
-Spotify Pitch: A gritty motivational rap record about pressure, discipline, and staying real through the climb.
-TikTok Ideas:
-1. Before/after grind montage
-2. Studio hook performance
-3. “Rule 1” motivational caption series
-
-IG CAPTION
-Rule 1: No fakeness. Pressure made the sound.
-
-HASHTAGS
-#RuleOneNoFakeness #ZAYProducer #MusicCommand #HustleAnthem #IndependentArtist`);
-  }
-
-  window.zaySaveSong=function(){
-    const songs=bank();
-    const title=(document.getElementById("zayProductionOutput").textContent.match(/TITLE:\s*(.*)/)||[])[1]||"Untitled Song";
-    songs.unshift({title,ts:new Date().toISOString(),content:document.getElementById("zayProductionOutput").textContent});
-    setBank(songs.slice(0,25));
-  }
-
-  window.zayExportPackage=function(){
-    const txt=document.getElementById("zayProductionOutput").textContent;
-    const a=document.createElement("a");
-    a.href=URL.createObjectURL(new Blob([txt],{type:"text/plain"}));
-    a.download="zay-song-production-package.txt";
+  window.zayExport = function(){
+    const txt = localStorage.getItem("zay-last-output") || "";
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([txt],{type:"text/plain"}));
+    a.download = "zay-song.txt";
     a.click();
   }
 
-  window.zayClearBank=function(){setBank([])}
-
   function renderBank(){
-    const el=document.getElementById("zaySongBank"); if(!el) return;
-    const songs=bank();
-    el.innerHTML=songs.length?songs.map((s,i)=>`<div class="song-row" onclick="document.getElementById('zayProductionOutput').textContent=${JSON.stringify("${CONTENT}")}.replace('${CONTENT}', JSON.parse(localStorage.getItem('zay_song_bank'))[${i}].content)"><b>${s.title}</b><br><small>${new Date(s.ts).toLocaleString()}</small></div>`).join(""):"<div style='color:#c9a8df'>No saved songs yet.</div>";
+    const el = document.getElementById("zaySongBankCompact");
+    if(!el) return;
+
+    const bank = getBank();
+
+    if(!bank.length){
+      el.innerHTML = "<div style='opacity:.6'>No saved songs yet.</div>";
+      return;
+    }
+
+    el.innerHTML = bank.map((s,i)=>`
+      <div class="zay-song-item" onclick='localStorage.setItem("zay-last-output", ${JSON.stringify("${X}")}.replace("${X}", JSON.parse(localStorage.getItem("zay-song-bank"))[${i}].content)); location.reload();'>
+        <b>${s.title}</b><br>
+        <small>${new Date(s.ts).toLocaleString()}</small>
+      </div>
+    `).join("");
   }
 
   renderBank();
