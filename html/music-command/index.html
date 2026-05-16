@@ -808,11 +808,11 @@ function runCadenceSimulation() {
     if (!('speechSynthesis' in window)) return alert("Browser text-to-speech engine unavailable.");
     window.speechSynthesis.cancel();
 
-    const textBlock = document.getElementById('full-lyrics-content')?.innerText || document.body.innerText;
-    const cleanLines = textBlock.split('\n').filter(l => l.trim() && !l.startsWith('[')).slice(0, 4).join('\n');
+    const textBlock = document.getElementById('full-lyrics-content')?.innerText || '';
+    const cleanLines = textBlock ? textBlock.split('\n').filter(l => l.trim() && !l.startsWith('[')).slice(0, 4).join('\n') : '';
     
     const activeDNA = window.DNA || {};
-    const styleStr = (activeDNA.style || activeDNA.genre || 'default').toLowerCase();
+    const styleStr = (activeDNA?.style || activeDNA?.genre || 'default').toLowerCase();
     const profileKey = Object.keys(tsmDeliveryProfiles).find(k => styleStr.includes(k)) || 'default';
     const activeProfile = tsmDeliveryProfiles[profileKey];
 
@@ -837,7 +837,7 @@ function runCadenceSimulation() {
 // Hook state listener dynamically into the system loop
 function initAudioAssistanceMatrix() {
     const activeDNA = window.DNA || {};
-    systemBpm = activeDNA.bpm || (activeDNA.style?.toLowerCase().includes('aggressive') ? 112 : 90);
+    systemBpm = activeDNA?.bpm || (activeDNA?.style?.toLowerCase() || '').includes('aggressive') ? 112 : 90;
     
     const bpmDisp = document.getElementById('assistance-bpm-display');
     if (bpmDisp) bpmDisp.innerText = `BPM: ${systemBpm}`;

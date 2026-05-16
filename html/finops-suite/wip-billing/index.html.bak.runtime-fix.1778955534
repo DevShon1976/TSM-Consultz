@@ -4,10 +4,10 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Insurance Claims WIP</title>
+<title>FinOps WIP + Billing</title>
 
 <style>
-:root{ --accent:#b56cff; }
+:root{ --accent:#00ffc6; }
 
 body{
  margin:0;
@@ -85,7 +85,7 @@ button{
 <body>
 
 <div class="header">
-  <h1>Insurance Claims WIP</h1>
+  <h1>FinOps WIP + Billing</h1>
   <div>Unified WIP • Billing • Strategist Relay • HITL</div>
 </div>
 
@@ -174,12 +174,12 @@ async function runBNCA(){
 
   try{
 
-    const r=await fetch("/api/insurance/query",{
+    const r=await fetch("/api/finops/query",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
         payload:{
-          sector:"INSURANCE",
+          sector:"FINOPS",
           context:"Analyze WIP exposure, billing drift, HITL escalation, strategist relay, and executive risk."
         }
       })
@@ -203,116 +203,9 @@ function exportBrief(){
   const txt=document.getElementById("out").textContent;
   const a=document.createElement("a");
   a.href=URL.createObjectURL(new Blob([txt],{type:"text/plain"}));
-  a.download="insurance-wip-brief.txt";
+  a.download="finops-wip-brief.txt";
   a.click();
 }
-</script>
-
-
-
-<script id="tsm-wip-runtime">
-(function(){
-
-console.log("TSM WIP Runtime Online");
-
-function safe(id){
-  return document.getElementById(id);
-}
-
-window.wipExportJSON = function(){
-  try{
-    const data = {
-      exported: new Date().toISOString(),
-      title: document.title,
-      sector: document.body.dataset.sector || "unknown"
-    };
-
-    const blob = new Blob(
-      [JSON.stringify(data,null,2)],
-      {type:"application/json"}
-    );
-
-    const a=document.createElement("a");
-    a.href=URL.createObjectURL(blob);
-    a.download="wip-export.json";
-    a.click();
-  }catch(e){
-    console.warn(e);
-  }
-};
-
-window.wipExportTXT = function(){
-  try{
-    const txt = document.body.innerText.slice(0,12000);
-
-    const blob = new Blob([txt], {type:"text/plain"});
-
-    const a=document.createElement("a");
-    a.href=URL.createObjectURL(blob);
-    a.download="wip-brief.txt";
-    a.click();
-  }catch(e){
-    console.warn(e);
-  }
-};
-
-window.wipSave = function(){
-  try{
-    localStorage.setItem(
-      "tsm-wip-last-state",
-      JSON.stringify({
-        ts:Date.now(),
-        title:document.title
-      })
-    );
-
-    alert("WIP state saved");
-  }catch(e){
-    console.warn(e);
-  }
-};
-
-function injectBar(){
-
-  if(document.getElementById("tsm-wip-command-bar")) return;
-
-  const bar=document.createElement("div");
-
-  bar.id="tsm-wip-command-bar";
-
-  bar.style.cssText=`
-    position:fixed;
-    bottom:18px;
-    left:50%;
-    transform:translateX(-50%);
-    z-index:99999;
-    display:flex;
-    gap:10px;
-    background:#07131d;
-    border:1px solid rgba(0,255,198,.25);
-    padding:12px;
-    border-radius:16px;
-    box-shadow:0 0 30px rgba(0,255,198,.15);
-  `;
-
-  bar.innerHTML=`
-    <button onclick="wipSave()" style="background:#00ffc6;color:#001;border:0;padding:10px 14px;border-radius:10px;font-weight:900">Save</button>
-
-    <button onclick="wipExportTXT()" style="background:#ffc400;color:#111;border:0;padding:10px 14px;border-radius:10px;font-weight:900">Export TXT</button>
-
-    <button onclick="wipExportJSON()" style="background:#b56cff;color:#fff;border:0;padding:10px 14px;border-radius:10px;font-weight:900">Export JSON</button>
-  `;
-
-  document.body.appendChild(bar);
-}
-
-if(document.readyState==="loading"){
-  document.addEventListener("DOMContentLoaded", injectBar);
-}else{
-  injectBar();
-}
-
-})();
 </script>
 
 </body>
