@@ -876,12 +876,7 @@ app.all("/api/wip/sector-ai",(req,res)=>{
   const context=body.question || body.context || body.payload?.context || "Sector WIP review";
   const txt=tsmSectorWipReply(sector,context);
   res.json({ok:true,sector:String(sector).toUpperCase(),reply:txt,content:txt,mesh:true,timestamp:new Date().toISOString()});
-
-
-
 // TSM_INSURANCE_QUERY_ROUTE_FINAL
-
-});
 
 
 // TSM_FINOPS_QUERY_NODE01_FINAL
@@ -992,7 +987,7 @@ app.all("/api/wip/:sector/query", (req, res) => {
 // END_TSM_FAST_SECTOR_WIP_ROUTES
 
 
-app.listen(8080, () => console.log('Sovereign Mesh Online on 8080'));
+
 
 
 // ============================================================================
@@ -1060,4 +1055,5 @@ app.post('/api/music/hooks/generate10', async (req, res) => {
     }
 });
 
-
+// ── Port Binding Engine Initialization (Safely Deferred to Final Step) ──
+app.listen(8080, () => console.log('Sovereign Mesh Online on 8080'));
