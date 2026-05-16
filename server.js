@@ -401,6 +401,22 @@ app.post(['/api/cfo-chat', '*/api/cfo-chat'], (req, res) => {
 
 
 
+// ── Consolidated Sector AI Production Route ─────────────────────
+app.all("/api/wip/sector-ai", (req, res) => {
+    const body = req.body || {};
+    const sector = body.sector || body.payload?.sector || "CONSTRUCTION";
+    const context = body.question || body.context || body.payload?.context || "Sector WIP review";
+    const txt = tsmSectorWipReply(sector, context);
+    res.json({
+        ok: true,
+        sector: String(sector).toUpperCase(),
+        reply: txt,
+        content: txt,
+        mesh: true,
+        timestamp: new Date().toISOString()
+    });
+});
+
 // ── 404 catch-all ─────────────────────────────────────────────────
 // WIP sub-routes mounted on /api (before catch-all)
 const apiRouter = require('express').Router();
@@ -741,82 +757,7 @@ app.all('/api/hc/strategist-rollup', async (req,res)=>{
 
 
 
-app.post("/api/wip/sector-ai", async (req,res) => {
-  try{
 
-    const body = req.body || {};
-    const sector = String(body.sector || "general").toUpperCase();
-    const entity = body.entity || {};
-    const question = body.question || "Analyze WIP exposure";
-
-    const maps = {
-      CONSTRUCTION:{
-        owner:"Construction Strategist",
-        controller:"Construction Command",
-        risks:["Profit fade","Underbilling","Schedule variance","Retainage exposure"]
-      },
-      FINOPS:{
-        owner:"Financial Strategist",
-        controller:"Financial Command",
-        risks:["Margin compression","Cashflow slowdown","Forecast variance","AR aging"]
-      },
-      HEALTHCARE:{
-        owner:"HC Strategist",
-        controller:"Healthcare Command",
-        risks:["Prior auth denial","Claim scrub hold","AR aging","Coding variance"]
-      },
-      INSURANCE:{
-        owner:"Insurance Strategist",
-        controller:"Insurance Command",
-        risks:["Claims leakage","Audit exposure","Policy variance","Fraud escalation"]
-      }
-    };
-
-    const cfg = maps[sector] || maps.CONSTRUCTION;
-
-    const narrative = `
-${sector} BNCA SYNTHESIS
-
-TOP ISSUE
-${question}
-
-WHY IT MATTERS
-This issue impacts executive KPIs, operational throughput, financial performance, compliance posture, and strategist escalation readiness.
-
-BEST NEXT ACTIONS
-1. Assign accountable owner lane.
-2. Resolve blockers inside SLA window.
-3. Relay unresolved escalation to strategist.
-4. Generate executive briefing packet.
-
-OWNER LANE
-${cfg.owner}
-
-CONTROLLER
-${cfg.controller}
-
-ENTERPRISE RISKS
-• ${cfg.risks.join("\\n• ")}
-
-HITL DECISION
-Human leadership review required before enterprise escalation.
-
-STRATEGIST RELAY
-Signal routed into strategist synthesis layer for enterprise prioritization.
-
-CONFIDENCE
-94%
-`;
-
-    return res.json({
-      ok:true,
-      sector,
-      owner:cfg.owner,
-      controller:cfg.controller,
-      content:narrative,
-      mesh:true,
-      timestamp:new Date().toISOString()
-    });
 
   }catch(e){
     res.status(500).json({ok:false,error:e.message});
@@ -870,19 +811,7 @@ CONFIDENCE
 }
 
 
-app.all("/api/wip/sector-ai", (req, res) => {
-    const body = req.body || {};
-    const sector = body.sector || body.payload?.sector || "CONSTRUCTION";
-    const context = body.question || body.context || body.payload?.context || "Sector WIP review";
-    const txt = tsmSectorWipReply(sector, context);
-    res.json({
-        ok: true,
-        sector: String(sector).toUpperCase(),
-        reply: txt,
-        content: txt,
-        mesh: true,
-        timestamp: new Date().toISOString()
-    });
+
 });
 
 // TSM_FINOPS_QUERY_NODE01_FINAL
