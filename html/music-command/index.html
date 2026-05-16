@@ -1227,6 +1227,158 @@ FX risers`);
 
 
 
+
+<script id="music-loading-guard-final">
+(function(){
+  if(window.__MUSIC_LOADING_GUARD__) return;
+  window.__MUSIC_LOADING_GUARD__ = true;
+
+  const originalFetch = window.fetch.bind(window);
+
+  window.fetch = function(resource, options={}){
+    const url = String(resource && resource.url ? resource.url : resource);
+    const isMusic = /\/api\/music|\/music-command|\/api\/ai|\/api\/brain/i.test(url);
+
+    if(!isMusic) return originalFetch(resource, options);
+
+    const controller = new AbortController();
+    const timeout = setTimeout(()=>controller.abort(), 12000);
+
+    return originalFetch(resource, {...options, signal: controller.signal})
+      .finally(()=>clearTimeout(timeout));
+  };
+
+  function resetButtons(){
+    document.querySelectorAll("button").forEach(btn=>{
+      const t=(btn.innerText||"").trim();
+      if(/ZAY IS BUILDING|GENERATING|LOADING|THINKING/i.test(t)){
+        btn.disabled=false;
+        btn.innerText=btn.dataset.originalText || "Build My Song Blueprint";
+      }
+    });
+  }
+
+  function ensureOutput(){
+    let out =
+      document.querySelector("#zayRuntimeOutput") ||
+      document.querySelector("#zaySongOutput") ||
+      document.querySelector("pre");
+
+    if(!out){
+      out=document.createElement("pre");
+      out.id="zayRuntimeOutput";
+      out.style.cssText="white-space:pre-wrap;margin:18px 24px;padding:16px;background:#08000e;border:1px solid rgba(181,108,255,.35);border-radius:16px;color:#f7eaff;min-height:260px;";
+      document.body.appendChild(out);
+    }
+    return out;
+  }
+
+  window.zayCardiTestSong = function(){
+    const out=ensureOutput();
+    out.textContent = `TITLE: Mad Cuz I'm Winnin'
+
+SONG DNA
+Genre: Hip-Hop
+Reference Energy: Cardi B-style confidence
+Mood: aggressive / bossed-up / motivational
+BPM: 94
+Delivery: sharp, cocky, animated
+Cadence: punchy bounce, attitude on bar endings
+
+[INTRO]
+Yeah!
+Uh!
+They mad already.
+Ha!
+ZAY, run it.
+
+[HOOK]
+Mad cuz I'm winnin', mad cuz I'm lit,
+Same girl from the bottom, now I'm bossed up quick.
+Eyes on the prize, I don't fold, I don't quit,
+If they ain't talkin' money, I ain't hearin' that ish.
+
+Mad cuz I'm winnin', mad cuz I glow,
+Came from the mud but I made it look gold.
+Moves like a boss, everybody know the plot,
+Started at the bottom, now I'm headed to the top.
+
+[VERSE 1]
+I'm still the same girl, from the bottom to the top,
+But now I'm makin' moves, like a boss, you know the plot.
+I'm on a roll, ain't nobody stoppin' me,
+Got my eyes on the prize, and I won't be free.
+
+I broke out the box, now the whole room watch,
+Pressure on my name but I still won't stop.
+Had to boss up heavy, had to make that call,
+They was prayin' I would slip, I was built not to fall.
+
+[ADLIBS]
+(Okay!)
+(Boss!)
+(Talk to me!)
+(They mad!)
+(Ha!)
+
+[VERSE 2]
+I ain't switch, I evolved, now the price went up,
+Had to pour my own glass, now my life filled up.
+They was sleepin' on the grind, now they wide awake,
+Every move calculated, every risk I take.
+
+No handouts, just hustle and timing,
+Pressure made a diamond, now the whole thing shining.
+I don't chase noise, I create my lane,
+They remember my face when they mention the game.
+
+[BRIDGE]
+I was down, now I'm up,
+Had enough, now it's stuck.
+If they mad, let 'em watch,
+I ain't never gon' stop.
+
+Same girl, new level,
+More fire, more pressure.
+Boss talk, no settle,
+Heavy crown, gold metal.
+
+[FINAL HOOK]
+Mad cuz I'm winnin', mad cuz I'm lit,
+Same girl from the bottom, now I'm bossed up quick.
+Eyes on the prize, I don't fold, I don't quit,
+If they ain't talkin' money, I ain't hearin' that ish.
+
+Mad cuz I'm winnin', mad cuz I glow,
+Came from the mud but I made it look gold.
+Moves like a boss, everybody know the plot,
+Started at the bottom, now I'm headed to the top.
+
+[OUTRO]
+They mad.
+I'm up.
+Boss moves.
+No luck.
+
+DAW / CADENCE GUIDE
+BPM: 94
+Punch “Mad cuz I'm winnin'” on beat 1.
+Let “bossed up quick” bounce short.
+Use hype adlibs after every 2 bars.
+Double the final hook.`;
+
+    out.scrollIntoView({behavior:"smooth",block:"center"});
+    localStorage.setItem("zay-last-output", out.textContent);
+    resetButtons();
+  };
+
+  setInterval(resetButtons, 2500);
+  window.addEventListener("load", ()=>setTimeout(resetButtons, 1500));
+
+  console.log("Music loading guard final online");
+})();
+</script>
+
 </body>
 </html>
 
