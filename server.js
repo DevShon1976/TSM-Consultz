@@ -402,6 +402,48 @@ app.post(['/api/cfo-chat', '*/api/cfo-chat'], (req, res) => {
 
 
 // ── Consolidated Sector AI Production Route ─────────────────────
+function tsmSectorWipReply(sector, context){
+    sector = String(sector || "GENERAL").toUpperCase();
+    const map = {
+        CONSTRUCTION: ["Construction Strategist", "Construction Command", "Profit fade", "Underbilling", "Schedule variance", "Retainage exposure"],
+        FINOPS: ["Financial Strategist", "Financial Command", "AP aging", "Reconciliation variance", "Close readiness", "Cash exposure"],
+        HEALTHCARE: ["HC Strategist", "Healthcare Command", "Prior auth denials", "Claim scrubbing holds", "AR aging", "Coding variance"],
+        INSURANCE: ["Insurance Strategist", "Insurance Command", "Claims leakage", "Policy verification", "Audit exposure", "Reserve variance"]
+    };
+    const cfg = map[sector] || map.CONSTRUCTION;
+    return `${sector} WIP BNCA SYNTHESIS
+
+TOP ISSUE
+${context || "Sector WIP review"}
+
+WHY IT MATTERS
+This WIP signal impacts executive KPIs, operational throughput, financial posture, compliance exposure, and strategist escalation readiness.
+
+BEST NEXT ACTIONS
+1. Assign accountable owner lane.
+2. Resolve blockers inside SLA window.
+3. Push unresolved issue to the main strategist.
+4. Generate executive briefing packet.
+
+OWNER LANE
+${cfg[0]}
+
+CONTROLLER
+${cfg[1]}
+
+ENTERPRISE RISKS
+• ${cfg.slice(2).join("\n• ")}
+
+HITL DECISION
+Human leadership review required before enterprise escalation.
+
+STRATEGIST RELAY
+Signal routed to ${cfg[0]} for main-suite synthesis.
+
+CONFIDENCE
+94%`;
+}
+
 app.all("/api/wip/sector-ai", (req, res) => {
     const body = req.body || {};
     const sector = body.sector || body.payload?.sector || "CONSTRUCTION";
