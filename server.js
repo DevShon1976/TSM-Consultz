@@ -405,14 +405,15 @@ app.post(['/api/cfo-chat', '*/api/cfo-chat'], (req, res) => {
 // WIP sub-routes mounted on /api (before catch-all)
 const apiRouter = require('express').Router();
 require('./wip-routes')(apiRouter);
-apiRouter.use((req,res) => res.status(404).json({ok:false,error:'API route not found',path:req.path}));
 app.use('/api', apiRouter);
 
 // ── Music Command ─────────────────────────────────────────────────
-app.get(['/music','/suite/music','/html/music-command','/html/music-command/index.html'],
-  (req,res) => res.sendFile(require('path').join(__dirname,'html','music-command','index.html')));
+app.get(['/music','/suite/music'],
+  (req,res) => res.sendFile(path.join(__dirname,'html','music-command','index.html')));
 app.use('/music-command', express.static(path.join(__dirname,'html','music-command')));
 
+
+app.use('/api', require('./servers/shared'));
 app.use((req,res) => res.status(404).send('Not found: '+req.path));
 
 
@@ -868,10 +869,6 @@ CONFIDENCE
 94%`;
 }
 
-app.all("/api/insurance/query",(req,res)=>{
-  const payload=(req.body&&(req.body.payload||req.body))||{};
-  const txt=tsmSectorWipReply("INSURANCE",payload.context);
-  res.json({ok:true,sector:"INSURANCE",reply:txt,content:txt,mesh:true,timestamp:new Date().toISOString()});
 });
 
 app.all("/api/wip/sector-ai",(req,res)=>{
@@ -885,44 +882,7 @@ app.all("/api/wip/sector-ai",(req,res)=>{
 
 
 // TSM_INSURANCE_QUERY_ROUTE_FINAL
-app.all("/api/insurance/query",(req,res)=>{
-  const payload=(req.body&&(req.body.payload||req.body))||{};
-  const context=payload.context || "Insurance WIP review";
-  const txt=`INSURANCE WIP BNCA SYNTHESIS
 
-TOP ISSUE
-${context}
-
-WHY IT MATTERS
-This WIP signal impacts claim leakage, reserve accuracy, compliance posture, audit exposure, policyholder experience, and executive escalation readiness.
-
-BEST NEXT ACTIONS
-1. Assign Insurance Strategist owner lane.
-2. Resolve policy / claim blockers inside SLA window.
-3. Package audit evidence for compliance review.
-4. Push unresolved risk into insurance controller review.
-
-OWNER LANE
-Insurance Strategist
-
-CONTROLLER
-Insurance Command
-
-ENTERPRISE RISKS
-• Claims leakage
-• Policy verification gaps
-• Reserve variance
-• Audit exposure
-
-HITL DECISION
-Human leadership review required before enterprise escalation.
-
-STRATEGIST RELAY
-Signal routed to Insurance Strategist for main-suite synthesis.
-
-CONFIDENCE
-94%`;
-  res.json({ok:true,sector:"INSURANCE",reply:txt,content:txt,mesh:true,timestamp:new Date().toISOString()});
 });
 
 
@@ -970,8 +930,8 @@ CONFIDENCE
 
 
 // ── Music Command route ───────────────────────────────────────────
-app.get(['/music','/suite/music','/html/music-command','/html/music-command/index.html'],
-  (req,res) => res.sendFile(require('path').join(__dirname,'html','music-command','index.html')));
+app.get(['/music','/suite/music'],
+  (req,res) => res.sendFile(path.join(__dirname,'html','music-command','index.html')));
 app.use('/music-command', express.static(path.join(__dirname,'html','music-command')));
 
 
@@ -1053,5 +1013,4 @@ app.post('/api/music/hooks/generate10', async (req, res) => {
     }
 });
 
-// Re-append the dynamic suite router catch-all signature path
-app.post(path, (req, res) => handle(req, res, HANDLERS[suite]));
+
