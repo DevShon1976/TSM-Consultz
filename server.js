@@ -826,4 +826,12 @@ app.use('/music-command', express.static(path.join(__dirname,'html','music-comma
 
 
 
+
+// TSM System Route Alias Bridge: Captures frontend layout hooks
+app.post('/api/music/hooks/generate10', (req, res, next) => {
+    console.log("⚡ Route alias hit: Forwarding frontend payload to core generator...");
+    req.url = '/api/music/generate-hooks'; // Change this to your actual backend endpoint string found in Step 1
+    next();
+});
+
 app.listen(8080, () => console.log('Sovereign Mesh Online on 8080'));
