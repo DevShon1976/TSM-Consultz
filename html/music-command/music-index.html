@@ -1029,6 +1029,131 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 </script>
+
+<script>
+// Master Calibration Matrix for Producer Consistency
+const SYSTEM_GUARDRAILS = {
+    1: {
+        phase: "01 // THEMATIC ANCHORING",
+        color: "text-green-400",
+        border: "border-green-500/20",
+        bg: "bg-green-500/5",
+        tips: [
+            "Pin contrasting sub-themes (e.g., real-field grind vs introspective vision).",
+            "Establish an intentional artist flow reference to ground your syllable limits.",
+            "Isolate a core philosophical title statement before triggering structure compilation."
+        ]
+    },
+    2: {
+        phase: "02 // GROOVE CALIBRATION",
+        color: "text-purple-400",
+        border: "border-purple-500/20",
+        bg: "bg-purple-500/5",
+        tips: [
+            "Lock the core tracking pocket tightly inside the 90-95 BPM parameters.",
+            "Verify that instrumentation definitions alternate (e.g., filtered intro vs heavy sub drop).",
+            "Enforce strict 2-bar layout increments to maximize metric stability scores."
+        ]
+    },
+    3: {
+        phase: "03 // HOOK ENGINE METRICS",
+        color: "text-magenta-400",
+        border: "border-magenta-500/20",
+        bg: "bg-magenta-500/5",
+        tips: [
+            "Isolate explicit, declarative, short phrases for your primary chorus hook line.",
+            "Ensure selected variations carry strong punctuation markers for downbeat emphasis.",
+            "Verify the hook captures the core team/hustle narrative change."
+        ]
+    },
+    4: {
+        phase: "04 // ARRANGEMENT CONTROLS",
+        color: "text-green-400",
+        border: "border-green-500/20",
+        bg: "bg-green-500/5",
+        tips: [
+            "Vary your line densities—match tight, double-time verses against wider, spacious bridge layers.",
+            "Format structural indicators explicitly (e.g., distinct Verse 1 vs Verse 2 panels).",
+            "Drop arrangement volume levels over the bridge section to prepare for the final chorus peak."
+        ]
+    },
+    5: {
+        phase: "05 // AUDIO AUDIO FINALIZATION",
+        color: "text-magenta-400",
+        border: "border-magenta-500/20",
+        bg: "bg-magenta-500/5",
+        tips: [
+            "Apply target tape/tube saturation to dense vocal transients to prevent clipping.",
+            "Balance independent stem fader volumes (Vocals vs Subs vs Samples) before printing.",
+            "Target master loudness thresholds precisely within the -12 to -14 Integrated LUFS window."
+        ]
+    }
+};
+
+function refreshProducerGuardrails(step) {
+    const config = SYSTEM_GUARDRAILS[step];
+    if (!config) return;
+
+    let panel = document.getElementById("zay-guardrail-panel");
+    if (!panel) {
+        // Appends to the left steps-sidebar layout or falls back smoothly
+        const container = document.querySelector('.space-y-4, sidebar, .w-64') || document.body;
+        panel = document.createElement("div");
+        panel.id = "zay-guardrail-panel";
+        panel.className = "mt-6 p-4 border rounded-xl font-mono text-xs transition-all duration-300";
+        container.appendChild(panel);
+    }
+
+    // Set interactive visual parameters matching your theme configuration
+    panel.className = `mt-6 p-4 border rounded-xl font-mono text-xs transition-all duration-300 ${config.border} ${config.bg}`;
+    
+    panel.innerHTML = `
+        <div class="flex justify-between items-center mb-3 font-bold tracking-wider ${config.color}">
+            <span>${config.phase}</span>
+            <span class="text-[10px] bg-black/40 px-1.5 py-0.5 rounded border border-white/5 uppercase">ZAY SPEC</span>
+        </div>
+        <ul class="space-y-2.5 text-gray-400 list-none pl-0">
+            ${config.tips.map(tip => `
+                <li class="flex items-start gap-2 leading-relaxed">
+                    <span class="${config.color} shrink-0">&bull;</span>
+                    <span>${tip}</span>
+                </li>
+            `).join('')}
+        </ul>
+    `;
+}
+
+// Hook systematically into existing step-advancement functions
+const baseSelectHook = window.selectHook;
+window.selectHook = function(text) {
+    if (typeof baseSelectHook === 'function') baseSelectHook(text);
+    refreshProducerGuardrails(4);
+};
+
+const baseAdvanceToStep5 = window.advanceToStep5;
+window.advanceToStep5 = function() {
+    if (typeof baseAdvanceToStep5 === 'function') baseAdvanceToStep5();
+    refreshProducerGuardrails(5);
+};
+
+// Bind steps 1, 2, and 3 triggers on load
+document.addEventListener("DOMContentLoaded", () => {
+    // Initial render matching step state from your workspace view
+    const blueprintUnavailable = document.body.innerHTML.includes('Blueprint unavailable.');
+    refreshProducerGuardrails(blueprintUnavailable ? 2 : 1);
+
+    // Dynamic click listeners for master action items
+    const blueprintBtn = Array.from(document.querySelectorAll('button')).find(el => el.textContent.includes('BUILD MY SONG BLUEPRINT'));
+    if (blueprintBtn) {
+        blueprintBtn.addEventListener('click', () => refreshProducerGuardrails(2));
+    }
+
+    const hooksBtn = Array.from(document.querySelectorAll('button')).find(el => el.textContent.includes('GENERATE 10 HOOKS'));
+    if (hooksBtn) {
+        hooksBtn.addEventListener('click', () => refreshProducerGuardrails(3));
+    }
+});
+</script>
 </body>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
