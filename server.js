@@ -869,7 +869,6 @@ CONFIDENCE
 94%`;
 }
 
-});
 
 app.all("/api/wip/sector-ai",(req,res)=>{
   const body=req.body||{};
@@ -877,7 +876,6 @@ app.all("/api/wip/sector-ai",(req,res)=>{
   const context=body.question || body.context || body.payload?.context || "Sector WIP review";
   const txt=tsmSectorWipReply(sector,context);
   res.json({ok:true,sector:String(sector).toUpperCase(),reply:txt,content:txt,mesh:true,timestamp:new Date().toISOString()});
-});
 
 
 
@@ -946,9 +944,13 @@ app.post('/api/music/hooks/generate10', (req, res, next) => {
 });
 
 
+
+
+
+
 // TSM_FAST_SECTOR_WIP_ROUTES
 function tsmFastWip(sector, context){
-  sector=String(sector||"GENERAL").toUpperCase();
+  sector = String(sector || "GENERAL").toUpperCase();
   return `${sector} WIP BNCA SYNTHESIS
 
 TOP ISSUE
@@ -973,11 +975,19 @@ CONFIDENCE
 94%`;
 }
 
-app.all("/api/wip/:sector/query",(req,res)=>{
-  const payload=(req.body&&(req.body.payload||req.body))||{};
-  const sector=req.params.sector;
-  const txt=tsmFastWip(sector,payload.context);
-  res.json({ok:true,sector:String(sector).toUpperCase(),reply:txt,content:txt,fast:true,mesh:true,timestamp:new Date().toISOString()});
+app.all("/api/wip/:sector/query", (req, res) => {
+  const payload = (req.body && (req.body.payload || req.body)) || {};
+  const sector = req.params.sector;
+  const txt = tsmFastWip(sector, payload.context);
+  res.json({
+    ok: true,
+    sector: String(sector).toUpperCase(),
+    reply: txt,
+    content: txt,
+    fast: true,
+    mesh: true,
+    timestamp: new Date().toISOString()
+  });
 });
 // END_TSM_FAST_SECTOR_WIP_ROUTES
 
