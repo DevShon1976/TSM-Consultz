@@ -404,7 +404,17 @@ app.post(['/api/cfo-chat', '*/api/cfo-chat'], (req, res) => {
 
 
 
-// ── Consolidated Sector AI Production Route & Logic ─────────────────────
+
+// ── Multi-Industry Adaptive Intelligence Route ───────────────────────────
+function autoDetectSector(payloadText) {
+    const text = String(payloadText || "").toLowerCase();
+    if (text.match(/(retainage|subcontractor|aia|job_cost|construction|mesa premier)/)) return "CONSTRUCTION";
+    if (text.match(/(cpt|drg|payer|denial|provider|healthcare|banner)/)) return "HEALTHCARE";
+    if (text.match(/(adjuster|claim|reserve|payout|insurance)/)) return "INSURANCE";
+    if (text.match(/(gl_code|ap|ar|purchase_order|billing|finops|finance)/)) return "FINOPS";
+    return "CONSTRUCTION"; // Default core alignment fallback
+}
+
 function tsmSectorWipReply(sector, context){
     sector = String(sector || "GENERAL").toUpperCase();
     const map = {
@@ -449,14 +459,32 @@ CONFIDENCE
 
 app.all("/api/wip/sector-ai", (req, res) => {
     const body = req.body || {};
-    const sector = body.sector || body.payload?.sector || "CONSTRUCTION";
-    const context = body.question || body.context || body.payload?.context || "Sector WIP review";
-    const txt = tsmSectorWipReply(sector, context);
+    const contextText = body.question || body.context || body.payload?.context || "";
+    
+    // Explicit body sector or auto-detected based on incoming keywords
+    const determinedSector = body.sector || body.payload?.sector || autoDetectSector(contextText + " " + (body.question || ""));
+    const txt = tsmSectorWipReply(determinedSector, contextText);
+    
+    // Compute mockup numeric balances conforming to the 4 universal panels
+    const progress = body.progress || body.payload?.progress || 75;
+    const costs = body.costs || body.payload?.costs || 120000;
+    const earned = body.earned || body.payload?.earned || 145000;
+    const liquidated = body.liquidated || body.payload?.liquidated || 110000;
+    
     res.json({
         ok: true,
-        sector: String(sector).toUpperCase(),
+        sector: String(determinedSector).toUpperCase(),
         reply: txt,
         content: txt,
+        schema: {
+            industry: String(determinedSector).toUpperCase(),
+            percent_complete: progress,
+            costs_to_date: costs,
+            revenue_earned: earned,
+            billed_or_paid_to_date: liquidated,
+            over_under_status: (earned - liquidated >= 0) ? "UNDER-BILLED / ASSET EXPOSURE" : "OVER-BILLED / ADVANCED LIABILITY",
+            ai_risk_score: body.risk || (determinedSector === "HEALTHCARE" ? 82 : 45)
+        },
         mesh: true,
         timestamp: new Date().toISOString()
     });
@@ -869,48 +897,7 @@ app.post('/api/music/hooks/generate10', (req, res, next) => {
 
 
 
-// TSM_FAST_SECTOR_WIP_ROUTES
-function tsmFastWip(sector, context){
-  sector = String(sector || "GENERAL").toUpperCase();
-  return `${sector} WIP BNCA SYNTHESIS
 
-TOP ISSUE
-${context || "Sector WIP billing exposure review"}
-
-WHY IT MATTERS
-This WIP signal impacts billing drift, operational throughput, financial exposure, compliance posture, and executive decision timing.
-
-BEST NEXT ACTIONS
-1. Assign accountable owner lane.
-2. Resolve blockers inside SLA window.
-3. Route unresolved exposure to strategist.
-4. Generate executive briefing packet.
-
-OWNER LANE
-${sector} Controller / Strategist
-
-STRATEGIST RELAY
-Signal routed for HITL review and executive prioritization.
-
-CONFIDENCE
-94%`;
-}
-
-app.all("/api/wip/:sector/query", (req, res) => {
-  const payload = (req.body && (req.body.payload || req.body)) || {};
-  const sector = req.params.sector;
-  const txt = tsmFastWip(sector, payload.context);
-  res.json({
-    ok: true,
-    sector: String(sector).toUpperCase(),
-    reply: txt,
-    content: txt,
-    fast: true,
-    mesh: true,
-    timestamp: new Date().toISOString()
-  });
-});
-// END_TSM_FAST_SECTOR_WIP_ROUTES
 
 
 
@@ -984,5 +971,47 @@ app.post('/api/music/hooks/generate10', async (req, res) => {
 // ── Port Binding Engine Initialization (Safely Deferred to Final Step) ──
 
 // ── Final Server Port Binding Initialization ──
+
+
+// SAFE_WIP_ROUTES_START
+function safeWipPayload(sector, context) {
+  const upper = String(sector || "GENERAL").toUpperCase();
+  return {
+    ok: true,
+    suite: upper.toLowerCase(),
+    logic: "WIP-BNCA",
+    status: "ACTIVE",
+    action: "HITL_REVIEW",
+    message: `${upper} WIP signal received. ${context || "Executive WIP exposure ready for review."}`,
+    next_steps: [
+      "Assign accountable owner lane",
+      "Review billing / WIP variance",
+      "Prepare executive brief",
+      "Route to strategist for HITL decision"
+    ],
+    metrics: {
+      exposure_score: 94,
+      risk_level: "HIGH",
+      strategist_relay: "READY"
+    },
+    timestamp: new Date().toISOString()
+  };
+}
+
+app.post("/api/wip/:sector/query", (req, res) => {
+  try {
+    const payload = (req.body && (req.body.payload || req.body)) || {};
+    return res.json(safeWipPayload(req.params.sector, payload.context));
+  } catch (e) {
+    return res.status(200).json({
+      ok: false,
+      error: e.message,
+      fallback: true,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+// SAFE_WIP_ROUTES_END
+
 
 app.listen(8080, '0.0.0.0', () => console.log('Sovereign Mesh Online on 0.0.0.0:8080'));
