@@ -1056,4 +1056,6 @@ app.post('/api/music/hooks/generate10', async (req, res) => {
 });
 
 // ── Port Binding Engine Initialization (Safely Deferred to Final Step) ──
+
+// ── Final Server Port Binding Initialization ──
 app.listen(8080, '0.0.0.0', () => console.log('Sovereign Mesh Online on 0.0.0.0:8080'));
