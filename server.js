@@ -173,6 +173,53 @@ app.use('/finops-suite', express.static(path.join(__dirname, 'html', 'finops-sui
 app.use('/healthcare', express.static(path.join(__dirname, 'html', 'healthcare')));
 app.use(express.static(path.join(__dirname, 'public')));
 
+
+// ======================================================
+// MUSIC COMMAND API ROUTES
+// ======================================================
+app.all('/api/music/structure', async (req,res) => {
+  res.json({
+    ok:true,
+    producer:"ZAY",
+    structure:{
+      intro:"4 bars",
+      hook:"8 bars",
+      verse1:"16 bars",
+      bridge:"8 bars",
+      verse2:"16 bars",
+      outro:"4 bars"
+    },
+    narrative:"ZAY generated a commercial structure blueprint around the user's concept.",
+    mesh:true,
+    timestamp:new Date().toISOString()
+  });
+});
+
+app.all('/api/music/hooks/generate', async (req,res) => {
+  const body=req.body||{};
+  const theme=body.theme||body.prompt||"victory";
+  res.json({
+    ok:true,
+    producer:"ZAY",
+    theme,
+    hooks:[
+      "Started from pressure now the whole team up",
+      "Built from the dark now the lights can't blind us",
+      "Every loss turned lessons into leverage",
+      "City on my back but the vision still elegant",
+      "Can't stop now the blueprint too legendary",
+      "Pain turned power now the whole room listening",
+      "Built the foundation then I doubled the ceiling",
+      "From survival mode to executive rhythm",
+      "Every late night turned strategy into motion",
+      "Came too far now the mission too important"
+    ],
+    mesh:true,
+    timestamp:new Date().toISOString()
+  });
+});
+
+
 app.post(['/api/cfo-chat', '*/api/cfo-chat'], (req, res) => {
     const { sector } = req.body;
     // WIP Data derived from the Job Master Schema
@@ -777,65 +824,6 @@ app.get(['/music','/suite/music','/html/music-command','/html/music-command/inde
 app.use('/music-command', express.static(path.join(__dirname,'html','music-command')));
 
 
-
-// ======================================================
-// MUSIC COMMAND API ROUTES
-// ======================================================
-
-app.post('/api/music/structure', async (req,res) => {
-
-  const body = req.body || {};
-  const idea =
-    body.idea ||
-    body.prompt ||
-    "Generate song structure.";
-
-  return res.json({
-    ok:true,
-    producer:"ZAY",
-    structure:{
-      intro:"4 bars",
-      hook:"8 bars",
-      verse1:"16 bars",
-      bridge:"8 bars",
-      verse2:"16 bars",
-      outro:"4 bars"
-    },
-    narrative:
-      "ZAY generated a commercial structure blueprint around the user's concept.",
-    mesh:true,
-    timestamp:new Date().toISOString()
-  });
-});
-
-app.post('/api/music/hooks/generate', async (req,res) => {
-
-  const body = req.body || {};
-  const theme =
-    body.theme ||
-    body.prompt ||
-    "anthem";
-
-  return res.json({
-    ok:true,
-    producer:"ZAY",
-    hooks:[
-      "Started from pressure now the whole team up",
-      "Built from the dark now the lights can't blind us",
-      "Every loss turned lessons into leverage",
-      "City on my back but the vision still elegant",
-      "Can't stop now the blueprint too legendary",
-      "Pain turned power now the whole room listening",
-      "Built the foundation then I doubled the ceiling",
-      "From survival mode to executive rhythm",
-      "Every late night turned strategy into motion",
-      "Came too far now the mission too important"
-    ],
-    theme,
-    mesh:true,
-    timestamp:new Date().toISOString()
-  });
-});
 
 
 app.listen(8080, () => console.log('Sovereign Mesh Online on 8080'));
