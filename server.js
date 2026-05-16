@@ -181,14 +181,47 @@ app.all('/api/music/structure', async (req,res) => {
   res.json({
     ok:true,
     producer:"ZAY",
+
+    blueprint: `
+INTRO — 4 bars
+HOOK — 8 bars
+VERSE 1 — 16 bars
+BRIDGE — 8 bars
+VERSE 2 — 16 bars
+FINAL HOOK — 8 bars
+OUTRO — 4 bars
+`,
+
+    structureText: `
+INTRO — 4 bars
+HOOK — 8 bars
+VERSE 1 — 16 bars
+BRIDGE — 8 bars
+VERSE 2 — 16 bars
+FINAL HOOK — 8 bars
+OUTRO — 4 bars
+`,
+
     structure:{
       intro:"4 bars",
       hook:"8 bars",
       verse1:"16 bars",
       bridge:"8 bars",
       verse2:"16 bars",
+      finalHook:"8 bars",
       outro:"4 bars"
     },
+
+    sections:[
+      "INTRO",
+      "HOOK",
+      "VERSE 1",
+      "BRIDGE",
+      "VERSE 2",
+      "FINAL HOOK",
+      "OUTRO"
+    ],
+
     narrative:"ZAY generated a commercial structure blueprint around the user's concept.",
     mesh:true,
     timestamp:new Date().toISOString()
