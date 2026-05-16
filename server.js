@@ -220,6 +220,109 @@ app.all('/api/music/hooks/generate', async (req,res) => {
 });
 
 
+
+app.all('/api/music/complete-song', async (req,res) => {
+  const body=req.body||{};
+  const prompt=body.prompt||body.idea||"dark cinematic victory anthem";
+
+  res.json({
+    ok:true,
+    producer:"ZAY",
+    title:"Pressure Made Diamonds",
+    concept:prompt,
+    structure:["Intro","Hook","Verse 1","Hook","Verse 2","Bridge","Final Hook","Outro"],
+    lyrics:`TITLE: Pressure Made Diamonds
+
+[INTRO]
+Yeah...
+Late nights, low lights...
+Pressure made diamonds.
+ZAY, run it.
+
+[HOOK]
+I came from the pressure, now the whole room shine,
+Had to lose a couple pieces just to build my line.
+They counted out the vision, I was counting up the signs,
+Now the pain look expensive when it hit the right time.
+
+Adlib: Yeah, yeah.
+Adlib: Pressure made me.
+
+[VERSE 1]
+I was standing in the storm with a plan in my chest,
+Had a hundred closed doors but I still got blessed.
+Every setback wrote a bar, every scar got dressed,
+Now I move with intention, not a point to impress.
+
+I seen doubt turn loud when the numbers came clean,
+I seen pain turn power when I stepped on the scene.
+Had to build from the basement with a king-size dream,
+Now the whole team eating off the work unseen.
+
+Adlib: Talk to 'em.
+Adlib: We made it through that.
+
+[HOOK]
+I came from the pressure, now the whole room shine,
+Had to lose a couple pieces just to build my line.
+They counted out the vision, I was counting up the signs,
+Now the pain look expensive when it hit the right time.
+
+Adlib: Right time.
+Adlib: Whole room shine.
+
+[VERSE 2]
+This ain't luck, this is discipline in motion,
+Late night strategy, faith in the ocean.
+I was broke in the spirit but rich in devotion,
+Now the blueprint alive and the doors cracking open.
+
+They want the highlight, not the climb that it cost,
+Not the days I had to lead while I felt like I lost.
+I turned silence into leverage, turned delay into sauce,
+Now I speak from the win but remember the cross.
+
+Adlib: Remember that.
+Adlib: Never forgot.
+
+[BRIDGE]
+If I bend, I won't break,
+If I fall, I still wake.
+Every risk that I take
+Put my name on the gate.
+
+I was built for the weight,
+I was trained by the wait.
+Now the pressure too late,
+I already turned great.
+
+[FINAL HOOK]
+I came from the pressure, now the whole room shine,
+Had to lose a couple pieces just to build my line.
+They counted out the vision, I was counting up the signs,
+Now the pain look expensive when it hit the right time.
+
+Adlib: Pressure made diamonds.
+Adlib: Whole team up.
+Adlib: We survived it.
+
+[OUTRO]
+Late nights paid.
+Pressure stayed.
+Faith led.
+Vision made.`,
+    notes:{
+      bpm:"82-90 BPM",
+      mood:"dark cinematic, victorious, emotional",
+      arrangement:"808s, choir pads, filtered piano, wide hook stacks",
+      performance:"Verse tight and controlled; hooks bigger with doubled vocals and adlibs."
+    },
+    mesh:true,
+    timestamp:new Date().toISOString()
+  });
+});
+
+
 app.post(['/api/cfo-chat', '*/api/cfo-chat'], (req, res) => {
     const { sector } = req.body;
     // WIP Data derived from the Job Master Schema
