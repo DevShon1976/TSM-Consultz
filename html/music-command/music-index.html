@@ -906,6 +906,129 @@ function finalizeTrack() {
     alert("Track Finalized! Master print exported to distribution hubs successfully.");
 }
 </script>
+
+<script>
+// Unified Stage Guide Matrix for Producer Calibration
+const STAGE_GUIDES = {
+    1: {
+        title: "PHASE 1: THEMATIC ANCHORING",
+        agent: "ZAY",
+        color: "text-green-400",
+        border: "border-green-500/20",
+        bg: "bg-green-500/5",
+        rules: [
+            "Establish emotional contrast (e.g., struggle vs. absolute focus).",
+            "Target specific delivery dynamics (e.g., fast rhythmic cadence).",
+            "Lock down an explicit style signature before laying bars."
+        ]
+    },
+    2: {
+        title: "PHASE 2: BLUEPRINT CALIBRATION",
+        agent: "ZAY",
+        color: "text-purple-400",
+        border: "border-purple-500/20",
+        bg: "bg-purple-500/5",
+        rules: [
+            "Constrain the groove architecture between 90 - 95 BPM.",
+            "Enforce strict 2-bar or 4-bar block definitions.",
+            "Map out structural instrumentation phases (Soul Sample filters, 808 hits)."
+        ]
+    },
+    3: {
+        title: "PHASE 3: HOOK SELECTION",
+        agent: "ZAY",
+        color: "text-magenta-400",
+        border: "border-magenta-500/20",
+        bg: "bg-magenta-500/5",
+        rules: [
+            "Isolate short, declarative phrases for the primary chorus line.",
+            "Ensure the hook text maintains high lyric punctuation values.",
+            "Weave the main project theme directly into the hook centerpiece."
+        ]
+    },
+    4: {
+        title: "PHASE 4: ARRANGEMENT VECTORING",
+        agent: "ZAY",
+        color: "text-green-400",
+        border: "border-green-500/20",
+        bg: "bg-green-500/5",
+        rules: [
+            "Alternate word counts (e.g., tight high-density vs. spaced reflective lines).",
+            "Place punctuation markers (!) strictly on natural downbeat drops.",
+            "Bridge transitions must scale emotional dynamics down before final chorus builds."
+        ]
+    },
+    5: {
+        title: "PHASE 5: MIX REFINEMENT",
+        agent: "ZAY",
+        color: "text-magenta-400",
+        border: "border-magenta-500/20",
+        bg: "bg-magenta-500/5",
+        rules: [
+            "Set master stereo width overhead limits around 120% - 125%.",
+            "Apply soft harmonic saturation directly to dense vocal transients.",
+            "Validate final loudness levels (-12 to -14 Integrated LUFS range)."
+        ]
+    }
+};
+
+function renderStageRecommendations(stepNumber) {
+    const guide = STAGE_GUIDES[stepNumber];
+    if (!guide) return;
+
+    // Find or create the recommendation panel element in the viewport sidebar layout
+    let panel = document.getElementById("system-guide-panel");
+    if (!panel) {
+        const sidebar = document.querySelector('.space-y-4, .w-64, sidebar') || document.body;
+        panel = document.createElement("div");
+        panel.id = "system-guide-panel";
+        panel.className = "mt-4 p-3 border rounded-lg font-mono text-xs transition-all duration-300";
+        sidebar.appendChild(panel);
+    }
+
+    // Dynamic style cleanup and template overwrite
+    panel.className = `mt-4 p-4 border rounded-lg font-mono text-xs transition-all duration-300 ${guide.border} ${guide.bg}`;
+    
+    panel.innerHTML = `
+        <div class="flex justify-between items-center mb-2 font-bold tracking-wide ${guide.color}">
+            <span>${guide.title}</span>
+            <span class="px-1.5 py-0.5 rounded bg-black/40 border border-white/5 text-[10px]">AGENT: ${guide.agent}</span>
+        </div>
+        <ul class="space-y-2 text-gray-400 list-none pl-0">
+            ${guide.rules.map(rule => `
+                <li class="flex items-start gap-2">
+                    <span class="${guide.color} shrink-0">&bull;</span>
+                    <span>${rule}</span>
+                </li>
+            `).join('')}
+        </ul>
+    `;
+}
+
+// Hook directly into pipeline workflow steps
+const originalAdvanceToStep5 = window.advanceToStep5;
+window.advanceToStep5 = function() {
+    if (typeof originalAdvanceToStep5 === 'function') originalAdvanceToStep5();
+    renderStageRecommendations(5);
+};
+
+const originalSelectHook = window.selectHook;
+window.selectHook = function(text) {
+    if (typeof originalSelectHook === 'function') originalSelectHook(text);
+    renderStageRecommendations(4);
+};
+
+// Initial draw calibration for Step 2 active state
+document.addEventListener("DOMContentLoaded", () => {
+    renderStageRecommendations(2);
+    
+    // Auto-bind any clickable workflow buttons to refresh the guide card view states
+    const hookBtn = Array.from(document.querySelectorAll('button')).find(el => el.textContent.includes('GENERATE 10 HOOKS'));
+    if (hookBtn) {
+        hookBtn.addEventListener('click', () => renderStageRecommendations(3));
+    }
+});
+</script>
 </body>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
