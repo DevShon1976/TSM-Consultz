@@ -116,20 +116,32 @@
             const track = document.getElementById('global-track');
             
             if (playing) {
-                clearInterval(playbackInterval);
+                if (playbackInterval) clearInterval(playbackInterval);
                 track.pause();
                 btn.innerText = "START REPLAY";
                 playing = false;
             } else {
-                btn.innerText = "STOP AUDIO";
+                btn.innerText = "LOADING AUDIO...";
                 playing = true;
                 track.volume = 0.75;
-                track.play().catch(e => console.log("Playback blocked:", e));
-                runLiveTrackSequence();
+                
+                // Safe asynchronous engine load state
+                track.play()
+                    .then(() => {
+                        btn.innerText = "STOP AUDIO";
+                        runLiveTrackSequence();
+                    })
+                    .catch(e => {
+                        console.log("Playback blocked:", e);
+                        btn.innerText = "START REPLAY";
+                        playing = false;
+                    });
             }
         }
 
         function runLiveTrackSequence() {
+            if (playbackInterval) clearInterval(playbackInterval);
+            
             for(let i = 1; i <= totalSteps; i++) {
                 document.getElementById('l' + i).classList.remove('active');
             }
