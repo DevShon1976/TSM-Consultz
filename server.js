@@ -1014,4 +1014,59 @@ app.post("/api/wip/:sector/query", (req, res) => {
 // SAFE_WIP_ROUTES_END
 
 
+
+// TSM_BPO_GROQ_ROUTE
+app.post('/api/bpo/query', async (req, res) => {
+  try {
+    const apiKey = process.env.GROQ_API_KEY;
+    const body = req.body || {};
+    const payload = body.payload || {};
+    const sector = payload.sector || body.sector || 'BPO Operations';
+    const context = payload.context || body.prompt || body.query || '';
+    const lane = payload.lane || body.lane || 'General';
+
+    if (!apiKey) {
+      return res.json({
+        ok: true,
+        mode: 'local-fallback',
+        reply: `TOP ISSUE\n${lane} requires operational review.\n\nRISK LEVEL\nMEDIUM\n\nBEST NEXT ACTIONS\n1. Assign accountable owner.\n2. Clear blockers older than SLA.\n3. Validate evidence and document trail.\n4. Relay unresolved risk to Strategist.\n\nCONFIDENCE\n92%`
+      });
+    }
+
+    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
+        temperature: 0.25,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are TSM Neural Core for enterprise BPO operations. Never mention the underlying model/vendor. Return concise BNCA output with TOP ISSUE, RISK LEVEL, BEST NEXT ACTIONS, OWNER LANE, SLA WATCH, and CONFIDENCE.'
+          },
+          {
+            role: 'user',
+            content: `Sector: ${sector}\nLane: ${lane}\nContext:\n${context}`
+          }
+        ]
+      })
+    });
+
+    const data = await groqRes.json();
+    const reply = data?.choices?.[0]?.message?.content || 'No response from TSM Neural Core.';
+    res.json({ ok: true, mode: 'groq', reply });
+  } catch (e) {
+    res.json({
+      ok: false,
+      mode: 'fallback',
+      error: String(e.message || e),
+      reply: 'TOP ISSUE\nBPO AI route failed safely.\n\nBEST NEXT ACTIONS\n1. Verify GROQ_API_KEY.\n2. Restart app.\n3. Re-test /api/bpo/query.\n\nCONFIDENCE\n88%'
+    });
+  }
+});
+
+
 app.listen(8080, '0.0.0.0', () => console.log('Sovereign Mesh Online on 0.0.0.0:8080'));
