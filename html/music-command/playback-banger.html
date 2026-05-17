@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TSM Music Command - Real-Time Playback Engine</title>
+    <style>
+        :root {
+            --bg-dark: #070a13;
+            --bg-panel: #0f172a;
+            --pink-accent: #ec4899;
+            --purple-accent: #a855f7;
+            --text-main: #f8fafc;
+            --text-muted: #64748b;
+            --border-color: #1e293b;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 30px;
+            display: flex;
+            justify-content: center;
+        }
+        .audio-player-card {
+            width: 100%;
+            max-width: 650px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+        .track-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+        }
+        .track-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--pink-accent);
+            margin: 0;
+        }
+        .track-meta {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        .control-btn {
+            background: var(--pink-accent);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .control-btn:hover {
+            opacity: 0.9;
+        }
+        .lyrics-viewport {
+            background: #020617;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            height: 280px;
+            overflow-y: auto;
+            font-size: 1.05rem;
+            line-height: 1.8;
+        }
+        .lyric-row {
+            margin: 8px 0;
+            opacity: 0.4;
+            transition: all 0.3s ease;
+        }
+        .lyric-row.active {
+            opacity: 1;
+            color: #fff;
+            transform: scale(1.02);
+            border-left: 3px solid var(--pink-accent);
+            padding-left: 8px;
+        }
+        .adlib-highlight {
+            color: var(--purple-accent);
+            font-style: italic;
+            font-weight: bold;
+            margin-left: 6px;
+        }
+        .section-tag {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-top: 14px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="audio-player-card">
+        <div class="track-header">
+            <div>
+                <h1 class="track-title">Scottsdale Payback (Arrangement Replay)</h1>
+                <div class="track-meta">BPM: 150 &bull; High-Energy Luxury Trap &bull; Live Synthesis Layout</div>
+            </div>
+            <button class="control-btn" id="play-trigger" onclick="togglePlayback()">START REPLAY</button>
+        </div>
+
+        <div class="lyrics-viewport" id="viewport">
+            <span class="section-tag">[Intro]</span>
+            <div class="lyric-row" id="l1">(Yeah... uh huh...) <span class="adlib-highlight">[Look!]</span></div>
+            <div class="lyric-row" id="l2">New condo in Scottsdale, pajama party goin' up, <span class="adlib-highlight">[Turn it up!]</span></div>
+            <div class="lyric-row" id="l3">Heard my ex was outside flexin', now he's really outta luck. <span class="adlib-highlight">[Straight facts!]</span></div>
+
+            <span class="section-tag">[Chorus / Hook]</span>
+            <div class="lyric-row" id="l4" style="color: var(--pink-accent);">FROM RAGS TO RICHES, RUNNIN' CIRCLES 'ROUND BITCHES! <span class="adlib-highlight">[Woo!]</span></div>
+            <div class="lyric-row" id="l5" style="color: var(--pink-accent);">DEY MAN'S FACE ALL IN MY CAT, LIKE A HUNGRY MAN DINNER... <span class="adlib-highlight">[Eat it up!]</span></div>
+
+            <span class="section-tag">[Verse 1]</span>
+            <div class="lyric-row" id="l6">Red Impala pullin' up, windows tinted out to space, <span class="adlib-highlight">[Skrrt!]</span></div>
+            <div class="lyric-row" id="l7">Cameras catchin' everything, you can't erase the trace. <span class="adlib-highlight">[Gotcha!]</span></div>
+
+            <span class="section-tag">[Bridge]</span>
+            <div class="lyric-row" id="l8" style="font-style: italic;">They didn't see the radar screening out the threat... <span class="adlib-highlight">[Hold up]</span></div>
+            <div class="lyric-row" id="l9" style="font-style: italic;">Now we counting up the assets, collecting every net... <span class="adlib-highlight">[Count it!]</span></div>
+        </div>
+    </div>
+
+    <script>
+        let playing = false;
+        let currentStep = 0;
+        let playbackInterval;
+        const totalSteps = 9;
+
+        function togglePlayback() {
+            const btn = document.getElementById('play-trigger');
+            if (playing) {
+                clearInterval(playbackInterval);
+                btn.innerText = "START REPLAY";
+                playing = false;
+            } else {
+                btn.innerText = "STOP AUDIO";
+                playing = true;
+                runLiveTrackSequence();
+            }
+        }
+
+        function runLiveTrackSequence() {
+            // Reset state
+            for(let i = 1; i <= totalSteps; i++) {
+                document.getElementById(`l${i}`).classList.remove('active');
+            }
+            currentStep = 1;
+            document.getElementById(`l${currentStep}`).classList.add('active');
+
+            playbackInterval = setInterval(() => {
+                document.getElementById(`l${currentStep}`).classList.remove('active');
+                currentStep++;
+                if (currentStep > totalSteps) {
+                    clearInterval(playbackInterval);
+                    document.getElementById('play-trigger').innerText = "START REPLAY";
+                    playing = false;
+                    return;
+                }
+                const activeRow = document.getElementById(`l${currentStep}`);
+                activeRow.classList.add('active');
+                activeRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 3000); // 3-second pacing simulating active verse bars
+        }
+    </script>
+</body>
+</html>
