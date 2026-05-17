@@ -79,6 +79,15 @@
 
   const cfg=MAP[current] || MAP.executive;
 
+  function sectorIntel(){
+    return window.TSMSectorIntelligence || {
+      label:()=>cfg.owner,
+      relay:()=>cfg.owner,
+      action:()=>cfg.actions && cfg.actions[0] ? cfg.actions[0] : "Assign owner",
+      summary:()=>cfg.owner + " active."
+    };
+  }
+
   function load(){
     try{return JSON.parse(localStorage.getItem(KEY)||"{}");}catch(e){return{};}
   }
@@ -99,7 +108,7 @@
       .tsm-auto{max-width:1280px;margin:26px auto;padding:20px;background:rgba(3,10,18,.98);border:1px solid rgba(0,255,198,.18);border-radius:18px;color:#e8f7ff;font-family:Inter,system-ui,Arial;position:relative;z-index:40}
       .tsm-auto h2{color:#00ffc6;margin:0;font-size:30px}
       .tsm-auto p{color:#9fb8c8;line-height:1.55}
-      .auto-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:15px 0}
+      .auto-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:15px 0}
       .auto-card{background:#06131c;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px}
       .auto-card small{display:block;color:#7f9aaa;letter-spacing:.14em;text-transform:uppercase;font-size:10px}
       .auto-card b{display:block;color:#00ffc6;margin-top:8px;font-size:22px}
@@ -201,6 +210,7 @@ TSM is no longer only displaying intelligence. It is simulating operational exec
         <div class="auto-card"><small>Sector</small><b>${current.toUpperCase()}</b></div>
         <div class="auto-card"><small>Stage</small><b>${state[current].stage}</b></div>
         <div class="auto-card"><small>Owner</small><b>${state[current].owner}</b></div>
+        <div class="auto-card"><small>Sector Executive</small><b>${sectorIntel().label()}</b></div>
         <div class="auto-card"><small>Exposure</small><b>${state[current].exposure}</b></div>
       </div>
 
