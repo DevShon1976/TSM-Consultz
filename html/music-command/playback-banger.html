@@ -107,29 +107,33 @@
     <div class="audio-player-card">
         <div class="track-header">
             <div>
-                <h1 class="track-title">Scottsdale Payback (Live Synthesis Engine)</h1>
-                <div class="track-meta">BPM: 150 &bull; Web Audio Backing Beat & Vocal Engine Enabled</div>
+                <h1 class="track-title">Scottsdale Payback (Studio Streaming Engine)</h1>
+                <div class="track-meta">BPM: 150 &bull; Studio Layer Streaming Enabled</div>
             </div>
             <button class="control-btn" id="play-trigger" onclick="togglePlayback()">START REPLAY</button>
         </div>
 
+        <audio id="instrumental-track" loop crossOrigin="anonymous">
+            <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+        </audio>
+
         <div class="lyrics-viewport" id="viewport">
             <span class="section-tag">[Intro]</span>
-            <div class="lyric-row" id="l1" data-tts="Intro... Yeah... uh huh... Look!">(Yeah... uh huh...) <span class="adlib-highlight">[Look!]</span></div>
-            <div class="lyric-row" id="l2" data-tts="New condo in Scottsdale, pajama party goin up! Turn it up!">New condo in Scottsdale, pajama party goin' up, <span class="adlib-highlight">[Turn it up!]</span></div>
-            <div class="lyric-row" id="l3" data-tts="Heard my ex was outside flexin, now hes really outta luck. Straight facts!">Heard my ex was outside flexin', now he's really outta luck. <span class="adlib-highlight">[Straight facts!]</span></div>
+            <div class="lyric-row" id="l1">(Yeah... uh huh...) <span class="adlib-highlight">[Look!]</span></div>
+            <div class="lyric-row" id="l2">New condo in Scottsdale, pajama party goin' up, <span class="adlib-highlight">[Turn it up!]</span></div>
+            <div class="lyric-row" id="l3">Heard my ex was outside flexin', now he's really outta luck. <span class="adlib-highlight">[Straight facts!]</span></div>
 
             <span class="section-tag">[Chorus / Hook]</span>
-            <div class="lyric-row" id="l4" data-tts="FROM RAGS TO RICHES, RUNNIN CIRCLES ROUND BITCHES! WOO!" style="color: var(--pink-accent); font-weight: bold;">FROM RAGS TO RICHES, RUNNIN' CIRCLES 'ROUND BITCHES! <span class="adlib-highlight">[Woo!]</span></div>
-            <div class="lyric-row" id="l5" data-tts="DEY MANS FACE ALL IN MY CAT, LIKE A HUNGRY MAN DINNER... Eat it up!" style="color: var(--pink-accent); font-weight: bold;">DEY MAN'S FACE ALL IN MY CAT, LIKE A HUNGRY MAN DINNER... <span class="adlib-highlight">[Eat it up!]</span></div>
+            <div class="lyric-row" id="l4" style="color: var(--pink-accent); font-weight: bold;">FROM RAGS TO RICHES, RUNNIN' CIRCLES 'ROUND BITCHES! <span class="adlib-highlight">[Woo!]</span></div>
+            <div class="lyric-row" id="l5" style="color: var(--pink-accent); font-weight: bold;">DEY MAN'S FACE ALL IN MY CAT, LIKE A HUNGRY MAN DINNER... <span class="adlib-highlight">[Eat it up!]</span></div>
 
             <span class="section-tag">[Verse 1]</span>
-            <div class="lyric-row" id="l6" data-tts="Red Impala pullin up, windows tinted out to space. Skrrt!">Red Impala pullin' up, windows tinted out to space, <span class="adlib-highlight">[Skrrt!]</span></div>
-            <div class="lyric-row" id="l7" data-tts="Cameras catchin everything, you cant erase the trace. Gotcha!">Cameras catchin' everything, you can't erase the trace. <span class="adlib-highlight">[Gotcha!]</span></div>
+            <div class="lyric-row" id="l6">Red Impala pullin' up, windows tinted out to space, <span class="adlib-highlight">[Skrrt!]</span></div>
+            <div class="lyric-row" id="l7">Cameras catchin' everything, you can't erase the trace. <span class="adlib-highlight">[Gotcha!]</span></div>
 
             <span class="section-tag">[Bridge]</span>
-            <div class="lyric-row" id="l8" data-tts="They didnt see the radar screening out the threat... Hold up." style="font-style: italic;">They didn't see the radar screening out the threat... <span class="adlib-highlight">[Hold up]</span></div>
-            <div class="lyric-row" id="l9" data-tts="Now we counting up the assets, collecting every net... Count it!" style="font-style: italic;">Now we counting up the assets, collecting every net... <span class="adlib-highlight">[Count it!]</span></div>
+            <div class="lyric-row" id="l8" style="font-style: italic;">They didn't see the radar screening out the threat... <span class="adlib-highlight">[Hold up]</span></div>
+            <div class="lyric-row" id="l9" style="font-style: italic;">Now we counting up the assets, collecting every net... <span class="adlib-highlight">[Count it!]</span></div>
         </div>
     </div>
 
@@ -138,69 +142,25 @@
         let currentStep = 0;
         let playbackInterval;
         const totalSteps = 9;
-        
-        let audioCtx = null;
-        let drumLoopId = null;
-
-        function initSynthEngine() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-        }
-
-        // Simulates a low-end synthetic 808 sub-bass beat loop natively
-        function startSynthBassLoop() {
-            initSynthEngine();
-            let time = audioCtx.currentTime;
-            
-            function scheduleBeat() {
-                if (!playing) return;
-                
-                // Trigger an 808 sub-pulse kick drop
-                let osc = audioCtx.createOscillator();
-                let gain = audioCtx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(55, time); // A1 Sub note
-                osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.4);
-                
-                gain.gain.setValueAtTime(0.6, time);
-                gain.gain.exponentialRampToValueAtTime(0.01, time + 0.4);
-                
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start(time);
-                osc.stop(time + 0.4);
-                
-                time += 0.8; // Grid step progression matching tempo limits
-                setTimeout(scheduleBeat, 800);
-            }
-            scheduleBeat();
-        }
 
         function togglePlayback() {
             const btn = document.getElementById('play-trigger');
+            const bgAudio = document.getElementById('instrumental-track');
+            
             if (playing) {
                 clearInterval(playbackInterval);
-                window.speechSynthesis.cancel();
+                bgAudio.pause();
                 btn.innerText = "START REPLAY";
                 playing = false;
             } else {
                 btn.innerText = "STOP AUDIO";
                 playing = true;
-                startSynthBassLoop();
+                
+                bgAudio.volume = 0.4;
+                bgAudio.play().catch(e => console.log("Streaming tracking error:", e));
+                
                 runLiveTrackSequence();
             }
-        }
-
-        function speakLine(elementId) {
-            const row = document.getElementById(elementId);
-            const rawText = row.getAttribute('data-tts');
-            
-            window.speechSynthesis.cancel(); // Flush previous queue stack
-            const utterance = new SpeechSynthesisUtterance(rawText);
-            utterance.rate = 1.1;
-            utterance.pitch = 1.0;
-            window.speechSynthesis.speak(utterance);
         }
 
         function runLiveTrackSequence() {
@@ -210,7 +170,6 @@
             
             currentStep = 1;
             document.getElementById(`l${currentStep}`).classList.add('active');
-            speakLine(`l${currentStep}`);
 
             playbackInterval = setInterval(() => {
                 document.getElementById(`l${currentStep}`).classList.remove('active');
@@ -218,6 +177,7 @@
                 
                 if (currentStep > totalSteps) {
                     clearInterval(playbackInterval);
+                    document.getElementById('instrumental-track').pause();
                     document.getElementById('play-trigger').innerText = "START REPLAY";
                     playing = false;
                     return;
@@ -226,8 +186,7 @@
                 const activeRow = document.getElementById(`l${currentStep}`);
                 activeRow.classList.add('active');
                 activeRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                speakLine(`l${currentStep}`);
-            }, 3800); // Step timeline windows matching voice velocity curves
+            }, 3800);
         }
     </script>
 </body>
