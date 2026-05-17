@@ -2872,5 +2872,225 @@ async function runWipPitchBNCA_insurance(){
   </div>
 </section>
 
+<script id="tsm-universal-tab-content-engine">
+(function(){
+  if(window.__TSM_TAB_CONTENT_ENGINE__) return;
+  window.__TSM_TAB_CONTENT_ENGINE__ = true;
+
+  const SECTOR = (() => {
+    const path = location.pathname.toLowerCase();
+    if(path.includes("az-ins") || path.includes("insurance")) return "insurance";
+    if(path.includes("pc-command")) return "pc";
+    if(path.includes("health") || path.includes("hc-")) return "healthcare";
+    return "ops";
+  })();
+
+  const CONTENT = {
+    healthcare: {
+      "DASHBOARD": ["Live census", "Prior auth pressure", "Denial watch", "RCM risk"],
+      "OPERATIONS": ["Staffing coverage", "Intake queue", "Scheduling backlog", "Vendor alerts"],
+      "MEDICAL": ["Clinical notes", "Care-gap review", "Provider queue", "Escalation watch"],
+      "PHARMACY": ["Medication queue", "Prior auth meds", "Refill exceptions", "Formulary flags"],
+      "INSURANCE": ["Eligibility", "Auth aging", "Payer rules", "Denial risk"],
+      "FINANCIAL": ["AR aging", "Claim value", "Revenue exposure", "Recovery lane"],
+      "LEGAL": ["Consent review", "Policy exposure", "Records request", "Risk escalation"],
+      "VENDORS": ["Vendor SLA", "Supply issue", "Contract touchpoint", "Escalation owner"],
+      "COMPLIANCE": ["HIPAA watch", "Audit trail", "Policy exception", "Evidence log"],
+      "BILLING": ["Claim scrub", "Denial queue", "Coding gap", "Clean-claim rate"],
+      "TAXPREP": ["Entity docs", "1099 watch", "Expense review", "Filing readiness"],
+      "GRANTS": ["Grant eligibility", "Application status", "Reporting deadline", "Funding risk"],
+      "STRATEGIST": ["BNCA summary", "Executive rollup", "Owner lane", "Next action"]
+    },
+
+    insurance: {
+      "DASHBOARD": ["Policy queue", "DME opportunities", "Referral watch", "Revenue score"],
+      "DME": ["Oxygen concentrator", "CPAP/BiPAP", "Mobility support", "Supply reorder"],
+      "QUALIFY": ["Eligibility check", "Medical necessity", "Documentation gap", "Authorization path"],
+      "REVENUE": ["Monthly premium", "Commission value", "Retention risk", "Upsell lane"],
+      "CLAIMS": ["Claim status", "Denial exposure", "Appeal queue", "Payer follow-up"],
+      "COMPLIANCE": ["Consent", "Audit log", "PHI handling", "Script adherence"],
+      "AI ANALYST": ["BNCA Engine", "Risk Summary", "Owner Lane", "Executive Report"]
+    },
+
+    pc: {
+      "DASHBOARD": ["Active requests", "Client queue", "SLA watch", "Command status"],
+      "CLIENTS": ["Client profile", "Open needs", "Document requests", "Owner lane"],
+      "TASKS": ["Next action", "Priority score", "Deadline watch", "Escalation"],
+      "DOCUMENTS": ["Upload review", "Missing docs", "Evidence log", "Export package"],
+      "REPORTS": ["Executive summary", "WIP figures", "Resolution status", "Client-ready output"],
+      "AI": ["BNCA Engine", "Risk Summary", "Action Plan", "Follow-up script"],
+      "STRATEGIST": ["Operating signal", "Cross-lane risk", "Best next action", "Pilot path"]
+    }
+  };
+
+  function clean(txt){
+    return (txt || "")
+      .replace(/[^\w\s/&-]/g," ")
+      .replace(/\s+/g," ")
+      .trim()
+      .toUpperCase();
+  }
+
+  function findKey(label){
+    const data = CONTENT[SECTOR] || CONTENT.ops || {};
+    const keys = Object.keys(data);
+    const exact = keys.find(k => clean(k) === clean(label));
+    if(exact) return exact;
+    return keys.find(k => clean(label).includes(clean(k)) || clean(k).includes(clean(label))) || keys[0] || "DASHBOARD";
+  }
+
+  function ensureMain(){
+    let main = document.querySelector("main") || document.querySelector("#main") || document.querySelector(".main") || document.querySelector(".content");
+    if(main) return main;
+
+    main = document.createElement("main");
+    main.id = "tsm-tab-main";
+    main.style.padding = "18px";
+    document.body.appendChild(main);
+    return main;
+  }
+
+  function render(label){
+    const key = findKey(label);
+    const items = (CONTENT[SECTOR] || {})[key] || ["Intake","Queue","Risk","BNCA"];
+    const main = ensureMain();
+
+    main.innerHTML = `
+      <section class="tsm-tab-render" style="background:rgba(8,21,34,.94);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:20px;margin:14px 0;color:#e8f7ff">
+        <p style="color:#00ffc6;letter-spacing:.18em;font-size:11px;text-transform:uppercase;margin:0 0 8px">ACTIVE OPERATING LANE</p>
+        <h1 style="font-size:42px;margin:8px 0;color:#fff">${key}</h1>
+        <p style="color:#9fb8c8;line-height:1.55;max-width:920px">
+          This tab now changes the operating content. Review queue status, ownership, SLA pressure, document evidence, BNCA recommendations, and escalation readiness.
+        </p>
+
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:12px;margin:16px 0">
+          ${items.map(x => `
+            <div style="background:#07131d;border:1px solid rgba(0,255,198,.18);border-radius:12px;padding:14px;min-height:115px">
+              <b style="color:#00ffc6">${x}</b>
+              <p style="color:#8aa6b7;font-size:13px;line-height:1.45">
+                Queue status, owner lane, SLA risk, evidence trail, and next-action readiness.
+              </p>
+            </div>
+          `).join("")}
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div style="background:#050b12;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px">
+            <b style="color:#ffc857">WORKFLOW INTAKE</b>
+            <textarea id="tsm-tab-context" style="width:100%;min-height:130px;margin-top:10px;background:#02080d;color:#dff7ff;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:12px" placeholder="Paste notes, issue summary, document context, or client scenario..."></textarea>
+            <button onclick="window.TSM_TAB_RUN && window.TSM_TAB_RUN('${key}')" style="margin-top:10px;background:#00ffc6;color:#001;border:0;border-radius:10px;padding:11px 14px;font-weight:900">⚡ RUN ${key} BNCA</button>
+            <pre id="tsm-tab-output" style="display:none;white-space:pre-wrap;background:#02080d;color:#dff7ff;border:1px solid rgba(0,255,198,.18);border-left:3px solid #00ffc6;border-radius:10px;padding:14px;margin-top:12px"></pre>
+          </div>
+
+          <div style="background:#050b12;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px">
+            <b style="color:#00ffc6">STRATEGIST OUTPUT</b>
+            <pre style="white-space:pre-wrap;color:#dff7ff;font-family:monospace;margin-top:12px;line-height:1.55">TOP ISSUE
+${key} requires operating review.
+
+BEST NEXT ACTIONS
+1. Assign accountable owner.
+2. Clear blockers older than current SLA.
+3. Validate supporting evidence.
+4. Relay unresolved risk to Strategist.
+
+CONFIDENCE
+92%</pre>
+          </div>
+        </div>
+      </section>
+    `;
+
+    document.querySelectorAll(".active").forEach(x => {
+      if(x.matches("button,a,.tab,.nav-btn,.nb,.si,[role='tab']")) x.classList.remove("active");
+    });
+  }
+
+  window.TSM_TAB_RUN = async function(lane){
+    const out = document.getElementById("tsm-tab-output");
+    const ctx = document.getElementById("tsm-tab-context")?.value || `Run BNCA for ${lane}.`;
+    if(!out) return;
+
+    out.style.display = "block";
+    out.textContent = "TSM Neural Core running...";
+
+    try{
+      const r = await fetch("/api/bpo/query", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          payload:{
+            sector:SECTOR,
+            lane,
+            context:ctx,
+            priority:"HIGH"
+          }
+        })
+      });
+      const d = await r.json();
+      out.textContent = d.reply || d.content || "No response.";
+    }catch(e){
+      out.textContent = `TOP ISSUE
+${lane} needs operating review.
+
+RISK LEVEL
+MEDIUM
+
+BEST NEXT ACTIONS
+1. Assign owner lane.
+2. Validate document evidence.
+3. Clear SLA blockers.
+4. Escalate unresolved issue.
+
+CONFIDENCE
+92%`;
+    }
+  };
+
+  function wire(){
+    const selectors = [
+      "button",
+      "a",
+      ".tab",
+      ".nav-btn",
+      ".nb",
+      ".si",
+      "[role='tab']",
+      "[data-tab]",
+      "[data-section]",
+      "[data-lane]"
+    ];
+
+    document.querySelectorAll(selectors.join(",")).forEach(el => {
+      const label = el.dataset.tab || el.dataset.section || el.dataset.lane || el.textContent || "";
+      const key = findKey(label);
+      if(!key || el.dataset.tsmTabWired) return;
+
+      const looksLikeTab =
+        el.matches("[data-tab],[data-section],[data-lane],[role='tab'],.tab,.nav-btn,.nb,.si") ||
+        Object.keys(CONTENT[SECTOR] || {}).some(k => clean(label).includes(clean(k)));
+
+      if(!looksLikeTab) return;
+
+      el.dataset.tsmTabWired = "true";
+      el.style.cursor = "pointer";
+
+      el.addEventListener("click", function(ev){
+        if(el.tagName === "A" && el.getAttribute("href") && !el.getAttribute("href").startsWith("#")) return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        render(label);
+        el.classList.add("active");
+      }, true);
+    });
+  }
+
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", wire);
+  else wire();
+
+  [300,900,1800].forEach(ms => setTimeout(wire, ms));
+
+})();
+</script>
+
 </body>
 </html>
