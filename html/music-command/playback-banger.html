@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TSM Music Command - Live Synth Engine</title>
+    <title>TSM Music Command - Live Audio Engine</title>
     <style>
         :root {
             --bg-dark: #070a13;
@@ -86,11 +86,15 @@
     <div class="audio-player-card">
         <div class="track-header">
             <div>
-                <h1 class="track-title">Scottsdale Payback (Failproof Core Audio)</h1>
-                <div style="font-size:0.85rem; color:var(--text-muted);">BPM: 150 &bull; Local Oscillator Synthesis Engine</div>
+                <h1 class="track-title">Scottsdale Payback (Live Vocal Mix)</h1>
+                <div style="font-size:0.85rem; color:var(--text-muted);">BPM: 150 &bull; Streaming Core Engine</div>
             </div>
             <button class="control-btn" id="play-trigger" onclick="togglePlayback()">START REPLAY</button>
         </div>
+
+        <audio id="studio-track" loop crossOrigin="anonymous">
+            <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" type="audio/mpeg">
+        </audio>
 
         <div class="lyrics-viewport" id="viewport">
             <div class="lyric-row" id="l1">(Yeah... uh huh...) <span class="adlib-highlight">[Look!]</span></div>
@@ -105,65 +109,24 @@
         let playing = false;
         let currentStep = 0;
         let playbackInterval;
-        let audioCtx;
-        let drumInterval;
         const totalSteps = 5;
-
-        function initAudioEngine() {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-
-        function playSynthBeat(freq, duration, type = 'triangle') {
-            if (!audioCtx) return;
-            let osc = audioCtx.createOscillator();
-            let gainNode = audioCtx.createGain();
-            
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            
-            gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-            
-            osc.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            
-            osc.start();
-            osc.stop(audioCtx.currentTime + duration);
-        }
 
         function togglePlayback() {
             const btn = document.getElementById('play-trigger');
+            const track = document.getElementById('studio-track');
             
             if (playing) {
                 clearInterval(playbackInterval);
-                clearInterval(drumInterval);
-                if (audioCtx) audioCtx.close();
-                audioCtx = null;
-                window.speechSynthesis.cancel();
+                track.pause();
                 btn.innerText = "START REPLAY";
                 playing = false;
             } else {
                 btn.innerText = "STOP AUDIO";
                 playing = true;
-                
-                initAudioEngine();
-                
-                // Fire continuous 150 BPM low bass synth rhythm blocks natively
-                drumInterval = setInterval(() => {
-                    playSynthBeat(75, 0.25, 'sine');   // Deep Bass
-                    setTimeout(() => playSynthBeat(290, 0.1, 'triangle'), 200); // Snare/Perc
-                }, 400);
-
+                track.volume = 0.6;
+                track.play().catch(e => console.log("Stream error:", e));
                 runLiveTrackSequence();
             }
-        }
-
-        function speakLine(elementId) {
-            const row = document.getElementById(elementId);
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(row.innerText);
-            utterance.rate = 1.15;
-            window.speechSynthesis.speak(utterance);
         }
 
         function runLiveTrackSequence() {
@@ -172,21 +135,19 @@
             }
             currentStep = 1;
             document.getElementById('l' + currentStep).classList.add('active');
-            speakLine('l' + currentStep);
 
             playbackInterval = setInterval(() => {
                 document.getElementById('l' + currentStep).classList.remove('active');
                 currentStep++;
                 if (currentStep > totalSteps) {
                     clearInterval(playbackInterval);
-                    clearInterval(drumInterval);
-                    btn.innerText = "START REPLAY";
+                    document.getElementById('studio-track').pause();
+                    document.getElementById('play-trigger').innerText = "START REPLAY";
                     playing = false;
                     return;
                 }
                 const activeRow = document.getElementById('l' + currentStep);
                 activeRow.classList.add('active');
-                speakLine('l' + currentStep);
             }, 3800);
         }
     </script>
