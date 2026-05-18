@@ -1,0 +1,1841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TSM FinOps · Staff Accountant Interview Suite</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --bg: #050a05;
+  --surface: #0a140a;
+  --panel: #0f1f0f;
+  --border: #1a3a1a;
+  --g: #00ff88;
+  --g2: #00cc66;
+  --g3: #004422;
+  --a: #ffcc00;
+  --b: #00aaff;
+  --r: #ff4455;
+  --p: #aa44ff;
+  --text: #c8e8c8;
+  --dim: #557755;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* scanline */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,136,.008) 2px, rgba(0,255,136,.008) 4px);
+  pointer-events: none;
+  z-index: 9000;
+}
+
+/* ── HEADER ── */
+.hdr {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 28px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  position: sticky; top: 0; z-index: 500;
+}
+.hdr-brand { display: flex; flex-direction: column; gap: 2px; }
+.hdr-title {
+  font-family: var(--mono);
+  font-size: 15px; font-weight: 700;
+  letter-spacing: 4px; color: var(--g);
+}
+.hdr-sub { font-size: 9px; color: var(--dim); letter-spacing: 3px; }
+.hdr-right { display: flex; align-items: center; gap: 16px; }
+.live { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--g); }
+.live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--g); box-shadow: 0 0 8px var(--g); animation: blink 2s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+#clock { font-size: 11px; color: var(--g); letter-spacing: 2px; }
+
+/* ── NAV TABS ── */
+.nav-tabs {
+  display: flex; overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  padding: 0 28px;
+}
+.nav-tab {
+  padding: 10px 18px;
+  font-family: var(--mono); font-size: 10px; font-weight: 600;
+  letter-spacing: 2px; color: var(--dim);
+  background: none; border: none; border-bottom: 2px solid transparent;
+  cursor: pointer; white-space: nowrap; transition: all .2s;
+}
+.nav-tab:hover { color: var(--g); }
+.nav-tab.active { color: var(--g); border-bottom-color: var(--g); }
+
+/* ── PAGES ── */
+.page { display: none; }
+.page.active { display: block; animation: fadeUp .25s ease; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+
+/* ── LAYOUT ── */
+.container { max-width: 1200px; margin: 0 auto; padding: 28px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+@media(max-width:900px){ .grid-2,.grid-3 { grid-template-columns: 1fr; } }
+
+/* ── CARDS ── */
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 18px;
+  margin-bottom: 14px;
+}
+.card-hdr {
+  font-size: 9px; font-weight: 700; letter-spacing: 3px;
+  color: var(--dim); margin-bottom: 12px;
+  font-family: var(--sans);
+}
+.card-title {
+  font-family: var(--sans); font-size: 16px; font-weight: 700;
+  letter-spacing: 1px; color: #e0ffe0; margin-bottom: 4px;
+}
+
+/* ── DEMO STEPS ── */
+.demo-step {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  transition: border-color .2s;
+}
+.demo-step.active { border-color: var(--g); box-shadow: 0 0 12px rgba(0,255,136,.08); }
+.demo-step.completed { border-color: var(--g3); background: #001a00; }
+.demo-step-hdr {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  background: var(--panel);
+  transition: background .15s;
+}
+.demo-step-hdr:hover { background: #0f1f0f; }
+.step-num {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--sans); font-size: 13px; font-weight: 700;
+  border: 1px solid var(--border); color: var(--dim);
+  flex-shrink: 0; transition: all .2s;
+}
+.demo-step.active .step-num { border-color: var(--g); color: var(--g); background: #001500; }
+.demo-step.completed .step-num { background: var(--g); color: #000; border-color: var(--g); }
+.step-title { font-family: var(--sans); font-size: 13px; font-weight: 700; letter-spacing: .5px; color: #d0eed0; }
+.step-goal { font-size: 10px; color: var(--dim); margin-top: 2px; }
+.step-status {
+  font-size: 9px; font-weight: 700; letter-spacing: 2px;
+  padding: 3px 10px; border-radius: 10px;
+}
+.ss-pending { background: #111; border: 1px solid #333; color: #555; }
+.ss-active { background: #001a00; border: 1px solid var(--g); color: var(--g); }
+.ss-done { background: #003322; border: 1px solid var(--g2); color: var(--g2); }
+.ss-auto { background: #1a1000; border: 1px solid var(--a); color: var(--a); }
+
+.demo-step-body {
+  display: none;
+  padding: 16px;
+  border-top: 1px solid var(--border);
+  background: #080e08;
+}
+.demo-step.expanded .demo-step-body { display: block; }
+
+.step-substeps { margin-bottom: 14px; }
+.substep {
+  display: flex; gap: 10px; padding: 7px 0;
+  border-bottom: 1px solid #0d1a0d; font-size: 11px;
+  line-height: 1.5; color: #99bb99;
+  transition: color .3s;
+}
+.substep:last-child { border-bottom: none; }
+.substep.done { color: var(--g); }
+.substep-num {
+  min-width: 20px; height: 20px; border-radius: 50%;
+  background: var(--g3); color: var(--g); font-size: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; flex-shrink: 0; transition: all .3s;
+}
+.substep.done .substep-num { background: var(--g); color: #000; }
+
+.step-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.btn {
+  padding: 7px 16px;
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: 1px; border-radius: 4px; cursor: pointer;
+  border: none; transition: all .15s;
+}
+.btn-g { background: var(--g); color: #000; }
+.btn-g:hover { background: var(--g2); }
+.btn-a { background: transparent; border: 1px solid var(--a); color: var(--a); }
+.btn-a:hover { background: #1a1000; }
+.btn-b { background: transparent; border: 1px solid var(--b); color: var(--b); }
+.btn-b:hover { background: #001133; }
+.btn-r { background: transparent; border: 1px solid var(--r); color: var(--r); }
+.btn-dim { background: #111; border: 1px solid #333; color: #666; cursor: not-allowed; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ── TERMINAL OUTPUT ── */
+.terminal {
+  background: #020602;
+  border: 1px solid #0a1f0a;
+  border-radius: 4px;
+  padding: 12px;
+  font-size: 11px;
+  color: #88bb88;
+  line-height: 1.7;
+  min-height: 60px;
+  white-space: pre-wrap;
+  overflow-y: auto;
+  max-height: 320px;
+  margin-top: 10px;
+  font-family: var(--mono);
+}
+.terminal .t-g { color: var(--g); }
+.terminal .t-a { color: var(--a); }
+.terminal .t-b { color: var(--b); }
+.terminal .t-r { color: var(--r); }
+.terminal .t-dim { color: #336633; }
+
+/* ── DATA TABLE ── */
+table { width: 100%; border-collapse: collapse; font-size: 11px; }
+th {
+  text-align: left; padding: 7px 10px;
+  font-size: 9px; letter-spacing: 2px; color: var(--dim);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--sans); font-weight: 700;
+}
+td { padding: 8px 10px; border-bottom: 1px solid #0d1a0d; }
+tr:hover td { background: #0a140a; }
+.td-match { color: var(--g); }
+.td-warn { color: var(--a); }
+.td-err { color: var(--r); }
+.td-pending { color: #556655; }
+
+/* ── BADGE ── */
+.badge {
+  padding: 2px 8px; border-radius: 10px;
+  font-size: 9px; font-weight: 700; letter-spacing: 1px;
+}
+.bg { background: #001a00; border: 1px solid var(--g); color: var(--g); }
+.ba { background: #1a1000; border: 1px solid var(--a); color: var(--a); }
+.br { background: #1a0000; border: 1px solid var(--r); color: var(--r); }
+.bb { background: #001133; border: 1px solid var(--b); color: var(--b); }
+.bp { background: #1a0022; border: 1px solid var(--p); color: var(--p); }
+
+/* ── PROGRESS ── */
+.progress-bar { height: 4px; background: #0d1a0d; border-radius: 2px; overflow: hidden; margin: 12px 0 4px; }
+.progress-fill { height: 100%; background: var(--g); border-radius: 2px; transition: width .5s ease; }
+.progress-lbl { font-size: 10px; color: var(--dim); margin-bottom: 16px; }
+
+/* ── SCORE RING ── */
+.score-ring {
+  width: 80px; height: 80px; border-radius: 50%;
+  border: 3px solid var(--g);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  font-family: var(--sans); font-weight: 700;
+  color: var(--g); flex-shrink: 0;
+}
+.score-ring-val { font-size: 22px; line-height: 1; }
+.score-ring-lbl { font-size: 8px; letter-spacing: 1px; color: var(--dim); }
+
+/* ── POC DATA PANEL ── */
+.poc-panel {
+  background: #020802;
+  border: 1px solid var(--g3);
+  border-radius: 6px;
+  padding: 16px;
+  margin-top: 12px;
+}
+.poc-hdr {
+  font-size: 9px; letter-spacing: 3px; color: var(--g);
+  font-weight: 700; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.poc-btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.poc-btn {
+  padding: 9px 12px;
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  border-radius: 4px; cursor: pointer; text-align: left;
+  transition: all .15s; border: none;
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* ── AUTO-RUN CONTROLS ── */
+.auto-controls {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+.auto-speed {
+  display: flex; align-items: center; gap: 8px; font-size: 10px; color: var(--dim);
+}
+.speed-btn {
+  padding: 4px 10px; border-radius: 4px; font-size: 10px;
+  cursor: pointer; font-family: var(--mono); font-weight: 700;
+  border: 1px solid var(--border); background: transparent; color: var(--dim);
+  transition: all .15s;
+}
+.speed-btn.active { background: var(--g3); border-color: var(--g); color: var(--g); }
+.auto-status { font-size: 10px; color: var(--dim); margin-left: auto; }
+
+/* ── INTERVIEW SIDEBAR ── */
+.interview-layout { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
+@media(max-width:1100px){ .interview-layout { grid-template-columns: 1fr; } }
+.sidebar-sticky { position: sticky; top: 80px; }
+
+/* ── KPI CARDS ── */
+.kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+@media(max-width:900px){ .kpi-grid { grid-template-columns: 1fr 1fr; } }
+.kpi {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 6px; padding: 14px;
+}
+.kpi-val { font-family: var(--sans); font-size: 26px; font-weight: 700; margin-bottom: 4px; }
+.kpi-lbl { font-size: 9px; color: var(--dim); letter-spacing: 2px; }
+.kpi-sub { font-size: 10px; margin-top: 3px; }
+
+/* ── NOTIFICATION ── */
+.notif {
+  position: fixed; bottom: 20px; right: 20px;
+  background: var(--panel); border: 1px solid var(--g);
+  border-radius: 6px; padding: 12px 16px;
+  font-size: 11px; color: var(--g); z-index: 9999;
+  transform: translateX(200%); transition: transform .3s;
+  max-width: 340px; font-family: var(--mono);
+}
+.notif.show { transform: translateX(0); }
+
+/* ── FOOTER ── */
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 10px 28px;
+  background: var(--surface);
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 10px; color: var(--dim);
+  margin-top: 40px;
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-brand">
+    <div class="hdr-title">TSM · FINOPS INTERVIEW SUITE</div>
+    <div class="hdr-sub">STAFF ACCOUNTANT TECHNICAL ASSESSMENT · 20-DEMO PLAYBOOK</div>
+  </div>
+  <div class="hdr-right">
+    <div class="live"><div class="live-dot"></div>SESSION ACTIVE</div>
+    <div id="clock">--:--:--</div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav-tabs">
+  <button class="nav-tab active" onclick="showPage('overview',this)">OVERVIEW</button>
+  <button class="nav-tab" onclick="showPage('demos',this)">20 DEMO PLAYBOOK</button>
+  <button class="nav-tab" onclick="showPage('poc',this)">POC DATA</button>
+  <button class="nav-tab" onclick="showPage('ledger',this)">LIVE LEDGER</button>
+  <button class="nav-tab" onclick="showPage('recon',this)">RECONCILIATION</button>
+  <button class="nav-tab" onclick="showPage('score',this)">SCORE CARD</button>
+</div>
+
+<!-- ══════════ PAGE: OVERVIEW ══════════ -->
+<div class="page active" id="page-overview">
+  <div class="container">
+
+    <div style="margin-bottom:24px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--dim);margin-bottom:6px">CANDIDATE TECHNICAL EVALUATION</div>
+      <div style="font-family:var(--sans);font-size:28px;font-weight:700;color:#e0ffe0;letter-spacing:1px;margin-bottom:6px">Staff Accountant · FinOps Assessment</div>
+      <div style="font-size:11px;color:var(--dim);line-height:1.7;max-width:700px">
+        20 live demos across Daily Workflow, Reconciliation, General Ledger, and Compliance. Each demo auto-runs with real PoC data injected into the UI. Candidates prove mastery by narrating and executing each step.
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi-val" style="color:var(--g)" id="ov-demos-done">0</div><div class="kpi-lbl">DEMOS COMPLETE</div><div class="kpi-sub" style="color:var(--dim)">of 20 total</div></div>
+      <div class="kpi"><div class="kpi-val" style="color:var(--a)" id="ov-score">0%</div><div class="kpi-lbl">OVERALL SCORE</div><div class="kpi-sub" style="color:var(--dim)">live updated</div></div>
+      <div class="kpi"><div class="kpi-val" style="color:var(--b)" id="ov-time">00:00</div><div class="kpi-lbl">SESSION TIME</div><div class="kpi-sub" style="color:var(--dim)">elapsed</div></div>
+      <div class="kpi"><div class="kpi-val" style="color:var(--g)" id="ov-cat">—</div><div class="kpi-lbl">ACTIVE CATEGORY</div><div class="kpi-sub" style="color:var(--dim)">current focus</div></div>
+    </div>
+
+    <div class="grid-2">
+      <div>
+        <div class="card">
+          <div class="card-hdr">ASSESSMENT CATEGORIES</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:center;gap:12px;padding:10px;background:var(--surface);border-radius:4px;border:1px solid var(--border)">
+              <div style="font-size:22px">📋</div>
+              <div><div style="font-family:var(--sans);font-weight:700;color:#d0eed0">CAT 1 · Daily Workflow</div><div style="font-size:10px;color:var(--dim)">Demos 1–5 · Transaction processing, AP/AR, sync recovery</div></div>
+              <div class="badge bg" style="margin-left:auto">5 DEMOS</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:10px;background:var(--surface);border-radius:4px;border:1px solid var(--border)">
+              <div style="font-size:22px">🔁</div>
+              <div><div style="font-family:var(--sans);font-weight:700;color:#d0eed0">CAT 2 · Reconciliation</div><div style="font-size:10px;color:var(--dim)">Demos 6–10 · Bank recon, sub-ledger ties, fee handling</div></div>
+              <div class="badge ba" style="margin-left:auto">5 DEMOS</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:10px;background:var(--surface);border-radius:4px;border:1px solid var(--border)">
+              <div style="font-size:22px">📒</div>
+              <div><div style="font-family:var(--sans);font-weight:700;color:#d0eed0">CAT 3 · General Ledger</div><div style="font-size:10px;color:var(--dim)">Demos 11–15 · JEs, amortization, depreciation, trial balance</div></div>
+              <div class="badge bb" style="margin-left:auto">5 DEMOS</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:10px;background:var(--surface);border-radius:4px;border:1px solid var(--border)">
+              <div style="font-size:22px">⚖️</div>
+              <div><div style="font-family:var(--sans);font-weight:700;color:#d0eed0">CAT 4 · Compliance</div><div style="font-size:10px;color:var(--dim)">Demos 16–20 · SoD, audit trails, budget drill-down, export</div></div>
+              <div class="badge bp" style="margin-left:auto">5 DEMOS</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-hdr">POC DATASETS LOADED</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:4px">
+              <div style="font-family:var(--sans);font-weight:700;color:#d0eed0;margin-bottom:3px">📄 demo_invoice_batch.csv</div>
+              <div style="font-size:10px;color:var(--dim)">3 invoices · INV-2026-001 through 004 · $23,250.75 total · SoD flags active</div>
+            </div>
+            <div style="padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:4px">
+              <div style="font-family:var(--sans);font-weight:700;color:#d0eed0;margin-bottom:3px">🏦 demo_bank_feed.csv</div>
+              <div style="font-size:10px;color:var(--dim)">3 transactions · $15 variance on TXN-BK-9902 · duplicate flag on TXN-BK-9904</div>
+            </div>
+            <div style="padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:4px">
+              <div style="font-family:var(--sans);font-weight:700;color:#d0eed0;margin-bottom:3px">⚙️ demo_fixed_assets.csv</div>
+              <div style="font-size:10px;color:var(--dim)">2 assets · $15K server + $12K insurance · monthly amortization: $1,416.67</div>
+            </div>
+            <div style="padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:4px">
+              <div style="font-family:var(--sans);font-weight:700;color:#d0eed0;margin-bottom:3px">📑 demo_journal_entries.json</div>
+              <div style="font-size:10px;color:var(--dim)">JE-2026-05-001 · Auto-Reverse: true · $7,500 legal accrual · June 1 reversal queued</div>
+            </div>
+          </div>
+          <div style="margin-top:14px;display:flex;gap:8px">
+            <button class="btn btn-g" onclick="showPage('demos',document.querySelectorAll('.nav-tab')[1])">▶ START DEMOS</button>
+            <button class="btn btn-a" onclick="autoRunAll()">⚡ AUTO-RUN ALL 20</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ PAGE: DEMOS ══════════ -->
+<div class="page" id="page-demos">
+  <div class="container">
+
+    <!-- AUTO-RUN CONTROLS -->
+    <div class="auto-controls">
+      <div style="font-size:10px;color:var(--g);font-weight:700;letter-spacing:2px">AUTO-RUN</div>
+      <button class="btn btn-g" id="auto-play-btn" onclick="toggleAutoRun()">▶ PLAY ALL</button>
+      <button class="btn btn-b" onclick="pauseAutoRun()">⏸ PAUSE</button>
+      <button class="btn btn-dim" onclick="resetAll()" style="cursor:pointer;background:transparent;border:1px solid #333;color:#555">↺ RESET</button>
+      <div class="auto-speed">
+        SPEED:
+        <button class="speed-btn active" id="sp1" onclick="setSpeed(1,this)">1×</button>
+        <button class="speed-btn" id="sp2" onclick="setSpeed(2,this)">2×</button>
+        <button class="speed-btn" id="sp3" onclick="setSpeed(3,this)">FAST</button>
+      </div>
+      <div class="auto-status" id="auto-status">Ready to run</div>
+    </div>
+
+    <div class="progress-bar"><div class="progress-fill" id="main-prog" style="width:0%"></div></div>
+    <div class="progress-lbl" id="main-prog-lbl">0 of 20 demos complete</div>
+
+    <!-- INTERVIEW LAYOUT -->
+    <div class="interview-layout">
+
+      <!-- DEMO LIST -->
+      <div id="demo-list">
+
+        <!-- CATEGORY 1 -->
+        <div style="font-size:9px;letter-spacing:4px;color:var(--g);font-weight:700;margin:0 0 12px;display:flex;align-items:center;gap:10px">
+          CAT 1 · DAILY WORKFLOW &amp; TRANSACTION PROCESSING
+          <div style="flex:1;height:1px;background:var(--border)"></div>
+        </div>
+
+        <!-- Demo 1 -->
+        <div class="demo-step" id="demo-1">
+          <div class="demo-step-hdr" onclick="toggleDemo(1)">
+            <div class="step-num" data-n="1">1</div>
+            <div>
+              <div class="step-title">Morning Routine &amp; System Health Check</div>
+              <div class="step-goal">Prove immediate operational visibility · finops-ui.html</div>
+            </div>
+            <div class="step-status ss-pending" id="st-1">PENDING</div>
+          </div>
+          <div class="demo-step-body">
+            <div class="step-substeps" id="sub-1">
+              <div class="substep" id="s1-1"><div class="substep-num">1</div>Open finops-ui.html → Operations Overview Dashboard</div>
+              <div class="substep" id="s1-2"><div class="substep-num">2</div>Locate Daily Cash Balance counter and Pending AP/AR bar chart</div>
+              <div class="substep" id="s1-3"><div class="substep-num">3</div>Click Alerts/Notifications Bell icon in top-right corner</div>
+              <div class="substep" id="s1-4"><div class="substep-num">4</div>Confirm exception queue is clear — $0 active alerts — system health verified</div>
+            </div>
+            <div id="out-1" class="terminal" style="display:none"></div>
+            <div class="step-actions">
+              <button class="btn btn-g" onclick="runDemo(1)">▶ RUN DEMO</button>
+              <button class="btn btn-a" onclick="loadDataset('invoice')">📄 Load Invoice Data</button>
+              <button class="btn btn-b" onclick="markDone(1)">✓ MARK DONE</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Demo 2 -->
+        <div class="demo-step" id="demo-2">
+          <div class="demo-step-hdr" onclick="toggleDemo(2)">
+            <div class="step-num" data-n="2">2</div>
+            <div>
+              <div class="step-title">Handling a Failed Transaction Sync</div>
+              <div class="step-goal">Trace webhook/API sync errors and manually recover data</div>
+            </div>
+            <div class="step-status ss-pending" id="st-2">PENDING</div>
+          </div>
+          <div class="demo-step-body">
+            <div class="step-substeps" id="sub-2">
+              <div class="substep" id="s2-1"><div class="substep-num">1</div>Navigate to finops-ui.html → Compliance &amp; Audit Logs tab</div>
+              <div class="substep" id="s2-2"><div class="substep-num">2</div>Filter logs by Status = Error or Type = Webhook to isolate failed sync event</div>
+              <div class="substep" id="s2-3"><div class="substep-num">3</div>Copy payload block or batch ID from the error log</div>
+              <div class="substep" id="s2-4"><div class="substep-num">4</div>Navigate to finops-operations.html → Invoicing &amp; Billing → Import Pending Orders/Batches → force-sync corrected payload</div>
+            </div>
+            <div id="out-2" class="terminal" style="display:none"></div>
+            <div class="step-actions">
+              <button class="btn btn-g" onclick="runDemo(2)">▶ RUN DEMO</button>
+              <button class="btn btn-a" onclick="loadDataset('invoice')">📄 Load Invoice Data</button>
+              <button class="btn btn-b" onclick="markDone(2)">✓ MARK DONE</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Demo 3 -->
+        <div class="demo-step" id="demo-3">
+          <div class="demo-step-hdr" onclick="toggleDemo(3)">
+            <div class="step-num" data-n="3">3</div>
+            <div>
+              <div class="step-title">AP &amp; Liability Prioritization</div>
+              <div class="step-goal">Safely manage cash out-flows without missing vendor deadlines</div>
+            </div>
+            <div class="step-status ss-pending" id="st-3">PENDING</div>
+          </div>
+          <div class="demo-step-body">
+            <div class="step-substeps" id="sub-3">
+              <div class="substep" id="s3-1"><div class="substep-num">1</div>Open finops-operations.html → Vendor Management / AP tab</div>
+              <div class="substep" id="s3-2"><div class="substep-num">2</div>Click "Unapproved Bills" sub-navigation filter</div>
+              <div class="substep" id="s3-3"><div class="substep-num">3</div>Sort by Due Date ascending — brings immediate liabilities to top</div>
+              <div class="substep" id="s3-4"><div class="substep-num">4</div>Select INV-2026-001 (Apex Global Logistics $14,500 — exceeds $10K SoD limit) → Route for Approval</div>
+            </div>
+            <div id="out-3" class="terminal" style="display:none"></div>
+            <div class="step-actions">
+              <button class="btn btn-g" onclick="runDemo(3)">▶ RUN DEMO</button>
+              <button class="btn btn-a" onclick="loadDataset('invoice')">📄 Load Invoice Data</button>
+              <button class="btn btn-b" onclick="markDone(3)">✓ MARK DONE</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Demo 4 -->
+        <div class="demo-step" id="demo-4">
+          <div class="demo-step-hdr" onclick="toggleDemo(4)">
+            <div class="step-num" data-n="4">4</div>
+            <div>
+              <div class="step-title">High-Volume Invoice Validation</div>
+              <div class="step-goal">Automated batch parsing and manual line-item verification</div>
+            </div>
+            <div class="step-status ss-pending" id="st-4">PENDING</div>
+          </div>
+          <div class="demo-step-body">
+            <div class="step-substeps" id="sub-4">
+              <div class="substep" id="s4-1"><div class="substep-num">1</div>Open finops-operations.html → Invoicing &amp; Billing</div>
+              <div class="substep" id="s4-2"><div class="substep-num">2</div>Click "Upload Batch CSV/JSON" → simulate high-volume data stream parse</div>
+              <div class="substep" id="s4-3"><div class="substep-num">3</div>Open INV-2026-004 (Starlight $1,250.75) → inspect GL Account Mapping field → 6200 - Office Supplies</div>
+              <div class="substep" id="s4-4"><div class="substep-num">4</div>Hover "Approve &amp; Post" → commits batch downstream to staging ledger</div>
+            </div>
+            <div id="out-4" class="terminal" style="display:none"></div>
+            <div class="step-actions">
+              <button class="btn btn-g" onclick="runDemo(4)">▶ RUN DEMO</button>
+              <button class="btn btn-a" onclick="loadDataset('invoice')">📄 Load Invoice Data</button>
+              <button class="btn btn-b" onclick="markDone(4)">✓ MARK DONE</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Demo 5 -->
+        <div class="demo-step" id="demo-5">
+          <div class="demo-step-hdr" onclick="toggleDemo(5)">
+            <div class="step-num" data-n="5">5</div>
+            <div>
+              <div class="step-title">Vendor Payment Discrepancy Investigation</div>
+              <div class="step-goal">Track payment from vendor profile to bank feed clearing event</div>
+            </div>
+            <div class="step-status ss-pending" id="st-5">PENDING</div>
+          </div>
+          <div class="demo-step-body">
+            <div class="step-substeps" id="sub-5">
+              <div class="substep" id="s5-1"><div class="substep-num">1</div>Open finops-operations.html → Vendor Management → search "Mesa Premier Legal"</div>
+              <div class="substep" id="s5-2"><div class="substep-num">2</div>Copy Payment Reference ID from vendor history ledger → INV-2026-003</div>
+              <div class="substep" id="s5-3"><div class="substep-num">3</div>Switch to finops-accounting.html → Banking &amp; Treasury → paste reference ID</div>
+              <div class="substep" id="s5-4"><div class="substep-num">4</div>Confirm transaction status reads "Cleared via Bank Feed" — TXN-BK-9902 matched</div>
+            </div>
+            <div id="out-5" class="terminal" style="display:none"></div>
+            <div class="step-actions">
+              <button class="btn btn-g" onclick="runDemo(5)">▶ RUN DEMO</button>
+              <button class="btn btn-a" onclick="loadDataset('bank')">🏦 Load Bank Feed</button>
+              <button class="btn btn-b" onclick="markDone(5)">✓ MARK DONE</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- CATEGORY 2 -->
+        <div style="font-size:9px;letter-spacing:4px;color:var(--a);font-weight:700;margin:20px 0 12px;display:flex;align-items:center;gap:10px">
+          CAT 2 · RECONCILIATION &amp; DATA INTEGRITY
+          <div style="flex:1;height:1px;background:var(--border)"></div>
+        </div>
+
+        <!-- Demo 6 -->
+        <div class="demo-step" id="demo-6">
+          <div class="demo-step-hdr" onclick="toggleDemo(6)">
+            <div class="step-num" data-n="6">6</div>
+            <div>
+              <div class="step-title">Automated Bank Reconciliation Run</div>
+              <div class="step-goal">Reconcile high volumes of cash data using rules engine automation</div>
+            </div>
+            <div class="step-status ss-pending" id="st-6">PENDING</div>
+          </div>
+          <div class="demo-step-body">
+            <div class="step-substeps" id="sub-6">
+              <div class="substep" id="s6-1"><div class="substep-num">1</div>Open finops-accounting.html → Banking &amp; Treasury</div>
+              <div class="substep" id="s6-2"><div class="substep-num">2</div>Click "Refresh Bank Feeds" → pulls TXN-BK-9901, 9902, 9905</div>
+              <div class="substep" id="s6-3"><div class="substep-num">3</div>Click "Auto-Match" execution button</div>
+              <div class="substep" id="s6-4"><div class="substep-num">4</div>TXN-BK-9901 ($8,900 Delta Tech) → slides green · auto-matched to AR-8900</div>
+            </div>
+            <div id="out-6" class="terminal" style="display:none"></div>
+            <div class="step-actions">
+              <button class="btn btn-g" onclick="runDemo(6)">▶ RUN DEMO</button>
+              <button class="btn btn-a" onclick="loadDataset('bank')">🏦 Load Bank Feed</button>
+              <button class="btn btn-b" onclick="markDone(6)">✓ MARK DONE</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Demo 7 -->
+        <div class="demo-step" id="demo-7">
+          <div class="demo-step-hdr" onclick="toggleDemo(7)">
+            <div class="step-num" data-n="7">7</div>
+            <div>
+              <div class="step-title">Resolving Unmatched Sub-Ledger Deposits</div>
+              <div class="step-goal">Bridge missing structural data gaps using cross-app reference IDs</div>
+            </div>
+            <div class="step-status ss-pending" id="st-7">PENDING</div>
+          </div>
+          <div class="demo-step-body">
+            <div class="step-substeps" id="sub-7">
+              <div class="substep" id="s7-1"><div class="substep-num">1</div>In finops-accounting.html → Bank Reconciliation → locate unreconciled item (TXN-BK-9902)</div>
+              <div class="substep" id="s7-2"><div class="substep-num">2</div>Open finops-operations.html tab → search $7,485 or "Mesa Premier Legal"</div>
+              <div class="substep" id="s7-3"><div class="substep-num">3</div>Copy Sub-Ledger Document ID → INV-2026-003</div>
+              <div class="substep" id="s7-4"><div class="substep-num">4</div>Return to accounting tab → paste ID into manual match field → "Manually Reconcile"</div>
+            </div>
+            <div id="out-7" class="terminal" style="display:none"></div>
+            <div class="step-actions">
+              <button class="btn btn-g" onclick="runDemo(7)">▶ RUN DEMO</button>
+              <button class="btn btn-a" onclick="loadDataset('bank')">🏦 Load Bank Feed</button>
+              <button class="btn btn-b" onclick="markDone(7)">✓ MARK DONE</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Demo 8 -->
+        <div class="demo-step" id="demo-8">
+          <div class="demo-step-hdr" onclick="toggleDemo(8)">
+            <div class="step-num" data-n="8">8</div>
+            <div>
+              <div class="step-title">Handling Merchant &amp; Wire Processing Fees</div>
+              <div class="step-goal">Account for bank-side financial leakage during matching routines</div>
+            </div>
+            <div class="step-status ss-pending" id="st-8">PENDING</div>
+          </div>
+          <div class="demo-step-body">
+            <div class="step-substeps" id="sub-8">
+              <div class="substep" id="s8-1"><div class="substep-num">1</div>In Bank Reconciliation → find TXN-BK-9905 where bank = $7,485 but ledger expects $7,500</div>
+              <div class="substep" id="s8-2"><div class="substep-num">2</div>Click "Split/Adjust Entry" on that row</div>
+              <div class="substep" id="s8-3"><div class="substep-num">3</div>Click GL Account Dropdown on distribution line → select 6120 - Bank Service Charges</div>
+              <div class="substep" id="s8-4"><div class="substep-num">4</div>Input $15.00 variance amount → "Post &amp; Close" → transaction balances to exact penny</div>
+            </div>
+            <div id="out-8" class="terminal" style="display:none"></div>
+            <div class="step-actions">
+              <button class="btn btn-g" onclick="runDemo(8)">▶ RUN DEMO</button>
+              <button class="btn btn-a" onclick="loadDataset('bank')">🏦 Load Bank Feed</button>
+              <button class="btn btn-b" onclick="markDone(8)">✓ MARK DONE</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Demo 9 -->
+        <div class="demo-step" id="demo-9">
+          <div class="demo-step-hdr" onclick="toggleDemo(9)">
+            <div class="step-num" data-n="9">9</div>
+            <div>
+              <div class="step-title">Sub-Ledger to GL Tie-Out Audit</div>
+              <div class="step-goal">Prove operational balances tie precisely to financial ledger totals</div>
+            </div>
+            <div class="step-status ss-pending" id="st-9">PENDING</div>
+          </div>
+          <div class="demo-step-body">
+            <div class="step-substeps" id="sub-9">
+              <div class="substep" id="s9-1"><div class="substep-num">1</div>Go to finops-operations.html → generate AR Aging Sub-Ledger Summary Total</div>
+              <div class="substep" id="s9-2"><div class="substep-num">2</div>Switch to finops-accounting.html → General Ledger → Trial Balance</div>
+              <div class="substep" id="s9-3"><div class="substep-num">3</div>Find account "1100 - Accounts Receivable" balance</div>
+              <div class="substep" id="s9-4"><div class="substep-num">4</div>Compare both values → confirm they match to the exact penny → tie-out verified</div>
+            </div>
+            <div id="out-9" class="terminal" style="display:none"></div>
+            <div class="step-actions">
+              <button class="btn btn-g" onclick="runDemo(9)">▶ RUN DEMO</button>
+              <button class="btn btn-a" onclick="loadDataset('journal')">📑 Load JE Data</button>
+              <button class="btn btn-b" onclick="markDone(9)">✓ MARK DONE</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Demo 10 -->
+        <div class="demo-step" id="demo-10">
+          <div class="demo-step-hdr" onclick="toggleDemo(10)">
+            <div class="step-num" data-n="10">10</div>
+            <div>
+              <div class="step-title">Processing Unapplied Customer Credits</div>
+              <div class="step-goal">Handle overpayment without throwing off revenue balances</div>
+            </div>
+            <div class="step-status ss-pending" id="st-10">PENDING</div>
+          </div>
+          <div class="demo-step-body">
+            <div class="step-substeps" id="sub-10">
+              <div class="substep" id="s10-1"><div class="substep-num">1</div>In Banking &amp; Treasury → identify TXN-BK-9904 (duplicate $8,900 deposit)</div>
+              <div class="substep" id="s10-2"><div class="substep-num">2</div>Reconcile exact invoice amount → Click "Classify Remainder"</div>
+              <div class="substep" id="s10-3"><div class="substep-num">3</div>Choose "Unapplied Customer Credit" from dropdown</div>
+              <div class="substep" id="s10-4"><div class="substep-num">4</div>Switch to finops-operations.html → customer CRM profile → confirm credit balance reflecting</div>
+            </div>
+            <div id="out-10" class="terminal" style="display:none"></div>
+            <div class="step-actions">
+              <button class="btn btn-g" onclick="runDemo(10)">▶ RUN DEMO</button>
+              <button class="btn btn-a" onclick="loadDataset('bank')">🏦 Load Bank Feed</button>
+              <button class="btn btn-b" onclick="markDone(10)">✓ MARK DONE</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- CATEGORY 3 -->
+        <div style="font-size:9px;letter-spacing:4px;color:var(--b);font-weight:700;margin:20px 0 12px;display:flex;align-items:center;gap:10px">
+          CAT 3 · GENERAL LEDGER, ADJUSTMENTS &amp; MONTH-END CLOSE
+          <div style="flex:1;height:1px;background:var(--border)"></div>
+        </div>
+
+        <!-- Demos 11-15 condensed structure -->
+        <div class="demo-step" id="demo-11">
+          <div class="demo-step-hdr" onclick="toggleDemo(11)">
+            <div class="step-num" data-n="11">11</div>
+            <div><div class="step-title">Drafting &amp; Posting a Manual Journal Entry</div><div class="step-goal">Double-entry bookkeeping · JE-2026-05-001 · Month-End Accruals</div></div>
+            <div class="step-status ss-pending" id="st-11">PENDING</div>
+          </div>
+          <div class="demo-step-body">
+            <div class="step-substeps" id="sub-11">
+              <div class="substep" id="s11-1"><div class="substep-num">1</div>Open finops-accounting.html → General Ledger → "New Journal Entry"</div>
+              <div class="substep" id="s11-2"><div class="substep-num">2</div>Fill memo: "Month-End Accruals" — header description populated</div>
+              <div class="substep" id="s11-3"><div class="substep-num">3</div>Line 1: Debit 6140 - Legal &amp; Professional $7,500 · Line 2: Credit 2150 - Accrued Liabilities $7,500</div>
+              <div class="substep" id="s11-4"><div class="substep-num">4</div>Verify Unbalanced Variance = $0.00 → "Post to Ledger"</div>
+            </div>
+            <div id="out-11" class="terminal" style="display:none"></div>
+            <div class="step-actions">
+              <button class="btn btn-g" onclick="runDemo(11)">▶ RUN DEMO</button>
+              <button class="btn btn-a" onclick="loadDataset('journal')">📑 Load JE Data</button>
+              <button class="btn btn-b" onclick="markDone(11)">✓ MARK DONE</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-step" id="demo-12">
+          <div class="demo-step-hdr" onclick="toggleDemo(12)">
+            <div class="step-num" data-n="12">12</div>
+            <div><div class="step-title">Prepaid Expense Amortization Schedule</div><div class="step-goal">PPD-2026-001 · $12,000 insurance · $1,000/mo amortization</div></div>
+            <div class="step-status ss-pending" id="st-12">PENDING</div>
+          </div>
+          <div class="demo-step-body">
+            <div class="step-substeps" id="sub-12">
+              <div class="substep" id="s12-1"><div class="substep-num">1</div>Open finops-accounting.html → Fixed Assets &amp; Amortization sub-module</div>
+              <div class="substep" id="s12-2"><div class="substep-num">2</div>Select PPD-2026-001 (Annual Commercial Property Insurance · $12,000 · 12mo life)</div>
+              <div class="substep" id="s12-3"><div class="substep-num">3</div>Click "Generate Amortization Entries" → auto-calculates $1,000/month</div>
+              <div class="substep" id="s12-4"><div class="substep-num">4</div>Inspect JE popup: Debit Insurance Expense · Credit Prepaid Expenses · "Approve Posting"</div>
+            </div>
+            <div id="out-12" class="terminal" style="display:none"></div>
+            <div class="step-actions">
+              <button class="btn btn-g" onclick="runDemo(12)">▶ RUN DEMO</button>
+              <button class="btn btn-a" onclick="loadDataset('assets')">⚙️ Load Fixed Assets</button>
+              <button class="btn btn-b" onclick="markDone(12)">✓ MARK DONE</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-step" id="demo-13">
+          <div class="demo-step-hdr" onclick="toggleDemo(13)">
+            <div class="step-num" data-n="13">13</div>
+            <div><div class="step-title">Setting Up a Reversing Accrual Entry</div><div class="step-goal">Auto-Reverse: true · JE-2026-05-001 · June 1 reversal queued</div></div>
+            <div class="step-status ss-pending" id="st-13">PENDING</div>
+          </div>
+          <div class="demo-step-body">
+            <div class="step-substeps" id="sub-13">
+              <div class="substep" id="s13-1"><div class="substep-num">1</div>In GL → "New Journal Entry" → input unbilled vendor expense accrual</div>
+              <div class="substep" id="s13-2"><div class="substep-num">2</div>Debit 6140 - Legal &amp; Professional · Credit 2150 - Accrued Liabilities · $7,500</div>
+              <div class="substep" id="s13-3"><div class="substep-num">3</div>Click "Auto-Reverse on Next Period Start" checkbox toggle → enabled</div>
+              <div class="substep" id="s13-4"><div class="substep-num">4</div>"Post to Ledger" → system marker confirms June 1 reversal entry is queued</div>
+            </div>
+            <div id="out-13" class="terminal" style="display:none"></div>
+            <div class="step-actions">
+              <button class="btn btn-g" onclick="runDemo(13)">▶ RUN DEMO</button>
+              <button class="btn btn-a" onclick="loadDataset('journal')">📑 Load JE Data</button>
+              <button class="btn btn-b" onclick="markDone(13)">✓ MARK DONE</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-step" id="demo-14">
+          <div class="demo-step-hdr" onclick="toggleDemo(14)">
+            <div class="step-num" data-n="14">14</div>
+            <div><div class="step-title">Monthly Depreciation Roll-Forward</div><div class="step-goal">AST-2026-001 · $15,000 server · $416.67/mo · 36-month life</div></div>
+            <div class="step-status ss-pending" id="st-14">PENDING</div>
+          </div>
+          <div class="demo-step-body">
+            <div class="step-substeps" id="sub-14">
+              <div class="substep" id="s14-1"><div class="substep-num">1</div>Open finops-accounting.html → Fixed Assets &amp; Amortization</div>
+              <div class="substep" id="s14-2"><div class="substep-num">2</div>Click "Run Depreciation Roll-Forward" calculation trigger</div>
+              <div class="substep" id="s14-3"><div class="substep-num">3</div>Review output table: AST-2026-001 book value reduced by $416.67</div>
+              <div class="substep" id="s14-4"><div class="substep-num">4</div>Click "Commit Depreciation Journal Batch" → balances finalized</div>
+            </div>
+            <div id="out-14" class="terminal" style="display:none"></div>
+            <div class="step-actions">
+              <button class="btn btn-g" onclick="runDemo(14)">▶ RUN DEMO</button>
+              <button class="btn btn-a" onclick="loadDataset('assets')">⚙️ Load Fixed Assets</button>
+              <button class="btn btn-b" onclick="markDone(14)">✓ MARK DONE</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-step" id="demo-15">
+          <div class="demo-step-hdr" onclick="toggleDemo(15)">
+            <div class="step-num" data-n="15">15</div>
+            <div><div class="step-title">Trial Balance Validation Pre-Close</div><div class="step-goal">Prove system balance integrity before final report packaging</div></div>
+            <div class="step-status ss-pending" id="st-15">PENDING</div>
+          </div>
+          <div class="demo-step-body">
+            <div class="step-substeps" id="sub-15">
+              <div class="substep" id="s15-1"><div class="substep-num">1</div>Open finops-accounting.html → Reports → Trial Balance</div>
+              <div class="substep" id="s15-2"><div class="substep-num">2</div>Set fiscal date parameter to closing month</div>
+              <div class="substep" id="s15-3"><div class="substep-num">3</div>Scroll to bottom summary row</div>
+              <div class="substep" id="s15-4"><div class="substep-num">4</div>Verify Total Debits = Total Credits exactly → no unmatched single-sided entries</div>
+            </div>
+            <div id="out-15" class="terminal" style="display:none"></div>
+            <div class="step-actions">
+              <button class="btn btn-g" onclick="runDemo(15)">▶ RUN DEMO</button>
+              <button class="btn btn-a" onclick="loadDataset('journal')">📑 Load JE Data</button>
+              <button class="btn btn-b" onclick="markDone(15)">✓ MARK DONE</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- CATEGORY 4 -->
+        <div style="font-size:9px;letter-spacing:4px;color:var(--p);font-weight:700;margin:20px 0 12px;display:flex;align-items:center;gap:10px">
+          CAT 4 · COMPLIANCE, CONTROLS &amp; ANALYTICS
+          <div style="flex:1;height:1px;background:var(--border)"></div>
+        </div>
+
+        <div class="demo-step" id="demo-16">
+          <div class="demo-step-hdr" onclick="toggleDemo(16)">
+            <div class="step-num" data-n="16">16</div>
+            <div><div class="step-title">Testing Segregation of Duties (SoD)</div><div class="step-goal">Prove software prevents risky unilateral user bypass actions</div></div>
+            <div class="step-status ss-pending" id="st-16">PENDING</div>
+          </div>
+          <div class="demo-step-body">
+            <div class="step-substeps" id="sub-16">
+              <div class="substep" id="s16-1"><div class="substep-num">1</div>Navigate to finops-operations.html → Vendor Management / AP</div>
+              <div class="substep" id="s16-2"><div class="substep-num">2</div>Attempt manual payment confirmation for INV-2026-001 ($14,500 — exceeds $10K limit)</div>
+              <div class="substep" id="s16-3"><div class="substep-num">3</div>"Direct Release Funds" button is greyed out / disabled — SoD constraint enforced</div>
+              <div class="substep" id="s16-4"><div class="substep-num">4</div>Only "Route for Approval" is active → manager sign-off workflow triggered</div>
+            </div>
+            <div id="out-16" class="terminal" style="display:none"></div>
+            <div class="step-actions">
+              <button class="btn btn-g" onclick="runDemo(16)">▶ RUN DEMO</button>
+              <button class="btn btn-a" onclick="loadDataset('invoice')">📄 Load Invoice Data</button>
+              <button class="btn btn-b" onclick="markDone(16)">✓ MARK DONE</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-step" id="demo-17">
+          <div class="demo-step-hdr" onclick="toggleDemo(17)">
+            <div class="step-num" data-n="17">17</div>
+            <div><div class="step-title">Generating Audit Trail Verification Reports</div><div class="step-goal">Prove all behaviors are permanently tracked for compliance reviewers</div></div>
+            <div class="step-status ss-pending" id="st-17">PENDING</div>
+          </div>
+          <div class="demo-step-body">
+            <div class="step-substeps" id="sub-17">
+              <div class="substep" id="s17-1"><div class="substep-num">1</div>Open finops-ui.html → Compliance &amp; Audit Logs view dashboard</div>
+              <div class="substep" id="s17-2"><div class="substep-num">2</div>Filter by user account ID or transaction reference code</div>
+              <div class="substep" id="s17-3"><div class="substep-num">3</div>Display chronological, unmodifiable text block showing exact timestamp, IP route, action parameters</div>
+              <div class="substep" id="s17-4"><div class="substep-num">4</div>Confirm total audit readiness — immutable record proves compliance posture</div>
+            </div>
+            <div id="out-17" class="terminal" style="display:none"></div>
+            <div class="step-actions">
+              <button class="btn btn-g" onclick="runDemo(17)">▶ RUN DEMO</button>
+              <button class="btn btn-b" onclick="markDone(17)">✓ MARK DONE</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-step" id="demo-18">
+          <div class="demo-step-hdr" onclick="toggleDemo(18)">
+            <div class="step-num" data-n="18">18</div>
+            <div><div class="step-title">Budget Variance Drill-Down Verification</div><div class="step-goal">Trace macro exceptions back to operational root causes</div></div>
+            <div class="step-status ss-pending" id="st-18">PENDING</div>
+          </div>
+          <div class="demo-step-body">
+            <div class="step-substeps" id="sub-18">
+              <div class="substep" id="s18-1"><div class="substep-num">1</div>Go to finops-accounting.html → Reports → run Income Statement</div>
+              <div class="substep" id="s18-2"><div class="substep-num">2</div>Locate 6200 - Office Supplies showing unusual variance spike (INV-2026-004)</div>
+              <div class="substep" id="s18-3"><div class="substep-num">3</div>Click hyperlinked account balance → drill down to ledger detail list</div>
+              <div class="substep" id="s18-4"><div class="substep-num">4</div>Copy transaction ID → paste into finops-operations.html invoice tracker → pull INV-2026-004 (Starlight $1,250.75)</div>
+            </div>
+            <div id="out-18" class="terminal" style="display:none"></div>
+            <div class="step-actions">
+              <button class="btn btn-g" onclick="runDemo(18)">▶ RUN DEMO</button>
+              <button class="btn btn-a" onclick="loadDataset('invoice')">📄 Load Invoice Data</button>
+              <button class="btn btn-b" onclick="markDone(18)">✓ MARK DONE</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-step" id="demo-19">
+          <div class="demo-step-hdr" onclick="toggleDemo(19)">
+            <div class="step-num" data-n="19">19</div>
+            <div><div class="step-title">Exporting a Standard Financial Close Package</div><div class="step-goal">Professional executive delivery of verified financial reporting data</div></div>
+            <div class="step-status ss-pending" id="st-19">PENDING</div>
+          </div>
+          <div class="demo-step-body">
+            <div class="step-substeps" id="sub-19">
+              <div class="substep" id="s19-1"><div class="substep-num">1</div>Open finops-accounting.html → Reports</div>
+              <div class="substep" id="s19-2"><div class="substep-num">2</div>Run and verify Balance Sheet → run and verify Income Statement</div>
+              <div class="substep" id="s19-3"><div class="substep-num">3</div>Locate "Export Options" dropdown control menu</div>
+              <div class="substep" id="s19-4"><div class="substep-num">4</div>Select "PDF Report Package" or "Excel Workbook" → download triggered for management delivery</div>
+            </div>
+            <div id="out-19" class="terminal" style="display:none"></div>
+            <div class="step-actions">
+              <button class="btn btn-g" onclick="runDemo(19)">▶ RUN DEMO</button>
+              <button class="btn btn-b" onclick="markDone(19)">✓ MARK DONE</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-step" id="demo-20">
+          <div class="demo-step-hdr" onclick="toggleDemo(20)">
+            <div class="step-num" data-n="20">20</div>
+            <div><div class="step-title">Full-Stack Finance Ecosystem Advantage Review</div><div class="step-goal">Weave through all 3 app layers — UI → Ops → Accounting</div></div>
+            <div class="step-status ss-pending" id="st-20">PENDING</div>
+          </div>
+          <div class="demo-step-body">
+            <div class="step-substeps" id="sub-20">
+              <div class="substep" id="s20-1"><div class="substep-num">1</div>Open all 3 tabs: finops-ui.html · finops-operations.html · finops-accounting.html</div>
+              <div class="substep" id="s20-2"><div class="substep-num">2</div>UI Layer: point to operational metric alert spike (AP aging &gt;60d)</div>
+              <div class="substep" id="s20-3"><div class="substep-num">3</div>Ops Layer: toggle to operations — show exactly where event is processed at transaction layer (INV-2026-001)</div>
+              <div class="substep" id="s20-4"><div class="substep-num">4</div>Accounting Layer: toggle to accounting — show precise GL entry generated (6140 Dr / 2150 Cr) — complete data flow mastery proven</div>
+            </div>
+            <div id="out-20" class="terminal" style="display:none"></div>
+            <div class="step-actions">
+              <button class="btn btn-g" onclick="runDemo(20)">▶ RUN DEMO</button>
+              <button class="btn btn-a" onclick="loadDataset('invoice')">📄 Load All Datasets</button>
+              <button class="btn btn-b" onclick="markDone(20)">✓ MARK DONE</button>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /demo-list -->
+
+      <!-- SIDEBAR -->
+      <div class="sidebar-sticky">
+
+        <!-- Score -->
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-hdr">SESSION SCORE</div>
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:14px">
+            <div class="score-ring">
+              <div class="score-ring-val" id="score-pct">0%</div>
+              <div class="score-ring-lbl">SCORE</div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:var(--dim);line-height:1.8">
+                <span id="sb-done">0</span>/20 demos<br>
+                <span id="sb-cat" style="color:var(--g)">Cat 1: 0/5</span><br>
+                <span id="sb-cat2" style="color:var(--a)">Cat 2: 0/5</span><br>
+                <span id="sb-cat3" style="color:var(--b)">Cat 3: 0/5</span><br>
+                <span id="sb-cat4" style="color:var(--p)">Cat 4: 0/5</span>
+              </div>
+            </div>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" id="sb-prog" style="width:0%"></div></div>
+        </div>
+
+        <!-- Active Dataset -->
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-hdr">ACTIVE DATASET</div>
+          <div id="active-dataset" style="font-size:11px;color:var(--dim);line-height:1.7">
+            No dataset loaded. Click a dataset button during a demo to inject PoC data.
+          </div>
+        </div>
+
+        <!-- Interviewer Notes -->
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-hdr">INTERVIEWER NOTES</div>
+          <textarea style="width:100%;background:#020802;border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;padding:8px;border-radius:4px;resize:vertical;min-height:100px;outline:none;line-height:1.6" placeholder="Type candidate observations here..."></textarea>
+          <div style="margin-top:8px;font-size:9px;color:var(--dim)">Rating: 
+            <span style="cursor:pointer;color:var(--g)" onclick="addRating('★★★★★')">★★★★★</span>
+            <span style="cursor:pointer;color:var(--g)" onclick="addRating('★★★★')"> ★★★★</span>
+            <span style="cursor:pointer;color:var(--a)" onclick="addRating('★★★')"> ★★★</span>
+            <span style="cursor:pointer;color:var(--r)" onclick="addRating('★★')"> ★★</span>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+          <div class="card-hdr">QUICK ACTIONS</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button class="btn btn-g" onclick="autoRunAll()" style="width:100%;justify-content:center">⚡ AUTO-RUN ALL 20</button>
+            <button class="btn btn-a" onclick="loadAllDatasets()" style="width:100%;justify-content:center">📦 LOAD ALL DATASETS</button>
+            <button class="btn btn-b" onclick="showPage('score',document.querySelectorAll('.nav-tab')[5])" style="width:100%;justify-content:center">📊 VIEW SCORE CARD</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ PAGE: POC DATA ══════════ -->
+<div class="page" id="page-poc">
+  <div class="container">
+    <div style="font-size:9px;letter-spacing:3px;color:var(--dim);margin-bottom:6px">PROOF OF CONCEPT</div>
+    <div style="font-family:var(--sans);font-size:22px;font-weight:700;color:#e0ffe0;margin-bottom:16px">PoC Data Injection Hub</div>
+
+    <div class="grid-2">
+      <div>
+        <div class="card">
+          <div class="card-hdr">📄 INVOICE BATCH — demo_invoice_batch.csv</div>
+          <table>
+            <thead><tr><th>INVOICE ID</th><th>VENDOR</th><th>AMOUNT</th><th>GL ACCT</th><th>DUE DATE</th><th>STATUS</th></tr></thead>
+            <tbody>
+              <tr><td>INV-2026-001</td><td>Apex Global Logistics</td><td class="td-warn">$14,500.00</td><td>5010</td><td>2026-05-20</td><td><span class="badge ba">APPROVAL REQ</span></td></tr>
+              <tr><td>INV-2026-003</td><td>Mesa Premier Legal</td><td class="td-err">$7,500.00</td><td>6140</td><td>2026-05-15</td><td><span class="badge br">OVERDUE</span></td></tr>
+              <tr><td>INV-2026-004</td><td>Starlight Office Supplies</td><td class="td-match">$1,250.75</td><td>6200</td><td>2026-05-28</td><td><span class="badge ba">PENDING</span></td></tr>
+            </tbody>
+          </table>
+          <div style="margin-top:10px;font-size:10px;color:var(--dim)">⚠️ INV-2026-001 exceeds $10K SoD limit — Route for Approval enforced · Demo 3, 16</div>
+          <button class="btn btn-g" style="margin-top:10px" onclick="loadDataset('invoice')">INJECT INTO UI</button>
+        </div>
+
+        <div class="card">
+          <div class="card-hdr">🏦 BANK FEED — demo_bank_feed.csv</div>
+          <table>
+            <thead><tr><th>TXN ID</th><th>DATE</th><th>DESCRIPTION</th><th>AMOUNT</th><th>TYPE</th><th>ACTION</th></tr></thead>
+            <tbody>
+              <tr><td>TXN-BK-9901</td><td>05-17</td><td>ACH DEP DELTA TECH</td><td class="td-match">$8,900.00</td><td>CR</td><td><span class="badge bg">AUTO-MATCH</span></td></tr>
+              <tr><td>TXN-BK-9902</td><td>05-17</td><td>WIRE MESA PREM LEGAL</td><td class="td-warn">$7,485.00</td><td>CR</td><td><span class="badge ba">MANUAL $15 GAP</span></td></tr>
+              <tr><td>TXN-BK-9905</td><td>05-18</td><td>BANK SERV CHARGE</td><td class="td-err">-$15.00</td><td>DR</td><td><span class="badge ba">→ 6120</span></td></tr>
+            </tbody>
+          </table>
+          <div style="margin-top:10px;font-size:10px;color:var(--dim)">⚠️ TXN-BK-9902 variance $15 = bank service charge · split to 6120 · Demo 7, 8</div>
+          <button class="btn btn-g" style="margin-top:10px" onclick="loadDataset('bank')">INJECT INTO UI</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-hdr">⚙️ FIXED ASSETS — demo_fixed_assets.csv</div>
+          <table>
+            <thead><tr><th>ASSET ID</th><th>NAME</th><th>CATEGORY</th><th>COST</th><th>LIFE</th><th>MO. AMORT</th></tr></thead>
+            <tbody>
+              <tr><td>AST-2026-001</td><td>Dell Server Cluster</td><td>IT Hardware</td><td>$15,000</td><td>36mo</td><td class="td-match">$416.67</td></tr>
+              <tr><td>PPD-2026-001</td><td>Commercial Property Insurance</td><td>Prepaid</td><td>$12,000</td><td>12mo</td><td class="td-match">$1,000.00</td></tr>
+            </tbody>
+          </table>
+          <div style="margin-top:10px;font-size:10px;color:var(--dim)">PPD-2026-001 → Demo 12 (amortization) · AST-2026-001 → Demo 14 (depreciation roll-forward)</div>
+          <button class="btn btn-g" style="margin-top:10px" onclick="loadDataset('assets')">INJECT INTO UI</button>
+        </div>
+
+        <div class="card">
+          <div class="card-hdr">📑 JOURNAL ENTRIES — demo_journal_entries.json</div>
+          <div class="terminal" style="max-height:220px;font-size:10px">{
+  "Entry_ID": "JE-2026-05-001",
+  "Memo": "Month-End Unbilled Legal Accrual - Mesa Premier",
+  "Auto_Reverse": <span style="color:var(--a)">true</span>,
+  "Reversal_Date": "2026-06-01",
+  "Lines": [
+    {
+      "GL_Account": "6140 - Legal &amp; Professional",
+      "Debit": <span style="color:var(--g)">7500.00</span>,
+      "Credit": 0.00
+    },
+    {
+      "GL_Account": "2150 - Accrued Liabilities",
+      "Debit": 0.00,
+      "Credit": <span style="color:var(--g)">7500.00</span>
+    }
+  ],
+  "Balance_Check": "<span style="color:var(--g)">$0.00 VARIANCE — BALANCED</span>"
+}</div>
+          <div style="margin-top:10px;font-size:10px;color:var(--dim)">Auto_Reverse: true → June 1 reversal auto-queued · Demo 11, 13</div>
+          <button class="btn btn-g" style="margin-top:10px" onclick="loadDataset('journal')">INJECT INTO UI</button>
+        </div>
+
+        <div class="card">
+          <div class="card-hdr">⚡ BULK INJECTION</div>
+          <div style="font-size:11px;color:var(--dim);margin-bottom:12px;line-height:1.6">Load all 4 datasets simultaneously into the active demo session. Populates all terminals and tables at once — use before starting an auto-run.</div>
+          <button class="btn btn-a" onclick="loadAllDatasets()" style="width:100%;justify-content:center;margin-bottom:8px">📦 LOAD ALL 4 DATASETS</button>
+          <button class="btn btn-g" onclick="autoRunAll()" style="width:100%;justify-content:center">⚡ AUTO-RUN ALL 20 DEMOS</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ PAGE: LIVE LEDGER ══════════ -->
+<div class="page" id="page-ledger">
+  <div class="container">
+    <div style="font-size:9px;letter-spacing:3px;color:var(--dim);margin-bottom:6px">GENERAL LEDGER · LIVE VIEW</div>
+    <div style="font-family:var(--sans);font-size:22px;font-weight:700;color:#e0ffe0;margin-bottom:16px">Trial Balance — May 2026</div>
+
+    <div class="grid-2" style="margin-bottom:20px">
+      <div class="kpi"><div class="kpi-val" style="color:var(--g)" id="tb-debits">$0.00</div><div class="kpi-lbl">TOTAL DEBITS</div></div>
+      <div class="kpi"><div class="kpi-val" style="color:var(--g)" id="tb-credits">$0.00</div><div class="kpi-lbl">TOTAL CREDITS</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr">TRIAL BALANCE — ACCOUNTS</div>
+      <table>
+        <thead><tr><th>GL ACCT</th><th>ACCOUNT NAME</th><th>DEBIT</th><th>CREDIT</th><th>TYPE</th><th>STATUS</th></tr></thead>
+        <tbody id="tb-body">
+          <tr><td colspan="6" style="text-align:center;color:var(--dim);padding:20px">Click "Load Trial Balance" to populate</td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button class="btn btn-g" onclick="loadTrialBalance()">▶ LOAD TRIAL BALANCE</button>
+        <button class="btn btn-a" onclick="runAutoMatch()">🔁 RUN AUTO-MATCH</button>
+        <button class="btn btn-b" onclick="exportLedger()">📤 EXPORT PDF PACKAGE</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr">LEDGER ACTIVITY LOG</div>
+      <div id="ledger-log" class="terminal" style="min-height:120px">&gt; Ledger log ready. Run trial balance to populate activity.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ PAGE: RECONCILIATION ══════════ -->
+<div class="page" id="page-recon">
+  <div class="container">
+    <div style="font-size:9px;letter-spacing:3px;color:var(--dim);margin-bottom:6px">BANKING &amp; TREASURY</div>
+    <div style="font-family:var(--sans);font-size:22px;font-weight:700;color:#e0ffe0;margin-bottom:16px">Bank Reconciliation Workbench</div>
+
+    <div class="grid-3" style="margin-bottom:20px">
+      <div class="kpi"><div class="kpi-val" style="color:var(--g)" id="recon-matched">0</div><div class="kpi-lbl">AUTO-MATCHED</div></div>
+      <div class="kpi"><div class="kpi-val" style="color:var(--a)" id="recon-pending">3</div><div class="kpi-lbl">PENDING MATCH</div></div>
+      <div class="kpi"><div class="kpi-val" style="color:var(--r)" id="recon-variance">$15.00</div><div class="kpi-lbl">OPEN VARIANCE</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr">BANK FEED — ACTIVE TRANSACTIONS</div>
+      <table>
+        <thead><tr><th>TXN ID</th><th>DATE</th><th>DESCRIPTION</th><th>BANK AMT</th><th>LEDGER AMT</th><th>VARIANCE</th><th>STATUS</th><th>ACTION</th></tr></thead>
+        <tbody id="recon-body">
+          <tr><td colspan="8" style="text-align:center;color:var(--dim);padding:20px">Click "Refresh Bank Feeds" to load transactions</td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-g" onclick="refreshBankFeeds()">🔄 REFRESH BANK FEEDS</button>
+        <button class="btn btn-a" onclick="autoMatchAll()">⚡ AUTO-MATCH ALL</button>
+        <button class="btn btn-b" onclick="manualMatch()">✎ MANUAL MATCH</button>
+        <button class="btn btn-dim" onclick="splitAdjust()" style="cursor:pointer;background:#1a1000;border:1px solid var(--a);color:var(--a)">✂ SPLIT / ADJUST</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr">RECONCILIATION LOG</div>
+      <div id="recon-log" class="terminal" style="min-height:100px">&gt; Reconciliation engine ready. Refresh bank feeds to begin.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ PAGE: SCORE CARD ══════════ -->
+<div class="page" id="page-score">
+  <div class="container">
+    <div style="font-size:9px;letter-spacing:3px;color:var(--dim);margin-bottom:6px">ASSESSMENT RESULTS</div>
+    <div style="font-family:var(--sans);font-size:28px;font-weight:700;color:#e0ffe0;margin-bottom:20px">Candidate Score Card</div>
+
+    <div class="grid-2">
+      <div>
+        <div class="card">
+          <div class="card-hdr">CATEGORY SCORES</div>
+          <div id="cat-scores">
+            <div style="margin-bottom:16px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--g)">CAT 1 · Daily Workflow</span><span id="cat1-score">0/5</span></div>
+              <div class="progress-bar"><div class="progress-fill" id="cat1-bar" style="width:0%"></div></div>
+            </div>
+            <div style="margin-bottom:16px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--a)">CAT 2 · Reconciliation</span><span id="cat2-score">0/5</span></div>
+              <div class="progress-bar"><div class="progress-fill" id="cat2-bar" style="width:0%;background:var(--a)"></div></div>
+            </div>
+            <div style="margin-bottom:16px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--b)">CAT 3 · General Ledger</span><span id="cat3-score">0/5</span></div>
+              <div class="progress-bar"><div class="progress-fill" id="cat3-bar" style="width:0%;background:var(--b)"></div></div>
+            </div>
+            <div style="margin-bottom:16px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--p)">CAT 4 · Compliance</span><span id="cat4-score">0/5</span></div>
+              <div class="progress-bar"><div class="progress-fill" id="cat4-bar" style="width:0%;background:var(--p)"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hdr">RECOMMENDATION</div>
+          <div id="recommendation" style="font-size:13px;color:var(--dim);line-height:1.8">
+            Complete demos to generate candidate recommendation.
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card" style="text-align:center;padding:32px">
+          <div style="font-family:var(--sans);font-size:11px;letter-spacing:3px;color:var(--dim);margin-bottom:12px">OVERALL SCORE</div>
+          <div id="final-ring" class="score-ring" style="width:120px;height:120px;margin:0 auto 16px;border-width:4px">
+            <div class="score-ring-val" style="font-size:32px" id="final-score-pct">0%</div>
+            <div class="score-ring-lbl">COMPLETE</div>
+          </div>
+          <div style="font-family:var(--sans);font-size:24px;font-weight:700;color:#e0ffe0;margin-bottom:4px" id="final-grade">—</div>
+          <div style="font-size:11px;color:var(--dim)" id="final-label">Awaiting assessment</div>
+        </div>
+
+        <div class="card">
+          <div class="card-hdr">DEMO COMPLETION LOG</div>
+          <div id="completion-log" style="font-size:11px;color:var(--dim);line-height:1.8">
+            No demos completed yet.
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-g" onclick="exportScoreCard()" style="flex:1;justify-content:center">📤 EXPORT SCORE CARD</button>
+            <button class="btn btn-b" onclick="resetAll()" style="flex:1;justify-content:center">↺ RESET SESSION</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div>TSM · FINOPS INTERVIEW SUITE · Staff Accountant Assessment · 20-Demo Playbook</div>
+  <div style="color:var(--g)" id="footer-score">0/20 Complete</div>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<script>
+// ── STATE ────────────────────────────────────────────────────────────────────
+var completed = new Set();
+var sessionStart = Date.now();
+var autoRunning = false;
+var autoTimer = null;
+var autoSpeed = 1; // multiplier
+var currentAutoDemo = 0;
+
+// Speed settings in ms per substep
+var SPEEDS = { 1: 900, 2: 450, 3: 150 };
+
+// ── DEMO SCRIPTS (terminal output) ──────────────────────────────────────────
+var DEMO_SCRIPTS = {
+  1: [
+    { t:400,  txt:'[INIT] Opening finops-ui.html → Operations Overview Dashboard...' },
+    { t:900,  txt:'[LOAD] Daily Cash Balance: $284,000.00 | AP Pending: $23,250.75 | AR Outstanding: $24,885.00' },
+    { t:1500, txt:'[CHECK] Locating Alerts/Notifications Bell icon → top-right corner...' },
+    { t:2200, txt:'[OK] Exception queue status: CLEAR\n[OK] Active alerts: $0\n[OK] System health: VERIFIED ✓' },
+    { t:2800, txt:'[PASS] Demo 1 complete — Operational visibility confirmed', color:'g' }
+  ],
+  2: [
+    { t:400,  txt:'[INIT] Opening Compliance & Audit Logs tab → filtering Status=Error...' },
+    { t:900,  txt:'[FOUND] Failed sync event detected:\n  Batch ID: BATCH-2026-0517-ERR\n  Type: Webhook\n  Payload: INV-2026-003 (Mesa Premier Legal $7,500)' },
+    { t:1600, txt:'[ACTION] Copying payload block → switching to finops-operations.html...' },
+    { t:2200, txt:'[IMPORT] Invoicing & Billing → Import Pending Orders/Batches → force-sync initiated...' },
+    { t:2800, txt:'[OK] Sync recovered → INV-2026-003 now in staging table → status: Pending Approval', color:'g' },
+    { t:3300, txt:'[PASS] Demo 2 complete — Webhook recovery proven', color:'g' }
+  ],
+  3: [
+    { t:400,  txt:'[INIT] Opening finops-operations.html → Vendor Management / AP...' },
+    { t:900,  txt:'[FILTER] Clicking "Unapproved Bills" sub-navigation...\n[SORT] Due Date ascending applied' },
+    { t:1500, txt:'[DATA] Unapproved bills loaded:\n  01. INV-2026-001 | Apex Global Logistics | $14,500.00 | Due: 05-20 ⚠\n  02. INV-2026-003 | Mesa Premier Legal   | $7,500.00  | Due: 05-15 OVERDUE\n  03. INV-2026-004 | Starlight Office Sup  | $1,250.75  | Due: 05-28' },
+    { t:2400, txt:'[SOD] INV-2026-001 ($14,500) → EXCEEDS $10,000 authorization limit\n[SOD] "Direct Release Funds" → DISABLED\n[SOD] "Route for Approval" → ENFORCED ✓' },
+    { t:3000, txt:'[ACTION] Routing INV-2026-001 to manager sign-off workflow...' },
+    { t:3500, txt:'[PASS] Demo 3 complete — AP prioritization & SoD constraint demonstrated', color:'g' }
+  ],
+  4: [
+    { t:400,  txt:'[INIT] Opening finops-operations.html → Invoicing & Billing...' },
+    { t:900,  txt:'[UPLOAD] Simulating Upload Batch CSV/JSON trigger...\n[PARSE] Processing 3-invoice batch...' },
+    { t:1500, txt:'[PARSED] Batch parse complete:\n  INV-2026-001 → GL: 5010 - Freight & Shipping     → $14,500.00\n  INV-2026-003 → GL: 6140 - Legal & Professional   → $7,500.00\n  INV-2026-004 → GL: 6200 - Office Supplies        → $1,250.75' },
+    { t:2300, txt:'[INSPECT] Opening INV-2026-004 (Starlight Office Supplies)\n[CHECK] GL Account Mapping field: 6200 - Office Supplies ✓\n[CHECK] Amount: $1,250.75 ✓ | Due: 2026-05-28 ✓' },
+    { t:3000, txt:'[ACTION] Hovering "Approve & Post" → batch downstream commit to staging ledger ready' },
+    { t:3500, txt:'[PASS] Demo 4 complete — Batch parsing and GL mapping verified', color:'g' }
+  ],
+  5: [
+    { t:400,  txt:'[INIT] Opening finops-operations.html → Vendor Management...' },
+    { t:900,  txt:'[SEARCH] Querying "Mesa Premier Legal"...\n[FOUND] Vendor profile loaded: Mesa Premier Legal LLC' },
+    { t:1500, txt:'[COPY] Payment Reference ID extracted:\n  Invoice: INV-2026-003\n  Amount:  $7,500.00 (expected) | $7,485.00 (received)\n  GL Acct: 6140 - Legal & Professional' },
+    { t:2200, txt:'[SWITCH] Opening finops-accounting.html → Banking & Treasury...\n[PASTE] Reference ID: INV-2026-003' },
+    { t:2900, txt:'[MATCH] TXN-BK-9902 located:\n  Description: WIRE ACH MESA PREM LEGAL\n  Status: Cleared via Bank Feed ✓\n  Variance: $15.00 → Bank Service Charge (6120)' },
+    { t:3500, txt:'[PASS] Demo 5 complete — Payment trace from vendor → bank feed proven', color:'g' }
+  ],
+  6: [
+    { t:400,  txt:'[INIT] Opening finops-accounting.html → Banking & Treasury...' },
+    { t:900,  txt:'[REFRESH] Pulling bank feed transactions...\n  TXN-BK-9901 | ACH DEP DELTA TECH     | $8,900.00 CR\n  TXN-BK-9902 | WIRE MESA PREM LEGAL   | $7,485.00 CR\n  TXN-BK-9905 | BANK SERV CHARGE WIRE  | -$15.00 DR' },
+    { t:1700, txt:'[AUTO-MATCH] Executing rules engine...' },
+    { t:2200, txt:'[MATCH] TXN-BK-9901 ($8,900.00) → AR-8900 (Delta Tech) → AUTO-MATCHED ✓ → row cleared GREEN' },
+    { t:2700, txt:'[PENDING] TXN-BK-9902 ($7,485.00) → variance $15.00 → manual match required\n[PENDING] TXN-BK-9905 (-$15.00) → bank charge → split/adjust required' },
+    { t:3200, txt:'[PASS] Demo 6 complete — Rules engine auto-match demonstrated', color:'g' }
+  ],
+  7: [
+    { t:400,  txt:'[INIT] Bank Reconciliation → locating unreconciled item...\n[FOUND] TXN-BK-9902 | $7,485.00 | WIRE MESA PREM LEGAL | unmatched' },
+    { t:1100, txt:'[SWITCH] Opening finops-operations.html tab...\n[SEARCH] Querying $7,485 / "Mesa Premier Legal"...' },
+    { t:1800, txt:'[FOUND] Sub-Ledger Document ID: INV-2026-003\n  Original Invoice: $7,500.00 | Received: $7,485.00 | Diff: $15.00' },
+    { t:2500, txt:'[RETURN] Switching back to finops-accounting.html → Bank Reconciliation...\n[PASTE] INV-2026-003 → manual match field populated' },
+    { t:3100, txt:'[ACTION] "Manually Reconcile" clicked → TXN-BK-9902 matched to INV-2026-003 ✓' },
+    { t:3600, txt:'[PASS] Demo 7 complete — Cross-app sub-ledger bridge proven', color:'g' }
+  ],
+  8: [
+    { t:400,  txt:'[INIT] Bank Reconciliation → locating fee variance row...' },
+    { t:900,  txt:'[FOUND] TXN-BK-9902: Bank $7,485.00 vs Ledger $7,500.00 → variance: -$15.00\n         TXN-BK-9905: BANK SERV CHARGE WIRE → -$15.00 DR confirmed' },
+    { t:1600, txt:'[ACTION] Clicking "Split/Adjust Entry" on TXN-BK-9902 row...\n[OPEN] Distribution line spawned' },
+    { t:2200, txt:'[SELECT] GL Account Dropdown → selecting...\n[ASSIGN] 6120 - Bank Service Charges selected ✓' },
+    { t:2800, txt:'[INPUT] Variance amount: $15.00 entered\n[POST] "Post & Close" clicked → transaction balances to exact penny ✓\n[RESULT] $7,485.00 + $15.00 = $7,500.00 → RECONCILED' },
+    { t:3400, txt:'[PASS] Demo 8 complete — Fee leakage accounted to 6120, penny-perfect balance', color:'g' }
+  ],
+  9: [
+    { t:400,  txt:'[INIT] finops-operations.html → generating AR Aging Sub-Ledger Summary...' },
+    { t:1000, txt:'[AR SUB-LEDGER] Total: $24,885.00\n  Delta Tech (INV open):  $8,900.00\n  Mesa Premier (partial): $7,485.00\n  Other AR:               $8,500.00' },
+    { t:1700, txt:'[SWITCH] Opening finops-accounting.html → General Ledger → Trial Balance...' },
+    { t:2300, txt:'[GL] Account 1100 - Accounts Receivable balance: $24,885.00' },
+    { t:2900, txt:'[COMPARE]\n  AR Sub-Ledger Total: $24,885.00\n  GL Account 1100:     $24,885.00\n  Variance:            $0.00 ✓ → TIE-OUT VERIFIED' },
+    { t:3400, txt:'[PASS] Demo 9 complete — Sub-ledger ties to GL to the exact penny', color:'g' }
+  ],
+  10: [
+    { t:400,  txt:'[INIT] Banking & Treasury → locating duplicate deposit...\n[FOUND] TXN-BK-9904 | ACH DEP DELTA TECH | $8,900.00 | DUPLICATE FLAG ⚠' },
+    { t:1100, txt:'[ACTION] Reconciling exact invoice amount ($8,900.00 → AR-8900)...\n[REMAINDER] $0.00 excess → but duplicate status flagged for classification' },
+    { t:1800, txt:'[ACTION] Clicking "Classify Remainder" → dropdown opened' },
+    { t:2300, txt:'[SELECT] "Unapplied Customer Credit" chosen from dropdown ✓' },
+    { t:2900, txt:'[SWITCH] Opening finops-operations.html → Delta Tech CRM/Billing profile...' },
+    { t:3400, txt:'[CONFIRM] Unapplied Credit: $8,900.00 now reflected as available balance for next billing cycle ✓' },
+    { t:3900, txt:'[PASS] Demo 10 complete — Overpayment classified without revenue distortion', color:'g' }
+  ],
+  11: [
+    { t:400,  txt:'[INIT] Opening finops-accounting.html → General Ledger → "New Journal Entry"' },
+    { t:900,  txt:'[LOAD] JE-2026-05-001 data injected:\n  Memo: Month-End Unbilled Legal Accrual - Mesa Premier' },
+    { t:1500, txt:'[ENTRY] Adding journal lines:\n  Line 1: DEBIT  6140 - Legal & Professional   $7,500.00\n  Line 2: CREDIT 2150 - Accrued Liabilities   $7,500.00' },
+    { t:2200, txt:'[CHECK] Unbalanced Variance Indicator: $0.00 ✓ — entry is balanced' },
+    { t:2800, txt:'[POST] "Post to Ledger" clicked → JE-2026-05-001 committed ✓' },
+    { t:3300, txt:'[PASS] Demo 11 complete — Double-entry JE posted, variance $0.00', color:'g' }
+  ],
+  12: [
+    { t:400,  txt:'[INIT] Opening Fixed Assets & Amortization sub-module...' },
+    { t:900,  txt:'[SELECT] PPD-2026-001 selected:\n  Name: Annual Commercial Property Insurance\n  Cost: $12,000.00 | Useful Life: 12 months\n  Monthly Amortization: $1,000.00' },
+    { t:1700, txt:'[ACTION] Clicking "Generate Amortization Entries"...' },
+    { t:2200, txt:'[JE POPUP]\n  DEBIT:  6320 - Insurance Expense    $1,000.00\n  CREDIT: 1510 - Prepaid Expenses     $1,000.00\n  Period: May 2026 | Month 1 of 12' },
+    { t:2900, txt:'[APPROVE] "Approve Posting" clicked → entry committed ✓\n[REMAINING] Prepaid balance: $11,000.00' },
+    { t:3400, txt:'[PASS] Demo 12 complete — Prepaid amortization $1,000/mo verified', color:'g' }
+  ],
+  13: [
+    { t:400,  txt:'[INIT] GL → "New Journal Entry" → loading JE-2026-05-001 structure...' },
+    { t:900,  txt:'[ENTRY] Unbilled vendor expense accrual:\n  DEBIT:  6140 - Legal & Professional   $7,500.00\n  CREDIT: 2150 - Accrued Liabilities   $7,500.00' },
+    { t:1600, txt:'[TOGGLE] Checking "Auto-Reverse on Next Period Start" checkbox...\n[ENABLED] Auto-reverse flag: TRUE ✓' },
+    { t:2200, txt:'[POST] "Post to Ledger" → JE-2026-05-001 committed in May 2026' },
+    { t:2800, txt:'[SYSTEM] Secondary marker generated:\n  Reversal Entry: JE-2026-06-001-REV\n  Date: 2026-06-01\n  Status: QUEUED ✓' },
+    { t:3300, txt:'[PASS] Demo 13 complete — Auto-reverse queued for June 1, prevents double-count', color:'g' }
+  ],
+  14: [
+    { t:400,  txt:'[INIT] Fixed Assets & Amortization → Running Depreciation Roll-Forward...' },
+    { t:900,  txt:'[CALC] Processing active assets:\n  AST-2026-001 | Dell Server Cluster | $15,000 cost | 36mo | $416.67/mo' },
+    { t:1600, txt:'[OUTPUT] Roll-forward table generated:\n  Prior Book Value:    $15,000.00\n  Depreciation (May):     -$416.67\n  Current Book Value:  $14,583.33' },
+    { t:2300, txt:'[COMMIT] "Commit Depreciation Journal Batch" clicked...\n  DEBIT:  6400 - Depreciation Expense  $416.67\n  CREDIT: 1600 - Accum. Depreciation   $416.67' },
+    { t:2900, txt:'[OK] Balances finalized → fixed asset register updated ✓' },
+    { t:3400, txt:'[PASS] Demo 14 complete — Depreciation roll-forward committed', color:'g' }
+  ],
+  15: [
+    { t:400,  txt:'[INIT] finops-accounting.html → Reports → Trial Balance...\n[PARAM] Fiscal date: May 2026' },
+    { t:1000, txt:'[LOAD] Trial balance generating...' },
+    { t:1700, txt:'[DATA] Key accounts:\n  1100 - AR:              $24,885.00 Dr\n  2000 - AP:              $23,250.75 Cr\n  2150 - Accrued Liab:    $7,500.00 Cr\n  5010 - Freight:         $14,500.00 Dr\n  6140 - Legal:           $7,500.00 Dr\n  6320 - Insurance:       $1,000.00 Dr\n  6400 - Depreciation:      $416.67 Dr' },
+    { t:2500, txt:'[SUMMARY ROW]\n  Total Debits:   $48,301.67\n  Total Credits:  $48,301.67\n  Variance:       $0.00 ✓' },
+    { t:3100, txt:'[PASS] Demo 15 complete — Trial balance ties, zero single-sided entry anomalies', color:'g' }
+  ],
+  16: [
+    { t:400,  txt:'[INIT] finops-operations.html → Vendor Management / AP...' },
+    { t:900,  txt:'[ATTEMPT] Selecting INV-2026-001 (Apex Global Logistics $14,500.00)...\n[ATTEMPT] Attempting to activate "Direct Release Funds" button...' },
+    { t:1600, txt:'[SOD TRIGGER] ⚠ Authorization limit exceeded:\n  Transaction: $14,500.00\n  User limit:  $10,000.00\n  Excess:      $4,500.00' },
+    { t:2200, txt:'[BLOCKED] "Direct Release Funds" → GREYED OUT / DISABLED ✓\n[ENFORCED] Only available action: "Route for Approval"' },
+    { t:2800, txt:'[ACTION] "Route for Approval" clicked → manager sign-off workflow triggered\n[AUDIT] SoD constraint event logged with timestamp ✓' },
+    { t:3300, txt:'[PASS] Demo 16 complete — Segregation of Duties constraint enforced correctly', color:'g' }
+  ],
+  17: [
+    { t:400,  txt:'[INIT] Opening finops-ui.html → Compliance & Audit Logs view...' },
+    { t:900,  txt:'[FILTER] Searching by transaction reference: INV-2026-001...' },
+    { t:1500, txt:'[AUDIT LOG] Retrieved — immutable record:\n  Timestamp:   2026-05-17 08:32:01 UTC\n  User:        Staff Accountant / Session-ID-4471\n  IP Route:    10.0.0.47 → proxy.finops.internal\n  Action:      ROUTE_FOR_APPROVAL\n  Record:      INV-2026-001 $14,500.00 Apex Global Logistics\n  SoD Flag:    TRIGGERED — amount > $10,000 threshold\n  Status:      PENDING_MANAGER_APPROVAL' },
+    { t:2500, txt:'[CONFIRM] Record is chronological, unmodifiable, timestamp-locked ✓\n[AUDIT] Complete audit readiness confirmed' },
+    { t:3000, txt:'[PASS] Demo 17 complete — Audit trail retrieved, compliance posture proven', color:'g' }
+  ],
+  18: [
+    { t:400,  txt:'[INIT] finops-accounting.html → Reports → Income Statement (May 2026)...' },
+    { t:900,  txt:'[SCAN] Reviewing expense rows for variance spikes...\n[FOUND] 6200 - Office Supplies: $1,250.75 (UNUSUAL SPIKE — budget $200/mo)' },
+    { t:1600, txt:'[DRILL] Clicking hyperlinked account balance 6200...\n[DETAIL] Ledger detail list loaded' },
+    { t:2200, txt:'[FOUND] Transaction ID: INV-2026-004\n  Vendor: Starlight Office Supplies\n  Amount: $1,250.75\n  Date:   2026-05-28' },
+    { t:2900, txt:'[SWITCH] Pasting INV-2026-004 into finops-operations.html invoice tracker...\n[OPEN] Original invoice: bulk office supplies order — annual restocking event' },
+    { t:3400, txt:'[EXPLAIN] Root cause: annual bulk purchase — not structural overspend ✓\n[ACTION] Flag for management note, not escalation' },
+    { t:3900, txt:'[PASS] Demo 18 complete — Variance traced from Income Statement → original invoice', color:'g' }
+  ],
+  19: [
+    { t:400,  txt:'[INIT] finops-accounting.html → Reports...' },
+    { t:900,  txt:'[RUN] Balance Sheet (May 2026)...\n  Total Assets:      $44,583.33\n  Total Liabilities: $30,750.75\n  Net Equity:        $13,832.58 ✓' },
+    { t:1600, txt:'[RUN] Income Statement (May 2026)...\n  Total Revenue:    $17,385.00\n  Total Expenses:   $23,833.42\n  Net Income:       -$6,448.42 (accrual month — reversals pending)' },
+    { t:2300, txt:'[VERIFY] Both statements balanced and cross-referenced ✓' },
+    { t:2800, txt:'[EXPORT] Opening "Export Options" dropdown...\n[SELECT] "PDF Report Package" selected → download triggered' },
+    { t:3300, txt:'[PACKAGE] Financial_Close_May2026.pdf — management delivery ready ✓' },
+    { t:3800, txt:'[PASS] Demo 19 complete — Financial close package exported for management', color:'g' }
+  ],
+  20: [
+    { t:400,  txt:'[INIT] Full-Stack Finance Review — all 3 app layers active...' },
+    { t:900,  txt:'[UI LAYER] finops-ui.html → Operations Overview:\n  ⚠ AP Aging alert: INV-2026-001 ($14,500) approaching due date 05-20\n  ⚠ Exception spike detected in expense account 6200' },
+    { t:1700, txt:'[OPS LAYER] finops-operations.html → transaction processing:\n  INV-2026-001 → routed for approval (SoD enforced)\n  INV-2026-004 → $1,250.75 parsed → GL 6200 mapped → staged for post' },
+    { t:2500, txt:'[ACCOUNTING LAYER] finops-accounting.html → GL impact:\n  DEBIT:  5010 - Freight & Shipping     $14,500.00\n  DEBIT:  6200 - Office Supplies        $1,250.75\n  CREDIT: 2000 - Accounts Payable       $15,750.75' },
+    { t:3300, txt:'[PROOF] Complete data flow demonstrated:\n  Alert spike (UI) → transaction processed (Ops) → GL entry generated (Accounting)\n  Full-stack mastery confirmed across all 3 layers ✓' },
+    { t:3900, txt:'[COMPLETE] ══════════════════════════════════════\n  ALL 20 DEMOS COMPLETE\n  Total Demos:     20/20\n  Score:           100%\n  Assessment:      FULL-STACK FINANCE MASTERY DEMONSTRATED\n══════════════════════════════════════', color:'g' }
+  ]
+};
+
+// ── DATASET OUTPUTS ─────────────────────────────────────────────────────────
+var DATASETS = {
+  invoice: {
+    label: '📄 demo_invoice_batch.csv',
+    detail: 'Loaded 3 invoices:\n  INV-2026-001 · Apex Global Logistics · $14,500.00 → SoD flag active\n  INV-2026-003 · Mesa Premier Legal   · $7,500.00  → OVERDUE\n  INV-2026-004 · Starlight Office Sup · $1,250.75  → GL 6200',
+    color: '#00ff88'
+  },
+  bank: {
+    label: '🏦 demo_bank_feed.csv',
+    detail: 'Loaded 3 bank transactions:\n  TXN-BK-9901 · Delta Tech ACH     · $8,900.00 CR → auto-match to AR-8900\n  TXN-BK-9902 · Mesa Premier Wire  · $7,485.00 CR → $15 variance detected\n  TXN-BK-9905 · Bank Svc Charge   · -$15.00 DR → split to GL 6120',
+    color: '#ffcc00'
+  },
+  assets: {
+    label: '⚙️ demo_fixed_assets.csv',
+    detail: 'Loaded 2 fixed assets:\n  AST-2026-001 · Dell Server Cluster     · $15,000 · 36mo · $416.67/mo depreciation\n  PPD-2026-001 · Property Insurance     · $12,000 · 12mo · $1,000.00/mo amortization',
+    color: '#00aaff'
+  },
+  journal: {
+    label: '📑 demo_journal_entries.json',
+    detail: 'Loaded JE-2026-05-001:\n  Memo: Month-End Unbilled Legal Accrual - Mesa Premier\n  DEBIT:  6140 - Legal & Professional $7,500.00\n  CREDIT: 2150 - Accrued Liabilities  $7,500.00\n  Auto_Reverse: TRUE → June 1 reversal queued\n  Balance Check: $0.00 VARIANCE — BALANCED',
+    color: '#aa44ff'
+  }
+};
+
+function loadDataset(type) {
+  var ds = DATASETS[type];
+  if (!ds) return;
+  var el = document.getElementById('active-dataset');
+  if (el) {
+    el.innerHTML = '<div style="color:' + ds.color + ';font-weight:700;margin-bottom:6px">' + ds.label + '</div>' +
+      '<div style="font-size:11px;color:#99bb99;white-space:pre-line;line-height:1.7">' + ds.detail + '</div>';
+  }
+  notify('✓ ' + ds.label + ' injected into session');
+  console.log('[TSM POC] Dataset loaded:', type, '\n', ds.detail);
+}
+
+function loadAllDatasets() {
+  ['invoice','bank','assets','journal'].forEach(function(t){ loadDataset(t); });
+  notify('✓ All 4 PoC datasets loaded');
+}
+
+// ── PAGE NAV ─────────────────────────────────────────────────────────────────
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(function(t){ t.classList.remove('active'); });
+  if (btn && btn.classList) btn.classList.add('active');
+  else {
+    var map = ['overview','demos','poc','ledger','recon','score'];
+    var idx = map.indexOf(id);
+    if (idx >= 0) document.querySelectorAll('.nav-tab')[idx].classList.add('active');
+  }
+  window.scrollTo(0,0);
+}
+
+// ── TOGGLE DEMO ──────────────────────────────────────────────────────────────
+function toggleDemo(n) {
+  var el = document.getElementById('demo-' + n);
+  var isExp = el.classList.contains('expanded');
+  document.querySelectorAll('.demo-step').forEach(function(d){ d.classList.remove('expanded','active'); });
+  if (!isExp) { el.classList.add('expanded','active'); }
+}
+
+// ── RUN DEMO ─────────────────────────────────────────────────────────────────
+function runDemo(n, onDone) {
+  var el = document.getElementById('demo-' + n);
+  var out = document.getElementById('out-' + n);
+  var stEl = document.getElementById('st-' + n);
+  var substeps = document.querySelectorAll('#sub-' + n + ' .substep');
+
+  if (!el || !out) return;
+
+  el.classList.add('expanded','active');
+  el.classList.remove('completed');
+  out.style.display = 'block';
+  out.textContent = '> [TSM FINOPS SUITE] Demo ' + n + ' initializing...\n';
+  stEl.textContent = 'RUNNING';
+  stEl.className = 'step-status ss-active';
+
+  // reset substeps
+  substeps.forEach(function(s){ s.classList.remove('done'); });
+
+  var script = DEMO_SCRIPTS[n] || [];
+  var speedMult = SPEEDS[autoSpeed] / 900;
+
+  script.forEach(function(line, i) {
+    setTimeout(function() {
+      var color = line.color === 'g' ? '\x1b[32m' : '';
+      out.textContent += line.txt + '\n';
+      out.scrollTop = out.scrollHeight;
+      // highlight substep
+      var sIdx = Math.min(i, substeps.length - 1);
+      if (substeps[sIdx]) substeps[sIdx].classList.add('done');
+    }, line.t * speedMult);
+  });
+
+  var totalTime = (script.length > 0 ? script[script.length-1].t : 2000) * speedMult + 400;
+  setTimeout(function() {
+    markDone(n);
+    if (onDone) onDone();
+  }, totalTime);
+}
+
+// ── MARK DONE ────────────────────────────────────────────────────────────────
+function markDone(n) {
+  completed.add(n);
+  var el = document.getElementById('demo-' + n);
+  var st = document.getElementById('st-' + n);
+  var num = el && el.querySelector('.step-num');
+  if (el) { el.classList.add('completed'); el.classList.remove('active','expanded'); }
+  if (st) { st.textContent = 'DONE'; st.className = 'step-status ss-done'; }
+  if (num) num.textContent = '✓';
+  updateScores();
+}
+
+// ── SCORES ───────────────────────────────────────────────────────────────────
+function updateScores() {
+  var done = completed.size;
+  var pct = Math.round((done/20)*100);
+
+  // main progress
+  var mp = document.getElementById('main-prog');
+  var ml = document.getElementById('main-prog-lbl');
+  if (mp) mp.style.width = pct + '%';
+  if (ml) ml.textContent = done + ' of 20 demos complete';
+
+  // overview
+  var od = document.getElementById('ov-demos-done');
+  var os = document.getElementById('ov-score');
+  if (od) od.textContent = done;
+  if (os) os.textContent = pct + '%';
+
+  // sidebar score
+  var sp = document.getElementById('score-pct');
+  var sbp = document.getElementById('sb-prog');
+  var sbd = document.getElementById('sb-done');
+  if (sp) sp.textContent = pct + '%';
+  if (sbp) sbp.style.width = pct + '%';
+  if (sbd) sbd.textContent = done;
+
+  // cat scores
+  var cats = [[1,5],[6,10],[11,15],[16,20]];
+  var catIds = ['sb-cat','sb-cat2','sb-cat3','sb-cat4'];
+  var catColors = ['green','var(--a)','var(--b)','var(--p)'];
+  var catNames = ['Cat 1','Cat 2','Cat 3','Cat 4'];
+  cats.forEach(function(range,i) {
+    var catDone = 0;
+    for (var d = range[0]; d <= range[1]; d++) { if (completed.has(d)) catDone++; }
+    var el = document.getElementById(catIds[i]);
+    if (el) el.textContent = catNames[i] + ': ' + catDone + '/5';
+
+    // score card bars
+    var catBars = ['cat1-bar','cat2-bar','cat3-bar','cat4-bar'];
+    var catScores = ['cat1-score','cat2-score','cat3-score','cat4-score'];
+    var bar = document.getElementById(catBars[i]);
+    var sc = document.getElementById(catScores[i]);
+    if (bar) bar.style.width = (catDone/5*100) + '%';
+    if (sc) sc.textContent = catDone + '/5';
+  });
+
+  // final score card
+  var fg = document.getElementById('final-grade');
+  var fl = document.getElementById('final-label');
+  var fp = document.getElementById('final-score-pct');
+  var fr = document.getElementById('final-ring');
+  if (fp) fp.textContent = pct + '%';
+  if (fg) {
+    var grade, label, color;
+    if (pct === 100) { grade='A+'; label='Full-Stack Finance Mastery — Hire Immediately'; color=var_g(); }
+    else if (pct >= 85) { grade='A'; label='Strong performance — recommend for next round'; color=var_g(); }
+    else if (pct >= 70) { grade='B'; label='Solid candidate — minor gaps to address'; color='#ffcc00'; }
+    else if (pct >= 50) { grade='C'; label='Needs development in key areas'; color='#ff8844'; }
+    else { grade='F'; label='Insufficient demonstration — not recommended'; color=var_r(); }
+    fg.textContent = grade;
+    fg.style.color = color;
+    fl.textContent = label;
+    if (fr) fr.style.borderColor = color;
+  }
+
+  // completion log
+  var log = document.getElementById('completion-log');
+  if (log && completed.size > 0) {
+    var items = [];
+    completed.forEach(function(n){
+      items.push('<span style="color:var(--g)">✓</span> Demo ' + n + ' complete');
+    });
+    log.innerHTML = items.join('<br>');
+  }
+
+  // recommendation
+  var rec = document.getElementById('recommendation');
+  if (rec && done > 0) {
+    var recs = [];
+    if (done >= 20) recs.push('<span style="color:var(--g)">★ HIRE RECOMMENDED</span> — demonstrated full-stack finance mastery across all 20 scenarios');
+    else if (done >= 15) recs.push('<span style="color:var(--g)">Strong candidate</span> — ' + (20-done) + ' demos remaining');
+    else recs.push('Assessment in progress — ' + done + '/20 complete');
+    rec.innerHTML = recs.join('<br>');
+  }
+
+  // footer
+  var fs = document.getElementById('footer-score');
+  if (fs) fs.textContent = done + '/20 Complete · ' + pct + '%';
+
+  // overview active category
+  var oc = document.getElementById('ov-cat');
+  if (oc) {
+    if (done < 5) oc.textContent = 'Cat 1';
+    else if (done < 10) oc.textContent = 'Cat 2';
+    else if (done < 15) oc.textContent = 'Cat 3';
+    else oc.textContent = 'Cat 4';
+  }
+}
+
+function var_g(){ return '#00ff88'; }
+function var_r(){ return '#ff4455'; }
+
+// ── AUTO-RUN ─────────────────────────────────────────────────────────────────
+function autoRunAll() {
+  showPage('demos', document.querySelectorAll('.nav-tab')[1]);
+  loadAllDatasets();
+  currentAutoDemo = 1;
+  autoRunning = true;
+  document.getElementById('auto-play-btn').textContent = '⏸ RUNNING';
+  document.getElementById('auto-status').textContent = 'Auto-running demos...';
+  runNextAutoDemo();
+}
+
+function runNextAutoDemo() {
+  if (!autoRunning || currentAutoDemo > 20) {
+    autoRunning = false;
+    document.getElementById('auto-play-btn').textContent = '▶ PLAY ALL';
+    document.getElementById('auto-status').textContent = 'All 20 demos complete ✓';
+    notify('✓ All 20 demos complete! Score: 100%');
+    return;
+  }
+  document.getElementById('auto-status').textContent = 'Running Demo ' + currentAutoDemo + ' of 20...';
+  var n = currentAutoDemo;
+
+  // scroll to demo
+  var el = document.getElementById('demo-' + n);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  runDemo(n, function() {
+    currentAutoDemo++;
+    var delay = SPEEDS[autoSpeed] * 0.5;
+    autoTimer = setTimeout(runNextAutoDemo, delay);
+  });
+}
+
+function toggleAutoRun() {
+  if (autoRunning) { pauseAutoRun(); }
+  else { autoRunAll(); }
+}
+
+function pauseAutoRun() {
+  autoRunning = false;
+  if (autoTimer) clearTimeout(autoTimer);
+  document.getElementById('auto-play-btn').textContent = '▶ PLAY ALL';
+  document.getElementById('auto-status').textContent = 'Paused at demo ' + currentAutoDemo;
+}
+
+function setSpeed(s, btn) {
+  autoSpeed = s;
+  document.querySelectorAll('.speed-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+}
+
+function resetAll() {
+  if (!confirm('Reset entire session?')) return;
+  completed.clear();
+  autoRunning = false;
+  currentAutoDemo = 0;
+  if (autoTimer) clearTimeout(autoTimer);
+  for (var i=1; i<=20; i++) {
+    var el = document.getElementById('demo-' + i);
+    var st = document.getElementById('st-' + i);
+    var num = el && el.querySelector('.step-num');
+    var out = document.getElementById('out-' + i);
+    if (el) { el.classList.remove('completed','active','expanded'); }
+    if (st) { st.textContent = 'PENDING'; st.className = 'step-status ss-pending'; }
+    if (num) num.textContent = i;
+    if (out) { out.textContent = ''; out.style.display = 'none'; }
+    var substeps = document.querySelectorAll('#sub-' + i + ' .substep');
+    substeps.forEach(function(s){ s.classList.remove('done'); });
+  }
+  document.getElementById('auto-play-btn').textContent = '▶ PLAY ALL';
+  document.getElementById('auto-status').textContent = 'Ready to run';
+  updateScores();
+  notify('↺ Session reset');
+}
+
+// ── LEDGER PAGE ──────────────────────────────────────────────────────────────
+function loadTrialBalance() {
+  var accounts = [
+    ['1100','Accounts Receivable','$24,885.00','—','Asset','bg'],
+    ['1510','Prepaid Expenses','$11,000.00','—','Asset','bg'],
+    ['1600','Accum. Depreciation','—','$416.67','Contra Asset','ba'],
+    ['2000','Accounts Payable','—','$23,250.75','Liability','ba'],
+    ['2150','Accrued Liabilities','—','$7,500.00','Liability','ba'],
+    ['5010','Freight & Shipping','$14,500.00','—','Expense','bb'],
+    ['6140','Legal & Professional','$7,500.00','—','Expense','bb'],
+    ['6200','Office Supplies','$1,250.75','—','Expense','bb'],
+    ['6320','Insurance Expense','$1,000.00','—','Expense','bb'],
+    ['6400','Depreciation Expense','$416.67','—','Expense','bb'],
+    ['6120','Bank Service Charges','$15.00','—','Expense','bb'],
+  ];
+  var html = accounts.map(function(a){
+    return '<tr><td><span class="badge '+a[5]+'">'+a[0]+'</span></td><td>'+a[1]+'</td><td class="td-match">'+a[2]+'</td><td class="td-warn">'+a[3]+'</td><td style="color:var(--dim)">'+a[4]+'</td><td><span class="badge bg">POSTED</span></td></tr>';
+  }).join('');
+  html += '<tr style="border-top:2px solid var(--border);font-weight:700"><td colspan="2" style="color:var(--g);font-family:var(--sans)">TOTALS</td><td class="td-match">$60,567.42</td><td class="td-match">$31,167.42</td><td></td><td><span class="badge bg">BALANCED</span></td></tr>';
+  document.getElementById('tb-body').innerHTML = html;
+  document.getElementById('tb-debits').textContent = '$60,567.42';
+  document.getElementById('tb-credits').textContent = '$60,567.42';
+  var log = document.getElementById('ledger-log');
+  log.textContent = '[' + new Date().toLocaleTimeString() + '] Trial Balance loaded — May 2026\n[OK] Total Debits:  $60,567.42\n[OK] Total Credits: $60,567.42\n[OK] Variance:      $0.00 — BALANCED ✓\n[OK] 11 accounts loaded — no single-sided entry anomalies detected';
+  notify('✓ Trial Balance loaded — Debits = Credits ✓');
+}
+
+function runAutoMatch() { notify('⚡ Auto-match executed — see Reconciliation tab'); }
+function exportLedger() { notify('📤 Financial_Close_May2026.pdf package triggered'); }
+
+// ── RECON PAGE ───────────────────────────────────────────────────────────────
+var reconState = { matched: 0, pending: 3, feeds: false };
+
+function refreshBankFeeds() {
+  var txns = [
+    { id:'TXN-BK-9901', date:'05-17', desc:'ACH DEP DELTA TECH', bank:'$8,900.00', ledger:'$8,900.00', variance:'$0.00', status:'<span class="badge bg">PENDING MATCH</span>', action:'auto' },
+    { id:'TXN-BK-9902', date:'05-17', desc:'WIRE MESA PREM LEGAL', bank:'$7,485.00', ledger:'$7,500.00', variance:'<span style="color:var(--r)">-$15.00</span>', status:'<span class="badge ba">VARIANCE</span>', action:'manual' },
+    { id:'TXN-BK-9905', date:'05-18', desc:'BANK SERV CHARGE WIRE', bank:'-$15.00', ledger:'$0.00', variance:'<span style="color:var(--r)">-$15.00</span>', status:'<span class="badge ba">SPLIT NEEDED</span>', action:'split' },
+  ];
+  var html = txns.map(function(t){
+    return '<tr><td>'+t.id+'</td><td>'+t.date+'</td><td>'+t.desc+'</td><td class="td-match">'+t.bank+'</td><td>'+t.ledger+'</td><td>'+t.variance+'</td><td>'+t.status+'</td><td><button class="btn btn-a" style="padding:3px 8px;font-size:9px" onclick="matchTxn(\''+t.id+'\',\''+t.action+'\')">'+t.action.toUpperCase()+'</button></td></tr>';
+  }).join('');
+  document.getElementById('recon-body').innerHTML = html;
+  document.getElementById('recon-log').textContent = '[' + new Date().toLocaleTimeString() + '] Bank feed refreshed — 3 transactions loaded\n[READY] TXN-BK-9901: $8,900.00 → auto-match candidate\n[WARN] TXN-BK-9902: $15.00 variance detected\n[ACTION] TXN-BK-9905: bank charge → split/adjust to GL 6120 required';
+  reconState.feeds = true;
+  notify('🔄 Bank feeds refreshed — 3 transactions loaded');
+}
+
+function autoMatchAll() {
+  if (!reconState.feeds) { refreshBankFeeds(); }
+  setTimeout(function(){
+    document.getElementById('recon-matched').textContent = '1';
+    document.getElementById('recon-pending').textContent = '2';
+    document.getElementById('recon-log').textContent += '\n\n[AUTO-MATCH] Running rules engine...\n[MATCH] TXN-BK-9901 ($8,900.00 Delta Tech) → AR-8900 → AUTO-MATCHED ✓ → row CLEARED GREEN\n[PENDING] TXN-BK-9902 → $15 variance → manual match required\n[PENDING] TXN-BK-9905 → bank charge → split/adjust to 6120 required';
+    notify('⚡ Auto-match complete — 1 matched, 2 pending');
+  }, 800);
+}
+
+function matchTxn(id, type) {
+  var log = document.getElementById('recon-log');
+  if (type === 'auto') { log.textContent += '\n[MATCH] ' + id + ' → auto-matched ✓'; reconState.matched++; reconState.pending--; }
+  else if (type === 'manual') { log.textContent += '\n[MANUAL] ' + id + ' → matched to INV-2026-003 → $15 variance → split to 6120 ✓'; reconState.matched++; reconState.pending--; reconState.variance = 0; document.getElementById('recon-variance').textContent = '$0.00'; }
+  else { log.textContent += '\n[SPLIT] ' + id + ' → $15.00 → 6120 - Bank Service Charges → posted ✓'; }
+  document.getElementById('recon-matched').textContent = reconState.matched;
+  document.getElementById('recon-pending').textContent = Math.max(0,reconState.pending);
+  notify('✓ ' + id + ' → ' + type + ' action completed');
+}
+
+function manualMatch() { matchTxn('TXN-BK-9902','manual'); }
+function splitAdjust() { matchTxn('TXN-BK-9905','split'); }
+
+// ── MISC ─────────────────────────────────────────────────────────────────────
+function addRating(r) {
+  var ta = document.querySelector('textarea');
+  if (ta) ta.value += '\nRating: ' + r;
+}
+
+function exportScoreCard() {
+  var data = 'TSM FinOps Staff Accountant Assessment\nScore: ' + completed.size + '/20 (' + Math.round(completed.size/20*100) + '%)\nCompleted: ' + Array.from(completed).join(', ');
+  notify('📤 Score card exported to console');
+  console.log(data);
+}
+
+function notify(msg) {
+  var n = document.getElementById('notif');
+  n.textContent = msg;
+  n.classList.add('show');
+  setTimeout(function(){ n.classList.remove('show'); }, 3200);
+}
+
+// ── CLOCK + SESSION TIMER ────────────────────────────────────────────────────
+function tick() {
+  var now = new Date();
+  var c = document.getElementById('clock');
+  if (c) c.textContent = now.toLocaleTimeString('en-US',{hour12:false});
+  var elapsed = Math.floor((Date.now() - sessionStart) / 1000);
+  var m = Math.floor(elapsed/60), s = elapsed%60;
+  var ot = document.getElementById('ov-time');
+  if (ot) ot.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+tick(); setInterval(tick, 1000);
+</script>
+</body>
+y
+  
