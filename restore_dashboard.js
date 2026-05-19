@@ -1,0 +1,380 @@
+const fs = require('fs');
+const path = require('path');
+
+const targetDir = './html/tsm-insurance';
+
+function getOriginalDashboardHTML(pageTitle, isAzPage) {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TSM Insurance Command Center - ${pageTitle}</title>
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --bg-card: #0f1524;
+            --gold-accent: #c5a880;
+            --gold-glow: rgba(197, 168, 128, 0.15);
+            --pink-accent: #ec4899;
+            --purple-accent: #a855f7;
+            --text-main: #f8fafc;
+            --text-muted: #64748b;
+            --border-color: #1e293b;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        /* Top Navigation Header Row matching original layout */
+        .suite-header {
+            background: #020617;
+            border-bottom: 2px solid var(--gold-accent);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .suite-label {
+            color: var(--gold-accent);
+            font-weight: 800;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-right: 15px;
+        }
+        .nav-tab {
+            background: #111827;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 6px 14px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .nav-tab:hover {
+            border-color: var(--gold-accent);
+            background: #1f2937;
+        }
+        .nav-tab.active-gold {
+            background: var(--gold-accent);
+            color: #000;
+            border-color: var(--gold-accent);
+        }
+        .nav-tab.purple-tab {
+            background: var(--purple-accent);
+            border-color: var(--purple-accent);
+        }
+        .nav-tab.purple-tab:hover {
+            opacity: 0.9;
+        }
+        /* Command Sub-Header */
+        .command-sub-bar {
+            background: #0b0f19;
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .brand-title {
+            color: var(--gold-accent);
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        /* Main Grid Area */
+        .dashboard-container {
+            padding: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .agent-title-section {
+            margin-bottom: 25px;
+        }
+        .agent-title-section h1 {
+            font-size: 1.8rem;
+            margin: 0 0 5px 0;
+            font-weight: 400;
+        }
+        .agent-title-section h1 strong {
+            color: var(--gold-accent);
+        }
+        /* Top Statistics Row Counters */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-left: 3px solid var(--gold-accent);
+            padding: 20px;
+            border-radius: 4px;
+        }
+        .stat-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+            margin-bottom: 5px;
+        }
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--gold-accent);
+        }
+        /* Split Main Content Workspace */
+        .main-workspace-split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+        .panel-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 24px;
+        }
+        .panel-header {
+            font-size: 0.95rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        /* Pain Points List Elements */
+        .pain-point-item {
+            background: #090d16;
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .tag-critical {
+            background: rgba(236, 72, 153, 0.15);
+            color: var(--pink-accent);
+            border: 1px solid var(--pink-accent);
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 700;
+        }
+        /* Action Action Buttons */
+        .action-button-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .act-btn {
+            padding: 12px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 0.85rem;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s;
+        }
+        .act-btn.gold { background: rgba(197, 168, 128, 0.1); color: var(--gold-accent); border-color: var(--gold-accent); }
+        .act-btn.blue { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border-color: #3b82f6; }
+        .act-btn.green { background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: #10b981; }
+        
+        /* Slideable Persistent Library Modal Shelf Overlay */
+        .playbook-shelf {
+            background: #0b0f19;
+            border: 2px solid var(--gold-accent);
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 25px;
+            display: none; /* Controlled interactively by button */
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+        }
+        .playbook-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .playbook-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .playbook-card:hover {
+            border-color: var(--pink-accent);
+            background: #141b2d;
+        }
+        .search-input-field {
+            background: #030712;
+            border: 1px solid var(--gold-accent);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 4px;
+            width: 320px;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="suite-header">
+        <div class="suite-label">⚜️ Insurance Suite:</div>
+        <a href="/tsm-insurance/az-ins.html" class="nav-tab ${isAzPage ? 'active-gold' : ''}">⚜️ AZ Command</a>
+        <a href="/tsm-insurance/agents-ins.html" class="nav-tab ${!isAzPage ? 'active-gold' : ''}">👥 Agents</a>
+        <a href="#" onclick="togglePlaybookLibrary()" class="nav-tab" style="border-color: var(--pink-accent); color: var(--pink-accent);">📚 Playbook Library</a>
+        <a href="/tsm-insurance/ce-study-prep.html" class="nav-tab purple-tab">🎓 CE Study Prep</a>
+        <a href="#" onclick="triggerWIP('DME Authorization Matrix')" class="nav-tab">♿ DME</a>
+        <a href="#" onclick="triggerWIP('Property and Casualty Command')" class="nav-tab">🏡 P&C Command</a>
+        <a href="#" onclick="triggerWIP('Intel Engine Matrix')" class="nav-tab">👁️ Intel</a>
+        <a href="#" onclick="triggerWIP('Presentation Slides View')" class="nav-tab">📊 Presentation</a>
+        <a href="#" onclick="triggerWIP('Legal Compliance Audit')" class="nav-tab">⚖️ Legal</a>
+    </div>
+
+    <div class="command-sub-bar">
+        <div class="brand-title">
+            <span>🌵 AZ INSURANCE COMMAND CENTER</span>
+        </div>
+        <div>
+            <input type="text" id="masterSearch" class="search-input-field" value='auditops --domain=insurance.tsmatter.com' readonly>
+        </div>
+        <div style="font-size: 0.8rem; color: var(--gold-accent); font-family: monospace;">
+            TSM Neural Core: <span style="color:#10b981;">● Online</span> | NPN: 18818059
+        </div>
+    </div>
+
+    <div class="dashboard-container">
+
+        <div id="playbookLibraryShelf" class="playbook-shelf">
+            <h3 style="margin-top:0; color:var(--pink-accent); display:flex; justify-content:between; align-items:center;">
+                <span>📚 Playbook Library Modules</span>
+                <small style="font-size:0.8rem; color:var(--text-muted); font-weight:normal; margin-left:15px;">Click to fill prompt array context context parameters</small>
+            </h3>
+            <div class="playbook-grid">
+                <div class="playbook-card" onclick="selectPlaybook('Medical')">
+                    <div style="font-size:1.4rem; margin-bottom:5px;">🏥</div>
+                    <strong>Medical Sector Audit</strong>
+                </div>
+                <div class="playbook-card" onclick="selectPlaybook('Legal')">
+                    <div style="font-size:1.4rem; margin-bottom:5px;">⚖️</div>
+                    <strong>Legal Frameworks Logic</strong>
+                </div>
+                <div class="playbook-card" onclick="selectPlaybook('Construction')">
+                    <div style="font-size:1.4rem; margin-bottom:5px;">🏗️</div>
+                    <strong>Construction Audit Ops</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="agent-title-section">
+            <h1>Agent <strong>Command Center</strong></h1>
+            <div style="font-size:0.85rem; color:var(--text-muted);">Arizona • Life • Health • Accident • Medicare — Powered by TSM Neural Core System Engine</div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-label">Active Clients</div><div class="stat-value">0</div><small style="color:var(--text-muted);">-- Clients tab</small></div>
+            <div class="stat-card"><div class="stat-label">Quotes Run</div><div class="stat-value">0</div><small style="color:var(--text-muted);">This session</small></div>
+            <div class="stat-card"><div class="stat-label">Docs Analyzed</div><div class="stat-value">0</div><small style="color:var(--text-muted);">AI powered</small></div>
+            <div class="stat-card"><div class="stat-label">Report Items</div><div class="stat-value">0</div><small style="color:var(--text-muted);">-- Reports tab</small></div>
+        </div>
+
+        <div class="main-workspace-split">
+            
+            <div class="panel-card">
+                <div class="panel-header">⚠️ Top AZ Pain Points Focus Matrix</div>
+                
+                <div class="pain-point-item">
+                    <div>
+                        <strong>💊 Medicare Part D Donut Hole Confusion</strong>
+                        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:3px;">Seniors overpaying avg $1,200/yr. Proper plan matches close gaps.</div>
+                    </div>
+                    <span class="tag-critical">CRITICAL</span>
+                </div>
+
+                <div class="pain-point-item">
+                    <div>
+                        <strong>💸 ACA APTC Clawback at Tax Time</strong>
+                        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:3px;">MAGI miscalculation matches IRS recapture risks for self-employed accounts.</div>
+                    </div>
+                    <span class="tag-critical">CRITICAL</span>
+                </div>
+
+                <div class="pain-point-item">
+                    <div>
+                        <strong>⚡ Accident Coverage Gap — AZ Families</strong>
+                        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:3px;">ER averages $2,400; ICU stays hit $18K. Fixed indemnity buffers exposures.</div>
+                    </div>
+                    <span class="tag-critical" style="color:#f59e0b; border-color:#f59e0b; background:rgba(245,158,11,0.1);">HIGH</span>
+                </div>
+            </div>
+
+            <div class="panel-card">
+                <div class="panel-header">⚡ Rapid Workspace Action Matrix</div>
+                <div class="action-button-grid">
+                    <button class="act-btn gold" onclick="triggerWIP('Life Insurance Quote Engine')">💛 LIFE QUOTE</button>
+                    <button class="act-btn blue" onclick="triggerWIP('ACA Health Quote Calculator')">💙 ACA QUOTE</button>
+                    <button class="act-btn gold" onclick="triggerWIP('IRMAA Surcharge Calculator')">⭐ IRMAA CALC</button>
+                    <button class="act-btn blue" onclick="triggerWIP('Accident Premium Calculator')">⚡ ACCIDENT CALC</button>
+                    <button class="act-btn green" onclick="triggerWIP('Secure Document Uploader')" style="grid-column: span 2; text-align:center;">📁 UPLOAD ENCRYPTED CLIENT DOCUMENTS</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function togglePlaybookLibrary() {
+            const shelf = document.getElementById('playbookLibraryShelf');
+            if (shelf.style.display === 'block') {
+                shelf.style.display = 'none';
+            } else {
+                shelf.style.display = 'block';
+            }
+        }
+
+        function selectPlaybook(sector) {
+            const searchBar = document.getElementById('masterSearch');
+            searchBar.value = 'auditops "Mesa Premier Legal - Factor: Municipal Residency" --logic=strategist';
+            searchBar.style.borderColor = '#ec4899';
+            searchBar.style.boxShadow = '0 0 10px rgba(236, 72, 153, 0.4)';
+        }
+
+        function triggerWIP(moduleName) {
+            alert("TSM Neural Core: The '" + moduleName + "' calculation module is currently provisioning inside this asset branch profile. Final deployment finalizing soon!");
+        }
+    </script>
+</body>
+</html>`;
+}
+
+fs.writeFileSync(path.join(targetDir, 'az-ins.html'), getOriginalDashboardHTML('AZ Command Center', true), 'utf8');
+fs.writeFileSync(path.join(targetDir, 'agents-ins.html'), getOriginalDashboardHTML('Broker & Agent Sync', false), 'utf8');
+
+console.log('✨ PREMIUM DASHBOARD UI RESTORED AND FEATURE-BRIDGED!');

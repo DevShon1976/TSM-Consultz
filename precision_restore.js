@@ -1,0 +1,366 @@
+const fs = require('fs');
+const path = require('path');
+
+const targetDir = './html/tsm-insurance';
+
+function buildGoldenLayout(pageTitle, isAzPage) {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TSM Insurance Suite - ${pageTitle}</title>
+    <style>
+        :root {
+            --gold-primary: #c5a880;
+            --gold-dark: #8a704d;
+            --bg-deep: #060913;
+            --bg-card: #0c101d;
+            --border-slate: #151c2e;
+            --pink-accent: #ec4899;
+            --purple-accent: #a855f7;
+            --text-white: #f8fafc;
+            --text-gray: #64748b;
+        }
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-white);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        /* Top Navigation Header Bar */
+        .header-suite-bar {
+            background: #02050c;
+            border-bottom: 1px solid #1a233a;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .suite-tag {
+            color: var(--gold-primary);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            margin-right: 10px;
+        }
+        .suite-btn {
+            background: #0f1424;
+            border: 1px solid var(--border-slate);
+            color: var(--text-white);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .suite-btn:hover {
+            border-color: var(--gold-primary);
+            background: #161f38;
+        }
+        .suite-btn.active {
+            background: var(--gold-primary);
+            color: #02050c;
+            border-color: var(--gold-primary);
+        }
+        .suite-btn.purple-mix {
+            background: var(--purple-accent);
+            border-color: var(--purple-accent);
+        }
+        .suite-btn.purple-mix:hover {
+            opacity: 0.9;
+        }
+        /* Control Dashboard Banner Row */
+        .sub-control-banner {
+            background: #080c16;
+            border-bottom: 1px solid var(--border-slate);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .banner-identity {
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: var(--gold-primary);
+        }
+        .search-container-box {
+            background: #02040a;
+            border: 1px solid var(--gold-primary);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 4px;
+            width: 350px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            outline: none;
+        }
+        /* Container Matrix */
+        .content-workspace {
+            padding: 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .hero-title-rack h1 {
+            font-size: 1.7rem;
+            margin: 0;
+            font-weight: 300;
+        }
+        .hero-title-rack h1 span {
+            color: var(--gold-primary);
+            font-weight: 700;
+        }
+        /* Operational Ticker Blocks */
+        .metric-ticker-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .ticker-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-slate);
+            border-left: 3px solid var(--gold-primary);
+            padding: 16px;
+            border-radius: 4px;
+        }
+        .ticker-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: var(--text-gray);
+            letter-spacing: 0.05em;
+        }
+        .ticker-num {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--gold-primary);
+            margin-top: 4px;
+        }
+        /* Split Application Grids */
+        .split-workspace-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 20px;
+        }
+        .board-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-slate);
+            border-radius: 4px;
+            padding: 20px;
+        }
+        .panel-heading-row {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-white);
+            border-bottom: 1px solid var(--border-slate);
+            padding-bottom: 8px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        /* Focus Matrix List Lines */
+        .focus-item-row {
+            background: #060913;
+            border: 1px solid var(--border-slate);
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .pill-critical {
+            background: rgba(236,72,153,0.1);
+            color: var(--pink-accent);
+            border: 1px solid var(--pink-accent);
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            font-weight: 800;
+            border-radius: 2px;
+        }
+        /* Action Utility Layout Grid */
+        .quick-action-cluster {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .action-button-node {
+            padding: 12px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: left;
+            background: #111625;
+            border: 1px solid var(--border-slate);
+            transition: all 0.2s;
+        }
+        .action-button-node.gold-variant { color: var(--gold-primary); border-color: var(--gold-primary); background: rgba(197,168,128,0.05); }
+        .action-button-node.blue-variant { color: #3b82f6; border-color: #3b82f6; background: rgba(59,130,246,0.05); }
+        .action-button-node.green-variant { color: #10b981; border-color: #10b981; background: rgba(16,185,129,0.05); }
+        
+        /* Sliding Dynamic Library Shelf */
+        .library-drawer-shelf {
+            background: #080c16;
+            border: 1px solid var(--gold-primary);
+            border-radius: 4px;
+            padding: 16px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .shelf-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .shelf-element {
+            background: var(--bg-card);
+            border: 1px solid var(--border-slate);
+            padding: 12px;
+            border-radius: 4px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .shelf-element:hover {
+            border-color: var(--pink-accent);
+            background: #111726;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-suite-bar">
+        <div class="suite-tag">⚡ Insurance Suite:</div>
+        <a href="/tsm-insurance/az-ins.html" class="suite-btn ${isAzPage ? 'active' : ''}">⚜️ AZ Command</a>
+        <a href="/tsm-insurance/agents-ins.html" class="suite-btn ${!isAzPage ? 'active' : ''}">👥 Agents</a>
+        <a href="#" onclick="toggleLibraryShelf()" class="suite-btn" style="border-color: var(--pink-accent); color: var(--pink-accent);">📚 Playbook Library</a>
+        <a href="/tsm-insurance/ce-study-prep.html" class="suite-btn purple-mix">🎓 CE Study Prep</a>
+        <a href="#" onclick="fireAlert('DME Authorization Matrix')" class="suite-btn">♿ DME</a>
+        <a href="#" onclick="fireAlert('Property and Casualty Hub')" class="suite-btn">🏡 P&C Command</a>
+        <a href="#" onclick="fireAlert('Intel Analysis Subsystem')" class="suite-btn">👁️ Intel</a>
+        <a href="#" onclick="fireAlert('Presentation Sync View')" class="suite-btn">📊 Presentation</a>
+        <a href="#" onclick="fireAlert('Legal Regulatory Tracker')" class="suite-btn">⚖️ Legal</a>
+    </div>
+
+    <div class="sub-control-banner">
+        <div class="banner-identity">🌵 ARIZONA INSURANCE COMMAND MATRIX</div>
+        <div>
+            <input type="text" id="queryDisplay" class="search-container-box" value="auditops --domain=insurance.tsmatter.com" readonly>
+        </div>
+        <div style="font-size: 0.75rem; font-family: monospace;">
+            TSM Neural Core: <span style="color:#10b981;">● Active</span> | NPN: 18818059
+        </div>
+    </div>
+
+    <div class="content-workspace">
+
+        <div id="libraryContainerShelf" class="library-drawer-shelf">
+            <h4 style="margin:0; color:var(--pink-accent);">📚 Persistent Playbook Workspace Library</h4>
+            <div class="shelf-cards-grid">
+                <div class="shelf-element" onclick="applyQuery('Medical')">
+                    <div style="font-size:1.2rem; margin-bottom:4px;">🏥</div>
+                    <strong>Medical Sector</strong>
+                </div>
+                <div class="shelf-element" onclick="applyQuery('Legal')">
+                    <div style="font-size:1.2rem; margin-bottom:4px;">⚖️</div>
+                    <strong>Legal Frameworks</strong>
+                </div>
+                <div class="shelf-element" onclick="applyQuery('Construction')">
+                    <div style="font-size:1.2rem; margin-bottom:4px;">🏗️</div>
+                    <strong>Construction Logic</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="hero-title-rack">
+            <h1>Agent <span>Command Center</span></h1>
+            <div style="font-size:0.8rem; color:var(--text-gray); margin-top:4px;">Arizona • Life • Health • Accident • Medicare — Integrated Framework Channel Engine</div>
+        </div>
+
+        <div class="metric-ticker-grid">
+            <div class="ticker-card"><div class="ticker-title">Active Clients</div><div class="ticker-num">0</div><small style="color:var(--text-gray); font-size:0.7rem;">-- Clients pane</small></div>
+            <div class="ticker-card"><div class="ticker-title">Quotes Run</div><div class="ticker-num">0</div><small style="color:var(--text-gray); font-size:0.7rem;">This active session</small></div>
+            <div class="ticker-card"><div class="ticker-title">Docs Analyzed</div><div class="ticker-num">0</div><small style="color:var(--text-gray); font-size:0.7rem;">Neural core active</small></div>
+            <div class="ticker-card"><div class="ticker-title">Report Items</div><div class="ticker-num">0</div><small style="color:var(--text-gray); font-size:0.7rem;">-- Reports pane</small></div>
+        </div>
+
+        <div class="split-workspace-grid">
+            
+            <div class="board-panel">
+                <div class="panel-heading-row">⚠️ Top AZ Pain Points Target Focus Matrix</div>
+                
+                <div class="focus-item-row">
+                    <div>
+                        <strong>💊 Medicare Part D Donut Hole Confusion</strong>
+                        <div style="font-size:0.75rem; color:var(--text-gray); margin-top:2px;">Seniors overpaying avg $1,200/yr. Optimal matrix matching closes exposures.</div>
+                    </div>
+                    <span class="pill-critical">CRITICAL</span>
+                </div>
+
+                <div class="focus-item-row">
+                    <div>
+                        <strong>💸 ACA APTC Clawback Risk Assessment</strong>
+                        <div style="font-size:0.75rem; color:var(--text-gray); margin-top:2px;">MAGI income mapping deviation triggers IRS recovery exposures.</div>
+                    </div>
+                    <span class="pill-critical">CRITICAL</span>
+                </div>
+
+                <div class="focus-item-row">
+                    <div>
+                        <strong>⚡ Accident Coverage Gap Mitigation</strong>
+                        <div style="font-size:0.75rem; color:var(--text-gray); margin-top:2px;">ER visits clip $2,400 median baselines. Supplemental buffers insulate cash reserves.</div>
+                    </div>
+                    <span class="pill-critical" style="color:#f59e0b; border-color:#f59e0b; background:rgba(245,158,11,0.05);">HIGH</span>
+                </div>
+            </div>
+
+            <div class="board-panel">
+                <div class="panel-heading-row">⚡ Rapid Operational Execution Buttons</div>
+                <div class="quick-action-cluster">
+                    <button class="action-button-node gold-variant" onclick="fireAlert('Life Insurance Quotation Calculator')">💛 LIFE QUOTE</button>
+                    <button class="action-button-node blue-variant" onclick="fireAlert('ACA Premium Subsidy Calculator')">💙 ACA QUOTE</button>
+                    <button class="action-button-node gold-variant" onclick="fireAlert('IRMAA Surcharge Sifting Engine')">⭐ IRMAA CALC</button>
+                    <button class="action-button-node blue-variant" onclick="fireAlert('Accident Indemnity Engine')">⚡ ACCIDENT CALC</button>
+                    <button class="action-button-node green-variant" onclick="fireAlert('Secure Document Gateway Uploader')" style="grid-column: span 2; text-align:center;">📁 DROP ENCRYPTED AUDIT FILES HERE</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function toggleLibraryShelf() {
+            const shelf = document.getElementById('libraryContainerShelf');
+            shelf.style.display = (shelf.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function applyQuery(sector) {
+            const display = document.getElementById('queryDisplay');
+            display.value = 'auditops "Mesa Premier Legal - Factor: Municipal Residency" --logic=strategist';
+            display.style.borderColor = '#ec4899';
+            display.style.boxShadow = '0 0 12px rgba(236, 72, 153, 0.5)';
+        }
+
+        function fireAlert(module) {
+            alert("TSM Neural Core: The '" + module + "' calculation matrix layout is currently provisioning inside this asset branch profile. Production finalizes shortly!");
+        }
+    </script>
+</body>
+</html>`;
+}
+
+fs.writeFileSync(path.join(targetDir, 'az-ins.html'), buildGoldenLayout('AZ Command Center', true), 'utf8');
+fs.writeFileSync(path.join(targetDir, 'agents-ins.html'), buildGoldenLayout('Broker & Agent Sync', false), 'utf8');
+
+console.log('✅ PREMIUM DARK GOLD UI ENGINE HAS BEEN RESTORED PERFECTLY.');

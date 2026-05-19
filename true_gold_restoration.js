@@ -1,8 +1,14 @@
-<!DOCTYPE html>
+const fs = require('fs');
+const path = require('path');
+
+const targetDir = './html/tsm-insurance';
+
+function getTrueGoldHTML(pageTitle, isAzPage) {
+    return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TSM Insurance Core - AZ Command Center</title>
+    <title>TSM Insurance Core - ${pageTitle}</title>
     <style>
         :root {
             --gold-primary: #c5a880;
@@ -263,8 +269,8 @@
 
     <div class="insurance-suite-header">
         <div class="suite-label">⚜️ Insurance Suite:</div>
-        <a href="/tsm-insurance/az-ins.html" class="nav-tab-node active-gold">⚜️ AZ Command</a>
-        <a href="/tsm-insurance/agents-ins.html" class="nav-tab-node ">👥 Agents</a>
+        <a href="/tsm-insurance/az-ins.html" class="nav-tab-node ${isAzPage ? 'active-gold' : ''}">⚜️ AZ Command</a>
+        <a href="/tsm-insurance/agents-ins.html" class="nav-tab-node ${!isAzPage ? 'active-gold' : ''}">👥 Agents</a>
         <a href="#" onclick="togglePlaybookDrawer(event)" class="nav-tab-node pink-tab">📚 Playbook Library</a>
         <a href="/tsm-insurance/ce-study-prep.html" class="nav-tab-node purple-tab">🎓 CE Study Prep</a>
         <a href="#" onclick="handleWIPClick('DME Core Matrix')" class="nav-tab-node">♿ DME</a>
@@ -387,113 +393,10 @@
         }
     </script>
 </body>
-</html>
-<script>
-(() => {
+</html>`;
+}
 
-  if (window.__TSM_BOOTED__) return;
-  window.__TSM_BOOTED__ = true;
+fs.writeFileSync(path.join(targetDir, 'az-ins.html'), getTrueGoldHTML('AZ Command Center', true), 'utf8');
+fs.writeFileSync(path.join(targetDir, 'agents-ins.html'), getTrueGoldHTML('Broker & Agent Sync', false), 'utf8');
 
-  console.log("TSM CORE ONLINE");
-
-  window.TSM_UI = {
-
-    runAudit: async (sector="General", factor="Analysis") => {
-
-      const feed =
-        document.querySelector('.intelligence-feed-output') ||
-        document.getElementById('intelligence-feed-output');
-
-      if (feed) {
-        feed.innerHTML =
-          '<span style="color:#00ffff">[STRATEGIST] Processing...</span>';
-      }
-
-      try {
-
-        const res = await fetch('/api/audit', {
-          method: 'POST',
-          headers: {
-            'Content-Type':'application/json'
-          },
-          body: JSON.stringify({
-            query:
-              'auditops "' + sector +
-              '" --factor "' + factor +
-              '" --logic strategist'
-          })
-        });
-
-        const data = await res.json();
-
-        if (feed) {
-          feed.innerText =
-            '[STRATEGIST] ' +
-            (data.output || 'Analysis Complete.');
-        }
-
-      } catch(err) {
-
-        console.error(err);
-
-        if (feed) {
-          feed.innerText =
-            '[STRATEGIST] Local API Bridge Failed.';
-        }
-      }
-    }
-  };
-
-  document.addEventListener('click', (e) => {
-
-    const card = e.target.closest('.module-card');
-
-    if (!card) return;
-
-    const sector =
-      card.dataset.sector || 'Construction';
-
-    const factor =
-      card.querySelector('h3')?.innerText ||
-      'General Audit';
-
-    window.TSM_UI.runAudit(sector, factor);
-
-  });
-
-  window.appendMsg = function(role, text) {
-
-    const chatWin = document.getElementById('chat-win');
-
-    if (!chatWin) return;
-
-    const isAI = role === 'ai';
-
-    const div = document.createElement('div');
-
-    div.className = 'msg ' + role;
-
-    div.innerHTML =
-      '<div class="msg-av">' +
-      (isAI ? '⚜' : '👤') +
-      '</div>' +
-      '<div class="msg-body">' +
-      '<div class="msg-lbl">' +
-      (isAI
-        ? 'TSM NEURAL CORE · AZ INSURANCE'
-        : 'YOU') +
-      '</div>' +
-      '<div class="msg-bub">' +
-      text +
-      '</div></div>';
-
-    chatWin.appendChild(div);
-
-    chatWin.scrollTop = chatWin.scrollHeight;
-  };
-
-  console.log("TSM_UI: Direct Neural Link Established.");
-
-})();
-</script>
-
+console.log('✨ High-fidelity original dark gold layouts successfully compiled and wired!');

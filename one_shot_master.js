@@ -1,0 +1,226 @@
+const fs = require('fs');
+const path = require('path');
+
+const targetDir = './html/tsm-insurance';
+if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
+
+function generateInsuranceHTML(pageTitle, activeTab) {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TSM Insurance Core - ${pageTitle}</title>
+    <style>
+        :root {
+            --bg-dark: #070a13;
+            --bg-panel: #0f172a;
+            --pink-accent: #ec4899;
+            --purple-accent: #a855f7;
+            --text-main: #f8fafc;
+            --text-muted: #64748b;
+            --border-color: #1e293b;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        /* Sidebar layout mirroring image_f8876c */
+        .sidebar {
+            width: 260px;
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .brand-header {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--pink-accent);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .nav-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+        .nav-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            color: var(--text-main);
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: background 0.2s;
+        }
+        .nav-item:hover {
+            background: #1e293b;
+        }
+        .nav-item.active {
+            background: var(--pink-accent);
+            font-weight: 600;
+        }
+        .nav-item.purple-btn {
+            background: var(--purple-accent);
+            font-weight: 600;
+            margin-top: 8px;
+        }
+        .nav-item.purple-btn:hover {
+            opacity: 0.9;
+        }
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-dark);
+        }
+        .top-bar {
+            height: 65px;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+        }
+        .search-bar {
+            background: #020617;
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 6px;
+            width: 400px;
+            color: white;
+            font-family: monospace;
+        }
+        .workspace-area {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+        .card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        /* Library Grid Options */
+        .library-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+            margin-top: 15px;
+        }
+        .lib-card {
+            background: #020617;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 16px;
+            cursor: pointer;
+            text-align: center;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .lib-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--pink-accent);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="brand-header">
+            <span>🛡️ TSM AuditOps</span>
+        </div>
+        
+        <div class="nav-group">
+            <div class="nav-label">Insurance Modules</div>
+            <a href="/tsm-insurance/az-ins.html" class="nav-item ${activeTab === 'az' ? 'active' : ''}">AZ Insurance Dashboard</a>
+            <a href="/tsm-insurance/agents-ins.html" class="nav-item ${activeTab === 'agents' ? 'active' : ''}">Broker & Agent Sync</a>
+            <a href="/tsm-insurance/ce-study-prep.html" class="nav-item purple-btn">🎓 CE Study Prep</a>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-label">System Frameworks</div>
+            <a href="#" onclick="triggerWIP('DME Authorization Matrix')" class="nav-item">DME Coverage Layer</a>
+            <a href="#" onclick="triggerWIP('Financial Reconciliation Audit')" class="nav-item">FinOps Recovery Suite</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <input type="text" id="searchBar" class="search-bar" value="auditops --domain=insurance.tsmatter.com" readonly>
+            <div style="font-size:0.85rem; color:var(--text-muted);">Secure Node: auditops.tsmatter.com</div>
+        </div>
+
+        <div class="workspace-area">
+            <div class="card">
+                <h3 style="margin-top:0; color:var(--pink-accent);">📚 Persistent Playbook Library</h3>
+                <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:15px;">Click any sector playbook asset profile card to automatically populate the primary search bar prompt array context:</p>
+                
+                <div class="library-grid">
+                    <div class="lib-card" onclick="runPlaybook('Medical')">
+                        <div style="font-size: 1.5rem; margin-bottom:8px;">🏥</div>
+                        <strong>Medical Sector</strong>
+                    </div>
+                    <div class="lib-card" onclick="runPlaybook('Legal')">
+                        <div style="font-size: 1.5rem; margin-bottom:8px;">⚖️</div>
+                        <strong>Legal Frameworks</strong>
+                    </div>
+                    <div class="lib-card" onclick="runPlaybook('Construction')">
+                        <div style="font-size: 1.5rem; margin-bottom:8px;">🏗️</div>
+                        <strong>Construction Logic</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>${pageTitle} View Workspace</h2>
+                <p style="color:var(--text-muted);">Active Identity Channel Context: Processing live insurance telemetry audits.</p>
+                <hr style="border:0; border-top:1px solid var(--border-color); margin:20px 0;">
+                <button onclick="triggerWIP('Deep Claim Analysis')" style="background:transparent; border:1px solid var(--pink-accent); color:var(--pink-accent); padding:10px 20px; border-radius:6px; cursor:pointer; font-weight:bold;">Execute Deep Scan Audit</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function runPlaybook(sector) {
+            const searchBar = document.getElementById('searchBar');
+            searchBar.value = 'auditops "Mesa Premier Legal - Factor: Municipal Residency" --logic=strategist';
+            searchBar.style.borderColor = '#ec4899';
+            console.log("Auto-filled workspace context prompt for sector: " + sector);
+        }
+
+        function triggerWIP(moduleName) {
+            alert("TSM Neural Core: The '" + moduleName + "' framework calculation module is currently provisioning. Final deployment finalizing soon!");
+        }
+    </script>
+</body>
+</html>`;
+}
+
+// Perform the one-shot structural write updates
+fs.writeFileSync(path.join(targetDir, 'az-ins.html'), generateInsuranceHTML('AZ Insurance Core', 'az'), 'utf8');
+fs.writeFileSync(path.join(targetDir, 'agents-ins.html'), generateInsuranceHTML('Broker & Agent Sync', 'agents'), 'utf8');
+
+console.log('🎯 ONE-SHOT CRITICAL CORRECTION COMPREHENSIVELY WRITTEN!');
