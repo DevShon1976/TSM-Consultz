@@ -300,6 +300,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 </style>
   <link rel="stylesheet" href="/shared/tsm-shared.css">
   <script src="/shared/tsm-shared.js"></script>
+  <!-- FinOps Doc Parser -->
+  <script src="/finops-suite/assets/doc-parser.js"></script>
 </head>
 <body>
 
@@ -1202,5 +1204,49 @@ function exportDocTxt(){ saveDocReport(); }
 
 </script>
 <div style="height:56px"></div><!-- spacer for cta bar -->
+
+<script>
+/* ── doc-parser.js auto-wire ── */
+(function() {
+  // Listen for docparser progress events and update UI if elements exist
+  document.addEventListener('docparser:progress', function(e) {
+    var d = e.detail;
+    var el = document.getElementById('parser-status') || document.getElementById('upload-status') || document.getElementById('doc-status');
+    if (el) el.textContent = d.msg;
+    console.log('[DocParser]', d.msg);
+  });
+
+  // Intercept any file input on the page
+  document.addEventListener('change', async function(e) {
+    if (e.target.type !== 'file') return;
+    var files = Array.from(e.target.files || []);
+    if (!files.length || typeof DocParser === 'undefined') return;
+
+    for (var file of files) {
+      try {
+        var result = await DocParser.parse(file);
+        // Store on the input element for downstream engines to pick up
+        e.target._parsed = result;
+        // Fire custom event so existing handlers can access clean text
+        e.target.dispatchEvent(new CustomEvent('docparser:ready', {
+          bubbles: true,
+          detail: result
+        }));
+        console.log('[DocParser] Ready:', result.meta);
+      } catch(err) {
+        console.error('[DocParser] Error:', err);
+      }
+    }
+  }, true);
+
+  // Override any fetch/XHR that sends raw file bytes and replace with extracted text
+  // Hook into window.extractedDocText for Groq/Claude API calls
+  window.getExtractedText = function(inputEl) {
+    if (inputEl && inputEl._parsed) return inputEl._parsed.text;
+    return null;
+  };
+})();
+</script>
+
 </body>
 </html>
