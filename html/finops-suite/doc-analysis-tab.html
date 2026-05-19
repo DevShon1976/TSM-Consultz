@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TSM · Doc Analysis — 4-Engine Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+/* ── RESET & BASE ───────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #0a0f0a;
+  --bg2:       #0d1a0d;
+  --bg3:       #112011;
+  --border:    #1e3a1e;
+  --border2:   #1e5a1e;
+  --green:     #00ff41;
+  --green-dim: #1a7a2a;
+  --yellow:    #ffd700;
+  --red:       #ff4444;
+  --orange:    #ff8c00;
+  --cyan:      #00e5ff;
+  --text:      #a8c8a8;
+  --text-dim:  #4a6a4a;
+  --white:     #e0ffe0;
+  --mono:      'IBM Plex Mono', monospace;
+}
+
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ── HEADER ─────────────────────────────────────────────── */
+.header {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.logo { color: var(--green); font-weight: 700; letter-spacing: .15em; font-size: 13px; }
+.logo .sep { color: var(--text-dim); }
+.logo-sub { color: var(--text-dim); font-size: 10px; letter-spacing: .1em; margin-top: 1px; }
+.session { color: var(--green); font-size: 11px; display: flex; align-items: center; gap: 6px; }
+.dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--green);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+#clock { font-variant-numeric: tabular-nums; }
+
+/* ── NAV ────────────────────────────────────────────────── */
+nav {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 0;
+  padding: 0 24px;
+  overflow-x: auto;
+}
+nav a {
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: 11px;
+  letter-spacing: .12em;
+  padding: 12px 18px;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: color .2s, border-color .2s;
+}
+nav a:hover { color: var(--text); }
+nav a.active { color: var(--green); border-bottom-color: var(--green); }
+
+/* ── MAIN ───────────────────────────────────────────────── */
+main { padding: 28px 28px 60px; max-width: 1100px; margin: 0 auto; }
+
+.section-label {
+  color: var(--text-dim);
+  font-size: 10px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+h2 { color: var(--white); font-size: 20px; font-weight: 600; margin-bottom: 20px; }
+
+/* ── PANEL ──────────────────────────────────────────────── */
+.panel {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+.panel-hdr {
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 10px;
+  letter-spacing: .2em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ai-badge {
+  background: rgba(0,229,255,.08);
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+  font-size: 9px;
+  padding: 2px 9px;
+  border-radius: 2px;
+  letter-spacing: .1em;
+}
+
+/* ── API KEY ROW ────────────────────────────────────────── */
+.key-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.key-label { color: var(--text-dim); font-size: 10px; letter-spacing: .15em; white-space: nowrap; }
+.key-input {
+  flex: 1;
+  min-width: 220px;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 6px 12px;
+  outline: none;
+  transition: border-color .2s;
+  letter-spacing: .04em;
+}
+.key-input:focus { border-color: var(--green); }
+.key-input::placeholder { color: var(--text-dim); }
+.key-save {
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid var(--green-dim);
+  border-radius: 3px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .1em;
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.key-save:hover { border-color: var(--green); color: var(--green); }
+.key-status { font-size: 10px; color: var(--text-dim); white-space: nowrap; }
+.key-status.ok { color: var(--green); }
+
+/* ── DROP ZONE ──────────────────────────────────────────── */
+.dropzone {
+  margin: 16px;
+  border: 1px dashed var(--border2);
+  border-radius: 4px;
+  padding: 36px 20px;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  transition: border-color .2s, background .2s;
+}
+.dropzone:hover, .dropzone.dragover {
+  border-color: var(--green);
+  background: rgba(0,255,65,.04);
+}
+.dropzone input[type=file] {
+  position: absolute; inset: 0; opacity: 0;
+  cursor: pointer; width: 100%; height: 100%;
+}
+.dz-icon { font-size: 30px; margin-bottom: 10px; color: var(--text-dim); }
+.dz-title { color: var(--text); font-size: 13px; margin-bottom: 4px; }
+.dz-sub   { color: var(--text-dim); font-size: 11px; }
+
+/* file chosen strip */
+.file-strip {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  margin: 0 16px 14px;
+  background: rgba(0,255,65,.05);
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+  padding: 9px 14px;
+  color: var(--green);
+  font-size: 12px;
+}
+.file-strip .fname { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-strip button {
+  background: none; border: none; color: var(--red);
+  cursor: pointer; font-size: 14px; font-family: var(--mono); padding: 0 2px;
+}
+
+/* ── RUN BAR ────────────────────────────────────────────── */
+.run-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 16px 16px;
+  flex-wrap: wrap;
+}
+.btn-run {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 24px;
+  background: rgba(0,255,65,.08);
+  border: 1px solid var(--green);
+  border-radius: 3px;
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.btn-run:hover:not(:disabled) { background: var(--green); color: var(--bg); }
+.btn-run:disabled { opacity: .35; cursor: not-allowed; }
+.spinner {
+  display: none;
+  width: 14px; height: 14px;
+  border: 2px solid rgba(0,255,65,.25);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.run-status { color: var(--text-dim); font-size: 11px; }
+
+/* ── ENGINE GRID ────────────────────────────────────────── */
+.engine-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 0 16px 16px;
+}
+@media (max-width: 680px) { .engine-grid { grid-template-columns: 1fr; } }
+
+.engine {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  transition: border-color .25s;
+}
+.engine.running { border-color: var(--yellow); }
+.engine.done    { border-color: var(--green); }
+.engine.errored { border-color: var(--red); }
+
+.engine-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+}
+.eng-num {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: var(--text-dim); flex-shrink: 0;
+  transition: border-color .25s, color .25s, background .25s;
+}
+.engine.running .eng-num { border-color: var(--yellow); color: var(--yellow); }
+.engine.done    .eng-num { border-color: var(--green);  color: var(--bg);     background: var(--green); }
+.engine.errored .eng-num { border-color: var(--red);    color: var(--red); }
+
+.eng-meta { flex: 1; min-width: 0; }
+.eng-name { color: var(--white); font-size: 11px; font-weight: 600; letter-spacing: .08em; }
+.eng-desc { color: var(--text-dim); font-size: 10px; margin-top: 1px; }
+
+.eng-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 2px;
+  border: 1px solid;
+  letter-spacing: .06em;
+  flex-shrink: 0;
+  transition: all .25s;
+}
+.eng-badge.idle    { color: var(--text-dim); border-color: var(--border); }
+.eng-badge.running { color: var(--yellow);   border-color: var(--yellow); animation: blink .9s step-end infinite; }
+.eng-badge.done    { color: var(--green);    border-color: var(--green); }
+.eng-badge.error   { color: var(--red);      border-color: var(--red); }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+.eng-output {
+  padding: 14px;
+  min-height: 100px;
+  max-height: 280px;
+  overflow-y: auto;
+  color: var(--text);
+  font-size: 11.5px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.eng-output.placeholder { color: #2a4a2a; font-style: italic; }
+.eng-output::-webkit-scrollbar { width: 4px; }
+.eng-output::-webkit-scrollbar-track { background: transparent; }
+.eng-output::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* ── MODEL ROW ──────────────────────────────────────────── */
+.model-row {
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.model-tag {
+  color: var(--cyan);
+  border: 1px solid rgba(0,229,255,.3);
+  padding: 1px 8px;
+  border-radius: 2px;
+  font-size: 10px;
+}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<div class="header">
+  <div>
+    <div class="logo">TSM <span class="sep">·</span> FINOPS INTERVIEW SUITE</div>
+    <div class="logo-sub">STAFF ACCOUNTANT TECHNICAL ASSESSMENT · 20-DEMO PLAYBOOK</div>
+  </div>
+  <div class="session">
+    <span class="dot"></span>
+    SESSION ACTIVE <span id="clock">00:00:00</span>
+  </div>
+</div>
+
+<!-- ── NAV ── -->
+<nav>
+  <a href="#">OVERVIEW</a>
+  <a href="#">20 DEMO PLAYBOOK</a>
+  <a href="#">POC DATA</a>
+  <a href="#">LIVE LEDGER</a>
+  <a href="#">RECONCILIATION</a>
+  <a href="#" class="active">DOC ANALYSIS</a>
+  <a href="#">SCORE CARD</a>
+</nav>
+
+<!-- ── MAIN ── -->
+<main>
+  <div class="section-label">AI · DOCUMENT INTELLIGENCE</div>
+  <h2>4-Engine Document Analysis</h2>
+
+  <div class="panel">
+    <div class="panel-hdr">
+      <span>⬡ DOCUMENT ANALYSIS — GROQ-POWERED PIPELINE</span>
+      <span class="ai-badge">4 ENGINES · PARALLEL</span>
+    </div>
+
+    <!-- API key -->
+    <div class="key-row">
+      <span class="key-label">GROQ API KEY</span>
+      <input class="key-input" type="password" id="apiKey"
+             placeholder="gsk_…  (stored in sessionStorage only)" autocomplete="off" />
+      <button class="key-save" id="saveKey">SAVE</button>
+      <span class="key-status" id="keyStatus">not set</span>
+    </div>
+
+    <!-- Drop zone -->
+    <div class="dropzone" id="dropzone">
+      <input type="file" id="fileInput"
+             accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.csv,.txt,.md,.json" />
+      <div class="dz-icon">⬆</div>
+      <div class="dz-title">Drop a document or click to browse</div>
+      <div class="dz-sub">Images · CSV · TXT · JSON · PDF*</div>
+    </div>
+
+    <!-- File strip -->
+    <div class="file-strip" id="fileStrip">
+      <span>📄</span>
+      <span class="fname" id="fName"></span>
+      <button id="fClear" title="Remove">✕</button>
+    </div>
+
+    <!-- Run -->
+    <div class="run-bar">
+      <button class="btn-run" id="runBtn" disabled>
+        <div class="spinner" id="spinner"></div>
+        <span id="runLabel">⚡ RUN 4-ENGINE ANALYSIS</span>
+      </button>
+      <span class="run-status" id="runStatus">Upload a document to begin</span>
+    </div>
+
+    <!-- Engines -->
+    <div class="engine-grid">
+
+      <div class="engine" id="eng1">
+        <div class="engine-head">
+          <div class="eng-num">1</div>
+          <div class="eng-meta">
+            <div class="eng-name">TRANSACTION EXTRACTOR</div>
+            <div class="eng-desc">Pulls every line item, date, amount &amp; payee</div>
+          </div>
+          <div class="eng-badge idle" id="e1-badge">IDLE</div>
+        </div>
+        <div class="eng-output placeholder" id="e1-out">Awaiting document…</div>
+      </div>
+
+      <div class="engine" id="eng2">
+        <div class="engine-head">
+          <div class="eng-num">2</div>
+          <div class="eng-meta">
+            <div class="eng-name">VARIANCE DETECTOR</div>
+            <div class="eng-desc">Flags mismatches, duplicates &amp; gaps</div>
+          </div>
+          <div class="eng-badge idle" id="e2-badge">IDLE</div>
+        </div>
+        <div class="eng-output placeholder" id="e2-out">Awaiting document…</div>
+      </div>
+
+      <div class="engine" id="eng3">
+        <div class="engine-head">
+          <div class="eng-num">3</div>
+          <div class="eng-meta">
+            <div class="eng-name">GL AUTO-CLASSIFIER</div>
+            <div class="eng-desc">Maps transactions to GL account codes</div>
+          </div>
+          <div class="eng-badge idle" id="e3-badge">IDLE</div>
+        </div>
+        <div class="eng-output placeholder" id="e3-out">Awaiting document…</div>
+      </div>
+
+      <div class="engine" id="eng4">
+        <div class="engine-head">
+          <div class="eng-num">4</div>
+          <div class="eng-meta">
+            <div class="eng-name">AUDIT RISK SCORER</div>
+            <div class="eng-desc">Rates risk level and surfaces red flags</div>
+          </div>
+          <div class="eng-badge idle" id="e4-badge">IDLE</div>
+        </div>
+        <div class="eng-output placeholder" id="e4-out">Awaiting document…</div>
+      </div>
+
+    </div>
+
+    <!-- Model info -->
+    <div class="model-row">
+      VISION / IMAGE →
+      <span class="model-tag">llama-3.2-90b-vision-preview</span>
+      &nbsp; TEXT →
+      <span class="model-tag">llama-3.3-70b-versatile</span>
+    </div>
+
+  </div><!-- /.panel -->
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── Clock ── */
+  const clockEl = document.getElementById('clock');
+  const start = Date.now();
+  setInterval(() => {
+    const s = Math.floor((Date.now() - start) / 1000);
+    const h = String(Math.floor(s / 3600)).padStart(2,'0');
+    const m = String(Math.floor((s % 3600) / 60)).padStart(2,'0');
+    const sec = String(s % 60).padStart(2,'0');
+    clockEl.textContent = `${h}:${m}:${sec}`;
+  }, 1000);
+
+  /* ── API key ── */
+  const apiKeyEl   = document.getElementById('apiKey');
+  const saveKeyBtn = document.getElementById('saveKey');
+  const keyStatus  = document.getElementById('keyStatus');
+
+  function loadKey() {
+    const k = sessionStorage.getItem('groq_key') || '';
+    if (k) {
+      apiKeyEl.value = k;
+      keyStatus.textContent = 'set ✓';
+      keyStatus.className = 'key-status ok';
+    }
+    return k;
+  }
+  loadKey();
+
+  saveKeyBtn.addEventListener('click', () => {
+    const k = apiKeyEl.value.trim();
+    if (!k) { keyStatus.textContent = 'enter a key'; keyStatus.className = 'key-status'; return; }
+    sessionStorage.setItem('groq_key', k);
+    keyStatus.textContent = 'saved ✓';
+    keyStatus.className = 'key-status ok';
+    checkReady();
+  });
+
+  /* ── File ── */
+  const dropzone  = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const fileStrip = document.getElementById('fileStrip');
+  const fName     = document.getElementById('fName');
+  const fClear    = document.getElementById('fClear');
+
+  let fileB64  = null;
+  let fileMime = null;
+  let fileText = null; // decoded text for non-image types
+
+  function setFile(file) {
+    if (!file) return;
+    fileMime = file.type || 'text/plain';
+    const reader = new FileReader();
+    reader.onload = e => {
+      const dataUrl = e.target.result;
+      fileB64 = dataUrl.split(',')[1];
+      // Decode text for non-image types
+      const isImg = fileMime.startsWith('image/');
+      if (!isImg) {
+        try { fileText = atob(fileB64); } catch { fileText = '[binary]'; }
+      } else {
+        fileText = null;
+      }
+      fName.textContent = file.name + ' (' + (file.size/1024).toFixed(1) + ' KB)';
+      fileStrip.style.display = 'flex';
+      dropzone.style.display  = 'none';
+      checkReady();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function clearFile() {
+    fileB64 = fileMime = fileText = null;
+    fileInput.value = '';
+    fileStrip.style.display = 'none';
+    dropzone.style.display  = '';
+    resetEngines();
+    checkReady();
+    document.getElementById('runStatus').textContent = 'Upload a document to begin';
+  }
+
+  fileInput.addEventListener('change', e => setFile(e.target.files[0]));
+  fClear.addEventListener('click', clearFile);
+  dropzone.addEventListener('dragover',  e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropzone.classList.remove('dragover');
+    setFile(e.dataTransfer.files[0]);
+  });
+
+  /* ── Ready check ── */
+  const runBtn    = document.getElementById('runBtn');
+  const runLabel  = document.getElementById('runLabel');
+  const spinner   = document.getElementById('spinner');
+  const runStatus = document.getElementById('runStatus');
+
+  function checkReady() {
+    const hasKey  = !!sessionStorage.getItem('groq_key');
+    const hasFile = !!fileB64;
+    runBtn.disabled = !(hasKey && hasFile);
+    if (hasKey && hasFile) runStatus.textContent = 'Ready — click RUN to start all 4 engines';
+    else if (!hasKey) runStatus.textContent = 'Enter Groq API key above';
+    else runStatus.textContent = 'Upload a document to begin';
+  }
+
+  /* ── Engines ── */
+  const ENGINES = [
+    {
+      n: 1,
+      name: 'TRANSACTION EXTRACTOR',
+      system: 'You are a financial transaction extractor. Given a document, extract every transaction as a compact table with columns: DATE | DESCRIPTION | AMOUNT | TYPE (credit/debit). If no clear transactions exist, summarise what financial data is present. Max 20 rows. Be concise.',
+      prompt: 'Extract all transactions from this document as a table.',
+    },
+    {
+      n: 2,
+      name: 'VARIANCE DETECTOR',
+      system: 'You are a variance and discrepancy detector for accounting documents. Identify: duplicate or near-duplicate entries, unusual round-number amounts, missing expected counterparts, date gaps or sequence breaks, and any amounts that look miskeyed. Return a short bulleted list of findings. If none found, say "No variances detected."',
+      prompt: 'Detect any variances, duplicates, or anomalies in this document.',
+    },
+    {
+      n: 3,
+      name: 'GL AUTO-CLASSIFIER',
+      system: 'You are a GL (General Ledger) classifier using a standard US chart of accounts. Map each transaction or line item to the most appropriate GL code and name (e.g. 6120 - Bank Charges, 1010 - Cash, 2000 - Accounts Payable, 6000 - Operating Expenses). Format: DESCRIPTION → GL CODE - GL NAME. Max 20 lines.',
+      prompt: 'Classify each transaction or line item to a GL account code.',
+    },
+    {
+      n: 4,
+      name: 'AUDIT RISK SCORER',
+      system: 'You are an audit risk analyst. Review the document and return: 1) OVERALL RISK: LOW / MEDIUM / HIGH on the first line. 2) Up to 5 specific red flags with a brief one-line explanation each. 3) One-sentence recommendation for the reconciliation team. Be direct and concise.',
+      prompt: 'Score the audit risk and list any red flags in this document.',
+    },
+  ];
+
+  function setState(n, state) {
+    const card  = document.getElementById('eng' + n);
+    const badge = document.getElementById('e' + n + '-badge');
+    card.className = 'engine ' + (state !== 'idle' ? state : '');
+    badge.className = 'eng-badge ' + (state === 'errored' ? 'error' : state);
+    const lbl = { idle:'IDLE', running:'RUNNING', done:'DONE', errored:'ERROR' };
+    badge.textContent = lbl[state] || state.toUpperCase();
+  }
+  function setOut(n, text, placeholder) {
+    const el = document.getElementById('e' + n + '-out');
+    el.textContent = text;
+    el.className = 'eng-output' + (placeholder ? ' placeholder' : '');
+  }
+  function resetEngines() {
+    ENGINES.forEach(e => { setState(e.n, 'idle'); setOut(e.n, 'Awaiting document…', true); });
+  }
+
+  /* ── Groq API call ── */
+  async function callGroq(engine) {
+    const key = sessionStorage.getItem('groq_key');
+    const isImg = fileMime && fileMime.startsWith('image/');
+    const model = isImg ? 'llama-3.2-90b-vision-preview' : 'llama-3.3-70b-versatile';
+
+    let userContent;
+    if (isImg) {
+      userContent = [
+        { type: 'image_url', image_url: { url: 'data:' + fileMime + ';base64,' + fileB64 } },
+        { type: 'text',      text: engine.prompt },
+      ];
+    } else {
+      // Text / CSV / PDF treated as raw text
+      const docText = fileText && fileText.length < 20000
+        ? fileText
+        : (fileText || '').slice(0, 20000) + '\n[truncated]';
+      userContent = engine.prompt + '\n\nDOCUMENT CONTENTS:\n' + docText;
+    }
+
+    const body = {
+      model,
+      max_tokens: 1024,
+      messages: [
+        { role: 'system', content: engine.system },
+        { role: 'user',   content: userContent },
+      ],
+    };
+
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + key,
+      },
+      body: JSON.stringify(body),
+    });
+
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    return data.choices?.[0]?.message?.content || '(no output)';
+  }
+
+  /* ── Run ── */
+  runBtn.addEventListener('click', async () => {
+    if (runBtn.disabled) return;
+    runBtn.disabled       = true;
+    spinner.style.display = 'block';
+    runLabel.textContent  = 'ANALYSING…';
+    runStatus.textContent = 'All 4 engines running in parallel via Groq…';
+    resetEngines();
+
+    await Promise.all(ENGINES.map(async (eng) => {
+      setState(eng.n, 'running');
+      try {
+        const result = await callGroq(eng);
+        setOut(eng.n, result);
+        setState(eng.n, 'done');
+      } catch (err) {
+        setOut(eng.n, '⚠ ' + err.message);
+        setState(eng.n, 'errored');
+      }
+    }));
+
+    spinner.style.display = 'none';
+    runLabel.textContent  = '⚡ RUN 4-ENGINE ANALYSIS';
+    runBtn.disabled       = false;
+    runStatus.textContent = 'Complete · ' + new Date().toLocaleTimeString();
+  });
+
+  checkReady();
+})();
+</script>
+</body>
+</html>
