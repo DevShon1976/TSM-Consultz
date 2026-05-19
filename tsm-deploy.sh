@@ -1,352 +1,246 @@
-#!/bin/bash
-export FLY_CONFIG_DIR="/workspaces/tsm-shell/.fly_config"
-# ══════════════════════════════════════════════════════════════════
-#  TSM DEPLOY — migrate HTML apps to Fly.io + sync to droplet
-#  Usage: bash tsm-deploy.sh [--fly] [--server] [--audit] [--all]
-# ══════════════════════════════════════════════════════════════════
+#!/usr/bin/env bash
+# ============================================================
+#  tsm-deploy.sh
+#  Commit all tracked + untracked files (skip .bak / .bak.*)
+#  Wire all HTML files into suite indexes
+#  Deploy to Fly.io
+#
+#  Usage:
+#    chmod +x tsm-deploy.sh && ./tsm-deploy.sh
+#    ./tsm-deploy.sh "optional commit message"
+# ============================================================
 set -euo pipefail
 
-# ── CONFIG ──────────────────────────────────────────────────────
-REMOTE_HOST="root@tsm-construction-s-1vcpu-2gb-nyc3-01"
-REMOTE_PATH="~/"
-AUDIT_DIR="./tmp_root/onclick-audit"
-OUTPUT_DIR="/mnt/user-data/outputs"   # where Claude writes files
-LOCAL_DEPLOY_DIR="./tmp_root/tsm-deploy"   # staging dir for fly apps
+# ── Config ──────────────────────────────────────────────────
+FLY_APP="tsm-shell"
+REPO_ROOT="$(git -C "$(dirname "$0")" rev-parse --show-toplevel 2>/dev/null || pwd)"
+COMMIT_MSG="${1:-"chore: auto-commit + deploy $(date '+%Y-%m-%d %H:%M')"}"
+SKIP_PATTERN='\.bak\(\.\|$\)\|\.bak\.[a-zA-Z0-9._-]*'   # matches .bak and .bak.*
 
-# Fly.io org (set your org slug here, or leave blank for personal)
-FLY_ORG=""
-FLY_REGION="ord"   # Chicago — closest to Phoenix; change to lax if preferred
+CYAN='\033[0;36m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
+RED='\033[0;31m';  BOLD='\033[1m';     RESET='\033[0m'
 
-# Color helpers
-RED='\033[0;31m'; GRN='\033[0;32m'; YLW='\033[1;33m'
-BLU='\033[0;34m'; CYN='\033[0;36m'; NC='\033[0m'
-ok()   { echo -e "${GRN}✓${NC}  $*"; }
-warn() { echo -e "${YLW}⚠${NC}  $*"; }
-info() { echo -e "${BLU}→${NC}  $*"; }
-fail() { echo -e "${RED}✗${NC}  $*"; exit 1; }
-hdr()  { echo -e "\n${CYN}══ $* ══${NC}"; }
+banner() { echo -e "\n${BOLD}${CYAN}══ $1 ══${RESET}"; }
+ok()     { echo -e "${GREEN}  ✓ $1${RESET}"; }
+warn()   { echo -e "${YELLOW}  ⚠ $1${RESET}"; }
+err()    { echo -e "${RED}  ✗ $1${RESET}"; }
+info()   { echo -e "  → $1"; }
 
-# ── DOMAIN → APP NAME MAP ────────────────────────────────────────
-# Maps each subdomain to its Fly app name (tsm- prefix + slug)
-declare -A APPS=(
-  ["financial-command"]="tsm-financial-command"
-  ["hc-billing"]="tsm-hc-billing"
-  ["hc-compliance"]="tsm-hc-compliance"
-  ["hc-grants"]="tsm-hc-grants"
-  ["hc-legal"]="tsm-hc-legal"
-  ["hc-medical"]="tsm-hc-medical"
-  ["hc-pharmacy"]="tsm-hc-pharmacy"
-  ["hc-strategist"]="tsm-hc-strategist"
-  ["hc-taxprep"]="tsm-hc-taxprep"
-  ["hc-vendors"]="tsm-hc-vendors"
-  ["hc-financial"]="tsm-hc-financial"
-  ["hc-insurance"]="tsm-hc-insurance"
-  ["hc-command"]="tsm-hc-command"
-  ["az-ins"]="tsm-az-ins"
-  ["construction-command"]="tsm-construction-command"
-  ["bpo-legal"]="tsm-bpo-legal"
-  ["bpo-realty"]="tsm-bpo-realty"
-  ["bpo-tax"]="tsm-bpo-tax"
-  ["desert-financial"]="tsm-desert-financial"
-  ["reo-pro"]="tsm-reo-pro"
-  ["pc-command"]="tsm-pc-command"
-  ["rrd-command"]="tsm-rrd-command"
-  ["strategist"]="tsm-strategist"
-  ["honorhealth"]="tsm-honorhealth"
-)
+echo -e "${BOLD}"
+echo "╔══════════════════════════════════════════════════╗"
+echo "║   TSM Shell · Commit + Wire + Deploy             ║"
+echo "╚══════════════════════════════════════════════════╝"
+echo -e "${RESET}"
+info "Repo root : $REPO_ROOT"
+info "Fly app   : $FLY_APP"
+info "Message   : $COMMIT_MSG"
 
-# ── HTML FILES TO DEPLOY ─────────────────────────────────────────
-# Maps fly-app-name → local html file
-declare -A HTML_FILES=(
-  ["tsm-honorhealth"]="${OUTPUT_DIR}/tsm-honorhealth-dee.html"
-  # Add more as they're created:
-  # ["tsm-hc-strategist"]="${OUTPUT_DIR}/tsm-hc-strategist.html"
-  # ["tsm-construction-command"]="${OUTPUT_DIR}/tsm-ameris-construction.html"
-)
+cd "$REPO_ROOT"
 
-# ════════════════════════════════════════════════════════════════
-# FUNCTION: check prerequisites
-# ════════════════════════════════════════════════════════════════
-check_deps() {
-  hdr "Checking prerequisites"
-  command -v flyctl &>/dev/null || fail "flyctl not installed. Run: curl -L https://fly.io/install.sh | sh"
-  command -v rsync  &>/dev/null || warn "rsync not found — will fall back to scp"
-  command -v ssh    &>/dev/null || fail "ssh not found"
-  flyctl auth whoami &>/dev/null || fail "Not logged into Fly.io. Run: flyctl auth login"
-  ok "All prerequisites met"
-  info "Fly.io user: $(flyctl auth whoami 2>/dev/null)"
-}
+# ── 1. Verify tools ──────────────────────────────────────────
+banner "STEP 1 · Checking tools"
+for tool in git node; do
+  command -v "$tool" &>/dev/null && ok "$tool found" || { err "$tool not found"; exit 1; }
+done
+FLY=$(command -v flyctl 2>/dev/null || command -v fly 2>/dev/null || true)
+if [[ -z "$FLY" ]]; then
+  warn "flyctl not found — deploy step will be skipped"
+  SKIP_DEPLOY=1
+else
+  ok "flyctl found"
+  SKIP_DEPLOY=0
+fi
 
-# ════════════════════════════════════════════════════════════════
-# FUNCTION: build static-site Dockerfile + fly.toml for one app
-# ════════════════════════════════════════════════════════════════
-scaffold_app() {
-  local SLUG="$1"        # e.g. hc-billing
-  local APP_NAME="$2"    # e.g. tsm-hc-billing
-  local HTML_SRC="$3"    # full path to the html file
-  local APP_DIR="${LOCAL_DEPLOY_DIR}/${APP_NAME}"
-
-  info "Scaffolding ${APP_NAME}…"
-  mkdir -p "${APP_DIR}/public"
-
-  # Copy html → index.html
-  if [[ -f "$HTML_SRC" ]]; then
-    cp "$HTML_SRC" "${APP_DIR}/public/index.html"
-    ok "Copied $(basename $HTML_SRC) → ${APP_NAME}/public/index.html"
-  else
-    warn "No HTML file found for ${APP_NAME} at ${HTML_SRC} — creating placeholder"
-    cat > "${APP_DIR}/public/index.html" << PLACEHOLDER
-<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>${APP_NAME}</title></head>
-<body style="font-family:sans-serif;padding:40px;background:#090E19;color:#E8EDF5">
-  <h2 style="color:#F47C20">TSM · ${SLUG}.tsmatter.com</h2>
-  <p>Deployment in progress. Check back soon.</p>
-</body></html>
-PLACEHOLDER
-  fi
-
-  # Minimal Nginx Dockerfile (no build step — pure static serve)
-  cat > "${APP_DIR}/Dockerfile" << 'DOCKER'
-FROM nginx:alpine
-COPY public /usr/share/nginx/html
-EXPOSE 8080
-RUN sed -i 's/listen\s*80;/listen 8080;/g' /etc/nginx/conf.d/default.conf
-CMD ["nginx", "-g", "daemon off;"]
-DOCKER
-
-  # fly.toml
-  local ORG_LINE=""
-  [[ -n "$FLY_ORG" ]] && ORG_LINE="org = \"${FLY_ORG}\""
-
-  cat > "${APP_DIR}/fly.toml" << FLYTOML
-app = "${APP_NAME}"
-primary_region = "${FLY_REGION}"
-${ORG_LINE}
-
-[build]
-
-[http_service]
-  internal_port = 8080
-  force_https   = true
-  auto_stop_machines  = true
-  auto_start_machines = true
-  min_machines_running = 0
-
-[[vm]]
-  memory = "256mb"
-  cpu_kind = "shared"
-  cpus = 1
-FLYTOML
-
-  ok "Scaffolded ${APP_NAME}"
-}
-
-# ════════════════════════════════════════════════════════════════
-# FUNCTION: deploy one app to fly
-# ════════════════════════════════════════════════════════════════
-deploy_app() {
-  local APP_NAME="$1"
-  local APP_DIR="${LOCAL_DEPLOY_DIR}/${APP_NAME}"
-
-  info "Deploying ${APP_NAME} to Fly.io…"
-  cd "${APP_DIR}"
-
-  # Create app if it doesn't exist yet
-  if ! flyctl apps list 2>/dev/null | grep -q "^${APP_NAME}"; then
-    info "Creating new Fly app: ${APP_NAME}"
-    local CREATE_FLAGS=" ${APP_NAME}  --machines"
-    [[ -n "$FLY_ORG" ]] && CREATE_FLAGS+=" --org ${FLY_ORG}"
-    flyctl apps create --org personal  ${CREATE_FLAGS} || warn "App may already exist — continuing deploy"
-  fi
-
-  flyctl deploy --app "${APP_NAME}" --ha=false 2>&1 | tail -20
-  ok "Deployed ${APP_NAME} → https://${APP_NAME}.fly.dev"
-  cd - > /dev/null
-}
-
-# ════════════════════════════════════════════════════════════════
-# FUNCTION: set custom domain on fly app
-# ════════════════════════════════════════════════════════════════
-set_custom_domain() {
-  local SLUG="$1"        # e.g. hc-billing
-  local APP_NAME="$2"    # e.g. tsm-hc-billing
-  local DOMAIN="${SLUG}.tsmatter.com"
-
-  info "Attaching custom domain ${DOMAIN} to ${APP_NAME}…"
-  flyctl certs add "${DOMAIN}" --app "${APP_NAME}" 2>&1 | tail -5 || warn "Cert may already exist for ${DOMAIN}"
-  ok "Domain attached: ${DOMAIN}"
-}
-
-# ════════════════════════════════════════════════════════════════
-# FUNCTION: copy all output files to remote droplet
-# ════════════════════════════════════════════════════════════════
-sync_to_server() {
-  hdr "Syncing files to ${REMOTE_HOST}"
-
-  # Test SSH connectivity first
-  info "Testing SSH connection to ${REMOTE_HOST}…"
-  ssh -o ConnectTimeout=8 -o BatchMode=yes "${REMOTE_HOST}" "echo ok" &>/dev/null \
-    || fail "Cannot reach ${REMOTE_HOST}. Check SSH key is added and host is reachable."
-  ok "SSH connection OK"
-
-  # Sync the full deploy staging dir
-  if command -v rsync &>/dev/null; then
-    rsync -avz --progress \
-      "${LOCAL_DEPLOY_DIR}/" \
-      "${REMOTE_HOST}:${REMOTE_PATH}/tsm-deploy/" \
-      2>&1
-  else
-    warn "rsync not available — using scp"
-    scp -r "${LOCAL_DEPLOY_DIR}/" "${REMOTE_HOST}:${REMOTE_PATH}/tsm-deploy/"
-  fi
-
-  # Also copy the raw output HTML files
-  if [[ -d "$OUTPUT_DIR" ]]; then
-    info "Copying HTML outputs…"
-    scp "${OUTPUT_DIR}"/*.html "${REMOTE_HOST}:${REMOTE_PATH}/tsm-html/" 2>/dev/null || warn "No html files found or remote dir missing — creating it"
-    ssh "${REMOTE_HOST}" "mkdir -p ${REMOTE_PATH}/tsm-html"
-    scp "${OUTPUT_DIR}"/*.html "${REMOTE_HOST}:${REMOTE_PATH}/tsm-html/" 2>/dev/null || true
-  fi
-
-  # Copy the onclick audit dir if it exists
-  if [[ -d "$AUDIT_DIR" ]]; then
-    info "Copying onclick audit dir…"
-    rsync -avz "${AUDIT_DIR}/" "${REMOTE_HOST}:${REMOTE_PATH}/onclick-audit/" 2>/dev/null \
-      || scp -r "${AUDIT_DIR}/" "${REMOTE_HOST}:${REMOTE_PATH}/onclick-audit/"
-  fi
-
-  ok "Sync complete → ${REMOTE_HOST}:${REMOTE_PATH}"
-}
-
-# ════════════════════════════════════════════════════════════════
-# FUNCTION: run onclick/syntax audit against all target domains
-# ════════════════════════════════════════════════════════════════
-run_audit() {
-  hdr "Running onclick syntax audit"
-  mkdir -p "${AUDIT_DIR}"
-
-  cat > "${AUDIT_DIR}/syntax-targets.txt" << 'TARGETS'
-https://financial-command.tsmatter.com
-https://hc-billing.tsmatter.com
-https://hc-compliance.tsmatter.com
-https://hc-grants.tsmatter.com
-https://hc-legal.tsmatter.com
-https://hc-medical.tsmatter.com
-https://hc-pharmacy.tsmatter.com
-https://hc-strategist.tsmatter.com
-https://hc-taxprep.tsmatter.com
-https://hc-vendors.tsmatter.com
-https://hc-financial.tsmatter.com
-https://hc-insurance.tsmatter.com
-https://hc-command.tsmatter.com
-https://az-ins.tsmatter.com
-https://construction-command.tsmatter.com
-https://bpo-legal.tsmatter.com
-https://bpo-realty.tsmatter.com
-https://bpo-tax.tsmatter.com
-https://desert-financial.tsmatter.com
-https://reo-pro.tsmatter.com
-https://pc-command.tsmatter.com
-https://rrd-command.tsmatter.com
-https://strategist.tsmatter.com
-TARGETS
-
-  ok "Target list written to ${AUDIT_DIR}/syntax-targets.txt"
-
-  if [[ -f "./tmp_root/pinpoint_syntax_breaks.sh" ]]; then
-    info "Running pinpoint_syntax_breaks.sh…"
-    bash ./tmp_root/pinpoint_syntax_breaks.sh 2>&1 | tee "${AUDIT_DIR}/syntax_report.txt"
-
-    echo ""
-    hdr "Audit Summary — Errors Only"
-    grep -A5 "INLINE SCRIPT\|FAILED\|ERROR" "${AUDIT_DIR}/syntax_report.txt" | head -100 || ok "No errors found in report"
-  else
-    warn "pinpoint_syntax_breaks.sh not found at ./tmp_root/ — skipping live audit"
-    info "Place the audit script at ./tmp_root/pinpoint_syntax_breaks.sh and rerun with --audit"
-  fi
-}
-
-# ════════════════════════════════════════════════════════════════
-# FUNCTION: print DNS instructions
-# ════════════════════════════════════════════════════════════════
-print_dns_guide() {
-  hdr "DNS Setup Required"
-  echo ""
-  echo "For each domain to resolve, add a CNAME record in your DNS provider"
-  echo "(Cloudflare, Namecheap, etc.):"
-  echo ""
-  printf "  %-35s  %-45s\n" "CNAME Host" "Points to"
-  printf "  %-35s  %-45s\n" "─────────────────────────────────" "─────────────────────────────────────────────"
-  for SLUG in "${!APPS[@]}"; do
-    APP_NAME="${APPS[$SLUG]}"
-    printf "  %-35s  %-45s\n" "${SLUG}.tsmatter.com" "${APP_NAME}.fly.dev"
-  done | sort
-  echo ""
-  warn "Fly.io also needs the cert attached: flyctl certs add <domain> --app <app-name>"
-}
-
-# ════════════════════════════════════════════════════════════════
-# MAIN
-# ════════════════════════════════════════════════════════════════
-main() {
-  echo -e "${CYN}"
-  echo "  ████████╗███████╗███╗   ███╗"
-  echo "     ██╔══╝██╔════╝████╗ ████║"
-  echo "     ██║   ███████╗██╔████╔██║"
-  echo "     ██║        ██╗██║╚██╔╝██║"
-  echo "     ██║   ███████║██║ ╚═╝ ██║"
-  echo "     ╚═╝   ╚══════╝╚═╝     ╚═╝"
-  echo -e "  Deploy · tsmatter.com network${NC}"
-  echo ""
-
-  local DO_FLY=false DO_SERVER=false DO_AUDIT=false
-
-  [[ $# -eq 0 ]] && { warn "No flags given. Usage: bash tsm-deploy.sh [--fly] [--server] [--audit] [--all] [--dns]"; exit 1; }
-
-  for arg in "$@"; do
-    case "$arg" in
-      --fly)    DO_FLY=true ;;
-      --server) DO_SERVER=true ;;
-      --audit)  DO_AUDIT=true ;;
-      --dns)    print_dns_guide; exit 0 ;;
-      --all)    DO_FLY=true; DO_SERVER=true; DO_AUDIT=true ;;
-      *) warn "Unknown flag: $arg" ;;
-    esac
+# ── 2. Remove stray .bak files from git index (if tracked) ───
+banner "STEP 2 · Untracking .bak files"
+BAK_TRACKED=$(git ls-files | grep -E '\.bak(\.[a-zA-Z0-9._-]+)?$' || true)
+if [[ -n "$BAK_TRACKED" ]]; then
+  echo "$BAK_TRACKED" | while read -r f; do
+    git rm --cached --ignore-unmatch "$f" --quiet && warn "Untracked from git: $f"
   done
+else
+  ok "No .bak files in git index"
+fi
 
-  check_deps
+# Ensure .gitignore excludes them going forward
+if ! grep -q "^*.bak" "$REPO_ROOT/.gitignore" 2>/dev/null; then
+  echo "*.bak"       >> "$REPO_ROOT/.gitignore"
+  echo "*.bak.*"     >> "$REPO_ROOT/.gitignore"
+  ok "Added *.bak / *.bak.* to .gitignore"
+fi
 
-  # ── RUN AUDIT ──
-  if $DO_AUDIT; then
-    run_audit
-  fi
+# ── 3. Wire HTML files into suite index files ────────────────
+banner "STEP 3 · Wiring HTML files into suite indexes"
+node - <<'NODEWIRE'
+const fs   = require('fs');
+const path = require('path');
 
-  # ── DEPLOY TO FLY ──
-  if $DO_FLY; then
-    hdr "Fly.io Deployment"
-    mkdir -p "${LOCAL_DEPLOY_DIR}"
+const SUITES = [
+  { dir: 'html/finops-suite',        index: 'html/finops-suite/suite-index.html',       title: 'FinOps Suite' },
+  { dir: 'html/construction-suite',  index: 'html/construction-suite/suite-index.html', title: 'Construction Suite' },
+  { dir: 'html/tsm-insurance',       index: 'html/tsm-insurance/suite-index.html',      title: 'Insurance Suite' },
+];
 
-    for SLUG in "${!APPS[@]}"; do
-      APP_NAME="${APPS[$SLUG]}"
-      HTML_SRC="${HTML_FILES[$APP_NAME]:-}"
+// Files to exclude from suite indexes
+const EXCLUDE = [
+  'suite-index.html','tsm-insurance-suite-index.html','index.html',
+  /\.bak(\.[a-zA-Z0-9._-]+)?$/,
+  /^assets\//,/^docs\//,/^wip\//,/^wip-billing\//,
+  /^showcase\//,/^financial\//,/^construction-docs\//,
+  /^finops-showcase\//,/^finops-main-strategist\//,/^finops-presentation\//,
+  /^v[0-9]+/,
+];
 
-      scaffold_app "$SLUG" "$APP_NAME" "$HTML_SRC"
-      deploy_app "$APP_NAME"
-      set_custom_domain "$SLUG" "$APP_NAME"
-      echo ""
-    done
-
-    ok "All apps deployed to Fly.io"
-    print_dns_guide
-  fi
-
-  # ── SYNC TO DROPLET ──
-  if $DO_SERVER; then
-    sync_to_server
-  fi
-
-  hdr "Done"
-  ok "TSM deploy complete"
+function shouldExclude(name) {
+  return EXCLUDE.some(e => e instanceof RegExp ? e.test(name) : e === name);
 }
 
-main "$@"
+function friendlyName(file) {
+  return file.replace('.html','').replace(/-/g,' ').replace(/_/g,' ')
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
 
+function iconFor(name) {
+  const n = name.toLowerCase();
+  if (n.includes('command'))     return '⚡';
+  if (n.includes('compliance'))  return '🛡';
+  if (n.includes('doc'))         return '📄';
+  if (n.includes('tax'))         return '💰';
+  if (n.includes('financial'))   return '📊';
+  if (n.includes('invoice') || n.includes('billing')) return '🧾';
+  if (n.includes('legal'))       return '⚖';
+  if (n.includes('present'))     return '📽';
+  if (n.includes('intel') || n.includes('brain')) return '🔍';
+  if (n.includes('az-ins') || n.includes('insurance')) return '🌵';
+  if (n.includes('agent'))       return '👥';
+  if (n.includes('ce-') || n.includes('study')) return '🎓';
+  if (n.includes('dme'))         return '🏥';
+  if (n.includes('zero'))        return '🔐';
+  if (n.includes('showcase'))    return '🖼';
+  if (n.includes('audit'))       return '🔎';
+  if (n.includes('permit') || n.includes('proposal')) return '📋';
+  if (n.includes('hub'))         return '🏗';
+  if (n.includes('staff') || n.includes('interview')) return '🧑‍💼';
+  if (n.includes('pitch'))       return '🎯';
+  if (n.includes('how-to'))      return '📖';
+  if (n.includes('pc-') || n.includes('p&c')) return '🏠';
+  return '📁';
+}
+
+for (const suite of SUITES) {
+  const absDir   = path.resolve(suite.dir);
+  const absIndex = path.resolve(suite.index);
+  if (!fs.existsSync(absDir)) { console.log(`  ⚠ Dir not found: ${suite.dir}`); continue; }
+
+  const files = fs.readdirSync(absDir)
+    .filter(f => f.endsWith('.html') && !shouldExclude(f))
+    .sort();
+
+  const cards = files.map(f => {
+    const icon = iconFor(f);
+    const label = friendlyName(f);
+    return `      <a class="suite-card" href="${f}">
+        <span class="sc-icon">${icon}</span>
+        <span class="sc-name">${label}</span>
+        <span class="sc-arrow">→</span>
+      </a>`;
+  }).join('\n');
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>TSM · ${suite.title}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0b0b0b;--bg2:#111;--bg3:#161616;--border:#222;--text:#ccc;--dim:#555;--gold:#f5c518;--sans:'Inter',sans-serif;--mono:'JetBrains Mono',monospace}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;padding:32px 24px}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:10px}
+.brand{color:var(--gold);font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.12em}
+.brand-sub{color:var(--dim);font-size:10px;letter-spacing:.1em;margin-top:2px;font-family:var(--mono)}
+.back{color:var(--dim);font-size:11px;text-decoration:none;border:1px solid var(--border);padding:5px 12px;border-radius:3px;transition:color .15s,border-color .15s}
+.back:hover{color:var(--gold);border-color:var(--gold)}
+h1{color:#f0f0f0;font-size:20px;font-weight:700;margin-bottom:4px}
+.sub{color:var(--dim);font-size:11px;margin-bottom:24px;font-family:var(--mono)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.suite-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:5px;
+  padding:14px 16px;display:flex;align-items:center;gap:10px;
+  text-decoration:none;color:var(--text);font-size:12px;font-weight:500;
+  transition:border-color .15s,background .15s;
+}
+.suite-card:hover{border-color:var(--gold);background:#161400}
+.sc-icon{font-size:18px;flex-shrink:0}
+.sc-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sc-arrow{color:var(--dim);font-size:12px;flex-shrink:0;transition:color .15s}
+.suite-card:hover .sc-arrow{color:var(--gold)}
+.count{color:var(--dim);font-family:var(--mono);font-size:11px}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="brand">🌐 TSM SHELL · ${suite.title.toUpperCase()}</div>
+    <div class="brand-sub">AUTO-GENERATED · ${new Date().toISOString().slice(0,10)}</div>
+  </div>
+  <a class="back" href="../index.html">← Back to Hub</a>
+</header>
+<h1>${suite.title}</h1>
+<div class="sub">${files.length} modules · click to open</div>
+<div class="grid">
+${cards}
+</div>
+</body>
+</html>`;
+
+  fs.writeFileSync(absIndex, html, 'utf8');
+  console.log(`  ✓ Wired ${files.length} files → ${suite.index}`);
+}
+NODEWIRE
+ok "Suite indexes rebuilt"
+
+# ── 4. Git add + commit ──────────────────────────────────────
+banner "STEP 4 · Git commit"
+git -C "$REPO_ROOT" add --all
+# Remove any .bak files that snuck into the staging area
+git -C "$REPO_ROOT" diff --cached --name-only \
+  | grep -E '\.bak(\.[a-zA-Z0-9._-]+)?$' \
+  | xargs -r git -C "$REPO_ROOT" rm --cached --ignore-unmatch --quiet --
+STAGED=$(git -C "$REPO_ROOT" diff --cached --name-only | wc -l | tr -d ' ')
+if [[ "$STAGED" -eq 0 ]]; then
+  warn "Nothing to commit — working tree clean"
+else
+  git -C "$REPO_ROOT" commit -m "$COMMIT_MSG"
+  ok "Committed $STAGED files: $COMMIT_MSG"
+fi
+
+# ── 5. Git push ──────────────────────────────────────────────
+banner "STEP 5 · Git push"
+REMOTE=$(git -C "$REPO_ROOT" remote | head -1 || true)
+if [[ -n "$REMOTE" ]]; then
+  BRANCH=$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD)
+  git -C "$REPO_ROOT" push "$REMOTE" "$BRANCH"
+  ok "Pushed to $REMOTE/$BRANCH"
+else
+  warn "No git remote configured — skipping push"
+fi
+
+# ── 6. Fly deploy ────────────────────────────────────────────
+banner "STEP 6 · Fly.io deploy"
+if [[ "${SKIP_DEPLOY:-0}" -eq 1 ]]; then
+  warn "Skipping — flyctl not installed"
+else
+  $FLY deploy --app "$FLY_APP" --ha=false
+  ok "Deployed → https://${FLY_APP}.fly.dev"
+fi
+
+# ── Done ─────────────────────────────────────────────────────
+echo ""
+echo -e "${BOLD}${GREEN}╔══════════════════════════════════════════════════╗"
+echo    "║  ✓ ALL DONE                                      ║"
+echo -e "╚══════════════════════════════════════════════════╝${RESET}"
+echo -e "  Live: ${CYAN}https://${FLY_APP}.fly.dev${RESET}"
+echo ""
