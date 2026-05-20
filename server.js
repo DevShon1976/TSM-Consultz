@@ -742,54 +742,48 @@ CONFIDENCE
 }
 
 /* ---------- Healthcare ---------- */
-
 app.all('/api/hc/query', async (req,res)=>{
   const payload=req.body?.payload || req.body || {};
-  const context=payload.context || payload.question || "Healthcare WIP review";
-
-  res.json({
-    ok:true,
-    sector:"HEALTHCARE",
-    node:"HC NODE",
-    reply:tsmMeshReply("HEALTHCARE", context),
-    content:tsmMeshReply("HEALTHCARE", context),
-    mesh:true,
-    timestamp:new Date().toISOString()
-  });
+  const prompt=payload.prompt||payload.context||payload.question||payload.query||payload.action||"Analyze HEALTHCARE operations.";
+  const GROQ_KEY=process.env.GROQ_API_KEY;
+  if(!GROQ_KEY) return res.json({ok:true,reply:tsmMeshReply("HEALTHCARE",prompt),content:tsmMeshReply("HEALTHCARE",prompt),mesh:true});
+  try {
+    const r=await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{"Authorization":"Bearer "+GROQ_KEY,"Content-Type":"application/json"},body:JSON.stringify({model:process.env.TSM_MODEL||"llama-3.3-70b-versatile",max_tokens:800,messages:[{role:"system",content:"You are the TSM Healthcare Neural Strategist. Analyze HC operations, billing, compliance, clinical, and revenue cycle. Be specific and actionable."},{role:"user",content:prompt}]})}); 
+    const d=await r.json();
+    const reply=d.choices?.[0]?.message?.content||tsmMeshReply("HEALTHCARE",prompt);
+    res.json({ok:true,reply,content:reply,response:reply,sector:"HEALTHCARE",mesh:true,timestamp:new Date().toISOString()});
+  } catch(e){res.json({ok:true,reply:tsmMeshReply("HEALTHCARE",prompt),content:tsmMeshReply("HEALTHCARE",prompt)});}
+});
 });
 
 /* ---------- Construction ---------- */
-
 app.all('/api/construction/query', async (req,res)=>{
   const payload=req.body?.payload || req.body || {};
-  const context=payload.context || payload.question || "Construction WIP review";
-
-  res.json({
-    ok:true,
-    sector:"CONSTRUCTION",
-    node:"CONSTRUCTION NODE",
-    reply:tsmMeshReply("CONSTRUCTION", context),
-    content:tsmMeshReply("CONSTRUCTION", context),
-    mesh:true,
-    timestamp:new Date().toISOString()
-  });
+  const prompt=payload.prompt||payload.context||payload.question||payload.query||payload.action||"Analyze CONSTRUCTION operations.";
+  const GROQ_KEY=process.env.GROQ_API_KEY;
+  if(!GROQ_KEY) return res.json({ok:true,reply:tsmMeshReply("CONSTRUCTION",prompt),content:tsmMeshReply("CONSTRUCTION",prompt),mesh:true});
+  try {
+    const r=await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{"Authorization":"Bearer "+GROQ_KEY,"Content-Type":"application/json"},body:JSON.stringify({model:process.env.TSM_MODEL||"llama-3.3-70b-versatile",max_tokens:800,messages:[{role:"system",content:"You are the TSM Construction Neural Strategist. Analyze construction operations, permits, scheduling, cost, compliance. Be specific and actionable."},{role:"user",content:prompt}]})}); 
+    const d=await r.json();
+    const reply=d.choices?.[0]?.message?.content||tsmMeshReply("CONSTRUCTION",prompt);
+    res.json({ok:true,reply,content:reply,response:reply,sector:"CONSTRUCTION",mesh:true,timestamp:new Date().toISOString()});
+  } catch(e){res.json({ok:true,reply:tsmMeshReply("CONSTRUCTION",prompt),content:tsmMeshReply("CONSTRUCTION",prompt)});}
+});
 });
 
 /* ---------- Finance ---------- */
-
 app.all('/api/finance/query', async (req,res)=>{
   const payload=req.body?.payload || req.body || {};
-  const context=payload.context || payload.question || "Financial WIP review";
-
-  res.json({
-    ok:true,
-    sector:"FINANCE",
-    node:"FINANCE NODE",
-    reply:tsmMeshReply("FINANCE", context),
-    content:tsmMeshReply("FINANCE", context),
-    mesh:true,
-    timestamp:new Date().toISOString()
-  });
+  const prompt=payload.prompt||payload.context||payload.question||payload.query||payload.action||"Analyze FINANCE operations.";
+  const GROQ_KEY=process.env.GROQ_API_KEY;
+  if(!GROQ_KEY) return res.json({ok:true,reply:tsmMeshReply("FINANCE",prompt),content:tsmMeshReply("FINANCE",prompt),mesh:true});
+  try {
+    const r=await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{"Authorization":"Bearer "+GROQ_KEY,"Content-Type":"application/json"},body:JSON.stringify({model:process.env.TSM_MODEL||"llama-3.3-70b-versatile",max_tokens:800,messages:[{role:"system",content:"You are the TSM Financial Neural Strategist. Analyze financial operations, revenue, cash flow, CFO priorities. Be specific and data-driven."},{role:"user",content:prompt}]})}); 
+    const d=await r.json();
+    const reply=d.choices?.[0]?.message?.content||tsmMeshReply("FINANCE",prompt);
+    res.json({ok:true,reply,content:reply,response:reply,sector:"FINANCE",mesh:true,timestamp:new Date().toISOString()});
+  } catch(e){res.json({ok:true,reply:tsmMeshReply("FINANCE",prompt),content:tsmMeshReply("FINANCE",prompt)});}
+});
 });
 
 /* ---------- Insurance ---------- */
@@ -1189,4 +1183,18 @@ mkRoute("/api/legal/query",              "You are the TSM Legal Neural Strategis
 mkRoute("/api/main-strategist/hc-report","You are the TSM Main Strategist HC Report Engine. Generate comprehensive healthcare executive reports.", "HEALTHCARE");
 mkRoute("/api/mortgage/query",           "You are the TSM Mortgage Neural Strategist. Analyze mortgage operations, pipeline, and financial performance.", "MORTGAGE");
 mkRoute("/api/strategist/hc/dee-action", "You are the TSM HC DEE Action Engine. Generate strategic action plans for healthcare executive decisions.", "HEALTHCARE");
+
+/* ---------- Music ---------- */
+app.all('/api/music/strategy', async (req,res)=>{
+  const prompt=(req.body||{}).prompt||(req.body||{}).query||"Analyze music strategy.";
+  const GROQ_KEY=process.env.GROQ_API_KEY;
+  if(!GROQ_KEY) return res.json({ok:true,reply:"Music AI unavailable",content:"Music AI unavailable"});
+  try {
+    const r=await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{"Authorization":"Bearer "+GROQ_KEY,"Content-Type":"application/json"},body:JSON.stringify({model:process.env.TSM_MODEL||"llama-3.3-70b-versatile",max_tokens:800,messages:[{role:"system",content:"You are the TSM Music Industry Strategist. Analyze artist development, releases, revenue, distribution, and music business strategy."},{role:"user",content:prompt}]})});
+    const d=await r.json();
+    const reply=d.choices?.[0]?.message?.content||"Analysis complete.";
+    res.json({ok:true,reply,content:reply,response:reply,mesh:true,timestamp:new Date().toISOString()});
+  } catch(e){res.json({ok:true,reply:"Music AI error: "+e.message});}
+});
+
 app.use((req,res) => res.status(404).send('Not found: '+req.path));
