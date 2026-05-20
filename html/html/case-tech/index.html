@@ -7,29 +7,17 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Share+Tech+Mono&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
-/* TSM_SCROLL_FIX */
-html, body {
-  height: 100%;
-  overflow-y: auto;
-}
-main {
-  padding-bottom: 80px !important;
-  min-height: calc(100vh - 60px);
-}
-.footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 32px;
-  z-index: 10;
-}
-.ask-bar {
-  position: fixed;
-  bottom: 40px;
-  right: 12px;
-  z-index: 20;
-}
+/* TSM_SCROLL_FIX_V2 */
+html, body { height: 100%; overflow-y: auto; }
+main, .main { padding-bottom: 80px !important; min-height: calc(100vh - 60px); }
+.panel { max-height: none !important; overflow-y: visible; }
+.panel.active { display: block; }
+.scroll-box { max-height: 400px; overflow-y: auto; }
+.bnca-output { min-height: 120px; max-height: none; white-space: pre-wrap; }
+.footer { position: fixed; bottom: 0; left: 0; right: 0; height: 32px; z-index: 10; }
+.ask-bar { position: fixed; bottom: 40px; right: 12px; z-index: 20; }
+
+
 .panel {
   max-height: 60vh;
   overflow-y: auto;
@@ -437,8 +425,8 @@ console.log("TSM_UI: Direct Neural Link Established.");
   </div>
   <div class="hdr-right">
     <div class="hdr-pills">
-      <div class="hdr-pill cyan" onclick="scrollToSection('modules')">MODULES</div>
-      <div class="hdr-pill cyan" onclick="scrollToSection('reports')">REPORTS</div>
+      <div class="hdr-pill cyan" data-tsm-action="scrollToSection" data-tsm-args="'modules'">MODULES</div>
+      <div class="hdr-pill cyan" data-tsm-action="scrollToSection" data-tsm-args="'reports'">REPORTS</div>
       <div class="hdr-pill green" onclick="window.open('https://financial.tsmatter.com','_blank')">FINANCIAL CMD ↗</div>
     </div>
     <div class="hdr-status"><div class="status-dot"></div>SOVEREIGN · ONLINE</div>
@@ -471,12 +459,12 @@ console.log("TSM_UI: Direct Neural Link Established.");
     <div class="query-label">// NEURAL QUERY — DEPLOY TO ALL SOVEREIGN NODES SIMULTANEOUSLY</div>
     <div class="query-bar">
       <div class="node-toggles">
-        <div class="ntog tax active" id="tog-tax" onclick="toggleNode('tax')">TAX</div>
-        <div class="ntog orders active" id="tog-orders" onclick="toggleNode('orders')">ORDERS</div>
-        <div class="ntog ar active" id="tog-ar" onclick="toggleNode('ar')">AR/AP</div>
+        <div class="ntog tax active" id="tog-tax" data-tsm-action="toggleNode" data-tsm-args="'tax'">TAX</div>
+        <div class="ntog orders active" id="tog-orders" data-tsm-action="toggleNode" data-tsm-args="'orders'">ORDERS</div>
+        <div class="ntog ar active" id="tog-ar" data-tsm-action="toggleNode" data-tsm-args="'ar'">AR/AP</div>
       </div>
       <input id="masterQuery" placeholder="e.g. Export Q1 sales tax for 15 states, flag nexus risk…" onkeydown="if(event.key==='Enter')deployMaster()"/>
-      <button class="deploy-btn" id="masterBtn" onclick="deployMaster()">⚡ DEPLOY</button>
+      <button class="deploy-btn" id="masterBtn" data-tsm-action="deployMaster" data-tsm-args="">⚡ DEPLOY</button>
     </div>
   </div>
 
@@ -484,7 +472,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
   <div class="synthesis-panel" id="synthPanel">
     <div class="synth-head">
       <div class="synth-title">⚡ NEURAL SYNTHESIS — ALL NODES RESPONDED</div>
-      <div class="synth-close" onclick="closeSynth()">✕ CLOSE</div>
+      <div class="synth-close" data-tsm-action="closeSynth" data-tsm-args="">✕ CLOSE</div>
     </div>
     <div class="synth-body">
       <div class="synth-query" id="synthQuery"></div>
@@ -530,22 +518,22 @@ console.log("TSM_UI: Direct Neural Link Established.");
           Zero manual filing.
         </div>
         <div class="quick-prompts">
-          <button class="qp-btn" onclick="runQuick('tax','Export Q1 sales tax liability breakdown for all 15 nexus states with filing deadlines')">
+          <button class="qp-btn" data-tsm-action="runQuick" data-tsm-args="'tax','Export Q1 sales tax liability breakdown for all 15 nexus states with filing deadlines'">
             <span class="qp-arrow">›</span> Q1 tax liability export · all 15 states
           </button>
-          <button class="qp-btn" onclick="runQuick('tax','Which states are at risk of triggering new economic nexus based on current sales velocity?')">
+          <button class="qp-btn" data-tsm-action="runQuick" data-tsm-args="'tax','Which states are at risk of triggering new economic nexus based on current sales velocity?'">
             <span class="qp-arrow">›</span> New nexus risk by sales velocity
           </button>
-          <button class="qp-btn" onclick="runQuick('tax','List all pending exemption certificates expiring in the next 60 days')">
+          <button class="qp-btn" data-tsm-action="runQuick" data-tsm-args="'tax','List all pending exemption certificates expiring in the next 60 days'">
             <span class="qp-arrow">›</span> Exemption certs expiring in 60 days
           </button>
-          <button class="qp-btn" onclick="runQuick('tax','Generate an audit-ready sales tax reconciliation for the current quarter')">
+          <button class="qp-btn" data-tsm-action="runQuick" data-tsm-args="'tax','Generate an audit-ready sales tax reconciliation for the current quarter'">
             <span class="qp-arrow">›</span> Audit-ready Q reconciliation
           </button>
         </div>
         <div class="sov-input-row">
           <input class="sov-input" id="input-tax" placeholder="Custom tax / nexus query…" onkeydown="if(event.key==='Enter')runModule('tax')"/>
-          <button class="sov-run-btn tax" onclick="runModule('tax')">ANALYZE</button>
+          <button class="sov-run-btn tax" data-tsm-action="runModule" data-tsm-args="'tax'">ANALYZE</button>
         </div>
         <div class="sov-response" id="resp-tax"></div>
       </div>
@@ -571,22 +559,22 @@ console.log("TSM_UI: Direct Neural Link Established.");
           auto-categorization via AI inference.
         </div>
         <div class="quick-prompts">
-          <button class="qp-btn" onclick="runQuick('orders','Generate a shipping label with cheapest carrier rate for a 5lb package going to New York')">
+          <button class="qp-btn" data-tsm-action="runQuick" data-tsm-args="'orders','Generate a shipping label with cheapest carrier rate for a 5lb package going to New York'">
             <span class="qp-arrow">›</span> Generate label · carrier rate shop
           </button>
-          <button class="qp-btn" onclick="runQuick('orders','Show me all orders in the intake queue that have not been labeled in the past 48 hours')">
+          <button class="qp-btn" data-tsm-action="runQuick" data-tsm-args="'orders','Show me all orders in the intake queue that have not been labeled in the past 48 hours'">
             <span class="qp-arrow">›</span> Intake queue · unlabeled 48h
           </button>
-          <button class="qp-btn" onclick="runQuick('orders','Analyze fulfillment bottlenecks this month and suggest workflow improvements')">
+          <button class="qp-btn" data-tsm-action="runQuick" data-tsm-args="'orders','Analyze fulfillment bottlenecks this month and suggest workflow improvements'">
             <span class="qp-arrow">›</span> Fulfillment bottleneck analysis
           </button>
-          <button class="qp-btn" onclick="runQuick('orders','Auto-categorize and record all receipts from this week using bank feed matching')">
+          <button class="qp-btn" data-tsm-action="runQuick" data-tsm-args="'orders','Auto-categorize and record all receipts from this week using bank feed matching'">
             <span class="qp-arrow">›</span> Bank feed auto-match · receipts
           </button>
         </div>
         <div class="sov-input-row">
           <input class="sov-input" id="input-orders" placeholder="Order / fulfillment / shipping query…" onkeydown="if(event.key==='Enter')runModule('orders')"/>
-          <button class="sov-run-btn orders" onclick="runModule('orders')">PROCESS</button>
+          <button class="sov-run-btn orders" data-tsm-action="runModule" data-tsm-args="'orders'">PROCESS</button>
         </div>
         <div class="sov-response" id="resp-orders"></div>
       </div>
@@ -612,22 +600,22 @@ console.log("TSM_UI: Direct Neural Link Established.");
           AP auto-coding with audit trail.
         </div>
         <div class="quick-prompts">
-          <button class="qp-btn" onclick="runQuick('ar','Run a risk analysis on all open AR and flag customers trending toward late payment')">
+          <button class="qp-btn" data-tsm-action="runQuick" data-tsm-args="'ar','Run a risk analysis on all open AR and flag customers trending toward late payment'">
             <span class="qp-arrow">›</span> Risk analysis · AR late-pay prediction
           </button>
-          <button class="qp-btn" onclick="runQuick('ar','Auto-match all deposits from the past week against open invoices and flag discrepancies')">
+          <button class="qp-btn" data-tsm-action="runQuick" data-tsm-args="'ar','Auto-match all deposits from the past week against open invoices and flag discrepancies'">
             <span class="qp-arrow">›</span> Deposit → invoice auto-match
           </button>
-          <button class="qp-btn" onclick="runQuick('ar','Generate a 30-60-90 aging report with recommended collection actions')">
+          <button class="qp-btn" data-tsm-action="runQuick" data-tsm-args="'ar','Generate a 30-60-90 aging report with recommended collection actions'">
             <span class="qp-arrow">›</span> 30-60-90 aging · collection actions
           </button>
-          <button class="qp-btn" onclick="runQuick('ar','Update all customer records with latest payment status from QuickBooks sync')">
+          <button class="qp-btn" data-tsm-action="runQuick" data-tsm-args="'ar','Update all customer records with latest payment status from QuickBooks sync'">
             <span class="qp-arrow">›</span> QuickBooks sync · customer update
           </button>
         </div>
         <div class="sov-input-row">
           <input class="sov-input" id="input-ar" placeholder="AR/AP / reconciliation / QuickBooks query…" onkeydown="if(event.key==='Enter')runModule('ar')"/>
-          <button class="sov-run-btn ar" onclick="runModule('ar')">RECONCILE</button>
+          <button class="sov-run-btn ar" data-tsm-action="runModule" data-tsm-args="'ar'">RECONCILE</button>
         </div>
         <div class="sov-response" id="resp-ar"></div>
       </div>
@@ -659,7 +647,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
         <option value="cashflow">Cash Flow Forecast (Next 90 Days)</option>
       </select>
       <input class="report-state-input" id="reportContext" placeholder="States, client name, date range…"/>
-      <button class="build-btn" onclick="buildReport()">📄 BUILD REPORT</button>
+      <button class="build-btn" data-tsm-action="buildReport" data-tsm-args="">📄 BUILD REPORT</button>
     </div>
     <div class="report-output" id="reportOutput"></div>
   </div>
@@ -933,6 +921,24 @@ function scrollToSection(id) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
 }
 </script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>
 <script src="/html/runtime/tsm-runtime-engine.js"></script>

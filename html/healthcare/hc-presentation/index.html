@@ -292,8 +292,8 @@ window.TSM_OPS = {
 <h1 id="title"></h1>
 <div class="sub" id="sub"></div>
 <div class="price" id="price"></div>
-<button class="primary" onclick="startAutoDemo()">🎬 AUTO DEMO MODE</button>
-<button onclick="showClosingLock()">🔒 EXECUTIVE SUMMARY CLOSE</button>
+<button class="primary" data-tsm-action="startAutoDemo" data-tsm-args="">🎬 AUTO DEMO MODE</button>
+<button data-tsm-action="showClosingLock" data-tsm-args="">🔒 EXECUTIVE SUMMARY CLOSE</button>
 <button class="primary" onclick="OPS.runDoc()">RUN SELECTED WORKFLOW</button>
 <button onclick="OPS.runAll()">RUN ALL WORKFLOWS</button>
 <button onclick="OPS.pushMain()">OPEN HC MAIN STRATEGIST</button>
@@ -630,7 +630,7 @@ TALK TRACK:
               Demo output converted into a decision-ready pilot path.
             </div>
           </div>
-          <button onclick="hideClosingLock()" style="
+          <button data-tsm-action="hideClosingLock" data-tsm-args="" style="
             background:transparent;
             border:1px solid #123050;
             color:#8fb0c8;
@@ -714,7 +714,7 @@ TALK TRACK:
         ">${escapeHtml(report.summary || "BNCA ready: prioritize denial/auth blockers, assign owner lanes, generate follow-up documentation, and relay executive summary.")}</div>
 
         <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <button onclick="startHealthcarePilot()" style="
+          <button data-tsm-action="startHealthcarePilot" data-tsm-args="" style="
             background:#00e0ff;
             color:#001018;
             border:none;
@@ -724,7 +724,7 @@ TALK TRACK:
             cursor:pointer;
           ">START 30-DAY PILOT</button>
 
-          <button onclick="bookHealthcareWalkthrough()" style="
+          <button data-tsm-action="bookHealthcareWalkthrough" data-tsm-args="" style="
             background:transparent;
             border:1px solid #00e0ff;
             color:#00e0ff;
@@ -826,10 +826,10 @@ TALK TRACK:
     `;
 
     rail.innerHTML = `
-      <button onclick="startHealthcarePilot()" style="background:#00e0ff;color:#001018;border:none;padding:13px 16px;border-radius:9px;font-weight:900;cursor:pointer">
+      <button data-tsm-action="startHealthcarePilot" data-tsm-args="" style="background:#00e0ff;color:#001018;border:none;padding:13px 16px;border-radius:9px;font-weight:900;cursor:pointer">
         START 30-DAY PILOT
       </button>
-      <button onclick="bookHealthcareWalkthrough()" style="background:transparent;border:1px solid #00e0ff;color:#00e0ff;padding:13px 16px;border-radius:9px;font-weight:900;cursor:pointer">
+      <button data-tsm-action="bookHealthcareWalkthrough" data-tsm-args="" style="background:transparent;border:1px solid #00e0ff;color:#00e0ff;padding:13px 16px;border-radius:9px;font-weight:900;cursor:pointer">
         BOOK TECHNICAL WALKTHROUGH
       </button>
       <button onclick="location.href='/hc-main-strategist/index.html?v=closing-lock'" style="background:transparent;border:1px solid #00f59f;color:#00f59f;padding:13px 16px;border-radius:9px;font-weight:900;cursor:pointer">
@@ -956,20 +956,20 @@ function bookHealthcareWalkthrough(){
 #tsmHowToAnswer{margin-top:12px;white-space:pre-wrap;line-height:1.55;background:#061018;border:1px solid #123050;border-radius:10px;padding:12px}
 </style>
 
-<button id="tsmHowToButton" onclick="toggleHowToAssistant()">How To</button>
+<button id="tsmHowToButton" data-tsm-action="toggleHowToAssistant" data-tsm-args="">How To</button>
 
 <div id="tsmHowToPanel">
   <h3>HOW TO GUIDE</h3>
   <div class="mini">Healthcare Operations Layer assistant. Use this during demos or handoffs to guide end users through available features.</div>
 
-  <button onclick="howToAnswer('demo')">🎬 Run the guided demo</button>
-  <button onclick="howToAnswer('workflow')">▶ Run a healthcare workflow</button>
-  <button onclick="howToAnswer('fourlayer')">▣ Understand the 4-layer command flow</button>
-  <button onclick="howToAnswer('close')">🔒 Use the executive close panel</button>
-  <button onclick="howToAnswer('strategist')">🧠 Send output to HC Main Strategist</button>
-  <button onclick="howToAnswer('portal')">📊 Open Executive Portal</button>
-  <button onclick="howToAnswer('pilot')">✅ Start a 30-day pilot path</button>
-  <button onclick="howToAnswer('features')">✦ Show all customized features</button>
+  <button data-tsm-action="howToAnswer" data-tsm-args="'demo'">🎬 Run the guided demo</button>
+  <button data-tsm-action="howToAnswer" data-tsm-args="'workflow'">▶ Run a healthcare workflow</button>
+  <button data-tsm-action="howToAnswer" data-tsm-args="'fourlayer'">▣ Understand the 4-layer command flow</button>
+  <button data-tsm-action="howToAnswer" data-tsm-args="'close'">🔒 Use the executive close panel</button>
+  <button data-tsm-action="howToAnswer" data-tsm-args="'strategist'">🧠 Send output to HC Main Strategist</button>
+  <button data-tsm-action="howToAnswer" data-tsm-args="'portal'">📊 Open Executive Portal</button>
+  <button data-tsm-action="howToAnswer" data-tsm-args="'pilot'">✅ Start a 30-day pilot path</button>
+  <button data-tsm-action="howToAnswer" data-tsm-args="'features'">✦ Show all customized features</button>
 
   <div id="tsmHowToAnswer">Select a guide topic above.</div>
 </div>
@@ -1285,5 +1285,23 @@ CONFIDENCE
 <script src="/shared/tsm-global-command.js?v=phase4"></script>
 <script src="/shared/tsm-sector-intelligence.js?v=phase5si"></script>
 <script src="/shared/tsm-autonomous-execution.js?v=phase5"></script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

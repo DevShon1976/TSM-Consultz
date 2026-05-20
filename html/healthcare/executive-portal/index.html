@@ -223,9 +223,9 @@ th{color:#7793a7;font-size:11px;letter-spacing:.13em}
     <div class="sub">Enterprise Healthcare Command Authority · CFO / COO / Regional Leadership View</div>
   </div>
   <div>
-    <button class="btn" onclick="runExecutiveBriefing()">Run Executive Briefing</button>
-    <button class="btn gold" onclick="exportExecutiveBrief()">Export Brief</button>
-    <button class="btn purple" onclick="openPresentation()">Presentation Mode</button>
+    <button class="btn" data-tsm-action="runExecutiveBriefing" data-tsm-args="">Run Executive Briefing</button>
+    <button class="btn gold" data-tsm-action="exportExecutiveBrief" data-tsm-args="">Export Brief</button>
+    <button class="btn purple" data-tsm-action="openPresentation" data-tsm-args="">Presentation Mode</button>
   </div>
 </header>
 
@@ -325,7 +325,7 @@ CONFIDENCE
 </main>
 
 <section id="presentation">
-  <button class="btn" onclick="closePresentation()">Close</button>
+  <button class="btn" data-tsm-action="closePresentation" data-tsm-args="">Close</button>
   <h1>HC Executive Briefing Mode</h1>
   <pre class="brief">POSITIONING
 This is the executive command layer for healthcare operations.
@@ -576,5 +576,23 @@ CONFIDENCE
 })();
 </script>
 
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

@@ -137,8 +137,8 @@ console.log("TSM_UI: Direct Neural Link Established.");
 <div class="main">
   <div class="bar">
     <div class="url" id="url-bar">select an app</div>
-    <button class="bar-btn" onclick="reloadFrame()">⟳ Reload</button>
-    <button class="bar-btn" onclick="openCurrentTab()">↗ Open</button>
+    <button class="bar-btn" data-tsm-action="reloadFrame" data-tsm-args="">⟳ Reload</button>
+    <button class="bar-btn" data-tsm-action="openCurrentTab" data-tsm-args="">↗ Open</button>
   </div>
   <div class="frame-wrap">
     <iframe id="frame" src="about:blank"
@@ -148,7 +148,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
       <div class="splash-name" id="splash-name"></div>
       <div class="splash-sub">No local copy · opened in new tab</div>
       <div class="splash-url" id="splash-url"></div>
-      <button class="splash-btn" onclick="openCurrentTab()">Open Again ↗</button>
+      <button class="splash-btn" data-tsm-action="openCurrentTab" data-tsm-args="">Open Again ↗</button>
     </div>
   </div>
   <div class="foot">
@@ -320,7 +320,7 @@ let currentName  = null;
 
 function buildSectorTabs() {
   document.getElementById('sector-tabs').innerHTML = UNIQUE_SECTORS.map(s =>
-    `<button class="sector-btn${s===activeFilter?' active':''}" onclick="setSector('${s}')">${s}</button>`
+    `<button class="sector-btn${s===activeFilter?' active':''}" data-tsm-action="setSector" data-tsm-args="'${s}'">${s}</button>`
   ).join('');
 }
 
@@ -367,7 +367,7 @@ function itemHtml(a) {
   const dotClass = {local:'dot local', cached:'dot cached', ext:'dot ext'}[a.type] || 'dot local';
   const tagClass = {local:'tag local', cached:'tag cached', ext:'tag ext'}[a.type] || 'tag local';
   const tagText  = {local:'LOCAL',     cached:'CACHED',     ext:'EXT'}[a.type]     || 'LOCAL';
-  return `<div class="item" data-id="${a.url}" data-name="${a.name}" data-type="${a.type}" onclick="loadApp(this)">
+  return `<div class="item" data-id="${a.url}" data-name="${a.name}" data-type="${a.type}" data-tsm-action="loadApp" data-tsm-args="this">
     <span class="${dotClass}"></span>
     <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.name}</span>
     <span class="${tagClass}">${tagText}</span>
@@ -424,5 +424,23 @@ if (first) {
   }, 50);
 }
 </script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

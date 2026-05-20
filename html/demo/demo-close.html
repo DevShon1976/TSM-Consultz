@@ -246,15 +246,15 @@ console.log("TSM_UI: Direct Neural Link Established.");
   <div class="step-dots" id="step-dots"></div>
   <div class="sep"></div>
   <div class="timer" id="timer">0:00</div>
-  <button class="tbtn start" id="timer-btn" onclick="toggleTimer()">▶ START</button>
-  <button class="tbtn" onclick="resetTimer()">↺ RESET</button>
+  <button class="tbtn start" id="timer-btn" data-tsm-action="toggleTimer" data-tsm-args="">▶ START</button>
+  <button class="tbtn" data-tsm-action="resetTimer" data-tsm-args="">↺ RESET</button>
   <div class="sep"></div>
-  <button class="navbtn" id="prev-btn" onclick="navigate(-1)">&#8592;</button>
-  <button class="navbtn" id="next-btn" onclick="navigate(1)">&#8594;</button>
+  <button class="navbtn" id="prev-btn" data-tsm-action="navigate" data-tsm-args="-1">&#8592;</button>
+  <button class="navbtn" id="next-btn" data-tsm-action="navigate" data-tsm-args="1">&#8594;</button>
   <div class="sep"></div>
-  <button class="tbtn amber" onclick="openModal('objections')">⚠ Objections</button>
-  <button class="tbtn" onclick="openModal('email')">✉ Follow-Up</button>
-  <button class="tbtn" onclick="openModal('close')">💰 Close Script</button>
+  <button class="tbtn amber" data-tsm-action="openModal" data-tsm-args="'objections'">⚠ Objections</button>
+  <button class="tbtn" data-tsm-action="openModal" data-tsm-args="'email'">✉ Follow-Up</button>
+  <button class="tbtn" data-tsm-action="openModal" data-tsm-args="'close'">💰 Close Script</button>
 </div>
 
 <!-- MAIN CONTENT -->
@@ -299,7 +299,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
   <div class="modal">
     <div class="modal-hdr">
       <span class="modal-title amber">⚠ OBJECTION HANDLING</span>
-      <button class="modal-x" onclick="closeModal('objections')">✕</button>
+      <button class="modal-x" data-tsm-action="closeModal" data-tsm-args="'objections'">✕</button>
     </div>
     <div class="modal-body">
       <div class="obj">
@@ -331,7 +331,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
   <div class="modal">
     <div class="modal-hdr">
       <span class="modal-title blue">✉ FOLLOW-UP EMAIL</span>
-      <button class="modal-x" onclick="closeModal('email')">✕</button>
+      <button class="modal-x" data-tsm-action="closeModal" data-tsm-args="'email'">✕</button>
     </div>
     <div class="modal-body">
       <div class="email-subj">SUBJECT: Revenue Pressure Identified — Next Steps</div>
@@ -364,7 +364,7 @@ Best,
 [Your Name]</div>
     </div>
     <div class="modal-copy-row">
-      <button class="copy-btn" onclick="copyEmail(this)" style="font-size:10px;padding:6px 14px">Copy Email</button>
+      <button class="copy-btn" data-tsm-action="copyEmail" data-tsm-args="this" style="font-size:10px;padding:6px 14px">Copy Email</button>
     </div>
   </div>
 </div>
@@ -374,7 +374,7 @@ Best,
   <div class="modal">
     <div class="modal-hdr">
       <span class="modal-title" style="color:var(--green)">💰 THE CLOSE</span>
-      <button class="modal-x" onclick="closeModal('close')">✕</button>
+      <button class="modal-x" data-tsm-action="closeModal" data-tsm-args="'close'">✕</button>
     </div>
     <div class="modal-body">
       <div class="obj">
@@ -573,7 +573,7 @@ function init() {
   const dots = document.getElementById('step-dots');
   dots.innerHTML = STEPS.map(s =>
     `<button class="sdot${s.critical?' crit':''}" id="dot-${s.id}"
-      onclick="goTo(${s.id})" title="${s.label}">${s.id + 1}</button>`
+      data-tsm-action="goTo" data-tsm-args="${s.id}" title="${s.label}">${s.id + 1}</button>`
   ).join('');
   renderStep();
 }
@@ -642,7 +642,7 @@ function renderStep() {
       <div class="curl-box">
         <div class="curl-top">
           <span class="curl-tag">COPY + RUN IN TERMINAL</span>
-          <button class="copy-btn" id="curl-copy-btn" onclick="copyCurl(this)">Copy</button>
+          <button class="copy-btn" id="curl-copy-btn" data-tsm-action="copyCurl" data-tsm-args="this">Copy</button>
         </div>
         <div class="curl-code">${escHtml(s.curl)}</div>
       </div>
@@ -766,5 +766,23 @@ document.addEventListener('keydown', e => {
 
 init();
 </script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

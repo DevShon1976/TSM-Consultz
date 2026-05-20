@@ -157,14 +157,14 @@ console.log("TSM_UI: Direct Neural Link Established.");
 </div>
 
 <nav class="tabs">
-  <button class="tab active" onclick="showTab('dash',this)">DASHBOARD</button>
-  <button class="tab" onclick="showTab('gaps',this)">COVERAGE GAPS</button>
-  <button class="tab" onclick="showTab('renewals',this)">RENEWALS</button>
-  <button class="tab" onclick="showTab('risk',this)">RISK SCORING</button>
-  <button class="tab" onclick="showTab('quotes',this)">QUOTES</button>
-  <button class="tab" onclick="showTab('claims',this)">CLAIMS</button>
-  <button class="tab" onclick="showTab('files',this)">CLIENT FILES</button>
-  <button class="tab" onclick="showTab('ai',this)">AI BRIEFING</button>
+  <button class="tab active" data-tsm-action="showTab" data-tsm-args="'dash',this">DASHBOARD</button>
+  <button class="tab" data-tsm-action="showTab" data-tsm-args="'gaps',this">COVERAGE GAPS</button>
+  <button class="tab" data-tsm-action="showTab" data-tsm-args="'renewals',this">RENEWALS</button>
+  <button class="tab" data-tsm-action="showTab" data-tsm-args="'risk',this">RISK SCORING</button>
+  <button class="tab" data-tsm-action="showTab" data-tsm-args="'quotes',this">QUOTES</button>
+  <button class="tab" data-tsm-action="showTab" data-tsm-args="'claims',this">CLAIMS</button>
+  <button class="tab" data-tsm-action="showTab" data-tsm-args="'files',this">CLIENT FILES</button>
+  <button class="tab" data-tsm-action="showTab" data-tsm-args="'ai',this">AI BRIEFING</button>
 </nav>
 
 <main class="wrap">
@@ -275,8 +275,8 @@ console.log("TSM_UI: Direct Neural Link Established.");
       <div class="section-title">AI INTELLIGENCE BRIEFING</div>
       <textarea id="aiPrompt">Run a full P&C enterprise briefing: identify top 5 coverage gaps by dollar exposure, AZ-specific risks requiring immediate action, and best next course of action for each line of business.</textarea>
       <div class="row" style="margin-top:10px">
-        <button class="btn" onclick="runBriefing()">RUN P&C BNCA</button>
-        <button class="btn dark" onclick="saveBriefing()">SAVE REPORT</button>
+        <button class="btn" data-tsm-action="runBriefing" data-tsm-args="">RUN P&C BNCA</button>
+        <button class="btn dark" data-tsm-action="saveBriefing" data-tsm-args="">SAVE REPORT</button>
       </div>
       <div class="panel" id="aiOut" style="white-space:pre-wrap">Awaiting briefing...</div>
     </div>
@@ -390,10 +390,10 @@ main {
 
   <br>
 
-  <button class="pc-btn" onclick="runPCBNCA()">Run BNCA</button>
-  <button class="pc-btn" onclick="generateQuote()">Generate Quote</button>
-  <button class="pc-btn" onclick="createOutreach()">Create Client Outreach</button>
-  <button class="pc-btn" onclick="pushToStrategist()">Push to Strategist</button>
+  <button class="pc-btn" data-tsm-action="runPCBNCA" data-tsm-args="">Run BNCA</button>
+  <button class="pc-btn" data-tsm-action="generateQuote" data-tsm-args="">Generate Quote</button>
+  <button class="pc-btn" data-tsm-action="createOutreach" data-tsm-args="">Create Client Outreach</button>
+  <button class="pc-btn" data-tsm-action="pushToStrategist" data-tsm-args="">Push to Strategist</button>
 </div>
 
 <script>
@@ -453,5 +453,23 @@ async function pushToStrategist(){
 </script>
 
 
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

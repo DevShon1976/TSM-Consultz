@@ -6,29 +6,17 @@
 <title>TSMatter · Pricing</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-/* TSM_SCROLL_FIX */
-html, body {
-  height: 100%;
-  overflow-y: auto;
-}
-main {
-  padding-bottom: 80px !important;
-  min-height: calc(100vh - 60px);
-}
-.footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 32px;
-  z-index: 10;
-}
-.ask-bar {
-  position: fixed;
-  bottom: 40px;
-  right: 12px;
-  z-index: 20;
-}
+/* TSM_SCROLL_FIX_V2 */
+html, body { height: 100%; overflow-y: auto; }
+main, .main { padding-bottom: 80px !important; min-height: calc(100vh - 60px); }
+.panel { max-height: none !important; overflow-y: visible; }
+.panel.active { display: block; }
+.scroll-box { max-height: 400px; overflow-y: auto; }
+.bnca-output { min-height: 120px; max-height: none; white-space: pre-wrap; }
+.footer { position: fixed; bottom: 0; left: 0; right: 0; height: 32px; z-index: 10; }
+.ask-bar { position: fixed; bottom: 40px; right: 12px; z-index: 20; }
+
+
 .panel {
   max-height: 60vh;
   overflow-y: auto;
@@ -844,8 +832,8 @@ console.log("TSM_UI: Direct Neural Link Established.");
   <h1>Intelligence priced for <em>how you operate</em></h1>
   <p>From solo agents to enterprise health systems — every plan includes live AI across your entire stack. No per-seat surprises. No feature gating. Just output.</p>
   <div class="toggle-wrap">
-    <button class="toggle-btn active" id="btn-monthly" onclick="setAnnual(false)">Monthly</button>
-    <button class="toggle-btn" id="btn-annual" onclick="setAnnual(true)">Annual <span style="font-size:10px;color:var(--gold);margin-left:4px">−20%</span></button>
+    <button class="toggle-btn active" id="btn-monthly" data-tsm-action="setAnnual" data-tsm-args="false">Monthly</button>
+    <button class="toggle-btn" id="btn-annual" data-tsm-action="setAnnual" data-tsm-args="true">Annual <span style="font-size:10px;color:var(--gold);margin-left:4px">−20%</span></button>
   </div>
 </section>
 
@@ -1195,6 +1183,24 @@ function setAnnual(val) {
 
 buildTable();
 </script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>
 <script src="/html/runtime/tsm-runtime-engine.js"></script>

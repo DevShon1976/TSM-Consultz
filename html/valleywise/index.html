@@ -420,8 +420,8 @@ console.log("TSM_UI: Direct Neural Link Established.");
   <div class="sim-log" id="simlog" style="display:none"><div class="ll"><span class="lt">--:--:--<\/span><span>Ready. Press Run Coordination to begin.<\/span></div></div>
 
   <div class="sim-btns">
-    <button class="btn-primary" id="runbtn" onclick="runSim()">▶ Run coordination</button>
-    <button class="btn-sec" onclick="resetSim()">Reset</button>
+    <button class="btn-primary" id="runbtn" data-tsm-action="runSim" data-tsm-args="">▶ Run coordination</button>
+    <button class="btn-sec" data-tsm-action="resetSim" data-tsm-args="">Reset</button>
     <span class="sim-status" id="simstatus">idle<\/span>
   </div>
 </div>
@@ -473,8 +473,8 @@ console.log("TSM_UI: Direct Neural Link Established.");
   <div class="tt-progress" id="tt-pips"></div>
   <div class="tt-card" id="tt-card"></div>
   <div class="tt-nav">
-    <button class="tt-btn-g" id="tt-back" onclick="ttGo(-1)">← back</button>
-    <button class="tt-btn-p" id="tt-next" onclick="ttGo(1)">next →</button>
+    <button class="tt-btn-g" id="tt-back" data-tsm-action="ttGo" data-tsm-args="-1">← back</button>
+    <button class="tt-btn-p" id="tt-next" data-tsm-action="ttGo" data-tsm-args="1">next →</button>
     <span class="tt-counter" id="tt-counter"><\/span>
   </div>
 </div>
@@ -483,8 +483,8 @@ console.log("TSM_UI: Direct Neural Link Established.");
 <!-- nav -->
 <div class="nav" id="nav"></div>
 <div class="nav-arrows">
-  <button class="arr" onclick="go(-1)">← prev</button>
-  <button class="arr" onclick="go(1)">next →</button>
+  <button class="arr" data-tsm-action="go" data-tsm-args="-1">← prev</button>
+  <button class="arr" data-tsm-action="go" data-tsm-args="1">next →</button>
 </div>
 <div class="slide-num" id="slidenum">1 / 5</div>
 
@@ -765,7 +765,7 @@ function ttRender() {
   step.say.forEach(line => { h += '<div class="tt-say"><p>' + line + '</p></div>'; });
   if (step.objections) {
     step.objections.forEach((o, i) => {
-      h += '<div class="tt-obj"><div class="tt-obj-q" onclick="ttObj(' + i + ')"><span>' + o.q + '<\/span><span id="ttchev' + i + '">&#9662;<\/span></div>';
+      h += '<div class="tt-obj"><div class="tt-obj-q" data-tsm-action="ttObj" data-tsm-args="' + i + '"><span>' + o.q + '<\/span><span id="ttchev' + i + '">&#9662;<\/span></div>';
       h += '<div class="tt-obj-a" id="ttoa' + i + '">Say: ' + o.a + '</div></div>';
     });
   }
@@ -789,5 +789,23 @@ function ttObj(i) {
 ttRender();
 
 </script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

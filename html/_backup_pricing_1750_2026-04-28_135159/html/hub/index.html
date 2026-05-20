@@ -145,8 +145,8 @@ console.log("TSM_UI: Direct Neural Link Established.");
 <div class="main">
   <div class="bar">
     <div class="url" id="url">select an app</div>
-    <button class="bar-btn" onclick="reloadFrame()">⟳ Reload</button>
-    <button class="bar-btn" onclick="openTab()">↗ Open</button>
+    <button class="bar-btn" data-tsm-action="reloadFrame" data-tsm-args="">⟳ Reload</button>
+    <button class="bar-btn" data-tsm-action="openTab" data-tsm-args="">↗ Open</button>
   </div>
   <iframe id="frame" src="about:blank" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"></iframe>
   <div class="foot">
@@ -312,7 +312,7 @@ function buildSectorTabs() {
   const el = document.getElementById('sector-tabs');
   el.innerHTML = UNIQUE_SECTORS.map(s =>
     '<button class="sector-btn' + (s === activeFilter ? ' active' : '') +
-    '" onclick="setSector(\'' + s + '\')">' + s + '</button>'
+    '" data-tsm-action="setSector" data-tsm-args="\'' + s + '\'">' + s + '</button>'
   ).join('');
 }
 
@@ -371,7 +371,7 @@ function render() {
 
 function itemHtml(a) {
   const id = a.url || a.key;
-  return '<div class="item" data-id="' + id + '" onclick="loadApp(this)">' +
+  return '<div class="item" data-id="' + id + '" data-tsm-action="loadApp" data-tsm-args="this">' +
     '<span class="dot"></span>' +
     '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + a.name + '</span>' +
     (a.external ? '<span class="ext-icon">↗</span>' : '') +
@@ -420,5 +420,23 @@ if (first) {
   });
 }
 </script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

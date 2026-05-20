@@ -852,7 +852,7 @@ window.addEventListener('DOMContentLoaded', refreshLiveStats);
 <div style="margin-top:2.5rem; padding:2rem; background:#0c1520; border:1px solid rgba(0,224,255,.2);">
   <div style="font-family:'IBM Plex Mono',monospace; font-size:.7rem; letter-spacing:.15em; text-transform:uppercase; color:#00e0ff; margin-bottom:1rem;">LIVE AI BRIEFING</div>
   <div id="pitch-ai-output" style="font-family:'IBM Plex Mono',monospace; font-size:.85rem; color:#7a9baa; min-height:60px; margin-bottom:1rem;">[READY] Click to generate live executive briefing...</div>
-  <button onclick="runPitchAI()" style="font-family:'IBM Plex Mono',monospace; font-size:.75rem; letter-spacing:.12em; text-transform:uppercase; background:#00e0ff; color:#070d12; border:none; padding:12px 24px; cursor:pointer; font-weight:600;">
+  <button data-tsm-action="runPitchAI" data-tsm-args="" style="font-family:'IBM Plex Mono',monospace; font-size:.75rem; letter-spacing:.12em; text-transform:uppercase; background:#00e0ff; color:#070d12; border:none; padding:12px 24px; cursor:pointer; font-weight:600;">
     ⚡ GENERATE LIVE BRIEFING
   </button>
 </div>
@@ -1153,12 +1153,12 @@ flex-wrap:wrap;
 margin-top:16px;
 ">
 
-<button onclick="runFinopsPitchBNCA()"
+<button data-tsm-action="runFinopsPitchBNCA" data-tsm-args=""
 style="background:#00ffc6;color:#001;border:0;border-radius:10px;padding:10px 13px;font-weight:900;cursor:pointer">
 Generate Executive BNCA
 </button>
 
-<button onclick="copyFinopsNarrative()"
+<button data-tsm-action="copyFinopsNarrative" data-tsm-args=""
 style="background:#102030;color:#dff;border:1px solid rgba(0,255,198,.24);border-radius:10px;padding:10px 13px;font-weight:900;cursor:pointer">
 Copy Narrative
 </button>
@@ -1270,7 +1270,7 @@ BNCA Synthesis
 Executive Controller Layer</pre>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
         <button onclick="location.href='/finops-suite/finops-accounting.html?v=node01'" style="background:#00aaff;color:#001;border:0;border-radius:10px;padding:10px 13px;font-weight:900;cursor:pointer">Open WIP Demo</button>
-        <button onclick="runWipPitchBNCA_finops()" style="background:#102030;color:#dff;border:1px solid rgba(0,255,198,.24);border-radius:10px;padding:10px 13px;font-weight:900;cursor:pointer">Generate BNCA</button>
+        <button data-tsm-action="runWipPitchBNCA_finops" data-tsm-args="" style="background:#102030;color:#dff;border:1px solid rgba(0,255,198,.24);border-radius:10px;padding:10px 13px;font-weight:900;cursor:pointer">Generate BNCA</button>
       </div>
     </div>
   </div>
@@ -1302,5 +1302,23 @@ async function runWipPitchBNCA_finops(){
 <script src="/shared/tsm-global-command.js?v=phase4"></script>
 <script src="/shared/tsm-sector-intelligence.js?v=phase5si"></script>
 <script src="/shared/tsm-autonomous-execution.js?v=phase5"></script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

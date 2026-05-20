@@ -137,7 +137,7 @@ Accounting execution, compliance visibility, and executive reporting — as a sy
 Built to support AP, AR, bank reconciliations, month-end close, 1099 readiness, issue communication, supporting schedules, and controller-ready reporting.
 </div>
 <div class="price">$1,750/month</div>
-<button class="primary" onclick="runDemo()">RUN LIVE FINOPS DEMO</button>
+<button class="primary" data-tsm-action="runDemo" data-tsm-args="">RUN LIVE FINOPS DEMO</button>
 <button onclick="location.href='/html/finops-main-strategist/index.html?v=inty-close'">OPEN FINOPS MAIN STRATEGIST</button>
 <button onclick="location.href='/html/financial-command/index.html?v=inty-close'">OPEN FINANCIAL COMMAND</button>
 </header>
@@ -153,11 +153,11 @@ Built to support AP, AR, bank reconciliations, month-end close, 1099 readiness, 
 
 <section class="panel">
 <h2>LIVE WORKFLOW EXECUTION</h2>
-<button class="primary" onclick="stepAP()">▶ Send AP Queue</button>
-<button onclick="stepRecon()">▶ Trigger Reconciliation Review</button>
-<button onclick="stepClose()">▶ Lock Month-End Close</button>
-<button onclick="step1099()">▶ Run 1099 Outreach</button>
-<button onclick="pushMain()">▶ Show Executive Output</button>
+<button class="primary" data-tsm-action="stepAP" data-tsm-args="">▶ Send AP Queue</button>
+<button data-tsm-action="stepRecon" data-tsm-args="">▶ Trigger Reconciliation Review</button>
+<button data-tsm-action="stepClose" data-tsm-args="">▶ Lock Month-End Close</button>
+<button data-tsm-action="step1099" data-tsm-args="">▶ Run 1099 Outreach</button>
+<button data-tsm-action="pushMain" data-tsm-args="">▶ Show Executive Output</button>
 <div class="output" id="liveOut">Ready. Click RUN LIVE FINOPS DEMO or execute one workflow button.</div>
 </section>
 
@@ -235,9 +235,9 @@ Built to support AP, AR, bank reconciliations, month-end close, 1099 readiness, 
   <div class="finops-doc-grid" id="finopsDocGrid"></div>
 
   <div style="margin-top:12px">
-    <button class="primary" onclick="runSelectedFinopsDoc()">RUN SELECTED DOCUMENT</button>
-    <button onclick="runAllFinopsDocs()">RUN ALL 8 DOCS</button>
-    <button onclick="pushDocToFinopsMain()">PUSH DOC OUTPUT TO FINOPS MAIN</button>
+    <button class="primary" data-tsm-action="runSelectedFinopsDoc" data-tsm-args="">RUN SELECTED DOCUMENT</button>
+    <button data-tsm-action="runAllFinopsDocs" data-tsm-args="">RUN ALL 8 DOCS</button>
+    <button data-tsm-action="pushDocToFinopsMain" data-tsm-args="">PUSH DOC OUTPUT TO FINOPS MAIN</button>
   </div>
 
   <div id="finopsDocOutput">Select a financial document to analyze.</div>
@@ -500,7 +500,7 @@ function renderFinopsDocs(){
   const grid=document.getElementById('finopsDocGrid');
   if(!grid) return;
   grid.innerHTML = FINOPS_DOCS.map(d=>`
-    <div class="finops-doc ${d.key===selectedFinopsDoc.key?'active':''}" onclick="selectFinopsDoc('${d.key}')">
+    <div class="finops-doc ${d.key===selectedFinopsDoc.key?'active':''}" data-tsm-action="selectFinopsDoc" data-tsm-args="'${d.key}'">
       <b>${d.title}</b><br>
       <small>${d.risk}</small>
     </div>
@@ -606,7 +606,7 @@ Would you rather start this alongside your current workflow, or replace part of 
 Start with <b>AR/AP + reconciliation for the first 30 days</b>, then add 1099 readiness and month-end reporting.
 This keeps scope controlled while proving measurable value immediately.
 </p>
-<button class="primary" onclick="pushMain()">SHOW EXECUTIVE OUTPUT</button>
+<button class="primary" data-tsm-action="pushMain" data-tsm-args="">SHOW EXECUTIVE OUTPUT</button>
 </section>
 
 
@@ -726,5 +726,23 @@ function pushMain(){
  location.href='/html/finops-main-strategist/index.html?v=inty-executive-output';
 }
 </script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

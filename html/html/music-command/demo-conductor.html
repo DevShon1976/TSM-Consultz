@@ -5,29 +5,17 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>TSM ZY Music Suite · Demo Conductor</title>
 <style>
-/* TSM_SCROLL_FIX */
-html, body {
-  height: 100%;
-  overflow-y: auto;
-}
-main {
-  padding-bottom: 80px !important;
-  min-height: calc(100vh - 60px);
-}
-.footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 32px;
-  z-index: 10;
-}
-.ask-bar {
-  position: fixed;
-  bottom: 40px;
-  right: 12px;
-  z-index: 20;
-}
+/* TSM_SCROLL_FIX_V2 */
+html, body { height: 100%; overflow-y: auto; }
+main, .main { padding-bottom: 80px !important; min-height: calc(100vh - 60px); }
+.panel { max-height: none !important; overflow-y: visible; }
+.panel.active { display: block; }
+.scroll-box { max-height: 400px; overflow-y: auto; }
+.bnca-output { min-height: 120px; max-height: none; white-space: pre-wrap; }
+.footer { position: fixed; bottom: 0; left: 0; right: 0; height: 32px; z-index: 10; }
+.ask-bar { position: fixed; bottom: 40px; right: 12px; z-index: 20; }
+
+
 .panel {
   max-height: 60vh;
   overflow-y: auto;
@@ -311,10 +299,10 @@ border-bottom:1px solid rgba(255,255,255,.08);
     
 <div class="objectionBox">
   <h2>Live Objection Handler</h2>
-  <button class="objBtn" onclick="showObj('chatgpt')">“I already use ChatGPT.”</button>
-  <button class="objBtn" onclick="showObj('need')">“I don’t need this.”</button>
-  <button class="objBtn" onclick="showObj('price')">“How much is it?”</button>
-  <button class="objBtn" onclick="showObj('quality')">“Can AI really judge music?”</button>
+  <button class="objBtn" data-tsm-action="showObj" data-tsm-args="'chatgpt'">“I already use ChatGPT.”</button>
+  <button class="objBtn" data-tsm-action="showObj" data-tsm-args="'need'">“I don’t need this.”</button>
+  <button class="objBtn" data-tsm-action="showObj" data-tsm-args="'price'">“How much is it?”</button>
+  <button class="objBtn" data-tsm-action="showObj" data-tsm-args="'quality'">“Can AI really judge music?”</button>
   <pre class="objAnswer" id="objAnswer">Click an objection if it comes up during the demo.</pre>
 </div>
 
@@ -333,8 +321,8 @@ border-bottom:1px solid rgba(255,255,255,.08);
 </div>
 
 <div class="controls">
-  <button onclick="prev()">← Back</button>
-  <button class="primary" onclick="next()">Next →</button>
+  <button data-tsm-action="prev" data-tsm-args="">← Back</button>
+  <button class="primary" data-tsm-action="next" data-tsm-args="">Next →</button>
   <a class="btn" id="openNew" target="_blank">Open</a>
 </div>
 
@@ -462,7 +450,7 @@ let i = 0;
 
 function render(){
   document.getElementById("steps").innerHTML = deck.map((s,idx)=>`
-    <div class="step ${idx===i?'active':''}" onclick="go(${idx})">
+    <div class="step ${idx===i?'active':''}" data-tsm-action="go" data-tsm-args="${idx}">
       <div class="kicker">Step ${idx+1}</div>
       <h3>${s.title}</h3>
       <p>${s.label}</p>
@@ -649,7 +637,7 @@ margin-top:16px;
     <option value="label">Catalog / Label Mode · $499/mo</option>
   </select>
 
-  <button class="unlockBtn" onclick="instantUnlock()">Unlock Access Now</button>
+  <button class="unlockBtn" data-tsm-action="instantUnlock" data-tsm-args="">Unlock Access Now</button>
 
   <pre class="unlockResult" id="unlockResult">Lead capture + private link will appear here.</pre>
 </div>
@@ -739,6 +727,24 @@ Say this:
 })();
 </script>
 
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>
 <script src="/html/runtime/tsm-runtime-engine.js"></script>

@@ -232,9 +232,9 @@ console.log("TSM_UI: Direct Neural Link Established.");
 </div>
 
 <div class="tab-nav">
-  <button class="tab-btn active" onclick="switchTab('select',this)"><span class="tnum">1</span>Select Apps</button>
-  <button class="tab-btn" onclick="switchTab('narrate',this)"><span class="tnum">2</span>AI Narratives</button>
-  <button class="tab-btn" onclick="switchTab('deploy',this)"><span class="tnum">3</span>Deploy Suite</button>
+  <button class="tab-btn active" data-tsm-action="switchTab" data-tsm-args="'select',this"><span class="tnum">1</span>Select Apps</button>
+  <button class="tab-btn" data-tsm-action="switchTab" data-tsm-args="'narrate',this"><span class="tnum">2</span>AI Narratives</button>
+  <button class="tab-btn" data-tsm-action="switchTab" data-tsm-args="'deploy',this"><span class="tnum">3</span>Deploy Suite</button>
 </div>
 
 <div class="main">
@@ -253,9 +253,9 @@ console.log("TSM_UI: Direct Neural Link Established.");
       <div id="app-grid"></div>
       <div class="tray">
         <span class="tc"><span id="sel-count">0</span> apps selected</span>
-        <button class="btn" onclick="selectSector()">Select sector</button>
-        <button class="btn" onclick="clearAll()">Clear</button>
-        <button class="btn btn-g" onclick="goNarrate()">Next: AI Narratives →</button>
+        <button class="btn" data-tsm-action="selectSector" data-tsm-args="">Select sector</button>
+        <button class="btn" data-tsm-action="clearAll" data-tsm-args="">Clear</button>
+        <button class="btn btn-g" data-tsm-action="goNarrate" data-tsm-args="">Next: AI Narratives →</button>
       </div>
     </div>
 
@@ -280,13 +280,13 @@ console.log("TSM_UI: Direct Neural Link Established.");
       <div class="ai-bar">
         <div><div class="ai-bar-label">AI Narrative Generator</div><div class="ai-bar-sub">llama-3.3-70b-versatile streams narratives, talking points &amp; demo prompts tailored to your audience</div></div>
         <div class="model-tag">streaming</div>
-        <button class="gen-btn" id="gen-all-btn" onclick="generateAllPlaybooks()">Generate All Playbooks</button>
+        <button class="gen-btn" id="gen-all-btn" data-tsm-action="generateAllPlaybooks" data-tsm-args="">Generate All Playbooks</button>
       </div>
       <div class="progress"><div class="pfill" id="pfill"></div></div>
       <div id="narrative-list"></div>
       <div class="tray">
-        <button class="btn" onclick="switchTab('select',document.querySelectorAll('.tab-btn')[0])">← Back</button>
-        <button class="btn btn-g" onclick="goDeploy()">Next: Deploy →</button>
+        <button class="btn" data-tsm-action="switchTab" data-tsm-args="'select',document.querySelectorAll('.tab-btn')[0]">← Back</button>
+        <button class="btn btn-g" data-tsm-action="goDeploy" data-tsm-args="">Next: Deploy →</button>
       </div>
     </div>
 
@@ -298,8 +298,8 @@ console.log("TSM_UI: Direct Neural Link Established.");
             <div class="dst">Shareable suite link</div>
             <div class="surlbox" id="suite-url-box">—</div>
             <div style="display:flex;gap:8px;">
-              <button class="btn btn-g" onclick="copySuiteUrl()">Copy link</button>
-              <button class="btn" onclick="openFirst()">Open first app →</button>
+              <button class="btn btn-g" data-tsm-action="copySuiteUrl" data-tsm-args="">Copy link</button>
+              <button class="btn" data-tsm-action="openFirst" data-tsm-args="">Open first app →</button>
             </div>
           </div>
         </div>
@@ -314,7 +314,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
           <div class="dsnum">3</div>
           <div class="dsc">
             <div class="dst">AI coaching script</div>
-            <button class="bbtn coachl" id="coach-btn" onclick="generateCoachScript()">Generate my full presentation coaching script ↗</button>
+            <button class="bbtn coachl" id="coach-btn" data-tsm-action="generateCoachScript" data-tsm-args="">Generate my full presentation coaching script ↗</button>
             <div id="coach-output" class="aiout" style="display:none;margin-top:10px;"></div>
           </div>
         </div>
@@ -322,7 +322,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
           <div class="dsnum">4</div>
           <div class="dsc">
             <div class="dst">Deploy live suite page</div>
-            <button class="bbtn" id="deploy-btn" onclick="deployToServer()">Build live suite page at tsm-shell.fly.dev/html/suite/ ↗</button>
+            <button class="bbtn" id="deploy-btn" data-tsm-action="deployToServer" data-tsm-args="">Build live suite page at tsm-shell.fly.dev/html/suite/ ↗</button>
             <div id="deploy-result" class="deploy-result"></div>
           </div>
         </div>
@@ -737,7 +737,7 @@ function renderNarratives() {
         <div class="pbhl"><span class="dot ${appStatus[url] || 'checking'}"></span><div><div class="pbn">${app.name}</div><div class="pbu">${displayUrl}</div></div></div>
         <div class="pbhr">
           <a class="oabtn" href="${href}" target="_blank">Open ↗</a>
-          <button class="gsbtn" onclick="genSingle('${url.replace(/'/g,"\\'")}',this)">Generate ↗</button>
+          <button class="gsbtn" data-tsm-action="genSingle" data-tsm-args="'${url.replace(/'/g,'\\'')}',this">Generate ↗</button>
         </div>
       </div>
       <div class="pbbody">
@@ -857,7 +857,7 @@ function renderPills() {
   selected.forEach(url => {
     const app = findApp(url);
     const pill = document.createElement('div'); pill.className = 'pill';
-    pill.innerHTML = `${app.name}<span class="px" onclick="removePill('${url.replace(/'/g,"\\'")}')">✕</span>`;
+    pill.innerHTML = `${app.name}<span class="px" data-tsm-action="removePill" data-tsm-args="'${url.replace(/'/g,'\\'')}'">✕</span>`;
     p.appendChild(pill);
   });
 }
@@ -893,6 +893,24 @@ updateCount();
 // Start pinging after a short delay so UI is painted first
 setTimeout(pingAll, 800);
 </script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>
 <script src="/html/runtime/tsm-runtime-engine.js"></script>

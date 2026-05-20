@@ -5,29 +5,17 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>GHS STRATEGIST · TSM Healthcare Full System</title>
 <style>
-/* TSM_SCROLL_FIX */
-html, body {
-  height: 100%;
-  overflow-y: auto;
-}
-main {
-  padding-bottom: 80px !important;
-  min-height: calc(100vh - 60px);
-}
-.footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 32px;
-  z-index: 10;
-}
-.ask-bar {
-  position: fixed;
-  bottom: 40px;
-  right: 12px;
-  z-index: 20;
-}
+/* TSM_SCROLL_FIX_V2 */
+html, body { height: 100%; overflow-y: auto; }
+main, .main { padding-bottom: 80px !important; min-height: calc(100vh - 60px); }
+.panel { max-height: none !important; overflow-y: visible; }
+.panel.active { display: block; }
+.scroll-box { max-height: 400px; overflow-y: auto; }
+.bnca-output { min-height: 120px; max-height: none; white-space: pre-wrap; }
+.footer { position: fixed; bottom: 0; left: 0; right: 0; height: 32px; z-index: 10; }
+.ask-bar { position: fixed; bottom: 40px; right: 12px; z-index: 20; }
+
+
 .panel {
   max-height: 60vh;
   overflow-y: auto;
@@ -190,13 +178,13 @@ console.log("TSM_UI: Direct Neural Link Established.");
 </div>
 
 <nav class="nav">
-  <button class="nav-btn" onclick="switchTab('dash',this)">⊞ DASHBOARD</button>
-  <button class="nav-btn" onclick="switchTab('nodes',this)">📊 NODE STATUS</button>
-  <button class="nav-btn" onclick="switchTab('priorities',this)">🎯 PRIORITIES</button>
-  <button class="nav-btn" onclick="switchTab('analytics',this)">📈 ANALYTICS</button>
-  <button class="nav-btn" onclick="switchTab('reports',this)">🗂 REPORTS</button>
-  <button class="nav-btn" onclick="switchTab('ai',this)">🧠 AI ANALYSIS</button>
-  <button class="nav-btn" onclick="switchTab('presets',this)">⚡ PRESETS</button>
+  <button class="nav-btn" data-tsm-action="switchTab" data-tsm-args="'dash',this">⊞ DASHBOARD</button>
+  <button class="nav-btn" data-tsm-action="switchTab" data-tsm-args="'nodes',this">📊 NODE STATUS</button>
+  <button class="nav-btn" data-tsm-action="switchTab" data-tsm-args="'priorities',this">🎯 PRIORITIES</button>
+  <button class="nav-btn" data-tsm-action="switchTab" data-tsm-args="'analytics',this">📈 ANALYTICS</button>
+  <button class="nav-btn" data-tsm-action="switchTab" data-tsm-args="'reports',this">🗂 REPORTS</button>
+  <button class="nav-btn" data-tsm-action="switchTab" data-tsm-args="'ai',this">🧠 AI ANALYSIS</button>
+  <button class="nav-btn" data-tsm-action="switchTab" data-tsm-args="'presets',this">⚡ PRESETS</button>
 </nav>
 
 <div id="tab-dash">
@@ -249,8 +237,8 @@ console.log("TSM_UI: Direct Neural Link Established.");
     <div class="ai-hdr">⚡ AI ANALYSIS</div>
     <div class="ai-row">
       <input id="dash-inp" class="ai-inp" type="text" placeholder="Strategic query...">
-      <button class="ask-btn" id="dash-btn" onclick="askHC(document.getElementById('dash-inp').value,'dash-btn','dash-res')">▶ ASK</button>
-      <button class="ai-btn" onclick="saveCurrentReport()">SAVE CURRENT AS REPORT</button>
+      <button class="ask-btn" id="dash-btn" data-tsm-action="askHC" data-tsm-args="document.getElementById('dash-inp').value,'dash-btn','dash-res'">▶ ASK</button>
+      <button class="ai-btn" data-tsm-action="saveCurrentReport" data-tsm-args="">SAVE CURRENT AS REPORT</button>
     </div>
     <div id="dash-res" class="ai-res">&gt; AI ready.</div>
   </div>
@@ -273,13 +261,13 @@ console.log("TSM_UI: Direct Neural Link Established.");
   <div class="ai-box">
     <div class="ai-hdr">⚡ AI ANALYSIS</div>
     <div class="ai-row">
-      <button class="ai-btn" onclick="loadAI('Run diagnostics across all healthcare nodes and identify degraded lanes.')">Node Health Check</button>
-      <button class="ai-btn" onclick="loadAI('Compare node findings and recommend the best next cross-node action for an office manager.')">Cross-Node BNCA</button>
-      <button class="ai-btn" onclick="loadAI('Summarize which nodes are most likely to affect near-term revenue recovery.')">Revenue Impact Scan</button>
+      <button class="ai-btn" data-tsm-action="loadAI" data-tsm-args="'Run diagnostics across all healthcare nodes and identify degraded lanes.'">Node Health Check</button>
+      <button class="ai-btn" data-tsm-action="loadAI" data-tsm-args="'Compare node findings and recommend the best next cross-node action for an office manager.'">Cross-Node BNCA</button>
+      <button class="ai-btn" data-tsm-action="loadAI" data-tsm-args="'Summarize which nodes are most likely to affect near-term revenue recovery.'">Revenue Impact Scan</button>
     </div>
     <div class="ai-row">
       <input id="nodes-inp" class="ai-inp" type="text" placeholder="Node status query...">
-      <button class="ask-btn" id="nodes-btn" onclick="askHC(document.getElementById('nodes-inp').value,'nodes-btn','nodes-res')">▶ ASK</button>
+      <button class="ask-btn" id="nodes-btn" data-tsm-action="askHC" data-tsm-args="document.getElementById('nodes-inp').value,'nodes-btn','nodes-res'">▶ ASK</button>
     </div>
     <div id="nodes-res" class="ai-res">&gt; AI ready.</div>
   </div>
@@ -335,9 +323,9 @@ console.log("TSM_UI: Direct Neural Link Established.");
           <input id="report-company" class="ai-inp" type="text" placeholder="System / company...">
         </div>
         <div class="ai-row">
-          <button class="ask-btn" onclick="saveCurrentReport()">SAVE REPORT</button>
-          <button class="ai-btn" onclick="exportCurrentReport()">EXPORT JSON</button>
-          <button class="ai-btn" onclick="refreshReports()">REFRESH</button>
+          <button class="ask-btn" data-tsm-action="saveCurrentReport" data-tsm-args="">SAVE REPORT</button>
+          <button class="ai-btn" data-tsm-action="exportCurrentReport" data-tsm-args="">EXPORT JSON</button>
+          <button class="ai-btn" data-tsm-action="refreshReports" data-tsm-args="">REFRESH</button>
         </div>
         <div id="report-status" class="ai-res">> Report Studio ready.</div>
       </div>
@@ -359,10 +347,10 @@ console.log("TSM_UI: Direct Neural Link Established.");
 
 
 <div class="ai-row" style="margin-top:10px;">
-  <button class="ai-btn" onclick="runEnterpriseBnca()">
+  <button class="ai-btn" data-tsm-action="runEnterpriseBnca" data-tsm-args="">
 
-<button class="nav-btn" onclick="switchTab('exec', this)">📨 EXEC CORRESPONDENCE</button>
-<button class="nav-btn" onclick="switchTab('presentation', this)">🎤 PRESENTATION MODE</button>
+<button class="nav-btn" data-tsm-action="switchTab" data-tsm-args="'exec', this">📨 EXEC CORRESPONDENCE</button>
+<button class="nav-btn" data-tsm-action="switchTab" data-tsm-args="'presentation', this">🎤 PRESENTATION MODE</button>
 RUN ENTERPRISE BNCA</button>
 </div>
 
@@ -371,7 +359,7 @@ RUN ENTERPRISE BNCA</button>
     <div class="ai-hdr">⚡ DEEP AI ANALYSIS</div>
     <div class="ai-row">
       <input id="ai-inp" class="ai-inp" type="text" placeholder="Enter detailed query...">
-      <button class="ask-btn" id="ai-btn" onclick="askHC(document.getElementById('ai-inp').value,'ai-btn','ai-res')">▶ ASK</button>
+      <button class="ask-btn" id="ai-btn" data-tsm-action="askHC" data-tsm-args="document.getElementById('ai-inp').value,'ai-btn','ai-res'">▶ ASK</button>
     </div>
     <div id="ai-res" class="ai-res">&gt; AI Analysis ready.</div>
   </div>
@@ -381,12 +369,12 @@ RUN ENTERPRISE BNCA</button>
   <div class="sec" style="margin-top:16px">
     <div class="sec-hdr">PRESET LIBRARY — Click any to load into AI</div>
     <div class="pr-grid">
-      <div class="pr-card" onclick="loadPreset(this.dataset.p)" data-p="Run full HC suite BNCA — synthesize top risks across operations, medical, billing, compliance, financial, grants, insurance, legal, pharmacy, taxprep, and vendors. Rank by revenue impact and urgency."><div class="pr-card-title">Full Suite BNCA</div><div class="pr-card-desc">All-node risk synthesis</div></div>
-      <div class="pr-card" onclick="loadPreset(this.dataset.p)" data-p="Identify the top 3 revenue recovery opportunities across the HC suite — denial rate, DSO, DIR fees, grant funding at risk — and build 30-day action plan with assigned owners."><div class="pr-card-title">Revenue Recovery Plan</div><div class="pr-card-desc">$2.8M at-risk analysis</div></div>
-      <div class="pr-card" onclick="loadPreset(this.dataset.p)" data-p="Build 90-day HC enterprise strategic plan — compliance uplift, revenue cycle improvement, legal risk reduction, operations throughput stabilization, and grant portfolio management."><div class="pr-card-title">90-Day Enterprise Plan</div><div class="pr-card-desc">Full HC strategy</div></div>
-      <div class="pr-card" onclick="loadPreset(this.dataset.p)" data-p="Analyze Friday deadline convergence — billing denial response, compliance penalty reply, legal mediation, grants submission, operations staffing pressure. Build triage and resource allocation plan."><div class="pr-card-title">Friday Deadline Triage</div><div class="pr-card-desc">Multi-node deadline crisis</div></div>
-      <div class="pr-card" onclick="loadPreset(this.dataset.p)" data-p="Design HC suite compliance improvement roadmap — raise system score from 94.1% to 97%, identify below-threshold nodes, and build corrective action plans."><div class="pr-card-title">Compliance Roadmap</div><div class="pr-card-desc">94.1% → 97% target</div></div>
-      <div class="pr-card" onclick="loadPreset(this.dataset.p)" data-p="Build executive board report for HC suite — financial performance, compliance posture, legal exposure, operations throughput, and strategic priorities. C-suite ready format."><div class="pr-card-title">Board Report</div><div class="pr-card-desc">Executive summary</div></div>
+      <div class="pr-card" data-tsm-action="loadPreset" data-tsm-args="this.dataset.p" data-p="Run full HC suite BNCA — synthesize top risks across operations, medical, billing, compliance, financial, grants, insurance, legal, pharmacy, taxprep, and vendors. Rank by revenue impact and urgency."><div class="pr-card-title">Full Suite BNCA</div><div class="pr-card-desc">All-node risk synthesis</div></div>
+      <div class="pr-card" data-tsm-action="loadPreset" data-tsm-args="this.dataset.p" data-p="Identify the top 3 revenue recovery opportunities across the HC suite — denial rate, DSO, DIR fees, grant funding at risk — and build 30-day action plan with assigned owners."><div class="pr-card-title">Revenue Recovery Plan</div><div class="pr-card-desc">$2.8M at-risk analysis</div></div>
+      <div class="pr-card" data-tsm-action="loadPreset" data-tsm-args="this.dataset.p" data-p="Build 90-day HC enterprise strategic plan — compliance uplift, revenue cycle improvement, legal risk reduction, operations throughput stabilization, and grant portfolio management."><div class="pr-card-title">90-Day Enterprise Plan</div><div class="pr-card-desc">Full HC strategy</div></div>
+      <div class="pr-card" data-tsm-action="loadPreset" data-tsm-args="this.dataset.p" data-p="Analyze Friday deadline convergence — billing denial response, compliance penalty reply, legal mediation, grants submission, operations staffing pressure. Build triage and resource allocation plan."><div class="pr-card-title">Friday Deadline Triage</div><div class="pr-card-desc">Multi-node deadline crisis</div></div>
+      <div class="pr-card" data-tsm-action="loadPreset" data-tsm-args="this.dataset.p" data-p="Design HC suite compliance improvement roadmap — raise system score from 94.1% to 97%, identify below-threshold nodes, and build corrective action plans."><div class="pr-card-title">Compliance Roadmap</div><div class="pr-card-desc">94.1% → 97% target</div></div>
+      <div class="pr-card" data-tsm-action="loadPreset" data-tsm-args="this.dataset.p" data-p="Build executive board report for HC suite — financial performance, compliance posture, legal exposure, operations throughput, and strategic priorities. C-suite ready format."><div class="pr-card-title">Board Report</div><div class="pr-card-desc">Executive summary</div></div>
     </div>
   </div>
 </div>
@@ -394,7 +382,7 @@ RUN ENTERPRISE BNCA</button>
 <div class="footer">
   <div class="fn">♟️ STRATEGIST NODE · real-time node reporting · report memory live</div>
   <div class="fbtns">
-    <button class="fbtn fbnca" onclick="askHC('Run a full BNCA for GHS STRATEGIST: top risks, compliance gaps, priority actions, and office-manager next steps.','dash-btn','dash-res');switchTab('dash',document.querySelector('.nav-btn'))">⚡ RUN BNCA</button>
+    <button class="fbtn fbnca" data-tsm-action="askHC" data-tsm-args="'Run a full BNCA for GHS STRATEGIST: top risks, compliance gaps, priority actions, and office-manager next steps.','dash-btn','dash-res');switchTab('dash',document.querySelector('.nav-btn')">⚡ RUN BNCA</button>
     <button class="fbtn frelay" onclick="window.open('https://ghs-strategist.tsmatter.com','_blank')">🔗 RELAY TO STRATEGIST</button>
   </div>
 </div>
@@ -495,8 +483,8 @@ async function refreshReports(){
         <div class="saved-title">${r.title}</div>
         <div class="saved-meta">${r.company || 'General Healthcare'} · ${new Date(r.updatedAt || r.createdAt).toLocaleString()}</div>
         <div class="pill-row">
-          <button class="ai-btn" onclick="openReport('${r.id}')">OPEN</button>
-          <button class="ai-btn" onclick="deleteReport('${r.id}')">DELETE</button>
+          <button class="ai-btn" data-tsm-action="openReport" data-tsm-args="'${r.id}'">OPEN</button>
+          <button class="ai-btn" data-tsm-action="deleteReport" data-tsm-args="'${r.id}'">DELETE</button>
         </div>
       </div>
     `).join('');
@@ -816,7 +804,7 @@ window.addEventListener('load', () => {
   <div class="ai-box" style="margin-top:16px">
     <div class="ai-hdr">🎤 THURSDAY PRESENTATION MODE</div>
     <div class="ai-row" style="margin-bottom:10px;">
-      <button class="ai-btn" onclick="copyPresentationScript()">COPY TALK TRACK</button>
+      <button class="ai-btn" data-tsm-action="copyPresentationScript" data-tsm-args="">COPY TALK TRACK</button>
     </div>
     <div id="presentation-script" class="ai-res" style="white-space:pre-wrap; line-height:1.7;">OPEN
 
@@ -941,13 +929,31 @@ FINAL LINE
     </div>
     <div class="ai-row" style="margin-bottom:10px;">
       <input id="brief-question" class="ai-inp" type="text" placeholder="What are you being asked about?" />
-      <button class="ai-btn" onclick="generateLeadershipBrief()">GENERATE LEADERSHIP BRIEF</button>
-      <button class="ai-btn" onclick="copyLeadershipBrief()">COPY</button>
+      <button class="ai-btn" data-tsm-action="generateLeadershipBrief" data-tsm-args="">GENERATE LEADERSHIP BRIEF</button>
+      <button class="ai-btn" data-tsm-action="copyLeadershipBrief" data-tsm-args="">COPY</button>
     </div>
     <div id="brief-res" class="ai-res">> Leadership brief ready.</div>
   </div>
 </div>
 
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>
 <script src="/html/runtime/tsm-runtime-engine.js"></script>

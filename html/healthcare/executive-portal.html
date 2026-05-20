@@ -760,11 +760,11 @@ console.log("TSM_UI: Direct Neural Link Established.");
           </div>
         </div>
         <div class="action-bar">
-          <button class="btn btn-primary" onclick="loadReport()">
+          <button class="btn btn-primary" data-tsm-action="loadReport" data-tsm-args="">
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5l4 4 4-4" stroke="currentColor" stroke-width="1.2"/></svg>
             Run BNCA
           </button>
-          <button class="btn btn-ghost" onclick="copyReport()">
+          <button class="btn btn-ghost" data-tsm-action="copyReport" data-tsm-args="">
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="1" y="3" width="6" height="7" rx="1" stroke="currentColor" stroke-width="1"/><rect x="3" y="1" width="6" height="7" rx="1" stroke="currentColor" stroke-width="1"/></svg>
             Copy Report
           </button>
@@ -1175,5 +1175,23 @@ CONFIDENCE
 })();
 </script>
 
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

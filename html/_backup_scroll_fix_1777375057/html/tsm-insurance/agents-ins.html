@@ -418,10 +418,10 @@ console.log("TSM_UI: Direct Neural Link Established.");
   <p class="section-sub">One platform, four audiences. Whether you're a solo producer or a national carrier, the Intelligence Suite scales to your operation.</p>
 
   <div class="audience-tabs">
-    <div class="audience-tab active" onclick="showPanel('agents', this)">Individual Agents</div>
-    <div class="audience-tab" onclick="showPanel('agencies', this)">Agencies & FMOs</div>
-    <div class="audience-tab" onclick="showPanel('carriers', this)">Carriers & MGAs</div>
-    <div class="audience-tab" onclick="showPanel('training', this)">Training Orgs</div>
+    <div class="audience-tab active" data-tsm-action="showPanel" data-tsm-args="'agents', this">Individual Agents</div>
+    <div class="audience-tab" data-tsm-action="showPanel" data-tsm-args="'agencies', this">Agencies & FMOs</div>
+    <div class="audience-tab" data-tsm-action="showPanel" data-tsm-args="'carriers', this">Carriers & MGAs</div>
+    <div class="audience-tab" data-tsm-action="showPanel" data-tsm-args="'training', this">Training Orgs</div>
   </div>
 
   <!-- AGENTS -->
@@ -758,7 +758,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
           <option>Enterprise (200+)</option>
         </select>
       </div>
-      <button class="btn-submit" onclick="submitDemo()">Request My 20-Minute Demo →</button>
+      <button class="btn-submit" data-tsm-action="submitDemo" data-tsm-args="">Request My 20-Minute Demo →</button>
       <p class="disclaimer">Licensed AZ Insurance Producer · NPN 18818059 · No obligation · We'll reach out within 1 business day</p>
     </div>
     <div class="form-success" id="demo-success">
@@ -840,6 +840,24 @@ function submitDemo() {
 }
 </script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"a403a49538b84c30b205b872f0e09c1c","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>
   <!-- TSM AI Assistant -->

@@ -49,7 +49,7 @@ button{background:var(--green);color:#001015;border:0;border-radius:12px;padding
     <option value="realty">RealtyOps</option>
   </select>
 
-  <button style="margin-top:14px" onclick="renderROI()">Calculate Client Return</button>
+  <button style="margin-top:14px" data-tsm-action="renderROI" data-tsm-args="">Calculate Client Return</button>
 
   <pre id="roiOut">Choose a sector and calculate expected client return.</pre>
 </div>
@@ -161,5 +161,23 @@ renderROI();
 <script src="/shared/tsm-global-command.js?v=phase4"></script>
 <script src="/shared/tsm-sector-intelligence.js?v=phase5si"></script>
 <script src="/shared/tsm-autonomous-execution.js?v=phase5"></script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

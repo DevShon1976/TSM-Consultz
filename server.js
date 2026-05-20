@@ -1070,3 +1070,63 @@ app.post('/api/bpo/query', async (req, res) => {
 
 
 app.listen(8080, '0.0.0.0', () => console.log('Sovereign Mesh Online on 0.0.0.0:8080'));
+
+// =====================================================
+// TSM UNIVERSAL GROQ PROXY — fixes all suites
+// Any app can POST to /api/ai/query with:
+// { prompt, system, sector, model }
+// =====================================================
+const https = require('https');
+
+app.post("/api/ai/query", async (req, res) => {
+  const { prompt, system, sector, model, stream } = req.body || {};
+  const GROQ_KEY = process.env.GROQ_API_KEY;
+
+  if (!GROQ_KEY) {
+    return res.json({ ok: false, error: "No GROQ_API_KEY on server", reply: buildMeshBNCA(sector || "HEALTHCARE", prompt) });
+  }
+
+  const sectorSystems = {
+    HEALTHCARE: "You are the TSM Healthcare Neural Strategist. Analyze HC operations, billing, compliance, clinical, and revenue cycle issues. Be specific, actionable, and data-driven.",
+    CONSTRUCTION: "You are the TSM Construction Neural Strategist. Analyze construction operations, permits, scheduling, cost, compliance, and vendor issues. Be specific and actionable.",
+    FINANCE: "You are the TSM Financial Neural Strategist. Analyze financial operations, revenue, cash flow, compliance, and CFO-level priorities. Be specific and data-driven.",
+    INSURANCE: "You are the TSM Insurance Neural Strategist. Analyze insurance operations, claims, compliance, payer relations, and risk. Be specific and actionable.",
+  };
+
+  const systemPrompt = system || sectorSystems[sector] || sectorSystems.HEALTHCARE;
+  const groqModel = model || "llama-3.3-70b-versatile";
+
+  try {
+    const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROQ_KEY}` },
+      body: JSON.stringify({
+        model: groqModel,
+        max_tokens: 800,
+        stream: false,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: prompt || "Provide a strategic analysis." }
+        ]
+      })
+    });
+
+    const ct = groqRes.headers.get("content-type") || "";
+    if (!groqRes.ok || !ct.includes("application/json")) {
+      const txt = await groqRes.text();
+      return res.json({ ok: false, error: txt.slice(0, 200), reply: buildMeshBNCA(sector || "HEALTHCARE", prompt) });
+    }
+
+    const data = await groqRes.json();
+    const reply = data.choices?.[0]?.message?.content || buildMeshBNCA(sector || "HEALTHCARE", prompt);
+    res.json({ ok: true, reply, content: reply, sector, mesh: true, timestamp: new Date().toISOString() });
+
+  } catch (e) {
+    res.json({ ok: false, error: e.message, reply: buildMeshBNCA(sector || "HEALTHCARE", prompt) });
+  }
+});
+
+// Alias routes so existing apps dont need changes
+app.post("/api/hc/ask",        (req, res) => { req.body.sector = "HEALTHCARE";   app._router.handle(Object.assign(req, {url:"/api/ai/query",path:"/api/ai/query"}), res, ()=>{}); });
+app.post("/api/chat",          (req, res) => { req.body.sector = req.body.sector || "HEALTHCARE"; app._router.handle(Object.assign(req, {url:"/api/ai/query",path:"/api/ai/query"}), res, ()=>{}); });
+app.post("/api/strategist/query", (req, res) => { req.body.sector = "HEALTHCARE"; app._router.handle(Object.assign(req, {url:"/api/ai/query",path:"/api/ai/query"}), res, ()=>{}); });

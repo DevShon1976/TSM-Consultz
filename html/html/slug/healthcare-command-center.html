@@ -6,29 +6,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TSM Healthcare Command Center</title>
 <style>
-/* TSM_SCROLL_FIX */
-html, body {
-  height: 100%;
-  overflow-y: auto;
-}
-main {
-  padding-bottom: 80px !important;
-  min-height: calc(100vh - 60px);
-}
-.footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 32px;
-  z-index: 10;
-}
-.ask-bar {
-  position: fixed;
-  bottom: 40px;
-  right: 12px;
-  z-index: 20;
-}
+/* TSM_SCROLL_FIX_V2 */
+html, body { height: 100%; overflow-y: auto; }
+main, .main { padding-bottom: 80px !important; min-height: calc(100vh - 60px); }
+.panel { max-height: none !important; overflow-y: visible; }
+.panel.active { display: block; }
+.scroll-box { max-height: 400px; overflow-y: auto; }
+.bnca-output { min-height: 120px; max-height: none; white-space: pre-wrap; }
+.footer { position: fixed; bottom: 0; left: 0; right: 0; height: 32px; z-index: 10; }
+.ask-bar { position: fixed; bottom: 40px; right: 12px; z-index: 20; }
+
+
 .panel {
   max-height: 60vh;
   overflow-y: auto;
@@ -336,35 +324,35 @@ console.log("TSM_UI: Direct Neural Link Established.");
   <div class="left-sidebar">
     <div class="sb-section">
       <div class="sb-title">Playbooks</div>
-      <div class="playbook-item active" onclick="loadPlaybook(this,'Claim Recovery','Review denial exposure, claims backlog, compliance drift, and produce the best next course of action across the full healthcare command.')">
+      <div class="playbook-item active" data-tsm-action="loadPlaybook" data-tsm-args="this,'Claim Recovery','Review denial exposure, claims backlog, compliance drift, and produce the best next course of action across the full healthcare command.'">
         <div class="pb-name">Claim Recovery</div>
         <div class="pb-dot"></div>
       </div>
-      <div class="playbook-item" onclick="loadPlaybook(this,'Audit Sweep','Conduct a comprehensive audit sweep across all nodes — identify compliance gaps, documentation failures, and billing irregularities.')">
+      <div class="playbook-item" data-tsm-action="loadPlaybook" data-tsm-args="this,'Audit Sweep','Conduct a comprehensive audit sweep across all nodes — identify compliance gaps, documentation failures, and billing irregularities.'">
         <div class="pb-name">Audit Sweep</div>
         <span style="font-family:var(--mono);font-size:9px;color:var(--gold)">236k</span>
       </div>
-      <div class="playbook-item" onclick="loadPlaybook(this,'Margin Review','Analyze margin performance across all service lines, identify cost drivers, and recommend optimization paths.')">
+      <div class="playbook-item" data-tsm-action="loadPlaybook" data-tsm-args="this,'Margin Review','Analyze margin performance across all service lines, identify cost drivers, and recommend optimization paths.'">
         <div class="pb-name">Margin Review</div>
         <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">LOW</span>
       </div>
-      <div class="playbook-item" onclick="loadPlaybook(this,'Payer Contract Review','Review all payer contracts for underpayment risk, reimbursement rate gaps, and renegotiation windows.')">
+      <div class="playbook-item" data-tsm-action="loadPlaybook" data-tsm-args="this,'Payer Contract Review','Review all payer contracts for underpayment risk, reimbursement rate gaps, and renegotiation windows.'">
         <div class="pb-name">Payer Contract Review</div>
         <span style="font-family:var(--mono);font-size:9px;color:var(--gold)">APR 15</span>
       </div>
-      <div class="playbook-item" onclick="loadPlaybook(this,'Vendor / Supply Risk','Assess vendor supply chain risks, contract compliance, and critical dependency exposure.')">
+      <div class="playbook-item" data-tsm-action="loadPlaybook" data-tsm-args="this,'Vendor / Supply Risk','Assess vendor supply chain risks, contract compliance, and critical dependency exposure.'">
         <div class="pb-name">Vendor / Supply Risk</div>
         <span style="font-family:var(--mono);font-size:9px;color:var(--red)">2</span>
       </div>
-      <div class="playbook-item" onclick="loadPlaybook(this,'Cash Flow Analysis','Analyze cash flow patterns, AR aging, collections efficiency, and liquidity risk across all sites.')">
+      <div class="playbook-item" data-tsm-action="loadPlaybook" data-tsm-args="this,'Cash Flow Analysis','Analyze cash flow patterns, AR aging, collections efficiency, and liquidity risk across all sites.'">
         <div class="pb-name">Cash Flow</div>
         <span style="font-family:var(--mono);font-size:9px;color:var(--teal)">71%</span>
       </div>
-      <div class="playbook-item" onclick="loadPlaybook(this,'Tax Sweep','Review all healthcare tax obligations, 1099 compliance, depreciation schedules, and tax filing status.')">
+      <div class="playbook-item" data-tsm-action="loadPlaybook" data-tsm-args="this,'Tax Sweep','Review all healthcare tax obligations, 1099 compliance, depreciation schedules, and tax filing status.'">
         <div class="pb-name">Tax Sweep</div>
         <span style="font-family:var(--mono);font-size:9px;color:var(--gold)">$177k</span>
       </div>
-      <div class="playbook-item" onclick="loadPlaybook(this,'BMCA Benchmark','Run BMCA benchmark analysis across all nodes to identify best-in-class performance gaps.')">
+      <div class="playbook-item" data-tsm-action="loadPlaybook" data-tsm-args="this,'BMCA Benchmark','Run BMCA benchmark analysis across all nodes to identify best-in-class performance gaps.'">
         <div class="pb-name">BMCA</div>
         <span style="font-family:var(--mono);font-size:9px;color:var(--purple)">BEST</span>
       </div>
@@ -393,29 +381,29 @@ console.log("TSM_UI: Direct Neural Link Established.");
     <div class="deploy-bar">
       <div class="deploy-label">Deploy Query to Nodes</div>
       <div class="node-pills">
-        <div class="node-pill pill-medical selected" data-node="medical" onclick="toggleNodePill(this)">MEDICAL</div>
-        <div class="node-pill pill-pharmacy selected" data-node="pharmacy" onclick="toggleNodePill(this)">PHARMACY</div>
-        <div class="node-pill pill-insurance selected" data-node="insurance" onclick="toggleNodePill(this)">INSURANCE</div>
-        <div class="node-pill pill-financial selected" data-node="financial" onclick="toggleNodePill(this)">FINANCIAL</div>
-        <div class="node-pill pill-legal selected" data-node="legal" onclick="toggleNodePill(this)">LEGAL</div>
-        <div class="node-pill pill-vendors selected" data-node="vendors" onclick="toggleNodePill(this)">VENDORS</div>
-        <div class="node-pill pill-compliance selected" data-node="compliance" onclick="toggleNodePill(this)">COMPLIANCE</div>
-        <div class="node-pill pill-billing selected" data-node="billing" onclick="toggleNodePill(this)">BILLING</div>
-        <div class="node-pill pill-taxprep selected" data-node="taxprep" onclick="toggleNodePill(this)">TAX PREP</div>
-        <div class="node-pill pill-grants selected" data-node="grants" onclick="toggleNodePill(this)">GRANTS</div>
+        <div class="node-pill pill-medical selected" data-node="medical" data-tsm-action="toggleNodePill" data-tsm-args="this">MEDICAL</div>
+        <div class="node-pill pill-pharmacy selected" data-node="pharmacy" data-tsm-action="toggleNodePill" data-tsm-args="this">PHARMACY</div>
+        <div class="node-pill pill-insurance selected" data-node="insurance" data-tsm-action="toggleNodePill" data-tsm-args="this">INSURANCE</div>
+        <div class="node-pill pill-financial selected" data-node="financial" data-tsm-action="toggleNodePill" data-tsm-args="this">FINANCIAL</div>
+        <div class="node-pill pill-legal selected" data-node="legal" data-tsm-action="toggleNodePill" data-tsm-args="this">LEGAL</div>
+        <div class="node-pill pill-vendors selected" data-node="vendors" data-tsm-action="toggleNodePill" data-tsm-args="this">VENDORS</div>
+        <div class="node-pill pill-compliance selected" data-node="compliance" data-tsm-action="toggleNodePill" data-tsm-args="this">COMPLIANCE</div>
+        <div class="node-pill pill-billing selected" data-node="billing" data-tsm-action="toggleNodePill" data-tsm-args="this">BILLING</div>
+        <div class="node-pill pill-taxprep selected" data-node="taxprep" data-tsm-action="toggleNodePill" data-tsm-args="this">TAX PREP</div>
+        <div class="node-pill pill-grants selected" data-node="grants" data-tsm-action="toggleNodePill" data-tsm-args="this">GRANTS</div>
       </div>
       <div class="query-row">
         <input class="query-input" id="main-query" value="Review denial exposure, claims backlog, compliance drift, and produce the best next course of action across the full healthcare command." placeholder="Enter query to deploy across nodes...">
-        <button class="deploy-btn" id="deploy-btn" onclick="deployToNodes()">DEPLOY</button>
-        <button class="synth-btn" id="synth-btn" onclick="synthesize()">SYNTHESIZE</button>
+        <button class="deploy-btn" id="deploy-btn" data-tsm-action="deployToNodes" data-tsm-args="">DEPLOY</button>
+        <button class="synth-btn" id="synth-btn" data-tsm-action="synthesize" data-tsm-args="">SYNTHESIZE</button>
       </div>
       <div class="action-pills">
-        <div class="action-pill" onclick="safeAnalyze(document.querySelector(`textarea`)?.value || `analysis`, `output`)">UPLOAD DOCUMENT</div>
-        <div class="action-pill" onclick="deployToNodes('Run full cross-node analysis: denial trends, compliance posture, revenue cycle health, and recommended actions')">FULL ANALYSIS</div>
-        <div class="action-pill" onclick="deployToNodes('Extract all key metrics, KPIs, risk indicators, and financial data across nodes')">EXTRACT</div>
-        <div class="action-pill" onclick="deployToNodes('Scan all nodes for compliance gaps, HIPAA violations, documentation failures, and audit exposure')">COMPLIANCE SCAN</div>
-        <div class="action-pill" onclick="deployToNodes('Extract financial performance data: revenue, collections, AR aging, margin analysis')">FINANCIAL EXTRACT</div>
-        <div class="action-pill" onclick="synthesize()">EXEC SUMMARY</div>
+        <div class="action-pill" data-tsm-action="safeAnalyze" data-tsm-args="document.querySelector(`textarea`)?.value || `analysis`, `output`">UPLOAD DOCUMENT</div>
+        <div class="action-pill" data-tsm-action="deployToNodes" data-tsm-args="'Run full cross-node analysis: denial trends, compliance posture, revenue cycle health, and recommended actions'">FULL ANALYSIS</div>
+        <div class="action-pill" data-tsm-action="deployToNodes" data-tsm-args="'Extract all key metrics, KPIs, risk indicators, and financial data across nodes'">EXTRACT</div>
+        <div class="action-pill" data-tsm-action="deployToNodes" data-tsm-args="'Scan all nodes for compliance gaps, HIPAA violations, documentation failures, and audit exposure'">COMPLIANCE SCAN</div>
+        <div class="action-pill" data-tsm-action="deployToNodes" data-tsm-args="'Extract financial performance data: revenue, collections, AR aging, margin analysis'">FINANCIAL EXTRACT</div>
+        <div class="action-pill" data-tsm-action="synthesize" data-tsm-args="">EXEC SUMMARY</div>
       </div>
     </div>
 
@@ -433,7 +421,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
         <div class="nc-progress-bar"><div class="nc-progress-fill" style="background:var(--medical);width:0%" id="prog-medical"></div></div>
         <div class="nc-output" id="out-medical">Waiting for deploy.</div>
         <div class="nc-footer">
-          <button class="nc-open-btn" onclick="openNode('medical')">OPEN APP</button>
+          <button class="nc-open-btn" data-tsm-action="openNode" data-tsm-args="'medical'">OPEN APP</button>
           <div class="nc-status" id="status-medical">READY</div>
         </div>
       </div>
@@ -449,7 +437,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
         <div class="nc-progress-bar"><div class="nc-progress-fill" style="background:var(--pharmacy);width:0%" id="prog-pharmacy"></div></div>
         <div class="nc-output" id="out-pharmacy">Waiting for deploy.</div>
         <div class="nc-footer">
-          <button class="nc-open-btn" onclick="openNode('pharmacy')">OPEN APP</button>
+          <button class="nc-open-btn" data-tsm-action="openNode" data-tsm-args="'pharmacy'">OPEN APP</button>
           <div class="nc-status" id="status-pharmacy">READY</div>
         </div>
       </div>
@@ -465,7 +453,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
         <div class="nc-progress-bar"><div class="nc-progress-fill" style="background:var(--insurance);width:0%" id="prog-insurance"></div></div>
         <div class="nc-output" id="out-insurance">Waiting for deploy.</div>
         <div class="nc-footer">
-          <button class="nc-open-btn" onclick="openNode('insurance')">OPEN APP</button>
+          <button class="nc-open-btn" data-tsm-action="openNode" data-tsm-args="'insurance'">OPEN APP</button>
           <div class="nc-status" id="status-insurance">READY</div>
         </div>
       </div>
@@ -481,7 +469,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
         <div class="nc-progress-bar"><div class="nc-progress-fill" style="background:var(--financial);width:0%" id="prog-financial"></div></div>
         <div class="nc-output" id="out-financial">Waiting for deploy.</div>
         <div class="nc-footer">
-          <button class="nc-open-btn" onclick="openNode('financial')">OPEN APP</button>
+          <button class="nc-open-btn" data-tsm-action="openNode" data-tsm-args="'financial'">OPEN APP</button>
           <div class="nc-status" id="status-financial">READY</div>
         </div>
       </div>
@@ -497,7 +485,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
         <div class="nc-progress-bar"><div class="nc-progress-fill" style="background:var(--legal);width:0%" id="prog-legal"></div></div>
         <div class="nc-output" id="out-legal">Waiting for deploy.</div>
         <div class="nc-footer">
-          <button class="nc-open-btn" onclick="openNode('legal')">OPEN APP</button>
+          <button class="nc-open-btn" data-tsm-action="openNode" data-tsm-args="'legal'">OPEN APP</button>
           <div class="nc-status" id="status-legal">READY</div>
         </div>
       </div>
@@ -513,7 +501,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
         <div class="nc-progress-bar"><div class="nc-progress-fill" style="background:var(--vendors);width:0%" id="prog-vendors"></div></div>
         <div class="nc-output" id="out-vendors">Waiting for deploy.</div>
         <div class="nc-footer">
-          <button class="nc-open-btn" onclick="openNode('vendors')">OPEN APP</button>
+          <button class="nc-open-btn" data-tsm-action="openNode" data-tsm-args="'vendors'">OPEN APP</button>
           <div class="nc-status" id="status-vendors">READY</div>
         </div>
       </div>
@@ -529,7 +517,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
         <div class="nc-progress-bar"><div class="nc-progress-fill" style="background:var(--compliance);width:0%" id="prog-compliance"></div></div>
         <div class="nc-output" id="out-compliance">Waiting for deploy.</div>
         <div class="nc-footer">
-          <button class="nc-open-btn" onclick="openNode('compliance')">OPEN APP</button>
+          <button class="nc-open-btn" data-tsm-action="openNode" data-tsm-args="'compliance'">OPEN APP</button>
           <div class="nc-status" id="status-compliance">READY</div>
         </div>
       </div>
@@ -545,7 +533,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
         <div class="nc-progress-bar"><div class="nc-progress-fill" style="background:var(--billing);width:0%" id="prog-billing"></div></div>
         <div class="nc-output" id="out-billing">Waiting for deploy.</div>
         <div class="nc-footer">
-          <button class="nc-open-btn" onclick="openNode('billing')">OPEN APP</button>
+          <button class="nc-open-btn" data-tsm-action="openNode" data-tsm-args="'billing'">OPEN APP</button>
           <div class="nc-status" id="status-billing">READY</div>
         </div>
       </div>
@@ -561,7 +549,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
         <div class="nc-progress-bar"><div class="nc-progress-fill" style="background:var(--taxprep);width:0%" id="prog-taxprep"></div></div>
         <div class="nc-output" id="out-taxprep">Waiting for deploy.</div>
         <div class="nc-footer">
-          <button class="nc-open-btn" onclick="openNode('taxprep')">OPEN APP</button>
+          <button class="nc-open-btn" data-tsm-action="openNode" data-tsm-args="'taxprep'">OPEN APP</button>
           <div class="nc-status" id="status-taxprep">READY</div>
         </div>
       </div>
@@ -577,7 +565,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
         <div class="nc-progress-bar"><div class="nc-progress-fill" style="background:var(--grants);width:0%" id="prog-grants"></div></div>
         <div class="nc-output" id="out-grants">Waiting for deploy.</div>
         <div class="nc-footer">
-          <button class="nc-open-btn" onclick="openNode('grants')">OPEN APP</button>
+          <button class="nc-open-btn" data-tsm-action="openNode" data-tsm-args="'grants'">OPEN APP</button>
           <div class="nc-status" id="status-grants">READY</div>
         </div>
       </div>
@@ -649,18 +637,18 @@ Node Coverage:
 </div><!-- /layout -->
 
 <!-- NODE MODAL -->
-<div class="modal-overlay" id="modal-overlay" onclick="closeModalIfBg(event)">
+<div class="modal-overlay" id="modal-overlay" data-tsm-action="closeModalIfBg" data-tsm-args="event">
   <div class="modal">
     <div class="modal-header">
       <div class="modal-title" id="modal-title">Node App</div>
-      <button class="modal-close" onclick="closeModal()">×</button>
+      <button class="modal-close" data-tsm-action="closeModal" data-tsm-args="">×</button>
     </div>
     <div class="modal-body">
       <div class="modal-output" id="modal-output">Loading node intelligence...</div>
     </div>
     <div class="modal-input-row">
       <input class="ask-bar" class="ask-bar" class="modal-input" id="modal-input" placeholder="Ask this node a specific question...">
-      <button class="modal-send" onclick="sendNodeQuery()">ASK</button>
+      <button class="modal-send" data-tsm-action="sendNodeQuery" data-tsm-args="">ASK</button>
     </div>
   </div>
 </div>
@@ -931,6 +919,24 @@ window.safeAnalyze = async function(input, targetId="output"){
 <div id="output" style="padding:12px;color:#00ffa6;font-family:monospace;"></div>
 
 <script id="tsm-api-fix">/* TSM API routing fixed */</script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>
 <script src="/html/runtime/tsm-runtime-engine.js"></script>

@@ -736,7 +736,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
     <div class="bnca-header">TSM NEURAL CORE API KEY</div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <input type="password" id="tsm-neural-core-key" placeholder="Routed through TSM server — no key required" disabled style="flex:1;min-width:200px;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:11px;padding:8px 10px;outline:none"/>
-      <button class="btn" id="all-btn" onclick="generateAllBNCA()">GENERATE ALL NODES</button>
+      <button class="btn" id="all-btn" data-tsm-action="generateAllBNCA" data-tsm-args="">GENERATE ALL NODES</button>
       <span style="font-size:9px;color:var(--text3);letter-spacing:1px">MEMORY ONLY</span>
     </div>
   </div>
@@ -786,7 +786,7 @@ function buildNodeCards() {
           <div class="bnca-header" style="color:${STATUS_COLOR[n.status]}">${n.name} <span style="font-size:9px;padding:1px 6px;background:${STATUS_COLOR[n.status]}22;color:${STATUS_COLOR[n.status]}">${STATUS_LABEL[n.status]}</span></div>
           <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-top:2px">TO: ${n.strategist.toUpperCase()}</div>
         </div>
-        <button class="btn-outline" id="btn-${n.id}" onclick="generateNodeBNCA('${n.id}')" style="white-space:nowrap;font-size:9px;padding:5px 12px">GENERATE BNCA</button>
+        <button class="btn-outline" id="btn-${n.id}" data-tsm-action="generateNodeBNCA" data-tsm-args="'${n.id}'" style="white-space:nowrap;font-size:9px;padding:5px 12px">GENERATE BNCA</button>
       </div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;font-size:10px">
         <div style="background:var(--bg);padding:6px 8px"><div style="color:var(--text3);font-size:8px;letter-spacing:1px">COVERAGE</div><span style="color:${n.coverage>=85?'var(--green)':n.coverage>=70?'var(--amber)':'var(--red)'}">${n.coverage>0?n.coverage+'%':'—'}</span></div>
@@ -982,11 +982,11 @@ buildNodeCards();
   <div style="color:#00ffc6;font-weight:950;letter-spacing:.14em;font-size:12px">HC OPERATIONS · TAB COMMAND</div>
 
   <div class="hc-ops-tabs" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
-    <button class="hc-ops-tab active" data-tab="ops-intake" onclick="hcOpsSwitchTab('ops-intake')">Intake Queue</button>
-    <button class="hc-ops-tab" data-tab="ops-staffing" onclick="hcOpsSwitchTab('ops-staffing')">Staffing Coverage</button>
-    <button class="hc-ops-tab" data-tab="ops-scheduling" onclick="hcOpsSwitchTab('ops-scheduling')">Scheduling Backlog</button>
-    <button class="hc-ops-tab" data-tab="ops-vendors" onclick="hcOpsSwitchTab('ops-vendors')">Vendor Alerts</button>
-    <button class="hc-ops-tab" data-tab="ops-ai" onclick="hcOpsSwitchTab('ops-ai')">AI Analysis</button>
+    <button class="hc-ops-tab active" data-tab="ops-intake" data-tsm-action="hcOpsSwitchTab" data-tsm-args="'ops-intake'">Intake Queue</button>
+    <button class="hc-ops-tab" data-tab="ops-staffing" data-tsm-action="hcOpsSwitchTab" data-tsm-args="'ops-staffing'">Staffing Coverage</button>
+    <button class="hc-ops-tab" data-tab="ops-scheduling" data-tsm-action="hcOpsSwitchTab" data-tsm-args="'ops-scheduling'">Scheduling Backlog</button>
+    <button class="hc-ops-tab" data-tab="ops-vendors" data-tsm-action="hcOpsSwitchTab" data-tsm-args="'ops-vendors'">Vendor Alerts</button>
+    <button class="hc-ops-tab" data-tab="ops-ai" data-tsm-action="hcOpsSwitchTab" data-tsm-args="'ops-ai'">AI Analysis</button>
   </div>
 
   <div class="hc-ops-panel tab-content" data-panel="ops-intake" id="ops-intake" style="margin-top:14px">
@@ -1202,5 +1202,23 @@ CONFIDENCE
 })();
 </script>
 
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

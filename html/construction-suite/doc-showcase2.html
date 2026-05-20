@@ -651,11 +651,11 @@ console.log("TSM_UI: Direct Neural Link Established.");
     <input class="ai-bar-input" id="aiBarInput" placeholder="e.g. Summarize the GC contract payment terms…"/>
     <button class="ai-bar-btn" id="aiBarBtn">Ask AI</button>
     <div class="ai-quick-chips">
-      <span class="ai-qchip" onclick="barChip(this)">What permits are still pending?</span>
-      <span class="ai-qchip" onclick="barChip(this)">Summarize Q1 budget report</span>
-      <span class="ai-qchip" onclick="barChip(this)">OSHA compliance checklist</span>
-      <span class="ai-qchip" onclick="barChip(this)">Change order best practices</span>
-      <span class="ai-qchip" onclick="barChip(this)">What's in the MEP drawings?</span>
+      <span class="ai-qchip" data-tsm-action="barChip" data-tsm-args="this">What permits are still pending?</span>
+      <span class="ai-qchip" data-tsm-action="barChip" data-tsm-args="this">Summarize Q1 budget report</span>
+      <span class="ai-qchip" data-tsm-action="barChip" data-tsm-args="this">OSHA compliance checklist</span>
+      <span class="ai-qchip" data-tsm-action="barChip" data-tsm-args="this">Change order best practices</span>
+      <span class="ai-qchip" data-tsm-action="barChip" data-tsm-args="this">What's in the MEP drawings?</span>
     </div>
     <div class="ai-result-box" id="aiResultBox">
       <div class="ai-result-label">TSM Neural Core · Construction AI</div>
@@ -665,14 +665,14 @@ console.log("TSM_UI: Direct Neural Link Established.");
 
   <!-- Filter Chips -->
   <div class="filter-row">
-    <div class="filter-chip active" onclick="setFilter(this)">All</div>
-    <div class="filter-chip" onclick="setFilter(this)">Plans & Drawings</div>
-    <div class="filter-chip" onclick="setFilter(this)">Contracts</div>
-    <div class="filter-chip" onclick="setFilter(this)">Permits</div>
-    <div class="filter-chip" onclick="setFilter(this)">Reports</div>
-    <div class="filter-chip" onclick="setFilter(this)">Safety</div>
-    <div class="filter-chip" onclick="setFilter(this)">Compliance</div>
-    <div class="filter-chip" onclick="setFilter(this)">Financial</div>
+    <div class="filter-chip active" data-tsm-action="setFilter" data-tsm-args="this">All</div>
+    <div class="filter-chip" data-tsm-action="setFilter" data-tsm-args="this">Plans & Drawings</div>
+    <div class="filter-chip" data-tsm-action="setFilter" data-tsm-args="this">Contracts</div>
+    <div class="filter-chip" data-tsm-action="setFilter" data-tsm-args="this">Permits</div>
+    <div class="filter-chip" data-tsm-action="setFilter" data-tsm-args="this">Reports</div>
+    <div class="filter-chip" data-tsm-action="setFilter" data-tsm-args="this">Safety</div>
+    <div class="filter-chip" data-tsm-action="setFilter" data-tsm-args="this">Compliance</div>
+    <div class="filter-chip" data-tsm-action="setFilter" data-tsm-args="this">Financial</div>
   </div>
 
   <!-- Category Cards -->
@@ -1129,4 +1129,22 @@ window.processDoc = async () => {
 <script src="/shared/tsm-global-command.js?v=phase4"></script>
 <script src="/shared/tsm-sector-intelligence.js?v=phase5si"></script>
 <script src="/shared/tsm-autonomous-execution.js?v=phase5"></script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body></html>

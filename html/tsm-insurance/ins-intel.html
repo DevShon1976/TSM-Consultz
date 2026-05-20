@@ -214,7 +214,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
     <div class="nav-title">INSURANCE INTELLIGENCE</div>
   </div>
   <div class="nav-links">
-    <button class="nav-btn active" onclick="scrollTo({top:0,behavior:'smooth'})">NEURAL MAP</button>
+    <button class="nav-btn active" data-tsm-action="scrollTo" data-tsm-args="{top:0,behavior:'smooth'}">NEURAL MAP</button>
     <button class="nav-btn" onclick="document.getElementById('howto-section').scrollIntoView({behavior:'smooth'})">HOW TO</button>
     <button class="nav-btn" onclick="document.getElementById('workflow-section').scrollIntoView({behavior:'smooth'})">WORKFLOW</button>
     <a class="nav-btn" href="/suite">← SUITES</a>
@@ -623,7 +623,7 @@ function showPanel(app) {
       <div>
         <div class="panel-badge" style="color:${app.color};border-color:rgba(${rgb},.4);background:rgba(${rgb},.08);">${app.badge}</div>
       </div>
-      <button class="panel-close" onclick="selectApp('${app.id}')">✕ CLOSE</button>
+      <button class="panel-close" data-tsm-action="selectApp" data-tsm-args="'${app.id}'">✕ CLOSE</button>
     </div>
     <div class="panel-name">${app.name}</div>
     <div class="panel-desc">${app.desc}</div>
@@ -660,5 +660,23 @@ resize();
 <script src="/shared/tsm-global-command.js?v=phase4"></script>
 <script src="/shared/tsm-sector-intelligence.js?v=phase5si"></script>
 <script src="/shared/tsm-autonomous-execution.js?v=phase5"></script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

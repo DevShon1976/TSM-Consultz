@@ -311,10 +311,10 @@ border-bottom:1px solid rgba(255,255,255,.08);
     
 <div class="objectionBox">
   <h2>Live Objection Handler</h2>
-  <button class="objBtn" onclick="showObj('chatgpt')">“I already use ChatGPT.”</button>
-  <button class="objBtn" onclick="showObj('need')">“I don’t need this.”</button>
-  <button class="objBtn" onclick="showObj('price')">“How much is it?”</button>
-  <button class="objBtn" onclick="showObj('quality')">“Can AI really judge music?”</button>
+  <button class="objBtn" data-tsm-action="showObj" data-tsm-args="'chatgpt'">“I already use ChatGPT.”</button>
+  <button class="objBtn" data-tsm-action="showObj" data-tsm-args="'need'">“I don’t need this.”</button>
+  <button class="objBtn" data-tsm-action="showObj" data-tsm-args="'price'">“How much is it?”</button>
+  <button class="objBtn" data-tsm-action="showObj" data-tsm-args="'quality'">“Can AI really judge music?”</button>
   <pre class="objAnswer" id="objAnswer">Click an objection if it comes up during the demo.</pre>
 </div>
 
@@ -333,8 +333,8 @@ border-bottom:1px solid rgba(255,255,255,.08);
 </div>
 
 <div class="controls">
-  <button onclick="prev()">← Back</button>
-  <button class="primary" onclick="next()">Next →</button>
+  <button data-tsm-action="prev" data-tsm-args="">← Back</button>
+  <button class="primary" data-tsm-action="next" data-tsm-args="">Next →</button>
   <a class="btn" id="openNew" target="_blank">Open</a>
 </div>
 
@@ -462,7 +462,7 @@ let i = 0;
 
 function render(){
   document.getElementById("steps").innerHTML = deck.map((s,idx)=>`
-    <div class="step ${idx===i?'active':''}" onclick="go(${idx})">
+    <div class="step ${idx===i?'active':''}" data-tsm-action="go" data-tsm-args="${idx}">
       <div class="kicker">Step ${idx+1}</div>
       <h3>${s.title}</h3>
       <p>${s.label}</p>
@@ -649,7 +649,7 @@ margin-top:16px;
     <option value="label">Catalog / Label Mode · $499/mo</option>
   </select>
 
-  <button class="unlockBtn" onclick="instantUnlock()">Unlock Access Now</button>
+  <button class="unlockBtn" data-tsm-action="instantUnlock" data-tsm-args="">Unlock Access Now</button>
 
   <pre class="unlockResult" id="unlockResult">Lead capture + private link will appear here.</pre>
 </div>
@@ -739,5 +739,23 @@ Say this:
 })();
 </script>
 
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

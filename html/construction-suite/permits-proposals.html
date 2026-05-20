@@ -71,9 +71,9 @@ Review permit readiness, identify missing package items, generate an owner-ready
 </select>
 <textarea id="scope" placeholder="Paste project scope, permit notes, drawings summary, city comments, missing documents, owner requirements, or proposal request..."></textarea>
 <textarea id="docs" placeholder="List available docs: site plan, permit application, electrical diagram, MEP drawings, owner agreement, subcontractor bid, change order, OSHA plan..."></textarea>
-<button onclick="runPackage('Permit Readiness Checklist')">Generate Permit Checklist</button>
-<button class="gold" onclick="runPackage('Owner Proposal Generator')">Generate Proposal</button>
-<button class="ghost" onclick="runPackage('Full Permit + Proposal Package')">Run Full Package</button>
+<button data-tsm-action="runPackage" data-tsm-args="'Permit Readiness Checklist'">Generate Permit Checklist</button>
+<button class="gold" data-tsm-action="runPackage" data-tsm-args="'Owner Proposal Generator'">Generate Proposal</button>
+<button class="ghost" data-tsm-action="runPackage" data-tsm-args="'Full Permit + Proposal Package'">Run Full Package</button>
 </div>
 
 <div class="card">
@@ -93,9 +93,9 @@ Review permit readiness, identify missing package items, generate an owner-ready
 </section>
 
 <section class="grid3" style="margin-top:16px">
-<div class="card"><p class="ey">Permit BNCA</p><h2>Readiness Review</h2><p style="color:#9fb8c8">Find missing drawings, signatures, jurisdiction comments, and blockers.</p><button class="ghost" onclick="runPackage('Permit BNCA')">Run Permit BNCA</button></div>
-<div class="card"><p class="ey">Proposal BNCA</p><h2>Owner Proposal</h2><p style="color:#9fb8c8">Generate scope, exclusions, assumptions, and next steps.</p><button class="ghost" onclick="runPackage('Proposal BNCA')">Run Proposal BNCA</button></div>
-<div class="card"><p class="ey">Executive BNCA</p><h2>Next Actions</h2><p style="color:#9fb8c8">Create owner lane, subcontractor lane, permit lane, and escalation checklist.</p><button class="ghost" onclick="runPackage('Executive BNCA')">Run Executive BNCA</button></div>
+<div class="card"><p class="ey">Permit BNCA</p><h2>Readiness Review</h2><p style="color:#9fb8c8">Find missing drawings, signatures, jurisdiction comments, and blockers.</p><button class="ghost" data-tsm-action="runPackage" data-tsm-args="'Permit BNCA'">Run Permit BNCA</button></div>
+<div class="card"><p class="ey">Proposal BNCA</p><h2>Owner Proposal</h2><p style="color:#9fb8c8">Generate scope, exclusions, assumptions, and next steps.</p><button class="ghost" data-tsm-action="runPackage" data-tsm-args="'Proposal BNCA'">Run Proposal BNCA</button></div>
+<div class="card"><p class="ey">Executive BNCA</p><h2>Next Actions</h2><p style="color:#9fb8c8">Create owner lane, subcontractor lane, permit lane, and escalation checklist.</p><button class="ghost" data-tsm-action="runPackage" data-tsm-args="'Executive BNCA'">Run Executive BNCA</button></div>
 </section>
 
 <section class="grid2" style="margin-top:16px">
@@ -198,5 +198,23 @@ CONFIDENCE
 <script src="/shared/tsm-global-command.js?v=phase4"></script>
 <script src="/shared/tsm-sector-intelligence.js?v=phase5si"></script>
 <script src="/shared/tsm-autonomous-execution.js?v=phase5"></script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

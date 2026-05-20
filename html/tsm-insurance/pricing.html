@@ -844,8 +844,8 @@ console.log("TSM_UI: Direct Neural Link Established.");
   <h1>Intelligence priced for <em>how you operate</em></h1>
   <p>From solo agents to enterprise health systems — every plan includes live AI across your entire stack. No per-seat surprises. No feature gating. Just output.</p>
   <div class="toggle-wrap">
-    <button class="toggle-btn active" id="btn-monthly" onclick="setAnnual(false)">Monthly</button>
-    <button class="toggle-btn" id="btn-annual" onclick="setAnnual(true)">Annual <span style="font-size:10px;color:var(--gold);margin-left:4px">−20%</span></button>
+    <button class="toggle-btn active" id="btn-monthly" data-tsm-action="setAnnual" data-tsm-args="false">Monthly</button>
+    <button class="toggle-btn" id="btn-annual" data-tsm-action="setAnnual" data-tsm-args="true">Annual <span style="font-size:10px;color:var(--gold);margin-left:4px">−20%</span></button>
   </div>
 </section>
 
@@ -1202,5 +1202,23 @@ buildTable();
 <script src="/shared/tsm-global-command.js?v=phase4"></script>
 <script src="/shared/tsm-sector-intelligence.js?v=phase5si"></script>
 <script src="/shared/tsm-autonomous-execution.js?v=phase5"></script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

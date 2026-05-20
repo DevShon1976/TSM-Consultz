@@ -463,7 +463,7 @@ async function loadHubApps(){
       </div>
       <div class="tiny muted">${esc(app.url)}</div>
       <div class="tiny muted">Proxy ${esc(app.ai_proxy)}</div>
-      <div class="row"><button class="btn blue" onclick="runAppProbe('${app.app}')">PROBE AI</button></div>
+      <div class="row"><button class="btn blue" data-tsm-action="runAppProbe" data-tsm-args="'${app.app}'">PROBE AI</button></div>
     </div>`).join(''));
 }
 
@@ -545,7 +545,61 @@ document.addEventListener("DOMContentLoaded", () => {{
 </script>
 '''
 if 'window.TSM_HUB_AI' not in text:
-    text = text.replace('</body>', patch + '\n</body>') if '</body>' in text else text + patch
+    text = text.replace('
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
+</body>', patch + '\n
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
+</body>') if '
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
+</body>' in text else text + patch
 file_path.write_text(text, encoding='utf-8')
 print(f"patched {app}: {file_path}")
 PY
@@ -562,4 +616,22 @@ boot().catch(err => {
   setText('footerStatus', `Boot failed: ${err.message}`);
 });
 </script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>

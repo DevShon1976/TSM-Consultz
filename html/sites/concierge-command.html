@@ -164,21 +164,21 @@ console.log("TSM_UI: Direct Neural Link Established.");
 <div id="body">
   <div id="sidebar">
     <div class="sb-lbl">PLAYBOOKS</div>
-    <div class="playbook" onclick="runPlaybook('OTA_Audit',this)">
+    <div class="playbook" data-tsm-action="runPlaybook" data-tsm-args="'OTA_Audit',this">
       <div>OTA Audit</div><div class="playbook-sub">Commission overcharge recovery</div>
-    </div><div class="playbook" onclick="runPlaybook('RevPAR_Boost',this)">
+    </div><div class="playbook" data-tsm-action="runPlaybook" data-tsm-args="'RevPAR_Boost',this">
       <div>RevPAR Boost</div><div class="playbook-sub">Dynamic pricing optimization</div>
-    </div><div class="playbook" onclick="runPlaybook('GOP_Analysis',this)">
+    </div><div class="playbook" data-tsm-action="runPlaybook" data-tsm-args="'GOP_Analysis',this">
       <div>GOP Analysis</div><div class="playbook-sub">P&L line by line review</div>
-    </div><div class="playbook" onclick="runPlaybook('Guest_Experience',this)">
+    </div><div class="playbook" data-tsm-action="runPlaybook" data-tsm-args="'Guest_Experience',this">
       <div>Guest Experience</div><div class="playbook-sub">NPS + service recovery</div>
-    </div><div class="playbook" onclick="runPlaybook('BNCA',this)">
+    </div><div class="playbook" data-tsm-action="runPlaybook" data-tsm-args="'BNCA',this">
       <div>⚡ BNCA</div><div class="playbook-sub">Best Next Course of Action</div>
-    </div><div class="playbook" onclick="runPlaybook('Tax_Sweep',this)">
+    </div><div class="playbook" data-tsm-action="runPlaybook" data-tsm-args="'Tax_Sweep',this">
       <div>Tax Sweep</div><div class="playbook-sub">§179 + cost seg + S-Corp</div>
-    </div><div class="playbook" onclick="runPlaybook('Labor_Optimization',this)">
+    </div><div class="playbook" data-tsm-action="runPlaybook" data-tsm-args="'Labor_Optimization',this">
       <div>Labor Optimization</div><div class="playbook-sub">Scheduling + tip compliance</div>
-    </div><div class="playbook" onclick="runPlaybook('Corporate_Sales',this)">
+    </div><div class="playbook" data-tsm-action="runPlaybook" data-tsm-args="'Corporate_Sales',this">
       <div>Corporate Sales</div><div class="playbook-sub">Weekday occ improvement</div>
     </div>
     <div class="sb-lbl">SYSTEM</div>
@@ -194,8 +194,8 @@ console.log("TSM_UI: Direct Neural Link Established.");
           <label class="node-toggle active" id="tog-hotel"><input type="checkbox" checked value="hotel">HOTELOPS</label><label class="node-toggle active" id="tog-tax"><input type="checkbox" checked value="tax">TAX INTELLIGENCE</label><label class="node-toggle active" id="tog-comp"><input type="checkbox" checked value="comp">COMPLIANCE SHIELD</label><label class="node-toggle active" id="tog-fin"><input type="checkbox" checked value="fin">FINANCIAL</label><label class="node-toggle active" id="tog-strat"><input type="checkbox" checked value="strat">STRATEGIST</label>
         </div>
         <input id="queryInput" type="text" placeholder="Enter intelligence query — deploy to all selected nodes simultaneously...">
-        <button id="btnDeploy" onclick="deployQuery()">⚡ DEPLOY</button>
-        <button id="btnSynth" onclick="synthesize()" id="btnSynth">◈ SYNTHESIZE</button>
+        <button id="btnDeploy" data-tsm-action="deployQuery" data-tsm-args="">⚡ DEPLOY</button>
+        <button id="btnSynth" data-tsm-action="synthesize" data-tsm-args="" id="btnSynth">◈ SYNTHESIZE</button>
       </div>
     </div>
 
@@ -544,7 +544,7 @@ async function pollConcierge() {
           <div style="font-size:8px;color:#888;margin-top:2px">${p.doc_type} · ${p.project_ref||'no ref'} · ${new Date(p.uploaded_at).toLocaleTimeString()}</div>
         </div>
         <div style="font-size:8px;padding:3px 8px;background:#c8a030;color:#0a0800;font-weight:700;cursor:pointer;letter-spacing:1px;border-radius:2px;white-space:nowrap;margin-left:8px"
-          onclick="loadConcierge('${p.id}','${p.original_name}','${p.doc_type}')">ANALYZE</div>
+          data-tsm-action="loadConcierge" data-tsm-args="'${p.id}','${p.original_name}','${p.doc_type}'">ANALYZE</div>
       </div>`
     ).join('');
   } catch(e) { console.error('[intake]', e); }
@@ -711,5 +711,23 @@ if(inp&&out)inp.addEventListener("focus",function(){out.style.display="block";})
 
 <script id="tsm-api-fix">/* TSM API routing fixed */</script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"a403a49538b84c30b205b872f0e09c1c","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
-<script>window.ui = new TSM_UI();</script></body>
+<script>window.ui = new TSM_UI();</script>
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
+</body>
 </html>

@@ -133,7 +133,7 @@ button{
 <td>Operational Drift</td>
 <td>-$210K</td>
 <td>HIGH</td>
-<td><button onclick="runBNCA()">Explain</button></td>
+<td><button data-tsm-action="runBNCA" data-tsm-args="">Explain</button></td>
 </tr>
 
 <tr>
@@ -141,7 +141,7 @@ button{
 <td>Billing Variance</td>
 <td>-$87K</td>
 <td>MED</td>
-<td><button onclick="runBNCA()">Explain</button></td>
+<td><button data-tsm-action="runBNCA" data-tsm-args="">Explain</button></td>
 </tr>
 
 </table>
@@ -161,8 +161,8 @@ Ready. Run BNCA relay.
 </div>
 
 <div class="bar">
-<button onclick="runBNCA()">Run BNCA</button>
-<button onclick="exportBrief()">Export Brief</button>
+<button data-tsm-action="runBNCA" data-tsm-args="">Run BNCA</button>
+<button data-tsm-action="exportBrief" data-tsm-args="">Export Brief</button>
 <button onclick="location.href='/wip-dashboard.html'">Universal WIP</button>
 </div>
 
@@ -296,11 +296,11 @@ function injectBar(){
   `;
 
   bar.innerHTML=`
-    <button onclick="wipSave()" style="background:#00ffc6;color:#001;border:0;padding:10px 14px;border-radius:10px;font-weight:900">Save</button>
+    <button data-tsm-action="wipSave" data-tsm-args="" style="background:#00ffc6;color:#001;border:0;padding:10px 14px;border-radius:10px;font-weight:900">Save</button>
 
-    <button onclick="wipExportTXT()" style="background:#ffc400;color:#111;border:0;padding:10px 14px;border-radius:10px;font-weight:900">Export TXT</button>
+    <button data-tsm-action="wipExportTXT" data-tsm-args="" style="background:#ffc400;color:#111;border:0;padding:10px 14px;border-radius:10px;font-weight:900">Export TXT</button>
 
-    <button onclick="wipExportJSON()" style="background:#b56cff;color:#fff;border:0;padding:10px 14px;border-radius:10px;font-weight:900">Export JSON</button>
+    <button data-tsm-action="wipExportJSON" data-tsm-args="" style="background:#b56cff;color:#fff;border:0;padding:10px 14px;border-radius:10px;font-weight:900">Export JSON</button>
   `;
 
   document.body.appendChild(bar);
@@ -315,5 +315,23 @@ if(document.readyState==="loading"){
 })();
 </script>
 
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

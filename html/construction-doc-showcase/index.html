@@ -24,7 +24,7 @@ function loadSavedReports(){
     const panel=document.getElementById('savedPanel');const list=document.getElementById('savedList');
     if(!reports.length){panel.classList.remove('visible');return;}
     panel.classList.add('visible');
-    list.innerHTML=reports.map(r=>`<div class="saved-item" onclick="loadSaved(${r.id})"><div class="saved-item-title">${r.label}</div><div class="saved-item-meta">${r.saved} · Risk: ${r.risk||'—'} · Conf: ${r.conf||'—'}</div></div>`).join('');
+    list.innerHTML=reports.map(r=>`<div class="saved-item" data-tsm-action="loadSaved" data-tsm-args="${r.id}"><div class="saved-item-title">${r.label}</div><div class="saved-item-meta">${r.saved} · Risk: ${r.risk||'—'} · Conf: ${r.conf||'—'}</div></div>`).join('');
   }catch(e){}
 }
 function loadSaved(id){
@@ -209,18 +209,18 @@ console.log("TSM_UI: Direct Neural Link Established.");
   <!-- END HOW TO -->
   <div class="section-label">SELECT MODE</div>
   <div class="mode-row">
-    <button class="mode-btn active" id="mode-sample" onclick="setMode('sample')">📋 SAMPLE DOCUMENT<br><span style="font-weight:400;font-size:9px;color:var(--muted)">Pre-loaded demo docs</span></button>
-    <button class="mode-btn" id="mode-actual" onclick="setMode('actual')">📁 ACTUAL DOCUMENT<br><span style="font-weight:400;font-size:9px;color:var(--muted)">Upload your real file</span></button>
+    <button class="mode-btn active" id="mode-sample" data-tsm-action="setMode" data-tsm-args="'sample'">📋 SAMPLE DOCUMENT<br><span style="font-weight:400;font-size:9px;color:var(--muted)">Pre-loaded demo docs</span></button>
+    <button class="mode-btn" id="mode-actual" data-tsm-action="setMode" data-tsm-args="'actual'">📁 ACTUAL DOCUMENT<br><span style="font-weight:400;font-size:9px;color:var(--muted)">Upload your real file</span></button>
   </div>
   <div id="panel-sample">
     <div class="section-label">CHOOSE A SAMPLE DOCUMENT</div>
     <div class="sample-grid">
-      <div class="sample-card" onclick="selectSample(this,'bank-recon')"><div class="sc-type">FINOPS</div><div class="sc-name">Bank Reconciliation</div><div class="sc-desc">Q1 recon with $48K variance flagged across 3 accounts</div></div>
-      <div class="sample-card" onclick="selectSample(this,'ap-aging')"><div class="sc-type">BILLING</div><div class="sc-name">AP Aging Report</div><div class="sc-desc">180-day aging · 22 vendors · $312K outstanding</div></div>
-      <div class="sample-card" onclick="selectSample(this,'denial-report')"><div class="sc-type">INSURANCE</div><div class="sc-name">Denial Report</div><div class="sc-desc">18.4% denial rate · prior auth friction · 247 claims pending</div></div>
-      <div class="sample-card" onclick="selectSample(this,'gl-extract')"><div class="sc-type">FINANCIAL</div><div class="sc-name">GL Extract</div><div class="sc-desc">Q1 extract · revenue vs budget variance by cost center</div></div>
-      <div class="sample-card" onclick="selectSample(this,'audit-finding')"><div class="sc-type">COMPLIANCE</div><div class="sc-name">Audit Finding</div><div class="sc-desc">HIPAA gap · 3 open findings · Joint Commission prep</div></div>
-      <div class="sample-card" onclick="selectSample(this,'variance-report')"><div class="sc-type">OPERATIONS</div><div class="sc-name">Variance Report</div><div class="sc-desc">Staffing vs budget · intake throughput lag · scheduling pressure</div></div>
+      <div class="sample-card" data-tsm-action="selectSample" data-tsm-args="this,'bank-recon'"><div class="sc-type">FINOPS</div><div class="sc-name">Bank Reconciliation</div><div class="sc-desc">Q1 recon with $48K variance flagged across 3 accounts</div></div>
+      <div class="sample-card" data-tsm-action="selectSample" data-tsm-args="this,'ap-aging'"><div class="sc-type">BILLING</div><div class="sc-name">AP Aging Report</div><div class="sc-desc">180-day aging · 22 vendors · $312K outstanding</div></div>
+      <div class="sample-card" data-tsm-action="selectSample" data-tsm-args="this,'denial-report'"><div class="sc-type">INSURANCE</div><div class="sc-name">Denial Report</div><div class="sc-desc">18.4% denial rate · prior auth friction · 247 claims pending</div></div>
+      <div class="sample-card" data-tsm-action="selectSample" data-tsm-args="this,'gl-extract'"><div class="sc-type">FINANCIAL</div><div class="sc-name">GL Extract</div><div class="sc-desc">Q1 extract · revenue vs budget variance by cost center</div></div>
+      <div class="sample-card" data-tsm-action="selectSample" data-tsm-args="this,'audit-finding'"><div class="sc-type">COMPLIANCE</div><div class="sc-name">Audit Finding</div><div class="sc-desc">HIPAA gap · 3 open findings · Joint Commission prep</div></div>
+      <div class="sample-card" data-tsm-action="selectSample" data-tsm-args="this,'variance-report'"><div class="sc-type">OPERATIONS</div><div class="sc-name">Variance Report</div><div class="sc-desc">Staffing vs budget · intake throughput lag · scheduling pressure</div></div>
     </div>
   </div>
   <div id="panel-actual" style="display:none">
@@ -247,9 +247,9 @@ console.log("TSM_UI: Direct Neural Link Established.");
     <div class="pipe-step"><div class="pipe-dot" id="pipe-4">📊</div><div class="pipe-label">REPORT</div></div>
   </div>
   <div class="action-row">
-    <button class="proc-btn" id="procBtn" onclick="processDoc()" disabled>▶ PROCESS DOCUMENT</button>
-    <button class="save-btn" id="saveBtn" onclick="saveReport()">💾 SAVE REPORT</button>
-    <button class="push-btn" id="pushBtn" onclick="pushToStrategist()">→ PUSH TO CONSTRUCTION STRATEGIST</button>
+    <button class="proc-btn" id="procBtn" data-tsm-action="processDoc" data-tsm-args="" disabled>▶ PROCESS DOCUMENT</button>
+    <button class="save-btn" id="saveBtn" data-tsm-action="saveReport" data-tsm-args="">💾 SAVE REPORT</button>
+    <button class="push-btn" id="pushBtn" data-tsm-action="pushToStrategist" data-tsm-args="">→ PUSH TO CONSTRUCTION STRATEGIST</button>
   </div>
   <div class="output-panel">
     <div class="out-hdr">
@@ -413,7 +413,7 @@ function loadSavedReports(){
     const panel=document.getElementById('savedPanel');const list=document.getElementById('savedList');
     if(!reports.length){panel.classList.remove('visible');return;}
     panel.classList.add('visible');
-    list.innerHTML=reports.map(r=>`<div class="saved-item" onclick="loadSaved(${r.id})"><div class="saved-item-title">${r.label}</div><div class="saved-item-meta">${r.saved} · Risk: ${r.risk||'—'} · Conf: ${r.conf||'—'}</div></div>`).join('');
+    list.innerHTML=reports.map(r=>`<div class="saved-item" data-tsm-action="loadSaved" data-tsm-args="${r.id}"><div class="saved-item-title">${r.label}</div><div class="saved-item-meta">${r.saved} · Risk: ${r.risk||'—'} · Conf: ${r.conf||'—'}</div></div>`).join('');
   }catch(e){}
 }
 function loadSaved(id){
@@ -429,5 +429,23 @@ function loadSaved(id){
 loadSavedReports();
 
 </script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

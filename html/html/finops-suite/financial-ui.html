@@ -6,6 +6,16 @@
 <title>TSM Financial Operations · Start Here</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
+/* TSM_SCROLL_FIX_V2 */
+html, body { height: 100%; overflow-y: auto; }
+main, .main { padding-bottom: 80px !important; min-height: calc(100vh - 60px); }
+.panel { max-height: none !important; overflow-y: visible; }
+.panel.active { display: block; }
+.scroll-box { max-height: 400px; overflow-y: auto; }
+.bnca-output { min-height: 120px; max-height: none; white-space: pre-wrap; }
+.footer { position: fixed; bottom: 0; left: 0; right: 0; height: 32px; z-index: 10; }
+.ask-bar { position: fixed; bottom: 40px; right: 12px; z-index: 20; }
+
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#060b06;
@@ -480,7 +490,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
     <div class="sidebar-title">Staff Accountant Guide</div>
     <div class="sidebar-sub">Use this to understand what is available and what to click.</div>
 
-    <button class="guide-btn" onclick="toggleGuide(this,'guide-startday')">
+    <button class="guide-btn" data-tsm-action="toggleGuide" data-tsm-args="this,'guide-startday'">
       Start my day
       <span class="guide-chevron">▶</span>
     </button>
@@ -491,7 +501,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
       <div class="guide-step"><span>4.</span> Open Controller Action Plan for today's priorities</div>
     </div>
 
-    <button class="guide-btn" onclick="toggleGuide(this,'guide-ap')">
+    <button class="guide-btn" data-tsm-action="toggleGuide" data-tsm-args="this,'guide-ap'">
       Process AP / vendor invoices
       <span class="guide-chevron">▶</span>
     </button>
@@ -503,7 +513,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
       <div class="guide-step"><span>5.</span> Send prioritized list to controller</div>
     </div>
 
-    <button class="guide-btn" onclick="toggleGuide(this,'guide-ar')">
+    <button class="guide-btn" data-tsm-action="toggleGuide" data-tsm-args="this,'guide-ar'">
       Review AR / collections
       <span class="guide-chevron">▶</span>
     </button>
@@ -514,7 +524,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
       <div class="guide-step"><span>4.</span> Open Strategist for collection priority list</div>
     </div>
 
-    <button class="guide-btn" onclick="toggleGuide(this,'guide-rec')">
+    <button class="guide-btn" data-tsm-action="toggleGuide" data-tsm-args="this,'guide-rec'">
       Run bank reconciliation
       <span class="guide-chevron">▶</span>
     </button>
@@ -525,7 +535,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
       <div class="guide-step"><span>4.</span> Review exceptions, push to close package</div>
     </div>
 
-    <button class="guide-btn" onclick="toggleGuide(this,'guide-1099')">
+    <button class="guide-btn" data-tsm-action="toggleGuide" data-tsm-args="this,'guide-1099'">
       Check 1099 / W-9 readiness
       <span class="guide-chevron">▶</span>
     </button>
@@ -536,7 +546,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
       <div class="guide-step"><span>4.</span> Confirm filing deadline windows</div>
     </div>
 
-    <button class="guide-btn" onclick="toggleGuide(this,'guide-audit')">
+    <button class="guide-btn" data-tsm-action="toggleGuide" data-tsm-args="this,'guide-audit'">
       Check audit support / approvals
       <span class="guide-chevron">▶</span>
     </button>
@@ -547,7 +557,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
       <div class="guide-step"><span>4.</span> Close gaps before audit window</div>
     </div>
 
-    <button class="guide-btn" onclick="toggleGuide(this,'guide-ctrl')">
+    <button class="guide-btn" data-tsm-action="toggleGuide" data-tsm-args="this,'guide-ctrl'">
       Send next actions to controller
       <span class="guide-chevron">▶</span>
     </button>
@@ -558,7 +568,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
       <div class="guide-step"><span>4.</span> Export or share with controller</div>
     </div>
 
-    <button class="guide-btn" onclick="toggleGuide(this,'guide-pilot')">
+    <button class="guide-btn" data-tsm-action="toggleGuide" data-tsm-args="this,'guide-pilot'">
       Understand the 30-day pilot
       <span class="guide-chevron">▶</span>
     </button>
@@ -635,27 +645,27 @@ function render(){
       <div class="wp-q">What are you working on today?</div>
       <div class="wp-sub">Select one or more workflows — you can run them together.</div>
       <div class="wf-grid">${workflows.map((w,i)=>`
-        <div class="wf-card${selWork.includes(i)?' sel':''}" onclick="toggleW(${i})">
+        <div class="wf-card${selWork.includes(i)?' sel':''}" data-tsm-action="toggleW" data-tsm-args="${i}">
           <div class="wf-card-tag">${w.tag}</div>
           <div class="wf-card-name">${w.name}</div>
           <div class="wf-card-desc">${w.desc}</div>
         </div>`).join('')}</div>
       <div class="wf-footer">
         <span></span>
-        <button class="btn-next${selWork.length?' on':''}" onclick="setStep(2)">Next: Connect data →</button>
+        <button class="btn-next${selWork.length?' on':''}" data-tsm-action="setStep" data-tsm-args="2">Next: Connect data →</button>
       </div>`;
   } else if(step===2){
     p.innerHTML=`
       <div class="wp-q">How do you want to provide your data?</div>
       <div class="wp-sub">Choose whichever fits your setup for today's review.</div>
       <div class="src-grid">${sources.map((s,i)=>`
-        <div class="src-card${selSrc===i?' sel':''}" onclick="pickSrc(${i})">
+        <div class="src-card${selSrc===i?' sel':''}" data-tsm-action="pickSrc" data-tsm-args="${i}">
           <div class="src-name">${s.name}</div>
           <div class="src-desc">${s.desc}</div>
         </div>`).join('')}</div>
       <div class="wf-footer">
-        <button class="btn-back" onclick="setStep(1)">← Back</button>
-        <button class="btn-next${selSrc!==null?' on':''}" onclick="setStep(3)">Review &amp; run →</button>
+        <button class="btn-back" data-tsm-action="setStep" data-tsm-args="1">← Back</button>
+        <button class="btn-next${selSrc!==null?' on':''}" data-tsm-action="setStep" data-tsm-args="3">Review &amp; run →</button>
       </div>`;
   } else {
     const wLabels=selWork.map(i=>workflows[i].name).join(', ');
@@ -668,7 +678,7 @@ function render(){
       <button class="btn-run">▶ Run full accounting review</button>
       <div class="run-note">Detects issues, flags compliance gaps, and tells you exactly what to fix first.</div>
       <div class="wf-footer" style="margin-top:10px">
-        <button class="btn-back" onclick="setStep(2)">← Back</button>
+        <button class="btn-back" data-tsm-action="setStep" data-tsm-args="2">← Back</button>
         <span></span>
       </div>`;
   }
@@ -692,6 +702,24 @@ function toggleGuide(btn,id){
 render();
 </script>
 <script src="/groq-bridge.js"></script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>
 <script src="/html/runtime/tsm-runtime-engine.js"></script>

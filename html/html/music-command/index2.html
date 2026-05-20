@@ -7,29 +7,17 @@
 <title>TSM Music Command | Artist & Label Intelligence</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
-/* TSM_SCROLL_FIX */
-html, body {
-  height: 100%;
-  overflow-y: auto;
-}
-main {
-  padding-bottom: 80px !important;
-  min-height: calc(100vh - 60px);
-}
-.footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 32px;
-  z-index: 10;
-}
-.ask-bar {
-  position: fixed;
-  bottom: 40px;
-  right: 12px;
-  z-index: 20;
-}
+/* TSM_SCROLL_FIX_V2 */
+html, body { height: 100%; overflow-y: auto; }
+main, .main { padding-bottom: 80px !important; min-height: calc(100vh - 60px); }
+.panel { max-height: none !important; overflow-y: visible; }
+.panel.active { display: block; }
+.scroll-box { max-height: 400px; overflow-y: auto; }
+.bnca-output { min-height: 120px; max-height: none; white-space: pre-wrap; }
+.footer { position: fixed; bottom: 0; left: 0; right: 0; height: 32px; z-index: 10; }
+.ask-bar { position: fixed; bottom: 40px; right: 12px; z-index: 20; }
+
+
 .panel {
   max-height: 60vh;
   overflow-y: auto;
@@ -550,7 +538,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
 <div class="key-bar">
   <span class="key-label">⚡ GROQ API KEY:</span>
   <input type="password" class="key-input" id="groqKey" placeholder="gsk_... (required for AI features)" />
-  <button class="key-save" onclick="saveKey()">SET KEY</button>
+  <button class="key-save" data-tsm-action="saveKey" data-tsm-args="">SET KEY</button>
   <span class="key-status" id="keyStatus"></span>
 </div>
 
@@ -578,18 +566,18 @@ console.log("TSM_UI: Direct Neural Link Established.");
   <!-- SIDEBAR -->
   <div class="sidebar">
     <div class="sb-section">Navigation</div>
-    <div class="nav-item active" onclick="showTab('roster',this)"><span class="nav-icon">🎤</span>Roster<span class="nav-badge ok">12</span></div>
-    <div class="nav-item" onclick="showTab('releases',this)"><span class="nav-icon">💿</span>Releases<span class="nav-badge hot">3</span></div>
-    <div class="nav-item" onclick="showTab('royalties',this)"><span class="nav-icon">💰</span>Royalties<span class="nav-badge purple">$</span></div>
-    <div class="nav-item" onclick="showTab('booking',this)"><span class="nav-icon">🎪</span>Booking<span class="nav-badge warn">5</span></div>
-    <div class="nav-item" onclick="showTab('sync',this)"><span class="nav-icon">🎬</span>Sync/Licensing</div>
-    <div class="nav-item" onclick="showTab('marketing',this)"><span class="nav-icon">📢</span>Marketing</div>
+    <div class="nav-item active" data-tsm-action="showTab" data-tsm-args="'roster',this"><span class="nav-icon">🎤</span>Roster<span class="nav-badge ok">12</span></div>
+    <div class="nav-item" data-tsm-action="showTab" data-tsm-args="'releases',this"><span class="nav-icon">💿</span>Releases<span class="nav-badge hot">3</span></div>
+    <div class="nav-item" data-tsm-action="showTab" data-tsm-args="'royalties',this"><span class="nav-icon">💰</span>Royalties<span class="nav-badge purple">$</span></div>
+    <div class="nav-item" data-tsm-action="showTab" data-tsm-args="'booking',this"><span class="nav-icon">🎪</span>Booking<span class="nav-badge warn">5</span></div>
+    <div class="nav-item" data-tsm-action="showTab" data-tsm-args="'sync',this"><span class="nav-icon">🎬</span>Sync/Licensing</div>
+    <div class="nav-item" data-tsm-action="showTab" data-tsm-args="'marketing',this"><span class="nav-icon">📢</span>Marketing</div>
     <div class="sb-section">AI Tools</div>
-    <div class="nav-item" onclick="showTab('strategy',this)"><span class="nav-icon">🧠</span>AI Strategy</div>
-    <div class="nav-item" onclick="showTab('contracts',this)"><span class="nav-icon">📋</span>Contracts<span class="nav-badge warn">2</span></div>
+    <div class="nav-item" data-tsm-action="showTab" data-tsm-args="'strategy',this"><span class="nav-icon">🧠</span>AI Strategy</div>
+    <div class="nav-item" data-tsm-action="showTab" data-tsm-args="'contracts',this"><span class="nav-icon">📋</span>Contracts<span class="nav-badge warn">2</span></div>
     <div class="sb-section">Intelligence</div>
-    <div class="nav-item" onclick="showTab('charts',this)"><span class="nav-icon">📊</span>Chart Tracking</div>
-    <div class="nav-item" onclick="showTab('streaming',this)"><span class="nav-icon">🎧</span>Streaming Intel</div>
+    <div class="nav-item" data-tsm-action="showTab" data-tsm-args="'charts',this"><span class="nav-icon">📊</span>Chart Tracking</div>
+    <div class="nav-item" data-tsm-action="showTab" data-tsm-args="'streaming',this"><span class="nav-icon">🎧</span>Streaming Intel</div>
   </div>
 
   <!-- MAIN -->
@@ -609,7 +597,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
       <div>
         <div class="sec-hdr">
           <div class="sec-title">Artist Roster — Live Status</div>
-          <button class="btn btn-purple" onclick="aiRosterAnalysis()"><span id="rosterSpinner" class="spinner" style="display:none"></span>⚡ AI Roster Brief</button>
+          <button class="btn btn-purple" data-tsm-action="aiRosterAnalysis" data-tsm-args=""><span id="rosterSpinner" class="spinner" style="display:none"></span>⚡ AI Roster Brief</button>
         </div>
         <div class="grid3 stagger">
           <div class="artist-card">
@@ -668,7 +656,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
       <div class="panel">
         <div class="sec-hdr">
           <div class="sec-title">Release Pipeline</div>
-          <button class="btn btn-purple" onclick="aiReleasePlan()"><span id="relSpinner" class="spinner" style="display:none"></span>⚡ AI Release Plan</button>
+          <button class="btn btn-purple" data-tsm-action="aiReleasePlan" data-tsm-args=""><span id="relSpinner" class="spinner" style="display:none"></span>⚡ AI Release Plan</button>
         </div>
         <div class="stagger">
           <div class="release-item dropping"><span class="rel-badge dropping">DROPPING MAY 3</span><div class="rel-info"><div class="rel-title">Neon Dreams (Deluxe)</div><div class="rel-artist">Nova Eclipse · Dark Pop · 14 tracks</div></div><div class="rel-meta">Pre-saves: 42K<br>Promo: LIVE</div></div>
@@ -688,7 +676,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
       <div class="panel">
         <div class="sec-hdr">
           <div class="sec-title">Royalty Intelligence</div>
-          <button class="btn btn-purple" onclick="aiRoyaltyAnalysis()"><span id="roySpinner" class="spinner" style="display:none"></span>⚡ AI Analysis</button>
+          <button class="btn btn-purple" data-tsm-action="aiRoyaltyAnalysis" data-tsm-args=""><span id="roySpinner" class="spinner" style="display:none"></span>⚡ AI Analysis</button>
         </div>
         <div class="grid2">
           <div>
@@ -727,7 +715,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
       <div class="panel">
         <div class="sec-hdr">
           <div class="sec-title">Booking & Tour Command</div>
-          <button class="btn btn-purple" onclick="aiBookingBrief()">⚡ AI Tour Brief</button>
+          <button class="btn btn-purple" data-tsm-action="aiBookingBrief" data-tsm-args="">⚡ AI Tour Brief</button>
         </div>
         <div class="grid2">
           <div>
@@ -759,7 +747,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
     <!-- SYNC TAB -->
     <div id="tab-sync" class="tab-pane">
       <div class="panel">
-        <div class="sec-hdr"><div class="sec-title">Sync & Licensing Pipeline</div><button class="btn btn-purple" onclick="aiSyncAnalysis()">⚡ AI Sync Brief</button></div>
+        <div class="sec-hdr"><div class="sec-title">Sync & Licensing Pipeline</div><button class="btn btn-purple" data-tsm-action="aiSyncAnalysis" data-tsm-args="">⚡ AI Sync Brief</button></div>
         <div class="stagger">
           <div class="alert-item info"><span class="alert-badge info">INBOUND</span><div class="alert-text">TikTok brand deal inquiry — "Midnight Run" — 8.2M organic uses — Nike campaign interest — $50–80K estimated</div><div class="alert-meta">RESPOND 48H<br>SYNC</div></div>
           <div class="alert-item ok"><span class="alert-badge ok">SIGNED</span><div class="alert-text">Netflix series "Night Shift" — "Neon Dreams" — S2E4 placement — $24,000 flat fee + backend</div><div class="alert-meta">$24K<br>TV SYNC</div></div>
@@ -773,7 +761,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
     <!-- MARKETING TAB -->
     <div id="tab-marketing" class="tab-pane">
       <div class="panel">
-        <div class="sec-hdr"><div class="sec-title">Marketing Intelligence</div><button class="btn btn-purple" onclick="aiMarketingPlan()">⚡ AI Campaign Plan</button></div>
+        <div class="sec-hdr"><div class="sec-title">Marketing Intelligence</div><button class="btn btn-purple" data-tsm-action="aiMarketingPlan" data-tsm-args="">⚡ AI Campaign Plan</button></div>
         <div class="grid2">
           <div>
             <div style="font-family:var(--mono);font-size:0.52rem;color:var(--text3);margin-bottom:8px">SOCIAL PERFORMANCE</div>
@@ -803,18 +791,18 @@ console.log("TSM_UI: Direct Neural Link Established.");
         </div>
         <div style="display:flex;gap:8px;margin-bottom:12px">
           <input type="text" id="stratInput" class="key-input" style="flex:1;font-size:0.78rem;font-family:var(--body)" placeholder="e.g. How should we maximize revenue from the TikTok viral moment on Midnight Run?" />
-          <button class="btn btn-purple" onclick="aiStrategy(document.getElementById('stratInput').value)">ASK AI</button>
+          <button class="btn btn-purple" data-tsm-action="aiStrategy" data-tsm-args="document.getElementById('stratInput').value">ASK AI</button>
         </div>
         <div id="stratOutput" style="background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:12px;font-size:0.82rem;line-height:1.7;color:var(--text2);white-space:pre-wrap;display:none;max-height:400px;overflow-y:auto"></div>
         <div style="margin-top:10px">
           <div style="font-family:var(--mono);font-size:0.52rem;color:var(--text3);margin-bottom:6px;letter-spacing:0.08em">QUICK STRATEGIES</div>
           <div style="display:flex;flex-wrap:wrap;gap:5px">
-            <button class="qa-btn" onclick="aiStrategy('How do we maximize the TikTok viral moment for Midnight Run into a long-term revenue strategy?')">TikTok Monetization</button>
-            <button class="qa-btn" onclick="aiStrategy('What is the optimal release strategy for Nova Eclipse Neon Dreams Deluxe edition?')">Release Strategy</button>
-            <button class="qa-btn" onclick="aiStrategy('How should we approach the Artist K contract renewal negotiation?')">Contract Negotiation</button>
-            <button class="qa-btn" onclick="aiStrategy('What sync licensing opportunities should we prioritize for Q2 2026?')">Sync Pipeline</button>
-            <button class="qa-btn" onclick="aiStrategy('How do we grow Solara from $187K to $300K monthly revenue?')">Revenue Growth</button>
-            <button class="qa-btn" onclick="aiStrategy('What is the best touring strategy for the Southeast leg to maximize net revenue?')">Tour Optimization</button>
+            <button class="qa-btn" data-tsm-action="aiStrategy" data-tsm-args="'How do we maximize the TikTok viral moment for Midnight Run into a long-term revenue strategy?'">TikTok Monetization</button>
+            <button class="qa-btn" data-tsm-action="aiStrategy" data-tsm-args="'What is the optimal release strategy for Nova Eclipse Neon Dreams Deluxe edition?'">Release Strategy</button>
+            <button class="qa-btn" data-tsm-action="aiStrategy" data-tsm-args="'How should we approach the Artist K contract renewal negotiation?'">Contract Negotiation</button>
+            <button class="qa-btn" data-tsm-action="aiStrategy" data-tsm-args="'What sync licensing opportunities should we prioritize for Q2 2026?'">Sync Pipeline</button>
+            <button class="qa-btn" data-tsm-action="aiStrategy" data-tsm-args="'How do we grow Solara from $187K to $300K monthly revenue?'">Revenue Growth</button>
+            <button class="qa-btn" data-tsm-action="aiStrategy" data-tsm-args="'What is the best touring strategy for the Southeast leg to maximize net revenue?'">Tour Optimization</button>
           </div>
         </div>
       </div>
@@ -823,7 +811,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
     <!-- CONTRACTS TAB -->
     <div id="tab-contracts" class="tab-pane">
       <div class="panel">
-        <div class="sec-hdr"><div class="sec-title">Contract Management</div><button class="btn btn-purple" onclick="aiContractReview()">⚡ AI Contract Review</button></div>
+        <div class="sec-hdr"><div class="sec-title">Contract Management</div><button class="btn btn-purple" data-tsm-action="aiContractReview" data-tsm-args="">⚡ AI Contract Review</button></div>
         <div class="stagger">
           <div class="alert-item critical"><span class="alert-badge critical">EXPIRING</span><div class="alert-text">Artist K — Recording & Distribution Agreement — expires May 6 · renewal terms not yet proposed</div><div class="alert-meta">14 DAYS<br>CRITICAL</div></div>
           <div class="alert-item high"><span class="alert-badge high">REVIEW</span><div class="alert-text">Vexen — Management Agreement — 3-year term ends Jun 1 · commission structure renegotiation needed</div><div class="alert-meta">40 DAYS<br>MGMT</div></div>
@@ -861,7 +849,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
     <!-- STREAMING TAB -->
     <div id="tab-streaming" class="tab-pane">
       <div class="panel">
-        <div class="sec-hdr"><div class="sec-title">Streaming Intelligence</div><button class="btn btn-purple" onclick="aiStreamingAnalysis()">⚡ AI Analysis</button></div>
+        <div class="sec-hdr"><div class="sec-title">Streaming Intelligence</div><button class="btn btn-purple" data-tsm-action="aiStreamingAnalysis" data-tsm-args="">⚡ AI Analysis</button></div>
         <div style="font-family:var(--mono);font-size:0.52rem;color:var(--text3);margin-bottom:10px">PLATFORM PERFORMANCE — ALL ARTISTS — MTD</div>
         <div class="stream-item"><div class="stream-header"><span class="stream-name">Spotify</span><span class="stream-val">42.1M streams · $186K</span></div><div class="stream-bar-wrap"><div class="stream-bar" style="width:91%"></div></div></div>
         <div class="stream-item"><div class="stream-header"><span class="stream-name">Apple Music</span><span class="stream-val">18.4M streams · $142K</span></div><div class="stream-bar-wrap"><div class="stream-bar" style="width:72%"></div></div></div>
@@ -918,19 +906,19 @@ console.log("TSM_UI: Direct Neural Link Established.");
       </div>
       <div class="chat-row">
         <input class="ask-bar" class="ask-bar" type="text" class="chat-in" id="chatIn" placeholder="Ask music AI..." />
-        <button class="chat-send" onclick="sendChat()">→</button>
+        <button class="chat-send" data-tsm-action="sendChat" data-tsm-args="">→</button>
       </div>
     </div>
 
     <div class="rp-sec">
       <div class="rp-title">Quick Actions</div>
       <div class="qa-grid">
-        <button class="qa-btn" onclick="quickAction('How do we maximize the TikTok viral moment for Midnight Run right now?')">🔥 TikTok Viral</button>
-        <button class="qa-btn" onclick="quickAction('What are the key terms we need in the Artist K contract renewal?')">📋 Contract K</button>
-        <button class="qa-btn" onclick="quickAction('What is the optimal release sequence for May 2026 across all artists?')">💿 Release Plan</button>
-        <button class="qa-btn" onclick="quickAction('How do we counter the FIFA 27 sync offer to maximize value?')">🎮 Sync Deal</button>
-        <button class="qa-btn" onclick="quickAction('What streaming platform should we prioritize for Nova Eclipse promotion?')">🎧 Streaming</button>
-        <button class="qa-btn" onclick="quickAction('Generate a 90-day label revenue acceleration plan')">📈 Revenue Plan</button>
+        <button class="qa-btn" data-tsm-action="quickAction" data-tsm-args="'How do we maximize the TikTok viral moment for Midnight Run right now?'">🔥 TikTok Viral</button>
+        <button class="qa-btn" data-tsm-action="quickAction" data-tsm-args="'What are the key terms we need in the Artist K contract renewal?'">📋 Contract K</button>
+        <button class="qa-btn" data-tsm-action="quickAction" data-tsm-args="'What is the optimal release sequence for May 2026 across all artists?'">💿 Release Plan</button>
+        <button class="qa-btn" data-tsm-action="quickAction" data-tsm-args="'How do we counter the FIFA 27 sync offer to maximize value?'">🎮 Sync Deal</button>
+        <button class="qa-btn" data-tsm-action="quickAction" data-tsm-args="'What streaming platform should we prioritize for Nova Eclipse promotion?'">🎧 Streaming</button>
+        <button class="qa-btn" data-tsm-action="quickAction" data-tsm-args="'Generate a 90-day label revenue acceleration plan'">📈 Revenue Plan</button>
       </div>
     </div>
   </div>
@@ -1450,7 +1438,7 @@ window.addEventListener('load', musicSuiteBoot);
               </div>
               <pre style="white-space:pre-wrap;max-height:180px;overflow:auto;font-size:.7rem;color:var(--text2);background:var(--bg3);padding:8px;border-radius:3px">${o.output}</pre>
               <button class="btn btn-purple" style="margin-top:8px;width:100%;justify-content:center"
-                onclick="pickRevisionAndRerun('${session.id}','${o.id}')">
+                data-tsm-action="pickRevisionAndRerun" data-tsm-args="'${session.id}','${o.id}'">
                 Pick + Run Again ${o.id}
               </button>
             </div>
@@ -1632,7 +1620,7 @@ window.addEventListener('load', musicSuiteBoot);
             ${hit.label || 'No hit label'} · Score Delta ${data.delta >= 0 ? '+' : ''}${data.delta || 0}
           </div>
         </div>
-        <button class="btn btn-purple" onclick="refreshMusicEvolutionPanel()">Refresh Evolution</button>
+        <button class="btn btn-purple" data-tsm-action="refreshMusicEvolutionPanel" data-tsm-args="">Refresh Evolution</button>
       </div>
 
       <div style="display:grid;grid-template-columns:1.15fr .85fr;gap:14px;margin-top:12px">
@@ -1836,9 +1824,9 @@ window.addEventListener('load', musicSuiteBoot);
         `).join('')}
       </div>
       <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-        <button class="btn btn-purple" onclick="generateTenHooksUpsell()">Generate 10 Hooks · $25</button>
-        <button class="btn" onclick="exportCurrentMusicSession()">Export TXT</button>
-        <button class="btn" onclick="saveCurrentArtistSession()">Save Artist Session</button>
+        <button class="btn btn-purple" data-tsm-action="generateTenHooksUpsell" data-tsm-args="">Generate 10 Hooks · $25</button>
+        <button class="btn" data-tsm-action="exportCurrentMusicSession" data-tsm-args="">Export TXT</button>
+        <button class="btn" data-tsm-action="saveCurrentArtistSession" data-tsm-args="">Save Artist Session</button>
       </div>
     `;
 
@@ -2270,6 +2258,24 @@ window.addEventListener('load', musicSuiteBoot);
 })();
 </script>
 
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>
 <script src="/html/runtime/tsm-runtime-engine.js"></script>

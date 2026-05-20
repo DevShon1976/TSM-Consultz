@@ -137,9 +137,9 @@ console.log("TSM_UI: Direct Neural Link Established.");
 </header>
 
 <nav class="tabs">
-  <button class="tab active" onclick="showSector('healthcare',this)">HEALTHCARE</button>
-  <button class="tab" onclick="showSector('healthcare',this)">HEALTHCARE</button>
-  <button class="tab" onclick="showSector('combined',this)">COMBINED EXECUTIVE VIEW</button>
+  <button class="tab active" data-tsm-action="showSector" data-tsm-args="'healthcare',this">HEALTHCARE</button>
+  <button class="tab" data-tsm-action="showSector" data-tsm-args="'healthcare',this">HEALTHCARE</button>
+  <button class="tab" data-tsm-action="showSector" data-tsm-args="'combined',this">COMBINED EXECUTIVE VIEW</button>
 </nav>
 
 <main class="wrap">
@@ -193,8 +193,8 @@ console.log("TSM_UI: Direct Neural Link Established.");
     <div class="panel">
       <b style="color:#00e0ff">COMBINED EXECUTIVE READOUT</b>
       <div class="summary" id="comboSummary">Loading combined executive summary...</div>
-      <button class="btn" onclick="showSector('healthcare',document.querySelectorAll('.tab')[0])">VIEW HEALTHCARE</button>
-      <button class="btn gold" onclick="showSector('healthcare',document.querySelectorAll('.tab')[1])">VIEW HEALTHCARE</button>
+      <button class="btn" data-tsm-action="showSector" data-tsm-args="'healthcare',document.querySelectorAll('.tab')[0]">VIEW HEALTHCARE</button>
+      <button class="btn gold" data-tsm-action="showSector" data-tsm-args="'healthcare',document.querySelectorAll('.tab')[1]">VIEW HEALTHCARE</button>
     </div>
   </section>
 </main>
@@ -461,5 +461,23 @@ setInterval(refreshAll,4000);
 })();
 </script>
 
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

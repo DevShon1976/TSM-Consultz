@@ -420,7 +420,7 @@ if(inp&&out)inp.addEventListener("focus",function(){out.style.display="block";})
     <div id="tsm-ai-think" style="display:none;padding:4px 12px;font-size:8px;color:#00b8d4;letter-spacing:.08em;animation:tsmpulse 1s infinite">// AI PROCESSING…</div>
     <div style="display:flex;gap:0;border-top:1px solid rgba(0,229,255,0.08)">
       <input id="tsm-ai-input" placeholder="Ask healthcare AI…" onkeydown="if(event.key==='Enter')tsmAsk()" style="flex:1;background:transparent;border:none;outline:none;padding:8px 12px;font-family:'Share Tech Mono',monospace;font-size:10px;color:#c8d8e8;caret-color:#00e5ff" />
-      <button onclick="tsmAsk()" style="background:transparent;border:none;border-left:1px solid rgba(0,229,255,0.08);padding:8px 12px;font-family:'Share Tech Mono',monospace;font-size:8px;color:#00e5ff;cursor:pointer;letter-spacing:.08em">SEND</button>
+      <button data-tsm-action="tsmAsk" data-tsm-args="" style="background:transparent;border:none;border-left:1px solid rgba(0,229,255,0.08);padding:8px 12px;font-family:'Share Tech Mono',monospace;font-size:8px;color:#00e5ff;cursor:pointer;letter-spacing:.08em">SEND</button>
     </div>
   </div>
 </div>
@@ -501,5 +501,23 @@ if (typeof callAI === 'undefined') {
 }
 </script>
 
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

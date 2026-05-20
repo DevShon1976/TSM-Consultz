@@ -344,10 +344,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:13
   <p style="font-size:.85rem;color:var(--text);margin:.5rem 0 1.2rem;max-width:560px">One engine. Any industry. Real-time percent-complete analysis, profit fade detection, and CFO-ready narratives — powered by UPCODE-DETECT-V2 and the TSM Sovereign Mesh.</p>
 
   <div class="sector-bar">
-    <button class="sector-btn active-construction" id="btn-construction" onclick="setSector('construction')">🏗 CONSTRUCTION</button>
-    <button class="sector-btn" id="btn-healthcare" onclick="setSector('healthcare')">🏥 HEALTHCARE</button>
-    <button class="sector-btn" id="btn-insurance" onclick="setSector('insurance')">📋 INSURANCE</button>
-    <button class="sector-btn" id="btn-finops" onclick="setSector('finops')">💰 FINOPS</button>
+    <button class="sector-btn active-construction" id="btn-construction" data-tsm-action="setSector" data-tsm-args="'construction'">🏗 CONSTRUCTION</button>
+    <button class="sector-btn" id="btn-healthcare" data-tsm-action="setSector" data-tsm-args="'healthcare'">🏥 HEALTHCARE</button>
+    <button class="sector-btn" id="btn-insurance" data-tsm-action="setSector" data-tsm-args="'insurance'">📋 INSURANCE</button>
+    <button class="sector-btn" id="btn-finops" data-tsm-action="setSector" data-tsm-args="'finops'">💰 FINOPS</button>
   </div>
 </div>
 
@@ -381,7 +381,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:13
     <div class="ai-panel">
       <div class="ap-head">
         <span class="ap-title" id="ai-panel-title">STRATEGIST AUTO-NARRATIVE</span>
-        <button class="ap-run" id="ap-run-btn" onclick="runNarrative()">⚡ GENERATE</button>
+        <button class="ap-run" id="ap-run-btn" data-tsm-action="runNarrative" data-tsm-args="">⚡ GENERATE</button>
       </div>
       <div class="ap-body" id="ap-body">
         <span class="ap-placeholder">Select an entity and click GENERATE to produce a CFO-ready AI narrative for this sector.</span>
@@ -634,7 +634,7 @@ function renderAlerts(data) {
 
 function renderEntities(data) {
   document.getElementById('entity-list').innerHTML = data.entities.map((e,i) => `
-    <div class="entity" id="ent-${i}" onclick="selectEntity(${i})">
+    <div class="entity" id="ent-${i}" data-tsm-action="selectEntity" data-tsm-args="${i}">
       <span class="entity-risk ${e.riskCls}" style="float:right;font-family:var(--mono);font-size:.65rem;font-weight:700">${e.risk}</span>
       <div class="entity-id">${e.id}</div>
       <div class="entity-name">${e.name}</div>
@@ -644,7 +644,7 @@ function renderEntities(data) {
 
 function renderActions(data) {
   document.getElementById('action-btns').innerHTML = data.actions.map(a => `
-    <button class="ar-btn" onclick="runAction('${a}')">${a}</button>`).join('');
+    <button class="ar-btn" data-tsm-action="runAction" data-tsm-args="'${a}'">${a}</button>`).join('');
 }
 
 function selectEntity(i) {
@@ -1288,7 +1288,7 @@ console.log("TSM WIP RELAY ACTIVE");
       <div class="wip-surety-row"><span>Deadline</span><span class="warn">30 days (period close)</span></div>
       <div class="wip-surety-row"><span>Estimated Adjustment</span><span class="ok">+$140k earned premium</span></div>
       <div style="margin-top:.75rem;display:flex;gap:.5rem">
-        <button onclick="runAuditRecon()" style="flex:1;padding:.5rem;background:#f4a800;color:#000;border:none;font-family:inherit;font-size:.52rem;font-weight:700;letter-spacing:.1em;cursor:pointer;text-transform:uppercase">⚡ RUN AUDIT-RECON</button>
+        <button data-tsm-action="runAuditRecon" data-tsm-args="" style="flex:1;padding:.5rem;background:#f4a800;color:#000;border:none;font-family:inherit;font-size:.52rem;font-weight:700;letter-spacing:.1em;cursor:pointer;text-transform:uppercase">⚡ RUN AUDIT-RECON</button>
         <a href="/html/tsm-insurance/az-ins.html" style="flex:1;padding:.5rem;border:1px solid #f4a800;color:#f4a800;font-family:inherit;font-size:.52rem;letter-spacing:.1em;cursor:pointer;text-transform:uppercase;text-decoration:none;display:flex;align-items:center;justify-content:center">VIEW HUB ↗</a>
       </div>
     </div>
@@ -2048,6 +2048,24 @@ runtime-monitor-active
 })();
 </script>
 
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body></html>
 
 
@@ -2259,6 +2277,24 @@ pointer-events:none;
 runtime-monitor-active
 </div>
 
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 
 <script id="tsm-wip-runtime">
@@ -2392,5 +2428,23 @@ pointer-events:none;
 runtime-monitor-active
 </div>
 
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

@@ -426,8 +426,8 @@ footer{display:flex;align-items:center;justify-content:space-between;padding:7px
         70B params · 128k ctx · ~800 tok/s<br>
         Best for: executive-level financial synthesis
       </div>
-      <button class="btn btn-groq" id="run-btn" onclick="runGroq()">▸ Generate Strategist Report</button>
-      <button class="btn btn-clear" onclick="clearOutput()">↺ Clear output</button>
+      <button class="btn btn-groq" id="run-btn" data-tsm-action="runGroq" data-tsm-args="">▸ Generate Strategist Report</button>
+      <button class="btn btn-clear" data-tsm-action="clearOutput" data-tsm-args="">↺ Clear output</button>
       <div class="groq-badge">Groq inference · <span class="groq-speed">ultra-low latency</span></div>
     </div>
     <div class="ai-output-panel">
@@ -656,5 +656,23 @@ setInterval(() => {
   gaps.style.opacity = gaps.style.opacity === '0.5' ? '1' : '0.5';
 }, 1800);
 </script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

@@ -6,29 +6,17 @@
 <title>TSMatter · Demo Click Guide · HonorHealth & Dignity Health</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@500;700&display=swap" rel="stylesheet">
 <style>
-/* TSM_SCROLL_FIX */
-html, body {
-  height: 100%;
-  overflow-y: auto;
-}
-main {
-  padding-bottom: 80px !important;
-  min-height: calc(100vh - 60px);
-}
-.footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 32px;
-  z-index: 10;
-}
-.ask-bar {
-  position: fixed;
-  bottom: 40px;
-  right: 12px;
-  z-index: 20;
-}
+/* TSM_SCROLL_FIX_V2 */
+html, body { height: 100%; overflow-y: auto; }
+main, .main { padding-bottom: 80px !important; min-height: calc(100vh - 60px); }
+.panel { max-height: none !important; overflow-y: visible; }
+.panel.active { display: block; }
+.scroll-box { max-height: 400px; overflow-y: auto; }
+.bnca-output { min-height: 120px; max-height: none; white-space: pre-wrap; }
+.footer { position: fixed; bottom: 0; left: 0; right: 0; height: 32px; z-index: 10; }
+.ask-bar { position: fixed; bottom: 40px; right: 12px; z-index: 20; }
+
+
 .panel {
   max-height: 60vh;
   overflow-y: auto;
@@ -302,12 +290,12 @@ console.log("TSM_UI: Direct Neural Link Established.");
 
 <div class="wrap">
   <div class="org-tabs">
-    <div class="org-tab active-hh" id="tab-hh" onclick="switchOrg('hh')">
+    <div class="org-tab active-hh" id="tab-hh" data-tsm-action="switchOrg" data-tsm-args="'hh'">
       <div class="org-day">Thursday</div>
       <div class="org-name">HonorHealth</div>
       <div class="org-sub">Revenue Cycle · Dee Montee · 8-step script</div>
     </div>
-    <div class="org-tab" id="tab-dh" onclick="switchOrg('dh')">
+    <div class="org-tab" id="tab-dh" data-tsm-action="switchOrg" data-tsm-args="'dh'">
       <div class="org-day">Friday</div>
       <div class="org-name">Dignity Health</div>
       <div class="org-sub">Multi-site Operations · CFO Layer · 7-step script</div>
@@ -318,10 +306,10 @@ console.log("TSM_UI: Direct Neural Link Established.");
   <div id="step-container"></div>
 
   <div class="nav-row">
-    <button class="nav-btn" id="btn-prev" onclick="prevStep()">← Back</button>
-    <button class="nav-btn" id="btn-next" onclick="nextStep()">Next step →</button>
+    <button class="nav-btn" id="btn-prev" data-tsm-action="prevStep" data-tsm-args="">← Back</button>
+    <button class="nav-btn" id="btn-next" data-tsm-action="nextStep" data-tsm-args="">Next step →</button>
     <div class="nav-spacer"></div>
-    <button class="nav-btn" onclick="jumpTo(0)">↺ Restart</button>
+    <button class="nav-btn" data-tsm-action="jumpTo" data-tsm-args="0">↺ Restart</button>
   </div>
 </div>
 
@@ -560,7 +548,7 @@ function render() {
   let ph = '';
   for (let i = 0; i < total; i++) {
     const cls = i < step ? `prog-step done-${col}` : i === step ? `prog-step active-${col}` : 'prog-step';
-    ph += `<div class="${cls}" onclick="jumpTo(${i})" title="Step ${i+1}"></div>`;
+    ph += `<div class="${cls}" data-tsm-action="jumpTo" data-tsm-args="${i}" title="Step ${i+1}"></div>`;
   }
   ph += `<span class="prog-label">Step ${step+1} / ${total}</span>`;
   document.getElementById('prog-bar').innerHTML = ph;
@@ -644,6 +632,24 @@ document.getElementById('ft-date').textContent = ds;
 
 render();
 </script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>
 <script src="/html/runtime/tsm-runtime-engine.js"></script>

@@ -140,7 +140,7 @@ Load executive BNCA and HITL script.<br>
 
 <section class="panel">
 <h2>RUN FULL HEALTHCARE CHAIN</h2>
-<button class="primary" onclick="runFullChain()">RUN HEALTHCARE BNCA CHAIN</button>
+<button class="primary" data-tsm-action="runFullChain" data-tsm-args="">RUN HEALTHCARE BNCA CHAIN</button>
 <pre id="out">Ready. Click RUN HEALTHCARE BNCA CHAIN.</pre>
 </section>
 
@@ -181,5 +181,23 @@ async function runFullChain(){
   out.textContent=JSON.stringify({healthcare_command:hc,hc_strategist:strat,main_strategist:main,executive_portal:exec},null,2);
 }
 </script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

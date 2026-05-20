@@ -977,7 +977,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
               <div class="sec-title">Provider Roster</div>
               <div class="sec-sub">Risk-Ranked</div>
             </div>
-            <button class="btn sm" onclick="loadProviders()">Reload</button>
+            <button class="btn sm" data-tsm-action="loadProviders" data-tsm-args="">Reload</button>
           </div>
           <div style="overflow:auto">
             <table>
@@ -1152,7 +1152,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
               <div class="sec-title">TSM Hub App Wiring</div>
               <div class="sec-sub">Live Discovery</div>
             </div>
-            <button class="btn sm" onclick="loadHubApps()">↺ Rescan</button>
+            <button class="btn sm" data-tsm-action="loadHubApps" data-tsm-args="">↺ Rescan</button>
           </div>
           <div id="hubApps" style="display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))"></div>
         </div>
@@ -1177,7 +1177,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
             <div class="sec-title">Cure Script</div>
             <div class="sec-sub">Patch every hub app to a single AI backend</div>
           </div>
-          <button class="btn sm amber" onclick="copyCureScript()">Copy Script</button>
+          <button class="btn sm amber" data-tsm-action="copyCureScript" data-tsm-args="">Copy Script</button>
         </div>
         <pre class="cure-script" id="cureScriptBox"></pre>
       </div>
@@ -1364,7 +1364,7 @@ async function loadProviders(){
 
     byId('providersTable').innerHTML = providers.map(p=>`
       <tr>
-        <td><a href="#" onclick="selectProvider('${p.provider_id}');return false;" style="color:var(--g)">${esc(p.name||p.provider_id)}</a></td>
+        <td><a href="#" data-tsm-action="selectProvider" data-tsm-args="'${p.provider_id}');return false;' style='color:var(--g">${esc(p.name||p.provider_id)}</a></td>
         <td><span class="badge b">${esc((p.filing_status||'n/a').toUpperCase())}</span></td>
         <td>${p.contractor_flag?'<span class="badge a">CONTRACTOR</span>':'<span class="badge g">EMPLOYEE</span>'}</td>
         <td class="muted">${esc(p.ein||'—')}</td>
@@ -1661,7 +1661,7 @@ async function loadHubApps(){
             </div>
             <div class="muted tiny">${esc(app.url||'—')}</div>
             <div class="muted tiny">Proxy: ${esc(app.ai_proxy||'—')}</div>
-            <button class="btn sm blue" onclick="runAppProbe('${app.app}')">Probe AI</button>
+            <button class="btn sm blue" data-tsm-action="runAppProbe" data-tsm-args="'${app.app}'">Probe AI</button>
           </div>`).join('')
       : '<div class="empty">No hub apps discovered. Rescan to detect.</div>';
   } catch(e){
@@ -1767,7 +1767,61 @@ document.addEventListener("DOMContentLoaded", () => {{
 """
 
 if 'window.TSM_HUB_AI' not in text:
-    text = text.replace('</body>', patch + '\\n</body>') if '</body>' in text else text + patch
+    text = text.replace('
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
+</body>', patch + '\\n
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
+</body>') if '
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
+</body>' in text else text + patch
 file_path.write_text(text, encoding='utf-8')
 print(f"  patched: {file_path}")
 PY
@@ -1787,6 +1841,24 @@ boot().catch(err => {
   setStatus(`Boot failed: ${err.message}`, 'err');
 });
 </script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>
 <script src="/html/runtime/tsm-runtime-engine.js"></script>

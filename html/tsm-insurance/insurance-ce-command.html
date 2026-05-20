@@ -130,23 +130,23 @@ body{
 <div class="glass rounded-3xl p-8">
   <div class="flex flex-wrap gap-3">
 
-    <button class="tab-btn active" onclick="switchTrack('pc',this)">
+    <button class="tab-btn active" data-tsm-action="switchTrack" data-tsm-args="'pc',this">
       P&C
     </button>
 
-    <button class="tab-btn" onclick="switchTrack('life',this)">
+    <button class="tab-btn" data-tsm-action="switchTrack" data-tsm-args="'life',this">
       Life & Health
     </button>
 
-    <button class="tab-btn" onclick="switchTrack('ahip',this)">
+    <button class="tab-btn" data-tsm-action="switchTrack" data-tsm-args="'ahip',this">
       AHIP
     </button>
 
-    <button class="tab-btn" onclick="switchTrack('az',this)">
+    <button class="tab-btn" data-tsm-action="switchTrack" data-tsm-args="'az',this">
       Arizona
     </button>
 
-    <button class="tab-btn" onclick="switchTrack('national',this)">
+    <button class="tab-btn" data-tsm-action="switchTrack" data-tsm-args="'national',this">
       Nationwide
     </button>
 
@@ -195,15 +195,15 @@ body{
     </div>
 
     <div class="flex gap-3 flex-wrap">
-      <button class="tab-btn active" onclick="generateQuestion()">
+      <button class="tab-btn active" data-tsm-action="generateQuestion" data-tsm-args="">
         Generate Question
       </button>
 
-      <button class="tab-btn" onclick="runPracticeExam()">
+      <button class="tab-btn" data-tsm-action="runPracticeExam" data-tsm-args="">
         Practice Exam
       </button>
 
-      <button class="tab-btn" onclick="runStrategistReview()">
+      <button class="tab-btn" data-tsm-action="runStrategistReview" data-tsm-args="">
         Strategist Review
       </button>
     </div>
@@ -496,6 +496,24 @@ b.dataset.tsm=1;
 b.onclick=()=>console.log('[TSM]',b.innerText);
 });
 console.log('[TSM ENGINE ACTIVE]');
+});
+})();</script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
 });
 })();</script>
 </body>

@@ -5,29 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>HC Operations Node</title>
 <style>
-/* TSM_SCROLL_FIX */
-html, body {
-  height: 100%;
-  overflow-y: auto;
-}
-main {
-  padding-bottom: 80px !important;
-  min-height: calc(100vh - 60px);
-}
-.footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 32px;
-  z-index: 10;
-}
-.ask-bar {
-  position: fixed;
-  bottom: 40px;
-  right: 12px;
-  z-index: 20;
-}
+/* TSM_SCROLL_FIX_V2 */
+html, body { height: 100%; overflow-y: auto; }
+main, .main { padding-bottom: 80px !important; min-height: calc(100vh - 60px); }
+.panel { max-height: none !important; overflow-y: visible; }
+.panel.active { display: block; }
+.scroll-box { max-height: 400px; overflow-y: auto; }
+.bnca-output { min-height: 120px; max-height: none; white-space: pre-wrap; }
+.footer { position: fixed; bottom: 0; left: 0; right: 0; height: 32px; z-index: 10; }
+.ask-bar { position: fixed; bottom: 40px; right: 12px; z-index: 20; }
+
+
 .panel {
   max-height: 60vh;
   overflow-y: auto;
@@ -731,7 +719,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
     <div class="bnca-header">GROQ API KEY</div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <input type="password" id="groq-key" placeholder="gsk_..." style="flex:1;min-width:200px;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:11px;padding:8px 10px;outline:none"/>
-      <button class="btn" id="all-btn" onclick="generateAllBNCA()">GENERATE ALL NODES</button>
+      <button class="btn" id="all-btn" data-tsm-action="generateAllBNCA" data-tsm-args="">GENERATE ALL NODES</button>
       <span style="font-size:9px;color:var(--text3);letter-spacing:1px">MEMORY ONLY</span>
     </div>
   </div>
@@ -778,7 +766,7 @@ function buildNodeCards() {
           <div class="bnca-header" style="color:${STATUS_COLOR[n.status]}">${n.name} <span style="font-size:9px;padding:1px 6px;background:${STATUS_COLOR[n.status]}22;color:${STATUS_COLOR[n.status]}">${STATUS_LABEL[n.status]}</span></div>
           <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-top:2px">TO: ${n.strategist.toUpperCase()}</div>
         </div>
-        <button class="btn-outline" id="btn-${n.id}" onclick="generateNodeBNCA('${n.id}')" style="white-space:nowrap;font-size:9px;padding:5px 12px">GENERATE BNCA</button>
+        <button class="btn-outline" id="btn-${n.id}" data-tsm-action="generateNodeBNCA" data-tsm-args="'${n.id}'" style="white-space:nowrap;font-size:9px;padding:5px 12px">GENERATE BNCA</button>
       </div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;font-size:10px">
         <div style="background:var(--bg);padding:6px 8px"><div style="color:var(--text3);font-size:8px;letter-spacing:1px">COVERAGE</div><span style="color:${n.coverage>=85?'var(--green)':n.coverage>=70?'var(--amber)':'var(--red)'}">${n.coverage>0?n.coverage+'%':'—'}</span></div>
@@ -861,6 +849,24 @@ async function generateAllBNCA() {
 
 buildNodeCards();
 </script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>
 <script src="/html/runtime/tsm-runtime-engine.js"></script>

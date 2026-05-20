@@ -478,11 +478,11 @@ console.log("TSM_UI: Direct Neural Link Established.");
 <nav>
   <div class="nav-brand"><em>TSM</em> · Honor Health</div>
   <div class="nav-tabs">
-    <button class="nav-tab on" onclick="go('overview',this)">Overview</button>
-    <button class="nav-tab" onclick="go('architecture',this)">Architecture</button>
-    <button class="nav-tab" onclick="go('workflow',this)">Workflow Transform</button>
-    <button class="nav-tab" onclick="go('bpo',this)">BPO Services</button>
-    <button class="nav-tab" onclick="go('intake',this)">Intake Portal</button>
+    <button class="nav-tab on" data-tsm-action="go" data-tsm-args="'overview',this">Overview</button>
+    <button class="nav-tab" data-tsm-action="go" data-tsm-args="'architecture',this">Architecture</button>
+    <button class="nav-tab" data-tsm-action="go" data-tsm-args="'workflow',this">Workflow Transform</button>
+    <button class="nav-tab" data-tsm-action="go" data-tsm-args="'bpo',this">BPO Services</button>
+    <button class="nav-tab" data-tsm-action="go" data-tsm-args="'intake',this">Intake Portal</button>
   </div>
 </nav>
 
@@ -555,7 +555,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
 
     <!-- OFFICE MANAGER TIER -->
     <div class="om-row">
-      <div class="om-card active" onclick="toggleOM(this,'panel-om1')">
+      <div class="om-card active" data-tsm-action="toggleOM" data-tsm-args="this,'panel-om1'">
         <div class="om-card-top">
           <div class="om-dot"></div>
           <div class="om-name">Office Manager 1</div>
@@ -563,7 +563,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
         <div class="om-region">North Phoenix · Deer Valley</div>
         <div class="om-url">health.tsmatter.com</div>
       </div>
-      <div class="om-card" onclick="toggleOM(this,'panel-om2')">
+      <div class="om-card" data-tsm-action="toggleOM" data-tsm-args="this,'panel-om2'">
         <div class="om-card-top">
           <div class="om-dot"></div>
           <div class="om-name">Office Manager 2</div>
@@ -571,7 +571,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
         <div class="om-region">Central Phoenix · Midtown</div>
         <div class="om-url">health.tsmatter.com</div>
       </div>
-      <div class="om-card" onclick="toggleOM(this,'panel-om3')">
+      <div class="om-card" data-tsm-action="toggleOM" data-tsm-args="this,'panel-om3'">
         <div class="om-card-top">
           <div class="om-dot"></div>
           <div class="om-name">Office Manager 3</div>
@@ -941,7 +941,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
     <div id="tsm-ai-think" style="display:none;padding:4px 12px;font-size:8px;color:#00b8d4;letter-spacing:.08em;animation:tsmpulse 1s infinite">// AI PROCESSING…</div>
     <div style="display:flex;gap:0;border-top:1px solid rgba(0,229,255,0.08)">
       <input id="tsm-ai-input" placeholder="Ask healthcare AI…" onkeydown="if(event.key==='Enter')tsmAsk()" style="flex:1;background:transparent;border:none;outline:none;padding:8px 12px;font-family:'Share Tech Mono',monospace;font-size:10px;color:#c8d8e8;caret-color:#00e5ff" />
-      <button onclick="tsmAsk()" style="background:transparent;border:none;border-left:1px solid rgba(0,229,255,0.08);padding:8px 12px;font-family:'Share Tech Mono',monospace;font-size:8px;color:#00e5ff;cursor:pointer;letter-spacing:.08em">SEND</button>
+      <button data-tsm-action="tsmAsk" data-tsm-args="" style="background:transparent;border:none;border-left:1px solid rgba(0,229,255,0.08);padding:8px 12px;font-family:'Share Tech Mono',monospace;font-size:8px;color:#00e5ff;cursor:pointer;letter-spacing:.08em">SEND</button>
     </div>
   </div>
 </div>
@@ -1022,5 +1022,23 @@ if (typeof callAI === 'undefined') {
 }
 </script>
 
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

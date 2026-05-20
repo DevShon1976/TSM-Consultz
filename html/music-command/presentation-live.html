@@ -113,7 +113,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
 </head>
 <body>
 
-<div class="nav"><button onclick="prev()">↑</button><button onclick="next()">↓</button></div>
+<div class="nav"><button data-tsm-action="prev" data-tsm-args="">↑</button><button data-tsm-action="next" data-tsm-args="">↓</button></div>
 <div class="count" id="count"></div>
 
 <section class="slide active">
@@ -131,7 +131,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
   </div>
 
   <div style="margin-top:14px;">
-    <button onclick="startGuidedDemo()" style="background:#ffd84d;color:#000;border:none;padding:10px 14px;border-radius:6px;font-weight:600;cursor:pointer;">
+    <button data-tsm-action="startGuidedDemo" data-tsm-args="" style="background:#ffd84d;color:#000;border:none;padding:10px 14px;border-radius:6px;font-weight:600;cursor:pointer;">
       ⚡ Start Live Demo (Recommended)
     </button>
   </div>
@@ -140,7 +140,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
   <div style="display:flex;gap:12px;margin-top:28px;flex-wrap:wrap">
     <a class="btn primary" href="/html/music-command/index.html">Open App</a>
     <a class="btn purple" href="/html/music-command/marketing.html">Marketing Page</a>
-    <button class="btn" onclick="refreshAll()">Refresh Live Data</button>
+    <button class="btn" data-tsm-action="refreshAll" data-tsm-args="">Refresh Live Data</button>
   </div>
   <div class="footer">Use ↑ / ↓ arrows to navigate</div>
 
@@ -151,7 +151,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
     style="width:100%;height:100px;background:#07090f;border:1px solid rgba(255,255,255,0.08);color:#fff;padding:10px;border-radius:6px;"></textarea>
 
   <div style="margin-top:10px;">
-    <button onclick="runDemo()" style="background:#00ffd0;color:#000;border:none;padding:10px 14px;border-radius:6px;font-weight:600;cursor:pointer;">
+    <button data-tsm-action="runDemo" data-tsm-args="" style="background:#00ffd0;color:#000;border:none;padding:10px 14px;border-radius:6px;font-weight:600;cursor:pointer;">
       Run AI Analysis
     </button>
   </div>
@@ -199,7 +199,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
     <div>
       <textarea id="demoDraft">Life surrounded by wrong but trying to stay right is a fight
 Every day a battle every night a new light</textarea>
-      <button class="btn primary" onclick="runLiveChain()" style="margin-top:12px">Run ZAY → RIYA → DJ</button>
+      <button class="btn primary" data-tsm-action="runLiveChain" data-tsm-args="" style="margin-top:12px">Run ZAY → RIYA → DJ</button>
     </div>
     <pre id="chainResult">Click Run to call /api/music/agent/chain</pre>
   </div>
@@ -625,5 +625,23 @@ Every day a battle every night a new light`;
 <script src="/shared/tsm-operational-mesh.js?v=mesh1"></script>
 <script src="/shared/tsm-relay-bus.js?v=relay2"></script>
 <script src="/shared/tsm-sector-intelligence.js?v=phase5si"></script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

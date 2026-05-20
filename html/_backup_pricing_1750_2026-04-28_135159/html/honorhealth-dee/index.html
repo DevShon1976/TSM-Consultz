@@ -497,11 +497,11 @@ console.log("TSM_UI: Direct Neural Link Established.");
 <nav>
   <div class="nav-brand"><em>TSM</em> · Honor Health</div>
   <div class="nav-tabs">
-    <button class="nav-tab on" onclick="go('overview',this)">Overview</button>
-    <button class="nav-tab" onclick="go('architecture',this)">Architecture</button>
-    <button class="nav-tab" onclick="go('workflow',this)">Workflow Transform</button>
-    <button class="nav-tab" onclick="go('bpo',this)">BPO Services</button>
-    <button class="nav-tab" onclick="go('intake',this)">Intake Portal</button>
+    <button class="nav-tab on" data-tsm-action="go" data-tsm-args="'overview',this">Overview</button>
+    <button class="nav-tab" data-tsm-action="go" data-tsm-args="'architecture',this">Architecture</button>
+    <button class="nav-tab" data-tsm-action="go" data-tsm-args="'workflow',this">Workflow Transform</button>
+    <button class="nav-tab" data-tsm-action="go" data-tsm-args="'bpo',this">BPO Services</button>
+    <button class="nav-tab" data-tsm-action="go" data-tsm-args="'intake',this">Intake Portal</button>
   </div>
 </nav>
 
@@ -574,7 +574,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
 
     <!-- OFFICE MANAGER TIER -->
     <div class="om-row">
-      <div class="om-card active" onclick="toggleOM(this,'panel-om1')">
+      <div class="om-card active" data-tsm-action="toggleOM" data-tsm-args="this,'panel-om1'">
         <div class="om-card-top">
           <div class="om-dot"></div>
           <div class="om-name">Office Manager 1</div>
@@ -582,7 +582,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
         <div class="om-region">North Phoenix · Deer Valley</div>
         <div class="om-url">health.tsmatter.com</div>
       </div>
-      <div class="om-card" onclick="toggleOM(this,'panel-om2')">
+      <div class="om-card" data-tsm-action="toggleOM" data-tsm-args="this,'panel-om2'">
         <div class="om-card-top">
           <div class="om-dot"></div>
           <div class="om-name">Office Manager 2</div>
@@ -590,7 +590,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
         <div class="om-region">Central Phoenix · Midtown</div>
         <div class="om-url">health.tsmatter.com</div>
       </div>
-      <div class="om-card" onclick="toggleOM(this,'panel-om3')">
+      <div class="om-card" data-tsm-action="toggleOM" data-tsm-args="this,'panel-om3'">
         <div class="om-card-top">
           <div class="om-dot"></div>
           <div class="om-name">Office Manager 3</div>
@@ -948,5 +948,23 @@ console.log("TSM_UI: Direct Neural Link Established.");
     document.getElementById(panelId).classList.add('open');
   }
 </script>
-<script>window.ui = new TSM_UI();</script></body>
+<script>window.ui = new TSM_UI();</script>
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
+</body>
 </html>

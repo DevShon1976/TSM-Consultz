@@ -265,13 +265,13 @@
         <div class="suite-label">⚜️ Insurance Suite:</div>
         <a href="/tsm-insurance/az-ins.html" class="nav-tab-node active-gold">⚜️ AZ Command</a>
         <a href="/tsm-insurance/agents-ins.html" class="nav-tab-node ">👥 Agents</a>
-        <a href="#" onclick="togglePlaybookDrawer(event)" class="nav-tab-node pink-tab">📚 Playbook Library</a>
+        <a href="#" data-tsm-action="togglePlaybookDrawer" data-tsm-args="event" class="nav-tab-node pink-tab">📚 Playbook Library</a>
         <a href="/tsm-insurance/ce-study-prep.html" class="nav-tab-node purple-tab">🎓 CE Study Prep</a>
-        <a href="#" onclick="handleWIPClick('DME Core Matrix')" class="nav-tab-node">♿ DME</a>
-        <a href="#" onclick="handleWIPClick('Property & Casualty Command')" class="nav-tab-node">🏡 P&C Command</a>
-        <a href="#" onclick="handleWIPClick('Intel Analysis Engine')" class="nav-tab-node">👁️ Intel</a>
-        <a href="#" onclick="handleWIPClick('Presentation Layout View')" class="nav-tab-node">📊 Presentation</a>
-        <a href="#" onclick="handleWIPClick('Legal Compliance Dashboard')" class="nav-tab-node">⚖️ Legal</a>
+        <a href="#" data-tsm-action="handleWIPClick" data-tsm-args="'DME Core Matrix'" class="nav-tab-node">♿ DME</a>
+        <a href="#" data-tsm-action="handleWIPClick" data-tsm-args="'Property & Casualty Command'" class="nav-tab-node">🏡 P&C Command</a>
+        <a href="#" data-tsm-action="handleWIPClick" data-tsm-args="'Intel Analysis Engine'" class="nav-tab-node">👁️ Intel</a>
+        <a href="#" data-tsm-action="handleWIPClick" data-tsm-args="'Presentation Layout View'" class="nav-tab-node">📊 Presentation</a>
+        <a href="#" data-tsm-action="handleWIPClick" data-tsm-args="'Legal Compliance Dashboard'" class="nav-tab-node">⚖️ Legal</a>
     </div>
 
     <div class="sub-identity-row">
@@ -290,15 +290,15 @@
             <h4 style="margin: 0 0 4px 0; color: var(--pink-accent);">📚 Persistent Playbook Workspace Library</h4>
             <p style="margin: 0 0 14px 0; font-size: 0.8rem; color: #64748b;">Select an operational asset module below to wire prompt telemetry parameters into your current core shell interface window session context:</p>
             <div class="drawer-grid">
-                <div class="drawer-card-node" onclick="fireQueryWiring('Medical')">
+                <div class="drawer-card-node" data-tsm-action="fireQueryWiring" data-tsm-args="'Medical'">
                     <div style="font-size: 1.4rem; margin-bottom: 6px;">🏥</div>
                     <strong style="color: #fff; font-size: 0.85rem;">Medical Sector</strong>
                 </div>
-                <div class="drawer-card-node" onclick="fireQueryWiring('Legal')">
+                <div class="drawer-card-node" data-tsm-action="fireQueryWiring" data-tsm-args="'Legal'">
                     <div style="font-size: 1.4rem; margin-bottom: 6px;">⚖️</div>
                     <strong style="color: #fff; font-size: 0.85rem;">Legal Frameworks</strong>
                 </div>
-                <div class="drawer-card-node" onclick="fireQueryWiring('Construction')">
+                <div class="drawer-card-node" data-tsm-action="fireQueryWiring" data-tsm-args="'Construction'">
                     <div style="font-size: 1.4rem; margin-bottom: 6px;">🏗️</div>
                     <strong style="color: #fff; font-size: 0.85rem;">Construction Logic</strong>
                 </div>
@@ -350,11 +350,11 @@
             <div class="content-card-panel">
                 <div class="panel-caption-row">⚡ Rapid Operational Execution Buttons</div>
                 <div class="actions-button-cluster">
-                    <button class="action-click-btn gold-style" onclick="handleWIPClick('Life Insurance Quotation Calculator')">💛 LIFE QUOTE</button>
-                    <button class="action-click-btn blue-style" onclick="handleWIPClick('ACA Premium Subsidy Calculator')">💙 ACA QUOTE</button>
-                    <button class="action-click-btn gold-style" onclick="handleWIPClick('IRMAA Surcharge Sifting Engine')">⭐ IRMAA CALC</button>
-                    <button class="action-click-btn blue-style" onclick="handleWIPClick('Accident Indemnity Engine')">⚡ ACCIDENT CALC</button>
-                    <button class="action-click-btn green-style" onclick="handleWIPClick('Secure Document Gateway Uploader')" style="grid-column: span 2; text-align:center;">📁 DROP ENCRYPTED AUDIT FILES HERE</button>
+                    <button class="action-click-btn gold-style" data-tsm-action="handleWIPClick" data-tsm-args="'Life Insurance Quotation Calculator'">💛 LIFE QUOTE</button>
+                    <button class="action-click-btn blue-style" data-tsm-action="handleWIPClick" data-tsm-args="'ACA Premium Subsidy Calculator'">💙 ACA QUOTE</button>
+                    <button class="action-click-btn gold-style" data-tsm-action="handleWIPClick" data-tsm-args="'IRMAA Surcharge Sifting Engine'">⭐ IRMAA CALC</button>
+                    <button class="action-click-btn blue-style" data-tsm-action="handleWIPClick" data-tsm-args="'Accident Indemnity Engine'">⚡ ACCIDENT CALC</button>
+                    <button class="action-click-btn green-style" data-tsm-action="handleWIPClick" data-tsm-args="'Secure Document Gateway Uploader'" style="grid-column: span 2; text-align:center;">📁 DROP ENCRYPTED AUDIT FILES HERE</button>
                 </div>
             </div>
 
@@ -386,6 +386,24 @@
             alert("TSM Neural Core: The '" + moduleLabel + "' execution framework layer is currently provisioning inside this asset branch profile. Production layout updates finalize soon!");
         }
     </script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>
 <script>

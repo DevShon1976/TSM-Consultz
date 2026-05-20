@@ -775,7 +775,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
   <div class="deploy-bar">
     <div class="deploy-label">// QUERY NODES</div>
     <input class="ask-bar" class="ask-bar" class="deploy-input" id="deployInput" placeholder="Ask any financial, project, or compliance question across all nodes…" onkeydown="if(event.key==='Enter')deployQuery()"/>
-    <button class="deploy-btn" onclick="deployQuery()">⚡ DEPLOY</button>
+    <button class="deploy-btn" data-tsm-action="deployQuery" data-tsm-args="">⚡ DEPLOY</button>
   </div>
 
   <!-- ── STATS ── -->
@@ -1172,5 +1172,23 @@ console.log("TSM_UI: Direct Neural Link Established.");
     if (e.key === 'Enter') deployQuery();
   });
 </script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

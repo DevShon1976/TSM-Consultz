@@ -218,7 +218,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
 <div class="stratbar">
   <div class="stratlabel">◈ BNCA</div>
   <div class="strattext" id="stratline">Waiting for Main Strategist posture...</div>
-  <button class="stratbtn" onclick="refreshAll()">REFRESH</button>
+  <button class="stratbtn" data-tsm-action="refreshAll" data-tsm-args="">REFRESH</button>
 </div>
 
 <div class="main">
@@ -236,11 +236,11 @@ console.log("TSM_UI: Direct Neural Link Established.");
 
   <div class="center">
     <div class="tabs">
-      <div class="tab active" data-mode="bnca" onclick="setMode('bnca', this)">BNCA</div>
-      <div class="tab" data-mode="recovery" onclick="setMode('recovery', this)">Recovery</div>
-      <div class="tab" data-mode="payer" onclick="setMode('payer', this)">Payer</div>
-      <div class="tab" data-mode="brief" onclick="setMode('brief', this)">Exec Brief</div>
-      <div class="tab" data-mode="compare" onclick="setMode('compare', this)">Compare</div>
+      <div class="tab active" data-mode="bnca" data-tsm-action="setMode" data-tsm-args="'bnca', this">BNCA</div>
+      <div class="tab" data-mode="recovery" data-tsm-action="setMode" data-tsm-args="'recovery', this">Recovery</div>
+      <div class="tab" data-mode="payer" data-tsm-action="setMode" data-tsm-args="'payer', this">Payer</div>
+      <div class="tab" data-mode="brief" data-tsm-action="setMode" data-tsm-args="'brief', this">Exec Brief</div>
+      <div class="tab" data-mode="compare" data-tsm-action="setMode" data-tsm-args="'compare', this">Compare</div>
     </div>
 
     <div class="content">
@@ -260,9 +260,9 @@ console.log("TSM_UI: Direct Neural Link Established.");
             <div class="big" id="bnca-title">Loading...</div>
             <div class="copy" id="bnca-why" style="margin-top:10px"></div>
             <div class="btnrow">
-              <button class="btn btn-g" onclick="runModeAction()">Run Current Mode</button>
-              <button class="btn btn-p" onclick="delegateToOM()">Delegate to OM</button>
-              <button class="btn btn-o" onclick="refreshAll()">Refresh</button>
+              <button class="btn btn-g" data-tsm-action="runModeAction" data-tsm-args="">Run Current Mode</button>
+              <button class="btn btn-p" data-tsm-action="delegateToOM" data-tsm-args="">Delegate to OM</button>
+              <button class="btn btn-o" data-tsm-action="refreshAll" data-tsm-args="">Refresh</button>
             </div>
           </div>
           <div class="panel">
@@ -444,7 +444,7 @@ function renderOfficeList(base){
   const ranking = (base && base.officeRanking) || [];
   const el = document.getElementById('office-list');
   el.innerHTML = ranking.map(o => `
-    <div class="office ${esc(o.status || '')} ${o.office === STATE.selectedOffice ? 'active' : ''}" onclick="selectOffice('${esc(o.office)}')">
+    <div class="office ${esc(o.status || '')} ${o.office === STATE.selectedOffice ? 'active' : ''}" data-tsm-action="selectOffice" data-tsm-args="'${esc(o.office)}'">
       <div class="name">#${esc(o.riskRank)} · ${esc(o.office)}</div>
       <div class="meta">${esc(o.summary || '')}<br>Driver: ${esc(o.primaryDriver || '—')}</div>
     </div>
@@ -683,7 +683,7 @@ function renderOfficeList(base){
 
   el.innerHTML = ranking.map(o => `
     <div class="office ${o.office === STATE.selectedOffice ? 'active' : ''}"
-         onclick="selectOffice('${o.office}')"
+         data-tsm-action="selectOffice" data-tsm-args="'${o.office}'"
          style="padding:10px;border-bottom:1px solid rgba(0,255,163,.1);cursor:pointer">
       <div style="font-weight:bold">#${o.riskRank} · ${o.office}</div>
       <div style="font-size:11px;color:#9fdcc9">${o.summary}</div>
@@ -762,5 +762,23 @@ function showToast(msg){
 })();
 </script>
 
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

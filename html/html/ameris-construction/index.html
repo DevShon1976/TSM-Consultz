@@ -1,28 +1,16 @@
 
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ameris Construction | Command Center</title><style>
-/* TSM_SCROLL_FIX */
-html, body {
-  height: 100%;
-  overflow-y: auto;
-}
-main {
-  padding-bottom: 80px !important;
-  min-height: calc(100vh - 60px);
-}
-.footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 32px;
-  z-index: 10;
-}
-.ask-bar {
-  position: fixed;
-  bottom: 40px;
-  right: 12px;
-  z-index: 20;
-}
+/* TSM_SCROLL_FIX_V2 */
+html, body { height: 100%; overflow-y: auto; }
+main, .main { padding-bottom: 80px !important; min-height: calc(100vh - 60px); }
+.panel { max-height: none !important; overflow-y: visible; }
+.panel.active { display: block; }
+.scroll-box { max-height: 400px; overflow-y: auto; }
+.bnca-output { min-height: 120px; max-height: none; white-space: pre-wrap; }
+.footer { position: fixed; bottom: 0; left: 0; right: 0; height: 32px; z-index: 10; }
+.ask-bar { position: fixed; bottom: 40px; right: 12px; z-index: 20; }
+
+
 .panel {
   max-height: 60vh;
   overflow-y: auto;
@@ -160,7 +148,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
 <div class="presets" id="presets"></div>
 <div class="chat"><div class="ct">YOUR DEDICATED AI INTELLIGENCE ENGINE</div>
 <div class="cw" id="chat"><div class="msg"><div class="av">AI</div><div class="mb"><div class="ml">TSM INTELLIGENCE</div><div class="mt">Ameris Construction Command Center initialized. I am your dedicated AI intelligence engine with deep knowledge of your operations, active alerts, and industry context. Ask me anything — compliance posture, revenue optimization, risk assessment, or operational intelligence.</div></div></div></div>
-<div class="ci"><input class="ask-bar" class="ask-bar" class="inp" id="inp" placeholder="Ask your AI engine anything..." onkeydown="if(event.key==='Enter')send()"><button class="btn" onclick="send()">ASK →</button></div>
+<div class="ci"><input class="ask-bar" class="ask-bar" class="inp" id="inp" placeholder="Ask your AI engine anything..." onkeydown="if(event.key==='Enter')send()"><button class="btn" data-tsm-action="send" data-tsm-args="">ASK →</button></div>
 </div>
 </div>
 <div class="footer">© 2026 AMERIS CONSTRUCTION · POWERED BY TSM MATTER · ameris-construction.tsmatter.com</div>
@@ -290,7 +278,7 @@ async function pollAmerisIntake() {
           <div style="font-size:8px;color:#888;margin-top:2px">${p.doc_type} · ${p.project_ref||'no ref'} · ${new Date(p.uploaded_at).toLocaleTimeString()}</div>
         </div>
         <div style="font-size:8px;padding:3px 8px;background:#0066cc;color:#020c06;font-weight:700;cursor:pointer;letter-spacing:1px;border-radius:2px;white-space:nowrap;margin-left:8px;flex-shrink:0"
-          onclick="loadAmerisPacket('${p.id}','${p.original_name}','${p.doc_type}')">ANALYZE</div>
+          data-tsm-action="loadAmerisPacket" data-tsm-args="'${p.id}','${p.original_name}','${p.doc_type}'">ANALYZE</div>
       </div>`
     ).join('');
   } catch(e) { console.error('[intake]', e); }
@@ -468,4 +456,22 @@ if(inp&&out)inp.addEventListener("focus",function(){out.style.display="block";})
 
 
 <script id="tsm-api-fix">/* TSM API routing fixed */</script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body></html><script src="/html/runtime/tsm-runtime-engine.js"></script>

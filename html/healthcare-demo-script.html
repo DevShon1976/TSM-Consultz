@@ -442,7 +442,7 @@ body {
 
   <!-- STEP 1 -->
   <div class="step open" id="step1">
-    <div class="step-header" onclick="toggleStep('step1')">
+    <div class="step-header" data-tsm-action="toggleStep" data-tsm-args="'step1'">
       <div class="step-num">1</div>
       <div class="step-title">Open the Dashboard — First Impression</div>
       <span class="step-tag tag-click">Click</span>
@@ -489,7 +489,7 @@ body {
 
   <!-- STEP 2 -->
   <div class="step" id="step2">
-    <div class="step-header" onclick="toggleStep('step2')">
+    <div class="step-header" data-tsm-action="toggleStep" data-tsm-args="'step2'">
       <div class="step-num">2</div>
       <div class="step-title">WIP Matrix — Show the Problem in Detail</div>
       <span class="step-tag tag-click">Click</span>
@@ -540,7 +540,7 @@ body {
 
   <!-- STEP 3 -->
   <div class="step" id="step3">
-    <div class="step-header" onclick="toggleStep('step3')">
+    <div class="step-header" data-tsm-action="toggleStep" data-tsm-args="'step3'">
       <div class="step-num">3</div>
       <div class="step-title">Click ENC-8821 — Trigger the AI Narrative</div>
       <span class="step-tag tag-click">Click</span>
@@ -599,7 +599,7 @@ body {
 
   <!-- STEP 4 -->
   <div class="step" id="step4">
-    <div class="step-header" onclick="toggleStep('step4')">
+    <div class="step-header" data-tsm-action="toggleStep" data-tsm-args="'step4'">
       <div class="step-num">4</div>
       <div class="step-title">Show the Financial Intelligence Charts B–F</div>
       <span class="step-tag tag-watch">Watch</span>
@@ -664,7 +664,7 @@ body {
 
   <!-- STEP 5 -->
   <div class="step" id="step5">
-    <div class="step-header" onclick="toggleStep('step5')">
+    <div class="step-header" data-tsm-action="toggleStep" data-tsm-args="'step5'">
       <div class="step-num">5</div>
       <div class="step-title">Run the Live BNCA API — Show It's Real</div>
       <span class="step-tag tag-click">Click</span>
@@ -710,7 +710,7 @@ body {
 
   <!-- STEP 6 -->
   <div class="step" id="step6">
-    <div class="step-header" onclick="toggleStep('step6')">
+    <div class="step-header" data-tsm-action="toggleStep" data-tsm-args="'step6'">
       <div class="step-num">6</div>
       <div class="step-title">Quick Suite Tour — Show the Full Platform</div>
       <span class="step-tag tag-click">Click</span>
@@ -767,7 +767,7 @@ body {
 
   <!-- STEP 7 — Q&A PREP -->
   <div class="step" id="step7">
-    <div class="step-header" onclick="toggleStep('step7')">
+    <div class="step-header" data-tsm-action="toggleStep" data-tsm-args="'step7'">
       <div class="step-num">7</div>
       <div class="step-title">Anticipated Q&A — Clinical & Ops Leadership</div>
       <span class="step-tag tag-qa">Q&A</span>
@@ -821,8 +821,8 @@ body {
   <div class="timer-left">Demo Timer</div>
   <div class="timer-time" id="timerDisplay">00:00</div>
   <div class="timer-btns">
-    <button class="timer-btn" id="timerStartBtn" onclick="toggleTimer()">▶ Start</button>
-    <button class="timer-btn" onclick="resetTimer()">↺ Reset</button>
+    <button class="timer-btn" id="timerStartBtn" data-tsm-action="toggleTimer" data-tsm-args="">▶ Start</button>
+    <button class="timer-btn" data-tsm-action="resetTimer" data-tsm-args="">↺ Reset</button>
     <button class="timer-btn" onclick="window.print()">🖨 Print</button>
   </div>
 </div>
@@ -880,5 +880,23 @@ function resetTimer() {
 
 updateProgress();
 </script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

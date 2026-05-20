@@ -159,7 +159,7 @@ button.primary:hover,button.gold:hover,button.osha:hover{opacity:.85}
     <div class="ai-panel">
       <div class="ap-head">
         <span class="ap-title">STRATEGIST AUTO-NARRATIVE · CFO-READY OUTPUT</span>
-        <button class="ap-run" id="ap-run-btn" onclick="runNarrative()">⚡ GENERATE</button>
+        <button class="ap-run" id="ap-run-btn" data-tsm-action="runNarrative" data-tsm-args="">⚡ GENERATE</button>
       </div>
       <div class="ap-body" id="ap-body"><span class="ap-placeholder">Select a job entity and click GENERATE to produce a CFO-ready AI narrative covering WIP position, profit fade risk, billing variance, and 30/60/90 day cash outlook.</span></div>
     </div>
@@ -216,10 +216,10 @@ button.primary:hover,button.gold:hover,button.osha:hover{opacity:.85}
 </div>
 
 <div class="actionbar">
-  <button class="primary" onclick="runWIPAI()">⚡ Run Sector BNCA</button>
-  <button class="osha" onclick="runWIPAI('Run OSHA Readiness Audit for JOB-211. Inspection in 14 days. 3 open safety items. Provide prioritized safety checklist and compliance actions.')">🦺 OSHA Audit</button>
-  <button class="gold" onclick="runStrategistRollup()">Push to Strategist</button>
-  <button class="dark" onclick="exportBrief()">Export Brief</button>
+  <button class="primary" data-tsm-action="runWIPAI" data-tsm-args="">⚡ Run Sector BNCA</button>
+  <button class="osha" data-tsm-action="runWIPAI" data-tsm-args="'Run OSHA Readiness Audit for JOB-211. Inspection in 14 days. 3 open safety items. Provide prioritized safety checklist and compliance actions.'">🦺 OSHA Audit</button>
+  <button class="gold" data-tsm-action="runStrategistRollup" data-tsm-args="">Push to Strategist</button>
+  <button class="dark" data-tsm-action="exportBrief" data-tsm-args="">Export Brief</button>
   <button class="dark" onclick="location.href='/wip-dashboard.html'">Universal WIP</button>
   <button class="dark" onclick="location.href='/'">Home</button>
 </div>
@@ -285,10 +285,10 @@ function init() {
     `<div class="af-item"><span class="af-sev ${a.cls}">${a.sev}</span><span class="af-text">${a.text}</span></div>`).join('');
 
   document.getElementById('entity-list').innerHTML=DATA.entities.map((e,i)=>
-    `<div class="entity" id="ent-${i}" onclick="selectEntity(${i})"><span class="${e.riskCls}" style="float:right;font-family:var(--mono);font-size:.6rem;font-weight:700">${e.risk}</span><div class="entity-id">${e.id}</div><div class="entity-name">${e.name}</div><div class="entity-meta">${e.meta}</div></div>`).join('');
+    `<div class="entity" id="ent-${i}" data-tsm-action="selectEntity" data-tsm-args="${i}"><span class="${e.riskCls}" style="float:right;font-family:var(--mono);font-size:.6rem;font-weight:700">${e.risk}</span><div class="entity-id">${e.id}</div><div class="entity-name">${e.name}</div><div class="entity-meta">${e.meta}</div></div>`).join('');
 
   document.getElementById('action-btns').innerHTML=DATA.actions.map(a=>
-    `<button class="ar-btn" onclick="runAction('${a}')">${a}</button>`).join('');
+    `<button class="ar-btn" data-tsm-action="runAction" data-tsm-args="'${a}'">${a}</button>`).join('');
 }
 
 function selectEntity(i) {
@@ -330,5 +330,23 @@ function exportBrief(){
 
 init();
 </script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

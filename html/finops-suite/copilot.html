@@ -101,7 +101,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
 <br><br>
 <textarea id="context" placeholder="Optional: paste invoice notes, AR aging, reconciliation issue, tax deadline, audit finding, or month-end blocker..."></textarea>
 <br><br>
-<button class="primary" onclick="runCopilot()">RUN STAFF ACCOUNTANT COPILOT</button>
+<button class="primary" data-tsm-action="runCopilot" data-tsm-args="">RUN STAFF ACCOUNTANT COPILOT</button>
 <button onclick="window.open('/html/finops-suite/financial-command/index.html','_blank')">FINANCIAL COMMAND ↗</button>
 <button onclick="window.open('/html/finops-suite/financial/index.html','_blank')">FINANCIAL INTEL ↗</button>
 <button onclick="window.open('/html/finops-suite/finops-main-strategist/index.html','_blank')">MAIN STRATEGIST ↗</button>
@@ -127,8 +127,8 @@ console.log("TSM_UI: Direct Neural Link Established.");
 
 <div class="rail">
   <span>Most teams start with a 30-day pilot.</span>
-  <button class="primary" onclick="runCopilot()">RUN COPILOT</button>
-  <button onclick="openStrategist()">CONTROLLER ACTION PLAN</button>
+  <button class="primary" data-tsm-action="runCopilot" data-tsm-args="">RUN COPILOT</button>
+  <button data-tsm-action="openStrategist" data-tsm-args="">CONTROLLER ACTION PLAN</button>
 </div>
 
 <script>
@@ -213,7 +213,7 @@ style="position:fixed;right:20px;bottom:20px;background:#00FFC6;color:#001;paddi
 <b>⚡ POWER MOVE</b><br>
 Use multi-workflow run to combine AP + AR + Tax into one decision plan.<br><br>
 
-<button onclick="runFullDemo()" style="margin-top:10px;padding:6px 10px;background:#00FFC6;border:none;color:#001;border-radius:6px;cursor:pointer;">RUN DEMO FLOW</button>
+<button data-tsm-action="runFullDemo" data-tsm-args="" style="margin-top:10px;padding:6px 10px;background:#00FFC6;border:none;color:#001;border-radius:6px;cursor:pointer;">RUN DEMO FLOW</button>
 </div>
 
 <script>
@@ -239,5 +239,23 @@ function runFullDemo(){
 <script src="/shared/tsm-global-command.js?v=phase4"></script>
 <script src="/shared/tsm-sector-intelligence.js?v=phase5si"></script>
 <script src="/shared/tsm-autonomous-execution.js?v=phase5"></script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

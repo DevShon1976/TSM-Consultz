@@ -738,7 +738,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
     <div class="bnca-desc">TSM Neural Core · llama-3.3-70b-versatile generates a prioritized action plan based on live node status, staffing gaps, intake queue, vendor alerts, and scheduling backlog.</div>
     <div class="bnca-output" id="bnca-out"></div>
     <div style="display:flex;gap:10px;align-items:center">
-      <button class="btn" id="bnca-btn" onclick="generateBNCA()">GENERATE BNCA</button>
+      <button class="btn" id="bnca-btn" data-tsm-action="generateBNCA" data-tsm-args="">GENERATE BNCA</button>
       <span id="bnca-status" style="font-size:10px;color:var(--text2)"></span>
     </div>
   </div>
@@ -749,7 +749,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
     <input type="text" id="query-input" placeholder="e.g. What should we do about Southside staffing gaps?" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:11px;padding:8px 10px;margin-bottom:8px;outline:none" onkeydown="if(event.key==='Enter')sendQuery()"/>
     <div class="bnca-output" id="query-out"></div>
     <div style="display:flex;gap:10px;align-items:center">
-      <button class="btn-outline" onclick="sendQuery()">SEND QUERY ↗</button>
+      <button class="btn-outline" data-tsm-action="sendQuery" data-tsm-args="">SEND QUERY ↗</button>
       <span id="query-status" style="font-size:10px;color:var(--text2)"></span>
     </div>
   </div>
@@ -1005,6 +1005,24 @@ CONFIDENCE
 })();
 </script>
 
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 y
   

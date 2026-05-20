@@ -26,7 +26,7 @@ pre{white-space:pre-wrap;line-height:1.55;background:#050c13;border:1px solid rg
     <div class="sub">Prior auth denials, claim scrubbing, coding review, AR aging, payer holds, and HC strategist relay.</div>
   </div>
   <div style="display:flex;gap:8px">
-    <button onclick="runWIPAI()">Run BNCA</button>
+    <button data-tsm-action="runWIPAI" data-tsm-args="">Run BNCA</button>
     <button class="dark" onclick="location.href='/healthcare/hc-main-strategist/index.html?v=wip-relay'">Open Strategist</button>
   </div>
 </header>
@@ -44,9 +44,9 @@ pre{white-space:pre-wrap;line-height:1.55;background:#050c13;border:1px solid rg
       <div class="ey">Unified Sector WIP Queue</div>
       <table>
         <thead><tr><th>ID</th><th>Issue</th><th>Value</th><th>Risk</th><th>Action</th><th>AI</th></tr></thead>
-        <tbody><tr><td>ENC-8821</td><td>Prior Auth Denial</td><td>$4.2K</td><td class='risk'>CRIT</td><td>File appeal packet</td><td><button onclick="runWIPAI('ENC-8821 · Prior Auth Denial · File appeal packet')">Explain</button></td></tr>
-<tr><td>ENC-8912</td><td>Claim Scrubbing Hold</td><td>$2.75K</td><td class='risk'>HIGH</td><td>Correct modifier</td><td><button onclick="runWIPAI('ENC-8912 · Claim Scrubbing Hold · Correct modifier')">Explain</button></td></tr>
-<tr><td>ENC-8834</td><td>Coding Review Queue</td><td>$1.85K</td><td class='risk'>MED</td><td>Review CPT/ICD gap</td><td><button onclick="runWIPAI('ENC-8834 · Coding Review Queue · Review CPT/ICD gap')">Explain</button></td></tr></tbody>
+        <tbody><tr><td>ENC-8821</td><td>Prior Auth Denial</td><td>$4.2K</td><td class='risk'>CRIT</td><td>File appeal packet</td><td><button data-tsm-action="runWIPAI" data-tsm-args="'ENC-8821 · Prior Auth Denial · File appeal packet'">Explain</button></td></tr>
+<tr><td>ENC-8912</td><td>Claim Scrubbing Hold</td><td>$2.75K</td><td class='risk'>HIGH</td><td>Correct modifier</td><td><button data-tsm-action="runWIPAI" data-tsm-args="'ENC-8912 · Claim Scrubbing Hold · Correct modifier'">Explain</button></td></tr>
+<tr><td>ENC-8834</td><td>Coding Review Queue</td><td>$1.85K</td><td class='risk'>MED</td><td>Review CPT/ICD gap</td><td><button data-tsm-action="runWIPAI" data-tsm-args="'ENC-8834 · Coding Review Queue · Review CPT/ICD gap'">Explain</button></td></tr></tbody>
       </table>
     </div>
     <div class="card">
@@ -62,9 +62,9 @@ pre{white-space:pre-wrap;line-height:1.55;background:#050c13;border:1px solid rg
 </div>
 
 <div class="actionbar">
-  <button onclick="runWIPAI()">Run Sector BNCA</button>
-  <button class="gold" onclick="runStrategistRollup()">Push to Main Strategist</button>
-  <button class="purple" onclick="exportBrief()">Export Brief</button>
+  <button data-tsm-action="runWIPAI" data-tsm-args="">Run Sector BNCA</button>
+  <button class="gold" data-tsm-action="runStrategistRollup" data-tsm-args="">Push to Main Strategist</button>
+  <button class="purple" data-tsm-action="exportBrief" data-tsm-args="">Export Brief</button>
   <button class="dark" onclick="location.href='/'">Home</button>
   <button class="dark" onclick="location.href='/healthcare/hc-main-strategist/index.html?v=wip-relay'">Strategist</button>
 </div>
@@ -310,5 +310,23 @@ CONFIDENCE
 })();
 </script>
 
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

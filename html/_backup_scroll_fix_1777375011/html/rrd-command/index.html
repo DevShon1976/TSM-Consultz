@@ -1129,7 +1129,7 @@ Escalation Queue ✓</div>
         '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;background:#0d1520;border:1px solid #1e3a4a;border-radius:4px">' +
         '<div><div style="font-size:11px;color:#e6edf3;font-weight:600">' + p.original_name + '</div>' +
         '<div style="font-size:9px;color:#8b949e;margin-top:2px">' + p.doc_type + ' · ' + (p.project_ref||'no ref') + ' · ' + new Date(p.uploaded_at).toLocaleTimeString() + '</div></div>' +
-        '<div style="font-size:9px;padding:3px 8px;border-radius:10px;background:rgba(0,243,255,0.1);color:#00f3ff;border:1px solid rgba(0,243,255,0.3);cursor:pointer" onclick="loadIntakePacket(\'' + p.id + '\',\'' + p.original_name + '\',\'' + p.doc_type + '\')">LOAD</div></div>'
+        '<div style="font-size:9px;padding:3px 8px;border-radius:10px;background:rgba(0,243,255,0.1);color:#00f3ff;border:1px solid rgba(0,243,255,0.3);cursor:pointer" data-tsm-action="loadIntakePacket" data-tsm-args="\'' + p.id + '\',\'' + p.original_name + '\',\'' + p.doc_type + '\'">LOAD</div></div>'
       ).join('');
     } catch(e) { console.error('[intake poll]', e); }
   }
@@ -1515,7 +1515,25 @@ if(inp&&out)inp.addEventListener("focus",function(){out.style.display="block";})
 
 
 <script id="tsm-api-fix">/* TSM API routing fixed */</script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9eddd83c3f47e9e5',t:'MTc3NjQ1NDIzMA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body></html>`;
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9eddd83c3f47e9e5',t:'MTc3NjQ1NDIzMA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
+</body></html>`;
 
   const win = window.open('','_blank');
   if(win){
@@ -1565,5 +1583,23 @@ window.safeAnalyze = async function(input, targetId="output"){
 </script>
 
 <div id="output" style="padding:12px;color:#00ffa6;font-family:monospace;"></div>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>

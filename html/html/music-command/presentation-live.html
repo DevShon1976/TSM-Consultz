@@ -6,29 +6,17 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>ZY Music Command — Live Demo Presentation</title>
 <style>
-/* TSM_SCROLL_FIX */
-html, body {
-  height: 100%;
-  overflow-y: auto;
-}
-main {
-  padding-bottom: 80px !important;
-  min-height: calc(100vh - 60px);
-}
-.footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 32px;
-  z-index: 10;
-}
-.ask-bar {
-  position: fixed;
-  bottom: 40px;
-  right: 12px;
-  z-index: 20;
-}
+/* TSM_SCROLL_FIX_V2 */
+html, body { height: 100%; overflow-y: auto; }
+main, .main { padding-bottom: 80px !important; min-height: calc(100vh - 60px); }
+.panel { max-height: none !important; overflow-y: visible; }
+.panel.active { display: block; }
+.scroll-box { max-height: 400px; overflow-y: auto; }
+.bnca-output { min-height: 120px; max-height: none; white-space: pre-wrap; }
+.footer { position: fixed; bottom: 0; left: 0; right: 0; height: 32px; z-index: 10; }
+.ask-bar { position: fixed; bottom: 40px; right: 12px; z-index: 20; }
+
+
 .panel {
   max-height: 60vh;
   overflow-y: auto;
@@ -113,7 +101,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
 </head>
 <body>
 
-<div class="nav"><button onclick="prev()">↑</button><button onclick="next()">↓</button></div>
+<div class="nav"><button data-tsm-action="prev" data-tsm-args="">↑</button><button data-tsm-action="next" data-tsm-args="">↓</button></div>
 <div class="count" id="count"></div>
 
 <section class="slide active">
@@ -131,7 +119,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
   </div>
 
   <div style="margin-top:14px;">
-    <button onclick="startGuidedDemo()" style="background:#ffd84d;color:#000;border:none;padding:10px 14px;border-radius:6px;font-weight:600;cursor:pointer;">
+    <button data-tsm-action="startGuidedDemo" data-tsm-args="" style="background:#ffd84d;color:#000;border:none;padding:10px 14px;border-radius:6px;font-weight:600;cursor:pointer;">
       ⚡ Start Live Demo (Recommended)
     </button>
   </div>
@@ -140,7 +128,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
   <div style="display:flex;gap:12px;margin-top:28px;flex-wrap:wrap">
     <a class="btn primary" href="/html/music-command/index.html">Open App</a>
     <a class="btn purple" href="/html/music-command/marketing.html">Marketing Page</a>
-    <button class="btn" onclick="refreshAll()">Refresh Live Data</button>
+    <button class="btn" data-tsm-action="refreshAll" data-tsm-args="">Refresh Live Data</button>
   </div>
   <div class="footer">Use ↑ / ↓ arrows to navigate</div>
 
@@ -151,7 +139,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
     style="width:100%;height:100px;background:#07090f;border:1px solid rgba(255,255,255,0.08);color:#fff;padding:10px;border-radius:6px;"></textarea>
 
   <div style="margin-top:10px;">
-    <button onclick="runDemo()" style="background:#00ffd0;color:#000;border:none;padding:10px 14px;border-radius:6px;font-weight:600;cursor:pointer;">
+    <button data-tsm-action="runDemo" data-tsm-args="" style="background:#00ffd0;color:#000;border:none;padding:10px 14px;border-radius:6px;font-weight:600;cursor:pointer;">
       Run AI Analysis
     </button>
   </div>
@@ -199,7 +187,7 @@ console.log("TSM_UI: Direct Neural Link Established.");
     <div>
       <textarea id="demoDraft">Life surrounded by wrong but trying to stay right is a fight
 Every day a battle every night a new light</textarea>
-      <button class="btn primary" onclick="runLiveChain()" style="margin-top:12px">Run ZAY → RIYA → DJ</button>
+      <button class="btn primary" data-tsm-action="runLiveChain" data-tsm-args="" style="margin-top:12px">Run ZAY → RIYA → DJ</button>
     </div>
     <pre id="chainResult">Click Run to call /api/music/agent/chain</pre>
   </div>
@@ -622,6 +610,24 @@ Every day a battle every night a new light`;
 })();
 </script>
 
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
 </body>
 </html>
 <script src="/html/runtime/tsm-runtime-engine.js"></script>
