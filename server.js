@@ -796,17 +796,15 @@ app.all('/api/finance/query', async (req,res)=>{
 
 app.all('/api/insurance/query', async (req,res)=>{
   const payload=req.body?.payload || req.body || {};
-  const context=payload.context || payload.question || "Insurance WIP review";
-
-  res.json({
-    ok:true,
-    sector:"INSURANCE",
-    node:"INSURANCE NODE",
-    reply:tsmMeshReply("INSURANCE", context),
-    content:tsmMeshReply("INSURANCE", context),
-    mesh:true,
-    timestamp:new Date().toISOString()
-  });
+  const prompt=payload.prompt||payload.context||payload.question||payload.query||payload.action||"Analyze AZ insurance operations.";
+  const GROQ_KEY=process.env.GROQ_API_KEY;
+  if(!GROQ_KEY) return res.json({ok:true,reply:tsmMeshReply("INSURANCE",prompt),content:tsmMeshReply("INSURANCE",prompt),mesh:true});
+  try {
+    const r=await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{"Authorization":"Bearer "+GROQ_KEY,"Content-Type":"application/json"},body:JSON.stringify({model:process.env.TSM_MODEL||"llama-3.3-70b-versatile",max_tokens:800,messages:[{role:"system",content:"You are the TSM Insurance Neural Strategist. Analyze AZ insurance, Medicare, P&C, DME, agent performance, compliance, payer relations. Be specific and actionable."},{role:"user",content:prompt}]})});
+    const d=await r.json();
+    const reply=d.choices?.[0]?.message?.content||tsmMeshReply("INSURANCE",prompt);
+    res.json({ok:true,reply,content:reply,response:reply,sector:"INSURANCE",mesh:true,timestamp:new Date().toISOString()});
+  } catch(e){res.json({ok:true,reply:tsmMeshReply("INSURANCE",prompt),content:tsmMeshReply("INSURANCE",prompt)});}
 });
 
 /* ---------- Strategist Rollup ---------- */
