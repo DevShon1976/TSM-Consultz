@@ -438,6 +438,8 @@ function buildStrategistSystemPosture(system, officesPayload = []) {
 
 // ── HUB ROUTE ──
 app.get("/hub", (req, res) => res.sendFile(path.join(__dirname, "html", "hub", "index.html")));
+app.get('/music', (req, res) => res.redirect('/html/music-command/index.html'));
+app.post('/api/groq', async (req, res) => { try { const r = await fetch('http://localhost:' + (process.env.PORT||3000) + '/api/financial/query', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(req.body) }); const d = await r.json(); res.json(d); } catch(e) { res.status(500).json({error:e.message}); } });
 
 
 // =====================================================
@@ -737,6 +739,9 @@ app.use('/html/finops-main-strategist', express.static(path.join(__dirname, 'htm
 app.use('/html/financial-command', express.static(path.join(__dirname, 'html/financial-command')));
 app.use('/html/tax-prep', express.static(path.join(__dirname, 'html/tax-prep')));
 app.use('/html/compliance', express.static(path.join(__dirname, 'html/compliance')));
+app.use('/html/tsm-insurance', express.static(path.join(__dirname, 'html/tsm-insurance')));
+app.use('/html/finops-suite', express.static(path.join(__dirname, 'html/finops-suite')));
+app.use('/html/construction-suite', express.static(path.join(__dirname, 'html/construction-suite')));
 
 app.use(express.static(__dirname, {
   extensions: ['html']

@@ -81,7 +81,7 @@ main, .main { padding-bottom: 80px !important; min-height: calc(100vh - 60px); }
   --glow:0 0 20px rgba(212,168,67,.12);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow:hidden;background:var(--bg)}
+html,body{height:100%;overflow-y:auto;background:var(--bg)}
 body{font-family:'Share Tech Mono',monospace;color:var(--white);display:flex;flex-direction:column}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:var(--bg)}
@@ -107,7 +107,7 @@ body{font-family:'Share Tech Mono',monospace;color:var(--white);display:flex;fle
 .hdr-btn.doc:hover{background:rgba(139,92,246,.1)}
 
 /* TICKER */
-#ticker{height:25px;background:var(--bg3);border-bottom:1px solid rgba(212,168,67,.12);overflow:hidden;flex-shrink:0;position:relative}
+#ticker{height:25px;background:var(--bg3);border-bottom:1px solid rgba(212,168,67,.12);overflow-y:auto;flex-shrink:0;position:relative}
 #ticker-inner{white-space:nowrap;font-size:8px;color:var(--gold);letter-spacing:1px;line-height:25px;position:absolute;animation:tick 100s linear infinite}
 @keyframes tick{0%{transform:translateX(100vw)}100%{transform:translateX(-700%)}}
 
@@ -125,7 +125,7 @@ body{font-family:'Share Tech Mono',monospace;color:var(--white);display:flex;fle
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 
 /* MAIN */
-#main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+#main{flex:1;display:flex;flex-direction:column;overflow-y:auto;min-width:0}
 
 /* CAT CARDS */
 #cats{display:grid;grid-template-columns:repeat(11,1fr);border-bottom:1px solid var(--border);flex-shrink:0}
@@ -136,8 +136,8 @@ body{font-family:'Share Tech Mono',monospace;color:var(--white);display:flex;fle
 .cat-live{position:absolute;top:4px;right:5px;font-size:6px;color:var(--teal);letter-spacing:1px;display:flex;align-items:center;gap:2px}
 .cat-live::before{content:'';width:4px;height:4px;background:var(--teal);border-radius:50%;animation:blink 1.5s ease-in-out infinite}
 .cat-icon{font-size:15px;margin-bottom:2px}
-.cat-name{font-family:'Cinzel',serif;font-size:8px;font-weight:600;color:var(--white);letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cat-sub{font-size:6px;color:var(--muted);margin-top:1px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cat-name{font-family:'Cinzel',serif;font-size:8px;font-weight:600;color:var(--white);letter-spacing:.3px;white-space:nowrap;overflow-y:auto;text-overflow:ellipsis}
+.cat-sub{font-size:6px;color:var(--muted);margin-top:1px;line-height:1.3;white-space:nowrap;overflow-y:auto;text-overflow:ellipsis}
 .cat-score{font-size:11px;font-family:'Cinzel',serif;font-weight:700;color:var(--gold);margin-top:2px}
 .cat-trend{font-size:7px;color:var(--teal)}
 
@@ -146,7 +146,7 @@ body{font-family:'Share Tech Mono',monospace;color:var(--white);display:flex;fle
 #page{flex:1;overflow-y:auto;padding:13px;min-width:0}
 
 /* STRATEGIST */
-#strat{width:320px;background:var(--bg2);border-left:1px solid rgba(212,168,67,.2);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;height:100vh;position:sticky;top:0}
+#strat{width:320px;background:var(--bg2);border-left:1px solid rgba(212,168,67,.2);display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0;min-height:100vh;position:sticky;top:0}
 #strat-hdr{padding:10px 12px;border-bottom:1px solid rgba(212,168,67,.18);background:var(--bg4)}
 #strat-title{font-family:'Cinzel',serif;font-size:11px;font-weight:700;color:var(--gold);letter-spacing:2px;display:flex;align-items:center;gap:7px}
 #strat-sub{font-size:7px;color:var(--gold3);margin-top:2px;letter-spacing:1px}
@@ -1221,7 +1221,7 @@ function renderLib(filter){
     if(filter){const f=filter.toLowerCase();items=items.filter(i=>i.label.toLowerCase().includes(f)||i.desc.toLowerCase().includes(f));}
     if(filter&&items.length===0)return;
     const open=filter?true:libOpen[s.key];
-    html+=`<div class="lib-sect"><div class="lib-hdr-row" data-tsm-action="togSect" data-tsm-args="'${s.key}'"><div class="lib-hdr-left"><span style="color:${s.color}">${s.label}</span><span class="lib-cnt">${items.length} presets</span></div><span class="lib-chev${open?' open':''}" id="chev-${s.key}">▶</span></div><div class="lib-items${open?' open':''}" id="lib-${s.key}">${items.map(p=>`<button class="lib-item${selPreset&&selPreset.label===p.label?' sel':''}" onclick='loadPreset(${JSON.stringify(p).replace(/'/g,"&apos;")})'><div class="lib-item-title">${p.label}</div><div class="lib-item-desc">${p.desc}</div></button>`).join('')}</div></div>`;
+    html+=`<div class="lib-sect"><div class="lib-hdr-row" data-tsm-action="togSect" data-tsm-args="'${s.key}'"><div class="lib-hdr-left"><span style="color:${s.color}">${s.label}</span><span class="lib-cnt">${items.length} presets</span></div><span class="lib-chev${open?' open':''}" id="chev-${s.key}">▶</span></div><div class="lib-items${open?' open':''}" id="lib-${s.key}">${items.map(p=>`<button class="lib-item${selPreset&&selPreset.label===p.label?' sel':''}" data-tsm-action="loadPreset" data-tsm-args="${JSON.stringify(p).replace(/'/g,"&apos;")}"><div class="lib-item-title">${p.label}</div><div class="lib-item-desc">${p.desc}</div></button>`).join('')}</div></div>`;
   });
   document.getElementById('library').innerHTML=html||'<div style="padding:8px 12px;font-size:8px;color:var(--dim)">No presets found.</div>';
 }
@@ -2017,7 +2017,7 @@ async function pollReoIntake() {
     list.innerHTML = records.map(p =>
       `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 9px;background:#060400;border:1px solid #d4a83233;border-radius:2px">
         <div style="flex:1;min-width:0">
-          <div style="font-size:10px;color:#f0e8c8;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.original_name}</div>
+          <div style="font-size:10px;color:#f0e8c8;font-weight:600;overflow-y:auto;text-overflow:ellipsis;white-space:nowrap">${p.original_name}</div>
           <div style="font-size:8px;color:#888;margin-top:2px">${p.doc_type} · ${p.project_ref||'no ref'} · ${new Date(p.uploaded_at).toLocaleTimeString()}</div>
         </div>
         <div style="font-size:8px;padding:3px 8px;background:#d4a832;color:#060400;font-weight:700;cursor:pointer;letter-spacing:1px;border-radius:2px;white-space:nowrap;margin-left:8px"
