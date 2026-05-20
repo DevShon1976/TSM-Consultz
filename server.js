@@ -67,16 +67,6 @@ CONFIDENCE
 94%`;
 }
 
-app.get("/api/hc/query", (req, res) => {
-  res.json({ ok: true, route: "/api/hc/query", method: "POST required", mesh: true });
-});
-
-app.post("/api/hc/query", (req, res) => {
-  const payload = (req.body && (req.body.payload || req.body)) || {};
-  const reply = buildMeshBNCA("HEALTHCARE", payload.context || payload.action || payload.prompt);
-  res.json({ ok: true, sector: "HEALTHCARE", node: payload.node || "HC NODE", reply, content: reply, mesh: true, timestamp: new Date().toISOString() });
-});
-
 app.get("/api/hc/strategist-rollup", (req, res) => {
   res.json({
     ok: true,
@@ -101,16 +91,6 @@ app.post("/api/hc/strategist-rollup", (req, res) => {
     mesh: true,
     timestamp: new Date().toISOString()
   });
-});
-
-app.get("/api/construction/query", (req, res) => {
-  res.json({ ok: true, route: "/api/construction/query", method: "POST required", mesh: true });
-});
-
-app.post("/api/construction/query", (req, res) => {
-  const payload = (req.body && (req.body.payload || req.body)) || {};
-  const reply = buildMeshBNCA("CONSTRUCTION", payload.context || payload.action || payload.prompt);
-  res.json({ ok: true, sector: "CONSTRUCTION", node: payload.node || "CONSTRUCTION NODE", reply, content: reply, mesh: true, timestamp: new Date().toISOString() });
 });
 
 app.get("/api/construction/strategist-rollup", (req, res) => {
@@ -139,15 +119,6 @@ app.post("/api/construction/strategist-rollup", (req, res) => {
   });
 });
 
-app.get("/api/finance/query", (req, res) => {
-  res.json({ ok: true, route: "/api/finance/query", method: "POST required", mesh: true });
-});
-
-app.post("/api/finance/query", (req, res) => {
-  const payload = (req.body && (req.body.payload || req.body)) || {};
-  const reply = buildMeshBNCA("FINANCE", payload.context || payload.action || payload.prompt);
-  res.json({ ok: true, sector: "FINANCE", node: payload.node || "FINANCE NODE", reply, content: reply, mesh: true, timestamp: new Date().toISOString() });
-});
 
 app.get("/api/finance/strategist-rollup", (req, res) => {
   res.json({
@@ -821,48 +792,6 @@ app.all('/api/hc/strategist-rollup', async (req,res)=>{
 
 
 
-
-// TSM_FINOPS_QUERY_NODE01_FINAL
-app.all("/api/finance/query", (req, res) => {
-    const payload = (req.body && (req.body.payload || req.body)) || {};
-    const context = payload.context || "FinOps WIP review";
-    const txt = `FINOPS BNCA SYNTHESIS
-
-TOP ISSUE
-${context}
-
-WHY IT MATTERS
-This issue impacts close readiness, cash visibility, AP/AR exposure, reconciliation accuracy, executive KPIs, and controller decision timing.
-
-BEST NEXT ACTIONS
-1. Assign Financial Accounting owner lane.
-2. Resolve reconciliation blockers inside the current operating window.
-3. Push unresolved exposure to FinOps Strategist.
-4. Generate CFO-ready executive briefing packet.
-
-OWNER LANE
-Financial Accounting Lead
-
-CONTROLLER
-FinOps Command
-
-ENTERPRISE RISKS
-• AP/AR exposure
-• Reconciliation variance
-• Cashflow slowdown
-• Close-readiness risk
-• Compliance drift
-
-HITL DECISION
-Human controller review required before enterprise escalation.
-
-STRATEGIST RELAY
-Signal routed to FinOps Strategist for executive BNCA synthesis.
-
-CONFIDENCE
-94%`;
-    res.json({ ok: true, sector: "FINOPS", node: "NODE 01 · FINANCIAL ACCOUNTING", reply: txt, content: txt, mesh: true, timestamp: new Date().toISOString() });
-});
 
 // ── Music Command route ───────────────────────────────────────────
 app.get(['/music','/suite/music'],
