@@ -2326,9 +2326,10 @@ document.addEventListener('click', function(e){
   const args = el.getAttribute('data-tsm-args');
 
   if(action === 'sw' || action === 'switchTab') {
-    const tabId = Array.isArray(args) ? args[0] : args;
+    const rawId = Array.isArray(args) ? args[0] : args;
+    const tabId = rawId ? rawId.replace(/['"`]/g,'').trim() : '';
     const btn = document.querySelector('.nav-btn[onclick*="' + tabId + '"]');
-    if(window.switchTab) switchTab(tabId, btn);
+    if(window.switchTab && tabId) switchTab(tabId, btn);
   } else if(action === 'generateReport') {
     const type = Array.isArray(args) ? args[0] : args;
     if(window.generateReport) generateReport(type||'full');
