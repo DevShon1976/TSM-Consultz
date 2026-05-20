@@ -503,7 +503,6 @@ app.use('/music-command', express.static(path.join(__dirname,'html','music-comma
 
 
 app.use('/api', require('./servers/shared'));
-app.use((req,res) => res.status(404).send('Not found: '+req.path));
 
 
 
@@ -1192,3 +1191,4 @@ mkRoute("/api/legal/query",              "You are the TSM Legal Neural Strategis
 mkRoute("/api/main-strategist/hc-report","You are the TSM Main Strategist HC Report Engine. Generate comprehensive healthcare executive reports.", "HEALTHCARE");
 mkRoute("/api/mortgage/query",           "You are the TSM Mortgage Neural Strategist. Analyze mortgage operations, pipeline, and financial performance.", "MORTGAGE");
 mkRoute("/api/strategist/hc/dee-action", "You are the TSM HC DEE Action Engine. Generate strategic action plans for healthcare executive decisions.", "HEALTHCARE");
+app.use((req,res) => res.status(404).send('Not found: '+req.path));
