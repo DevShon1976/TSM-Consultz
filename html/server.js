@@ -5,7 +5,15 @@ const fs = require('fs');
 const app = express();
 
 app.use(express.json());
+
+// Serve static assets out of root and core subdirectories immediately
 app.use(express.static(__dirname));
+app.use('/tsm-insurance', express.static(path.join(__dirname, 'tsm-insurance')));
+app.use('/sites', express.static(path.join(__dirname, 'sites')));
+app.use('/slug', express.static(path.join(__dirname, 'slug')));
+app.use('/strategist', express.static(path.join(__dirname, 'strategist')));
+app.use('/shared', express.static(path.join(__dirname, 'shared')));
+app.use('/runtime', express.static(path.join(__dirname, 'runtime')));
 
 // ================================================
 // TSM FINOPS PERSISTENT BACKEND STORAGE
@@ -57,27 +65,36 @@ app.post('/api/finops/action', (req, res) => {
   res.json({ ok: true, action, count: data.actions.length });
 });
 
-// SPA Catch-All Route with corrected path references
+// Deep Resolution Routing Layer
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({ ok: false, error: 'API route not found' });
   }
 
+  // Clean the path to get the targeted file name
   const targetPath = path.join(__dirname, req.path);
-  
-  fs.stat(targetPath, (err, stats) => {
-    if (!err && stats.isFile()) {
-      return res.sendFile(targetPath);
-    } else {
-      return res.sendFile(path.join(__dirname, 'hotelops.html'));
+  const baseFileName = path.basename(req.path);
+
+  // 1. Precise Match Check (Matches explicit nested directory structures)
+  if (fs.existsSync(targetPath) && fs.statSync(targetPath).isFile()) {
+    return res.sendFile(targetPath);
+  }
+
+  // 2. Cross-Directory Scan (Locates files if a custom prefix is present)
+  const searchDirs = ['tsm-insurance', 'sites', 'slug', 'strategist', '.'];
+  for (const dir of searchDirs) {
+    const fallbackCheckPath = path.join(__dirname, dir, baseFileName);
+    if (fs.existsSync(fallbackCheckPath) && fs.statSync(fallbackCheckPath).isFile()) {
+      return res.sendFile(fallbackCheckPath);
     }
-  });
+  }
+
+  // 3. Absolute Fallback Home Node
+  return res.sendFile(path.join(__dirname, 'hotelops.html'));
 });
 
-// ===== CORRECTED MULTI-PORT PORT BINDING FOR FLY.IO =====
-// Explicitly fallback to port 3000 if 8080 isn't available
-const TARGET_PORT = process.env.PORT || 8080;
-
+// ===== DYNAMIC PORT BINDING =====
+const TARGET_PORT = process.env.PORT || 3000;
 app.listen(TARGET_PORT, '0.0.0.0', () => {
-  console.log(`TSM Shell listening securely on 0.0.0.0:${TARGET_PORT}`);
+  console.log(`TSM Shell Engine listening on port ${TARGET_PORT}`);
 });
