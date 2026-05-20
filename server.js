@@ -754,7 +754,6 @@ app.all('/api/hc/query', async (req,res)=>{
     res.json({ok:true,reply,content:reply,response:reply,sector:"HEALTHCARE",mesh:true,timestamp:new Date().toISOString()});
   } catch(e){res.json({ok:true,reply:tsmMeshReply("HEALTHCARE",prompt),content:tsmMeshReply("HEALTHCARE",prompt)});}
 });
-});
 
 /* ---------- Construction ---------- */
 app.all('/api/construction/query', async (req,res)=>{
@@ -769,7 +768,6 @@ app.all('/api/construction/query', async (req,res)=>{
     res.json({ok:true,reply,content:reply,response:reply,sector:"CONSTRUCTION",mesh:true,timestamp:new Date().toISOString()});
   } catch(e){res.json({ok:true,reply:tsmMeshReply("CONSTRUCTION",prompt),content:tsmMeshReply("CONSTRUCTION",prompt)});}
 });
-});
 
 /* ---------- Finance ---------- */
 app.all('/api/finance/query', async (req,res)=>{
@@ -783,7 +781,6 @@ app.all('/api/finance/query', async (req,res)=>{
     const reply=d.choices?.[0]?.message?.content||tsmMeshReply("FINANCE",prompt);
     res.json({ok:true,reply,content:reply,response:reply,sector:"FINANCE",mesh:true,timestamp:new Date().toISOString()});
   } catch(e){res.json({ok:true,reply:tsmMeshReply("FINANCE",prompt),content:tsmMeshReply("FINANCE",prompt)});}
-});
 });
 
 /* ---------- Insurance ---------- */
