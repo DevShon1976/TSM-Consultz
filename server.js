@@ -1149,3 +1149,46 @@ app.post("/api/insurance/query", async (req, res) => {
     res.json({ ok: true, reply: buildMeshBNCA("INSURANCE", prompt), content: buildMeshBNCA("INSURANCE", prompt) });
   }
 });
+
+// =====================================================
+// MISSING ROUTES — bulk add all suite endpoints
+// =====================================================
+const groqReply = async (systemPrompt, userPrompt) => {
+  const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: { "Authorization": "Bearer " + process.env.GROQ_API_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({ model: process.env.TSM_MODEL || "llama-3.3-70b-versatile", max_tokens: 800, messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }] })
+  });
+  const d = await r.json();
+  return d.choices?.[0]?.message?.content || "Analysis complete.";
+};
+const mkRoute = (path, system, sector) => {
+  app.get(path, (req, res) => res.json({ ok: true, mesh: true }));
+  app.post(path, async (req, res) => {
+    const b = req.body || {};
+    const prompt = b.prompt || b.query || b.context || b.action || b.message || ("Analyze " + sector + " operations.");
+    try {
+      const reply = await groqReply(system, prompt);
+      res.json({ ok: true, reply, content: reply, response: reply, output: reply, sector, mesh: true, timestamp: new Date().toISOString() });
+    } catch(e) {
+      res.json({ ok: true, reply: buildMeshBNCA(sector, prompt), content: buildMeshBNCA(sector, prompt) });
+    }
+  });
+};
+
+mkRoute("/api/audit",                    "You are the TSM Audit Strategist. Analyze compliance, billing audit, and operational audit findings. Be specific and actionable.", "AUDIT");
+mkRoute("/api/financial/query",          "You are the TSM Financial Neural Strategist. Analyze financial operations, revenue, cash flow, CFO priorities. Be specific.", "FINANCE");
+mkRoute("/api/finops/report",            "You are the TSM FinOps Strategist. Generate financial operations reports covering revenue, margins, and cash flow.", "FINANCE");
+mkRoute("/api/finops/actions",           "You are the TSM FinOps Strategist. Generate prioritized financial action items and owner assignments.", "FINANCE");
+mkRoute("/api/finops/upload-doc",        "You are the TSM FinOps Document Analyzer. Extract key financial insights from the provided document.", "FINANCE");
+mkRoute("/api/groq",                     "You are the TSM Neural Strategist. Answer the query with specific, actionable intelligence.", "GENERAL");
+mkRoute("/api/hc/brief",                 "You are the TSM HC Briefing Engine. Generate concise executive healthcare briefings.", "HEALTHCARE");
+mkRoute("/api/hc/delegate",              "You are the TSM HC Delegation Engine. Assign tasks to the correct owner lanes with deadlines.", "HEALTHCARE");
+mkRoute("/api/hc/layer2",                "You are the TSM HC Layer 2 Strategist. Provide deep-dive clinical and operational analysis.", "HEALTHCARE");
+mkRoute("/api/hc/nodes",                 "You are the TSM HC Node Intelligence Engine. Report on all active healthcare nodes and their status.", "HEALTHCARE");
+mkRoute("/api/hc/tasks",                 "You are the TSM HC Task Engine. Generate and prioritize healthcare operational tasks.", "HEALTHCARE");
+mkRoute("/api/honor/dee/dashboard",      "You are the TSM Honor Health DEE Dashboard. Provide executive healthcare dashboard intelligence.", "HEALTHCARE");
+mkRoute("/api/legal/query",              "You are the TSM Legal Neural Strategist. Analyze legal operations, contracts, compliance, and risk. Be specific.", "LEGAL");
+mkRoute("/api/main-strategist/hc-report","You are the TSM Main Strategist HC Report Engine. Generate comprehensive healthcare executive reports.", "HEALTHCARE");
+mkRoute("/api/mortgage/query",           "You are the TSM Mortgage Neural Strategist. Analyze mortgage operations, pipeline, and financial performance.", "MORTGAGE");
+mkRoute("/api/strategist/hc/dee-action", "You are the TSM HC DEE Action Engine. Generate strategic action plans for healthcare executive decisions.", "HEALTHCARE");
