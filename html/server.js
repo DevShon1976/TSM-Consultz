@@ -103,3 +103,8 @@ app.use('/healthcare-suite', express.static(path.join(__dirname, 'healthcare-sui
 app.use('/music-command', express.static(path.join(__dirname, 'music-command')));
 app.post('/api/financial/query', (req, res) => res.json({answer:'stub'}));
 app.post('/api/groq', (req, res) => res.json({answer:'stub'}));
+app.use('/html/tsm-insurance', express.static(path.join(__dirname, 'tsm-insurance')));
+app.use('/html/finops-suite', express.static(path.join(__dirname, 'finops-suite')));
+app.use('/html/construction-suite', express.static(path.join(__dirname, 'construction-suite')));
+app.use('/html/healthcare', express.static(path.join(__dirname, 'healthcare')));
+app.use('/html/music-command', express.static(path.join(__dirname, 'music-command')));
