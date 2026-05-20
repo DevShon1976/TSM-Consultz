@@ -1169,4 +1169,35 @@ app.all('/api/music/strategy', async (req,res)=>{
   } catch(e){res.json({ok:true,reply:"Music AI error: "+e.message});}
 });
 
+
+// ── /api/claude/proxy ──
+app.post('/api/claude/proxy', express.json({limit:'4mb'}), async (req, res) => {
+  const GROQ_KEY = process.env.GROQ_API_KEY;
+  try {
+    const {system, messages, max_tokens=1200} = req.body;
+    const msgs = system ? [{role:'system',content:system},...messages] : messages;
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+GROQ_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({model:process.env.TSM_MODEL||'llama-3.3-70b-versatile',max_tokens,messages:msgs})
+    });
+    const data = await r.json();
+    const text = data.choices?.[0]?.message?.content || '';
+    res.json({content:[{type:'text',text}]});
+  } catch(e){ res.status(500).json({error:{message:e.message}}); }
+});
+
+// ── /api/groq/complete ──
+app.post('/api/groq/complete', express.json({limit:'2mb'}), async (req, res) => {
+  const key = process.env.GROQ_API_KEY;
+  try {
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
+      body:JSON.stringify({...req.body, stream:false})
+    });
+    res.json(await r.json());
+  } catch(e){ res.status(500).json({error:{message:e.message}}); }
+});
+
 app.use((req,res) => res.status(404).send('Not found: '+req.path));
