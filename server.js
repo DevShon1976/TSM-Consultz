@@ -986,6 +986,52 @@ app.post('/api/bpo/query', async (req, res) => {
 });
 
 
+
+// ── /api/claude/proxy — Anthropic msg format, Groq fallback ──
+app.post('/api/claude/proxy', express.json({limit:'4mb'}), async (req, res) => {
+  const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
+  const GROQ_KEY      = process.env.GROQ_API_KEY;
+  if (ANTHROPIC_KEY) {
+    try {
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', 'x-api-key':ANTHROPIC_KEY,
+                   'anthropic-version':'2023-06-01' },
+        body: JSON.stringify(req.body)
+      });
+      return res.json(await r.json());
+    } catch(e) { /* fall through to Groq */ }
+  }
+  if (!GROQ_KEY) return res.status(503).json({error:{message:'No AI key configured'}});
+  try {
+    const { system, messages, max_tokens = 1200 } = req.body;
+    const msgs = system ? [{role:'system', content:system}, ...messages] : messages;
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization':'Bearer '+GROQ_KEY, 'Content-Type':'application/json' },
+      body: JSON.stringify({ model: process.env.TSM_MODEL||'llama-3.3-70b-versatile',
+                             max_tokens, messages: msgs })
+    });
+    const data = await r.json();
+    const text = data.choices?.[0]?.message?.content || '';
+    res.json({ content: [{ type:'text', text }] }); // Anthropic-shape response
+  } catch(e) { res.status(500).json({error:{message:e.message}}); }
+});
+
+// ── /api/groq/complete — OpenAI format passthrough, non-streaming ──
+app.post('/api/groq/complete', express.json({limit:'2mb'}), async (req, res) => {
+  const key = process.env.GROQ_API_KEY;
+  if (!key) return res.status(503).json({error:{message:'No GROQ_API_KEY'}});
+  try {
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization':'Bearer '+key, 'Content-Type':'application/json' },
+      body: JSON.stringify({ ...req.body, stream:false })
+    });
+    res.json(await r.json());
+  } catch(e) { res.status(500).json({error:{message:e.message}}); }
+});
+
 app.listen(8080, '0.0.0.0', () => console.log('Sovereign Mesh Online on 0.0.0.0:8080'));
 
 // =====================================================
