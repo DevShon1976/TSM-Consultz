@@ -97,3 +97,9 @@ const TARGET_PORT = 8080;
 app.listen(TARGET_PORT, '0.0.0.0', () => {
   console.log(`TSM Shell Engine bound to absolute target port ${TARGET_PORT}`);
 });
+app.use('/finops-suite', express.static(path.join(__dirname, 'finops-suite')));
+app.use('/construction-suite', express.static(path.join(__dirname, 'construction-suite')));
+app.use('/healthcare-suite', express.static(path.join(__dirname, 'healthcare-suite')));
+app.use('/music-command', express.static(path.join(__dirname, 'music-command')));
+app.post('/api/financial/query', (req, res) => res.json({answer:'stub'}));
+app.post('/api/groq', (req, res) => res.json({answer:'stub'}));
