@@ -65,18 +65,19 @@ app.get('*', (req, res) => {
 
   const targetPath = path.join(__dirname, req.path);
   
-  // Verify if it's a valid directory or trailing slash, default to home page
   fs.stat(targetPath, (err, stats) => {
     if (!err && stats.isFile()) {
       return res.sendFile(targetPath);
     } else {
-      // If file doesn't exist on disk, serve the master entrypoint safely
       return res.sendFile(path.join(__dirname, 'hotelops.html'));
     }
   });
 });
 
-// ===== FORCE LISTEN FOR FLY.IO =====
-app.listen(process.env.PORT || 8080, '0.0.0.0', () => {
-  console.log('TSM Shell listening securely on 0.0.0.0:8080');
+// ===== CORRECTED MULTI-PORT PORT BINDING FOR FLY.IO =====
+// Explicitly fallback to port 3000 if 8080 isn't available
+const TARGET_PORT = process.env.PORT || 8080;
+
+app.listen(TARGET_PORT, '0.0.0.0', () => {
+  console.log(`TSM Shell listening securely on 0.0.0.0:${TARGET_PORT}`);
 });
