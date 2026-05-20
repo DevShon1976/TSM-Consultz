@@ -71,7 +71,6 @@ app.get('*', (req, res) => {
     return res.status(404).json({ ok: false, error: 'API route not found' });
   }
 
-  // Clean the path to get the targeted file name
   const targetPath = path.join(__dirname, req.path);
   const baseFileName = path.basename(req.path);
 
@@ -93,8 +92,8 @@ app.get('*', (req, res) => {
   return res.sendFile(path.join(__dirname, 'hotelops.html'));
 });
 
-// ===== DYNAMIC PORT BINDING =====
-const TARGET_PORT = process.env.PORT || 3000;
+// ===== HARDCODED PORT BINDING FOR FLY-PROXY MATCH =====
+const TARGET_PORT = 8080;
 app.listen(TARGET_PORT, '0.0.0.0', () => {
-  console.log(`TSM Shell Engine listening on port ${TARGET_PORT}`);
+  console.log(`TSM Shell Engine bound to absolute target port ${TARGET_PORT}`);
 });
