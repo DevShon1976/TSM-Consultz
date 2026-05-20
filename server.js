@@ -1130,3 +1130,22 @@ app.post("/api/ai/query", async (req, res) => {
 app.post("/api/hc/ask",        (req, res) => { req.body.sector = "HEALTHCARE";   app._router.handle(Object.assign(req, {url:"/api/ai/query",path:"/api/ai/query"}), res, ()=>{}); });
 app.post("/api/chat",          (req, res) => { req.body.sector = req.body.sector || "HEALTHCARE"; app._router.handle(Object.assign(req, {url:"/api/ai/query",path:"/api/ai/query"}), res, ()=>{}); });
 app.post("/api/strategist/query", (req, res) => { req.body.sector = "HEALTHCARE"; app._router.handle(Object.assign(req, {url:"/api/ai/query",path:"/api/ai/query"}), res, ()=>{}); });
+
+// INSURANCE QUERY ROUTE
+app.get("/api/insurance/query", (req, res) => {
+  res.json({ ok: true, mesh: true });
+});
+app.post("/api/insurance/query", async (req, res) => {
+  const payload = req.body || {};
+  const prompt = payload.prompt || payload.query || payload.context || payload.action || "Analyze AZ insurance operations.";
+  const GROQ_KEY = process.env.GROQ_API_KEY;
+  if (!GROQ_KEY) return res.json({ ok: true, reply: buildMeshBNCA("INSURANCE", prompt), content: buildMeshBNCA("INSURANCE", prompt) });
+  try {
+    const r = await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { "Authorization": "Bearer " + GROQ_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ model: process.env.TSM_MODEL || "llama-3.3-70b-versatile", max_tokens: 800, messages: [{ role: "system", content: "You are the TSM Insurance Neural Strategist. Analyze AZ insurance, Medicare, P&C, DME, agent performance, compliance, payer relations. Be specific and actionable." }, { role: "user", content: prompt }] }) });
+    const d = await r.json();
+    const reply = d.choices?.[0]?.message?.content || buildMeshBNCA("INSURANCE", prompt);
+    res.json({ ok: true, reply, content: reply, response: reply, sector: "INSURANCE", mesh: true, timestamp: new Date().toISOString() });
+  } catch(e) {
+    res.json({ ok: true, reply: buildMeshBNCA("INSURANCE", prompt), content: buildMeshBNCA("INSURANCE", prompt) });
+  }
+});
