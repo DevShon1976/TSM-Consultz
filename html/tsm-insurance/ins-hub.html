@@ -2325,7 +2325,19 @@ document.addEventListener('click', function(e){
   const action = el.getAttribute('data-tsm-action');
   const args = el.getAttribute('data-tsm-args');
 
-  if(window.TSM && TSM.launcher && TSM.launcher.run){
+  if(action === 'sw' || action === 'switchTab') {
+    const tabId = Array.isArray(args) ? args[0] : args;
+    const btn = document.querySelector('.nav-btn[onclick*="' + tabId + '"]');
+    if(window.switchTab) switchTab(tabId, btn);
+  } else if(action === 'generateReport') {
+    const type = Array.isArray(args) ? args[0] : args;
+    if(window.generateReport) generateReport(type||'full');
+  } else if(action === 'sendMessage') {
+    if(window.sendMessage) sendMessage();
+  } else if(action === 'toggleRA') {
+    const el = typeof args === 'string' ? document.querySelector(args) : args;
+    if(el) el.classList.toggle('open');
+  } else if(window.TSM && TSM.launcher && TSM.launcher.run) {
     TSM.launcher.run(action, args);
   } else {
     console.warn('[TSM] launcher missing:', action, args);
