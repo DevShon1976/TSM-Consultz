@@ -598,5 +598,4 @@ app.post('/api/strategist/query', async function(req, res) {
 });
 // ===== END GROQ AI ENGINE =====
 app.use((req,res) => res.status(404).send('Not found: '+req.path));
-const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log('TSM-Shell running on port ' + PORT));
