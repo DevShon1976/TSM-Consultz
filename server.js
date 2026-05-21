@@ -377,7 +377,6 @@ app.listen(PORT, "0.0.0.0", () => {
   console.log();
 });
 
-<<<<<<< HEAD
 // ===== GROQ AI ENGINE =====
 const https = require('https');
 
@@ -600,5 +599,3 @@ app.post('/api/strategist/query', async function(req, res) {
 // ===== END GROQ AI ENGINE =====
 app.use((req,res) => res.status(404).send('Not found: '+req.path));
 
-=======
->>>>>>> 379e01ab6e0cfcba608d5f00619691507b63cdd9
