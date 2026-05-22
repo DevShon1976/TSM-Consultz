@@ -8,12 +8,13 @@ const HTML_ROOT = path.join(__dirname, "html");
 
 app.get("/health", (_req, res) => res.json({ status: "ok" }));
 
-{ route: "/construction", dir: "html/construction-suite", index: "construction-hub.html" },
-{ route: "/finops",       dir: "html/finops-suite",       index: "finops-presentation/index.html" },
-{ route: "/healthcare",   dir: "html/healthcare",          index: "index.html" },
-{ route: "/insurance",    dir: "html/tsm-insurance",       index: "ins-presentation.html" },
-{ route: "/music",        dir: "html/music-command",       index: "index.html" },
-
+const suites = [
+  { route: "/construction", dir: "html/construction-suite", index: "construction-hub.html" },
+  { route: "/finops",       dir: "html/finops-suite",       index: "finops-presentation/index.html" },
+  { route: "/healthcare",   dir: "html/healthcare",         index: "index.html" },
+  { route: "/insurance",    dir: "html/tsm-insurance",      index: "ins-presentation.html" },
+  { route: "/music",        dir: "html/music-command",      index: "index.html" },
+];
 
 
 
@@ -90,7 +91,7 @@ app.get("/api/hc/strategist-rollup", (req, res) => {
   });
 });
 
-app.use('/html', express.static(path.join(__dirname, 'html'), { extensions: ['html'] }));
+app.use(express.static(path.join(__dirname, 'html'), { extensions: ['html'] }));
 
 app.use('/html/healthcare', express.static(path.join(__dirname, 'html', 'healthcare'), { index: 'index.html', extensions: ['html'] }));
 suites.forEach(s => {
