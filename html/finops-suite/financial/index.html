@@ -1139,7 +1139,54 @@ Includes:
 
 <div onclick="window.open('/how-to','_blank')" style="position:fixed;right:20px;bottom:20px;background:#00FFC6;color:#001;padding:10px 14px;border-radius:20px;font-family:DM Mono,monospace;font-size:12px;cursor:pointer;z-index:9999;">HOW TO</div>
 <script src="/tsm-ai-client.js"></script>
-<script src="/tsm-bnca-bridge.js"></script>
+window.TSM_UI = {
+  runAudit: async (sector, factor) => {
+    const feed = document.querySelector('.intelligence-feed-output') 
+               || document.getElementById('intelligence-feed-output');
+    if (feed) feed.innerHTML = '<span style="color:#00ffff">[STRATEGIST] Processing...</span>';
+
+    // Get key — checks localStorage first, then prompts
+    let apiKey = localStorage.getItem('groq_api_key');
+    if (!apiKey) {
+      apiKey = prompt('Enter your Groq API key:');
+      if (!apiKey) { 
+        if (feed) feed.innerText = '[STRATEGIST] No API key provided.';
+        return; 
+      }
+      localStorage.setItem('groq_api_key', apiKey);
+    }
+
+    try {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          messages: [{ 
+            role: 'user', 
+            content: `Analyze the ${factor} area for ${sector}. Provide key risks and actions.` 
+          }],
+          max_tokens: 1024
+        })
+      });
+      const data = await res.json();
+      if (data.error) {
+        // Bad key — clear it so next call re-prompts
+        localStorage.removeItem('groq_api_key');
+        if (feed) feed.innerText = `[STRATEGIST] Error: ${data.error.message}`;
+        return;
+      }
+      const text = data.choices?.[0]?.message?.content || 'Analysis complete.';
+      if (feed) feed.innerText = `[STRATEGIST] ${text}`;
+    } catch (e) {
+      if (feed) feed.innerText = '[STRATEGIST] Groq request failed. Check console.';
+      console.error(e);
+    }
+  }
+};
 
 <script>
 // TSM BNCA NODE REPORT — Financial Intel
