@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TSM CRCR Study Mode</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap');
+
+  :root {
+    --bg: #050810;
+    --surface: #0d1220;
+    --surface2: #131928;
+    --border: #1e2d45;
+    --accent: #00d4ff;
+    --accent2: #ff6b35;
+    --accent3: #7c3aed;
+    --green: #00ff9d;
+    --red: #ff3b5c;
+    --yellow: #ffd60a;
+    --text: #e8edf5;
+    --muted: #5a7090;
+    --font-mono: 'Space Mono', monospace;
+    --font-display: 'Syne', sans-serif;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-display);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 1; }
+
+  /* HEADER */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 16px 0;
+    background: rgba(5,8,16,0.9);
+    backdrop-filter: blur(10px);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-inner {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+  .logo span { color: var(--muted); }
+  .level-badge {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 4px 12px;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    border-radius: 2px;
+    letter-spacing: 0.1em;
+  }
+
+  /* HERO STATS BAR */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin: 24px 0;
+  }
+  .stat-cell {
+    background: var(--surface);
+    padding: 16px 20px;
+    text-align: center;
+  }
+  .stat-cell .val {
+    font-family: var(--font-mono);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .stat-cell .val.green { color: var(--green); }
+  .stat-cell .val.yellow { color: var(--yellow); }
+  .stat-cell .val.red { color: var(--red); }
+  .stat-cell .label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* MAIN NAV TABS */
+  .tabs {
+    display: flex; gap: 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 28px;
+  }
+  .tab {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* PANELS */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* SECTION HEADER */
+  .section-header {
+    display: flex; align-items: baseline; gap: 12px;
+    margin-bottom: 20px;
+  }
+  .section-title {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .section-sub {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  /* SCENARIO CARD */
+  .scenario-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 24px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .scenario-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--accent);
+  }
+  .scenario-card.denial::before { background: var(--red); }
+  .scenario-card.coding::before { background: var(--accent3); }
+  .scenario-card.claims::before { background: var(--yellow); }
+  .scenario-card.payments::before { background: var(--green); }
+
+  .scenario-meta {
+    display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;
+  }
+  .tag {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .tag.module-intake { border-color: var(--accent); color: var(--accent); }
+  .tag.module-coding { border-color: var(--accent3); color: var(--accent3); }
+  .tag.module-claims { border-color: var(--yellow); color: var(--yellow); }
+  .tag.module-denials { border-color: var(--red); color: var(--red); }
+  .tag.module-payments { border-color: var(--green); color: var(--green); }
+
+  .scenario-issue {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .scenario-task {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .scenario-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .btn {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.primary { border-color: var(--accent); color: var(--accent); }
+  .btn.primary:hover { background: var(--accent); color: var(--bg); }
+  .btn.danger { border-color: var(--red); color: var(--red); }
+  .btn.danger:hover { background: var(--red); color: var(--bg); }
+  .btn.success { border-color: var(--green); color: var(--green); }
+  .btn.success:hover { background: var(--green); color: var(--bg); }
+  .btn.large { padding: 12px 28px; font-size: 12px; }
+
+  /* QUIZ PANEL */
+  .quiz-question {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 28px;
+    margin-bottom: 20px;
+  }
+  .question-num {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .question-text {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 24px;
+  }
+  .options { display: grid; gap: 8px; }
+  .option {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 14px;
+  }
+  .option:hover { border-color: var(--accent); }
+  .option.selected { border-color: var(--accent); background: rgba(0,212,255,0.08); }
+  .option.correct { border-color: var(--green); background: rgba(0,255,157,0.08); color: var(--green); }
+  .option.wrong { border-color: var(--red); background: rgba(255,59,92,0.08); color: var(--red); }
+  .option-letter {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    width: 22px; height: 22px;
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    color: var(--muted);
+  }
+
+  /* DENIAL LAB */
+  .denial-card {
+    background: var(--surface);
+    border: 1px solid var(--red);
+    padding: 24px;
+    margin-bottom: 16px;
+    position: relative;
+  }
+  .denial-code {
+    font-family: var(--font-mono);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--red);
+    margin-bottom: 4px;
+  }
+  .denial-name {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .denial-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .fix-steps {
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+    display: none;
+  }
+  .fix-steps.show { display: block; }
+  .fix-step {
+    display: flex; gap: 10px;
+    font-size: 13px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .fix-step:last-child { border-bottom: none; }
+  .step-num {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--accent);
+    width: 18px;
+    flex-shrink: 0;
+    padding-top: 1px;
+  }
+
+  /* PROGRESS BAR */
+  .progress-wrap {
+    background: var(--surface2);
+    height: 4px;
+    margin: 8px 0 20px;
+    position: relative;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    transition: width 0.5s ease;
+  }
+
+  /* LIFECYCLE FLOW */
+  .lifecycle {
+    display: flex; align-items: center; gap: 0;
+    margin-bottom: 28px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .lifecycle-step {
+    flex-shrink: 0;
+    padding: 10px 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    font-size: 11px;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    position: relative;
+  }
+  .lifecycle-step.active { border-color: var(--accent); color: var(--accent); background: rgba(0,212,255,0.06); }
+  .lifecycle-step.done { border-color: var(--green); color: var(--green); background: rgba(0,255,157,0.06); }
+  .lifecycle-step.error { border-color: var(--red); color: var(--red); background: rgba(255,59,92,0.06); }
+  .lifecycle-arrow {
+    color: var(--border);
+    font-size: 16px;
+    padding: 0 4px;
+    flex-shrink: 0;
+  }
+
+  /* SCORE RESULT */
+  .score-result {
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 28px;
+    text-align: center;
+    margin-top: 20px;
+  }
+  .score-result.show { display: block; }
+  .score-big {
+    font-family: var(--font-mono);
+    font-size: 72px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .score-grade {
+    font-size: 14px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  /* WEAK AREAS */
+  .weak-list { display: grid; gap: 10px; margin-bottom: 20px; }
+  .weak-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .weak-label { flex: 1; font-size: 13px; }
+  .weak-score {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--yellow);
+  }
+  .weak-bar-wrap { width: 80px; height: 4px; background: var(--surface2); }
+  .weak-bar { height: 100%; background: var(--yellow); }
+
+  /* EXAM MODE */
+  .exam-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+  .timer {
+    font-family: var(--font-mono);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--yellow);
+    letter-spacing: 0.05em;
+  }
+  .timer.urgent { color: var(--red); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+  .exam-progress-text {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  /* AI QUERY BOX */
+  .ai-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-top: 16px;
+  }
+  .ai-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    padding: 10px 14px;
+    resize: vertical;
+    min-height: 80px;
+    margin-bottom: 10px;
+    outline: none;
+  }
+  .ai-input:focus { border-color: var(--accent); }
+  .ai-response {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text);
+    white-space: pre-wrap;
+    font-family: var(--font-mono);
+    display: none;
+    background: var(--surface2);
+    padding: 14px;
+    border-left: 3px solid var(--accent);
+    margin-top: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  .ai-response.show { display: block; }
+  .ai-loading {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    display: none;
+  }
+  .ai-loading.show { display: block; }
+
+  /* CONFIG */
+  .api-config {
+    background: var(--surface);
+    border: 1px solid var(--yellow);
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    display: flex; gap: 10px; align-items: center;
+  }
+  .api-input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 8px 12px;
+    outline: none;
+  }
+  .api-input:focus { border-color: var(--yellow); }
+  .api-note {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--yellow);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media(max-width:600px) { .grid2 { grid-template-columns: 1fr; } .stats-bar { grid-template-columns: repeat(2,1fr); } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="header-inner">
+      <div class="logo">TSM <span>//</span> CRCR Study Mode <span>// Healthcare Revenue Cycle</span></div>
+      <div class="level-badge" id="levelBadge">LEVEL 1</div>
+    </div>
+  </div>
+</header>
+
+<div class="container" style="padding-top:24px; padding-bottom:48px;">
+
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="stat-cell">
+      <div class="val green" id="statScore">--</div>
+      <div class="label">Avg Score</div>
+    </div>
+    <div class="stat-cell">
+      <div class="val" id="statSessions">0</div>
+      <div class="label">Sessions</div>
+    </div>
+    <div class="stat-cell">
+      <div class="val yellow" id="statWeak">--</div>
+      <div class="label">Weak Area</div>
+    </div>
+    <div class="stat-cell">
+      <div class="val" id="statLevel">1</div>
+      <div class="label">Current Level</div>
+    </div>
+  </div>
+
+  <!-- API CONFIG -->
+  <div class="api-config" id="apiConfig">
+    <span class="api-note">⚠ API Key</span>
+    <input class="api-input" id="apiKeyInput" type="password" placeholder="Paste Groq API key to enable AI features (gsk_...)"/>
+    <button class="btn primary" onclick="saveApiKey()">Save</button>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('daily', this)">Daily Session</button>
+    <button class="tab" onclick="switchTab('quiz', this)">Quiz Mode</button>
+    <button class="tab" onclick="switchTab('denial', this)">Denial Lab</button>
+    <button class="tab" onclick="switchTab('exam', this)">Exam Mode</button>
+    <button class="tab" onclick="switchTab('ai', this)">AI Tutor</button>
+    <button class="tab" onclick="switchTab('progress', this)">Progress</button>
+  </div>
+
+  <!-- DAILY SESSION -->
+  <div class="panel active" id="panel-daily">
+    <div class="section-header">
+      <div class="section-title">Daily Practice</div>
+      <div class="section-sub" id="dailyDate"></div>
+    </div>
+
+    <div class="lifecycle" id="lifecycleFlow">
+      <div class="lifecycle-step active">Intake</div>
+      <div class="lifecycle-arrow">→</div>
+      <div class="lifecycle-step">Coding</div>
+      <div class="lifecycle-arrow">→</div>
+      <div class="lifecycle-step">Claims</div>
+      <div class="lifecycle-arrow">→</div>
+      <div class="lifecycle-step">Payment</div>
+      <div class="lifecycle-arrow">→</div>
+      <div class="lifecycle-step">Denial</div>
+    </div>
+
+    <div id="scenariosContainer"></div>
+
+    <div style="margin-top:20px;">
+      <button class="btn primary large" onclick="generateDailySession()">↺ New Session</button>
+      <button class="btn large" onclick="submitAllScenarios()" style="margin-left:10px;">Submit All</button>
+    </div>
+
+    <div class="score-result" id="dailyResult">
+      <div class="score-big" id="dailyScoreNum">82%</div>
+      <div class="score-grade" id="dailyScoreGrade">Grade: B — Good Work</div>
+      <div id="dailyFeedback" style="font-size:13px; color:var(--muted); margin-bottom:20px;"></div>
+      <button class="btn primary" onclick="generateDailySession()">Start Next Session</button>
+    </div>
+  </div>
+
+  <!-- QUIZ MODE -->
+  <div class="panel" id="panel-quiz">
+    <div class="section-header">
+      <div class="section-title">Quiz Mode</div>
+      <div class="section-sub">CRCR-Style Questions</div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-fill" id="quizProgress" style="width:0%"></div>
+    </div>
+    <div id="quizContainer"></div>
+    <div id="quizNav" style="display:flex; gap:8px; margin-top:16px;">
+      <button class="btn primary" onclick="startQuiz()">Start 10-Question Quiz</button>
+    </div>
+    <div class="score-result" id="quizResult">
+      <div class="score-big" id="quizScoreNum" style="color:var(--green)">--</div>
+      <div class="score-grade" id="quizScoreGrade"></div>
+      <button class="btn primary" style="margin-top:16px;" onclick="startQuiz()">Retake Quiz</button>
+    </div>
+  </div>
+
+  <!-- DENIAL LAB -->
+  <div class="panel" id="panel-denial">
+    <div class="section-header">
+      <div class="section-title">Denial Lab</div>
+      <div class="section-sub">Master Every Denial Code</div>
+    </div>
+    <div id="denialContainer"></div>
+  </div>
+
+  <!-- EXAM MODE -->
+  <div class="panel" id="panel-exam">
+    <div class="section-header">
+      <div class="section-title">Exam Mode</div>
+      <div class="section-sub">75 Questions · 2 Hour Simulation</div>
+    </div>
+    <div id="examNotStarted">
+      <div class="scenario-card">
+        <div class="scenario-issue">CRCR Exam Simulation</div>
+        <div class="scenario-task">Mimics the real HFMA CRCR exam format — 75 questions, timed, scenario-heavy, mixed difficulty. Passing score: 75%</div>
+        <div class="scenario-actions" style="margin-top:16px;">
+          <button class="btn primary large" onclick="startExam()">Begin Exam</button>
+        </div>
+      </div>
+    </div>
+    <div id="examActive" style="display:none;">
+      <div class="exam-header">
+        <div>
+          <div style="font-family:var(--font-mono); font-size:10px; color:var(--muted); letter-spacing:0.15em; text-transform:uppercase; margin-bottom:4px;">Time Remaining</div>
+          <div class="timer" id="examTimer">2:00:00</div>
+        </div>
+        <div class="exam-progress-text">
+          <div id="examQNum">Question 1 of 75</div>
+          <div id="examPct" style="color:var(--accent); margin-top:4px;">0% Complete</div>
+        </div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-fill" id="examProgress" style="width:0%"></div>
+      </div>
+      <div id="examQContainer"></div>
+      <div style="display:flex; gap:8px; margin-top:16px;" id="examNav">
+        <button class="btn primary" onclick="nextExamQuestion()">Next Question →</button>
+        <button class="btn danger" onclick="endExam()">End Exam</button>
+      </div>
+    </div>
+    <div class="score-result" id="examResult">
+      <div class="score-big" id="examScoreNum"></div>
+      <div class="score-grade" id="examScoreGrade"></div>
+      <div id="examBreakdown" style="text-align:left; margin:20px 0;"></div>
+      <button class="btn primary" onclick="startExam()">Retake Exam</button>
+    </div>
+  </div>
+
+  <!-- AI TUTOR -->
+  <div class="panel" id="panel-ai">
+    <div class="section-header">
+      <div class="section-title">AI Tutor</div>
+      <div class="section-sub">Powered by Groq · llama-3.3-70b</div>
+    </div>
+    <div class="grid2">
+      <div>
+        <div style="font-family:var(--font-mono); font-size:10px; color:var(--muted); letter-spacing:0.15em; text-transform:uppercase; margin-bottom:10px;">Quick Prompts</div>
+        <div style="display:grid; gap:6px;">
+          <button class="btn" style="text-align:left;" onclick="setAIPrompt('Explain the difference between ERA and EOB in simple terms')">ERA vs EOB explained</button>
+          <button class="btn" style="text-align:left;" onclick="setAIPrompt('What are the most common reasons for CO-16 denials and how do I fix them?')">CO-16 denial causes + fixes</button>
+          <button class="btn" style="text-align:left;" onclick="setAIPrompt('Walk me through a clean claim lifecycle from patient intake to payment posting')">Clean claim lifecycle</button>
+          <button class="btn" style="text-align:left;" onclick="setAIPrompt('What is Coordination of Benefits (COB) and how does it affect claims?')">COB rules explained</button>
+          <button class="btn" style="text-align:left;" onclick="setAIPrompt('Generate 5 CRCR-style exam questions about medical necessity with answers')">Generate practice questions</button>
+          <button class="btn" style="text-align:left;" onclick="setAIPrompt('What is the timely filing limit for Medicare, Medicaid, and commercial payers?')">Timely filing rules</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-family:var(--font-mono); font-size:10px; color:var(--muted); letter-spacing:0.15em; text-transform:uppercase; margin-bottom:10px;">Ask Anything</div>
+        <div class="ai-box" style="padding:0; background:transparent; border:none; margin:0;">
+          <textarea class="ai-input" id="aiInput" placeholder="Ask any CRCR question... e.g. 'What causes a CO-50 denial?'"></textarea>
+          <button class="btn primary" onclick="askAI()">Ask AI →</button>
+          <div class="ai-loading" id="aiLoading">⟳ Consulting healthcare AI...</div>
+          <div class="ai-response" id="aiResponse"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="panel" id="panel-progress">
+    <div class="section-header">
+      <div class="section-title">Progress Tracker</div>
+      <div class="section-sub">Domain Performance</div>
+    </div>
+    <div class="weak-list" id="progressList"></div>
+    <div style="margin-top:20px;">
+      <button class="btn danger" onclick="resetProgress()">Reset All Progress</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let state = JSON.parse(localStorage.getItem('crcr_state') || '{}');
+state = Object.assign({
+  level: 1,
+  sessions: 0,
+  scores: [],
+  domainScores: { intake:[], coding:[], claims:[], payments:[], denials:[] },
+  apiKey: ''
+}, state);
+
+function saveState() { localStorage.setItem('crcr_state', JSON.stringify(state)); }
+
+// ─── DATA ─────────────────────────────────────────────────────────────────────
+const SCENARIOS = {
+  intake: [
+    { issue: 'Patient registered with incorrect date of birth', task: 'Identify impact on eligibility verification', type: 'intake' },
+    { issue: 'Insurance ID entered without leading zeros', task: 'Explain how this causes a 271 eligibility failure', type: 'intake' },
+    { issue: 'Primary and secondary insurance not coordinated', task: 'Apply COB rules to determine correct billing order', type: 'intake' },
+    { issue: 'Prior authorization not obtained before MRI', task: 'Identify which denial code will result and fix path', type: 'intake' },
+    { issue: 'Patient address does not match insurance records', task: 'Explain downstream claim impact', type: 'intake' },
+  ],
+  coding: [
+    { issue: 'ICD-10 code does not support medical necessity for CPT ordered', task: 'Identify the mismatch and correct the coding', type: 'coding' },
+    { issue: 'Modifier 25 missing on E/M service billed same day as procedure', task: 'Explain bundling rules and add correct modifier', type: 'coding' },
+    { issue: 'Unlisted CPT code used without documentation', task: 'Find the correct billable code for the procedure', type: 'coding' },
+    { issue: 'HCPCS Level II code submitted to payer that requires CPT', task: 'Identify payer-specific coding requirement', type: 'coding' },
+  ],
+  claims: [
+    { issue: 'Claim submitted past timely filing limit (CO-197)', task: 'Review appeal rights and document exception', type: 'claims' },
+    { issue: 'NPI on claim does not match payer credentialing file', task: 'Identify correct NPI and resubmit pathway', type: 'claims' },
+    { issue: 'Duplicate claim submitted within 30 days of original', task: 'Identify as duplicate and void or correct', type: 'claims' },
+    { issue: 'Clearinghouse returned claim with 277 rejection', task: 'Read rejection code and fix claim loop errors', type: 'claims' },
+  ],
+  payments: [
+    { issue: 'ERA shows contractual adjustment greater than fee schedule', task: 'Audit ERA against contract and flag underpayment', type: 'payments' },
+    { issue: 'Payment posted to wrong patient account', task: 'Reverse payment and re-apply to correct account', type: 'payments' },
+    { issue: 'Deductible applied when patient is in deductible-free period', task: 'Identify benefit error and initiate appeal', type: 'payments' },
+  ],
+  denials: [
+    { issue: 'CO-16: Claim lacks information needed for adjudication', task: 'Identify missing field and resubmit with attachment', type: 'denials' },
+    { issue: 'CO-50: Non-covered service — not medically necessary', task: 'Draft medical necessity appeal with clinical notes', type: 'denials' },
+    { issue: 'CO-4: Service inconsistent with modifier', task: 'Review modifier rules and correct claim', type: 'denials' },
+    { issue: 'PR-1: Deductible amount not yet met', task: 'Bill patient for deductible balance', type: 'denials' },
+  ]
+};
+
+const QUIZ_BANK = [
+  { q: 'What is the MOST likely cause of a CO-197 denial?', opts: ['Incorrect CPT code','Claim submitted after timely filing limit','Missing prior authorization','Invalid NPI'], ans: 1 },
+  { q: 'Which document shows the exact payment calculation from a payer?', opts: ['UB-04','CMS-1500','ERA/835','ABN'], ans: 2 },
+  { q: 'A patient has Medicare primary and Medicaid secondary. Which rule applies?', opts: ['HIPAA','COB — Medicare pays first','Subrogation','Assignment of benefits'], ans: 1 },
+  { q: 'What does a 271 transaction confirm?', opts: ['Claim status','Patient eligibility and benefits','Authorization','Payment remittance'], ans: 1 },
+  { q: 'Modifier 25 is required when billing:', opts: ['Two surgical procedures same day','E/M service same day as a procedure','Bilateral procedures','Assistant surgeon'], ans: 1 },
+  { q: 'CO-50 denial means:', opts: ['Timely filing exceeded','Service not medically necessary','Duplicate claim','Missing information'], ans: 1 },
+  { q: 'What is the primary purpose of a clearinghouse?', opts: ['Store patient records','Process insurance claims electronically','Verify licenses','Manage authorizations'], ans: 1 },
+  { q: 'Which coding system is used for outpatient diagnoses?', opts: ['CPT','ICD-10-CM','ICD-10-PCS','HCPCS Level II'], ans: 1 },
+  { q: 'A clean claim must be paid within how many days by Medicare?', opts: ['14 days','30 days','45 days','60 days'], ans: 1 },
+  { q: 'What does "assignment of benefits" mean?', opts: ['Patient pays provider directly','Payer pays provider directly','Patient assigns deductible','Provider assigns billing rights'], ans: 1 },
+  { q: 'Which denial is preventable at patient access?', opts: ['CO-50 medical necessity','CO-197 timely filing','CO-4 modifier error','Eligibility-related denial'], ans: 3 },
+  { q: 'An EOB is sent to:', opts: ['The clearinghouse','The provider only','The patient','Both provider and patient'], ans: 3 },
+  { q: 'What is the first step in denial management?', opts: ['Appeal immediately','Identify root cause','Write off the balance','Call the payer'], ans: 1 },
+  { q: 'HCPCS Level II codes begin with:', opts: ['A number 0-9','A letter A-V','The prefix "ICD"','CPT modifier'], ans: 1 },
+  { q: 'Prior authorization is required primarily to confirm:', opts: ['Patient identity','Medical necessity','Payer contract rates','Coding accuracy'], ans: 1 },
+];
+
+const DENIALS = [
+  { code: 'CO-16', name: 'Claim Lacks Information', desc: 'The claim is missing data required for adjudication. Common causes: missing NPI, incomplete diagnosis, no referring provider.', fixes: ['Identify missing field from 835 remark code','Add required information to claim','Resubmit as corrected claim (frequency code 7)','Document in denial log'] },
+  { code: 'CO-50', name: 'Not Medically Necessary', desc: 'The service is not covered because it fails to meet the payer\'s medical necessity criteria for the diagnosis billed.', fixes: ['Review LCD/NCD for the CPT code','Check if ICD-10 supports procedure','Obtain clinical documentation from provider','Draft appeal with clinical notes and guidelines','Submit with additional diagnosis codes if applicable'] },
+  { code: 'CO-197', name: 'Timely Filing Exceeded', desc: 'The claim was not submitted within the payer\'s timely filing window. Medicare: 12 months. Commercial: varies 90–365 days.', fixes: ['Check original submission date','Pull proof of timely filing (clearinghouse confirmation)','Submit appeal with proof of timely filing','If no proof exists, write off per contract'] },
+  { code: 'CO-4', name: 'Modifier Inconsistency', desc: 'The service was billed with a modifier that is inconsistent with the procedure or payer rules.', fixes: ['Review modifier requirements for CPT','Check if Modifier 25 needed (same-day E/M)','Verify bilateral/assistant modifier rules','Correct and resubmit'] },
+  { code: 'CO-11', name: 'Diagnosis Inconsistent with Procedure', desc: 'The diagnosis code does not support the procedure performed. Classic ICD-CPT mismatch.', fixes: ['Review medical record for supporting diagnosis','Query provider if needed','Add or correct ICD-10 code','Resubmit corrected claim'] },
+  { code: 'PR-1', name: 'Deductible Not Met', desc: 'Patient responsibility — deductible amount not yet met. Bill the patient, not the payer.', fixes: ['Verify deductible amount on ERA','Update patient balance in billing system','Generate patient statement','Follow up per collections protocol'] },
+];
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+function init() {
+  document.getElementById('dailyDate').textContent = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+  updateStats();
+  generateDailySession();
+  renderDenialLab();
+  renderProgress();
+  if (state.apiKey) {
+    document.getElementById('apiKeyInput').value = state.apiKey;
+    document.getElementById('apiConfig').style.borderColor = 'var(--green)';
+  }
+}
+
+function updateStats() {
+  const avg = state.scores.length ? Math.round(state.scores.reduce((a,b)=>a+b,0)/state.scores.length) : null;
+  document.getElementById('statScore').textContent = avg ? avg+'%' : '--';
+  document.getElementById('statSessions').textContent = state.sessions;
+  document.getElementById('statLevel').textContent = state.level;
+  document.getElementById('levelBadge').textContent = 'LEVEL ' + state.level;
+
+  // Weak area
+  let weak = '--'; let weakScore = 100;
+  Object.entries(state.domainScores).forEach(([k,v]) => {
+    if (v.length) {
+      const s = Math.round(v.reduce((a,b)=>a+b,0)/v.length);
+      if (s < weakScore) { weakScore = s; weak = k.toUpperCase(); }
+    }
+  });
+  document.getElementById('statWeak').textContent = weak;
+}
+
+// ─── TABS ─────────────────────────────────────────────────────────────────────
+function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
+}
+
+// ─── DAILY SESSION ────────────────────────────────────────────────────────────
+let currentScenarios = [];
+let scenarioAnswers = {};
+
+function generateDailySession() {
+  document.getElementById('dailyResult').classList.remove('show');
+  scenarioAnswers = {};
+  currentScenarios = [];
+
+  const modules = ['intake','coding','claims','denials','payments'];
+  modules.forEach(m => {
+    const pool = SCENARIOS[m] || SCENARIOS.denials;
+    const s = pool[Math.floor(Math.random()*pool.length)];
+    currentScenarios.push({...s, module: m, id: m+'_'+Date.now()});
+  });
+
+  // Update lifecycle
+  const steps = document.querySelectorAll('.lifecycle-step');
+  steps.forEach((s,i) => { s.className = 'lifecycle-step' + (i===0?' active':''); });
+
+  renderScenarios();
+  state.sessions++;
+  saveState();
+  updateStats();
+}
+
+function renderScenarios() {
+  const c = document.getElementById('scenariosContainer');
+  c.innerHTML = currentScenarios.map((s,i) => `
+    <div class="scenario-card ${s.module}" id="scard_${i}">
+      <div class="scenario-meta">
+        <span class="tag module-${s.module}">${s.module}</span>
+        <span class="tag">Level ${state.level}</span>
+        <span class="tag" id="status_${i}">Pending</span>
+      </div>
+      <div class="scenario-issue">${s.issue}</div>
+      <div class="scenario-task">Task: ${s.task}</div>
+      <div class="scenario-actions">
+        <button class="btn success" onclick="markScenario(${i}, true)">✓ Resolved</button>
+        <button class="btn danger" onclick="markScenario(${i}, false)">✗ Needs Review</button>
+        <button class="btn" onclick="showHint(${i})">Hint</button>
+      </div>
+      <div id="hint_${i}" style="display:none; margin-top:12px; padding:12px; background:var(--surface2); border-left:3px solid var(--accent); font-size:13px; color:var(--muted); font-family:var(--font-mono); line-height:1.6;"></div>
+    </div>
+  `).join('');
+}
+
+function markScenario(idx, resolved) {
+  scenarioAnswers[idx] = resolved;
+  const statusEl = document.getElementById('status_'+idx);
+  statusEl.textContent = resolved ? '✓ Resolved' : '✗ Needs Review';
+  statusEl.style.borderColor = resolved ? 'var(--green)' : 'var(--red)';
+  statusEl.style.color = resolved ? 'var(--green)' : 'var(--red)';
+
+  // Update lifecycle
+  const filled = Object.keys(scenarioAnswers).length;
+  const steps = document.querySelectorAll('.lifecycle-step');
+  steps.forEach((s,i) => {
+    if (i < filled) s.className = 'lifecycle-step done';
+    else if (i === filled) s.className = 'lifecycle-step active';
+    else s.className = 'lifecycle-step';
+  });
+}
+
+function showHint(idx) {
+  const s = currentScenarios[idx];
+  const hints = {
+    intake: 'Check registration accuracy. Front-end errors cause 90% of preventable denials.',
+    coding: 'Verify ICD-10 → CPT medical necessity linkage. Check LCD/NCD guidelines.',
+    claims: 'Review claim form fields against payer requirements. Check 837 loops.',
+    payments: 'Compare ERA to contract. Flag underpayments within 45 days.',
+    denials: 'Identify root cause first: administrative, clinical, or payer error?'
+  };
+  const hint = document.getElementById('hint_'+idx);
+  hint.style.display = 'block';
+  hint.textContent = hints[s.module] || 'Review HFMA guidelines for this domain.';
+}
+
+function submitAllScenarios() {
+  const total = currentScenarios.length;
+  const resolved = Object.values(scenarioAnswers).filter(Boolean).length;
+  const score = Math.round((resolved/total)*100);
+
+  state.scores.push(score);
+  currentScenarios.forEach((s,i) => {
+    if (state.domainScores[s.module]) {
+      state.domainScores[s.module].push(scenarioAnswers[i] ? 100 : 40);
+    }
+  });
+
+  // Auto level
+  const avg = Math.round(state.scores.slice(-5).reduce((a,b)=>a+b,0)/Math.min(state.scores.length,5));
+  if (avg > 85 && state.level < 6) state.level++;
+  else if (avg < 60 && state.level > 1) state.level--;
+
+  saveState();
+  updateStats();
+  renderProgress();
+
+  const grade = score>=90?'A — Excellent':score>=75?'B — Good Work':score>=60?'C — Keep Practicing':'D — Review Fundamentals';
+  document.getElementById('dailyScoreNum').textContent = score+'%';
+  document.getElementById('dailyScoreNum').style.color = score>=75?'var(--green)':score>=60?'var(--yellow)':'var(--red)';
+  document.getElementById('dailyScoreGrade').textContent = 'Grade: '+grade;
+  document.getElementById('dailyFeedback').textContent = `${resolved} of ${total} scenarios resolved. ${score<75?'Focus on your weak areas in the Denial Lab.':'Strong performance. Increase difficulty by leveling up.'}`;
+  document.getElementById('dailyResult').classList.add('show');
+}
+
+// ─── QUIZ ─────────────────────────────────────────────────────────────────────
+let quizQuestions = [];
+let quizCurrent = 0;
+let quizScore = 0;
+let quizAnswered = false;
+
+function startQuiz() {
+  document.getElementById('quizResult').classList.remove('show');
+  quizQuestions = [...QUIZ_BANK].sort(()=>Math.random()-0.5).slice(0,10);
+  quizCurrent = 0; quizScore = 0;
+  renderQuizQuestion();
+  document.getElementById('quizNav').innerHTML = '<button class="btn primary" onclick="submitQuizAnswer()">Submit Answer</button>';
+}
+
+function renderQuizQuestion() {
+  quizAnswered = false;
+  const q = quizQuestions[quizCurrent];
+  document.getElementById('quizProgress').style.width = ((quizCurrent/10)*100)+'%';
+  document.getElementById('quizContainer').innerHTML = `
+    <div class="quiz-question">
+      <div class="question-num">Question ${quizCurrent+1} of 10</div>
+      <div class="question-text">${q.q}</div>
+      <div class="options">
+        ${q.opts.map((o,i)=>`
+          <div class="option" id="opt_${i}" onclick="selectOption(${i})">
+            <div class="option-letter">${String.fromCharCode(65+i)}</div>
+            ${o}
+          </div>`).join('')}
+      </div>
+      <div id="quizExplain" style="display:none; margin-top:16px; padding:12px; background:var(--surface2); border-left:3px solid var(--green); font-size:13px; color:var(--muted); font-family:var(--font-mono);"></div>
+    </div>
+  `;
+}
+
+let selectedOpt = null;
+function selectOption(i) {
+  if (quizAnswered) return;
+  selectedOpt = i;
+  document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  document.getElementById('opt_'+i).classList.add('selected');
+}
+
+function submitQuizAnswer() {
+  if (selectedOpt === null) return;
+  quizAnswered = true;
+  const q = quizQuestions[quizCurrent];
+  const correct = selectedOpt === q.ans;
+  if (correct) quizScore++;
+
+  document.querySelectorAll('.option').forEach((o,i) => {
+    if (i === q.ans) o.classList.add('correct');
+    else if (i === selectedOpt && !correct) o.classList.add('wrong');
+  });
+
+  const explain = document.getElementById('quizExplain');
+  explain.style.display = 'block';
+  explain.textContent = correct ? '✓ Correct! ' + getExplanation(quizCurrent) : '✗ Incorrect. ' + getExplanation(quizCurrent);
+  explain.style.borderLeftColor = correct ? 'var(--green)' : 'var(--red)';
+
+  selectedOpt = null;
+  if (quizCurrent < 9) {
+    document.getElementById('quizNav').innerHTML = '<button class="btn primary" onclick="nextQuizQuestion()">Next Question →</button>';
+  } else {
+    document.getElementById('quizNav').innerHTML = '<button class="btn primary" onclick="finishQuiz()">See Results</button>';
+  }
+}
+
+function getExplanation(idx) {
+  const explanations = [
+    'CO-197 is the standard timely filing denial code used by most payers.',
+    'The ERA (835) is the electronic remittance advice showing payment detail.',
+    'COB rules require Medicare to pay first when it is the primary payer.',
+    'The 271 is the eligibility response transaction in the X12 EDI standard.',
+    'Modifier 25 indicates a significant, separately identifiable E/M service.',
+    'CO-50 is the non-covered/medical necessity denial code.',
+    'Clearinghouses translate and route claims between providers and payers.',
+    'ICD-10-CM is used for outpatient/physician diagnoses.',
+    'Medicare requires clean claims to be paid within 30 days electronically.',
+    'Assignment of benefits authorizes payer to send payment directly to provider.',
+    'Eligibility issues are preventable during patient access/registration.',
+    'EOB goes to both the provider and the patient.',
+    'Root cause analysis is the first and most critical step in denial management.',
+    'HCPCS Level II codes begin with a letter (A-V) for supplies and services.',
+    'Prior authorization confirms medical necessity before service is rendered.',
+  ];
+  return explanations[idx] || '';
+}
+
+function nextQuizQuestion() {
+  quizCurrent++;
+  renderQuizQuestion();
+  document.getElementById('quizNav').innerHTML = '<button class="btn primary" onclick="submitQuizAnswer()">Submit Answer</button>';
+}
+
+function finishQuiz() {
+  const pct = Math.round((quizScore/10)*100);
+  const grade = pct>=90?'A — Excellent':pct>=75?'B — Good Work':pct>=60?'C — Keep Practicing':'D — Review Fundamentals';
+  document.getElementById('quizScoreNum').textContent = pct+'%';
+  document.getElementById('quizScoreNum').style.color = pct>=75?'var(--green)':pct>=60?'var(--yellow)':'var(--red)';
+  document.getElementById('quizScoreGrade').textContent = grade + ' · ' + quizScore + '/10 correct';
+  document.getElementById('quizResult').classList.add('show');
+  document.getElementById('quizContainer').innerHTML = '';
+  document.getElementById('quizNav').innerHTML = '';
+  document.getElementById('quizProgress').style.width = '100%';
+  state.scores.push(pct);
+  state.domainScores.coding.push(pct);
+  saveState(); updateStats(); renderProgress();
+}
+
+// ─── DENIAL LAB ───────────────────────────────────────────────────────────────
+function renderDenialLab() {
+  document.getElementById('denialContainer').innerHTML = DENIALS.map((d,i) => `
+    <div class="denial-card">
+      <div class="denial-code">${d.code}</div>
+      <div class="denial-name">${d.name}</div>
+      <div class="denial-desc">${d.desc}</div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn primary" onclick="toggleFix(${i})">View Fix Steps</button>
+        <button class="btn" onclick="practiceDenial('${d.code}', '${d.name}')">Practice</button>
+      </div>
+      <div class="fix-steps" id="fix_${i}">
+        ${d.fixes.map((f,j)=>`<div class="fix-step"><div class="step-num">0${j+1}</div><div>${f}</div></div>`).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleFix(i) {
+  document.getElementById('fix_'+i).classList.toggle('show');
+}
+
+function practiceDenial(code, name) {
+  switchTab('ai', document.querySelectorAll('.tab')[4]);
+  document.getElementById('aiInput').value = `I received a ${code} denial (${name}). Walk me through the exact steps to appeal this denial successfully, including what documentation I need and the timeline.`;
+}
+
+// ─── EXAM MODE ────────────────────────────────────────────────────────────────
+let examQuestions = [];
+let examCurrent = 0;
+let examScore = 0;
+let examTimer = null;
+let examSeconds = 7200;
+let examSelectedOpt = null;
+
+function startExam() {
+  document.getElementById('examNotStarted').style.display = 'none';
+  document.getElementById('examResult').classList.remove('show');
+  document.getElementById('examActive').style.display = 'block';
+
+  examQuestions = [];
+  while (examQuestions.length < 75) {
+    examQuestions = [...examQuestions, ...QUIZ_BANK];
+  }
+  examQuestions = examQuestions.slice(0,75).sort(()=>Math.random()-0.5);
+  examCurrent = 0; examScore = 0; examSelectedOpt = null;
+  examSeconds = 7200;
+
+  clearInterval(examTimer);
+  examTimer = setInterval(() => {
+    examSeconds--;
+    const h = Math.floor(examSeconds/3600);
+    const m = Math.floor((examSeconds%3600)/60);
+    const s = examSeconds%60;
+    document.getElementById('examTimer').textContent =
+      `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    if (examSeconds <= 300) document.getElementById('examTimer').classList.add('urgent');
+    if (examSeconds <= 0) endExam();
+  }, 1000);
+
+  renderExamQuestion();
+}
+
+function renderExamQuestion() {
+  const q = examQuestions[examCurrent];
+  const pct = Math.round((examCurrent/75)*100);
+  document.getElementById('examQNum').textContent = `Question ${examCurrent+1} of 75`;
+  document.getElementById('examPct').textContent = pct+'% Complete';
+  document.getElementById('examProgress').style.width = pct+'%';
+  examSelectedOpt = null;
+
+  document.getElementById('examQContainer').innerHTML = `
+    <div class="quiz-question">
+      <div class="question-text">${q.q}</div>
+      <div class="options">
+        ${q.opts.map((o,i)=>`
+          <div class="option" id="eopt_${i}" onclick="selectExamOption(${i})">
+            <div class="option-letter">${String.fromCharCode(65+i)}</div>${o}
+          </div>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function selectExamOption(i) {
+  examSelectedOpt = i;
+  document.querySelectorAll('#examQContainer .option').forEach(o => o.classList.remove('selected'));
+  document.getElementById('eopt_'+i).classList.add('selected');
+}
+
+function nextExamQuestion() {
+  if (examSelectedOpt !== null && examQuestions[examCurrent].ans === examSelectedOpt) examScore++;
+  examCurrent++;
+  if (examCurrent >= 75) { endExam(); return; }
+  renderExamQuestion();
+}
+
+function endExam() {
+  clearInterval(examTimer);
+  document.getElementById('examActive').style.display = 'none';
+  const pct = Math.round((examScore/75)*100);
+  const passed = pct >= 75;
+  document.getElementById('examScoreNum').textContent = pct+'%';
+  document.getElementById('examScoreNum').style.color = passed ? 'var(--green)' : 'var(--red)';
+  document.getElementById('examScoreGrade').textContent = passed ? '✓ PASS — You meet the CRCR passing threshold' : '✗ FAIL — Score below 75% passing threshold';
+
+  const timeUsed = 7200 - examSeconds;
+  const mins = Math.floor(timeUsed/60);
+  document.getElementById('examBreakdown').innerHTML = `
+    <div class="weak-item"><span class="weak-label">Questions Correct</span><span class="weak-score">${examScore}/75</span></div>
+    <div class="weak-item"><span class="weak-label">Score</span><span class="weak-score" style="color:${passed?'var(--green)':'var(--red)'}">${pct}%</span></div>
+    <div class="weak-item"><span class="weak-label">Time Used</span><span class="weak-score">${mins} minutes</span></div>
+    <div class="weak-item"><span class="weak-label">Passing Threshold</span><span class="weak-score">75%</span></div>
+  `;
+  document.getElementById('examResult').classList.add('show');
+  state.scores.push(pct); saveState(); updateStats();
+}
+
+// ─── PROGRESS ─────────────────────────────────────────────────────────────────
+function renderProgress() {
+  const domains = Object.entries(state.domainScores);
+  document.getElementById('progressList').innerHTML = domains.map(([k,v]) => {
+    const avg = v.length ? Math.round(v.reduce((a,b)=>a+b,0)/v.length) : 0;
+    const color = avg>=80?'var(--green)':avg>=60?'var(--yellow)':'var(--red)';
+    return `
+      <div class="weak-item">
+        <span class="weak-label" style="text-transform:capitalize;">${k}</span>
+        <span class="weak-score" style="color:${color}">${avg||'--'}${avg?'%':''}</span>
+        <div class="weak-bar-wrap"><div class="weak-bar" style="width:${avg}%; background:${color};"></div></div>
+        <span style="font-family:var(--font-mono); font-size:10px; color:var(--muted);">${v.length} sessions</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function resetProgress() {
+  if (!confirm('Reset all progress?')) return;
+  state = { level:1, sessions:0, scores:[], domainScores:{intake:[],coding:[],claims:[],payments:[],denials:[]}, apiKey: state.apiKey };
+  saveState(); updateStats(); renderProgress();
+}
+
+// ─── AI TUTOR ─────────────────────────────────────────────────────────────────
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key) return;
+  state.apiKey = key;
+  saveState();
+  document.getElementById('apiConfig').style.borderColor = 'var(--green)';
+}
+
+function setAIPrompt(text) {
+  switchTab('ai', document.querySelectorAll('.tab')[4]);
+  document.getElementById('aiInput').value = text;
+}
+
+async function askAI() {
+  const question = document.getElementById('aiInput').value.trim();
+  if (!question) return;
+
+  const apiKey = state.apiKey || document.getElementById('apiKeyInput').value.trim();
+  const responseEl = document.getElementById('aiResponse');
+  const loadingEl = document.getElementById('aiLoading');
+
+  if (!apiKey) {
+    responseEl.style.display = 'block';
+    responseEl.textContent = '⚠ Add your Groq API key above to enable AI responses.';
+    return;
+  }
+
+  loadingEl.classList.add('show');
+  responseEl.classList.remove('show');
+
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 1024,
+        messages: [
+          { role: 'system', content: 'You are a healthcare revenue cycle expert and CRCR certification trainer. Answer questions clearly and practically. Focus on what the student needs to know to pass the CRCR exam and perform well in real RCM operations. Be concise and use bullet points where helpful.' },
+          { role: 'user', content: question }
+        ]
+      })
+    });
+    const data = await res.json();
+    const answer = data.choices?.[0]?.message?.content || 'No response received.';
+    loadingEl.classList.remove('show');
+    responseEl.textContent = answer;
+    responseEl.classList.add('show');
+  } catch(e) {
+    loadingEl.classList.remove('show');
+    responseEl.textContent = 'Error: ' + e.message;
+    responseEl.classList.add('show');
+  }
+}
+
+// ─── START ─────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
