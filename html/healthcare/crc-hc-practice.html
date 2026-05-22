@@ -627,13 +627,13 @@ function renderStudyCards(){
 }
 
 /* ══ VIEW SWITCHING ═════════════════════════════════════ */
-function switchView(name,el){
-  document.querySelectorAll('.ttab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  if(el)el.classList.add('active');
-  document.getElementById('view-'+name).classList.add('active');
-  if(name==='crcr') crcrRefresh();
-}
+function switchView(view, el){
+  if(window.parent && window.parent !== window){
+    window.parent.postMessage({action:'switchView',view:view},'*');
+  } else {
+    const urls={dashboard:'/',accounting:'/html/finops-suite/finops-accounting.html',operations:'/html/finops-suite/finops-operations.html',financial:'/html/tsm-demo-launcher.html',study:'/html/finops-suite/crcr-study-mode.html',ai:'/html/finops-suite/crcr-study-mode.html',crcr:'/html/healthcare/crc-hc-practice.html'};
+    if(urls[view]) window.location.href=urls[view];
+  }
 
 /* ══ CRCR DATA ══════════════════════════════════════════ */
 const CRCR_DOMAINS={
