@@ -375,6 +375,7 @@ app.post('/api/music/guidance', express.json(), async (req, res) => {
   );
   res.json({ ok: true, ...result });
 });
+app.post('/api/finops/bnca/report', (req, res) => res.json({ok:true}));
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`\n🚀 TSM Shell on http://0.0.0.0:${PORT}`);
