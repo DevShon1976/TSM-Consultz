@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CRCR · HC Practice Command · TSM</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+:root{
+  --bg:#04080e;--s1:#060d18;--s2:#091220;--s3:#0c1828;
+  --line:rgba(0,255,198,.14);--line2:rgba(0,255,198,.26);
+  --text:#d8f0ff;--muted:#5e7e96;--muted2:#8aa4b8;
+  --green:#00ffc6;--blue:#00aaff;--yellow:#ffc400;
+  --red:#ff4455;--purple:#b56cff;--orange:#ff7a00;
+  --intake:#00aaff;--coding:#00ffc6;--claims:#ffc400;
+  --payments:#b56cff;--denials:#ff4455;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;display:flex;flex-direction:column}
+
+/* TOP BAR */
+.top{height:46px;min-height:46px;background:var(--s1);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 16px;gap:14px;z-index:100}
+.logo{font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--green);white-space:nowrap;font-weight:600}
+.logo span{color:var(--muted);font-weight:300}
+.domain-tabs{display:flex;height:100%;flex:1;gap:0}
+.dtab{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:0 14px;border:none;background:transparent;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;position:relative}
+.dtab:hover{color:var(--text)}
+.dtab.active{color:var(--green);border-bottom-color:var(--green)}
+.dtab[data-domain="intake"].active{color:var(--intake);border-bottom-color:var(--intake)}
+.dtab[data-domain="coding"].active{color:var(--coding);border-bottom-color:var(--coding)}
+.dtab[data-domain="claims"].active{color:var(--claims);border-bottom-color:var(--claims)}
+.dtab[data-domain="payments"].active{color:var(--payments);border-bottom-color:var(--payments)}
+.dtab[data-domain="denials"].active{color:var(--denials);border-bottom-color:var(--denials)}
+.dtab[data-domain="quiz"].active{color:var(--yellow);border-bottom-color:var(--yellow)}
+.dtab[data-domain="denial-lab"].active{color:var(--orange);border-bottom-color:var(--orange)}
+.top-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.stat-pill{font-family:var(--mono);font-size:9px;padding:4px 10px;border:1px solid var(--line2);color:var(--muted2);letter-spacing:.1em;white-space:nowrap}
+.stat-pill.good{border-color:rgba(0,255,198,.4);color:var(--green)}
+.api-btn{font-family:var(--mono);font-size:9px;padding:4px 10px;border:1px solid var(--line2);background:transparent;color:var(--muted);cursor:pointer;letter-spacing:.1em;text-transform:uppercase;transition:all .15s}
+.api-btn:hover{border-color:var(--green);color:var(--green)}
+.api-btn.live{border-color:var(--green);color:var(--green)}
+
+/* WORKSPACE */
+.workspace{flex:1;display:grid;grid-template-columns:380px 1fr;overflow:hidden}
+
+/* LEFT STUDY PANEL */
+.study-panel{background:var(--s1);border-right:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
+.panel-hdr{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.panel-hdr-title{font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--green)}
+.panel-hdr-badge{font-family:var(--mono);font-size:9px;padding:2px 8px;border:1px solid var(--line2);color:var(--muted);letter-spacing:.08em}
+.panel-scroll{flex:1;overflow-y:auto;padding:12px}
+
+/* CONCEPT BLOCK */
+.concept-block{background:var(--s2);border:1px solid var(--line);padding:14px;margin-bottom:10px;border-left:3px solid var(--green)}
+.concept-label{font-family:var(--mono);font-size:8px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+.concept-title{font-size:13px;font-weight:600;margin-bottom:8px}
+.concept-body{font-size:12px;color:var(--muted2);line-height:1.7}
+.concept-body b{color:var(--text);font-weight:500}
+
+/* SCENARIO CARDS */
+.scenario-card{background:var(--s2);border:1px solid var(--line);padding:12px 14px;margin-bottom:8px;cursor:default;transition:all .15s}
+.scenario-card:hover{border-color:var(--line2)}
+.scenario-card.done{opacity:.55}
+.scenario-meta{display:flex;gap:6px;margin-bottom:8px;align-items:center}
+.s-tag{font-family:var(--mono);font-size:8px;padding:2px 7px;border:1px solid var(--line);color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.s-tag.intake{border-color:rgba(0,170,255,.4);color:var(--intake)}
+.s-tag.coding{border-color:rgba(0,255,198,.4);color:var(--coding)}
+.s-tag.claims{border-color:rgba(255,196,0,.4);color:var(--claims)}
+.s-tag.payments{border-color:rgba(181,108,255,.4);color:var(--payments)}
+.s-tag.denials{border-color:rgba(255,68,85,.4);color:var(--denials)}
+.s-tag.quiz{border-color:rgba(255,196,0,.4);color:var(--yellow)}
+.s-issue{font-size:12px;font-weight:500;margin-bottom:5px;line-height:1.5}
+.s-task{font-size:11px;color:var(--muted2);margin-bottom:10px;line-height:1.5}
+.s-task::before{content:'Task: ';color:var(--muted);font-family:var(--mono);font-size:10px}
+.s-actions{display:flex;gap:6px;flex-wrap:wrap}
+.s-btn{font-family:var(--mono);font-size:9px;padding:5px 10px;border:1px solid var(--line2);background:transparent;color:var(--muted2);cursor:pointer;letter-spacing:.07em;text-transform:uppercase;transition:all .15s}
+.s-btn:hover{border-color:var(--green);color:var(--green)}
+.s-btn.resolve{border-color:rgba(0,255,198,.3);color:var(--green)}
+.s-btn.resolve:hover{background:rgba(0,255,198,.1)}
+.s-btn.fail{border-color:rgba(255,68,85,.3);color:var(--red)}
+.s-btn.fail:hover{background:rgba(255,68,85,.1)}
+.hint-block{margin-top:10px;padding:10px 12px;background:var(--s3);border-left:3px solid var(--yellow);font-family:var(--mono);font-size:11px;color:var(--muted2);line-height:1.6;display:none}
+.scenario-card.expanded .hint-block{display:block}
+
+/* QUIZ */
+.quiz-q{background:var(--s2);border:1px solid var(--line);padding:16px;margin-bottom:10px}
+.quiz-num{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.15em;margin-bottom:8px}
+.quiz-text{font-size:13px;font-weight:500;margin-bottom:12px;line-height:1.5}
+.quiz-opts{display:grid;gap:6px}
+.quiz-opt{padding:9px 12px;background:var(--s3);border:1px solid var(--line);color:var(--muted2);cursor:pointer;font-size:12px;text-align:left;transition:all .15s;font-family:var(--sans)}
+.quiz-opt:hover{border-color:var(--blue);color:var(--text)}
+.quiz-opt.correct{border-color:var(--green);color:var(--green);background:rgba(0,255,198,.06)}
+.quiz-opt.wrong{border-color:var(--red);color:var(--red);background:rgba(255,68,85,.06)}
+.quiz-opt:disabled{cursor:default;pointer-events:none}
+.quiz-result{margin-top:8px;font-family:var(--mono);font-size:10px;padding:8px 10px;border-left:3px solid var(--green)}
+.quiz-result.wrong{border-left-color:var(--red);color:var(--red)}
+.quiz-result.correct{color:var(--green);background:rgba(0,255,198,.04)}
+
+/* DENIAL LAB */
+.denial-card{background:var(--s2);border:1px solid var(--line);padding:14px;margin-bottom:8px}
+.denial-card .dc-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.dc-code{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--red)}
+.dc-name{font-size:13px;font-weight:500}
+.dc-desc{font-size:12px;color:var(--muted2);line-height:1.6;margin-bottom:10px}
+.dc-fixes{margin-top:6px}
+.dc-fix-label{font-family:var(--mono);font-size:8px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+.dc-fix-list{list-style:none;display:grid;gap:4px}
+.dc-fix-list li{font-size:11px;color:var(--muted2);padding:5px 8px;background:var(--s3);border-left:2px solid var(--green);line-height:1.5}
+.dc-fix-list li::before{content:'→ ';color:var(--green);font-family:var(--mono)}
+
+/* RIGHT - HC NODE PANEL */
+.node-panel{display:flex;flex-direction:column;overflow:hidden}
+.node-panel-hdr{padding:10px 14px;border-bottom:1px solid var(--line);background:var(--s1);display:flex;align-items:center;gap:10px}
+.node-panel-title{font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+.node-panel-title span{color:var(--green)}
+.node-grid-wrap{flex:1;overflow-y:auto;padding:14px}
+.node-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start}
+.node-card{background:var(--s2);border:1px solid var(--line);padding:14px;position:relative;overflow:hidden;transition:border-color .2s}
+.node-card::before{content:'';position:absolute;left:0;top:0;right:0;height:3px;background:var(--nc,var(--green))}
+.node-card:hover{border-color:var(--line2)}
+.node-card.highlighted{border-color:var(--nc,var(--green))}
+.nc-live{font-family:var(--mono);font-size:8px;color:var(--nc,var(--green));letter-spacing:.15em;margin-bottom:6px}
+.nc-title{font-size:14px;font-weight:600;color:var(--nc,var(--green));margin-bottom:3px;letter-spacing:.06em}
+.nc-meta{font-size:10px;color:var(--muted);margin-bottom:8px;line-height:1.5}
+.nc-issue-label{font-family:var(--mono);font-size:8px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:4px}
+.nc-issue{font-size:11px;color:var(--muted2);line-height:1.5;margin-bottom:10px}
+.nc-actions{display:flex;gap:6px;flex-wrap:wrap}
+.nc-btn{font-family:var(--mono);font-size:9px;padding:6px 10px;border:1px solid var(--line2);background:transparent;color:var(--muted2);cursor:pointer;letter-spacing:.07em;text-transform:uppercase;transition:all .15s}
+.nc-btn:hover{border-color:var(--nc,var(--green));color:var(--nc,var(--green))}
+.nc-btn.primary{border-color:var(--nc,var(--green));color:var(--nc,var(--green))}
+.nc-btn.primary:hover{background:rgba(0,255,198,.08)}
+.nc-relevance{position:absolute;right:10px;top:10px;font-family:var(--mono);font-size:8px;padding:2px 6px;border:1px solid var(--nc,var(--green));color:var(--nc,var(--green));letter-spacing:.08em;opacity:.7}
+
+/* AI PANEL */
+.ai-drawer{background:var(--s1);border-top:1px solid var(--line);display:flex;flex-direction:column;max-height:260px}
+.ai-drawer-hdr{padding:8px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.ai-drawer-title{font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase}
+.ai-drawer-title span{color:var(--yellow)}
+.ai-messages{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:8px}
+.ai-msg{font-size:12px;line-height:1.6;max-width:90%}
+.ai-msg.user{background:rgba(0,170,255,.08);border:1px solid rgba(0,170,255,.2);padding:8px 12px;align-self:flex-end;color:var(--text)}
+.ai-msg.ai{background:var(--s2);border:1px solid var(--line);padding:8px 12px;align-self:flex-start;color:var(--text);white-space:pre-wrap}
+.ai-msg.ai .src{font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:.1em;margin-bottom:4px;text-transform:uppercase}
+.ai-input-row{padding:8px 10px;display:flex;gap:6px;border-top:1px solid var(--line)}
+.ai-input{flex:1;background:var(--s2);border:1px solid var(--line);color:var(--text);font-family:var(--sans);font-size:12px;padding:6px 10px;outline:none;min-height:32px;resize:none}
+.ai-input:focus{border-color:var(--green)}
+.ai-send{font-family:var(--mono);font-size:9px;padding:6px 12px;border:1px solid var(--green);background:transparent;color:var(--green);cursor:pointer;letter-spacing:.1em;text-transform:uppercase;transition:all .15s;white-space:nowrap}
+.ai-send:hover{background:rgba(0,255,198,.1)}
+
+/* SCORE BAR */
+.score-bar{height:24px;min-height:24px;background:var(--s1);border-top:1px solid var(--line);display:flex;align-items:center;padding:0 14px;gap:12px}
+.sb-seg{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.08em}
+.sb-seg.hi{color:var(--green)}
+.sb-dot{width:5px;height:5px;border-radius:50%;background:var(--green)}
+.sb-div{color:var(--line2)}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;align-items:center;justify-content:center}
+.overlay.show{display:flex}
+.modal{background:var(--s1);border:1px solid var(--line2);padding:24px;width:340px}
+.modal-title{font-family:var(--mono);font-size:11px;color:var(--green);letter-spacing:.15em;text-transform:uppercase;margin-bottom:16px}
+.modal-input{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--text);font-family:var(--mono);font-size:12px;padding:8px 10px;outline:none;margin-bottom:8px}
+.modal-input:focus{border-color:var(--green)}
+.modal-note{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.06em;margin-bottom:14px;line-height:1.6}
+.modal-row{display:flex;gap:8px}
+.modal-btn{flex:1;font-family:var(--mono);font-size:10px;padding:8px;border:1px solid var(--line2);background:transparent;color:var(--muted);cursor:pointer;letter-spacing:.08em;text-transform:uppercase;transition:all .15s}
+.modal-btn.primary{border-color:var(--green);color:var(--green)}
+.modal-btn.primary:hover{background:rgba(0,255,198,.1)}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--s1)}
+::-webkit-scrollbar-thumb{background:rgba(0,255,198,.2)}
+
+/* Progress pill */
+.prog-pill{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9px;padding:2px 8px;border:1px solid var(--line);color:var(--muted);letter-spacing:.08em}
+.prog-fill{display:inline-block;height:4px;background:var(--green);transition:width .4s}
+.prog-track{display:inline-block;width:40px;height:4px;background:var(--s3);vertical-align:middle}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="top">
+  <div class="logo">CRCR <span>//</span> HC Practice Command</div>
+  <div class="domain-tabs">
+    <button class="dtab active" data-domain="intake" onclick="setDomain('intake',this)">01 · Intake</button>
+    <button class="dtab" data-domain="coding" onclick="setDomain('coding',this)">02 · Coding</button>
+    <button class="dtab" data-domain="claims" onclick="setDomain('claims',this)">03 · Claims</button>
+    <button class="dtab" data-domain="payments" onclick="setDomain('payments',this)">04 · Payments</button>
+    <button class="dtab" data-domain="denials" onclick="setDomain('denials',this)">05 · Denials</button>
+    <button class="dtab" data-domain="quiz" onclick="setDomain('quiz',this)">Quiz Bank</button>
+    <button class="dtab" data-domain="denial-lab" onclick="setDomain('denial-lab',this)">Denial Lab</button>
+  </div>
+  <div class="top-right">
+    <div class="stat-pill" id="pillScore">Score: --</div>
+    <div class="stat-pill" id="pillLevel">Lvl 1</div>
+    <div class="stat-pill good" id="pillSessions">0 sessions</div>
+    <button class="api-btn" id="apiBtn" onclick="showModal()">⚙ AI KEY</button>
+  </div>
+</div>
+
+<!-- WORKSPACE -->
+<div class="workspace">
+
+  <!-- LEFT: STUDY PANEL -->
+  <div class="study-panel">
+    <div class="panel-hdr">
+      <div class="panel-hdr-title" id="panelTitle">Patient Intake</div>
+      <div class="panel-hdr-badge" id="panelBadge">INTAKE</div>
+      <div style="margin-left:auto">
+        <div class="prog-pill"><div class="prog-track"><div class="prog-fill" id="domainProg" style="width:0%"></div></div><span id="domainProgTxt">0/0</span></div>
+      </div>
+    </div>
+    <div class="panel-scroll" id="studyContent"></div>
+  </div>
+
+  <!-- RIGHT: HC NODES + AI -->
+  <div class="node-panel">
+    <div class="node-panel-hdr">
+      <div class="node-panel-title"><span id="nodePanelDomain">INTAKE</span> → HC PRACTICE NODES</div>
+      <div style="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--muted)">Click a scenario → nodes highlight · Practice in the relevant node</div>
+    </div>
+    <div class="node-grid-wrap">
+      <div class="node-grid" id="nodeGrid"></div>
+    </div>
+
+    <!-- AI DRAWER -->
+    <div class="ai-drawer">
+      <div class="ai-drawer-hdr">
+        <div class="ai-drawer-title">AI Tutor <span>· Ask while you practice</span></div>
+        <div style="margin-left:auto;display:flex;gap:6px">
+          <button class="nc-btn" onclick="quickAsk('Explain the key concepts I need to know for this domain in simple terms')">Explain domain</button>
+          <button class="nc-btn" onclick="quickAsk('Give me a tip for the hardest part of this workflow')">Top tip</button>
+          <button class="nc-btn" onclick="quickAsk('Quiz me on one concept from this domain with 4 options')">Quick quiz</button>
+        </div>
+      </div>
+      <div class="ai-messages" id="aiMessages">
+        <div class="ai-msg ai"><div class="src">CRCR AI · TSM</div>Select a domain tab to begin. I can explain concepts, quiz you on denial codes, walk through scenarios, or help you understand what you're seeing in the HC nodes.</div>
+      </div>
+      <div class="ai-input-row">
+        <textarea class="ai-input" id="aiInput" rows="1" placeholder="Ask about RCM, denial codes, coding rules..." onkeydown="aiKey(event)"></textarea>
+        <button class="ai-send" onclick="sendAI()">Send →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="score-bar">
+  <div class="sb-dot"></div>
+  <div class="sb-seg hi">CRCR · Healthcare Revenue Cycle</div>
+  <div class="sb-div">·</div>
+  <div class="sb-seg" id="sbDomain">Domain: Intake</div>
+  <div class="sb-div">·</div>
+  <div class="sb-seg" id="sbProgress">0 scenarios resolved today</div>
+  <div class="sb-div">·</div>
+  <div class="sb-seg" id="sbTime"></div>
+  <div style="margin-left:auto;display:flex;gap:8px">
+    <div class="sb-seg">Weak: <span style="color:var(--red)" id="sbWeak">--</span></div>
+    <div class="sb-div">·</div>
+    <div class="sb-seg">Avg: <span style="color:var(--green)" id="sbAvg">--%</span></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="hideModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">⚙ AI Configuration</div>
+    <div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;margin-bottom:6px">Groq API Key</div>
+    <input class="modal-input" type="password" id="mKey" placeholder="gsk_...">
+    <div class="modal-note">Free at console.groq.com · Powers AI Tutor explanations and coaching</div>
+    <div class="modal-row">
+      <button class="modal-btn" onclick="hideModal()">Cancel</button>
+      <button class="modal-btn primary" onclick="saveCfg()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ─── STATE ─────────────────────────────────────────────── */
+let ST = JSON.parse(localStorage.getItem('crcr_hc') || '{}');
+ST = Object.assign({apiKey:'',scores:[],sessions:0,level:1,resolved:{},domainScores:{intake:[],coding:[],claims:[],payments:[],denials:[]}},ST);
+let curDomain = 'intake';
+function save(){localStorage.setItem('crcr_hc',JSON.stringify(ST))}
+
+/* ─── DATA ───────────────────────────────────────────────── */
+const DOMAINS = {
+  intake:{
+    label:'Patient Intake',badge:'INTAKE',color:'var(--intake)',
+    concept:{
+      title:'Patient Access & Eligibility',
+      body:'The intake cycle starts before the clinical visit. <b>270/271 transactions</b> verify eligibility in real-time. <b>COB (Coordination of Benefits)</b> determines payer order when a patient has multiple insurances. <b>Prior authorization</b> must be obtained before scheduled procedures or a CO-15/CO-197 denial results. Front-end errors cause over <b>60% of preventable denials</b> — intake accuracy is mission-critical.'
+    },
+    scenarios:[
+      {id:'i1',issue:'Patient registered with incorrect date of birth',task:'Identify impact on eligibility verification and correct the registration'},
+      {id:'i2',issue:'Insurance ID entered without leading zeros',task:'Explain how this causes a 271 eligibility failure and what the fix path is'},
+      {id:'i3',issue:'Primary and secondary insurance not coordinated',task:'Apply COB rules to determine correct billing order'},
+      {id:'i4',issue:'Prior authorization not obtained before MRI',task:'Identify which denial code will result (CO-15) and the resolution path'},
+      {id:'i5',issue:'Patient address does not match insurance records',task:'Explain the downstream claim impact and how to correct before submission'},
+    ],
+    hints:{
+      i1:'Check registration accuracy. 270/271 eligibility match requires exact DOB. A mismatch returns a 271 with benefit=inactive.',
+      i2:'Payer enrollment files store member IDs with exact formatting. Leading zero mismatches cause a "subscriber not found" 271 rejection.',
+      i3:'Medicare is primary over commercial (MSP rules). Medicaid is always payer of last resort. Verify COB every 90 days at minimum.',
+      i4:'CO-15 = services denied because prior authorization was not obtained. Get retro-authorization within payer window (usually 24–72 hrs).',
+      i5:'Address mismatches trigger 835 CO-16 (missing info) on claims. Correct in registration + re-verify eligibility before submitting.'
+    },
+    nodes:['insurance','operations']
+  },
+  coding:{
+    label:'Medical Coding',badge:'CODING',color:'var(--coding)',
+    concept:{
+      title:'CPT / ICD-10 / HCPCS Coding Rules',
+      body:'<b>ICD-10-CM</b> diagnoses must support medical necessity for every CPT ordered. <b>Modifier 25</b> is required when an E/M service is billed same-day as a procedure. <b>Modifier 59</b> breaks unbundling when separate distinct services are performed. <b>NCCI edits</b> define which CPT pairs bundle by default. HCPCS Level II codes (A–V prefix) are used for supplies, DME, and drugs — some payers require CPT instead.'
+    },
+    scenarios:[
+      {id:'c1',issue:'ICD-10 code does not support medical necessity for CPT ordered',task:'Identify the ICD-CPT mismatch and correct the coding'},
+      {id:'c2',issue:'Modifier 25 missing on E/M service billed same day as procedure',task:'Explain bundling rules and add correct modifier'},
+      {id:'c3',issue:'Unlisted CPT code submitted without documentation',task:'Find the correct billable code for the procedure performed'},
+      {id:'c4',issue:'HCPCS Level II code submitted to payer that requires CPT',task:'Identify payer-specific coding requirement and fix'},
+    ],
+    hints:{
+      c1:'Pull the LCD (Local Coverage Determination) for the CPT. It lists approved ICD-10 codes. Add supporting diagnosis or query provider.',
+      c2:'Modifier 25 tells the payer the E/M was a significant, separately identifiable service from the procedure. Without it, the E/M bundles.',
+      c3:'Unlisted codes require a paper claim with supporting documentation. Always check if a specific CPT exists before using 99999-type codes.',
+      c4:'Check payer EDI companion guide. Some payers (Medicaid) require HCPCS; others (some commercial) require equivalent CPT only.'
+    },
+    nodes:['billing','medical']
+  },
+  claims:{
+    label:'Claims Processing',badge:'CLAIMS',color:'var(--claims)',
+    concept:{
+      title:'837 Claim Lifecycle & Submission',
+      body:'Claims flow: <b>837P/I created → clearinghouse → 277CA acknowledgment → payer adjudication → 835 ERA</b>. A <b>277 rejection</b> (before adjudication) is a format/loop error, not a denial. <b>Timely filing</b> windows: Medicare = 12 months, commercial = 90–365 days. Track original submission dates from <b>clearinghouse 277CA confirmations</b> — these are your proof of timely filing in appeals. <b>Frequency code 7</b> = replacement claim; code 8 = void.'
+    },
+    scenarios:[
+      {id:'cl1',issue:'Claim submitted past timely filing limit — CO-197 received',task:'Review appeal rights and locate proof of timely filing'},
+      {id:'cl2',issue:'NPI on claim does not match payer credentialing file',task:'Identify correct NPI and map out the resubmission pathway'},
+      {id:'cl3',issue:'Duplicate claim submitted within 30 days of original',task:'Identify as duplicate (CO-18), void or correct before resubmitting'},
+      {id:'cl4',issue:'Clearinghouse returned claim with 277 rejection code',task:'Read rejection loop and fix the 837 claim segment error'},
+    ],
+    hints:{
+      cl1:'Pull the original 277CA or clearinghouse submission report. Attach as proof of timely filing in the appeal. Check if a valid exception applies (payer error, system outage).',
+      cl2:'Type 1 NPI = individual provider; Type 2 = organization. The payer credential file holds the enrolled NPI — must match exactly on Box 33/24J.',
+      cl3:'CO-18 = duplicate claim. Void original first (frequency code 8), then correct and resubmit (frequency code 7) if needed.',
+      cl4:'277 rejections are pre-adjudication. Check the loop/segment codes. Common: missing REF*F8 (original claim number), bad provider NPI, invalid date formats.'
+    },
+    nodes:['billing','compliance']
+  },
+  payments:{
+    label:'Payment Posting',badge:'PAYMENTS',color:'var(--payments)',
+    concept:{
+      title:'ERA / EOB & Payment Reconciliation',
+      body:'<b>ERA (835 transaction)</b> is the electronic remittance. It contains CAS segments with <b>CARC (Claim Adjustment Reason Codes)</b> and <b>RARC (Remittance Advice Remark Codes)</b>. Contractual adjustments (CO-45) = difference between billed charge and contracted rate. <b>Underpayments</b> must be appealed within 45–180 days of the ERA date. A <b>PR code</b> = Patient Responsibility. Always reconcile ERA to your fee schedule before posting — every dollar matters.'
+    },
+    scenarios:[
+      {id:'p1',issue:'ERA shows contractual adjustment greater than contracted fee schedule',task:'Audit ERA against contract terms and flag as underpayment'},
+      {id:'p2',issue:'Payment posted to wrong patient account (transposition error)',task:'Reverse the payment and re-apply correctly'},
+      {id:'p3',issue:'Deductible applied when patient is in deductible-free benefit period',task:'Identify the benefit error and initiate a payer appeal'},
+    ],
+    hints:{
+      p1:'Pull your fee schedule for the CPT. If ERA payment < contracted rate, it\'s an underpayment. File a dispute within the contract\'s appeal window. Document payer remittance date.',
+      p2:'Use a reversal transaction — credit the wrong account, debit the correct account. Post with note of original ERA number. Re-reconcile month-end.',
+      p3:'Call payer to verify benefit period dates. If confirmed error, submit a formal appeal with the patient\'s EOB and plan documents showing the deductible waiver.'
+    },
+    nodes:['financial','billing']
+  },
+  denials:{
+    label:'Denial Management',badge:'DENIALS',color:'var(--denials)',
+    concept:{
+      title:'Denial Root Cause & Appeals Workflow',
+      body:'Denial management is the most high-impact revenue cycle function. Every denial needs a <b>root cause</b> before action: Administrative (wrong NPI, timely filing), Clinical (medical necessity, auth), or Payer Error (incorrect contract interpretation). The denial loop: <b>Receive 835 → identify CARC → assign to owner lane → research root cause → correct/appeal → track resolution → prevent recurrence</b>. Target: deny rate under 5% of submitted charges.'
+    },
+    scenarios:[
+      {id:'d1',issue:'CO-16: Claim lacks information — missing referring provider NPI',task:'Identify missing field from remark code, add NPI, resubmit as corrected claim'},
+      {id:'d2',issue:'CO-50: Not medically necessary — diagnosis does not support CPT',task:'Review LCD, add supporting diagnosis or obtain documentation for appeal'},
+      {id:'d3',issue:'CO-4: Modifier inconsistent with procedure — Modifier 25 error',task:'Review modifier requirements, correct claim, resubmit'},
+      {id:'d4',issue:'PR-1: Deductible not yet met — patient responsibility balance',task:'Bill patient for deductible balance, update billing system'},
+      {id:'d5',issue:'CO-197: Timely filing exceeded — no clearinghouse proof',task:'Determine if exception applies, locate any proof, assess write-off risk'},
+    ],
+    hints:{
+      d1:'CO-16 always comes with N codes (remark codes). Read the N code first — it tells you exactly what field is missing. Common: N264 (referring provider NPI).',
+      d2:'Pull the CMS LCD for the CPT code. If ICD-10 is not on the approved list, query the provider for a supporting diagnosis before appealing.',
+      d3:'Modifier 25 = E/M same day as procedure. Modifier 59 = distinct service. Modifier 26/TC = professional/technical component. Match modifier to the clinical scenario exactly.',
+      d4:'PR codes are patient responsibility — never appeal these to the payer. Update the patient\'s balance and generate a statement. Offer payment plan per policy.',
+      d5:'With no proof, timely filing appeals rarely succeed. Check for any system outage records or payer acknowledgment. If no exception exists, prepare for write-off.'
+    },
+    nodes:['billing','compliance','insurance']
+  },
+  quiz:{
+    label:'Quiz Bank',badge:'QUIZ',color:'var(--yellow)',
+    concept:null,scenarios:[],hints:{},nodes:['billing','compliance','insurance','medical','operations']
+  },
+  'denial-lab':{
+    label:'Denial Code Lab',badge:'LAB',color:'var(--orange)',
+    concept:null,scenarios:[],hints:{},nodes:['billing','compliance']
+  }
+};
+
+const QUIZ_BANK = [
+  {q:'What is the MOST likely cause of a CO-197 denial?',opts:['Incorrect CPT code','Claim submitted after timely filing limit','Missing prior authorization','Invalid NPI'],ans:1},
+  {q:'Which transaction confirms patient eligibility and benefits in real-time?',opts:['837P','835 ERA','271 response','277CA'],ans:2},
+  {q:'A patient has Medicare primary and Medicaid secondary. Which rule applies?',opts:['HIPAA','COB — Medicare pays first','Subrogation','Assignment of benefits'],ans:1},
+  {q:'CO-50 denial means the service is:',opts:['Filed past timely window','Not medically necessary','A duplicate claim','Missing information'],ans:1},
+  {q:'Modifier 25 is required when billing:',opts:['Two surgical procedures same day','E/M service same day as a procedure','Bilateral procedures','Telehealth visit'],ans:1},
+  {q:'A 277 rejection from the clearinghouse indicates:',opts:['The payer denied the claim for medical necessity','A format/loop error before adjudication','The timely filing window has expired','A duplicate claim was detected'],ans:1},
+  {q:'Which CARC code represents the contractual adjustment between billed and paid?',opts:['CO-16','CO-45','CO-50','PR-1'],ans:1},
+  {q:'What does frequency code 7 indicate on a resubmitted claim?',opts:['Original claim','Replacement claim','Voided claim','Late-filed claim'],ans:1},
+  {q:'PR codes on an 835 ERA indicate:',opts:['Payer denied the claim','Patient financial responsibility','Clearinghouse rejection','Contractual write-off'],ans:1},
+  {q:'What is the first step in a denial management workflow?',opts:['Appeal immediately','Identify root cause','Write off the balance','Refile the claim'],ans:1},
+  {q:'HCPCS Level II codes begin with:',opts:['A number 0–9','A letter A–V','The prefix ICD','A CPT modifier'],ans:1},
+  {q:'Which denial is preventable at the patient access stage?',opts:['CO-50 medical necessity','CO-197 timely filing','CO-4 modifier error','CO-15 prior auth not obtained'],ans:3},
+  {q:'An EOB is sent to:',opts:['Clearinghouse only','Provider only','Patient and provider','CMS only'],ans:2},
+  {q:'CO-4 denial most commonly results from:',opts:['A missing diagnosis code','An incorrect or inconsistent modifier','An unlisted procedure code','A duplicate claim number'],ans:1},
+  {q:'What does "clean claim" mean in RCM?',opts:['A claim with no charges','A claim submitted electronically','A claim that can be processed without additional information','A claim approved for payment'],ans:2},
+];
+
+const DENIAL_CODES = [
+  {code:'CO-16',name:'Claim Lacks Information',color:'var(--red)',desc:'The claim is missing data required for adjudication. The remark (N) code will specify exactly what is missing.',fixes:['Read the N remark code — it identifies the exact missing field','Add the required information (NPI, referring provider, NDC, etc.)','Resubmit as corrected claim with frequency code 7','Document fix and root cause in denial log']},
+  {code:'CO-50',name:'Not Medically Necessary',color:'var(--red)',desc:'The diagnosis does not meet the payer\'s medical necessity criteria for the procedure billed.',fixes:['Pull LCD/NCD for the CPT code — check approved ICD-10 list','Query provider for supporting diagnosis if available','Obtain clinical documentation (progress notes, imaging, labs)','Draft appeal with clinical evidence and CPT policy citation','Add supporting ICD-10 codes if documented in the chart']},
+  {code:'CO-197',name:'Timely Filing Exceeded',color:'var(--orange)',desc:'Claim submitted outside the payer\'s timely filing window. Medicare = 12 months; commercial = 90–365 days.',fixes:['Pull clearinghouse 277CA or submission confirmation as proof','Submit appeal with proof of timely filing as attachment','If no proof exists, check for valid exceptions (payer delay, system outage, disaster)','Write off per contractual obligation if no exception applies']},
+  {code:'CO-4',name:'Modifier Inconsistency',color:'var(--orange)',desc:'The modifier used is inconsistent with the procedure code or payer-specific billing rules.',fixes:['Review modifier requirements for the CPT code','Verify Modifier 25 is present for same-day E/M + procedure','Check if Modifier 59 or XE/XP/XS/XU is more appropriate','Correct modifier and resubmit as corrected claim']},
+  {code:'CO-18',name:'Duplicate Claim',color:'var(--yellow)',desc:'The payer identified this as a duplicate of a previously processed claim.',fixes:['Pull original claim and compare — verify if true duplicate','If corrected/replacement, void original (frequency code 8) first','Resubmit corrected claim with frequency code 7','If original was underpaid, open an underpayment dispute instead']},
+  {code:'CO-15',name:'Authorization Not Obtained',color:'var(--red)',desc:'The service required prior authorization and none was obtained before the date of service.',fixes:['Contact payer immediately for retro-authorization (24–72 hr window)','Obtain clinical documentation to support retro-auth request','If denied retro-auth, file formal appeal with clinical evidence','Document intake failure and flag for process improvement']},
+  {code:'PR-1',name:'Deductible — Patient Responsibility',color:'var(--muted2)',desc:'Deductible amount has not yet been met. This is patient responsibility — do not appeal to the payer.',fixes:['Verify deductible balance on ERA/EOB','Update patient financial responsibility in billing system','Generate patient statement for deductible amount','Offer payment plan per practice financial policy']},
+  {code:'CO-45',name:'Contractual Write-Off',color:'var(--muted2)',desc:'The difference between billed charges and the contracted allowed amount. Standard write-off for in-network providers.',fixes:['Verify payment matches the contracted rate in your fee schedule','If payment is below contracted rate → it\'s an underpayment, not a CO-45','Appeal underpayments within 45–180 days of ERA date','Adjust the balance to zero after write-off']},
+];
+
+const HC_NODES = {
+  insurance:{title:'INSURANCE',meta:'Eligibility · Prior Auth · Payer Rules · 270/271',color:'#00aaff',issue:'Resolve payer friction: 271 eligibility failures, prior auth aging, authorization SLA, and COB disputes.',relevance:{intake:'PRIMARY',coding:'SECONDARY',claims:'SECONDARY',payments:'SUPPORT',denials:'PRIMARY'}},
+  operations:{title:'OPERATIONS',meta:'Intake · Scheduling · Patient Access · Throughput',color:'#00aaff',issue:'Balance intake volume, scheduling pressure, and registration accuracy to prevent front-end denial exposure.',relevance:{intake:'PRIMARY',coding:'SUPPORT',claims:'SUPPORT',payments:'SUPPORT',denials:'SECONDARY'}},
+  billing:{title:'BILLING',meta:'Claims · Coding · Denials · AR · Clean Claim Rate',color:'#00ffc6',issue:'Drive denial reduction, claim scrubbing, coding accuracy, and AR recovery workflows.',relevance:{intake:'SECONDARY',coding:'PRIMARY',claims:'PRIMARY',payments:'PRIMARY',denials:'PRIMARY'}},
+  medical:{title:'MEDICAL',meta:'CPT · Clinical Docs · Medical Necessity · Audit',color:'#00ffc6',issue:'Close clinical documentation gaps, query providers, and route medical necessity appeals with supporting evidence.',relevance:{intake:'SUPPORT',coding:'PRIMARY',claims:'SUPPORT',payments:'SUPPORT',denials:'SECONDARY'}},
+  financial:{title:'FINANCIAL',meta:'Revenue Cycle · AR Aging · P&L · Cash Flow',color:'#00aaff',issue:'Prioritize high-value aging claims, reconcile ERA payments, and flag underpayments before the appeal window closes.',relevance:{intake:'SUPPORT',coding:'SUPPORT',claims:'SECONDARY',payments:'PRIMARY',denials:'SECONDARY'}},
+  compliance:{title:'COMPLIANCE',meta:'HIPAA · CMS · OIG · Audit Trail · Policy',color:'#ff4d6d',issue:'Close documentation gaps, enforce coding policy, and maintain audit trail before billing handoff.',relevance:{intake:'SUPPORT',coding:'SECONDARY',claims:'PRIMARY',payments:'SUPPORT',denials:'PRIMARY'}},
+  pharmacy:{title:'PHARMACY',meta:'DEA · Drug Interactions · Rx Auth · HCPCS J-codes',color:'#ffc400',issue:'Clear medication prior auth dependencies and resolve HCPCS J-code billing questions.',relevance:{intake:'SUPPORT',coding:'SECONDARY',claims:'SUPPORT',payments:'SUPPORT',denials:'SUPPORT'}},
+};
+
+/* ─── RENDER ENGINE ──────────────────────────────────────── */
+function setDomain(domain, el){
+  curDomain = domain;
+  document.querySelectorAll('.dtab').forEach(t=>t.classList.remove('active'));
+  if(el) el.classList.add('active');
+  document.getElementById('panelTitle').textContent = DOMAINS[domain].label;
+  document.getElementById('panelBadge').textContent = DOMAINS[domain].badge;
+  document.getElementById('nodePanelDomain').textContent = DOMAINS[domain].badge;
+  document.getElementById('sbDomain').textContent = 'Domain: ' + DOMAINS[domain].label;
+  renderStudy(domain);
+  renderNodes(domain);
+  updateProgress(domain);
+}
+
+function renderStudy(domain){
+  const sc = document.getElementById('studyContent');
+  if(domain === 'quiz'){sc.innerHTML = renderQuiz(); wireQuiz(); return}
+  if(domain === 'denial-lab'){sc.innerHTML = renderDenialLab(); return}
+
+  const d = DOMAINS[domain];
+  let html = '';
+  if(d.concept){
+    html += `<div class="concept-block" style="border-left-color:${d.color}">
+      <div class="concept-label">Core Concept · ${d.badge}</div>
+      <div class="concept-title">${d.concept.title}</div>
+      <div class="concept-body">${d.concept.body}</div>
+    </div>`;
+  }
+  d.scenarios.forEach(s=>{
+    const done = ST.resolved[s.id];
+    html += `<div class="scenario-card ${done?'done':''}" id="scard_${s.id}">
+      <div class="scenario-meta">
+        <div class="s-tag ${domain}">${domain.toUpperCase()}</div>
+        <div class="s-tag">Lvl ${ST.level}</div>
+        ${done?`<div class="s-tag" style="border-color:rgba(0,255,198,.4);color:var(--green)">✓ Done</div>`:''}
+      </div>
+      <div class="s-issue">${s.issue}</div>
+      <div class="s-task">${s.task}</div>
+      <div class="s-actions">
+        <button class="s-btn resolve" onclick="resolveScenario('${s.id}',true)">✓ Resolved</button>
+        <button class="s-btn fail" onclick="resolveScenario('${s.id}',false)">✗ Needs Review</button>
+        <button class="s-btn" onclick="toggleHint('${s.id}','${domain}')">Hint</button>
+        <button class="s-btn" onclick="askAbout('${s.issue.replace(/'/g,"\\'")}')">Ask AI →</button>
+      </div>
+      <div class="hint-block" id="hint_${s.id}">${d.hints[s.id]||''}</div>
+    </div>`;
+  });
+  sc.innerHTML = html;
+}
+
+function renderNodes(domain){
+  const grid = document.getElementById('nodeGrid');
+  const d = DOMAINS[domain];
+  const relevantKeys = d.nodes;
+  const allKeys = Object.keys(HC_NODES);
+  // show relevant nodes first, then rest dimmed
+  const ordered = [...relevantKeys, ...allKeys.filter(k=>!relevantKeys.includes(k))];
+  grid.innerHTML = ordered.map(key=>{
+    const n = HC_NODES[key];
+    const rel = n.relevance[domain] || 'SUPPORT';
+    const isPrimary = rel === 'PRIMARY';
+    const isSecondary = rel === 'SECONDARY';
+    const dimmed = !relevantKeys.includes(key);
+    return `<div class="node-card ${isPrimary?'highlighted':''}" style="--nc:${n.color};${dimmed?'opacity:.3;pointer-events:none':''}">
+      <div class="nc-live">● LIVE · ${n.title}</div>
+      <div class="nc-title">${n.title}</div>
+      <div class="nc-meta">${n.meta}</div>
+      <div class="nc-issue-label">Relevant because</div>
+      <div class="nc-issue">${n.issue}</div>
+      <div class="nc-actions">
+        <button class="nc-btn primary" onclick="practiceNode('${key}','${domain}')">Practice Here</button>
+        <button class="nc-btn" onclick="askNode('${key}','${domain}')">Ask AI</button>
+      </div>
+      <div class="nc-relevance">${rel}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderQuiz(){
+  const shuffled = [...QUIZ_BANK].sort(()=>Math.random()-.5).slice(0,8);
+  window.__quizSet = shuffled;
+  window.__quizAnswers = {};
+  return shuffled.map((q,i)=>`
+    <div class="quiz-q" id="qq_${i}">
+      <div class="quiz-num">Q${i+1} of 8</div>
+      <div class="quiz-text">${q.q}</div>
+      <div class="quiz-opts" id="qopts_${i}">
+        ${q.opts.map((o,j)=>`<button class="quiz-opt" onclick="answerQuiz(${i},${j})">${String.fromCharCode(65+j)}. ${o}</button>`).join('')}
+      </div>
+      <div id="qresult_${i}" style="display:none"></div>
+    </div>`).join('') +
+    `<div style="display:flex;gap:8px;margin-top:10px">
+      <button class="s-btn resolve" onclick="scoreQuiz()">Submit Quiz</button>
+      <button class="s-btn" onclick="setDomain('quiz',document.querySelector('[data-domain=quiz]'))">New Questions</button>
+    </div>`;
+}
+
+function wireQuiz(){} // opts wired inline
+
+function answerQuiz(qi,optIdx){
+  if(window.__quizAnswers[qi] !== undefined) return;
+  window.__quizAnswers[qi] = optIdx;
+  const q = window.__quizSet[qi];
+  const opts = document.querySelectorAll(`#qopts_${qi} .quiz-opt`);
+  opts.forEach((o,i)=>{
+    o.disabled = true;
+    if(i === q.ans) o.classList.add('correct');
+    else if(i === optIdx && optIdx !== q.ans) o.classList.add('wrong');
+  });
+  const res = document.getElementById('qresult_'+qi);
+  res.style.display = 'block';
+  const correct = optIdx === q.ans;
+  res.innerHTML = `<div class="quiz-result ${correct?'correct':'wrong'}">${correct?'✓ Correct':'✗ Incorrect — Answer: '+String.fromCharCode(65+q.ans)+'. '+q.opts[q.ans]}</div>`;
+}
+
+function scoreQuiz(){
+  const total = window.__quizSet.length;
+  let correct = 0;
+  window.__quizSet.forEach((q,i)=>{
+    if(window.__quizAnswers[i] === q.ans) correct++;
+  });
+  const score = Math.round(correct/total*100);
+  ST.scores.push(score);
+  ST.sessions++;
+  save();
+  updateStats();
+  quickAsk(`I just scored ${score}% on the CRCR quiz (${correct}/${total} correct). What should I focus on to improve?`);
+}
+
+function renderDenialLab(){
+  return DENIAL_CODES.map(d=>`
+    <div class="denial-card">
+      <div class="dc-top">
+        <div class="dc-code" style="color:${d.color}">${d.code}</div>
+        <div class="dc-name">${d.name}</div>
+      </div>
+      <div class="dc-desc">${d.desc}</div>
+      <div class="dc-fixes">
+        <div class="dc-fix-label">Resolution Steps</div>
+        <ul class="dc-fix-list">${d.fixes.map(f=>`<li>${f}</li>`).join('')}</ul>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:6px">
+        <button class="s-btn" onclick="askAbout('How do I handle a ${d.code} denial — ${d.name}?')">Ask AI →</button>
+        <button class="s-btn resolve" onclick="resolveScenario('dl_${d.code}',true)">✓ Practiced</button>
+      </div>
+    </div>`).join('');
+}
+
+/* ─── INTERACTIONS ───────────────────────────────────────── */
+function toggleHint(id,domain){
+  const card = document.getElementById('scard_'+id);
+  card.classList.toggle('expanded');
+}
+
+function resolveScenario(id,resolved){
+  ST.resolved[id] = resolved;
+  if(resolved && DOMAINS[curDomain].domainScores !== undefined){
+    if(ST.domainScores[curDomain]) ST.domainScores[curDomain].push(100);
+  }
+  save();
+  updateProgress(curDomain);
+  updateStats();
+  const card = document.getElementById('scard_'+id);
+  if(card) card.classList.toggle('done', resolved);
+  const sbp = document.getElementById('sbProgress');
+  sbp.textContent = Object.values(ST.resolved).filter(Boolean).length + ' scenarios resolved today';
+}
+
+function practiceNode(nodeKey,domain){
+  const n = HC_NODES[nodeKey];
+  const d = DOMAINS[domain];
+  quickAsk(`I am practicing the ${d.label} domain on the ${n.title} node in my HC Command Chain. Walk me through what I should look for in this node and what actions to take for ${d.label} scenarios.`);
+}
+
+function askNode(nodeKey,domain){
+  const n = HC_NODES[nodeKey];
+  const d = DOMAINS[domain];
+  quickAsk(`How does the ${n.title} node relate to ${d.label} in healthcare RCM? What are the key touchpoints?`);
+}
+
+function askAbout(topic){
+  document.getElementById('aiInput').value = topic;
+  sendAI();
+}
+
+function updateProgress(domain){
+  const d = DOMAINS[domain];
+  if(!d.scenarios || !d.scenarios.length){
+    document.getElementById('domainProg').style.width = '0%';
+    document.getElementById('domainProgTxt').textContent = '--';
+    return;
+  }
+  const done = d.scenarios.filter(s=>ST.resolved[s.id]).length;
+  const pct = Math.round(done/d.scenarios.length*100);
+  document.getElementById('domainProg').style.width = pct+'%';
+  document.getElementById('domainProgTxt').textContent = done+'/'+d.scenarios.length;
+}
+
+/* ─── AI ─────────────────────────────────────────────────── */
+async function callAI(q){
+  if(!ST.apiKey) return '⚠ Add your Groq API key via ⚙ to enable AI coaching.';
+  try{
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+ST.apiKey},
+      body:JSON.stringify({
+        model:'llama-3.3-70b-versatile',
+        max_tokens:700,
+        messages:[
+          {role:'system',content:`You are a CRCR (Certified Revenue Cycle Representative) coach and healthcare RCM expert embedded in the TSM HC Practice Command. You specialize in: patient intake, eligibility (270/271), prior authorization, medical coding (CPT/ICD-10/HCPCS), claim submission (837), denial management (CARC/RARC codes), payment posting (835 ERA), and AR recovery. Be direct, practical, and educational. Use specific code references (CO-16, CO-50, Modifier 25, etc.) when relevant. Keep responses concise and actionable.`},
+          {role:'user',content:q}
+        ]
+      })
+    });
+    const d = await r.json();
+    return d.choices?.[0]?.message?.content || 'No response.';
+  }catch(e){return 'Error: '+e.message}
+}
+
+async function sendAI(){
+  const inp = document.getElementById('aiInput');
+  const q = inp.value.trim();
+  if(!q) return;
+  inp.value = '';
+  const msgs = document.getElementById('aiMessages');
+  msgs.innerHTML += `<div class="ai-msg user">${q}</div>`;
+  msgs.innerHTML += `<div class="ai-msg ai" id="aiLoading"><div class="src">CRCR AI</div>thinking...</div>`;
+  msgs.scrollTop = msgs.scrollHeight;
+  const ans = await callAI(q);
+  const ld = document.getElementById('aiLoading');
+  if(ld) ld.remove();
+  msgs.innerHTML += `<div class="ai-msg ai"><div class="src">CRCR AI · HC Practice</div>${ans}</div>`;
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function quickAsk(q){
+  document.getElementById('aiInput').value = q;
+  sendAI();
+}
+
+function aiKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAI()}}
+
+/* ─── STATS ──────────────────────────────────────────────── */
+function updateStats(){
+  const avg = ST.scores.length ? Math.round(ST.scores.reduce((a,b)=>a+b,0)/ST.scores.length) : null;
+  document.getElementById('pillScore').textContent = 'Score: '+(avg?avg+'%':'--');
+  document.getElementById('pillLevel').textContent = 'Lvl '+(ST.level||1);
+  document.getElementById('pillSessions').textContent = (ST.sessions||0)+' sessions';
+  document.getElementById('sbAvg').textContent = (avg?avg+'%':'--%');
+
+  let weak='--', weakScore=101;
+  Object.entries(ST.domainScores).forEach(([k,v])=>{
+    if(v.length){const s=Math.round(v.reduce((a,b)=>a+b,0)/v.length); if(s<weakScore){weakScore=s;weak=k.charAt(0).toUpperCase()+k.slice(1)}}
+  });
+  document.getElementById('sbWeak').textContent = weak;
+}
+
+/* ─── CONFIG ─────────────────────────────────────────────── */
+function showModal(){
+  document.getElementById('mKey').value = ST.apiKey;
+  document.getElementById('overlay').classList.add('show');
+}
+function hideModal(){document.getElementById('overlay').classList.remove('show')}
+function saveCfg(){
+  ST.apiKey = document.getElementById('mKey').value.trim();
+  save();
+  document.getElementById('apiBtn').classList.toggle('live',!!ST.apiKey);
+  document.getElementById('apiBtn').textContent = ST.apiKey?'✓ AI LIVE':'⚙ AI KEY';
+  hideModal();
+}
+
+/* ─── CLOCK ──────────────────────────────────────────────── */
+function tick(){document.getElementById('sbTime').textContent = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}
+
+/* ─── INIT ───────────────────────────────────────────────── */
+function init(){
+  setDomain('intake', document.querySelector('[data-domain=intake]'));
+  updateStats();
+  tick();
+  setInterval(tick,15000);
+  if(ST.apiKey){document.getElementById('apiBtn').classList.add('live');document.getElementById('apiBtn').textContent='✓ AI LIVE'}
+  document.getElementById('sbProgress').textContent = Object.values(ST.resolved).filter(Boolean).length+' scenarios resolved today';
+}
+init();
+</script>
+</body>
+</html>
