@@ -450,6 +450,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13
         <button class="crcr-dtab" data-d="quiz" onclick="crcrSetDomain('quiz',this)">Quiz Bank</button>
         <button class="crcr-dtab" data-d="denial-lab" onclick="crcrSetDomain('denial-lab',this)">Denial Lab</button>
         <button class="crcr-dtab" data-d="financial" onclick="crcrSetDomain('financial',this)">06 · Financial</button>
+        <button class="crcr-dtab" data-d="guide" onclick="crcrSetDomain('guide',this)">? · Guide</button>
         <button class="crcr-dtab" data-d="coding_integrity" onclick="crcrSetDomain('coding_integrity',this)">07 · Integrity</button>
         <div class="crcr-stats">
           <div class="crcr-stat live" id="crcrPillSessions">0 sessions</div>
@@ -756,6 +757,99 @@ const CRCR_HC_NODES={
 };
 
 /* ══ CRCR RENDER ════════════════════════════════════════ */
+function crcrBuildGuide(){
+  return `<div style="padding:1.5rem 0">
+    <div style="font-size:11px;letter-spacing:.1em;color:var(--muted);margin-bottom:1.2rem">HOW TO USE · CRCR HC PRACTICE</div>
+
+    <div class="crcr-concept" style="border-left-color:var(--rcm-intake);margin-bottom:1rem">
+      <div class="crcr-concept-lbl">Step 1 · Pick a Domain Tab</div>
+      <div class="crcr-concept-ttl">Start with 01 · Intake</div>
+      <div class="crcr-concept-body">The tabs at the top (01–07) represent the 7 RCM domains. Each one contains a <b>Core Concept</b> summary and real-world <b>scenarios</b> to work through. Work left to right — Intake → Coding → Claims → Payments → Denials → Financial → Integrity.</div>
+    </div>
+
+    <div class="crcr-concept" style="border-left-color:var(--rcm-coding);margin-bottom:1rem">
+      <div class="crcr-concept-lbl">Step 2 · Work the Scenarios</div>
+      <div class="crcr-concept-ttl">Read the issue. Think through the fix. Then act.</div>
+      <div class="crcr-concept-body">Each scenario shows a real RCM problem and asks you to identify the fix path. Use <b>Hint</b> if stuck. Mark <b>✓ Resolved</b> when confident or <b>✗ Needs Review</b> to flag it for later. Use <b>Ask AI →</b> to get a deeper explanation from the AI tutor.</div>
+    </div>
+
+    <div class="crcr-concept" style="border-left-color:var(--rcm-claims);margin-bottom:1rem">
+      <div class="crcr-concept-lbl">Step 3 · Quiz Bank</div>
+      <div class="crcr-concept-ttl">Test your retention with 21 CRCR-aligned questions</div>
+      <div class="crcr-concept-body">Click <b>Quiz Bank</b> in the tab bar. Answer all questions, then submit for a scored result. Questions cover all 7 domains. The app tracks your weak domains and surfaces them in the <b>Weak:</b> pill at the top right.</div>
+    </div>
+
+    <div class="crcr-concept" style="border-left-color:var(--rcm-denials);margin-bottom:1rem">
+      <div class="crcr-concept-lbl">Step 4 · Denial Code Lab</div>
+      <div class="crcr-concept-ttl">Learn every major CARC code and its fix path</div>
+      <div class="crcr-concept-body">Click <b>Denial Lab</b> to browse CO-16, CO-50, CO-197, CO-4, CO-18, CO-15, PR-1, CO-45 and more. Each card shows the denial description and a step-by-step fix workflow.</div>
+    </div>
+
+    <div class="crcr-concept" style="border-left-color:var(--rcm-payments);margin-bottom:1rem">
+      <div class="crcr-concept-lbl">Step 5 · HC Practice Nodes (Right Panel)</div>
+      <div class="crcr-concept-ttl">See which hospital departments own each domain</div>
+      <div class="crcr-concept-body">The right panel shows <b>PRIMARY</b> and <b>SUPPORT</b> nodes — the hospital practice areas most responsible for each RCM domain. Click <b>Practice Here</b> to jump to that domain, or <b>Ask AI</b> to get department-specific guidance.</div>
+    </div>
+
+    <div class="crcr-concept" style="border-left-color:var(--rcm-yellow);margin-bottom:1rem">
+      <div class="crcr-concept-lbl">Quick Reference · Keyboard Shortcuts</div>
+      <div class="crcr-concept-ttl">Navigate faster</div>
+      <div class="crcr-concept-body">
+        <b>Tab bar</b> — click any domain to jump directly<br>
+        <b>Hint button</b> — reveals a targeted clinical tip<br>
+        <b>Ask AI →</b> — sends the scenario to the AI tutor pre-loaded<br>
+        <b>Score pill</b> — tracks your quiz average across sessions<br>
+        <b>Weak pill</b> — shows your lowest-scoring domain to prioritize
+      </div>
+    </div>
+
+    <div style="font-size:11px;color:var(--muted);margin-top:2rem;padding-top:1rem;border-top:1px solid var(--border)">
+      TSM CRCR HC Practice · Built for RCM exam prep and daily workflow mastery
+    </div>
+  </div>`;
+}
+
+function crcrInitTooltips(){
+  if(localStorage.getItem('crcr_tooltips_seen')) return;
+  const tips=[
+    {sel:'.crcr-dtab[data-d="intake"]',text:'Start here — work domains left to right'},
+    {sel:'#crcrPillScore',text:'Your quiz average across all sessions'},
+    {sel:'#crcrPillWeak',text:'Your weakest domain — prioritize this'},
+    {sel:'.crcr-right-hdr',text:'These nodes show which hospital departments own this domain'},
+  ];
+  const overlay=document.createElement('div');
+  overlay.id='crcr-tooltip-overlay';
+  overlay.style.cssText='position:fixed;inset:0;z-index:9999;pointer-events:none';
+  let idx=0;
+  function showTip(){
+    overlay.innerHTML='';
+    if(idx>=tips.length){
+      document.body.removeChild(overlay);
+      localStorage.setItem('crcr_tooltips_seen','1');
+      return;
+    }
+    const t=tips[idx];
+    const el=document.querySelector(t.sel);
+    if(!el){idx++;showTip();return;}
+    const r=el.getBoundingClientRect();
+    const tip=document.createElement('div');
+    tip.style.cssText=`position:fixed;left:${r.left}px;top:${r.bottom+8}px;background:var(--rcm-intake);color:#000;font-size:11px;font-weight:600;padding:6px 10px;border-radius:4px;pointer-events:all;cursor:pointer;white-space:nowrap;z-index:10000;box-shadow:0 0 0 2px #fff2`;
+    tip.textContent=t.text+' · click to continue';
+    tip.onclick=()=>{idx++;showTip();};
+    const pulse=document.createElement('div');
+    pulse.style.cssText=`position:fixed;left:${r.left-3}px;top:${r.top-3}px;width:${r.width+6}px;height:${r.height+6}px;border:2px solid var(--rcm-intake);border-radius:4px;animation:crcrPulse .8s ease-in-out infinite alternate;pointer-events:none`;
+    overlay.appendChild(pulse);
+    overlay.appendChild(tip);
+  }
+  if(!document.getElementById('crcr-pulse-style')){
+    const s=document.createElement('style');
+    s.id='crcr-pulse-style';
+    s.textContent='@keyframes crcrPulse{from{opacity:.3}to{opacity:1}}';
+    document.head.appendChild(s);
+  }
+  document.body.appendChild(overlay);
+  showTip();
+}
 function crcrSetDomain(domain,el){
   crcrCurDomain = domain;
   document.querySelectorAll('#view-crcr .crcr-dtab').forEach(t=>t.classList.remove('active'));
@@ -776,6 +870,8 @@ function crcrRefresh(){
 
 function crcrRenderStudy(domain){
   const el=document.getElementById('crcrStudyContent');
+  if(domain==='guide'){document.getElementById('crcrStudyContent').innerHTML=crcrBuildGuide();return}
+  if(domain==='guide'){document.getElementById('crcrStudyContent').innerHTML=crcrBuildGuide();return}
   if(domain==='quiz'){el.innerHTML=crcrBuildQuiz();return}
   if(domain==='denial-lab'){el.innerHTML=crcrBuildDenialLab();return}
   const d=CRCR_DOMAINS[domain]; let html='';
