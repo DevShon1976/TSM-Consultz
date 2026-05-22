@@ -1,726 +1,1032 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CRCR · HC Practice Command · TSM</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TSM · Staff Accountant + CRCR Command</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+/* ── HUB TOKENS ──────────────────────────────────────── */
 :root{
-  --bg:#04080e;--s1:#060d18;--s2:#091220;--s3:#0c1828;
-  --line:rgba(0,255,198,.14);--line2:rgba(0,255,198,.26);
-  --text:#d8f0ff;--muted:#5e7e96;--muted2:#8aa4b8;
-  --green:#00ffc6;--blue:#00aaff;--yellow:#ffc400;
-  --red:#ff4455;--purple:#b56cff;--orange:#ff7a00;
-  --intake:#00aaff;--coding:#00ffc6;--claims:#ffc400;
-  --payments:#b56cff;--denials:#ff4455;
-  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+  --bg:#060810;--surface:#0c1018;--surface2:#111622;--surface3:#161d2e;
+  --border:#1c2840;--border2:#243354;
+  --gold:#e8b84b;--gold2:#c49a2f;--gold-lo:#1a1200;
+  --blue:#3b82f6;--blue-lo:#0d1f3c;
+  --green:#22c55e;--green-lo:#052010;
+  --red:#ef4444;--purple:#a855f7;--cyan:#06b6d4;
+  --text:#dce6f5;--muted:#4d6380;--muted2:#7a94b0;
+  --mono:'DM Mono',monospace;--sans:'DM Sans',sans-serif;
 }
-*{box-sizing:border-box;margin:0;padding:0}
+*{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%;overflow:hidden}
 body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;display:flex;flex-direction:column}
 
-/* TOP BAR */
-.top{height:46px;min-height:46px;background:var(--s1);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 16px;gap:14px;z-index:100}
-.logo{font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--green);white-space:nowrap;font-weight:600}
-.logo span{color:var(--muted);font-weight:300}
-.domain-tabs{display:flex;height:100%;flex:1;gap:0}
-.dtab{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:0 14px;border:none;background:transparent;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;position:relative}
-.dtab:hover{color:var(--text)}
-.dtab.active{color:var(--green);border-bottom-color:var(--green)}
-.dtab[data-domain="intake"].active{color:var(--intake);border-bottom-color:var(--intake)}
-.dtab[data-domain="coding"].active{color:var(--coding);border-bottom-color:var(--coding)}
-.dtab[data-domain="claims"].active{color:var(--claims);border-bottom-color:var(--claims)}
-.dtab[data-domain="payments"].active{color:var(--payments);border-bottom-color:var(--payments)}
-.dtab[data-domain="denials"].active{color:var(--denials);border-bottom-color:var(--denials)}
-.dtab[data-domain="quiz"].active{color:var(--yellow);border-bottom-color:var(--yellow)}
-.dtab[data-domain="denial-lab"].active{color:var(--orange);border-bottom-color:var(--orange)}
-.top-right{margin-left:auto;display:flex;align-items:center;gap:8px}
-.stat-pill{font-family:var(--mono);font-size:9px;padding:4px 10px;border:1px solid var(--line2);color:var(--muted2);letter-spacing:.1em;white-space:nowrap}
-.stat-pill.good{border-color:rgba(0,255,198,.4);color:var(--green)}
-.api-btn{font-family:var(--mono);font-size:9px;padding:4px 10px;border:1px solid var(--line2);background:transparent;color:var(--muted);cursor:pointer;letter-spacing:.1em;text-transform:uppercase;transition:all .15s}
-.api-btn:hover{border-color:var(--green);color:var(--green)}
-.api-btn.live{border-color:var(--green);color:var(--green)}
+/* ── TOP BAR ─────────────────────────────────────────── */
+.topbar{height:44px;min-height:44px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;z-index:200}
+.logo{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;margin-right:24px;white-space:nowrap}
+.logo span{color:var(--muted)}
+.topbar-tabs{display:flex;flex:1;height:100%}
+.ttab{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:0 14px;border:none;background:transparent;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+.ttab:hover{color:var(--text)}
+.ttab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.ttab.active.crcr-tab{color:#00ffc6;border-bottom-color:#00ffc6}
+.topbar-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+.date-badge{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.1em;white-space:nowrap}
+.api-pill{font-family:var(--mono);font-size:9px;padding:3px 10px;border:1px solid var(--border2);color:var(--muted);cursor:pointer;transition:all .15s;letter-spacing:.08em;text-transform:uppercase}
+.api-pill:hover{border-color:var(--gold);color:var(--gold)}
+.api-pill.connected{border-color:var(--green);color:var(--green)}
 
-/* WORKSPACE */
-.workspace{flex:1;display:grid;grid-template-columns:380px 1fr;overflow:hidden}
+/* ── WORKSPACE ───────────────────────────────────────── */
+.workspace{flex:1;display:grid;grid-template-columns:260px 1fr;overflow:hidden}
 
-/* LEFT STUDY PANEL */
-.study-panel{background:var(--s1);border-right:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
-.panel-hdr{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
-.panel-hdr-title{font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--green)}
-.panel-hdr-badge{font-family:var(--mono);font-size:9px;padding:2px 8px;border:1px solid var(--line2);color:var(--muted);letter-spacing:.08em}
-.panel-scroll{flex:1;overflow-y:auto;padding:12px}
+/* ── LEFT SIDEBAR ────────────────────────────────────── */
+.sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sidebar-section{border-bottom:1px solid var(--border);padding:10px 12px}
+.sidebar-label{font-family:var(--mono);font-size:8px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin-bottom:7px}
+.task-item{display:flex;align-items:flex-start;gap:7px;padding:6px 8px;border:1px solid var(--border);background:var(--surface2);margin-bottom:4px;cursor:pointer;transition:all .15s}
+.task-item:hover{border-color:var(--border2)}
+.task-item.done{opacity:.5}
+.task-item.done .task-name{text-decoration:line-through}
+.task-check{width:13px;height:13px;border:1px solid var(--border2);background:var(--bg);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:9px;transition:all .15s}
+.task-item.done .task-check{background:var(--green);border-color:var(--green);color:var(--bg)}
+.task-name{font-size:11px;line-height:1.4;flex:1}
+.task-tag{font-family:var(--mono);font-size:8px;padding:1px 5px;border:1px solid var(--border);color:var(--muted);white-space:nowrap;align-self:flex-start}
+.task-tag.ap{border-color:#e8b84b44;color:var(--gold)}
+.task-tag.ar{border-color:#3b82f644;color:var(--blue)}
+.task-tag.gl{border-color:#22c55e44;color:var(--green)}
+.task-tag.close{border-color:#a855f744;color:var(--purple)}
+.task-tag.ops{border-color:#06b6d444;color:var(--cyan)}
+.task-tag.rcm{border-color:#00ffc644;color:#00ffc6}
+.domain-bars{display:grid;gap:6px}
+.domain-bar-top{display:flex;justify-content:space-between;margin-bottom:3px}
+.domain-bar-name{font-size:10px;color:var(--muted2)}
+.domain-bar-pct{font-family:var(--mono);font-size:10px;color:var(--gold)}
+.domain-bar-track{height:3px;background:var(--surface3)}
+.domain-bar-fill{height:100%;background:var(--gold);transition:width .5s}
+.app-link{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:all .15s;margin-bottom:4px}
+.app-link:hover{border-color:var(--gold)}
+.app-link-icon{font-size:14px}
+.app-link-info{flex:1}
+.app-link-name{font-size:11px;color:var(--text);font-weight:500}
+.app-link-sub{font-size:9px;color:var(--muted);font-family:var(--mono);letter-spacing:.04em}
+.app-link.crcr:hover{border-color:#00ffc6}
 
-/* CONCEPT BLOCK */
-.concept-block{background:var(--s2);border:1px solid var(--line);padding:14px;margin-bottom:10px;border-left:3px solid var(--green)}
-.concept-label{font-family:var(--mono);font-size:8px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
-.concept-title{font-size:13px;font-weight:600;margin-bottom:8px}
-.concept-body{font-size:12px;color:var(--muted2);line-height:1.7}
-.concept-body b{color:var(--text);font-weight:500}
+/* ── VIEWS ───────────────────────────────────────────── */
+.main-panel{display:flex;flex-direction:column;overflow:hidden}
+.view{display:none;flex:1;overflow:hidden;flex-direction:column}
+.view.active{display:flex}
+.iframe-toolbar{background:var(--surface);border-bottom:1px solid var(--border);padding:6px 12px;display:flex;align-items:center;gap:8px}
+.iframe-title{font-family:var(--mono);font-size:10px;color:var(--gold);letter-spacing:.1em;text-transform:uppercase}
 
-/* SCENARIO CARDS */
-.scenario-card{background:var(--s2);border:1px solid var(--line);padding:12px 14px;margin-bottom:8px;cursor:default;transition:all .15s}
-.scenario-card:hover{border-color:var(--line2)}
-.scenario-card.done{opacity:.55}
-.scenario-meta{display:flex;gap:6px;margin-bottom:8px;align-items:center}
-.s-tag{font-family:var(--mono);font-size:8px;padding:2px 7px;border:1px solid var(--line);color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
-.s-tag.intake{border-color:rgba(0,170,255,.4);color:var(--intake)}
-.s-tag.coding{border-color:rgba(0,255,198,.4);color:var(--coding)}
-.s-tag.claims{border-color:rgba(255,196,0,.4);color:var(--claims)}
-.s-tag.payments{border-color:rgba(181,108,255,.4);color:var(--payments)}
-.s-tag.denials{border-color:rgba(255,68,85,.4);color:var(--denials)}
-.s-tag.quiz{border-color:rgba(255,196,0,.4);color:var(--yellow)}
-.s-issue{font-size:12px;font-weight:500;margin-bottom:5px;line-height:1.5}
-.s-task{font-size:11px;color:var(--muted2);margin-bottom:10px;line-height:1.5}
-.s-task::before{content:'Task: ';color:var(--muted);font-family:var(--mono);font-size:10px}
-.s-actions{display:flex;gap:6px;flex-wrap:wrap}
-.s-btn{font-family:var(--mono);font-size:9px;padding:5px 10px;border:1px solid var(--line2);background:transparent;color:var(--muted2);cursor:pointer;letter-spacing:.07em;text-transform:uppercase;transition:all .15s}
-.s-btn:hover{border-color:var(--green);color:var(--green)}
-.s-btn.resolve{border-color:rgba(0,255,198,.3);color:var(--green)}
-.s-btn.resolve:hover{background:rgba(0,255,198,.1)}
-.s-btn.fail{border-color:rgba(255,68,85,.3);color:var(--red)}
-.s-btn.fail:hover{background:rgba(255,68,85,.1)}
-.hint-block{margin-top:10px;padding:10px 12px;background:var(--s3);border-left:3px solid var(--yellow);font-family:var(--mono);font-size:11px;color:var(--muted2);line-height:1.6;display:none}
-.scenario-card.expanded .hint-block{display:block}
+/* ── STUDY VIEW ──────────────────────────────────────── */
+.study-scroll{flex:1;overflow-y:auto;padding:20px}
+.study-card{background:var(--surface);border:1px solid var(--border);padding:18px 20px;margin-bottom:12px;position:relative}
+.study-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
+.study-card.accounting::before{background:var(--gold)}
+.study-card.operations::before{background:var(--blue)}
+.study-card.analysis::before{background:var(--green)}
+.study-card.compliance::before{background:var(--purple)}
+.study-topic{font-size:14px;font-weight:600}
+.study-badge{font-family:var(--mono);font-size:8px;padding:2px 7px;border:1px solid var(--border2);color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.study-desc{font-size:12px;color:var(--muted2);line-height:1.7;margin:10px 0 12px}
+.study-btn{font-family:var(--mono);font-size:10px;padding:5px 12px;border:1px solid var(--border2);background:transparent;color:var(--muted2);cursor:pointer;letter-spacing:.08em;text-transform:uppercase;transition:all .15s}
+.study-btn:hover{border-color:var(--gold);color:var(--gold)}
+.study-btn.primary{border-color:var(--gold);color:var(--gold)}
+.study-btn.primary:hover{background:var(--gold);color:var(--bg)}
 
-/* QUIZ */
-.quiz-q{background:var(--s2);border:1px solid var(--line);padding:16px;margin-bottom:10px}
-.quiz-num{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.15em;margin-bottom:8px}
-.quiz-text{font-size:13px;font-weight:500;margin-bottom:12px;line-height:1.5}
-.quiz-opts{display:grid;gap:6px}
-.quiz-opt{padding:9px 12px;background:var(--s3);border:1px solid var(--line);color:var(--muted2);cursor:pointer;font-size:12px;text-align:left;transition:all .15s;font-family:var(--sans)}
-.quiz-opt:hover{border-color:var(--blue);color:var(--text)}
-.quiz-opt.correct{border-color:var(--green);color:var(--green);background:rgba(0,255,198,.06)}
-.quiz-opt.wrong{border-color:var(--red);color:var(--red);background:rgba(255,68,85,.06)}
-.quiz-opt:disabled{cursor:default;pointer-events:none}
-.quiz-result{margin-top:8px;font-family:var(--mono);font-size:10px;padding:8px 10px;border-left:3px solid var(--green)}
-.quiz-result.wrong{border-left-color:var(--red);color:var(--red)}
-.quiz-result.correct{color:var(--green);background:rgba(0,255,198,.04)}
+/* ── HUB AI VIEW ─────────────────────────────────────── */
+.ai-view{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.ai-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.msg{max-width:85%;padding:12px 14px;font-size:13px;line-height:1.7}
+.msg.user{background:var(--blue-lo);border:1px solid #3b82f622;align-self:flex-end;color:var(--text)}
+.msg.ai{background:var(--surface);border:1px solid var(--border);align-self:flex-start;color:var(--text);white-space:pre-wrap}
+.msg.ai .msg-source{font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+.ai-input-bar{background:var(--surface);border-top:1px solid var(--border);padding:10px 12px;display:flex;gap:8px;align-items:flex-end}
+.ai-textarea{flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:var(--sans);font-size:13px;padding:8px 12px;resize:none;outline:none;min-height:38px;max-height:100px;line-height:1.5}
+.ai-textarea:focus{border-color:var(--gold)}
+.send-btn{font-family:var(--mono);font-size:10px;padding:8px 14px;border:1px solid var(--gold);background:var(--gold-lo);color:var(--gold);cursor:pointer;letter-spacing:.1em;text-transform:uppercase;transition:all .15s;white-space:nowrap}
+.send-btn:hover{background:var(--gold);color:var(--bg)}
+.quick-prompts{display:flex;gap:6px;flex-wrap:wrap;padding:8px 12px;background:var(--surface);border-top:1px solid var(--border)}
+.qp{font-family:var(--mono);font-size:9px;padding:4px 10px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;letter-spacing:.06em;transition:all .15s}
+.qp:hover{border-color:var(--gold);color:var(--gold)}
 
-/* DENIAL LAB */
-.denial-card{background:var(--s2);border:1px solid var(--line);padding:14px;margin-bottom:8px}
-.denial-card .dc-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.dc-code{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--red)}
-.dc-name{font-size:13px;font-weight:500}
-.dc-desc{font-size:12px;color:var(--muted2);line-height:1.6;margin-bottom:10px}
-.dc-fixes{margin-top:6px}
-.dc-fix-label{font-family:var(--mono);font-size:8px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
-.dc-fix-list{list-style:none;display:grid;gap:4px}
-.dc-fix-list li{font-size:11px;color:var(--muted2);padding:5px 8px;background:var(--s3);border-left:2px solid var(--green);line-height:1.5}
-.dc-fix-list li::before{content:'→ ';color:var(--green);font-family:var(--mono)}
+/* ── STATUS BAR ──────────────────────────────────────── */
+.statusbar{height:24px;min-height:24px;background:var(--surface);border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;padding:0 12px}
+.status-dot{width:5px;height:5px;border-radius:50%;background:var(--green)}
+.status-seg{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.08em}
+.status-seg.hi{color:var(--gold)}
+.status-divider{color:var(--border2)}
 
-/* RIGHT - HC NODE PANEL */
-.node-panel{display:flex;flex-direction:column;overflow:hidden}
-.node-panel-hdr{padding:10px 14px;border-bottom:1px solid var(--line);background:var(--s1);display:flex;align-items:center;gap:10px}
-.node-panel-title{font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
-.node-panel-title span{color:var(--green)}
-.node-grid-wrap{flex:1;overflow-y:auto;padding:14px}
-.node-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start}
-.node-card{background:var(--s2);border:1px solid var(--line);padding:14px;position:relative;overflow:hidden;transition:border-color .2s}
-.node-card::before{content:'';position:absolute;left:0;top:0;right:0;height:3px;background:var(--nc,var(--green))}
-.node-card:hover{border-color:var(--line2)}
-.node-card.highlighted{border-color:var(--nc,var(--green))}
-.nc-live{font-family:var(--mono);font-size:8px;color:var(--nc,var(--green));letter-spacing:.15em;margin-bottom:6px}
-.nc-title{font-size:14px;font-weight:600;color:var(--nc,var(--green));margin-bottom:3px;letter-spacing:.06em}
-.nc-meta{font-size:10px;color:var(--muted);margin-bottom:8px;line-height:1.5}
-.nc-issue-label{font-family:var(--mono);font-size:8px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:4px}
-.nc-issue{font-size:11px;color:var(--muted2);line-height:1.5;margin-bottom:10px}
-.nc-actions{display:flex;gap:6px;flex-wrap:wrap}
-.nc-btn{font-family:var(--mono);font-size:9px;padding:6px 10px;border:1px solid var(--line2);background:transparent;color:var(--muted2);cursor:pointer;letter-spacing:.07em;text-transform:uppercase;transition:all .15s}
-.nc-btn:hover{border-color:var(--nc,var(--green));color:var(--nc,var(--green))}
-.nc-btn.primary{border-color:var(--nc,var(--green));color:var(--nc,var(--green))}
-.nc-btn.primary:hover{background:rgba(0,255,198,.08)}
-.nc-relevance{position:absolute;right:10px;top:10px;font-family:var(--mono);font-size:8px;padding:2px 6px;border:1px solid var(--nc,var(--green));color:var(--nc,var(--green));letter-spacing:.08em;opacity:.7}
+/* ── MODAL ───────────────────────────────────────────── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);padding:24px;width:360px}
+.modal-title{font-family:var(--mono);font-size:11px;color:var(--gold);letter-spacing:.15em;text-transform:uppercase;margin-bottom:16px}
+.modal-input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:12px;padding:8px 12px;outline:none;margin-bottom:8px}
+.modal-input:focus{border-color:var(--gold)}
+.modal-note{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.08em;margin-bottom:14px;line-height:1.6}
+.modal-actions{display:flex;gap:8px}
+.modal-btn{flex:1;font-family:var(--mono);font-size:10px;padding:8px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;letter-spacing:.08em;text-transform:uppercase;transition:all .15s}
+.modal-btn.primary{border-color:var(--gold);color:var(--gold)}
+.modal-btn.primary:hover{background:var(--gold);color:var(--bg)}
 
-/* AI PANEL */
-.ai-drawer{background:var(--s1);border-top:1px solid var(--line);display:flex;flex-direction:column;max-height:260px}
-.ai-drawer-hdr{padding:8px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
-.ai-drawer-title{font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase}
-.ai-drawer-title span{color:var(--yellow)}
-.ai-messages{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:8px}
-.ai-msg{font-size:12px;line-height:1.6;max-width:90%}
-.ai-msg.user{background:rgba(0,170,255,.08);border:1px solid rgba(0,170,255,.2);padding:8px 12px;align-self:flex-end;color:var(--text)}
-.ai-msg.ai{background:var(--s2);border:1px solid var(--line);padding:8px 12px;align-self:flex-start;color:var(--text);white-space:pre-wrap}
-.ai-msg.ai .src{font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:.1em;margin-bottom:4px;text-transform:uppercase}
-.ai-input-row{padding:8px 10px;display:flex;gap:6px;border-top:1px solid var(--line)}
-.ai-input{flex:1;background:var(--s2);border:1px solid var(--line);color:var(--text);font-family:var(--sans);font-size:12px;padding:6px 10px;outline:none;min-height:32px;resize:none}
-.ai-input:focus{border-color:var(--green)}
-.ai-send{font-family:var(--mono);font-size:9px;padding:6px 12px;border:1px solid var(--green);background:transparent;color:var(--green);cursor:pointer;letter-spacing:.1em;text-transform:uppercase;transition:all .15s;white-space:nowrap}
-.ai-send:hover{background:rgba(0,255,198,.1)}
+/* ══ CRCR VIEW — scoped inside #view-crcr ════════════ */
+#view-crcr{--rcm-green:#00ffc6;--rcm-blue:#00aaff;--rcm-yellow:#ffc400;--rcm-red:#ff4455;--rcm-purple:#b56cff;--rcm-orange:#ff7a00;--rcm-intake:#00aaff;--rcm-coding:#00ffc6;--rcm-claims:#ffc400;--rcm-payments:#b56cff;--rcm-denials:#ff4455;--rcm-line:rgba(0,255,198,.14);--rcm-line2:rgba(0,255,198,.26);--rcm-s2:#0c1520;--rcm-s3:#111d2a}
+#view-crcr .crcr-subhdr{background:var(--surface);border-bottom:1px solid var(--border);padding:0 14px;display:flex;align-items:stretch;height:40px;gap:0;flex-shrink:0}
+#view-crcr .crcr-dtab{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:0 12px;border:none;background:transparent;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+#view-crcr .crcr-dtab:hover{color:var(--text)}
+#view-crcr .crcr-dtab.active{color:var(--rcm-green);border-bottom-color:var(--rcm-green)}
+#view-crcr .crcr-dtab[data-d="intake"].active{color:var(--rcm-intake);border-bottom-color:var(--rcm-intake)}
+#view-crcr .crcr-dtab[data-d="coding"].active{color:var(--rcm-coding);border-bottom-color:var(--rcm-coding)}
+#view-crcr .crcr-dtab[data-d="claims"].active{color:var(--rcm-claims);border-bottom-color:var(--rcm-claims)}
+#view-crcr .crcr-dtab[data-d="payments"].active{color:var(--rcm-payments);border-bottom-color:var(--rcm-payments)}
+#view-crcr .crcr-dtab[data-d="denials"].active{color:var(--rcm-denials);border-bottom-color:var(--rcm-denials)}
+#view-crcr .crcr-dtab[data-d="quiz"].active{color:var(--rcm-yellow);border-bottom-color:var(--rcm-yellow)}
+#view-crcr .crcr-dtab[data-d="denial-lab"].active{color:var(--rcm-orange);border-bottom-color:var(--rcm-orange)}
+#view-crcr .crcr-stats{margin-left:auto;display:flex;align-items:center;gap:6px}
+#view-crcr .crcr-stat{font-family:var(--mono);font-size:9px;padding:3px 8px;border:1px solid var(--rcm-line2);color:var(--muted2);letter-spacing:.08em;white-space:nowrap}
+#view-crcr .crcr-stat.live{border-color:rgba(0,255,198,.4);color:var(--rcm-green)}
+#view-crcr .crcr-body{flex:1;display:grid;grid-template-columns:360px 1fr;overflow:hidden}
+#view-crcr .crcr-left{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+#view-crcr .crcr-left-hdr{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0}
+#view-crcr .crcr-left-title{font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--rcm-green)}
+#view-crcr .crcr-left-badge{font-family:var(--mono);font-size:8px;padding:2px 7px;border:1px solid var(--rcm-line2);color:var(--muted);letter-spacing:.08em}
+#view-crcr .crcr-prog-track{display:inline-block;width:40px;height:3px;background:var(--surface3);vertical-align:middle;margin-left:auto}
+#view-crcr .crcr-prog-fill{height:100%;background:var(--rcm-green);transition:width .4s}
+#view-crcr .crcr-prog-txt{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.06em;margin-left:4px}
+#view-crcr .crcr-scroll{flex:1;overflow-y:auto;padding:10px 12px}
+#view-crcr .crcr-concept{background:var(--rcm-s2);border:1px solid var(--border);padding:13px;margin-bottom:10px;border-left:3px solid var(--rcm-green)}
+#view-crcr .crcr-concept-lbl{font-family:var(--mono);font-size:8px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin-bottom:5px}
+#view-crcr .crcr-concept-ttl{font-size:13px;font-weight:600;margin-bottom:7px;color:var(--text)}
+#view-crcr .crcr-concept-body{font-size:12px;color:var(--muted2);line-height:1.7}
+#view-crcr .crcr-concept-body b{color:var(--text);font-weight:500}
+#view-crcr .crcr-sc{background:var(--rcm-s2);border:1px solid var(--border);padding:11px 13px;margin-bottom:7px;transition:border-color .15s}
+#view-crcr .crcr-sc:hover{border-color:var(--rcm-line2)}
+#view-crcr .crcr-sc.done{opacity:.5}
+#view-crcr .crcr-sc-meta{display:flex;gap:5px;margin-bottom:7px;align-items:center;flex-wrap:wrap}
+#view-crcr .crcr-tag{font-family:var(--mono);font-size:8px;padding:2px 6px;border:1px solid var(--border);color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+#view-crcr .crcr-tag.intake{border-color:rgba(0,170,255,.4);color:var(--rcm-intake)}
+#view-crcr .crcr-tag.coding{border-color:rgba(0,255,198,.4);color:var(--rcm-coding)}
+#view-crcr .crcr-tag.claims{border-color:rgba(255,196,0,.4);color:var(--rcm-claims)}
+#view-crcr .crcr-tag.payments{border-color:rgba(181,108,255,.4);color:var(--rcm-payments)}
+#view-crcr .crcr-tag.denials{border-color:rgba(255,68,85,.4);color:var(--rcm-denials)}
+#view-crcr .crcr-tag.done-tag{border-color:rgba(0,255,198,.4);color:var(--rcm-green)}
+#view-crcr .crcr-sc-issue{font-size:12px;font-weight:500;margin-bottom:4px;line-height:1.5;color:var(--text)}
+#view-crcr .crcr-sc-task{font-size:11px;color:var(--muted2);margin-bottom:9px;line-height:1.5}
+#view-crcr .crcr-sc-task::before{content:'Task: ';color:var(--muted);font-family:var(--mono);font-size:10px}
+#view-crcr .crcr-sc-actions{display:flex;gap:5px;flex-wrap:wrap}
+#view-crcr .crcr-sbtn{font-family:var(--mono);font-size:9px;padding:5px 9px;border:1px solid var(--border2);background:transparent;color:var(--muted2);cursor:pointer;letter-spacing:.06em;text-transform:uppercase;transition:all .15s}
+#view-crcr .crcr-sbtn:hover{border-color:var(--rcm-green);color:var(--rcm-green)}
+#view-crcr .crcr-sbtn.ok{border-color:rgba(0,255,198,.3);color:var(--rcm-green)}
+#view-crcr .crcr-sbtn.ok:hover{background:rgba(0,255,198,.08)}
+#view-crcr .crcr-sbtn.bad{border-color:rgba(255,68,85,.3);color:var(--rcm-red)}
+#view-crcr .crcr-hint{margin-top:9px;padding:9px 11px;background:var(--rcm-s3);border-left:3px solid var(--rcm-yellow);font-family:var(--mono);font-size:11px;color:var(--muted2);line-height:1.6;display:none}
+#view-crcr .crcr-sc.expanded .crcr-hint{display:block}
+#view-crcr .crcr-right{display:flex;flex-direction:column;overflow:hidden}
+#view-crcr .crcr-right-hdr{padding:9px 14px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;gap:10px;flex-shrink:0}
+#view-crcr .crcr-right-title{font-family:var(--mono);font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+#view-crcr .crcr-right-title span{color:var(--rcm-green)}
+#view-crcr .crcr-right-hint{font-family:var(--mono);font-size:9px;color:var(--muted);margin-left:auto}
+#view-crcr .crcr-nodes-wrap{flex:1;overflow-y:auto;padding:12px}
+#view-crcr .crcr-node-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;align-content:start}
+#view-crcr .crcr-nc{background:var(--rcm-s2);border:1px solid var(--border);padding:13px;position:relative;overflow:hidden;transition:border-color .2s}
+#view-crcr .crcr-nc::before{content:'';position:absolute;left:0;top:0;right:0;height:3px;background:var(--ncol,var(--rcm-green))}
+#view-crcr .crcr-nc:hover{border-color:var(--rcm-line2)}
+#view-crcr .crcr-nc.hi{border-color:var(--ncol,var(--rcm-green))}
+#view-crcr .crcr-nc-live{font-family:var(--mono);font-size:8px;color:var(--ncol,var(--rcm-green));letter-spacing:.14em;margin-bottom:5px}
+#view-crcr .crcr-nc-title{font-size:13px;font-weight:700;color:var(--ncol,var(--rcm-green));margin-bottom:2px;letter-spacing:.05em}
+#view-crcr .crcr-nc-meta{font-size:10px;color:var(--muted);margin-bottom:7px;line-height:1.5}
+#view-crcr .crcr-nc-lbl{font-family:var(--mono);font-size:8px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:3px}
+#view-crcr .crcr-nc-issue{font-size:11px;color:var(--muted2);line-height:1.5;margin-bottom:9px}
+#view-crcr .crcr-nc-actions{display:flex;gap:5px;flex-wrap:wrap}
+#view-crcr .crcr-ncbtn{font-family:var(--mono);font-size:9px;padding:5px 9px;border:1px solid var(--border2);background:transparent;color:var(--muted2);cursor:pointer;letter-spacing:.06em;text-transform:uppercase;transition:all .15s}
+#view-crcr .crcr-ncbtn:hover{border-color:var(--ncol,var(--rcm-green));color:var(--ncol,var(--rcm-green))}
+#view-crcr .crcr-ncbtn.p{border-color:var(--ncol,var(--rcm-green));color:var(--ncol,var(--rcm-green))}
+#view-crcr .crcr-nc-rel{position:absolute;right:9px;top:9px;font-family:var(--mono);font-size:8px;padding:2px 5px;border:1px solid var(--ncol,var(--rcm-green));color:var(--ncol,var(--rcm-green));letter-spacing:.08em;opacity:.65}
+#view-crcr .crcr-quiz-q{background:var(--rcm-s2);border:1px solid var(--border);padding:14px;margin-bottom:10px}
+#view-crcr .crcr-quiz-num{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.14em;margin-bottom:7px}
+#view-crcr .crcr-quiz-txt{font-size:13px;font-weight:500;margin-bottom:11px;line-height:1.5;color:var(--text)}
+#view-crcr .crcr-quiz-opts{display:grid;gap:5px}
+#view-crcr .crcr-qopt{padding:8px 11px;background:var(--rcm-s3);border:1px solid var(--border);color:var(--muted2);cursor:pointer;font-size:12px;text-align:left;transition:all .15s;font-family:var(--sans)}
+#view-crcr .crcr-qopt:hover{border-color:var(--rcm-blue);color:var(--text)}
+#view-crcr .crcr-qopt.correct{border-color:var(--rcm-green);color:var(--rcm-green);background:rgba(0,255,198,.06)}
+#view-crcr .crcr-qopt.wrong{border-color:var(--rcm-red);color:var(--rcm-red);background:rgba(255,68,85,.06)}
+#view-crcr .crcr-qopt:disabled{cursor:default;pointer-events:none}
+#view-crcr .crcr-qresult{margin-top:7px;font-family:var(--mono);font-size:10px;padding:7px 10px;border-left:3px solid var(--rcm-green)}
+#view-crcr .crcr-qresult.wrong{border-left-color:var(--rcm-red);color:var(--rcm-red)}
+#view-crcr .crcr-qresult.correct{color:var(--rcm-green);background:rgba(0,255,198,.04)}
+#view-crcr .crcr-dc{background:var(--rcm-s2);border:1px solid var(--border);padding:13px;margin-bottom:7px}
+#view-crcr .crcr-dc-top{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+#view-crcr .crcr-dc-code{font-family:var(--mono);font-size:14px;font-weight:600}
+#view-crcr .crcr-dc-name{font-size:13px;font-weight:500}
+#view-crcr .crcr-dc-desc{font-size:12px;color:var(--muted2);line-height:1.6;margin-bottom:9px}
+#view-crcr .crcr-dc-fix-lbl{font-family:var(--mono);font-size:8px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin-bottom:5px}
+#view-crcr .crcr-dc-list{list-style:none;display:grid;gap:3px}
+#view-crcr .crcr-dc-list li{font-size:11px;color:var(--muted2);padding:5px 8px;background:var(--rcm-s3);border-left:2px solid var(--rcm-green);line-height:1.5}
+#view-crcr .crcr-dc-list li::before{content:'→ ';color:var(--rcm-green);font-family:var(--mono)}
+#view-crcr .crcr-ai-drawer{background:var(--surface);border-top:1px solid var(--border);display:flex;flex-direction:column;max-height:220px;flex-shrink:0}
+#view-crcr .crcr-ai-hdr{padding:7px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0}
+#view-crcr .crcr-ai-title{font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+#view-crcr .crcr-ai-title span{color:var(--rcm-yellow)}
+#view-crcr .crcr-ai-msgs{flex:1;overflow-y:auto;padding:8px 14px;display:flex;flex-direction:column;gap:7px}
+#view-crcr .crcr-ai-msg{font-size:12px;line-height:1.6;max-width:90%;padding:7px 11px;border:1px solid var(--border)}
+#view-crcr .crcr-ai-msg.u{background:var(--blue-lo);border-color:#3b82f622;align-self:flex-end;color:var(--text)}
+#view-crcr .crcr-ai-msg.a{background:var(--rcm-s2);align-self:flex-start;color:var(--text);white-space:pre-wrap}
+#view-crcr .crcr-ai-msg .crcr-src{font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+#view-crcr .crcr-ai-row{padding:7px 10px;display:flex;gap:6px;border-top:1px solid var(--border);flex-shrink:0}
+#view-crcr .crcr-ai-inp{flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:var(--sans);font-size:12px;padding:6px 10px;outline:none;resize:none;min-height:30px}
+#view-crcr .crcr-ai-inp:focus{border-color:var(--rcm-green)}
+#view-crcr .crcr-send{font-family:var(--mono);font-size:9px;padding:6px 12px;border:1px solid var(--rcm-green);background:transparent;color:var(--rcm-green);cursor:pointer;letter-spacing:.1em;text-transform:uppercase;transition:all .15s;white-space:nowrap}
+#view-crcr .crcr-send:hover{background:rgba(0,255,198,.1)}
+#view-crcr .crcr-qp-row{display:flex;gap:5px;flex-wrap:wrap;padding:6px 14px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+#view-crcr .crcr-qp{font-family:var(--mono);font-size:9px;padding:3px 9px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;letter-spacing:.05em;transition:all .15s}
+#view-crcr .crcr-qp:hover{border-color:var(--rcm-green);color:var(--rcm-green)}
 
-/* SCORE BAR */
-.score-bar{height:24px;min-height:24px;background:var(--s1);border-top:1px solid var(--line);display:flex;align-items:center;padding:0 14px;gap:12px}
-.sb-seg{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.08em}
-.sb-seg.hi{color:var(--green)}
-.sb-dot{width:5px;height:5px;border-radius:50%;background:var(--green)}
-.sb-div{color:var(--line2)}
-
-/* MODAL */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;align-items:center;justify-content:center}
-.overlay.show{display:flex}
-.modal{background:var(--s1);border:1px solid var(--line2);padding:24px;width:340px}
-.modal-title{font-family:var(--mono);font-size:11px;color:var(--green);letter-spacing:.15em;text-transform:uppercase;margin-bottom:16px}
-.modal-input{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--text);font-family:var(--mono);font-size:12px;padding:8px 10px;outline:none;margin-bottom:8px}
-.modal-input:focus{border-color:var(--green)}
-.modal-note{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.06em;margin-bottom:14px;line-height:1.6}
-.modal-row{display:flex;gap:8px}
-.modal-btn{flex:1;font-family:var(--mono);font-size:10px;padding:8px;border:1px solid var(--line2);background:transparent;color:var(--muted);cursor:pointer;letter-spacing:.08em;text-transform:uppercase;transition:all .15s}
-.modal-btn.primary{border-color:var(--green);color:var(--green)}
-.modal-btn.primary:hover{background:rgba(0,255,198,.1)}
-
-/* SCROLLBAR */
-::-webkit-scrollbar{width:4px}
-::-webkit-scrollbar-track{background:var(--s1)}
-::-webkit-scrollbar-thumb{background:rgba(0,255,198,.2)}
-
-/* Progress pill */
-.prog-pill{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9px;padding:2px 8px;border:1px solid var(--line);color:var(--muted);letter-spacing:.08em}
-.prog-fill{display:inline-block;height:4px;background:var(--green);transition:width .4s}
-.prog-track{display:inline-block;width:40px;height:4px;background:var(--s3);vertical-align:middle}
+/* scrollbars */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--surface)}
+::-webkit-scrollbar-thumb{background:var(--border2)}
 </style>
 </head>
 <body>
 
 <!-- TOP BAR -->
-<div class="top">
-  <div class="logo">CRCR <span>//</span> HC Practice Command</div>
-  <div class="domain-tabs">
-    <button class="dtab active" data-domain="intake" onclick="setDomain('intake',this)">01 · Intake</button>
-    <button class="dtab" data-domain="coding" onclick="setDomain('coding',this)">02 · Coding</button>
-    <button class="dtab" data-domain="claims" onclick="setDomain('claims',this)">03 · Claims</button>
-    <button class="dtab" data-domain="payments" onclick="setDomain('payments',this)">04 · Payments</button>
-    <button class="dtab" data-domain="denials" onclick="setDomain('denials',this)">05 · Denials</button>
-    <button class="dtab" data-domain="quiz" onclick="setDomain('quiz',this)">Quiz Bank</button>
-    <button class="dtab" data-domain="denial-lab" onclick="setDomain('denial-lab',this)">Denial Lab</button>
+<div class="topbar">
+  <div class="logo">TSM <span>//</span> Command Hub</div>
+  <div class="topbar-tabs">
+    <button class="ttab active" onclick="switchView('dashboard',this)">Dashboard</button>
+    <button class="ttab" onclick="switchView('accounting',this)">Accounting</button>
+    <button class="ttab" onclick="switchView('operations',this)">Operations</button>
+    <button class="ttab" onclick="switchView('financial',this)">Financial</button>
+    <button class="ttab" onclick="switchView('study',this)">Study</button>
+    <button class="ttab" onclick="switchView('ai',this)">AI Tutor</button>
+    <button class="ttab crcr-tab" onclick="switchView('crcr',this)">⚕ CRCR · RCM</button>
   </div>
-  <div class="top-right">
-    <div class="stat-pill" id="pillScore">Score: --</div>
-    <div class="stat-pill" id="pillLevel">Lvl 1</div>
-    <div class="stat-pill good" id="pillSessions">0 sessions</div>
-    <button class="api-btn" id="apiBtn" onclick="showModal()">⚙ AI KEY</button>
+  <div class="topbar-right">
+    <div class="date-badge" id="dateBadge"></div>
+    <div class="api-pill" id="apiPill" onclick="showModal()">⚙ API KEY</div>
   </div>
 </div>
 
 <!-- WORKSPACE -->
 <div class="workspace">
 
-  <!-- LEFT: STUDY PANEL -->
-  <div class="study-panel">
-    <div class="panel-hdr">
-      <div class="panel-hdr-title" id="panelTitle">Patient Intake</div>
-      <div class="panel-hdr-badge" id="panelBadge">INTAKE</div>
-      <div style="margin-left:auto">
-        <div class="prog-pill"><div class="prog-track"><div class="prog-fill" id="domainProg" style="width:0%"></div></div><span id="domainProgTxt">0/0</span></div>
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-section" style="flex:1;overflow-y:auto;overflow-x:hidden">
+      <div class="sidebar-label">Daily Responsibilities</div>
+      <div id="taskList"></div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Study Progress</div>
+      <div class="domain-bars" id="domainBars"></div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Quick Launch</div>
+      <div class="app-link" onclick="switchView('accounting',document.querySelectorAll('.ttab')[1])">
+        <div class="app-link-icon">📊</div>
+        <div class="app-link-info"><div class="app-link-name">Accounting POC</div><div class="app-link-sub">AP · AR · JE · Bank Rec · P&L</div></div>
+        <div style="font-size:10px;color:var(--muted)">→</div>
+      </div>
+      <div class="app-link" onclick="switchView('operations',document.querySelectorAll('.ttab')[2])">
+        <div class="app-link-icon">⚙️</div>
+        <div class="app-link-info"><div class="app-link-name">Operations Suite</div><div class="app-link-sub">FinOps Operations</div></div>
+        <div style="font-size:10px;color:var(--muted)">→</div>
+      </div>
+      <div class="app-link crcr" onclick="switchView('crcr',document.querySelectorAll('.ttab')[6])">
+        <div class="app-link-icon">⚕</div>
+        <div class="app-link-info"><div class="app-link-name" style="color:#00ffc6">CRCR · HC Practice</div><div class="app-link-sub">Intake · Coding · Denials · Quiz</div></div>
+        <div style="font-size:10px;color:#00ffc6">→</div>
       </div>
     </div>
-    <div class="panel-scroll" id="studyContent"></div>
   </div>
 
-  <!-- RIGHT: HC NODES + AI -->
-  <div class="node-panel">
-    <div class="node-panel-hdr">
-      <div class="node-panel-title"><span id="nodePanelDomain">INTAKE</span> → HC PRACTICE NODES</div>
-      <div style="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--muted)">Click a scenario → nodes highlight · Practice in the relevant node</div>
-    </div>
-    <div class="node-grid-wrap">
-      <div class="node-grid" id="nodeGrid"></div>
-    </div>
+  <!-- MAIN PANEL -->
+  <div class="main-panel">
 
-    <!-- AI DRAWER -->
-    <div class="ai-drawer">
-      <div class="ai-drawer-hdr">
-        <div class="ai-drawer-title">AI Tutor <span>· Ask while you practice</span></div>
-        <div style="margin-left:auto;display:flex;gap:6px">
-          <button class="nc-btn" onclick="quickAsk('Explain the key concepts I need to know for this domain in simple terms')">Explain domain</button>
-          <button class="nc-btn" onclick="quickAsk('Give me a tip for the hardest part of this workflow')">Top tip</button>
-          <button class="nc-btn" onclick="quickAsk('Quiz me on one concept from this domain with 4 options')">Quick quiz</button>
+    <!-- DASHBOARD VIEW -->
+    <div class="view active" id="view-dashboard">
+      <div style="flex:1;overflow-y:auto;padding:20px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:18px">
+          <div style="background:var(--surface);border:1px solid var(--border);padding:14px">
+            <div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;margin-bottom:6px">Today's Tasks</div>
+            <div style="font-family:var(--mono);font-size:28px;font-weight:700;color:var(--gold)" id="dashTaskCount">0/0</div>
+            <div style="font-size:11px;color:var(--muted2);margin-top:3px">completed</div>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);padding:14px">
+            <div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;margin-bottom:6px">Study Level</div>
+            <div style="font-family:var(--mono);font-size:28px;font-weight:700;color:var(--green)" id="dashLevel">1</div>
+            <div style="font-size:11px;color:var(--muted2);margin-top:3px">current level</div>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);padding:14px">
+            <div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;margin-bottom:6px">CRCR Score</div>
+            <div style="font-family:var(--mono);font-size:28px;font-weight:700;color:#00ffc6" id="dashCrcrScore">--</div>
+            <div style="font-size:11px;color:var(--muted2);margin-top:3px">quiz average</div>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);padding:14px">
+            <div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;margin-bottom:6px">RCM Resolved</div>
+            <div style="font-family:var(--mono);font-size:28px;font-weight:700;color:var(--blue)" id="dashRcmResolved">0</div>
+            <div style="font-size:11px;color:var(--muted2);margin-top:3px">scenarios today</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+          <div style="background:var(--surface);border:1px solid var(--border);padding:16px">
+            <div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;margin-bottom:12px">Staff Accountant Daily Cycle</div>
+            <div style="display:flex;align-items:center;gap:0;flex-wrap:wrap;gap:4px">
+              <div style="padding:6px 10px;background:var(--surface2);border:1px solid var(--gold);color:var(--gold);font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.08em">Morning Open</div>
+              <div style="color:var(--border2);padding:0 4px;font-size:14px">→</div>
+              <div style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.08em">AP Review</div>
+              <div style="color:var(--border2);padding:0 4px;font-size:14px">→</div>
+              <div style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.08em">GL Entries</div>
+              <div style="color:var(--border2);padding:0 4px;font-size:14px">→</div>
+              <div style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.08em">Reconcile</div>
+              <div style="color:var(--border2);padding:0 4px;font-size:14px">→</div>
+              <div style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.08em">Study</div>
+            </div>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid #00ffc6;padding:16px">
+            <div style="font-family:var(--mono);font-size:8px;color:#00ffc6;letter-spacing:.2em;text-transform:uppercase;margin-bottom:12px">CRCR RCM Daily Cycle</div>
+            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px">
+              <div style="padding:6px 10px;background:var(--surface2);border:1px solid #00ffc622;color:#00ffc6;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.08em">Intake Check</div>
+              <div style="color:var(--border2);padding:0 4px;font-size:14px">→</div>
+              <div style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.08em">Claims</div>
+              <div style="color:var(--border2);padding:0 4px;font-size:14px">→</div>
+              <div style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.08em">Denials</div>
+              <div style="color:var(--border2);padding:0 4px;font-size:14px">→</div>
+              <div style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.08em">Payments</div>
+              <div style="color:var(--border2);padding:0 4px;font-size:14px">→</div>
+              <div style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.08em">Quiz</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:var(--surface);border:1px solid var(--border);padding:16px">
+          <div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;margin-bottom:12px">Work Maps to Study</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <div style="padding:11px 13px;background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--gold);cursor:pointer" onclick="switchView('accounting',document.querySelectorAll('.ttab')[1])">
+              <div style="font-size:11px;font-weight:600;margin-bottom:3px">AP / Bank Rec / JE</div>
+              <div style="font-size:11px;color:var(--muted2);line-height:1.5">Accounting POC → run AI engines</div>
+              <div style="font-family:var(--mono);font-size:9px;color:var(--gold);margin-top:5px">→ Accounting POC</div>
+            </div>
+            <div style="padding:11px 13px;background:var(--surface2);border:1px solid var(--border);border-left:3px solid #00aaff;cursor:pointer" onclick="switchView('crcr',document.querySelectorAll('.ttab')[6]);setTimeout(()=>crcrSetDomain('claims',document.querySelector('[data-d=claims]')),100)">
+              <div style="font-size:11px;font-weight:600;margin-bottom:3px">Claims Processing</div>
+              <div style="font-size:11px;color:var(--muted2);line-height:1.5">CRCR → Claims domain → 837 lifecycle</div>
+              <div style="font-family:var(--mono);font-size:9px;color:#00aaff;margin-top:5px">→ CRCR Claims</div>
+            </div>
+            <div style="padding:11px 13px;background:var(--surface2);border:1px solid var(--border);border-left:3px solid #ff4455;cursor:pointer" onclick="switchView('crcr',document.querySelectorAll('.ttab')[6]);setTimeout(()=>crcrSetDomain('denials',document.querySelector('[data-d=denials]')),100)">
+              <div style="font-size:11px;font-weight:600;margin-bottom:3px">Denial Management</div>
+              <div style="font-size:11px;color:var(--muted2);line-height:1.5">CRCR → Denials + Denial Lab → CO codes</div>
+              <div style="font-family:var(--mono);font-size:9px;color:#ff4455;margin-top:5px">→ CRCR Denial Lab</div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="ai-messages" id="aiMessages">
-        <div class="ai-msg ai"><div class="src">CRCR AI · TSM</div>Select a domain tab to begin. I can explain concepts, quiz you on denial codes, walk through scenarios, or help you understand what you're seeing in the HC nodes.</div>
+    </div>
+
+    <!-- ACCOUNTING VIEW -->
+    <div class="view" id="view-accounting">
+      <div class="iframe-toolbar">
+        <div class="iframe-title">FinOps · Financial Accounting POC</div>
+        <span style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-left:auto">AP · AR · JE · Bank Rec · P&L · Month-End Close</span>
       </div>
-      <div class="ai-input-row">
-        <textarea class="ai-input" id="aiInput" rows="1" placeholder="Ask about RCM, denial codes, coding rules..." onkeydown="aiKey(event)"></textarea>
-        <button class="ai-send" onclick="sendAI()">Send →</button>
+      <div style="flex:1;overflow:hidden">
+        <iframe src="https://tsm-shell-production-57da.up.railway.app/finops-suite/finops-accounting.html" style="width:100%;height:100%;border:none"></iframe>
       </div>
     </div>
+
+    <!-- OPERATIONS VIEW -->
+    <div class="view" id="view-operations">
+      <div class="iframe-toolbar"><div class="iframe-title">FinOps · Operations Suite</div></div>
+      <div style="flex:1;overflow:hidden">
+        <iframe src="https://tsm-shell-production-57da.up.railway.app/finops-suite/finops-operations.html" style="width:100%;height:100%;border:none"></iframe>
+      </div>
+    </div>
+
+    <!-- FINANCIAL VIEW -->
+    <div class="view" id="view-financial">
+      <div class="iframe-toolbar"><div class="iframe-title">FinOps · Financial Intelligence Hub</div></div>
+      <div style="flex:1;overflow:hidden">
+        <iframe src="https://tsm-shell-production-57da.up.railway.app/finops-suite/financial/index.html" style="width:100%;height:100%;border:none"></iframe>
+      </div>
+    </div>
+
+    <!-- STUDY VIEW -->
+    <div class="view" id="view-study">
+      <div class="study-scroll" id="studyCards"></div>
+    </div>
+
+    <!-- HUB AI VIEW -->
+    <div class="view" id="view-ai">
+      <div class="ai-view">
+        <div class="quick-prompts">
+          <button class="qp" onclick="hubAsk('Explain the double-entry accounting system with a real example')">Double-entry basics</button>
+          <button class="qp" onclick="hubAsk('Walk me through a bank reconciliation step by step')">Bank rec</button>
+          <button class="qp" onclick="hubAsk('What journal entries are required for month-end close?')">Month-end JEs</button>
+          <button class="qp" onclick="hubAsk('Explain accounts payable aging and what action to take at each stage')">AP aging</button>
+          <button class="qp" onclick="hubAsk('Generate 5 accounting quiz questions at staff accountant level with answers')">Quiz me</button>
+        </div>
+        <div class="ai-messages" id="hubAiMessages">
+          <div class="msg ai"><div class="msg-source">TSM FinOps AI</div>Ask any accounting, finance, or FinOps question. I can explain concepts, quiz you, walk through journal entries, or help you understand your finops apps.</div>
+        </div>
+        <div class="ai-input-bar">
+          <textarea class="ai-textarea" id="hubAiInput" rows="1" placeholder="Ask an accounting question..." onkeydown="hubAiKey(event)"></textarea>
+          <button class="send-btn" onclick="hubSendAI()">Send →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CRCR VIEW ══════════════════════════════════ -->
+    <div class="view" id="view-crcr">
+
+      <!-- CRCR SUB-HEADER: domain tabs -->
+      <div class="crcr-subhdr">
+        <button class="crcr-dtab active" data-d="intake" onclick="crcrSetDomain('intake',this)">01 · Intake</button>
+        <button class="crcr-dtab" data-d="coding" onclick="crcrSetDomain('coding',this)">02 · Coding</button>
+        <button class="crcr-dtab" data-d="claims" onclick="crcrSetDomain('claims',this)">03 · Claims</button>
+        <button class="crcr-dtab" data-d="payments" onclick="crcrSetDomain('payments',this)">04 · Payments</button>
+        <button class="crcr-dtab" data-d="denials" onclick="crcrSetDomain('denials',this)">05 · Denials</button>
+        <button class="crcr-dtab" data-d="quiz" onclick="crcrSetDomain('quiz',this)">Quiz Bank</button>
+        <button class="crcr-dtab" data-d="denial-lab" onclick="crcrSetDomain('denial-lab',this)">Denial Lab</button>
+        <div class="crcr-stats">
+          <div class="crcr-stat live" id="crcrPillSessions">0 sessions</div>
+          <div class="crcr-stat" id="crcrPillScore">Score: --</div>
+          <div class="crcr-stat" id="crcrPillWeak">Weak: --</div>
+        </div>
+      </div>
+
+      <!-- CRCR BODY: study panel + node panel -->
+      <div class="crcr-body">
+
+        <!-- LEFT: study content -->
+        <div class="crcr-left">
+          <div class="crcr-left-hdr">
+            <div class="crcr-left-title" id="crcrPanelTitle">Patient Intake</div>
+            <div class="crcr-left-badge" id="crcrPanelBadge">INTAKE</div>
+            <div class="crcr-prog-track"><div class="crcr-prog-fill" id="crcrProgFill" style="width:0%"></div></div>
+            <div class="crcr-prog-txt" id="crcrProgTxt">0/0</div>
+          </div>
+          <div class="crcr-scroll" id="crcrStudyContent"></div>
+        </div>
+
+        <!-- RIGHT: HC nodes + AI drawer -->
+        <div class="crcr-right">
+          <div class="crcr-right-hdr">
+            <div class="crcr-right-title"><span id="crcrNodeDomain">INTAKE</span> → HC PRACTICE NODES</div>
+            <div class="crcr-right-hint">PRIMARY = core practice node for this domain</div>
+          </div>
+
+          <!-- QUICK ASK ROW -->
+          <div class="crcr-qp-row">
+            <button class="crcr-qp" onclick="crcrQuickAsk('Explain the key concepts for the current domain I am studying in CRCR')">Explain domain</button>
+            <button class="crcr-qp" onclick="crcrQuickAsk('What is the most common mistake in this RCM domain and how do I avoid it?')">Top tip</button>
+            <button class="crcr-qp" onclick="crcrQuickAsk('Give me one CRCR practice question for this domain with 4 options and tell me the answer')">Quick quiz</button>
+            <button class="crcr-qp" onclick="crcrQuickAsk('List the denial codes most associated with this domain and their fix paths')">Denial codes</button>
+          </div>
+
+          <div class="crcr-nodes-wrap">
+            <div class="crcr-node-grid" id="crcrNodeGrid"></div>
+          </div>
+
+          <!-- AI DRAWER -->
+          <div class="crcr-ai-drawer">
+            <div class="crcr-ai-hdr">
+              <div class="crcr-ai-title">CRCR AI Tutor <span>· ask while you practice</span></div>
+            </div>
+            <div class="crcr-ai-msgs" id="crcrAiMsgs">
+              <div class="crcr-ai-msg a"><div class="crcr-src">CRCR AI · TSM</div>Select a domain to begin. Ask about denial codes, RCM concepts, coding rules, or how to handle specific scenarios.</div>
+            </div>
+            <div class="crcr-ai-row">
+              <textarea class="crcr-ai-inp" id="crcrAiInput" rows="1" placeholder="Ask about RCM, CO codes, CPT rules..." onkeydown="crcrAiKey(event)"></textarea>
+              <button class="crcr-send" onclick="crcrSendAI()">Send →</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════ -->
+
   </div>
 </div>
 
 <!-- STATUS BAR -->
-<div class="score-bar">
-  <div class="sb-dot"></div>
-  <div class="sb-seg hi">CRCR · Healthcare Revenue Cycle</div>
-  <div class="sb-div">·</div>
-  <div class="sb-seg" id="sbDomain">Domain: Intake</div>
-  <div class="sb-div">·</div>
-  <div class="sb-seg" id="sbProgress">0 scenarios resolved today</div>
-  <div class="sb-div">·</div>
-  <div class="sb-seg" id="sbTime"></div>
-  <div style="margin-left:auto;display:flex;gap:8px">
-    <div class="sb-seg">Weak: <span style="color:var(--red)" id="sbWeak">--</span></div>
-    <div class="sb-div">·</div>
-    <div class="sb-seg">Avg: <span style="color:var(--green)" id="sbAvg">--%</span></div>
-  </div>
+<div class="statusbar">
+  <div class="status-dot"></div>
+  <span class="status-seg hi">TSM Command Hub</span>
+  <span class="status-divider">·</span>
+  <span class="status-seg" id="statusTasks">0/0 tasks</span>
+  <span class="status-divider">·</span>
+  <span class="status-seg" id="statusApi">API: not set</span>
+  <span class="status-divider">·</span>
+  <span class="status-seg" id="statusCrcr">CRCR: 0 resolved</span>
+  <span class="status-divider">·</span>
+  <span class="status-seg" id="statusTime"></span>
 </div>
 
 <!-- MODAL -->
-<div class="overlay" id="overlay" onclick="hideModal()">
+<div class="modal-overlay" id="modalOverlay" onclick="hideModal()">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-title">⚙ AI Configuration</div>
     <div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;margin-bottom:6px">Groq API Key</div>
-    <input class="modal-input" type="password" id="mKey" placeholder="gsk_...">
-    <div class="modal-note">Free at console.groq.com · Powers AI Tutor explanations and coaching</div>
-    <div class="modal-row">
+    <input class="modal-input" type="password" id="modalApiKey" placeholder="gsk_...">
+    <div class="modal-note">Free at console.groq.com · Powers Hub AI Tutor + CRCR AI coach</div>
+    <div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;margin-bottom:6px">Railway Server (optional)</div>
+    <input class="modal-input" type="text" id="modalRailway" placeholder="https://tsm-shell-production-57da.up.railway.app">
+    <div class="modal-note">Your deployed TSM server URL for iframe apps</div>
+    <div class="modal-actions">
       <button class="modal-btn" onclick="hideModal()">Cancel</button>
-      <button class="modal-btn primary" onclick="saveCfg()">Save</button>
+      <button class="modal-btn primary" onclick="saveConfig()">Save</button>
     </div>
   </div>
 </div>
 
 <script>
-/* ─── STATE ─────────────────────────────────────────────── */
-let ST = JSON.parse(localStorage.getItem('crcr_hc') || '{}');
-ST = Object.assign({apiKey:'',scores:[],sessions:0,level:1,resolved:{},domainScores:{intake:[],coding:[],claims:[],payments:[],denials:[]}},ST);
-let curDomain = 'intake';
-function save(){localStorage.setItem('crcr_hc',JSON.stringify(ST))}
+/* ══ HUB STATE ══════════════════════════════════════════ */
+let cfg = JSON.parse(localStorage.getItem('sa_cfg')||'{}');
+cfg = Object.assign({apiKey:'',railwayUrl:'https://tsm-shell-production-57da.up.railway.app',tasks:{},scores:[],level:1,taskDate:''},cfg);
+function saveCfg(){localStorage.setItem('sa_cfg',JSON.stringify(cfg))}
 
-/* ─── DATA ───────────────────────────────────────────────── */
-const DOMAINS = {
-  intake:{
-    label:'Patient Intake',badge:'INTAKE',color:'var(--intake)',
-    concept:{
-      title:'Patient Access & Eligibility',
-      body:'The intake cycle starts before the clinical visit. <b>270/271 transactions</b> verify eligibility in real-time. <b>COB (Coordination of Benefits)</b> determines payer order when a patient has multiple insurances. <b>Prior authorization</b> must be obtained before scheduled procedures or a CO-15/CO-197 denial results. Front-end errors cause over <b>60% of preventable denials</b> — intake accuracy is mission-critical.'
-    },
+/* ══ CRCR STATE ═════════════════════════════════════════ */
+let ST = JSON.parse(localStorage.getItem('crcr_hc')||'{}');
+ST = Object.assign({scores:[],sessions:0,level:1,resolved:{},domainScores:{intake:[],coding:[],claims:[],payments:[],denials:[]}},ST);
+let crcrCurDomain = 'intake';
+function crcrSave(){localStorage.setItem('crcr_hc',JSON.stringify(ST))}
+
+/* ══ HUB TASKS ══════════════════════════════════════════ */
+const TASKS = [
+  {id:'t1',name:'Review AP inbox — flag invoices due within 7 days',tag:'ap'},
+  {id:'t2',name:'Post approved vendor invoices to GL',tag:'ap'},
+  {id:'t3',name:'Check AR aging — follow up on 30+ day balances',tag:'ar'},
+  {id:'t4',name:'Record daily cash receipts',tag:'ar'},
+  {id:'t5',name:'Prepare and post daily journal entries',tag:'gl'},
+  {id:'t6',name:'Reconcile bank transactions to GL',tag:'gl'},
+  {id:'t7',name:'Review expense reports for policy compliance',tag:'ap'},
+  {id:'t8',name:'Update month-end close checklist',tag:'close'},
+  {id:'t9',name:'CRCR — 1 domain + quiz session',tag:'rcm'},
+  {id:'t10',name:'Study session — 20 min accounting concepts',tag:'ops'},
+];
+const today = new Date().toDateString();
+if(cfg.taskDate!==today){cfg.tasks={};cfg.taskDate=today;saveCfg()}
+
+function renderTasks(){
+  const done=Object.values(cfg.tasks).filter(Boolean).length;
+  document.getElementById('taskList').innerHTML=TASKS.map(t=>`
+    <div class="task-item ${cfg.tasks[t.id]?'done':''}" onclick="toggleTask('${t.id}')">
+      <div class="task-check">${cfg.tasks[t.id]?'✓':''}</div>
+      <div class="task-name">${t.name}</div>
+      <div class="task-tag ${t.tag}">${t.tag.toUpperCase()}</div>
+    </div>`).join('');
+  document.getElementById('dashTaskCount').textContent=done+'/'+TASKS.length;
+  document.getElementById('statusTasks').textContent=done+'/'+TASKS.length+' tasks';
+}
+function toggleTask(id){cfg.tasks[id]=!cfg.tasks[id];saveCfg();renderTasks()}
+
+/* ══ DOMAIN BARS ════════════════════════════════════════ */
+const ACCT_DOMAINS=[
+  {key:'ap_ar',label:'AP/AR',color:'var(--gold)'},
+  {key:'gl',label:'General Ledger',color:'var(--blue)'},
+  {key:'recon',label:'Reconciliation',color:'var(--green)'},
+  {key:'close',label:'Month-End',color:'var(--purple)'},
+];
+function renderDomainBars(){
+  if(!cfg.domainScores)cfg.domainScores={};
+  document.getElementById('domainBars').innerHTML=ACCT_DOMAINS.map(d=>{
+    const arr=cfg.domainScores[d.key]||[];
+    const avg=arr.length?Math.round(arr.reduce((a,b)=>a+b,0)/arr.length):0;
+    return `<div>
+      <div class="domain-bar-top"><span class="domain-bar-name">${d.label}</span><span class="domain-bar-pct" style="color:${d.color}">${avg||'--'}${avg?'%':''}</span></div>
+      <div class="domain-bar-track"><div class="domain-bar-fill" style="width:${avg}%;background:${d.color}"></div></div>
+    </div>`;
+  }).join('');
+}
+
+/* ══ HUB STUDY CARDS ════════════════════════════════════ */
+const STUDY_CARDS=[
+  {type:'accounting',topic:'Accounts Payable Cycle',badge:'AP',desc:'AP cycle: PO → goods received → invoice → 3-way match → approved → posted → paid. Your Accounting POC automates triage and approval steps.',actions:[{label:'Accounting POC',fn:`switchView('accounting',document.querySelectorAll('.ttab')[1])`},{label:'Ask AI',fn:`hubAsk('Walk me through the AP invoice cycle and what a 3-way match means')`,p:true}]},
+  {type:'operations',topic:'Bank Reconciliation',badge:'RECON',desc:'Bank rec proves your GL cash balance matches the bank statement. Add deposits-in-transit, subtract outstanding checks (bank side). Add interest income, subtract bank fees (book side). Difference = zero.',actions:[{label:'Accounting POC',fn:`switchView('accounting',document.querySelectorAll('.ttab')[1])`},{label:'Ask AI',fn:`hubAsk('What are the most common reconciling items in a bank reconciliation and how do I handle each one?')`,p:true}]},
+  {type:'accounting',topic:'Journal Entry Rules',badge:'GL',desc:'Every JE must balance: debits = credits. Assets/Expenses increase with debits. Liabilities/Equity/Revenue increase with credits. Accounting POC validates this automatically.',actions:[{label:'Build a JE',fn:`switchView('accounting',document.querySelectorAll('.ttab')[1])`},{label:'Quiz me',fn:`hubAsk('Give me 5 journal entry scenarios at staff accountant level and ask me to provide the correct debit and credit accounts')`,p:true}]},
+  {type:'analysis',topic:'RCM meets Accounting',badge:'BRIDGE',desc:'Healthcare accounting crossover: AP invoices from vendors = standard AP cycle. But patient AR, insurance AR, and denial write-offs require RCM knowledge. The CRCR tab covers the revenue side.',actions:[{label:'CRCR Denials',fn:`switchView('crcr',document.querySelectorAll('.ttab')[6]);setTimeout(()=>crcrSetDomain('denials',document.querySelector('[data-d=denials]')),100)`},{label:'Denial Lab',fn:`switchView('crcr',document.querySelectorAll('.ttab')[6]);setTimeout(()=>crcrSetDomain('denial-lab',document.querySelector('[data-d=denial-lab]')),100)`,p:true}]},
+];
+function renderStudyCards(){
+  document.getElementById('studyCards').innerHTML=STUDY_CARDS.map(c=>`
+    <div class="study-card ${c.type}" style="margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div class="study-topic">${c.topic}</div>
+        <div class="study-badge">${c.badge}</div>
+      </div>
+      <div class="study-desc">${c.desc}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${c.actions.map(a=>`<button class="study-btn ${a.p?'primary':''}" onclick="${a.fn}">${a.label}</button>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+/* ══ VIEW SWITCHING ═════════════════════════════════════ */
+function switchView(name,el){
+  document.querySelectorAll('.ttab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  if(el)el.classList.add('active');
+  document.getElementById('view-'+name).classList.add('active');
+  if(name==='crcr') crcrRefresh();
+}
+
+/* ══ CRCR DATA ══════════════════════════════════════════ */
+const CRCR_DOMAINS={
+  intake:{label:'Patient Intake',badge:'INTAKE',color:'var(--rcm-intake)',
+    concept:{title:'Patient Access & Eligibility',body:'The intake cycle starts before the clinical visit. <b>270/271 transactions</b> verify eligibility in real-time. <b>COB</b> determines payer order with multiple insurances. <b>Prior authorization</b> must be obtained before scheduled procedures or a CO-15 results. Front-end errors cause over <b>60% of preventable denials</b>.'},
     scenarios:[
-      {id:'i1',issue:'Patient registered with incorrect date of birth',task:'Identify impact on eligibility verification and correct the registration'},
-      {id:'i2',issue:'Insurance ID entered without leading zeros',task:'Explain how this causes a 271 eligibility failure and what the fix path is'},
+      {id:'i1',issue:'Patient registered with incorrect date of birth',task:'Identify impact on 271 eligibility verification and correct registration'},
+      {id:'i2',issue:'Insurance ID entered without leading zeros',task:'Explain how this causes a 271 eligibility failure and map the fix path'},
       {id:'i3',issue:'Primary and secondary insurance not coordinated',task:'Apply COB rules to determine correct billing order'},
-      {id:'i4',issue:'Prior authorization not obtained before MRI',task:'Identify which denial code will result (CO-15) and the resolution path'},
-      {id:'i5',issue:'Patient address does not match insurance records',task:'Explain the downstream claim impact and how to correct before submission'},
+      {id:'i4',issue:'Prior authorization not obtained before MRI',task:'Identify which denial code results (CO-15) and the resolution path'},
+      {id:'i5',issue:'Patient address does not match insurance records',task:'Explain the downstream claim impact and correction steps'},
     ],
-    hints:{
-      i1:'Check registration accuracy. 270/271 eligibility match requires exact DOB. A mismatch returns a 271 with benefit=inactive.',
-      i2:'Payer enrollment files store member IDs with exact formatting. Leading zero mismatches cause a "subscriber not found" 271 rejection.',
-      i3:'Medicare is primary over commercial (MSP rules). Medicaid is always payer of last resort. Verify COB every 90 days at minimum.',
-      i4:'CO-15 = services denied because prior authorization was not obtained. Get retro-authorization within payer window (usually 24–72 hrs).',
-      i5:'Address mismatches trigger 835 CO-16 (missing info) on claims. Correct in registration + re-verify eligibility before submitting.'
-    },
-    nodes:['insurance','operations']
-  },
-  coding:{
-    label:'Medical Coding',badge:'CODING',color:'var(--coding)',
-    concept:{
-      title:'CPT / ICD-10 / HCPCS Coding Rules',
-      body:'<b>ICD-10-CM</b> diagnoses must support medical necessity for every CPT ordered. <b>Modifier 25</b> is required when an E/M service is billed same-day as a procedure. <b>Modifier 59</b> breaks unbundling when separate distinct services are performed. <b>NCCI edits</b> define which CPT pairs bundle by default. HCPCS Level II codes (A–V prefix) are used for supplies, DME, and drugs — some payers require CPT instead.'
-    },
+    hints:{i1:'Check registration accuracy. 270/271 match requires exact DOB. A mismatch returns a 271 with benefit=inactive.',i2:'Payer enrollment files store member IDs with exact formatting. Leading zero mismatches cause "subscriber not found" on 271.',i3:'Medicare is primary over commercial (MSP rules). Medicaid is always payer of last resort. Verify COB every 90 days.',i4:'CO-15 = services denied because prior auth was not obtained. Get retro-authorization within payer window (usually 24–72 hrs).',i5:'Address mismatches trigger CO-16 (missing info) on claims. Correct in registration + re-verify eligibility before submitting.'},
+    nodes:['insurance','operations']},
+  coding:{label:'Medical Coding',badge:'CODING',color:'var(--rcm-coding)',
+    concept:{title:'CPT / ICD-10 / HCPCS Coding Rules',body:'<b>ICD-10-CM</b> diagnoses must support medical necessity for every CPT ordered. <b>Modifier 25</b> is required when an E/M service is billed same-day as a procedure. <b>Modifier 59</b> breaks unbundling for distinct services. <b>NCCI edits</b> define which CPT pairs bundle by default.'},
     scenarios:[
       {id:'c1',issue:'ICD-10 code does not support medical necessity for CPT ordered',task:'Identify the ICD-CPT mismatch and correct the coding'},
-      {id:'c2',issue:'Modifier 25 missing on E/M service billed same day as procedure',task:'Explain bundling rules and add correct modifier'},
-      {id:'c3',issue:'Unlisted CPT code submitted without documentation',task:'Find the correct billable code for the procedure performed'},
+      {id:'c2',issue:'Modifier 25 missing on E/M billed same day as procedure',task:'Explain bundling rules and add correct modifier'},
+      {id:'c3',issue:'Unlisted CPT code submitted without documentation',task:'Find the correct billable code for the procedure'},
       {id:'c4',issue:'HCPCS Level II code submitted to payer that requires CPT',task:'Identify payer-specific coding requirement and fix'},
     ],
-    hints:{
-      c1:'Pull the LCD (Local Coverage Determination) for the CPT. It lists approved ICD-10 codes. Add supporting diagnosis or query provider.',
-      c2:'Modifier 25 tells the payer the E/M was a significant, separately identifiable service from the procedure. Without it, the E/M bundles.',
-      c3:'Unlisted codes require a paper claim with supporting documentation. Always check if a specific CPT exists before using 99999-type codes.',
-      c4:'Check payer EDI companion guide. Some payers (Medicaid) require HCPCS; others (some commercial) require equivalent CPT only.'
-    },
-    nodes:['billing','medical']
-  },
-  claims:{
-    label:'Claims Processing',badge:'CLAIMS',color:'var(--claims)',
-    concept:{
-      title:'837 Claim Lifecycle & Submission',
-      body:'Claims flow: <b>837P/I created → clearinghouse → 277CA acknowledgment → payer adjudication → 835 ERA</b>. A <b>277 rejection</b> (before adjudication) is a format/loop error, not a denial. <b>Timely filing</b> windows: Medicare = 12 months, commercial = 90–365 days. Track original submission dates from <b>clearinghouse 277CA confirmations</b> — these are your proof of timely filing in appeals. <b>Frequency code 7</b> = replacement claim; code 8 = void.'
-    },
+    hints:{c1:'Pull the LCD for the CPT. It lists approved ICD-10 codes. Add supporting diagnosis or query provider.',c2:'Modifier 25 tells the payer the E/M was a significant, separately identifiable service from the procedure. Without it, the E/M bundles.',c3:'Unlisted codes require a paper claim with supporting documentation. Always check if a specific CPT exists first.',c4:'Check payer EDI companion guide. Some payers require HCPCS; others require equivalent CPT only.'},
+    nodes:['billing','medical']},
+  claims:{label:'Claims Processing',badge:'CLAIMS',color:'var(--rcm-claims)',
+    concept:{title:'837 Claim Lifecycle & Submission',body:'Claims flow: <b>837P/I created → clearinghouse → 277CA → payer adjudication → 835 ERA</b>. A <b>277 rejection</b> (before adjudication) is a format/loop error, not a denial. <b>Timely filing</b>: Medicare = 12 months, commercial = 90–365 days. <b>Frequency code 7</b> = replacement; code 8 = void.'},
     scenarios:[
-      {id:'cl1',issue:'Claim submitted past timely filing limit — CO-197 received',task:'Review appeal rights and locate proof of timely filing'},
-      {id:'cl2',issue:'NPI on claim does not match payer credentialing file',task:'Identify correct NPI and map out the resubmission pathway'},
+      {id:'cl1',issue:'Claim submitted past timely filing limit — CO-197 received',task:'Review appeal rights and locate clearinghouse proof of timely filing'},
+      {id:'cl2',issue:'NPI on claim does not match payer credentialing file',task:'Identify correct NPI and map out resubmission pathway'},
       {id:'cl3',issue:'Duplicate claim submitted within 30 days of original',task:'Identify as duplicate (CO-18), void or correct before resubmitting'},
       {id:'cl4',issue:'Clearinghouse returned claim with 277 rejection code',task:'Read rejection loop and fix the 837 claim segment error'},
     ],
-    hints:{
-      cl1:'Pull the original 277CA or clearinghouse submission report. Attach as proof of timely filing in the appeal. Check if a valid exception applies (payer error, system outage).',
-      cl2:'Type 1 NPI = individual provider; Type 2 = organization. The payer credential file holds the enrolled NPI — must match exactly on Box 33/24J.',
-      cl3:'CO-18 = duplicate claim. Void original first (frequency code 8), then correct and resubmit (frequency code 7) if needed.',
-      cl4:'277 rejections are pre-adjudication. Check the loop/segment codes. Common: missing REF*F8 (original claim number), bad provider NPI, invalid date formats.'
-    },
-    nodes:['billing','compliance']
-  },
-  payments:{
-    label:'Payment Posting',badge:'PAYMENTS',color:'var(--payments)',
-    concept:{
-      title:'ERA / EOB & Payment Reconciliation',
-      body:'<b>ERA (835 transaction)</b> is the electronic remittance. It contains CAS segments with <b>CARC (Claim Adjustment Reason Codes)</b> and <b>RARC (Remittance Advice Remark Codes)</b>. Contractual adjustments (CO-45) = difference between billed charge and contracted rate. <b>Underpayments</b> must be appealed within 45–180 days of the ERA date. A <b>PR code</b> = Patient Responsibility. Always reconcile ERA to your fee schedule before posting — every dollar matters.'
-    },
+    hints:{cl1:'Pull the original 277CA or clearinghouse submission report. Attach as proof of timely filing in the appeal.',cl2:'Type 1 NPI = individual provider; Type 2 = organization. Enrolled NPI must match exactly on the claim.',cl3:'CO-18 = duplicate claim. Void original first (frequency code 8), then correct and resubmit (frequency code 7).',cl4:'277 rejections are pre-adjudication. Check the loop/segment codes. Common: missing REF*F8, bad NPI, invalid date formats.'},
+    nodes:['billing','compliance']},
+  payments:{label:'Payment Posting',badge:'PAYMENTS',color:'var(--rcm-payments)',
+    concept:{title:'ERA / EOB & Payment Reconciliation',body:'<b>ERA (835 transaction)</b> contains CAS segments with <b>CARC</b> and <b>RARC codes</b>. CO-45 = contractual adjustment. <b>Underpayments</b> must be appealed within 45–180 days of ERA date. A <b>PR code</b> = Patient Responsibility. Always reconcile ERA to your fee schedule before posting.'},
     scenarios:[
       {id:'p1',issue:'ERA shows contractual adjustment greater than contracted fee schedule',task:'Audit ERA against contract terms and flag as underpayment'},
-      {id:'p2',issue:'Payment posted to wrong patient account (transposition error)',task:'Reverse the payment and re-apply correctly'},
+      {id:'p2',issue:'Payment posted to wrong patient account',task:'Reverse the payment and re-apply correctly'},
       {id:'p3',issue:'Deductible applied when patient is in deductible-free benefit period',task:'Identify the benefit error and initiate a payer appeal'},
     ],
-    hints:{
-      p1:'Pull your fee schedule for the CPT. If ERA payment < contracted rate, it\'s an underpayment. File a dispute within the contract\'s appeal window. Document payer remittance date.',
-      p2:'Use a reversal transaction — credit the wrong account, debit the correct account. Post with note of original ERA number. Re-reconcile month-end.',
-      p3:'Call payer to verify benefit period dates. If confirmed error, submit a formal appeal with the patient\'s EOB and plan documents showing the deductible waiver.'
-    },
-    nodes:['financial','billing']
-  },
-  denials:{
-    label:'Denial Management',badge:'DENIALS',color:'var(--denials)',
-    concept:{
-      title:'Denial Root Cause & Appeals Workflow',
-      body:'Denial management is the most high-impact revenue cycle function. Every denial needs a <b>root cause</b> before action: Administrative (wrong NPI, timely filing), Clinical (medical necessity, auth), or Payer Error (incorrect contract interpretation). The denial loop: <b>Receive 835 → identify CARC → assign to owner lane → research root cause → correct/appeal → track resolution → prevent recurrence</b>. Target: deny rate under 5% of submitted charges.'
-    },
+    hints:{p1:'Pull your fee schedule for the CPT. If ERA payment < contracted rate, it\'s an underpayment. File a dispute within the contract\'s appeal window.',p2:'Use a reversal transaction — credit the wrong account, debit the correct account. Post with note of original ERA number.',p3:'Call payer to verify benefit period dates. If confirmed error, submit a formal appeal with the patient\'s EOB showing the deductible waiver.'},
+    nodes:['financial','billing']},
+  denials:{label:'Denial Management',badge:'DENIALS',color:'var(--rcm-denials)',
+    concept:{title:'Denial Root Cause & Appeals Workflow',body:'Every denial needs a <b>root cause</b> before action: Administrative (wrong NPI, timely filing), Clinical (medical necessity, auth), or Payer Error. The denial loop: <b>Receive 835 → identify CARC → assign to owner lane → research → correct/appeal → track → prevent recurrence</b>. Target: deny rate under 5%.'},
     scenarios:[
-      {id:'d1',issue:'CO-16: Claim lacks information — missing referring provider NPI',task:'Identify missing field from remark code, add NPI, resubmit as corrected claim'},
+      {id:'d1',issue:'CO-16: Claim lacks information — missing referring provider NPI',task:'Identify missing field from N remark code, add NPI, resubmit corrected claim'},
       {id:'d2',issue:'CO-50: Not medically necessary — diagnosis does not support CPT',task:'Review LCD, add supporting diagnosis or obtain documentation for appeal'},
       {id:'d3',issue:'CO-4: Modifier inconsistent with procedure — Modifier 25 error',task:'Review modifier requirements, correct claim, resubmit'},
       {id:'d4',issue:'PR-1: Deductible not yet met — patient responsibility balance',task:'Bill patient for deductible balance, update billing system'},
       {id:'d5',issue:'CO-197: Timely filing exceeded — no clearinghouse proof',task:'Determine if exception applies, locate any proof, assess write-off risk'},
     ],
-    hints:{
-      d1:'CO-16 always comes with N codes (remark codes). Read the N code first — it tells you exactly what field is missing. Common: N264 (referring provider NPI).',
-      d2:'Pull the CMS LCD for the CPT code. If ICD-10 is not on the approved list, query the provider for a supporting diagnosis before appealing.',
-      d3:'Modifier 25 = E/M same day as procedure. Modifier 59 = distinct service. Modifier 26/TC = professional/technical component. Match modifier to the clinical scenario exactly.',
-      d4:'PR codes are patient responsibility — never appeal these to the payer. Update the patient\'s balance and generate a statement. Offer payment plan per policy.',
-      d5:'With no proof, timely filing appeals rarely succeed. Check for any system outage records or payer acknowledgment. If no exception exists, prepare for write-off.'
-    },
-    nodes:['billing','compliance','insurance']
-  },
-  quiz:{
-    label:'Quiz Bank',badge:'QUIZ',color:'var(--yellow)',
-    concept:null,scenarios:[],hints:{},nodes:['billing','compliance','insurance','medical','operations']
-  },
-  'denial-lab':{
-    label:'Denial Code Lab',badge:'LAB',color:'var(--orange)',
-    concept:null,scenarios:[],hints:{},nodes:['billing','compliance']
-  }
+    hints:{d1:'CO-16 always comes with N remark codes. Read the N code first — it tells you exactly what field is missing. Common: N264 (referring provider NPI).',d2:'Pull the CMS LCD for the CPT. If ICD-10 is not on the approved list, query provider for supporting diagnosis before appealing.',d3:'Modifier 25 = E/M same day as procedure. Match modifier to the clinical scenario exactly.',d4:'PR codes are patient responsibility — never appeal to payer. Update patient balance and generate a statement.',d5:'With no proof, timely filing appeals rarely succeed. Check for system outage records. If no exception exists, prepare for write-off.'},
+    nodes:['billing','compliance','insurance']},
+  quiz:{label:'Quiz Bank',badge:'QUIZ',color:'var(--rcm-yellow)',concept:null,scenarios:[],hints:{},nodes:['billing','compliance','insurance','medical','operations']},
+  'denial-lab':{label:'Denial Code Lab',badge:'LAB',color:'var(--rcm-orange)',concept:null,scenarios:[],hints:{},nodes:['billing','compliance']}
 };
 
-const QUIZ_BANK = [
+const CRCR_QUIZ=[
   {q:'What is the MOST likely cause of a CO-197 denial?',opts:['Incorrect CPT code','Claim submitted after timely filing limit','Missing prior authorization','Invalid NPI'],ans:1},
   {q:'Which transaction confirms patient eligibility and benefits in real-time?',opts:['837P','835 ERA','271 response','277CA'],ans:2},
   {q:'A patient has Medicare primary and Medicaid secondary. Which rule applies?',opts:['HIPAA','COB — Medicare pays first','Subrogation','Assignment of benefits'],ans:1},
   {q:'CO-50 denial means the service is:',opts:['Filed past timely window','Not medically necessary','A duplicate claim','Missing information'],ans:1},
   {q:'Modifier 25 is required when billing:',opts:['Two surgical procedures same day','E/M service same day as a procedure','Bilateral procedures','Telehealth visit'],ans:1},
-  {q:'A 277 rejection from the clearinghouse indicates:',opts:['The payer denied the claim for medical necessity','A format/loop error before adjudication','The timely filing window has expired','A duplicate claim was detected'],ans:1},
-  {q:'Which CARC code represents the contractual adjustment between billed and paid?',opts:['CO-16','CO-45','CO-50','PR-1'],ans:1},
+  {q:'A 277 rejection from the clearinghouse indicates:',opts:['The payer denied for medical necessity','A format/loop error before adjudication','The timely filing window has expired','A duplicate claim was detected'],ans:1},
+  {q:'Which CARC code represents the contractual adjustment?',opts:['CO-16','CO-45','CO-50','PR-1'],ans:1},
   {q:'What does frequency code 7 indicate on a resubmitted claim?',opts:['Original claim','Replacement claim','Voided claim','Late-filed claim'],ans:1},
   {q:'PR codes on an 835 ERA indicate:',opts:['Payer denied the claim','Patient financial responsibility','Clearinghouse rejection','Contractual write-off'],ans:1},
   {q:'What is the first step in a denial management workflow?',opts:['Appeal immediately','Identify root cause','Write off the balance','Refile the claim'],ans:1},
   {q:'HCPCS Level II codes begin with:',opts:['A number 0–9','A letter A–V','The prefix ICD','A CPT modifier'],ans:1},
   {q:'Which denial is preventable at the patient access stage?',opts:['CO-50 medical necessity','CO-197 timely filing','CO-4 modifier error','CO-15 prior auth not obtained'],ans:3},
-  {q:'An EOB is sent to:',opts:['Clearinghouse only','Provider only','Patient and provider','CMS only'],ans:2},
   {q:'CO-4 denial most commonly results from:',opts:['A missing diagnosis code','An incorrect or inconsistent modifier','An unlisted procedure code','A duplicate claim number'],ans:1},
   {q:'What does "clean claim" mean in RCM?',opts:['A claim with no charges','A claim submitted electronically','A claim that can be processed without additional information','A claim approved for payment'],ans:2},
+  {q:'An EOB is sent to:',opts:['Clearinghouse only','Provider only','Patient and provider','CMS only'],ans:2},
 ];
 
-const DENIAL_CODES = [
-  {code:'CO-16',name:'Claim Lacks Information',color:'var(--red)',desc:'The claim is missing data required for adjudication. The remark (N) code will specify exactly what is missing.',fixes:['Read the N remark code — it identifies the exact missing field','Add the required information (NPI, referring provider, NDC, etc.)','Resubmit as corrected claim with frequency code 7','Document fix and root cause in denial log']},
-  {code:'CO-50',name:'Not Medically Necessary',color:'var(--red)',desc:'The diagnosis does not meet the payer\'s medical necessity criteria for the procedure billed.',fixes:['Pull LCD/NCD for the CPT code — check approved ICD-10 list','Query provider for supporting diagnosis if available','Obtain clinical documentation (progress notes, imaging, labs)','Draft appeal with clinical evidence and CPT policy citation','Add supporting ICD-10 codes if documented in the chart']},
-  {code:'CO-197',name:'Timely Filing Exceeded',color:'var(--orange)',desc:'Claim submitted outside the payer\'s timely filing window. Medicare = 12 months; commercial = 90–365 days.',fixes:['Pull clearinghouse 277CA or submission confirmation as proof','Submit appeal with proof of timely filing as attachment','If no proof exists, check for valid exceptions (payer delay, system outage, disaster)','Write off per contractual obligation if no exception applies']},
-  {code:'CO-4',name:'Modifier Inconsistency',color:'var(--orange)',desc:'The modifier used is inconsistent with the procedure code or payer-specific billing rules.',fixes:['Review modifier requirements for the CPT code','Verify Modifier 25 is present for same-day E/M + procedure','Check if Modifier 59 or XE/XP/XS/XU is more appropriate','Correct modifier and resubmit as corrected claim']},
-  {code:'CO-18',name:'Duplicate Claim',color:'var(--yellow)',desc:'The payer identified this as a duplicate of a previously processed claim.',fixes:['Pull original claim and compare — verify if true duplicate','If corrected/replacement, void original (frequency code 8) first','Resubmit corrected claim with frequency code 7','If original was underpaid, open an underpayment dispute instead']},
-  {code:'CO-15',name:'Authorization Not Obtained',color:'var(--red)',desc:'The service required prior authorization and none was obtained before the date of service.',fixes:['Contact payer immediately for retro-authorization (24–72 hr window)','Obtain clinical documentation to support retro-auth request','If denied retro-auth, file formal appeal with clinical evidence','Document intake failure and flag for process improvement']},
-  {code:'PR-1',name:'Deductible — Patient Responsibility',color:'var(--muted2)',desc:'Deductible amount has not yet been met. This is patient responsibility — do not appeal to the payer.',fixes:['Verify deductible balance on ERA/EOB','Update patient financial responsibility in billing system','Generate patient statement for deductible amount','Offer payment plan per practice financial policy']},
-  {code:'CO-45',name:'Contractual Write-Off',color:'var(--muted2)',desc:'The difference between billed charges and the contracted allowed amount. Standard write-off for in-network providers.',fixes:['Verify payment matches the contracted rate in your fee schedule','If payment is below contracted rate → it\'s an underpayment, not a CO-45','Appeal underpayments within 45–180 days of ERA date','Adjust the balance to zero after write-off']},
+const CRCR_DENIAL_CODES=[
+  {code:'CO-16',name:'Claim Lacks Information',color:'var(--rcm-red)',desc:'Missing data required for adjudication. The remark (N) code specifies exactly what is missing.',fixes:['Read the N remark code — identifies exact missing field','Add required info (NPI, referring provider, NDC, etc.)','Resubmit as corrected claim with frequency code 7','Document root cause in denial log']},
+  {code:'CO-50',name:'Not Medically Necessary',color:'var(--rcm-red)',desc:'Diagnosis does not meet the payer\'s medical necessity criteria for the procedure billed.',fixes:['Pull LCD/NCD for the CPT code — check approved ICD-10 list','Query provider for supporting diagnosis','Obtain clinical documentation (notes, imaging, labs)','Draft appeal with clinical evidence and CPT policy citation']},
+  {code:'CO-197',name:'Timely Filing Exceeded',color:'var(--rcm-orange)',desc:'Claim submitted outside the payer\'s timely filing window. Medicare = 12 months; commercial = 90–365 days.',fixes:['Pull clearinghouse 277CA as proof of timely filing','Submit appeal with proof attached','Check for valid exceptions (payer delay, system outage)','Write off per contract if no exception applies']},
+  {code:'CO-4',name:'Modifier Inconsistency',color:'var(--rcm-orange)',desc:'Modifier used is inconsistent with procedure code or payer-specific billing rules.',fixes:['Review modifier requirements for the CPT code','Verify Modifier 25 is present for same-day E/M + procedure','Check if Modifier 59 or XE/XP/XS/XU is more appropriate','Correct modifier and resubmit as corrected claim']},
+  {code:'CO-18',name:'Duplicate Claim',color:'var(--rcm-yellow)',desc:'Payer identified this as a duplicate of a previously processed claim.',fixes:['Pull original claim and compare','Void original first (frequency code 8)','Resubmit corrected claim with frequency code 7','If original underpaid, open an underpayment dispute instead']},
+  {code:'CO-15',name:'Auth Not Obtained',color:'var(--rcm-red)',desc:'Service required prior authorization and none was obtained before date of service.',fixes:['Contact payer immediately for retro-authorization','Obtain clinical documentation for retro-auth request','If denied retro-auth, file formal appeal with evidence','Document intake failure for process improvement']},
+  {code:'PR-1',name:'Deductible — Patient Responsibility',color:'var(--muted2)',desc:'Deductible not yet met. Patient responsibility — do not appeal to the payer.',fixes:['Verify deductible balance on ERA/EOB','Update patient financial responsibility in billing system','Generate patient statement','Offer payment plan per practice financial policy']},
+  {code:'CO-45',name:'Contractual Write-Off',color:'var(--muted2)',desc:'Difference between billed charges and contracted allowed amount. Standard write-off for in-network providers.',fixes:['Verify payment matches contracted rate in your fee schedule','If payment < contracted rate → underpayment, not CO-45','Appeal underpayments within 45–180 days of ERA date','Adjust balance to zero after write-off']},
 ];
 
-const HC_NODES = {
-  insurance:{title:'INSURANCE',meta:'Eligibility · Prior Auth · Payer Rules · 270/271',color:'#00aaff',issue:'Resolve payer friction: 271 eligibility failures, prior auth aging, authorization SLA, and COB disputes.',relevance:{intake:'PRIMARY',coding:'SECONDARY',claims:'SECONDARY',payments:'SUPPORT',denials:'PRIMARY'}},
-  operations:{title:'OPERATIONS',meta:'Intake · Scheduling · Patient Access · Throughput',color:'#00aaff',issue:'Balance intake volume, scheduling pressure, and registration accuracy to prevent front-end denial exposure.',relevance:{intake:'PRIMARY',coding:'SUPPORT',claims:'SUPPORT',payments:'SUPPORT',denials:'SECONDARY'}},
-  billing:{title:'BILLING',meta:'Claims · Coding · Denials · AR · Clean Claim Rate',color:'#00ffc6',issue:'Drive denial reduction, claim scrubbing, coding accuracy, and AR recovery workflows.',relevance:{intake:'SECONDARY',coding:'PRIMARY',claims:'PRIMARY',payments:'PRIMARY',denials:'PRIMARY'}},
-  medical:{title:'MEDICAL',meta:'CPT · Clinical Docs · Medical Necessity · Audit',color:'#00ffc6',issue:'Close clinical documentation gaps, query providers, and route medical necessity appeals with supporting evidence.',relevance:{intake:'SUPPORT',coding:'PRIMARY',claims:'SUPPORT',payments:'SUPPORT',denials:'SECONDARY'}},
-  financial:{title:'FINANCIAL',meta:'Revenue Cycle · AR Aging · P&L · Cash Flow',color:'#00aaff',issue:'Prioritize high-value aging claims, reconcile ERA payments, and flag underpayments before the appeal window closes.',relevance:{intake:'SUPPORT',coding:'SUPPORT',claims:'SECONDARY',payments:'PRIMARY',denials:'SECONDARY'}},
-  compliance:{title:'COMPLIANCE',meta:'HIPAA · CMS · OIG · Audit Trail · Policy',color:'#ff4d6d',issue:'Close documentation gaps, enforce coding policy, and maintain audit trail before billing handoff.',relevance:{intake:'SUPPORT',coding:'SECONDARY',claims:'PRIMARY',payments:'SUPPORT',denials:'PRIMARY'}},
-  pharmacy:{title:'PHARMACY',meta:'DEA · Drug Interactions · Rx Auth · HCPCS J-codes',color:'#ffc400',issue:'Clear medication prior auth dependencies and resolve HCPCS J-code billing questions.',relevance:{intake:'SUPPORT',coding:'SECONDARY',claims:'SUPPORT',payments:'SUPPORT',denials:'SUPPORT'}},
+const CRCR_HC_NODES={
+  insurance:{title:'INSURANCE',meta:'Eligibility · Prior Auth · Payer Rules · 270/271',color:'#00aaff',issue:'Resolve payer friction: 271 eligibility failures, prior auth aging, authorization SLA, and COB disputes.',rel:{intake:'PRIMARY',coding:'SECONDARY',claims:'SECONDARY',payments:'SUPPORT',denials:'PRIMARY'}},
+  operations:{title:'OPERATIONS',meta:'Intake · Scheduling · Patient Access · Throughput',color:'#00aaff',issue:'Balance intake volume, scheduling pressure, and registration accuracy to prevent front-end denial exposure.',rel:{intake:'PRIMARY',coding:'SUPPORT',claims:'SUPPORT',payments:'SUPPORT',denials:'SECONDARY'}},
+  billing:{title:'BILLING',meta:'Claims · Coding · Denials · AR · Clean Claim Rate',color:'#00ffc6',issue:'Drive denial reduction, claim scrubbing, coding accuracy, and AR recovery workflows.',rel:{intake:'SECONDARY',coding:'PRIMARY',claims:'PRIMARY',payments:'PRIMARY',denials:'PRIMARY'}},
+  medical:{title:'MEDICAL',meta:'CPT · Clinical Docs · Medical Necessity · Audit',color:'#00ffc6',issue:'Close clinical documentation gaps, query providers, and route medical necessity appeals with evidence.',rel:{intake:'SUPPORT',coding:'PRIMARY',claims:'SUPPORT',payments:'SUPPORT',denials:'SECONDARY'}},
+  financial:{title:'FINANCIAL',meta:'Revenue Cycle · AR Aging · P&L · Cash Flow',color:'#00aaff',issue:'Prioritize high-value aging claims, reconcile ERA payments, and flag underpayments before the appeal window closes.',rel:{intake:'SUPPORT',coding:'SUPPORT',claims:'SECONDARY',payments:'PRIMARY',denials:'SECONDARY'}},
+  compliance:{title:'COMPLIANCE',meta:'HIPAA · CMS · OIG · Audit Trail · Policy',color:'#ff4d6d',issue:'Close documentation gaps, enforce coding policy, and maintain audit trail before billing handoff.',rel:{intake:'SUPPORT',coding:'SECONDARY',claims:'PRIMARY',payments:'SUPPORT',denials:'PRIMARY'}},
+  pharmacy:{title:'PHARMACY',meta:'DEA · Drug Interactions · Rx Auth · HCPCS J-codes',color:'#ffc400',issue:'Clear medication prior auth dependencies and resolve HCPCS J-code billing questions.',rel:{intake:'SUPPORT',coding:'SECONDARY',claims:'SUPPORT',payments:'SUPPORT',denials:'SUPPORT'}},
 };
 
-/* ─── RENDER ENGINE ──────────────────────────────────────── */
-function setDomain(domain, el){
-  curDomain = domain;
-  document.querySelectorAll('.dtab').forEach(t=>t.classList.remove('active'));
-  if(el) el.classList.add('active');
-  document.getElementById('panelTitle').textContent = DOMAINS[domain].label;
-  document.getElementById('panelBadge').textContent = DOMAINS[domain].badge;
-  document.getElementById('nodePanelDomain').textContent = DOMAINS[domain].badge;
-  document.getElementById('sbDomain').textContent = 'Domain: ' + DOMAINS[domain].label;
-  renderStudy(domain);
-  renderNodes(domain);
-  updateProgress(domain);
+/* ══ CRCR RENDER ════════════════════════════════════════ */
+function crcrSetDomain(domain,el){
+  crcrCurDomain = domain;
+  document.querySelectorAll('#view-crcr .crcr-dtab').forEach(t=>t.classList.remove('active'));
+  if(el)el.classList.add('active');
+  const d = CRCR_DOMAINS[domain];
+  document.getElementById('crcrPanelTitle').textContent = d.label;
+  document.getElementById('crcrPanelBadge').textContent = d.badge;
+  document.getElementById('crcrNodeDomain').textContent = d.badge;
+  crcrRenderStudy(domain);
+  crcrRenderNodes(domain);
+  crcrUpdateProgress(domain);
 }
 
-function renderStudy(domain){
-  const sc = document.getElementById('studyContent');
-  if(domain === 'quiz'){sc.innerHTML = renderQuiz(); wireQuiz(); return}
-  if(domain === 'denial-lab'){sc.innerHTML = renderDenialLab(); return}
+function crcrRefresh(){
+  crcrSetDomain(crcrCurDomain, document.querySelector(`#view-crcr .crcr-dtab[data-d="${crcrCurDomain}"]`));
+  crcrUpdateStats();
+}
 
-  const d = DOMAINS[domain];
-  let html = '';
+function crcrRenderStudy(domain){
+  const el=document.getElementById('crcrStudyContent');
+  if(domain==='quiz'){el.innerHTML=crcrBuildQuiz();return}
+  if(domain==='denial-lab'){el.innerHTML=crcrBuildDenialLab();return}
+  const d=CRCR_DOMAINS[domain]; let html='';
   if(d.concept){
-    html += `<div class="concept-block" style="border-left-color:${d.color}">
-      <div class="concept-label">Core Concept · ${d.badge}</div>
-      <div class="concept-title">${d.concept.title}</div>
-      <div class="concept-body">${d.concept.body}</div>
+    html+=`<div class="crcr-concept" style="border-left-color:${d.color}">
+      <div class="crcr-concept-lbl">Core Concept · ${d.badge}</div>
+      <div class="crcr-concept-ttl">${d.concept.title}</div>
+      <div class="crcr-concept-body">${d.concept.body}</div>
     </div>`;
   }
   d.scenarios.forEach(s=>{
-    const done = ST.resolved[s.id];
-    html += `<div class="scenario-card ${done?'done':''}" id="scard_${s.id}">
-      <div class="scenario-meta">
-        <div class="s-tag ${domain}">${domain.toUpperCase()}</div>
-        <div class="s-tag">Lvl ${ST.level}</div>
-        ${done?`<div class="s-tag" style="border-color:rgba(0,255,198,.4);color:var(--green)">✓ Done</div>`:''}
+    const done=ST.resolved[s.id];
+    html+=`<div class="crcr-sc ${done?'done':''}" id="crcrSc_${s.id}">
+      <div class="crcr-sc-meta">
+        <div class="crcr-tag ${domain}">${domain.toUpperCase()}</div>
+        ${done?'<div class="crcr-tag done-tag">✓ Done</div>':''}
       </div>
-      <div class="s-issue">${s.issue}</div>
-      <div class="s-task">${s.task}</div>
-      <div class="s-actions">
-        <button class="s-btn resolve" onclick="resolveScenario('${s.id}',true)">✓ Resolved</button>
-        <button class="s-btn fail" onclick="resolveScenario('${s.id}',false)">✗ Needs Review</button>
-        <button class="s-btn" onclick="toggleHint('${s.id}','${domain}')">Hint</button>
-        <button class="s-btn" onclick="askAbout('${s.issue.replace(/'/g,"\\'")}')">Ask AI →</button>
+      <div class="crcr-sc-issue">${s.issue}</div>
+      <div class="crcr-sc-task">${s.task}</div>
+      <div class="crcr-sc-actions">
+        <button class="crcr-sbtn ok" onclick="crcrResolve('${s.id}',true)">✓ Resolved</button>
+        <button class="crcr-sbtn bad" onclick="crcrResolve('${s.id}',false)">✗ Needs Review</button>
+        <button class="crcr-sbtn" onclick="crcrToggleHint('${s.id}')">Hint</button>
+        <button class="crcr-sbtn" onclick="crcrAskAbout('${s.issue.replace(/'/g,"\\'")}')">Ask AI →</button>
       </div>
-      <div class="hint-block" id="hint_${s.id}">${d.hints[s.id]||''}</div>
+      <div class="crcr-hint" id="crcrHint_${s.id}">${d.hints[s.id]||''}</div>
     </div>`;
   });
-  sc.innerHTML = html;
+  el.innerHTML=html;
 }
 
-function renderNodes(domain){
-  const grid = document.getElementById('nodeGrid');
-  const d = DOMAINS[domain];
-  const relevantKeys = d.nodes;
-  const allKeys = Object.keys(HC_NODES);
-  // show relevant nodes first, then rest dimmed
-  const ordered = [...relevantKeys, ...allKeys.filter(k=>!relevantKeys.includes(k))];
-  grid.innerHTML = ordered.map(key=>{
-    const n = HC_NODES[key];
-    const rel = n.relevance[domain] || 'SUPPORT';
-    const isPrimary = rel === 'PRIMARY';
-    const isSecondary = rel === 'SECONDARY';
-    const dimmed = !relevantKeys.includes(key);
-    return `<div class="node-card ${isPrimary?'highlighted':''}" style="--nc:${n.color};${dimmed?'opacity:.3;pointer-events:none':''}">
-      <div class="nc-live">● LIVE · ${n.title}</div>
-      <div class="nc-title">${n.title}</div>
-      <div class="nc-meta">${n.meta}</div>
-      <div class="nc-issue-label">Relevant because</div>
-      <div class="nc-issue">${n.issue}</div>
-      <div class="nc-actions">
-        <button class="nc-btn primary" onclick="practiceNode('${key}','${domain}')">Practice Here</button>
-        <button class="nc-btn" onclick="askNode('${key}','${domain}')">Ask AI</button>
+function crcrRenderNodes(domain){
+  const grid=document.getElementById('crcrNodeGrid');
+  const d=CRCR_DOMAINS[domain];
+  const keys=d.nodes;
+  const all=Object.keys(CRCR_HC_NODES);
+  const ordered=[...keys,...all.filter(k=>!keys.includes(k))];
+  grid.innerHTML=ordered.map(key=>{
+    const n=CRCR_HC_NODES[key];
+    const rel=n.rel[domain]||'SUPPORT';
+    const primary=rel==='PRIMARY';
+    const dimmed=!keys.includes(key);
+    return `<div class="crcr-nc ${primary?'hi':''}" style="--ncol:${n.color};${dimmed?'opacity:.25;pointer-events:none':''}">
+      <div class="crcr-nc-live">● LIVE · ${n.title}</div>
+      <div class="crcr-nc-title">${n.title}</div>
+      <div class="crcr-nc-meta">${n.meta}</div>
+      <div class="crcr-nc-lbl">Relevant because</div>
+      <div class="crcr-nc-issue">${n.issue}</div>
+      <div class="crcr-nc-actions">
+        <button class="crcr-ncbtn p" onclick="crcrPracticeNode('${key}','${domain}')">Practice Here</button>
+        <button class="crcr-ncbtn" onclick="crcrAskNode('${key}','${domain}')">Ask AI</button>
       </div>
-      <div class="nc-relevance">${rel}</div>
+      <div class="crcr-nc-rel">${rel}</div>
     </div>`;
   }).join('');
 }
 
-function renderQuiz(){
-  const shuffled = [...QUIZ_BANK].sort(()=>Math.random()-.5).slice(0,8);
-  window.__quizSet = shuffled;
-  window.__quizAnswers = {};
-  return shuffled.map((q,i)=>`
-    <div class="quiz-q" id="qq_${i}">
-      <div class="quiz-num">Q${i+1} of 8</div>
-      <div class="quiz-text">${q.q}</div>
-      <div class="quiz-opts" id="qopts_${i}">
-        ${q.opts.map((o,j)=>`<button class="quiz-opt" onclick="answerQuiz(${i},${j})">${String.fromCharCode(65+j)}. ${o}</button>`).join('')}
+function crcrBuildQuiz(){
+  const set=[...CRCR_QUIZ].sort(()=>Math.random()-.5).slice(0,8);
+  window.__crcrQuiz=set; window.__crcrAnswers={};
+  return set.map((q,i)=>`
+    <div class="crcr-quiz-q" id="crcrQQ_${i}">
+      <div class="crcr-quiz-num">Q${i+1} of 8</div>
+      <div class="crcr-quiz-txt">${q.q}</div>
+      <div class="crcr-quiz-opts" id="crcrQOpts_${i}">
+        ${q.opts.map((o,j)=>`<button class="crcr-qopt" onclick="crcrAnswer(${i},${j})">${String.fromCharCode(65+j)}. ${o}</button>`).join('')}
       </div>
-      <div id="qresult_${i}" style="display:none"></div>
-    </div>`).join('') +
-    `<div style="display:flex;gap:8px;margin-top:10px">
-      <button class="s-btn resolve" onclick="scoreQuiz()">Submit Quiz</button>
-      <button class="s-btn" onclick="setDomain('quiz',document.querySelector('[data-domain=quiz]'))">New Questions</button>
+      <div id="crcrQRes_${i}" style="display:none"></div>
+    </div>`).join('')+
+    `<div style="display:flex;gap:7px;margin-top:10px">
+      <button class="crcr-sbtn ok" onclick="crcrScoreQuiz()">Submit Quiz</button>
+      <button class="crcr-sbtn" onclick="crcrSetDomain('quiz',document.querySelector('[data-d=quiz]'))">New Questions</button>
     </div>`;
 }
 
-function wireQuiz(){} // opts wired inline
-
-function answerQuiz(qi,optIdx){
-  if(window.__quizAnswers[qi] !== undefined) return;
-  window.__quizAnswers[qi] = optIdx;
-  const q = window.__quizSet[qi];
-  const opts = document.querySelectorAll(`#qopts_${qi} .quiz-opt`);
-  opts.forEach((o,i)=>{
-    o.disabled = true;
-    if(i === q.ans) o.classList.add('correct');
-    else if(i === optIdx && optIdx !== q.ans) o.classList.add('wrong');
+function crcrAnswer(qi,oi){
+  if(window.__crcrAnswers[qi]!==undefined)return;
+  window.__crcrAnswers[qi]=oi;
+  const q=window.__crcrQuiz[qi];
+  document.querySelectorAll(`#crcrQOpts_${qi} .crcr-qopt`).forEach((o,i)=>{
+    o.disabled=true;
+    if(i===q.ans)o.classList.add('correct');
+    else if(i===oi&&oi!==q.ans)o.classList.add('wrong');
   });
-  const res = document.getElementById('qresult_'+qi);
-  res.style.display = 'block';
-  const correct = optIdx === q.ans;
-  res.innerHTML = `<div class="quiz-result ${correct?'correct':'wrong'}">${correct?'✓ Correct':'✗ Incorrect — Answer: '+String.fromCharCode(65+q.ans)+'. '+q.opts[q.ans]}</div>`;
+  const res=document.getElementById('crcrQRes_'+qi);
+  res.style.display='block';
+  const ok=oi===q.ans;
+  res.innerHTML=`<div class="crcr-qresult ${ok?'correct':'wrong'}">${ok?'✓ Correct':'✗ Incorrect — Answer: '+String.fromCharCode(65+q.ans)+'. '+q.opts[q.ans]}</div>`;
 }
 
-function scoreQuiz(){
-  const total = window.__quizSet.length;
-  let correct = 0;
-  window.__quizSet.forEach((q,i)=>{
-    if(window.__quizAnswers[i] === q.ans) correct++;
-  });
-  const score = Math.round(correct/total*100);
-  ST.scores.push(score);
-  ST.sessions++;
-  save();
-  updateStats();
-  quickAsk(`I just scored ${score}% on the CRCR quiz (${correct}/${total} correct). What should I focus on to improve?`);
+function crcrScoreQuiz(){
+  const total=window.__crcrQuiz.length;
+  const correct=window.__crcrQuiz.filter((q,i)=>window.__crcrAnswers[i]===q.ans).length;
+  const score=Math.round(correct/total*100);
+  ST.scores.push(score); ST.sessions++;
+  if(ST.domainScores.claims)ST.domainScores.claims.push(score);
+  crcrSave(); crcrUpdateStats();
+  crcrQuickAsk(`I just scored ${score}% on the CRCR quiz (${correct}/${total} correct). What should I focus on to improve?`);
+  updateDashboard();
 }
 
-function renderDenialLab(){
-  return DENIAL_CODES.map(d=>`
-    <div class="denial-card">
-      <div class="dc-top">
-        <div class="dc-code" style="color:${d.color}">${d.code}</div>
-        <div class="dc-name">${d.name}</div>
+function crcrBuildDenialLab(){
+  return CRCR_DENIAL_CODES.map(d=>`
+    <div class="crcr-dc">
+      <div class="crcr-dc-top">
+        <div class="crcr-dc-code" style="color:${d.color}">${d.code}</div>
+        <div class="crcr-dc-name">${d.name}</div>
       </div>
-      <div class="dc-desc">${d.desc}</div>
-      <div class="dc-fixes">
-        <div class="dc-fix-label">Resolution Steps</div>
-        <ul class="dc-fix-list">${d.fixes.map(f=>`<li>${f}</li>`).join('')}</ul>
-      </div>
-      <div style="margin-top:10px;display:flex;gap:6px">
-        <button class="s-btn" onclick="askAbout('How do I handle a ${d.code} denial — ${d.name}?')">Ask AI →</button>
-        <button class="s-btn resolve" onclick="resolveScenario('dl_${d.code}',true)">✓ Practiced</button>
+      <div class="crcr-dc-desc">${d.desc}</div>
+      <div class="crcr-dc-fix-lbl">Resolution Steps</div>
+      <ul class="crcr-dc-list">${d.fixes.map(f=>`<li>${f}</li>`).join('')}</ul>
+      <div style="margin-top:9px;display:flex;gap:6px">
+        <button class="crcr-sbtn" onclick="crcrAskAbout('How do I handle a ${d.code} denial — ${d.name}?')">Ask AI →</button>
+        <button class="crcr-sbtn ok" onclick="crcrResolve('dl_${d.code}',true)">✓ Practiced</button>
       </div>
     </div>`).join('');
 }
 
-/* ─── INTERACTIONS ───────────────────────────────────────── */
-function toggleHint(id,domain){
-  const card = document.getElementById('scard_'+id);
-  card.classList.toggle('expanded');
+/* ══ CRCR INTERACTIONS ══════════════════════════════════ */
+function crcrToggleHint(id){
+  const c=document.getElementById('crcrSc_'+id);
+  if(c)c.classList.toggle('expanded');
 }
-
-function resolveScenario(id,resolved){
-  ST.resolved[id] = resolved;
-  if(resolved && DOMAINS[curDomain].domainScores !== undefined){
-    if(ST.domainScores[curDomain]) ST.domainScores[curDomain].push(100);
-  }
-  save();
-  updateProgress(curDomain);
-  updateStats();
-  const card = document.getElementById('scard_'+id);
-  if(card) card.classList.toggle('done', resolved);
-  const sbp = document.getElementById('sbProgress');
-  sbp.textContent = Object.values(ST.resolved).filter(Boolean).length + ' scenarios resolved today';
+function crcrResolve(id,ok){
+  ST.resolved[id]=ok;
+  if(ok&&ST.domainScores[crcrCurDomain])ST.domainScores[crcrCurDomain].push(100);
+  crcrSave(); crcrUpdateProgress(crcrCurDomain); crcrUpdateStats(); updateDashboard();
+  const c=document.getElementById('crcrSc_'+id);
+  if(c)c.classList.toggle('done',ok);
+  document.getElementById('statusCrcr').textContent='CRCR: '+Object.values(ST.resolved).filter(Boolean).length+' resolved';
 }
-
-function practiceNode(nodeKey,domain){
-  const n = HC_NODES[nodeKey];
-  const d = DOMAINS[domain];
-  quickAsk(`I am practicing the ${d.label} domain on the ${n.title} node in my HC Command Chain. Walk me through what I should look for in this node and what actions to take for ${d.label} scenarios.`);
-}
-
-function askNode(nodeKey,domain){
-  const n = HC_NODES[nodeKey];
-  const d = DOMAINS[domain];
-  quickAsk(`How does the ${n.title} node relate to ${d.label} in healthcare RCM? What are the key touchpoints?`);
-}
-
-function askAbout(topic){
-  document.getElementById('aiInput').value = topic;
-  sendAI();
-}
-
-function updateProgress(domain){
-  const d = DOMAINS[domain];
-  if(!d.scenarios || !d.scenarios.length){
-    document.getElementById('domainProg').style.width = '0%';
-    document.getElementById('domainProgTxt').textContent = '--';
+function crcrUpdateProgress(domain){
+  const d=CRCR_DOMAINS[domain];
+  if(!d.scenarios||!d.scenarios.length){
+    document.getElementById('crcrProgFill').style.width='0%';
+    document.getElementById('crcrProgTxt').textContent='--';
     return;
   }
-  const done = d.scenarios.filter(s=>ST.resolved[s.id]).length;
-  const pct = Math.round(done/d.scenarios.length*100);
-  document.getElementById('domainProg').style.width = pct+'%';
-  document.getElementById('domainProgTxt').textContent = done+'/'+d.scenarios.length;
+  const done=d.scenarios.filter(s=>ST.resolved[s.id]).length;
+  const pct=Math.round(done/d.scenarios.length*100);
+  document.getElementById('crcrProgFill').style.width=pct+'%';
+  document.getElementById('crcrProgTxt').textContent=done+'/'+d.scenarios.length;
+}
+function crcrPracticeNode(key,domain){
+  const n=CRCR_HC_NODES[key];
+  const d=CRCR_DOMAINS[domain];
+  crcrQuickAsk(`I am practicing the ${d.label} domain on the ${n.title} HC node. Walk me through what I should look for and what actions to take for ${d.label} scenarios in this node.`);
+}
+function crcrAskNode(key,domain){
+  const n=CRCR_HC_NODES[key];
+  const d=CRCR_DOMAINS[domain];
+  crcrQuickAsk(`How does the ${n.title} node relate to ${d.label} in healthcare RCM? What are the key touchpoints and action items?`);
+}
+function crcrAskAbout(topic){
+  document.getElementById('crcrAiInput').value=topic;
+  crcrSendAI();
+}
+function crcrUpdateStats(){
+  const avg=ST.scores.length?Math.round(ST.scores.reduce((a,b)=>a+b,0)/ST.scores.length):null;
+  document.getElementById('crcrPillScore').textContent='Score: '+(avg?avg+'%':'--');
+  document.getElementById('crcrPillSessions').textContent=(ST.sessions||0)+' sessions';
+  let weak='--',ws=101;
+  Object.entries(ST.domainScores).forEach(([k,v])=>{
+    if(v.length){const s=Math.round(v.reduce((a,b)=>a+b,0)/v.length);if(s<ws){ws=s;weak=k.charAt(0).toUpperCase()+k.slice(1)}}
+  });
+  document.getElementById('crcrPillWeak').textContent='Weak: '+weak;
+  document.getElementById('statusCrcr').textContent='CRCR: '+Object.values(ST.resolved).filter(Boolean).length+' resolved';
 }
 
-/* ─── AI ─────────────────────────────────────────────────── */
-async function callAI(q){
-  if(!ST.apiKey) return '⚠ Add your Groq API key via ⚙ to enable AI coaching.';
+/* ══ CRCR AI ════════════════════════════════════════════ */
+async function crcrCallAI(q){
+  if(!cfg.apiKey)return'⚠ Add your Groq API key via ⚙ in the top bar to enable AI coaching.';
   try{
-    const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
       method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+ST.apiKey},
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+cfg.apiKey},
       body:JSON.stringify({
-        model:'llama-3.3-70b-versatile',
-        max_tokens:700,
+        model:'llama-3.3-70b-versatile',max_tokens:700,
         messages:[
-          {role:'system',content:`You are a CRCR (Certified Revenue Cycle Representative) coach and healthcare RCM expert embedded in the TSM HC Practice Command. You specialize in: patient intake, eligibility (270/271), prior authorization, medical coding (CPT/ICD-10/HCPCS), claim submission (837), denial management (CARC/RARC codes), payment posting (835 ERA), and AR recovery. Be direct, practical, and educational. Use specific code references (CO-16, CO-50, Modifier 25, etc.) when relevant. Keep responses concise and actionable.`},
+          {role:'system',content:'You are a CRCR (Certified Revenue Cycle Representative) coach and healthcare RCM expert in the TSM Command Hub. You specialize in: patient intake, eligibility (270/271), prior authorization, medical coding (CPT/ICD-10/HCPCS), claim submission (837), denial management (CARC/RARC codes), payment posting (835 ERA), and AR recovery. Be direct, practical, and educational. Use specific code references (CO-16, CO-50, Modifier 25, etc.) when relevant. Keep responses concise and actionable.'},
           {role:'user',content:q}
         ]
       })
     });
-    const d = await r.json();
-    return d.choices?.[0]?.message?.content || 'No response.';
-  }catch(e){return 'Error: '+e.message}
+    const d=await r.json();
+    return d.choices?.[0]?.message?.content||'No response.';
+  }catch(e){return'Error: '+e.message}
 }
-
-async function sendAI(){
-  const inp = document.getElementById('aiInput');
-  const q = inp.value.trim();
-  if(!q) return;
-  inp.value = '';
-  const msgs = document.getElementById('aiMessages');
-  msgs.innerHTML += `<div class="ai-msg user">${q}</div>`;
-  msgs.innerHTML += `<div class="ai-msg ai" id="aiLoading"><div class="src">CRCR AI</div>thinking...</div>`;
-  msgs.scrollTop = msgs.scrollHeight;
-  const ans = await callAI(q);
-  const ld = document.getElementById('aiLoading');
-  if(ld) ld.remove();
-  msgs.innerHTML += `<div class="ai-msg ai"><div class="src">CRCR AI · HC Practice</div>${ans}</div>`;
-  msgs.scrollTop = msgs.scrollHeight;
+async function crcrSendAI(){
+  const inp=document.getElementById('crcrAiInput');
+  const q=inp.value.trim(); if(!q)return;
+  inp.value='';
+  const msgs=document.getElementById('crcrAiMsgs');
+  msgs.innerHTML+=`<div class="crcr-ai-msg u">${q}</div>`;
+  msgs.innerHTML+=`<div class="crcr-ai-msg a" id="crcrLoading"><div class="crcr-src">CRCR AI</div>thinking...</div>`;
+  msgs.scrollTop=msgs.scrollHeight;
+  const ans=await crcrCallAI(q);
+  const ld=document.getElementById('crcrLoading');
+  if(ld)ld.remove();
+  msgs.innerHTML+=`<div class="crcr-ai-msg a"><div class="crcr-src">CRCR AI · HC Practice</div>${ans}</div>`;
+  msgs.scrollTop=msgs.scrollHeight;
 }
+function crcrQuickAsk(q){document.getElementById('crcrAiInput').value=q;crcrSendAI()}
+function crcrAiKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();crcrSendAI()}}
 
-function quickAsk(q){
-  document.getElementById('aiInput').value = q;
-  sendAI();
+/* ══ HUB AI ═════════════════════════════════════════════ */
+async function hubCallAI(q){
+  if(!cfg.apiKey)return'⚠ Add your API key via ⚙ to enable the AI Tutor.';
+  try{
+    const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+cfg.apiKey},
+      body:JSON.stringify({
+        model:'llama-3.3-70b-versatile',max_tokens:900,
+        messages:[
+          {role:'system',content:'You are a financial intelligence AI and accounting trainer for TSM Command Hub. You are an expert in accounting, financial operations, staff accountant responsibilities, journal entries, reconciliation, AP/AR, month-end close, and FinOps. Be direct, practical, and educational.'},
+          {role:'user',content:q}
+        ]
+      })
+    });
+    const d=await r.json();
+    return d.choices?.[0]?.message?.content||'No response.';
+  }catch(e){return'Error: '+e.message}
 }
-
-function aiKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAI()}}
-
-/* ─── STATS ──────────────────────────────────────────────── */
-function updateStats(){
-  const avg = ST.scores.length ? Math.round(ST.scores.reduce((a,b)=>a+b,0)/ST.scores.length) : null;
-  document.getElementById('pillScore').textContent = 'Score: '+(avg?avg+'%':'--');
-  document.getElementById('pillLevel').textContent = 'Lvl '+(ST.level||1);
-  document.getElementById('pillSessions').textContent = (ST.sessions||0)+' sessions';
-  document.getElementById('sbAvg').textContent = (avg?avg+'%':'--%');
-
-  let weak='--', weakScore=101;
-  Object.entries(ST.domainScores).forEach(([k,v])=>{
-    if(v.length){const s=Math.round(v.reduce((a,b)=>a+b,0)/v.length); if(s<weakScore){weakScore=s;weak=k.charAt(0).toUpperCase()+k.slice(1)}}
-  });
-  document.getElementById('sbWeak').textContent = weak;
+async function hubSendAI(){
+  const inp=document.getElementById('hubAiInput');
+  const q=inp.value.trim(); if(!q)return;
+  inp.value='';
+  const msgs=document.getElementById('hubAiMessages');
+  msgs.innerHTML+=`<div class="msg user">${q}</div>`;
+  msgs.innerHTML+=`<div class="msg ai" id="hubLoading"><div class="msg-source">AI Tutor</div>thinking...</div>`;
+  msgs.scrollTop=msgs.scrollHeight;
+  const ans=await hubCallAI(q);
+  const ld=document.getElementById('hubLoading'); if(ld)ld.remove();
+  msgs.innerHTML+=`<div class="msg ai"><div class="msg-source">TSM FinOps AI</div>${ans}</div>`;
+  msgs.scrollTop=msgs.scrollHeight;
 }
+function hubAsk(q){document.getElementById('hubAiInput').value=q;hubSendAI()}
+function hubAiKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();hubSendAI()}}
 
-/* ─── CONFIG ─────────────────────────────────────────────── */
-function showModal(){
-  document.getElementById('mKey').value = ST.apiKey;
-  document.getElementById('overlay').classList.add('show');
-}
-function hideModal(){document.getElementById('overlay').classList.remove('show')}
-function saveCfg(){
-  ST.apiKey = document.getElementById('mKey').value.trim();
-  save();
-  document.getElementById('apiBtn').classList.toggle('live',!!ST.apiKey);
-  document.getElementById('apiBtn').textContent = ST.apiKey?'✓ AI LIVE':'⚙ AI KEY';
+/* ══ CONFIG ═════════════════════════════════════════════ */
+function showModal(){document.getElementById('modalApiKey').value=cfg.apiKey;document.getElementById('modalRailway').value=cfg.railwayUrl;document.getElementById('modalOverlay').classList.add('show')}
+function hideModal(){document.getElementById('modalOverlay').classList.remove('show')}
+function saveConfig(){
+  cfg.apiKey=document.getElementById('modalApiKey').value.trim();
+  cfg.railwayUrl=document.getElementById('modalRailway').value.trim()||'https://tsm-shell-production-57da.up.railway.app';
+  saveCfg();
+  const pill=document.getElementById('apiPill');
+  if(cfg.apiKey){pill.textContent='✓ API READY';pill.classList.add('connected')}
+  else{pill.textContent='⚙ API KEY';pill.classList.remove('connected')}
+  document.getElementById('statusApi').textContent=cfg.apiKey?'API: ready':'API: not set';
   hideModal();
 }
 
-/* ─── CLOCK ──────────────────────────────────────────────── */
-function tick(){document.getElementById('sbTime').textContent = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}
+/* ══ DASHBOARD SYNC ═════════════════════════════════════ */
+function updateDashboard(){
+  const crcrAvg=ST.scores.length?Math.round(ST.scores.reduce((a,b)=>a+b,0)/ST.scores.length):null;
+  document.getElementById('dashCrcrScore').textContent=crcrAvg?crcrAvg+'%':'--';
+  document.getElementById('dashRcmResolved').textContent=Object.values(ST.resolved).filter(Boolean).length;
+}
 
-/* ─── INIT ───────────────────────────────────────────────── */
+/* ══ CLOCK ══════════════════════════════════════════════ */
+function tick(){
+  const now=new Date();
+  document.getElementById('statusTime').textContent=now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('dateBadge').textContent=now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+}
+
+/* ══ INIT ═══════════════════════════════════════════════ */
 function init(){
-  setDomain('intake', document.querySelector('[data-domain=intake]'));
-  updateStats();
-  tick();
-  setInterval(tick,15000);
-  if(ST.apiKey){document.getElementById('apiBtn').classList.add('live');document.getElementById('apiBtn').textContent='✓ AI LIVE'}
-  document.getElementById('sbProgress').textContent = Object.values(ST.resolved).filter(Boolean).length+' scenarios resolved today';
+  renderTasks(); renderDomainBars(); renderStudyCards();
+  crcrUpdateStats(); updateDashboard();
+  const pill=document.getElementById('apiPill');
+  if(cfg.apiKey){pill.textContent='✓ API READY';pill.classList.add('connected')}
+  document.getElementById('statusApi').textContent=cfg.apiKey?'API: ready':'API: not set';
+  tick(); setInterval(tick,15000);
+  // pre-render CRCR so first open is instant
+  crcrRenderStudy('intake'); crcrRenderNodes('intake');
 }
 init();
 </script>
