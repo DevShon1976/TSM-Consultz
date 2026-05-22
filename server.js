@@ -375,6 +375,13 @@ app.listen(PORT, "0.0.0.0", () => {
   console.log(`\n🚀 TSM Shell on http://0.0.0.0:${PORT}`);
   suites.forEach(s => console.log(`   ${s.route} → ${s.dir}/${s.index}`));
   console.log();
+}).on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${PORT} already in use. Exiting cleanly.`);
+    process.exit(1);
+  } else {
+    throw err;
+  }
 });
 
 // ===== GROQ AI ENGINE =====
