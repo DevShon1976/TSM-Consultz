@@ -95,6 +95,12 @@ app.get("/api/hc/strategist-rollup", (req, res) => {
 app.use('/html', express.static(path.join(__dirname, 'html'), { extensions: ['html'] }));
 
 app.use('/html/healthcare', express.static(path.join(__dirname, 'html', 'healthcare'), { index: 'index.html', extensions: ['html'] }));
+suites.forEach(s => {
+  app.use(s.route, express.static(path.join(__dirname, s.dir)));
+  app.get(s.route, (req, res) => {
+    res.sendFile(path.join(__dirname, s.dir, s.index));
+  });
+});
 
 // Specific route for PoC demo
 app.get('/html/healthcare/poc-html', (req, res) => {
