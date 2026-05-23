@@ -1956,12 +1956,7 @@
 
         function renderTasks() {
             const done = Object.values(cfg.tasks).filter(Boolean).length;
-            document.getElementById('taskList').innerHTML = TASKS.map(t => `
-    <div class="task-item ${cfg.tasks[t.id] ? 'done' : ''}" onclick="toggleTask('${t.id}')">
-      <div class="task-check">${cfg.tasks[t.id] ? '✓' : ''}</div>
-      <div class="task-name">${t.name}</div>
-      <div class="task-tag ${t.tag}">${t.tag.toUpperCase()}</div>
-    </div>`).join('');
+            document.getElementById('taskList').innerHTML = TASKS.map(t => '<div class="task-item ' + (cfg.tasks[t.id] ? 'done' : '') + '" onclick="toggleTask(\'' + t.id + '\')">' + '<div class="task-check">' + (cfg.tasks[t.id] ? '✓' : '') + '</div>' + '<div class="task-name">' + t.name + '</div>' + '<div class="task-tag ' + t.tag + '">' + t.tag.toUpperCase() + '</div>' + '</div>').join('');
             document.getElementById('dashTaskCount').textContent = done + '/' + TASKS.length;
             document.getElementById('statusTasks').textContent = done + '/' + TASKS.length + ' tasks';
         }
@@ -1979,32 +1974,94 @@
             document.getElementById('domainBars').innerHTML = ACCT_DOMAINS.map(d => {
                 const arr = cfg.domainScores[d.key] || [];
                 const avg = arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : 0;
-                return `<div>
-      <div class="domain-bar-top"><span class="domain-bar-name">${d.label}</span><span class="domain-bar-pct" style="color:${d.color}">${avg || '--'}${avg ? '%' : ''}</span></div>
-      <div class="domain-bar-track"><div class="domain-bar-fill" style="width:${avg}%;background:${d.color}"></div></div>
-    </div>`;
+                return '<div>' +
+                '<div class="domain-bar-top"><span class="domain-bar-name">' + d.label + '</span><span class="domain-bar-pct" style="color:' + d.color + '">' + (avg || '--') + (avg ? '%' : '') + '</span></div>' +
+                '<div class="domain-bar-track"><div class="domain-bar-fill" style="width:' + avg + '%;background:' + d.color + '"></div></div>' +
+                '</div>';
             }).join('');
         }
 
-        /* ══ HUB STUDY CARDS ════════════════════════════════════ */
+         /* ══ HUB STUDY CARDS ════════════════════════════════════ */
         const STUDY_CARDS = [
-            { type: 'accounting', topic: 'Accounts Payable Cycle', badge: 'AP', desc: 'AP cycle: PO → goods received → invoice → 3-way match → approved → posted → paid. Your Accounting POC automates triage and approval steps.', actions: [{ label: 'Accounting POC', fn: `switchView('accounting',document.querySelectorAll('.ttab')[1])` }, { label: 'Ask AI', fn: `hubAsk('Walk me through the AP invoice cycle and what a 3-way match means')`, p: true }] },
-            { type: 'operations', topic: 'Bank Reconciliation', badge: 'RECON', desc: 'Bank rec proves your GL cash balance matches the bank statement. Add deposits-in-transit, subtract outstanding checks (bank side). Add interest income, subtract bank fees (book side). Difference = zero.', actions: [{ label: 'Accounting POC', fn: `switchView('accounting',document.querySelectorAll('.ttab')[1])` }, { label: 'Ask AI', fn: `hubAsk('What are the most common reconciling items in a bank reconciliation and how do I handle each one?')`, p: true }] },
-            { type: 'accounting', topic: 'Journal Entry Rules', badge: 'GL', desc: 'Every JE must balance: debits = credits. Assets/Expenses increase with debits. Liabilities/Equity/Revenue increase with credits. Accounting POC validates this automatically.', actions: [{ label: 'Build a JE', fn: `switchView('accounting',document.querySelectorAll('.ttab')[1])` }, { label: 'Quiz me', fn: `hubAsk('Give me 5 journal entry scenarios at staff accountant level and ask me to provide the correct debit and credit accounts')`, p: true }] },
-            { type: 'analysis', topic: 'RCM meets Accounting', badge: 'BRIDGE', desc: 'Healthcare accounting crossover: AP invoices from vendors = standard AP cycle. But patient AR, insurance AR, and denial write-offs require RCM knowledge. The CRCR tab covers the revenue side.', actions: [{ label: 'CRCR Denials', fn: `switchView('crcr',document.querySelectorAll('.ttab')[6]);setTimeout(()=>crcrSetDomain('denials',document.querySelector('[data-d=denials]')),100)` }, { label: 'Denial Lab', fn: `switchView('crcr',document.querySelectorAll('.ttab')[6]);setTimeout(()=>crcrSetDomain('denial-lab',document.querySelector('[data-d=denial-lab]')),100)`, p: true }] },
+            { type: 'accounting', topic: 'Accounts Payable Cycle', badge: 'AP', desc: 'AP cycle: PO → goods received → invoice → 3-way match → approved → posted → paid. Your Accounting POC automates triage and approval steps.', actions: [{ label: 'Accounting POC', fn: "switchView('accounting',document.querySelectorAll('.ttab')[1])" }, { label: 'Ask AI', fn: "hubAsk('Walk me through the AP invoice cycle and what a 3-way match means')", p: true }] },
+            { type: 'operations', topic: 'Bank Reconciliation', badge: 'RECON', desc: 'Bank rec proves your GL cash balance matches the bank statement. Add deposits-in-transit, subtract outstanding checks (bank side). Add interest income, subtract bank fees (book side). Difference = zero.', actions: [{ label: 'Accounting POC', fn: "switchView('accounting',document.querySelectorAll('.ttab')[1])" }, { label: 'Ask AI', fn: "hubAsk('What are the most common reconciling items in a bank reconciliation and how do I handle each one?')", p: true }] },
+            { type: 'accounting', topic: 'Journal Entry Rules', badge: 'GL', desc: 'Every JE must balance: debits = credits. Assets/Expenses increase with debits. Liabilities/Equity/Revenue increase with credits. Accounting POC validates this automatically.', actions: [{ label: 'Build a JE', fn: "switchView('accounting',document.querySelectorAll('.ttab')[1])" }, { label: 'Quiz me', fn: "hubAsk('Give me 5 journal entry scenarios at staff accountant level and ask me to provide the correct debit and credit accounts')", p: true }] },
+            { type: 'analysis', topic: 'RCM meets Accounting', badge: 'BRIDGE', desc: 'Healthcare accounting crossover: AP invoices from vendors = standard AP cycle. But patient AR, insurance AR, and denial write-offs require RCM knowledge. The CRCR tab covers the revenue side.', actions: [{ label: 'CRCR Denials', fn: "switchView('crcr',document.querySelectorAll('.ttab')[6]);setTimeout(()=>crcrSetDomain('denials',document.querySelector('[data-d=denials]')),100)" }, { label: 'Denial Lab', fn: "switchView('crcr',document.querySelectorAll('.ttab')[6]);setTimeout(()=>crcrSetDomain('denial-lab',document.querySelector('[data-d=denial-lab]')),100)", p: true }] },
         ];
         function renderStudyCards() {
-            document.getElementById('studyCards').innerHTML = STUDY_CARDS.map(c => `
-    <div class="study-card ${c.type}" style="margin-bottom:12px">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-        <div class="study-topic">${c.topic}</div>
-        <div class="study-badge">${c.badge}</div>
-      </div>
-      <div class="study-desc">${c.desc}</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-      ${c.actions.map(a => '<button class="study-btn ' + (a.p ? 'primary' : '') + '" onclick="' + a.fn + '">' + a.label + '</button>').join('')}
-        </div>
-    </div>`).join('');
+            document.getElementById('studyCards').innerHTML = STUDY_CARDS.map(c =>
+                '<div class="study-card ' + c.type + '" style="margin-bottom:12px">' +
+                '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">' +
+                '<div class="study-topic">' + c.topic + '</div>' +
+                '<div class="study-badge">' + c.badge + '</div>' +
+                '</div>' +
+                '<div class="study-desc">' + c.desc + '</div>' +
+                '<div style="display:flex;gap:6px;flex-wrap:wrap">' +
+                c.actions.map(a => '<button class="study-btn ' + (a.p ? 'primary' : '') + '" onclick="' + a.fn + '">' + a.label + '</button>').join('') +
+                '</div></div>'
+            ).join('');
+        }
+
+        function crcrBuildQuiz() {
+            const set = [...CRCR_QUIZ].sort(() => Math.random() - .5).slice(0, 8);
+            window.__crcrQuiz = set; window.__crcrAnswers = {};
+            return set.map((q, i) =>
+                '<div class="crcr-quiz-q" id="crcrQQ_' + i + '">' +
+                '<div class="crcr-quiz-num">Q' + (i + 1) + ' of 8</div>' +
+                '<div class="crcr-quiz-txt">' + q.q + '</div>' +
+                '<div class="crcr-quiz-opts" id="crcrQOpts_' + i + '">' +
+                q.opts.map((o, j) => '<button class="crcr-qopt" onclick="crcrAnswer(' + i + ',' + j + ')">' + String.fromCharCode(65 + j) + '. ' + o + '</button>').join('') +
+                '</div>' +
+                '<div id="crcrQRes_' + i + '" style="display:none"></div>' +
+                '</div>'
+            ).join('') +
+            '<div style="display:flex;gap:7px;margin-top:10px">' +
+            '<button class="crcr-sbtn ok" onclick="crcrScoreQuiz()">Submit Quiz</button>' +
+            '<button class="crcr-sbtn" onclick="crcrSetDomain(\'quiz\',document.querySelector(\'[data-d=quiz]\'))">New Questions</button>' +
+            '</div>';
+        }
+
+        function crcrAnswer(qi, oi) {
+            if (window.__crcrAnswers[qi] !== undefined) return;
+            window.__crcrAnswers[qi] = oi;
+            const q = window.__crcrQuiz[qi];
+            document.querySelectorAll('#crcrQOpts_' + qi + ' .crcr-qopt').forEach((o, i) => {
+                o.disabled = true;
+                if (i === q.ans) o.classList.add('correct');
+                else if (i === oi && oi !== q.ans) o.classList.add('wrong');
+            });
+            const res = document.getElementById('crcrQRes_' + qi);
+            res.style.display = 'block';
+            const ok = oi === q.ans;
+            res.innerHTML = '<div class="crcr-qresult ' + (ok ? 'correct' : 'wrong') + '">' + (ok ? '✓ Correct' : '✗ Incorrect — Answer: ' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans]) + '</div>';
+        }
+
+        function crcrScoreQuiz() {
+            const total = window.__crcrQuiz.length;
+            const correct = window.__crcrQuiz.filter((q, i) => window.__crcrAnswers[i] === q.ans).length;
+            const score = Math.round(correct / total * 100);
+            ST.scores.push(score); ST.sessions++;
+            if (ST.domainScores.claims) ST.domainScores.claims.push(score);
+            crcrSave(); crcrUpdateStats();
+            crcrQuickAsk('I just scored ' + score + '% on the CRCR quiz (' + correct + '/' + total + ' correct). What should I focus on to improve?');
+            updateDashboard();
+        }
+
+        function crcrBuildDenialLab() {
+            return CRCR_DENIAL_CODES.map(d =>
+                '<div class="crcr-dc">' +
+                '<div class="crcr-dc-top">' +
+                '<div class="crcr-dc-code" style="color:' + d.color + '">' + d.code + '</div>' +
+                '<div class="crcr-dc-name">' + d.name + '</div>' +
+                '</div>' +
+                '<div class="crcr-dc-desc">' + d.desc + '</div>' +
+                '<div class="crcr-dc-fix-lbl">Resolution Steps</div>' +
+                '<ul class="crcr-dc-list">' + d.fixes.map(f => '<li>' + f + '</li>').join('') + '</ul>' +
+                '<div style="margin-top:9px;display:flex;gap:6px">' +
+                '<button class="crcr-sbtn" onclick="crcrAskAbout(\'How do I handle a ' + d.code + ' denial?\')">Ask AI</button>' +
+                '<button class="crcr-sbtn ok" onclick="crcrResolve(\'dl_' + d.code + '\',true)">✓ Got it</button>' +
+                '</div></div>'
+            ).join('');
         }
 
 
@@ -2350,15 +2407,15 @@
                 
                 res.innerHTML = '<div class="crcr-qresult ' + (ok ? 'correct' : 'wrong') + '">' + (ok ? '✓ Correct' : '✗ Incorrect — Answer: ' + String.fromCharCode(65 + q.ans) + '. ' + q.opts[q.ans]) + '</div>';
             function crcrScoreQuiz() {
-                const total = window.__crcrQuiz.length;
-                const correct = window.__crcrQuiz.filter((q, i) => window.__crcrAnswers[i] === q.ans).length;
-                const score = Math.round(correct / total * 100);
-                ST.scores.push(score); ST.sessions++;
-                if (ST.domainScores.claims) ST.domainScores.claims.push(score);
-                crcrSave(); crcrUpdateStats();
-                crcrQuickAsk(`I just scored ${score}% on the CRCR quiz (${correct}/${total} correct). What should I focus on to improve?`);
-                updateDashboard();
-            }
+            const total = window.__crcrQuiz.length;
+            const correct = window.__crcrQuiz.filter((q, i) => window.__crcrAnswers[i] === q.ans).length;
+            const score = Math.round(correct / total * 100);
+            ST.scores.push(score); ST.sessions++;
+            if (ST.domainScores.claims) ST.domainScores.claims.push(score);
+            crcrSave(); crcrUpdateStats();
+            crcrQuickAsk('I just scored ' + score + '% on the CRCR quiz (' + correct + '/' + total + ' correct). What should I focus on to improve?');
+            updateDashboard();
+        }
 
             function crcrBuildDenialLab() {
                 return CRCR_DENIAL_CODES.map(d =>
