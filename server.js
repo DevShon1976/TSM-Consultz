@@ -6,7 +6,11 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 const HTML_ROOT = path.join(__dirname, "html");
 
-app.get("/health", (_req, res) => res.json({ status: "ok" }));
+app.get("/health", (req, res) => res.json({ status: "ok" }));
+app.post("/api/finops/bnca/report", (req, res) => res.json({ ok: true }));
+app.post("/api/chat", (req, res) => res.json({ ok: true }));
+app.post("/api/bpo/query", (req, res) => res.json({ reply: "ok" }));
+app.post("/api/wip/sector-ai", (req, res) => res.json({ content: "ok" }));
 
 const suites = [
   { route: "/construction", dir: "html/construction-suite", index: "construction-hub.html" },
