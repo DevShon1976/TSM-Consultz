@@ -254,7 +254,36 @@ document.getElementById("nodeGrid").innerHTML = nodes.map(([key,title,meta,color
 <script src="/healthcare/mission-bridge.js"></script>
 <script src="/healthcare/mission-panel.js"></script>
 <script>
-const panel = MissionPanel.init('mission-panel-container', 'billing');
+window.addEventListener('load', function() {
+  if (typeof MissionPanel === 'undefined') {
+    console.error('mission-panel.js not loaded');
+    return;
+  }
+  const panel = MissionPanel.init('mission-panel-container', 'billing');
+  MissionBridge.renderTabSwitcher('nodes');
+  MissionBridge.renderScoreBadge('billing', 5);
+
+  const incoming = MissionBridge.checkIncoming();
+  if (incoming) {
+    const card = document.querySelector(`[data-node="${incoming.nodeId}"]`);
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth' });
+      card.style.outline = '2px solid #00c896';
+      card.style.boxShadow = '0 0 24px rgba(0,200,150,0.35)';
+    }
+    const ret = document.createElement('div');
+    ret.style.cssText = 'position:fixed;top:46px;right:0;z-index:9999;';
+    ret.innerHTML = `<button onclick="MissionBridge.completeObjective('${incoming.objectiveId}','billing',-15);window.location.href='/healthcare/crc-hc-practice.html';" style="background:#00c896;color:#000;border:none;padding:8px 18px;font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer;">✓ MARK COMPLETE → RETURN TO PRACTICE</button>`;
+    document.body.appendChild(ret);
+  }
+
+  document.querySelectorAll('.pill').forEach(btn => {
+    const t = btn.textContent.trim();
+    if (t === 'Billing') btn.addEventListener('click', () => panel.setMission('billing'));
+    if (t === 'Compliance') btn.addEventListener('click', () => panel.setMission('denials'));
+    if (t === 'Medical') btn.addEventListener('click', () => panel.setMission('coding'));
+  });
+});
 MissionBridge.renderTabSwitcher('nodes');
 MissionBridge.renderScoreBadge('billing', 5);
 
