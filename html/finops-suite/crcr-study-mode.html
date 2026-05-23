@@ -561,6 +561,7 @@
     <button class="tab" onclick="switchTab('exam', this)">Exam Mode</button>
     <button class="tab" onclick="switchTab('ai', this)">AI Tutor</button>
     <button class="tab" onclick="switchTab('progress', this)">Progress</button>
+    <button class="tab" onclick="switchTab('drill', this)">⚡ Drill Mode</button>
   </div>
 
   <!-- DAILY SESSION -->
@@ -711,9 +712,25 @@
     </div>
   </div>
 
+<!-- DRILL MODE -->
+<div class="panel" id="panel-drill">
+  <div class="section-header">
+    <div class="section-title">⚡ Weak Area Drill</div>
+    <div class="section-sub">Targeted practice on your lowest-scoring domain</div>
+  </div>
+  <div id="drillDomainBadge" style="display:inline-block;padding:6px 16px;border:1px solid var(--accent);color:var(--accent);font-family:var(--font-mono);font-size:11px;letter-spacing:.15em;margin-bottom:20px;border-radius:2px">LOADING...</div>
+  <div id="drillContainer"></div>
+  <div style="margin-top:20px;display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn primary" onclick="generateDrill()">↺ New Drill</button>
+    <button class="btn" onclick="generateDrill('intake')">Intake</button>
+    <button class="btn" onclick="generateDrill('coding')">Coding</button>
+    <button class="btn" onclick="generateDrill('claims')">Claims</button>
+    <button class="btn" onclick="generateDrill('payments')">Payments</button>
+    <button class="btn" onclick="generateDrill('denials')">Denials</button>
+    <button class="btn" onclick="generateDrill('financial')">Financial</button>
+    <button class="btn" onclick="generateDrill('integrity')">Integrity</button>
+  </div>
 </div>
-
-<script>
 // ─── STATE ────────────────────────────────────────────────────────────────────
 let state = JSON.parse(localStorage.getItem('crcr_state') || '{}');
 state = Object.assign({
@@ -915,14 +932,42 @@ function showHint(idx) {
     coding: 'Verify ICD-10 → CPT medical necessity linkage. Check LCD/NCD guidelines.',
     claims: 'Review claim form fields against payer requirements. Check 837 loops.',
     payments: 'Compare ERA to contract. Flag underpayments within 45 days.',
-    denials: 'Identify root cause first: administrative, clinical, or payer error?'
+    denials: 'Identify root cause first: administrative, clinical, or payer error?',
+    financial: 'Copay = flat fee. Coinsurance = % of allowed amount. Check ERA PR segments for patient responsibility.',
+    integrity: 'Run CPT pair through NCCI edits. E/M level must be supported by MDM or total time in the note.'
   };
   const hint = document.getElementById('hint_'+idx);
   hint.style.display = 'block';
   hint.textContent = hints[s.module] || 'Review HFMA guidelines for this domain.';
 }
 
-function submitAllScenarios() {
+function generateDrill(forceDomain){
+  const domain = forceDomain || (()=>{
+    let weak='denials'; let weakScore=100;
+    Object.entries(state.domainScores).forEach(([k,v])=>{
+      if(v.length){const s=Math.round(v.reduce((a,b)=>a+b,0)/v.length);if(s<weakScore){weakScore=s;weak=k;}}
+    });
+    return weak;
+  })();
+  const pool=SCENARIOS[domain]||SCENARIOS.denials;
+  const shuffled=[...pool].sort(()=>Math.random()-.5).slice(0,3);
+  document.getElementById('drillDomainBadge').textContent=domain.toUpperCase()+' DRILL — 3 SCENARIOS';
+  document.getElementById('drillContainer').innerHTML=shuffled.map((s,i)=>`
+    <div class="scenario-card ${domain}" style="margin-bottom:16px">
+      <div class="scenario-meta">
+        <span class="tag module-${domain}">${domain}</span>
+        <span class="tag">DRILL</span>
+      </div>
+      <div class="scenario-issue">${s.issue}</div>
+      <div class="scenario-task">Task: ${s.task}</div>
+      <div class="scenario-actions">
+        <button class="btn success" onclick="this.textContent='✓ Done';this.disabled=true">✓ Resolved</button>
+        <button class="btn danger" onclick="this.textContent='✗ Flagged';this.disabled=true">✗ Needs Review</button>
+        <button class="btn" onclick="openAppDrawer('${domain}',${i})">Practice in App →</button>
+      </div>
+    </div>
+  `).join('');
+}
   const total = currentScenarios.length;
   const resolved = Object.values(scenarioAnswers).filter(Boolean).length;
   const score = Math.round((resolved/total)*100);
