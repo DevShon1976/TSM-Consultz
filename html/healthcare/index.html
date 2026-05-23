@@ -259,7 +259,7 @@ window.addEventListener('load', function() {
     console.error('mission-panel.js not loaded');
     return;
   }
-  const panel = MissionPanel.init('mission-panel-container', 'billing');
+  window.panel = MissionPanel.init('mission-panel-container', 'billing');
   MissionBridge.renderTabSwitcher('nodes');
   MissionBridge.renderScoreBadge('billing', 5);
 
@@ -277,11 +277,22 @@ window.addEventListener('load', function() {
     document.body.appendChild(ret);
   }
 
-  document.querySelectorAll('.pill').forEach(btn => {
-    const t = btn.textContent.trim();
-    if (t === 'Billing') btn.addEventListener('click', () => panel.setMission('billing'));
-    if (t === 'Compliance') btn.addEventListener('click', () => panel.setMission('denials'));
-    if (t === 'Medical') btn.addEventListener('click', () => panel.setMission('coding'));
+  // Wire pills to mission switcher
+document.querySelectorAll('.pill').forEach(btn => {
+  const map = {
+    'Billing':    'billing',
+    'Compliance': 'compliance',
+    'Medical':    'medical',
+    'Pharmacy':   'pharmacy',
+    'Operations': 'operations',
+    'Insurance':  'insurance',
+    'Financial':  'financial',
+    'Legal':      'legal'
+  };
+  const t = btn.textContent.trim();
+  if (map[t]) btn.addEventListener('click', () => {
+    if (window.panel) window.panel.setMission(map[t]);
+    else openNode(map[t], { domain: map[t] });
   });
 });
 MissionBridge.renderTabSwitcher('nodes');
@@ -305,13 +316,6 @@ if (incoming) {
   document.body.appendChild(ret);
 }
 
-// Wire pills to mission switcher
-document.querySelectorAll('.pill').forEach(btn => {
-  const t = btn.textContent.trim();
-  if (t === 'Billing') btn.addEventListener('click', () => panel.setMission('billing'));
-  if (t === 'Compliance') btn.addEventListener('click', () => panel.setMission('denials'));
-  if (t === 'Medical') btn.addEventListener('click', () => panel.setMission('coding'));
-});
 </script>
 
 </body>
