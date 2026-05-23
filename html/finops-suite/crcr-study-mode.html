@@ -720,7 +720,7 @@ state = Object.assign({
   level: 1,
   sessions: 0,
   scores: [],
-  domainScores: { intake:[], coding:[], claims:[], payments:[], denials:[] },
+  domainScores: { intake:[], coding:[], claims:[], payments:[], denials:[], financial:[], integrity:[] },
   apiKey: ''
 }, state);
 
@@ -757,6 +757,22 @@ const SCENARIOS = {
     { issue: 'CO-50: Non-covered service — not medically necessary', task: 'Draft medical necessity appeal with clinical notes', type: 'denials' },
     { issue: 'CO-4: Service inconsistent with modifier', task: 'Review modifier rules and correct claim', type: 'denials' },
     { issue: 'PR-1: Deductible amount not yet met', task: 'Bill patient for deductible balance', type: 'denials' },
+    { issue: 'CO-18: Duplicate claim detected by payer', task: 'Void original claim and resubmit corrected with frequency code 7', type: 'denials' },
+    { issue: 'CO-15: Prior authorization not obtained', task: 'Request retro-authorization within payer window and document', type: 'denials' },
+  ],
+  financial: [
+    { issue: 'Patient unable to pay $2,400 deductible before elective surgery', task: 'Initiate financial counseling and explore payment plan or charity care options', type: 'financial' },
+    { issue: 'Patient quoted flat copay at check-in but actually owes 20% coinsurance', task: 'Explain copay vs coinsurance difference and correct the patient estimate', type: 'financial' },
+    { issue: 'Uninsured patient presents for emergency care', task: 'Screen for charity care eligibility per Federal Poverty Level guidelines', type: 'financial' },
+    { issue: 'Patient disputes $450 balance after insurance paid', task: 'Review ERA PR segments, verify patient responsibility, counsel on payment options', type: 'financial' },
+    { issue: 'ABN not obtained before non-covered Medicare service', task: 'Determine patient liability impact and document compliance gap', type: 'financial' },
+  ],
+  integrity: [
+    { issue: 'Three CPT codes submitted that NCCI edits bundle into one comprehensive code', task: 'Identify unbundling violation and correct to single comprehensive CPT', type: 'integrity' },
+    { issue: 'Office visit billed at Level 5 (99215) but documentation supports only Level 3 (99213)', task: 'Identify upcoding risk, downcode to match documentation, document audit finding', type: 'integrity' },
+    { issue: 'Revenue code 0450 on UB-04 but clinical level not documented', task: 'Match revenue code to correct service level and verify supporting documentation', type: 'integrity' },
+    { issue: 'Modifier 59 applied to bypass NCCI edit without clinical justification', task: 'Review clinical record — if no distinct service, remove modifier and rebill', type: 'integrity' },
+    { issue: 'Provider bills unlisted CPT code without documentation of medical necessity', task: 'Identify correct billable CPT or submit unlisted with supporting documentation', type: 'integrity' },
   ]
 };
 
@@ -835,8 +851,9 @@ function generateDailySession() {
   scenarioAnswers = {};
   currentScenarios = [];
 
-  const modules = ['intake','coding','claims','denials','payments'];
-  modules.forEach(m => {
+  const modules = ['intake','coding','claims','denials','payments','financial','integrity'];
+  const selected = modules.sort(()=>Math.random()-.5).slice(0,5);
+  selected.forEach(m => {
     const pool = SCENARIOS[m] || SCENARIOS.denials;
     const s = pool[Math.floor(Math.random()*pool.length)];
     currentScenarios.push({...s, module: m, id: m+'_'+Date.now()});
