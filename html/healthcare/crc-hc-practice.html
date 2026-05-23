@@ -2762,6 +2762,36 @@
         window.crcrSetDomain = typeof crcrSetDomain !== 'undefined' ? crcrSetDomain : function(){};
         window.crcrUpdateStats = typeof crcrUpdateStats !== 'undefined' ? crcrUpdateStats : function(){};
         </script>
+        <!-- Mission Panel -->
+<div id="mission-panel-container"></div>
+<script src="/healthcare/mission-bridge.js"></script>
+<script src="/healthcare/mission-panel.js"></script>
+<script>
+window.addEventListener('load', function() {
+  if (typeof MissionPanel === 'undefined') return;
+  window.panel = MissionPanel.init('mission-panel-container', 'billing');
+  MissionBridge.renderScoreBadge('billing', 5);
+
+  // Wire PRACTICE HERE buttons to open correct domain panel
+  document.querySelectorAll('button').forEach(btn => {
+    if (!btn.textContent.includes('PRACTICE HERE')) return;
+    btn.addEventListener('click', function() {
+      const card = btn.closest('[data-port], .live-node, section');
+      const domain = card?.querySelector('h2,h3')?.textContent?.trim()?.toLowerCase() || 'billing';
+      const map = {
+        'billing': 'billing', 'compliance': 'compliance',
+        'medical': 'medical', 'pharmacy': 'pharmacy',
+        'operations': 'operations', 'insurance': 'insurance',
+        'financial': 'financial', 'legal': 'legal',
+        'tax prep': 'taxprep', 'grants': 'grants',
+        'vendors': 'vendors'
+      };
+      const key = map[domain] || 'billing';
+      if (window.panel) window.panel.setMission(key);
+    });
+  });
+});
+</script>
 
 </body>
 
