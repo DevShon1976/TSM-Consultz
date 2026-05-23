@@ -170,6 +170,10 @@ const WORKFLOW_STAGES = ["CODING", "SUBMIT", "ADJUD.", "ERA"];
 
 // Override this to wire into your actual HC node routing
 function openNode(nodeId, params = {}) {
+  if (window.MissionBridge) {
+    MissionBridge.launchNode(nodeId, params.objectiveId || nodeId, 'billing', window.location.href);
+    return;
+  }
   console.log(`[MissionPanel] Opening node: ${nodeId}`, params);
 
   // Default: try to navigate to the node tab if the tab exists in the DOM
