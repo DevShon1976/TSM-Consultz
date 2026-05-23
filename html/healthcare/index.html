@@ -762,7 +762,21 @@ document.addEventListener('click', function(e){
 });
 })();</script>
 <script>
-  MissionBridge.renderTabSwitcher('nodes');
+  const _inc = MissionBridge.checkIncoming();
+if(_inc && _inc.objectiveId) {
+  const btn = document.createElement('button');
+  btn.style.cssText = 'position:fixed;bottom:60px;right:20px;z-index:9999;padding:12px 24px;background:#00c896;color:#000;border:none;font-family:JetBrains Mono,monospace;font-size:11px;font-weight:700;letter-spacing:.1em;cursor:pointer;border-radius:4px';
+  btn.textContent = '✓ OBJECTIVE COMPLETE — RETURN TO PRACTICE';
+  btn.onclick = () => {
+    const returnUrl = MissionBridge.reportComplete(_inc.objectiveId, _inc.objectiveId.split('_')[0], -8);
+    window.location.href = returnUrl;
+  };
+  document.body.appendChild(btn);
+  const banner = document.createElement('div');
+  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9998;padding:8px 20px;background:#041018;border-bottom:1px solid #00c896;font-family:JetBrains Mono,monospace;font-size:11px;color:#00c896;letter-spacing:.1em';
+  banner.textContent = `ACTIVE MISSION OBJECTIVE: ${_inc.objectiveId.replace(/_/g,' ').toUpperCase()} — Complete the task in this node, then click the button below`;
+  document.body.appendChild(banner);
+}
 const _incoming = MissionBridge.checkIncoming();
 if(_incoming) {
   const nodeBtn = document.querySelector(`[data-node="${_incoming.nodeId}"]`);
