@@ -2678,6 +2678,287 @@
         }
 
         init();
-        </script>  
+        </script>
+        <script>
+
+(function(){
+
+if(window.__TSM_PRACTICE_MISSION_CONTROL__) return;
+window.__TSM_PRACTICE_MISSION_CONTROL__ = true;
+
+function buildMissionControl(){
+
+  if(document.getElementById("tsm-mission-control"))
+    return;
+
+  const panel =
+    document.createElement("section");
+
+  panel.id = "tsm-mission-control";
+
+  panel.style.cssText = `
+    position:fixed;
+    right:18px;
+    top:120px;
+    width:340px;
+    z-index:999999;
+    background:#07131d;
+    border:1px solid rgba(0,255,198,.25);
+    border-radius:14px;
+    padding:16px;
+    color:#dff7ff;
+    font-family:Inter,Arial;
+    box-shadow:0 0 24px rgba(0,255,198,.12);
+  `;
+
+  panel.innerHTML = `
+    <div style="
+      color:#00ffc6;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.18em;
+      margin-bottom:12px;
+    ">
+      HC MISSION CONTROL
+    </div>
+
+    <div id="mission-objective"
+      style="
+        background:#041018;
+        border-radius:10px;
+        padding:12px;
+        line-height:1.6;
+        margin-bottom:14px;
+      ">
+      Waiting for objective...
+    </div>
+
+    <div style="
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-bottom:14px;
+    ">
+
+      <button id="open-hc-hub"
+        style="
+          padding:12px;
+          background:#02141f;
+          color:#00ffc6;
+          border:1px solid rgba(0,255,198,.25);
+          border-radius:10px;
+          cursor:pointer;
+          font-weight:800;
+        ">
+        OPEN HC HUB
+      </button>
+
+      <button id="refresh-score"
+        style="
+          padding:12px;
+          background:#02141f;
+          color:#fff;
+          border:1px solid rgba(255,255,255,.12);
+          border-radius:10px;
+          cursor:pointer;
+          font-weight:800;
+        ">
+        REFRESH
+      </button>
+
+    </div>
+
+    <div id="scoreboard"
+      style="
+        background:#041018;
+        border-radius:10px;
+        padding:12px;
+        line-height:1.8;
+      ">
+    </div>
+  `;
+
+  document.body.appendChild(panel);
+
+  document
+    .getElementById("open-hc-hub")
+    .onclick = function(){
+
+      window.open(
+        "/healthcare/index.html",
+        "_blank"
+      );
+    };
+
+  document
+    .getElementById("refresh-score")
+    .onclick = refreshMission;
+}
+
+function refreshMission(){
+
+  const active =
+    JSON.parse(
+      localStorage.getItem(
+        "TSM_ACTIVE_OBJECTIVE"
+      ) || "{}"
+    );
+
+  const score =
+    JSON.parse(
+      localStorage.getItem(
+        "TSM_SCOREBOARD"
+      ) || "{}"
+    );
+
+  const objective =
+    document.getElementById(
+      "mission-objective"
+    );
+
+  if(objective){
+
+    objective.innerHTML = `
+      <b>NODE:</b>
+      ${active.node || "NONE"}
+
+      <br><br>
+
+      <b>OBJECTIVE:</b>
+
+      <br>
+
+      ${active.objective || "No mission assigned"}
+    `;
+  }
+
+  const board =
+    document.getElementById(
+      "scoreboard"
+    );
+
+  if(board){
+
+    board.innerHTML = `
+      Completed:
+      <b>${score.completed || 0}</b>
+
+      <br>
+
+      Accuracy:
+      <b>${score.accuracy || 0}%</b>
+
+      <br>
+
+      Updated:
+      <b>${
+        score.updated
+          ? new Date(score.updated)
+              .toLocaleTimeString()
+          : "N/A"
+      }</b>
+    `;
+  }
+}
+
+function wireButtons(){
+
+  document
+    .querySelectorAll("button")
+    .forEach(btn => {
+
+      const txt =
+        (btn.innerText || "")
+          .toLowerCase();
+
+      if(btn.dataset.tsmwired)
+        return;
+
+      btn.dataset.tsmwired = "1";
+
+      if(txt.includes("billing")){
+
+        btn.onclick = function(){
+
+          localStorage.setItem(
+            "TSM_ACTIVE_OBJECTIVE",
+            JSON.stringify({
+              node:"billing",
+              objective:
+                "Review claim for all required fields before submission"
+            })
+          );
+
+          window.open(
+            "/healthcare/index.html",
+            "_blank"
+          );
+        };
+      }
+
+      if(txt.includes("credential")){
+
+        btn.onclick = function(){
+
+          localStorage.setItem(
+            "TSM_ACTIVE_OBJECTIVE",
+            JSON.stringify({
+              node:"insurance",
+              objective:
+                "Verify payer credentialing and eligibility"
+            })
+          );
+
+          window.open(
+            "/healthcare/index.html",
+            "_blank"
+          );
+        };
+      }
+
+      if(txt.includes("denial")){
+
+        btn.onclick = function(){
+
+          localStorage.setItem(
+            "TSM_ACTIVE_OBJECTIVE",
+            JSON.stringify({
+              node:"compliance",
+              objective:
+                "Resolve denial workflow and appeal exposure"
+            })
+          );
+
+          window.open(
+            "/healthcare/index.html",
+            "_blank"
+          );
+        };
+      }
+    });
+}
+
+function init(){
+
+  buildMissionControl();
+
+  refreshMission();
+
+  wireButtons();
+
+  setInterval(refreshMission, 3000);
+}
+
+if(document.readyState === "loading"){
+  document.addEventListener(
+    "DOMContentLoaded",
+    init
+  );
+}else{
+  init();
+}
+
+})();
+</script>  
 </body>
 </html>

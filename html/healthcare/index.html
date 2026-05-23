@@ -765,5 +765,65 @@ document.addEventListener('click', function(e){
   MissionBridge.renderTabSwitcher('practice');
   MissionBridge.renderScoreBadge('billing', 5);
 </script>
+<script>
+
+(function(){
+
+if(window.__TSM_HC_MISSION_BRIDGE__) return;
+window.__TSM_HC_MISSION_BRIDGE__ = true;
+
+window.TSM_NODE_ROUTES = {
+  billing: "/healthcare/hc-billing/index.html",
+  compliance: "/healthcare/hc-compliance/index.html",
+  insurance: "/healthcare/hc-insurance/index.html",
+  coding: "/healthcare/hc-medical/index.html",
+  payments: "/healthcare/hc-financial/index.html",
+  operations: "/healthcare/hc-operations/index.html",
+  denials: "/healthcare/crc-hc-practice.html"
+};
+
+window.launchMissionNode = function(node, objective){
+
+  localStorage.setItem(
+    "TSM_ACTIVE_OBJECTIVE",
+    JSON.stringify({
+      node,
+      objective,
+      started: Date.now()
+    })
+  );
+
+  const route =
+    window.TSM_NODE_ROUTES[node];
+
+  if(route){
+    window.open(route, "_blank");
+  }
+};
+
+window.completeMission = function(score){
+
+  const board =
+    JSON.parse(
+      localStorage.getItem("TSM_SCOREBOARD") || "{}"
+    );
+
+  board.completed =
+    (board.completed || 0) + 1;
+
+  board.accuracy =
+    score || 100;
+
+  board.updated =
+    Date.now();
+
+  localStorage.setItem(
+    "TSM_SCOREBOARD",
+    JSON.stringify(board)
+  );
+};
+
+})();
+</script>
 </body>
 </html>
