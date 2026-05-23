@@ -2479,15 +2479,15 @@
         function crcrPracticeNode(key,domain){
   const n=CRCR_HC_NODES[key];
   const HC_NODE_APPS={
-    insurance:{app:'FinOps Operations Suite',file:'/html/finops-suite/finops-operations.html',checklist:['Open Operations Suite','Navigate to Payer Management','Review eligibility verification workflow','Check prior auth tracking']},
-    operations:{app:'FinOps Operations Suite',file:'/html/finops-suite/finops-operations.html',checklist:['Open Operations Suite','Navigate to Patient Access','Review intake error queue','Check scheduling throughput metrics']},
-    billing:{app:'FinOps Accounting POC',file:'/html/finops-suite/finops-accounting.html',checklist:['Open Accounting POC','Navigate to Claims module','Review clean claim rate','Check AR aging by payer']},
-    medical:{app:'FinOps Accounting POC',file:'/html/finops-suite/finops-accounting.html',checklist:['Open Accounting POC','Navigate to Charge Entry','Verify ICD-10 to CPT linkage','Review medical necessity flags']},
-    financial:{app:'FinOps Accounting POC',file:'/html/finops-suite/finops-accounting.html',checklist:['Open Accounting POC','Navigate to Payment Posting','Reconcile ERA against fee schedule','Flag any underpayments']},
-    compliance:{app:'Staff Accountant Interview Suite',file:'/html/finops-suite/staff-accountant-interview.html',checklist:['Open Interview Suite','Select Compliance domain','Answer 3 audit scenario questions','Review AI feedback']},
-    pharmacy:{app:'FinOps Operations Suite',file:'/html/finops-suite/finops-operations.html',checklist:['Open Operations Suite','Navigate to Pharmacy module','Review HCPCS J-code billing queue','Check prior auth for specialty drugs']},
+    insurance:{label:'Insurance / Payer',checklist:['Verify patient eligibility via 270/271 transaction','Confirm primary vs secondary payer order (COB)','Check prior authorization status before DOS','Review payer-specific billing rules and modifiers','Document any eligibility discrepancies in the patient account']},
+    operations:{label:'Operations / Patient Access',checklist:['Confirm patient demographics match insurance records exactly','Verify insurance ID including leading zeros and formatting','Obtain prior authorization before scheduled procedures','Document intake errors and flag for registration correction','Run eligibility check and review 271 response segments']},
+    billing:{label:'Billing / Claims',checklist:['Review claim for all required fields before submission','Verify NPI matches payer credentialing file','Check timely filing window for each payer','Submit via clearinghouse and monitor 277CA response','Post ERA payments and reconcile against fee schedule']},
+    medical:{label:'Medical / Clinical',checklist:['Confirm ICD-10 diagnosis supports the CPT ordered','Query provider for additional supporting diagnoses if needed','Verify medical necessity per LCD/NCD for the procedure','Obtain clinical documentation for medical necessity appeals','Ensure Modifier 25 present for same-day E/M + procedure']},
+    financial:{label:'Financial / Revenue Cycle',checklist:['Reconcile ERA payment against contracted fee schedule','Flag underpayments within appeal window (45–180 days)','Post PR codes as patient responsibility — do not appeal','Set up payment plans for high-balance patient accounts','Screen uninsured patients for charity care eligibility']},
+    compliance:{label:'Compliance / Audit',checklist:['Verify E/M level is supported by documentation (MDM or time)','Check for NCCI edit conflicts in CPT pairs billed together','Confirm ABN obtained before non-covered Medicare services','Review revenue codes on UB-04 match clinical service level','Document all coding changes with rationale in audit log']},
+    pharmacy:{label:'Pharmacy / Rx',checklist:['Verify HCPCS J-code matches drug and dosage billed','Confirm prior authorization for specialty drugs','Check NDC number is included on claim when required','Verify drug is on payer formulary before dispensing','Reconcile drug wastage documentation with billing']},
   };
-  const a=HC_NODE_APPS[key]||{app:'FinOps Accounting POC',file:'/html/finops-suite/finops-accounting.html',checklist:['Open the app','Navigate to relevant module','Practice the scenario','Review results']};
+  const a=HC_NODE_APPS[key]||{label:key,checklist:['Review department-specific RCM responsibilities','Identify your role in the claim lifecycle','Practice scenario resolution steps','Document findings and escalate if needed']};
   const ex=document.getElementById('hcPracticeDrawer');
   if(ex)ex.remove();
   const drawer=document.createElement('div');
@@ -2504,8 +2504,7 @@
       <div style="font-size:11px;color:var(--muted);font-family:var(--mono);line-height:1.6;margin-bottom:20px">${n?n.meta:''}</div>
       <div style="font-size:9px;letter-spacing:.15em;color:var(--muted);font-family:var(--mono);margin-bottom:10px">PRACTICE IN · ${a.app.toUpperCase()}</div>
       ${a.checklist.map((c,i)=>`<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px"><div style="width:18px;height:18px;border:1px solid var(--border);border-radius:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--rcm-green);font-family:var(--mono)">${i+1}</div><div style="font-size:12px;color:var(--text);line-height:1.5;font-family:var(--mono)">${c}</div></div>`).join('')}
-      <a href="${a.file}" target="_blank" style="display:block;margin-top:20px;padding:12px;background:transparent;border:1px solid var(--rcm-green);color:var(--rcm-green);text-align:center;font-family:var(--mono);font-size:11px;letter-spacing:.15em;text-decoration:none">OPEN ${a.app.toUpperCase()} →</a>
-      <a href="/html/finops-suite/staff-accountant-interview.html" target="_blank" style="display:block;margin-top:10px;padding:10px;background:transparent;border:1px solid var(--border);color:var(--muted);text-align:center;font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-decoration:none">OPEN INTERVIEW SUITE →</a>
+      <div style="margin-top:20px;padding:12px;background:var(--rcm-s2,#0c1520);border:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;letter-spacing:.1em">PRACTICE THIS DOMAIN IN THE CRCR SCENARIOS ABOVE</div>
     </div>`;
   document.body.appendChild(drawer);
 }
