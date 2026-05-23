@@ -2507,6 +2507,106 @@
         }
         function crcrPracticeNode(key,domain){
   const n=CRCR_HC_NODES[key];
+  const MISSIONS={
+    insurance:{key:'insurance',objectives:[
+      {id:'ins_1',label:'Verify patient eligibility via 270/271',node:'insurance',risk:-8},
+      {id:'ins_2',label:'Confirm COB — primary vs secondary payer',node:'insurance',risk:-6},
+      {id:'ins_3',label:'Check prior auth status before DOS',node:'insurance',risk:-10},
+      {id:'ins_4',label:'Review payer-specific billing rules',node:'insurance',risk:-5},
+      {id:'ins_5',label:'Document eligibility discrepancies',node:'insurance',risk:-4},
+    ]},
+    operations:{key:'operations',objectives:[
+      {id:'ops_1',label:'Confirm patient demographics match insurance',node:'operations',risk:-8},
+      {id:'ops_2',label:'Verify insurance ID formatting',node:'operations',risk:-6},
+      {id:'ops_3',label:'Obtain prior auth before scheduled procedure',node:'operations',risk:-12},
+      {id:'ops_4',label:'Run eligibility check and review 271 response',node:'operations',risk:-7},
+      {id:'ops_5',label:'Flag intake errors for registration correction',node:'operations',risk:-5},
+    ]},
+    billing:{key:'billing',objectives:[
+      {id:'bil_1',label:'Review claim for all required fields',node:'billing',risk:-8},
+      {id:'bil_2',label:'Verify NPI matches payer credentialing file',node:'billing',risk:-10},
+      {id:'bil_3',label:'Check timely filing window for each payer',node:'billing',risk:-7},
+      {id:'bil_4',label:'Submit via clearinghouse — monitor 277CA',node:'billing',risk:-9},
+      {id:'bil_5',label:'Post ERA and reconcile against fee schedule',node:'billing',risk:-8},
+    ]},
+    medical:{key:'medical',objectives:[
+      {id:'med_1',label:'Confirm ICD-10 supports the CPT ordered',node:'medical',risk:-10},
+      {id:'med_2',label:'Query provider for supporting diagnoses',node:'medical',risk:-6},
+      {id:'med_3',label:'Verify medical necessity per LCD/NCD',node:'medical',risk:-9},
+      {id:'med_4',label:'Obtain clinical documentation for appeal',node:'medical',risk:-7},
+      {id:'med_5',label:'Confirm Modifier 25 for same-day E/M',node:'medical',risk:-6},
+    ]},
+    financial:{key:'financial',objectives:[
+      {id:'fin_1',label:'Reconcile ERA against contracted fee schedule',node:'financial',risk:-8},
+      {id:'fin_2',label:'Flag underpayments within appeal window',node:'financial',risk:-9},
+      {id:'fin_3',label:'Set up payment plan for high-balance accounts',node:'financial',risk:-5},
+      {id:'fin_4',label:'Screen uninsured patients for charity care',node:'financial',risk:-6},
+      {id:'fin_5',label:'Post PR codes as patient responsibility',node:'financial',risk:-4},
+    ]},
+    compliance:{key:'compliance',objectives:[
+      {id:'com_1',label:'Verify E/M level matches documentation',node:'compliance',risk:-10},
+      {id:'com_2',label:'Check for NCCI edit conflicts in CPT pairs',node:'compliance',risk:-9},
+      {id:'com_3',label:'Confirm ABN obtained for non-covered Medicare',node:'compliance',risk:-11},
+      {id:'com_4',label:'Review revenue codes on UB-04',node:'compliance',risk:-7},
+      {id:'com_5',label:'Document coding changes in audit log',node:'compliance',risk:-5},
+    ]},
+    pharmacy:{key:'pharmacy',objectives:[
+      {id:'pha_1',label:'Verify HCPCS J-code matches drug and dosage',node:'pharmacy',risk:-8},
+      {id:'pha_2',label:'Confirm prior auth for specialty drugs',node:'pharmacy',risk:-10},
+      {id:'pha_3',label:'Check NDC number included on claim',node:'pharmacy',risk:-6},
+      {id:'pha_4',label:'Verify drug is on payer formulary',node:'pharmacy',risk:-7},
+      {id:'pha_5',label:'Reconcile drug wastage documentation',node:'pharmacy',risk:-5},
+    ]},
+  };
+  const mission=MISSIONS[key]||MISSIONS.billing;
+  const progress=typeof MissionBridge!=='undefined'?MissionBridge.getProgress(mission.key,mission.objectives.length):{completed:[],pct:0,riskScore:72};
+  const ex=document.getElementById('hcPracticeDrawer');
+  if(ex)ex.remove();
+  const drawer=document.createElement('div');
+  drawer.id='hcPracticeDrawer';
+  drawer.style.cssText='position:fixed;right:0;top:0;bottom:0;width:380px;background:var(--surface);border-left:1px solid var(--border);z-index:9000;display:flex;flex-direction:column;overflow-y:auto';
+  drawer.innerHTML=`
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:10px;letter-spacing:.15em;color:var(--rcm-green);font-family:var(--mono)">MISSION · ${key.toUpperCase()}</div>
+      <button onclick="document.getElementById('hcPracticeDrawer').remove()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer">✕</button>
+    </div>
+    <div style="padding:16px 20px;background:var(--rcm-s2,#0c1520);border-bottom:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:4px">${domain.toUpperCase()} → ${key.toUpperCase()} NODE</div>
+      <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px">${n?n.title:key}</div>
+      <div style="display:flex;gap:16px;font-family:var(--mono);font-size:11px">
+        <span>RISK <b style="color:${progress.riskScore>50?'#ff4455':progress.riskScore>25?'#ffc400':'var(--rcm-green)'}">${progress.riskScore}</b></span>
+        <span>COMPLETE <b style="color:var(--rcm-green)">${progress.pct}%</b></span>
+      </div>
+      <div style="margin-top:8px;height:4px;background:var(--border);border-radius:2px">
+        <div style="height:4px;background:var(--rcm-green);border-radius:2px;width:${progress.pct}%;transition:width .3s"></div>
+      </div>
+    </div>
+    <div style="padding:16px 20px;flex:1">
+      <div style="font-size:9px;letter-spacing:.15em;color:var(--muted);font-family:var(--mono);margin-bottom:12px">MISSION OBJECTIVES — CLICK TO EXECUTE IN HC NODES</div>
+      ${mission.objectives.map((obj,i)=>{
+        const done=progress.completed.includes(obj.id);
+        return `<div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;padding:10px;background:${done?'rgba(0,255,198,.05)':'var(--rcm-s2,#0c1520)'};border:1px solid ${done?'var(--rcm-green)':'var(--border)'};border-radius:3px;cursor:${done?'default':'pointer'}" onclick="${done?'':`MissionBridge.launchNode('${obj.node}','${obj.id}','${mission.key}',window.location.href)`}">
+          <div style="width:20px;height:20px;border:1px solid ${done?'var(--rcm-green)':'var(--border)'};border-radius:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--rcm-green)">${done?'✓':i+1}</div>
+          <div style="font-size:12px;color:${done?'var(--rcm-green)':'var(--text)'};font-family:var(--mono);line-height:1.4;text-decoration:${done?'line-through':'none'}">${obj.label}</div>
+          ${done?'':`<div style="margin-left:auto;font-size:9px;color:var(--muted);font-family:var(--mono);white-space:nowrap">-${Math.abs(obj.risk)} risk →</div>`}
+        </div>`;
+      }).join('')}
+    </div><script src="/shared/tsm-shared.js"></script>
+    <script src="/healthcare/mission-bridge.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    if(typeof MissionBridge !== 'undefined') {
+      MissionBridge.renderTabSwitcher('practice');
+      MissionBridge.renderScoreBadge('billing', 5);
+    }
+  });
+</script>
+    <div style="padding:16px 20px;border-top:1px solid var(--border)">
+      <button onclick="MissionBridge.reset();document.getElementById('hcPracticeDrawer').remove();crcrPracticeNode('${key}','${domain}')" style="width:100%;padding:10px;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:10px;cursor:pointer;letter-spacing:.1em">RESET MISSION</button>
+    </div>`;
+  document.body.appendChild(drawer);
+}
+  const n=CRCR_HC_NODES[key];
   const HC_NODE_APPS={
     insurance:{label:'Insurance / Payer',checklist:['Verify patient eligibility via 270/271 transaction','Confirm primary vs secondary payer order (COB)','Check prior authorization status before DOS','Review payer-specific billing rules and modifiers','Document any eligibility discrepancies in the patient account']},
     operations:{label:'Operations / Patient Access',checklist:['Confirm patient demographics match insurance records exactly','Verify insurance ID including leading zeros and formatting','Obtain prior authorization before scheduled procedures','Document intake errors and flag for registration correction','Run eligibility check and review 271 response segments']},
