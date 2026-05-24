@@ -181,7 +181,7 @@ document.getElementById("nodeGrid").innerHTML = nodes.map(([key,title,meta,color
     <p>${issue}</p>
     <div class="label">WHY IT MATTERS</div>
     <p>This creates operational drag, delayed handoffs, revenue risk, or compliance exposure if unresolved.</p>
-    <button class="open-btn"onclick="openNodeAndExecute('${key}')">OPEN NODE →</button>
+    <button class="open-btn" onclick="openNodeAndExecute('${key}')">OPEN NODE →</button>
     <div class="live">LIVE</div>
   </section>
 `).join("");
@@ -202,7 +202,49 @@ document.getElementById("nodeGrid").innerHTML = nodes.map(([key,title,meta,color
 <!-- MISSION BRIDGE + PANEL -->
 <script src="/healthcare/mission-bridge.js"></script>
 <script src="/healthcare/mission-panel.js"></script>
-<script>window.addEventListener('load', function() {
+
+<script>
+// ─── FIX 1: Global refs so inline onclick="openNodeAndExecute(...)" works ───
+var _missionBannerEl = null;
+
+// ─── FIX 2: openNodeAndExecute defined at global scope ───────────────────────
+function openNodeAndExecute(nodeId) {
+  if (typeof MissionBridge === 'undefined') return;
+  MissionBridge.flagNodeOpened(nodeId);
+  const state = MissionBridge.get();
+  MissionBridge.set({ ...state, executingNode: nodeId, nodeOpened: true });
+  const card = document.querySelector('[data-node="' + nodeId + '"]');
+  if (card) {
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    card.classList.add('node-executing');
+  }
+  if (window.panel && typeof window.panel.setMission === 'function') {
+    window.panel.setMission(nodeId);
+  }
+}
+window.openNodeAndExecute = openNodeAndExecute;
+
+// ─── FIX 3: handleMarkComplete defined at global scope ───────────────────────
+function handleMarkComplete(objectiveId, missionKey, encodedReturnUrl) {
+  const state = MissionBridge.get();
+  if (!state.executingNode && !state.nodeOpened) {
+    // FIX: Use the stored banner reference instead of the broken querySelector
+    if (_missionBannerEl) {
+      _missionBannerEl.style.border = '2px solid #ff4d6d';
+      const warn = document.createElement('span');
+      warn.style.cssText = 'color:#ff4d6d;font-size:10px;display:block;margin-top:4px;';
+      warn.textContent = '⚠ Click OPEN NODE first to complete the task';
+      _missionBannerEl.appendChild(warn);
+    }
+    return;
+  }
+  MissionBridge.completeObjective(objectiveId, missionKey, -10);
+  MissionBridge.set({ ...MissionBridge.get(), executingNode: null, nodeOpened: false });
+  window.location.href = decodeURIComponent(encodedReturnUrl);
+}
+window.handleMarkComplete = handleMarkComplete;
+
+window.addEventListener('load', function() {
   if (typeof MissionPanel === 'undefined') {
     console.error('mission-panel.js not loaded');
     return;
@@ -218,7 +260,10 @@ document.getElementById("nodeGrid").innerHTML = nodes.map(([key,title,meta,color
       const label = state.objectiveLabel || incoming.objectiveId;
       const returnUrl = state.returnUrl || '/healthcare/crc-hc-practice.html';
       const ret = document.createElement('div');
+      ret.setAttribute('data-mission-banner', 'true'); // easy selector if ever needed
       ret.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#00c896;color:#000;padding:10px 20px;font-size:11px;font-weight:900;letter-spacing:1px;display:flex;justify-content:space-between;align-items:center;gap:20px;';
+      _missionBannerEl = ret; // FIX: store reference globally for handleMarkComplete
+
       const btn = document.createElement('button');
       btn.textContent = '✓ MARK COMPLETE → RETURN';
       btn.style.cssText = 'background:#000;color:#00c896;border:none;padding:10px 20px;font-size:11px;font-weight:900;letter-spacing:1px;cursor:pointer;border-radius:3px;white-space:nowrap;';
@@ -231,6 +276,7 @@ document.getElementById("nodeGrid").innerHTML = nodes.map(([key,title,meta,color
       ret.innerHTML = '<div>⚡ MISSION OBJECTIVE — <span style="font-weight:400">' + label + '</span><br><span style="font-size:10px;font-weight:400;">Review the highlighted node → click OPEN NODE → complete the task → click MARK COMPLETE</span></div>';
       ret.appendChild(btn);
       document.body.appendChild(ret);
+
       const card = document.querySelector('[data-node="' + incoming.nodeId + '"]');
       if (card) {
         card.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -240,62 +286,26 @@ document.getElementById("nodeGrid").innerHTML = nodes.map(([key,title,meta,color
     }
   }, 300);
 
-  function openNodeAndExecute(nodeId) {
-  MissionBridge.flagNodeOpened(nodeId);
-  const state = MissionBridge.get();
-  MissionBridge.set({
-    ...state,
-    executingNode: nodeId,
-    nodeOpened: true
-  });
-  // Scroll active card into view and highlight it
-  const card = document.querySelector('[data-node="' + nodeId + '"]');
-  if (card) {
-    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    card.classList.add('node-executing');
-  }
-  // Load the node in the right panel if panel exists
-  if (window.panel && typeof window.panel.setMission === 'function') {
-    window.panel.setMission(nodeId);
-  }
-}
-
-function handleMarkComplete(objectiveId, missionKey, encodedReturnUrl) {
-  const state = MissionBridge.get();
-  // Guard: only allow mark complete if user actually opened the node
-  if (!state.executingNode && !state.nodeOpened) {
-    const banner = document.querySelector('[style*="ACTIVE OBJECTIVE"]');
-    if (banner) {
-      banner.style.border = '2px solid #ff4d6d';
-      banner.innerHTML = banner.innerHTML + '<br><span style="color:#ff4d6d;font-size:10px;">⚠ Click OPEN NODE first to complete the task</span>';
-    }
-    return; // Block mark complete until node is opened
-  }
-  MissionBridge.completeObjective(objectiveId, missionKey, -10);
-  MissionBridge.set({ ...MissionBridge.get(), executingNode: null, nodeOpened: false });
-  window.location.href = decodeURIComponent(encodedReturnUrl);
-}
-
-// Wire pills to mission switcher
-document.querySelectorAll('.pill').forEach(btn => {
-  const map = {
-    'Billing':    'billing',
-    'Compliance': 'compliance',
-    'Medical':    'medical',
-    'Pharmacy':   'pharmacy',
-    'Operations': 'operations',
-    'Insurance':  'insurance',
-    'Financial':  'financial',
-    'Legal':      'legal',
-    'Tax Prep':   'taxprep',
-    'Grants':     'grants'
-  };
-  const t = btn.textContent.trim();
-  if (map[t]) btn.addEventListener('click', () => {
-    openNodeAndExecute(map[t]);
+  // Wire pills to mission switcher
+  document.querySelectorAll('.pill').forEach(btn => {
+    const map = {
+      'Billing':    'billing',
+      'Compliance': 'compliance',
+      'Medical':    'medical',
+      'Pharmacy':   'pharmacy',
+      'Operations': 'operations',
+      'Insurance':  'insurance',
+      'Financial':  'financial',
+      'Legal':      'legal',
+      'Tax Prep':   'taxprep',
+      'Grants':     'grants'
+    };
+    const t = btn.textContent.trim();
+    if (map[t]) btn.addEventListener('click', () => {
+      openNodeAndExecute(map[t]);
+    });
   });
 });
-
 </script>
 
 <script id="tsm-direct-wire">
@@ -329,5 +339,4 @@ window.openNode = openNode;
 </script>
 
 </body>
-
 </html>
