@@ -213,21 +213,30 @@ window.addEventListener('load', function() {
   MissionBridge.renderScoreBadge('billing', 5);
 
   const incoming = MissionBridge.checkIncoming();
-  if (incoming) {
-    const card = document.querySelector(`[data-node="${incoming.nodeId}"]`);
-    if (card) {
-      card.scrollIntoView({ behavior: 'smooth' });
-      card.style.outline = '2px solid #00c896';
-      card.style.boxShadow = '0 0 24px rgba(0,200,150,0.35)';
-    }
-    const ret = document.createElement('div');
-    ret.style.cssText = 'position:fixed;top:46px;right:0;z-index:9999;';
-    ret.innerHTML = `<button onclick="
-      MissionBridge.completeObjective('${incoming.objectiveId}','billing',-15);
-      window.location.href='/healthcare/crc-hc-practice.html';
-    " style="background:#00c896;color:#000;border:none;padding:8px 18px;font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer;">✓ MARK COMPLETE → RETURN TO PRACTICE</button>`;
-    document.body.appendChild(ret);
+if (incoming) {
+  const card = document.querySelector(`[data-node="${incoming.nodeId}"]`);
+  if (card) {
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    card.style.outline = '3px solid #00c896';
+    card.style.boxShadow = '0 0 40px rgba(0,255,198,0.5)';
+    
+    // Add instruction banner inside the card
+    const banner = document.createElement('div');
+    banner.style.cssText = 'background:#00c896;color:#000;padding:8px 12px;font-size:11px;font-weight:900;letter-spacing:1px;margin-top:8px;border-radius:3px;';
+    banner.innerHTML = '⚡ ACTIVE OBJECTIVE — Review this node, then click MARK COMPLETE above to return to practice and record your score.';
+    card.appendChild(banner);
   }
+
+  const ret = document.createElement('div');
+  ret.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#00c896;color:#000;padding:10px 20px;font-size:12px;font-weight:900;letter-spacing:1px;display:flex;justify-content:space-between;align-items:center;';
+  ret.innerHTML = `
+    <span>⚡ MISSION OBJECTIVE ACTIVE — Review the highlighted node below, then mark complete to score your progress</span>
+    <button onclick="MissionBridge.completeObjective('${incoming.objectiveId}','${incoming.missionKey || 'billing'}',-15);window.location.href='${decodeURIComponent(new URLSearchParams(window.location.search).get('returnUrl') || '/healthcare/crc-hc-practice.html')}';"
+    style="background:#000;color:#00c896;border:none;padding:8px 16px;font-size:11px;font-weight:900;letter-spacing:1px;cursor:pointer;border-radius:3px;">
+      ✓ MARK COMPLETE → RETURN TO PRACTICE
+    </button>`;
+  document.body.appendChild(ret);
+}();
 
   // Wire pills to mission switcher
   document.querySelectorAll('.pill').forEach(btn => {
