@@ -885,54 +885,34 @@ function userMessage(text) {
   feed.scrollTop = feed.scrollHeight;
 }
 
+// Ensure your sendChat function is cleanly closed
 async function sendChat() {
   const input = document.getElementById('chat-input');
   const text = input.value.trim();
   if (!text) return;
   input.value = '';
-  
-  // Safety check to ensure your message helper matches the DOM renderer
-  if (typeof userMessage === 'function') {
-    userMessage(text);
-  } else if (typeof addUserMessage === 'function') {
-    addUserMessage(text);
-  }
+  userMessage(text);
 
-  // Fallback map to grab the song DNA state smoothly regardless of naming
-  const activeDNA = window.DNA || window.selectedSongDNA || { genre: 'Hip-Hop', mood: 'Motivational' };
-  const stepVal = typeof currentStep !== 'undefined' ? currentStep : 1;
-
-  // Build context from current DNA
-  const context = `Current song context: Genre=${activeDNA.genre}, Mood=${activeDNA.mood}, Artist=${activeDNA.artist || 'none'}, Theme=${activeDNA.theme || 'not set yet'}, Step=${stepVal}/7, Has lyrics=${!!activeDNA.lyrics}`;
+  const context = `Current song context: Genre=${DNA.genre}, Mood=${DNA.mood}, Artist=${DNA.artist||'none'}, Theme=${DNA.theme||'not set yet'}, Step=${currentStep}/7, Has lyrics=${!!DNA.lyrics}`;
 
   try {
     const d = await apiCall('/music/coach', {
       query: `${context}\n\nUser: ${text}\n\nRespond as ZAY, a real producer/artist coach. Keep it direct, real, and helpful. Under 80 words.`,
     });
-    const reply = d.content || d.reply || d.text || "Let me think on that.";
+    const reply = d.content || d.reply || "Let me think on that.";
     zayMessage(reply);
   } catch(e) {
-    console.error("ZAY routing exception:", e);
     zayMessage("Connection dropped for a sec. Ask me again.");
   }
-}
+} // 🌟 This closing bracket must be here!
 
-document.getElementById('chat-input').addEventListener('keydown', e => {
-  // If they hit Enter but are NOT holding Shift, send the chat!
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
+// 1. Execute the chat function call safely
     sendChat();
   }
+}); // 🌟 This closes your document event listener clean and tight!
+
 </script>
 
-
-
-
-
-
-
-
-<script>
 // --- TSM Native Audio Engine & Cadence Simulation Pipeline ---
 let tsmAudioCtx = null;
 let metroTimer = null;
