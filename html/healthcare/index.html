@@ -289,26 +289,6 @@ document.getElementById("nodeGrid").innerHTML = nodes.map(([key,title,meta,color
     window.panel.setMission(nodeId);
   }
 }
-    
-    const state = MissionBridge.get();
-    const label = state.objectiveLabel || incoming.objectiveId;
-    const returnUrl = state.returnUrl || '/healthcare/crc-hc-practice.html';
-    const ret = document.createElement('div');
-    ret.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#00c896;color:#000;padding:10px 20px;font-size:11px;font-weight:900;letter-spacing:1px;display:flex;justify-content:space-between;align-items:center;gap:20px;';
-    const btn = document.createElement('button');
-    btn.textContent = '✓ MARK COMPLETE → RETURN';
-    btn.style.cssText = 'background:#000;color:#00c896;border:none;padding:10px 20px;font-size:11px;font-weight:900;letter-spacing:1px;cursor:pointer;border-radius:3px;white-space:nowrap;';
-    btn.dataset.objId = incoming.objectiveId;
-    btn.dataset.missionKey = incoming.missionKey || 'billing';
-    btn.dataset.returnUrl = encodeURIComponent(returnUrl);
-    btn.addEventListener('click', function() {
-      handleMarkComplete(this.dataset.objId, this.dataset.missionKey, this.dataset.returnUrl);
-    });
-    ret.innerHTML = '<div>⚡ MISSION OBJECTIVE — <span style="font-weight:400">' + label + '</span><br><span style="font-size:10px;font-weight:400;">Review the highlighted node → click OPEN NODE → complete the task → click MARK COMPLETE</span></div>';
-    ret.appendChild(btn);
-    document.body.appendChild(ret);
-  }
-}
 
 function handleMarkComplete(objectiveId, missionKey, encodedReturnUrl) {
   const state = MissionBridge.get();
@@ -324,48 +304,28 @@ function handleMarkComplete(objectiveId, missionKey, encodedReturnUrl) {
   MissionBridge.completeObjective(objectiveId, missionKey, -10);
   MissionBridge.set({ ...MissionBridge.get(), executingNode: null, nodeOpened: false });
   window.location.href = decodeURIComponent(encodedReturnUrl);
+}
 
-  // Wire pills to mission switcher
-  document.querySelectorAll('.pill').forEach(btn => {
-    const map = {
-      'Billing':    'billing',
-      'Compliance': 'compliance',
-      'Medical':    'medical',
-      'Pharmacy':   'pharmacy',
-      'Operations': 'operations',
-      'Insurance':  'insurance',
-      'Financial':  'financial',
-      'Legal':      'legal',
-      'Tax Prep':   'taxprep',
-      'Grants':     'grants'
-    };
-    const t = btn.textContent.trim();
-    if (map[t]) btn.addEventListener('click', () => {
-      openNodeAndExecute(map[t]);
-    });
-  });
-
-  // Wire pills to mission switcher
-  document.querySelectorAll('.pill').forEach(btn => {
-    const map = {
-      'Billing':    'billing',
-      'Compliance': 'compliance',
-      'Medical':    'medical',
-      'Pharmacy':   'pharmacy',
-      'Operations': 'operations',
-      'Insurance':  'insurance',
-      'Financial':  'financial',
-      'Legal':      'legal',
-      'Tax Prep':   'taxprep',
-      'Grants':     'grants'
-    };
-    const t = btn.textContent.trim();
-    if (map[t]) btn.addEventListener('click', () => {
-      if (window.panel) window.panel.setMission(map[t]);
-      else openNode(map[t], { domain: map[t] });
-    });
+// Wire pills to mission switcher
+document.querySelectorAll('.pill').forEach(btn => {
+  const map = {
+    'Billing':    'billing',
+    'Compliance': 'compliance',
+    'Medical':    'medical',
+    'Pharmacy':   'pharmacy',
+    'Operations': 'operations',
+    'Insurance':  'insurance',
+    'Financial':  'financial',
+    'Legal':      'legal',
+    'Tax Prep':   'taxprep',
+    'Grants':     'grants'
+  };
+  const t = btn.textContent.trim();
+  if (map[t]) btn.addEventListener('click', () => {
+    openNodeAndExecute(map[t]);
   });
 });
+
 </script>
 
 <script id="tsm-direct-wire">
