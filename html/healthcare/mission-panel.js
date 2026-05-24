@@ -342,7 +342,7 @@ class MissionPanel {
   render() {
     const pct = Math.round((this.completed.length / this.mission.objectives.length) * 100);
     this.container.innerHTML = `
-      <div class="mp-panel" style="background:#0d0d0d;border-left:1px solid #1e1e1e;height:100vh;overflow-y:auto;font-family:'JetBrains Mono','Courier New',monospace;position:fixed;right:0;top:0;width:340px;z-index:9000;">
+      <div class="mp-panel" style="background:#0d0d0d;border-left:1px solid #1e1e1e;height:100vh;overflow-y:auto;font-family:'JetBrains Mono','Courier New',monospace;position:fixed;right:0;top:0;width:340px;z-index:99999;">
         <div style="background:#111;border-bottom:1px solid #1e1e1e;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;">
           <div style="font-size:9px;letter-spacing:2px;color:#555;">MISSION CONTROL</div>
           <div style="display:flex;align-items:center;gap:8px;">
