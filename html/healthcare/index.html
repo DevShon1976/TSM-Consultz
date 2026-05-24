@@ -213,6 +213,50 @@ window.addEventListener('load', function() {
   MissionBridge.renderScoreBadge('billing', 5);
 
   const incoming = MissionBridge.checkIncoming();
+  if (incoming) {
+    const card = document.querySelector(`[data-node="${incoming.nodeId}"]`);
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      card.style.outline = '3px solid #00c896';
+      card.style.boxShadow = '0 0 40px rgba(0,255,198,0.5)';
+      const banner = document.createElement('div');
+      banner.style.cssText = 'background:#00c896;color:#000;padding:10px 14px;font-size:11px;font-weight:900;letter-spacing:1px;margin-top:8px;border-radius:3px;line-height:1.6;';
+      banner.innerHTML = `⚡ ACTIVE OBJECTIVE<br><span style="font-weight:400;font-size:10px;">1. Review this node\'s TOP ISSUE and WHY IT MATTERS<br>2. Click OPEN NODE → to perform the action<br>3. Return here and click MARK COMPLETE when done</span>`;
+      card.appendChild(banner);
+    }
+    const state = MissionBridge.get();
+    const label = state.objectiveLabel || incoming.objectiveId;
+    const returnUrl = state.returnUrl || '/healthcare/crc-hc-practice.html';
+    const ret = document.createElement('div');
+    ret.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#00c896;color:#000;padding:10px 20px;font-size:11px;font-weight:900;letter-spacing:1px;display:flex;justify-content:space-between;align-items:center;gap:20px;';
+    ret.innerHTML = `
+      <div>
+        ⚡ MISSION OBJECTIVE — <span style="font-weight:400">${label}</span><br>
+        <span style="font-size:10px;font-weight:400;">Review the highlighted node → perform the action → click MARK COMPLETE</span>
+      </div>
+      <button onclick="MissionBridge.completeObjective('${incoming.objectiveId}','${incoming.missionKey||'billing'}',-10);window.location.href='${returnUrl}';" style="background:#000;color:#00c896;border:none;padding:10px 20px;font-size:11px;font-weight:900;letter-spacing:1px;cursor:pointer;border-radius:3px;white-space:nowrap;">
+        ✓ MARK COMPLETE → RETURN
+      </button>`;
+    document.body.appendChild(ret);
+  }
+
+  const state = MissionBridge.get();
+  const label = state.objectiveLabel || incoming.objectiveId;
+  const ret = document.createElement('div');
+  ret.style.cssText = 'position:fixed;top:0;left:0;right:340px;z-index:9999;background:#00c896;color:#000;padding:10px 20px;font-size:11px;font-weight:900;letter-spacing:1px;display:flex;justify-content:space-between;align-items:center;gap:20px;';
+  ret.innerHTML = `
+    <div>
+      ⚡ MISSION OBJECTIVE — <span style="font-weight:400">${label}</span><br>
+      <span style="font-size:10px;font-weight:400;">Review the highlighted node → perform the action → click MARK COMPLETE</span>
+    </div>
+    <button onclick="
+      MissionBridge.completeObjective('${incoming.objectiveId}','${incoming.missionKey||'billing'}',-10);
+      window.location.href=decodeURIComponent('${encodeURIComponent(state.returnUrl||'/healthcare/crc-hc-practice.html')}');
+    " style="background:#000;color:#00c896;border:none;padding:10px 20px;font-size:11px;font-weight:900;letter-spacing:1px;cursor:pointer;border-radius:3px;white-space:nowrap;">
+      ✓ MARK COMPLETE → RETURN
+    </button>`;
+  document.body.appendChild(ret);
+}
 if (incoming) {
   const card = document.querySelector(`[data-node="${incoming.nodeId}"]`);
   if (card) {
@@ -283,7 +327,15 @@ document.addEventListener('click', function(e){
     console.warn('[TSM] launcher missing:', action, args);
   }
 });
-})();</script>
+})();
+function openNode(nodeId, params) {
+  if (window.panel) window.panel.setMission(nodeId);
+  else if (typeof MissionBridge !== 'undefined') {
+    window.location.href = '/healthcare/index.html?node=' + nodeId;
+  }
+}
+window.openNode = openNode;
+</script>
 
 </body>
 </html>
