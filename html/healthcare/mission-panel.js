@@ -314,7 +314,7 @@ class MissionPanel {
       const targetNode = NODE_MAP[obj.node] || obj.domain || obj.node;
       const el = document.createElement("div");
       el.className = "mp-objective" + (done ? " done" : "");
-      el.style.cssText = `display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:${done ? "#0f1a14" : "#111"};border:1px solid ${done ? "#1a3d2a" : "#1e1e1e"};border-radius:5px;cursor:${done ? "default" : "pointer"};transition:border-color 0.15s;margin-bottom:5px;`;
+      el.style.cssText = `display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:${done ? "#0f1a14" : "#111"};border:1px solid ${done ? "#1a3d2a" : "#1e1e1e"};border-radius:5px;cursor:${done ? "default" : "pointer"};transition:border-color 0.15s;margin-bottom:5px;position:relative;z-index:10;`;
       el.innerHTML = `
         <div style="width:16px;height:16px;border:1px solid ${done ? "#00c896" : "#333"};border-radius:3px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;background:${done ? "#00c896" : "transparent"};">
           ${done ? '<span style="font-size:10px;color:#000;font-weight:700;line-height:1;">✓</span>' : ""}
@@ -329,7 +329,11 @@ class MissionPanel {
       if (!done) {
         el.addEventListener("mouseenter", () => el.style.borderColor = "#333");
         el.addEventListener("mouseleave", () => el.style.borderColor = "#1e1e1e");
-        el.addEventListener("click", () => this.executeObjective(obj));
+        el.addEventListener("click", (e) => {
+  e.stopPropagation();
+  e.preventDefault();
+  this.executeObjective(obj);
+});
       }
       list.appendChild(el);
     });
