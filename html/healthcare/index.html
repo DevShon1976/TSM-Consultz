@@ -47,39 +47,31 @@ body{margin:0;background:radial-gradient(circle at top right,rgba(0,255,198,.08)
 .rgrid button.gold{border-color:#ffc400;color:#ffc400}
 .bnca{border-top:1px solid rgba(255,255,255,.08);padding-top:12px;white-space:pre-wrap;color:#dff7ff;line-height:1.45;font-size:12px}
 .footer{position:fixed;left:12px;bottom:16px;background:#061c12;border:1px solid #0d8b55;color:#00ffc6;border-radius:5px;padding:7px 12px;font-size:11px;z-index:20}
-/* mission panel */
 #mission-panel-container{position:fixed;right:0;top:0;bottom:0;width:340px;z-index:9000;pointer-events:none}
 #mission-panel-container .mp-panel{pointer-events:all}
 @media(max-width:1000px){.shell{grid-template-columns:1fr}.left,.right{display:none}.main{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}}
 </style>
-<script src="/healthcare/js/hc-strategist-relay.js?v=relay1" defer></script>
-<link rel="stylesheet" href="/shared/tsm-shared.css">
-<script src="/shared/tsm-shared.js"></script>
-<script src="/healthcare/js/tsm-bridge.js?v=force3" defer></script>
-<script src="/healthcare/js/hc-node-tab-controller.js?v=force3" defer></script>
-<script src="/healthcare/js/hc-universal-tab-ai.js?v=force3" defer></script>
-<script src="/healthcare/js/hc-howto-system.js?v=force3" defer></script>
 </head>
 <body>
 
 <!-- TSM WIP INTELLIGENCE BANNER -->
-<div class="tsm-wip-banner healthcare" id="tsm-wip-healthcare">
-  <div class="tsm-wip-left">
-    <div class="tsm-wip-icon">🏥</div>
+<div class="tsm-wip-banner healthcare" id="tsm-wip-healthcare" style="background:#07131d;border-bottom:1px solid rgba(255,61,87,.3);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div style="font-size:22px;">🏥</div>
     <div>
-      <div class="tsm-wip-label">WIP Intelligence · RCM Revenue Cycle</div>
-      <div class="tsm-wip-title">Healthcare RCM WIP · BNCA Active</div>
+      <div style="font-size:10px;color:#5d7890;letter-spacing:.14em;">WIP Intelligence · RCM Revenue Cycle</div>
+      <div style="font-weight:900;color:#dff7ff;letter-spacing:.06em;">Healthcare RCM WIP · BNCA Active</div>
     </div>
   </div>
-  <div class="tsm-wip-kpis">
-    <div class="tsm-wip-kpi"><div class="tsm-wip-kpi-val" style="color:#00e87a">$2.3M</div><div class="tsm-wip-kpi-lbl">Unbilled</div></div>
-    <div class="tsm-wip-kpi"><div class="tsm-wip-kpi-val" style="color:#00e87a">148</div><div class="tsm-wip-kpi-lbl">Pending Claims</div></div>
-    <div class="tsm-wip-kpi"><div class="tsm-wip-kpi-val" style="color:#f4a800">23%</div><div class="tsm-wip-kpi-lbl">Denial Risk</div></div>
-    <div class="tsm-wip-kpi"><div class="tsm-wip-kpi-val" style="color:#f4a800">61%</div><div class="tsm-wip-kpi-lbl">Reconciled</div></div>
+  <div style="display:flex;gap:20px;">
+    <div style="text-align:center"><div style="font-size:18px;font-weight:900;color:#00e87a">$2.3M</div><div style="font-size:10px;color:#5d7890">Unbilled</div></div>
+    <div style="text-align:center"><div style="font-size:18px;font-weight:900;color:#00e87a">148</div><div style="font-size:10px;color:#5d7890">Pending Claims</div></div>
+    <div style="text-align:center"><div style="font-size:18px;font-weight:900;color:#f4a800">23%</div><div style="font-size:10px;color:#5d7890">Denial Risk</div></div>
+    <div style="text-align:center"><div style="font-size:18px;font-weight:900;color:#f4a800">61%</div><div style="font-size:10px;color:#5d7890">Reconciled</div></div>
   </div>
   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.5rem">
-    <span class="tsm-wip-flag" style="background:rgba(255,61,87,.1);border:1px solid #ff3d57;color:#ff3d57">🔴 2 CRIT · ENC-8821 · ENC-8912</span>
-    <a href="/wip-dashboard.html?sector=healthcare" class="tsm-wip-btn">VIEW WIP DASHBOARD ↗</a>
+    <span id="crit-flag" style="background:rgba(255,61,87,.1);border:1px solid #ff3d57;color:#ff3d57;padding:4px 10px;border-radius:4px;font-size:11px;font-weight:900;">🔴 2 CRIT · ENC-8821 · ENC-8912</span>
+    <a href="/wip-dashboard.html?sector=healthcare" style="font-size:11px;color:#00ffc6;text-decoration:none;font-weight:700;">VIEW WIP DASHBOARD ↗</a>
   </div>
 </div>
 
@@ -154,9 +146,300 @@ BEST NEXT COURSE OF ACTION
 </div>
 
 <div id="mission-panel-container"></div>
-
 <div class="footer">● NEURAL LINK · HC-STRATEGIST</div>
 
+<!-- ═══════════════════════════════════════════════════
+     INLINED: mission-bridge.js
+═══════════════════════════════════════════════════ -->
+<script>
+const MissionBridge = {
+  STORAGE_KEY: 'tsm_mission_state',
+  set(data) {
+    try { localStorage.setItem(this.STORAGE_KEY, JSON.stringify({ ...data, updatedAt: Date.now() })); } catch(e) {}
+  },
+  flagNodeOpened(nodeId) {
+    const state = this.get();
+    this.set({ ...state, executingNode: nodeId, nodeOpened: true });
+  },
+  get() {
+    try { return JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}'); } catch { return {}; }
+  },
+  completeObjective(objectiveId, missionKey, riskDelta) {
+    const state = this.get();
+    const completed = state.completed || [];
+    if (!completed.includes(objectiveId)) completed.push(objectiveId);
+    this.set({ ...state, missionKey, completed, riskScore: Math.max(4, (state.riskScore || 72) + riskDelta), lastCompleted: objectiveId });
+  },
+  launchNode(nodeId, objectiveId, missionKey, returnUrl) {
+    this.set({ ...this.get(), pendingNode: nodeId, pendingObjective: objectiveId, missionKey, returnUrl: returnUrl || window.location.href, launchedAt: Date.now(), executingNode: null, nodeOpened: false });
+    window.location.href = `/healthcare/index.html?node=${nodeId}&objective=${objectiveId}`;
+  },
+  checkIncoming() {
+    const params = new URLSearchParams(window.location.search);
+    const nodeId = params.get('node');
+    const objectiveId = params.get('objective');
+    if (nodeId) return { nodeId, objectiveId };
+    return null;
+  },
+  reportComplete(objectiveId, missionKey, riskDelta) {
+    const state = this.get();
+    this.completeObjective(objectiveId, missionKey, riskDelta);
+    return state.returnUrl || '/healthcare/crc-hc-practice.html';
+  },
+  getProgress(missionKey, totalObjectives) {
+    const state = this.get();
+    if (state.missionKey !== missionKey) return { completed: [], pct: 0, riskScore: 72 };
+    const completed = state.completed || [];
+    return { completed, pct: Math.round((completed.length / totalObjectives) * 100), riskScore: state.riskScore || 72 };
+  },
+  reset() { try { localStorage.removeItem(this.STORAGE_KEY); } catch(e) {} }
+};
+
+MissionBridge.renderTabSwitcher = function(activePage) {
+  const tabs = document.createElement('div');
+  tabs.id = 'tsm-tab-switcher';
+  tabs.style.cssText = 'position:fixed;top:0;right:0;z-index:9999;display:flex;gap:0;font-family:"JetBrains Mono",monospace;font-size:10px;';
+  const pages = [{ label: 'HC NODES', url: '/healthcare/index.html' }, { label: 'PRACTICE', url: '/healthcare/crc-hc-practice.html' }];
+  pages.forEach(p => {
+    const btn = document.createElement('a');
+    btn.href = p.url;
+    btn.textContent = p.label;
+    const isActive = p.label.toLowerCase().includes(activePage.toLowerCase());
+    btn.style.cssText = `padding:6px 14px;text-decoration:none;letter-spacing:1.5px;background:${isActive?'#00c896':'#111'};color:${isActive?'#000':'#555'};border:1px solid ${isActive?'#00c896':'#222'};font-weight:${isActive?'700':'400'};transition:all 0.15s;`;
+    btn.addEventListener('mouseenter', () => { if (!isActive) { btn.style.color='#00c896'; btn.style.borderColor='#00c896'; }});
+    btn.addEventListener('mouseleave', () => { if (!isActive) { btn.style.color='#555'; btn.style.borderColor='#222'; }});
+    tabs.appendChild(btn);
+  });
+  document.body.appendChild(tabs);
+};
+
+MissionBridge.renderScoreBadge = function(missionKey, totalObjectives) {
+  const progress = this.getProgress(missionKey, totalObjectives);
+  const badge = document.createElement('div');
+  badge.id = 'tsm-score-badge';
+  badge.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#0d0d0d;border:1px solid #1e1e1e;border-radius:20px;padding:6px 16px;font-family:"JetBrains Mono",monospace;font-size:10px;color:#555;display:flex;gap:16px;align-items:center;z-index:8000;transition:all 0.3s;';
+  badge.innerHTML = `<span style="color:#00c896;letter-spacing:1px;">MISSION</span><span>RISK <b style="color:${progress.riskScore>50?'#e84040':progress.riskScore>25?'#f5a623':'#00c896'}">${progress.riskScore}</b></span><span>COMPLETE <b style="color:#00c896">${progress.pct}%</b></span><span style="color:#333;cursor:pointer;" onclick="MissionBridge.reset();location.reload();">RESET</span>`;
+  document.body.appendChild(badge);
+  window.addEventListener('storage', () => {
+    const p = MissionBridge.getProgress(missionKey, totalObjectives);
+    const b = badge.querySelector('b');
+    if (b) b.style.color = p.riskScore>50?'#e84040':p.riskScore>25?'#f5a623':'#00c896';
+  });
+};
+
+window.MissionBridge = MissionBridge;
+</script>
+
+<!-- ═══════════════════════════════════════════════════
+     INLINED: mission-panel.js
+═══════════════════════════════════════════════════ -->
+<script>
+const DOMAIN_COLORS = {
+  billing:"#00c896",denials:"#e84040",coding:"#00aaff",medical:"#00ffc6",payments:"#ffc400",ar:"#b56cff",
+  operations:"#00aaff",compliance:"#ff4d6d",insurance:"#00aaff",pharmacy:"#ffc400",financial:"#00aaff",
+  legal:"#b56cff",vendors:"#ff7a00",taxprep:"#d86cff",grants:"#4aa3ff"
+};
+const WORKFLOW_STAGES = ["INTAKE","REVIEW","ACTION","CLOSE"];
+const NODE_MAP = {
+  "billing-queue":"billing","credentialing":"billing","denial-lab":"compliance","coding-review":"medical",
+  "ar-followup":"billing","medical-node":"medical","insurance-node":"insurance","operations-node":"operations",
+  "pharmacy-node":"pharmacy","financial-node":"financial","legal-node":"legal","vendors-node":"vendors",
+  "taxprep-node":"taxprep","grants-node":"grants"
+};
+const MISSIONS = {
+  billing:{title:"Prevent denial before payer adjudication",domain:"BILLING / CLAIMS",objectives:[
+    {id:0,label:"Review claim for all required fields",node:"billing-queue",domain:"billing",riskDelta:-8,strat:"Missing modifier on line 3 detected. Claim flagged for correction before submission.",workflow:0},
+    {id:1,label:"Verify NPI matches payer credentialing file",node:"credentialing",domain:"billing",riskDelta:-12,strat:"NPI mismatch resolved. Provider now active in payer network. Denial risk reduced.",workflow:0},
+    {id:2,label:"Check timely filing window for each payer",node:"denial-lab",domain:"denials",riskDelta:-15,strat:"Timely filing window: 90 days. 14 days remaining. Escalate to AR immediately.",workflow:1},
+    {id:3,label:"Submit via clearinghouse and monitor 277CA",node:"coding-review",domain:"coding",riskDelta:-20,strat:"277CA accepted. Claim in payer queue. Expected adjudication: 21 days.",workflow:2},
+    {id:4,label:"Post ERA payments and reconcile against fee schedule",node:"ar-followup",domain:"payments",riskDelta:-17,strat:"ERA posted. Variance of $42.10 identified. Secondary payer coordination initiated.",workflow:3}
+  ]},
+  denials:{title:"Resolve active denial before appeal deadline",domain:"DENIALS / AR",objectives:[
+    {id:0,label:"Identify denial reason code (CO/PR/OA)",node:"denial-lab",domain:"denials",riskDelta:-10,strat:"CO-197: Timely filing exceeded. Exception documentation required within 5 days.",workflow:0},
+    {id:1,label:"Pull clinical documentation for medical necessity",node:"medical-node",domain:"medical",riskDelta:-14,strat:"Clinical docs attached. Medical necessity criteria partially met — query physician.",workflow:0},
+    {id:2,label:"Draft appeal letter with supporting evidence",node:"denial-lab",domain:"denials",riskDelta:-18,strat:"Appeal drafted. External review option available if internal appeal fails.",workflow:1},
+    {id:3,label:"Submit appeal and log in AR tracker",node:"ar-followup",domain:"ar",riskDelta:-22,strat:"Appeal submitted. Payer response window: 30 days. Follow-up queued at day 20.",workflow:2}
+  ]},
+  coding:{title:"Ensure clean claim submission on first pass",domain:"CODING / CLAIMS",objectives:[
+    {id:0,label:"Validate CPT and ICD-10 code pairing",node:"coding-review",domain:"coding",riskDelta:-12,strat:"CPT 99213 with Z23 — valid pairing. Check modifier 25 requirement.",workflow:0},
+    {id:1,label:"Check modifier requirements by payer",node:"coding-review",domain:"coding",riskDelta:-15,strat:"Modifier 25 required for this payer. Added to claim line 1.",workflow:0},
+    {id:2,label:"Confirm authorization aligns with coded services",node:"billing-queue",domain:"billing",riskDelta:-20,strat:"Auth on file covers 3 visits. Coded visit 4 — obtain retro auth immediately.",workflow:1},
+    {id:3,label:"Release claim to billing queue",node:"billing-queue",domain:"billing",riskDelta:-18,strat:"Claim released. Clean claim rate improved. Expected first-pass acceptance: 94%.",workflow:2}
+  ]},
+  compliance:{title:"Close documentation gaps before billing handoff",domain:"COMPLIANCE / AUDIT",objectives:[
+    {id:0,label:"Review HIPAA authorization on file",node:"denial-lab",domain:"denials",riskDelta:-10,strat:"HIPAA auth expired. Obtain updated consent before billing.",workflow:0},
+    {id:1,label:"Audit OIG exclusion list for all providers",node:"coding-review",domain:"coding",riskDelta:-14,strat:"One provider flagged. Remove from active billing until cleared.",workflow:0},
+    {id:2,label:"Verify CMS conditions of participation",node:"billing-queue",domain:"billing",riskDelta:-18,strat:"CoP documentation complete. No deficiencies found.",workflow:1},
+    {id:3,label:"File audit trail and close compliance ticket",node:"ar-followup",domain:"ar",riskDelta:-20,strat:"Audit trail filed. Compliance score updated to 91%.",workflow:2}
+  ]},
+  medical:{title:"Prioritize clinical documentation gaps",domain:"MEDICAL / CLINICAL",objectives:[
+    {id:0,label:"Identify undocumented clinical encounters",node:"medical-node",domain:"medical",riskDelta:-12,strat:"3 encounters missing clinical notes. Provider query sent.",workflow:0},
+    {id:1,label:"Route blocked cases to correct owner",node:"coding-review",domain:"coding",riskDelta:-15,strat:"2 cases rerouted to attending physician for addendum.",workflow:0},
+    {id:2,label:"Validate medical necessity criteria",node:"denial-lab",domain:"denials",riskDelta:-18,strat:"Medical necessity confirmed for 4 of 5 cases. One requires peer review.",workflow:1},
+    {id:3,label:"Release to billing after documentation complete",node:"billing-queue",domain:"billing",riskDelta:-20,strat:"All cases released. Clean documentation rate: 87%.",workflow:2}
+  ]},
+  insurance:{title:"Resolve payer friction and authorization backlog",domain:"INSURANCE / AUTH",objectives:[
+    {id:0,label:"Confirm patient demographics match insurance",node:"billing-queue",domain:"billing",riskDelta:-8,strat:"DOB mismatch on 2 accounts. Corrected and resubmitted.",workflow:0},
+    {id:1,label:"Verify insurance ID formatting",node:"credentialing",domain:"billing",riskDelta:-6,strat:"ID format corrected for BlueCross prefix requirement.",workflow:0},
+    {id:2,label:"Obtain prior auth before scheduled procedure",node:"denial-lab",domain:"denials",riskDelta:-12,strat:"Auth obtained. Valid for 90 days. Procedure cleared.",workflow:1},
+    {id:3,label:"Run eligibility check and review 271 response",node:"coding-review",domain:"coding",riskDelta:-7,strat:"271 received. Coverage active. Copay $35. Deductible met.",workflow:1},
+    {id:4,label:"Flag intake errors for registration correction",node:"ar-followup",domain:"payments",riskDelta:-5,strat:"3 intake errors flagged. Front desk correction queue updated.",workflow:2}
+  ]},
+  operations:{title:"Rebalance intake and clear scheduling backlog",domain:"OPERATIONS / THROUGHPUT",objectives:[
+    {id:0,label:"Review intake queue for blocked registrations",node:"billing-queue",domain:"billing",riskDelta:-10,strat:"12 registrations blocked. Missing insurance info on 8.",workflow:0},
+    {id:1,label:"Identify scheduling gaps over 48 hours",node:"coding-review",domain:"coding",riskDelta:-8,strat:"Gap analysis complete. 3 provider slots underutilized.",workflow:0},
+    {id:2,label:"Escalate auth blockers older than 72 hours",node:"denial-lab",domain:"denials",riskDelta:-15,strat:"4 auths escalated to payer relations. Expected resolution: 24 hours.",workflow:1},
+    {id:3,label:"Align handoffs between intake, billing, scheduling",node:"ar-followup",domain:"ar",riskDelta:-12,strat:"Handoff protocol updated. Cross-lane drag reduced by 18%.",workflow:2}
+  ]},
+  pharmacy:{title:"Clear prior auth dependencies and medication access blockers",domain:"PHARMACY / RX",objectives:[
+    {id:0,label:"Review DEA schedule compliance",node:"coding-review",domain:"coding",riskDelta:-10,strat:"Schedule II prescriptions compliant. One Schedule III needs renewal.",workflow:0},
+    {id:1,label:"Escalate medication access blockers",node:"denial-lab",domain:"denials",riskDelta:-14,strat:"2 PA denials escalated. Step therapy exception filed.",workflow:0},
+    {id:2,label:"Verify drug interaction flags are resolved",node:"medical-node",domain:"medical",riskDelta:-12,strat:"Interaction flag cleared by attending. Medication approved.",workflow:1},
+    {id:3,label:"Confirm prior auth for high-cost medications",node:"billing-queue",domain:"billing",riskDelta:-18,strat:"Auth confirmed for biologics. Specialty pharmacy notified.",workflow:2}
+  ]},
+  financial:{title:"Prioritize high-value aging claims and cash flow",domain:"FINANCIAL / REVENUE CYCLE",objectives:[
+    {id:0,label:"Review AR aging over 90 days",node:"ar-followup",domain:"ar",riskDelta:-15,strat:"$340K in 90+ day AR. Top 10 accounts identified for immediate follow-up.",workflow:0},
+    {id:1,label:"Identify blocked payment workflows",node:"billing-queue",domain:"billing",riskDelta:-12,strat:"3 ERA files failed import. Manual posting required.",workflow:0},
+    {id:2,label:"Reconcile ERA payments against fee schedule",node:"coding-review",domain:"coding",riskDelta:-18,strat:"Variance of $12,400 identified. Underpayment appeal initiated.",workflow:1},
+    {id:3,label:"Escalate payer holds to payer relations",node:"denial-lab",domain:"denials",riskDelta:-20,strat:"Payer hold released. Payment expected within 14 days.",workflow:2}
+  ]},
+  legal:{title:"Review documentation and contract-risk exceptions",domain:"LEGAL / REGULATORY",objectives:[
+    {id:0,label:"Review HIPAA contract compliance",node:"denial-lab",domain:"denials",riskDelta:-10,strat:"BAA updated for 3 vendors. HIPAA compliance restored.",workflow:0},
+    {id:1,label:"Identify contract-risk exceptions",node:"coding-review",domain:"coding",riskDelta:-14,strat:"2 contract exceptions flagged for legal review.",workflow:0},
+    {id:2,label:"Escalate regulatory defense items",node:"medical-node",domain:"medical",riskDelta:-18,strat:"Defense memo prepared. Outside counsel notified.",workflow:1},
+    {id:3,label:"Close open compliance tickets",node:"ar-followup",domain:"ar",riskDelta:-16,strat:"4 compliance tickets closed. Regulatory risk score reduced.",workflow:2}
+  ]},
+  vendors:{title:"Escalate vendor SLA exceptions and confirm ownership",domain:"VENDORS / SUPPLY CHAIN",objectives:[
+    {id:0,label:"Review vendor SLA performance",node:"coding-review",domain:"coding",riskDelta:-10,strat:"2 vendors below SLA threshold. Escalation notices sent.",workflow:0},
+    {id:1,label:"Confirm next-action ownership for exceptions",node:"billing-queue",domain:"billing",riskDelta:-12,strat:"Ownership confirmed. Resolution deadline: 48 hours.",workflow:0},
+    {id:2,label:"Escalate supply chain blockers",node:"denial-lab",domain:"denials",riskDelta:-15,strat:"Supply chain blocker escalated to COO. Backup vendor activated.",workflow:1},
+    {id:3,label:"Review vendor contract ROI",node:"ar-followup",domain:"ar",riskDelta:-12,strat:"ROI analysis complete. 1 vendor contract recommended for renegotiation.",workflow:2}
+  ]},
+  taxprep:{title:"Clear filing windows and vendor tax documentation gaps",domain:"TAX PREP / FILING",objectives:[
+    {id:0,label:"Review 1099 filing readiness",node:"coding-review",domain:"coding",riskDelta:-12,strat:"14 of 18 vendors have W-9 on file. 4 requests sent.",workflow:0},
+    {id:1,label:"Identify missing W-9 forms",node:"billing-queue",domain:"billing",riskDelta:-10,strat:"4 W-9s outstanding. Payment hold applied until received.",workflow:0},
+    {id:2,label:"Confirm filing window deadlines",node:"denial-lab",domain:"denials",riskDelta:-15,strat:"1099 deadline: Jan 31. All forms must be filed within 9 days.",workflow:1},
+    {id:3,label:"Submit 1099s via IRS e-file system",node:"ar-followup",domain:"ar",riskDelta:-18,strat:"E-file submitted. Confirmation number received. APR risk cleared.",workflow:2}
+  ]},
+  grants:{title:"Track restricted funding and overdue grant documentation",domain:"GRANTS / COMPLIANCE",objectives:[
+    {id:0,label:"Review HRSA reporting deadlines",node:"coding-review",domain:"coding",riskDelta:-12,strat:"HRSA report due in 14 days. Data collection 60% complete.",workflow:0},
+    {id:1,label:"Identify overdue grant documentation",node:"billing-queue",domain:"billing",riskDelta:-10,strat:"2 grants have overdue deliverables. Program managers notified.",workflow:0},
+    {id:2,label:"Reconcile restricted funding usage",node:"denial-lab",domain:"denials",riskDelta:-15,strat:"Restricted funds reconciled. No unallowable costs identified.",workflow:1},
+    {id:3,label:"Submit grant compliance report",node:"ar-followup",domain:"ar",riskDelta:-18,strat:"Compliance report submitted. Grant in good standing.",workflow:2}
+  ]}
+};
+
+class MissionPanel {
+  constructor(container, missionKey) {
+    this.container = typeof container === "string" ? document.getElementById(container) : container;
+    this.missionKey = missionKey;
+    this.mission = MISSIONS[missionKey] || MISSIONS.billing;
+    const saved = MissionBridge.get();
+    if (saved && saved.missionKey === missionKey) {
+      this.completed = saved.completed || [];
+      this.currentRisk = saved.riskScore || 72;
+    } else {
+      this.completed = [];
+      this.currentRisk = 72;
+    }
+    this.render();
+  }
+  setMission(missionKey) {
+    this.missionKey = missionKey;
+    this.mission = MISSIONS[missionKey] || MISSIONS.billing;
+    const saved = MissionBridge.get();
+    if (saved && saved.missionKey === missionKey) {
+      this.completed = saved.completed || [];
+      this.currentRisk = saved.riskScore || 72;
+    } else {
+      this.completed = [];
+      this.currentRisk = 72;
+    }
+    this.render();
+  }
+  executeObjective(obj) {
+    if (this.completed.includes(obj.id)) return;
+    this.completed.push(obj.id);
+    this.currentRisk = Math.max(4, this.currentRisk + obj.riskDelta);
+    MissionBridge.set({ missionKey: this.missionKey, completed: this.completed, riskScore: this.currentRisk, returnUrl: window.location.href });
+    this.updateMetrics();
+    this.showStrategist(obj.strat);
+    this.activateWorkflow(obj.workflow);
+    this.renderObjectives();
+    if (this.completed.length === this.mission.objectives.length) this.onComplete();
+    const targetNode = NODE_MAP[obj.node] || obj.domain || obj.node;
+    const returnUrl = window.location.href;
+    setTimeout(() => {
+      window.location.href = `/healthcare/index.html?node=${targetNode}&objective=${obj.node}&returnUrl=${encodeURIComponent(returnUrl)}&missionKey=${this.missionKey}&objectiveId=${obj.id}`;
+    }, 800);
+  }
+  updateMetrics() {
+    const pct = Math.round((this.completed.length / this.mission.objectives.length) * 100);
+    const riskEl = this.container.querySelector(".mp-risk-bar");
+    const riskScore = this.container.querySelector(".mp-risk-score");
+    const progEl = this.container.querySelector(".mp-prog-bar");
+    const progScore = this.container.querySelector(".mp-prog-score");
+    if (riskEl) riskEl.style.width = this.currentRisk + "%";
+    if (riskScore) riskScore.textContent = this.currentRisk;
+    if (progEl) progEl.style.width = pct + "%";
+    if (progScore) progScore.textContent = pct + "%";
+    MissionBridge.set({ missionKey: this.missionKey, completed: this.completed, riskScore: this.currentRisk, returnUrl: window.location.href });
+  }
+  showStrategist(text) {
+    const box = this.container.querySelector(".mp-strat-box");
+    const textEl = this.container.querySelector(".mp-strat-text");
+    if (!box || !textEl) return;
+    box.style.display = "block";
+    textEl.textContent = "";
+    let i = 0;
+    const interval = setInterval(() => { textEl.textContent += text[i]; i++; if (i >= text.length) clearInterval(interval); }, 16);
+  }
+  activateWorkflow(upTo) {
+    const steps = this.container.querySelectorAll(".mp-wf-step");
+    steps.forEach((el, i) => {
+      if (i <= upTo) { el.style.color="#00c896"; el.style.borderColor="#1a3d2a"; el.style.background="#0a1510"; }
+    });
+  }
+  onComplete() {
+    const status = this.container.querySelector(".mp-status");
+    if (status) { status.textContent="● COMPLETE"; status.style.color="#00c896"; }
+    document.dispatchEvent(new CustomEvent("tsm:missionComplete", { detail: { mission: this.missionKey, completedAt: Date.now() } }));
+    MissionBridge.set({ missionKey: this.missionKey, completed: this.completed, riskScore: this.currentRisk, status: "complete", returnUrl: window.location.href });
+  }
+  renderObjectives() {
+    const list = this.container.querySelector(".mp-obj-list");
+    if (!list) return;
+    list.innerHTML = "";
+    this.mission.objectives.forEach(obj => {
+      const done = this.completed.includes(obj.id);
+      const color = DOMAIN_COLORS[obj.domain] || "#555";
+      const targetNode = NODE_MAP[obj.node] || obj.domain || obj.node;
+      const el = document.createElement("div");
+      el.className = "mp-objective" + (done ? " done" : "");
+      el.style.cssText = `display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:${done?"#0f1a14":"#111"};border:1px solid ${done?"#1a3d2a":"#1e1e1e"};border-radius:5px;cursor:${done?"default":"pointer"};transition:border-color 0.15s;margin-bottom:5px;position:relative;z-index:10;`;
+      el.innerHTML = `<div style="width:16px;height:16px;border:1px solid ${done?"#00c896":"#333"};border-radius:3px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;background:${done?"#00c896":"transparent"};">${done?'<span style="font-size:10px;color:#000;font-weight:700;line-height:1;">✓</span>':""}</div><div style="flex:1;"><div style="font-size:10px;line-height:1.5;color:${done?"#444":"#c0c0c0"};text-decoration:${done?"line-through":"none"};">${obj.label}</div><div style="margin-top:3px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;"><span style="font-size:8px;color:${color};letter-spacing:1px;text-transform:uppercase;">${obj.domain}</span>${!done?`<span style="font-size:8px;color:#00aaff;letter-spacing:1px;">→ LAUNCH ${obj.node.toUpperCase()} · ${targetNode.toUpperCase()} NODE</span>`:""}</div></div>`;
+      if (!done) {
+        el.addEventListener("mouseenter", () => el.style.borderColor="#333");
+        el.addEventListener("mouseleave", () => el.style.borderColor="#1e1e1e");
+        el.addEventListener("click", (e) => { e.stopPropagation(); e.preventDefault(); this.executeObjective(obj); });
+      }
+      list.appendChild(el);
+    });
+  }
+  render() {
+    const pct = Math.round((this.completed.length / this.mission.objectives.length) * 100);
+    this.container.innerHTML = `<div class="mp-panel" style="background:#0d0d0d;border-left:1px solid #1e1e1e;height:100vh;overflow-y:auto;font-family:'JetBrains Mono','Courier New',monospace;position:fixed;right:0;top:0;width:340px;z-index:99999;"><div style="background:#111;border-bottom:1px solid #1e1e1e;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;"><div style="font-size:9px;letter-spacing:2px;color:#555;">MISSION CONTROL</div><div style="display:flex;align-items:center;gap:8px;"><div class="mp-status" style="font-size:9px;letter-spacing:1px;color:#e84040;">● ACTIVE</div><button onclick="this.closest('.mp-panel').style.display='none'" style="background:none;border:none;color:#555;cursor:pointer;font-size:14px;line-height:1;">×</button></div></div><div style="padding:14px;border-bottom:1px solid #1e1e1e;"><div style="font-size:8px;color:#555;letter-spacing:2px;margin-bottom:5px;">CURRENT MISSION</div><div style="font-size:12px;font-weight:600;color:#e0e0e0;line-height:1.5;">${this.mission.title}</div><div style="margin-top:10px;"><div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;"><div style="font-size:8px;color:#555;width:72px;">RISK EXPOSURE</div><div style="flex:1;height:3px;background:#1e1e1e;border-radius:2px;overflow:hidden;"><div class="mp-risk-bar" style="height:100%;width:${this.currentRisk}%;background:#e84040;border-radius:2px;transition:width 0.5s ease;"></div></div><div class="mp-risk-score" style="font-size:10px;color:#e84040;min-width:24px;text-align:right;">${this.currentRisk}</div></div><div style="display:flex;gap:8px;align-items:center;"><div style="font-size:8px;color:#555;width:72px;">COMPLETION</div><div style="flex:1;height:3px;background:#1e1e1e;border-radius:2px;overflow:hidden;"><div class="mp-prog-bar" style="height:100%;width:${pct}%;background:#00c896;border-radius:2px;transition:width 0.5s ease;"></div></div><div class="mp-prog-score" style="font-size:10px;color:#00c896;min-width:24px;text-align:right;">${pct}%</div></div></div></div><div style="padding:12px 14px;border-bottom:1px solid #1e1e1e;"><div style="font-size:8px;color:#555;letter-spacing:2px;margin-bottom:10px;">MISSION OBJECTIVES — CLICK TO EXECUTE IN HC NODES</div><div class="mp-obj-list"></div></div><div class="mp-strat-box" style="padding:12px 14px;border-bottom:1px solid #1e1e1e;display:none;"><div style="font-size:8px;color:#555;letter-spacing:2px;margin-bottom:7px;">HC STRATEGIST</div><div style="background:#0a1510;border:1px solid #1a3d2a;border-radius:5px;padding:10px 12px;"><div class="mp-strat-text" style="font-size:10px;color:#00c896;line-height:1.7;"></div></div></div><div style="padding:10px 14px;border-bottom:1px solid #1e1e1e;"><div style="font-size:8px;color:#555;letter-spacing:2px;margin-bottom:7px;">WORKFLOW STATE</div><div style="display:flex;gap:0;">${WORKFLOW_STAGES.map((s,i)=>`<div class="mp-wf-step" style="flex:1;text-align:center;font-size:8px;padding:6px 2px;border:1px solid #1e1e1e;${i>0?"border-left:none;":"border-radius:4px 0 0 4px;"}${i===WORKFLOW_STAGES.length-1?"border-radius:0 4px 4px 0;":""}color:#333;letter-spacing:1px;transition:all 0.3s;">${s}</div>`).join("")}</div></div><div style="padding:10px 14px;"><a href="/healthcare/crc-hc-practice.html" style="display:block;text-align:center;background:#0a1510;border:1px solid #1a3d2a;color:#00c896;padding:8px;font-size:9px;letter-spacing:2px;text-decoration:none;border-radius:4px;">← RETURN TO PRACTICE</a><button onclick="MissionBridge.reset();location.reload();" style="margin-top:6px;width:100%;background:none;border:1px solid #1e1e1e;color:#333;padding:7px;font-size:9px;letter-spacing:2px;cursor:pointer;border-radius:4px;">RESET MISSION</button></div></div>`;
+    this.renderObjectives();
+  }
+  static init(containerId, missionKey) { return new MissionPanel(containerId, missionKey); }
+}
+window.MissionPanel = MissionPanel;
+window.TSM_MISSIONS = MISSIONS;
+</script>
+
+<!-- ═══════════════════════════════════════════════════
+     NODE GRID
+═══════════════════════════════════════════════════ -->
 <script>
 const nodes = [
   ["operations","OPERATIONS","Staffing · Scheduling · Intake · Throughput","#00aaff","Rebalance intake, scheduling, and documentation workload before backlog expands."],
@@ -171,7 +454,6 @@ const nodes = [
   ["grants","GRANTS","Grant Compliance · Reports · Funding","#4aa3ff","Track restricted funding, HRSA reports, and overdue grant documentation."],
   ["insurance","INSURANCE","Eligibility · Prior Auth · Payer Rules","#00aaff","Resolve payer friction and authorization backlog."]
 ];
-
 document.getElementById("nodeGrid").innerHTML = nodes.map(([key,title,meta,color,issue])=>`
   <section class="node-card" data-node="${key}" style="--c:${color}">
     <div style="color:${color};font-size:11px;font-weight:900">● LIVE <span style="float:right;color:#35556f">PORT 30${Math.floor(Math.random()*30)+10}</span></div>
@@ -199,17 +481,14 @@ document.getElementById("nodeGrid").innerHTML = nodes.map(([key,title,meta,color
   </a>
 </div>
 
-<!-- MISSION BRIDGE + PANEL -->
-<script src="/healthcare/mission-bridge.js"></script>
-<script src="/healthcare/mission-panel.js"></script>
-
+<!-- ═══════════════════════════════════════════════════
+     MAIN CONTROLLER — global scope, all bugs fixed
+═══════════════════════════════════════════════════ -->
 <script>
-// ─── FIX 1: Global refs so inline onclick="openNodeAndExecute(...)" works ───
 var _missionBannerEl = null;
 
-// ─── FIX 2: openNodeAndExecute defined at global scope ───────────────────────
+// FIX 1: global scope so inline onclick works
 function openNodeAndExecute(nodeId) {
-  if (typeof MissionBridge === 'undefined') return;
   MissionBridge.flagNodeOpened(nodeId);
   const state = MissionBridge.get();
   MissionBridge.set({ ...state, executingNode: nodeId, nodeOpened: true });
@@ -224,17 +503,16 @@ function openNodeAndExecute(nodeId) {
 }
 window.openNodeAndExecute = openNodeAndExecute;
 
-// ─── FIX 3: handleMarkComplete defined at global scope ───────────────────────
+// FIX 2: global scope + uses stored banner reference
 function handleMarkComplete(objectiveId, missionKey, encodedReturnUrl) {
   const state = MissionBridge.get();
   if (!state.executingNode && !state.nodeOpened) {
-    // FIX: Use the stored banner reference instead of the broken querySelector
     if (_missionBannerEl) {
-      _missionBannerEl.style.border = '2px solid #ff4d6d';
+      _missionBannerEl.style.outline = '2px solid #ff4d6d';
       const warn = document.createElement('span');
-      warn.style.cssText = 'color:#ff4d6d;font-size:10px;display:block;margin-top:4px;';
+      warn.style.cssText = 'color:#ff4d6d;font-size:10px;display:block;margin-top:4px;font-weight:700;';
       warn.textContent = '⚠ Click OPEN NODE first to complete the task';
-      _missionBannerEl.appendChild(warn);
+      _missionBannerEl.querySelector('div') && _missionBannerEl.querySelector('div').appendChild(warn);
     }
     return;
   }
@@ -245,10 +523,6 @@ function handleMarkComplete(objectiveId, missionKey, encodedReturnUrl) {
 window.handleMarkComplete = handleMarkComplete;
 
 window.addEventListener('load', function() {
-  if (typeof MissionPanel === 'undefined') {
-    console.error('mission-panel.js not loaded');
-    return;
-  }
   window.panel = MissionPanel.init('mission-panel-container', 'billing');
   MissionBridge.renderTabSwitcher('nodes');
   MissionBridge.renderScoreBadge('billing', 5);
@@ -259,10 +533,11 @@ window.addEventListener('load', function() {
       const state = MissionBridge.get();
       const label = state.objectiveLabel || incoming.objectiveId;
       const returnUrl = state.returnUrl || '/healthcare/crc-hc-practice.html';
+
       const ret = document.createElement('div');
-      ret.setAttribute('data-mission-banner', 'true'); // easy selector if ever needed
+      ret.setAttribute('data-mission-banner', 'true');
       ret.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#00c896;color:#000;padding:10px 20px;font-size:11px;font-weight:900;letter-spacing:1px;display:flex;justify-content:space-between;align-items:center;gap:20px;';
-      _missionBannerEl = ret; // FIX: store reference globally for handleMarkComplete
+      _missionBannerEl = ret; // FIX 3: store ref instead of broken querySelector
 
       const btn = document.createElement('button');
       btn.textContent = '✓ MARK COMPLETE → RETURN';
@@ -286,24 +561,11 @@ window.addEventListener('load', function() {
     }
   }, 300);
 
-  // Wire pills to mission switcher
+  // Wire pills
   document.querySelectorAll('.pill').forEach(btn => {
-    const map = {
-      'Billing':    'billing',
-      'Compliance': 'compliance',
-      'Medical':    'medical',
-      'Pharmacy':   'pharmacy',
-      'Operations': 'operations',
-      'Insurance':  'insurance',
-      'Financial':  'financial',
-      'Legal':      'legal',
-      'Tax Prep':   'taxprep',
-      'Grants':     'grants'
-    };
+    const map = { 'Billing':'billing','Compliance':'compliance','Medical':'medical','Pharmacy':'pharmacy','Operations':'operations','Insurance':'insurance','Financial':'financial','Legal':'legal','Tax Prep':'taxprep','Grants':'grants' };
     const t = btn.textContent.trim();
-    if (map[t]) btn.addEventListener('click', () => {
-      openNodeAndExecute(map[t]);
-    });
+    if (map[t]) btn.addEventListener('click', () => openNodeAndExecute(map[t]));
   });
 });
 </script>
@@ -318,20 +580,18 @@ window.addEventListener('load', function() {
 })();
 </script>
 
-<script>(function(){
-document.addEventListener('click', function(e){
-  const el = e.target.closest('[data-tsm-action]');
-  if(!el) return;
-  const action = el.getAttribute('data-tsm-action');
-  const args = el.getAttribute('data-tsm-args');
-  if(window.TSM && TSM.launcher && TSM.launcher.run){
-    TSM.launcher.run(action, args);
-  } else {
-    console.warn('[TSM] launcher missing:', action, args);
-  }
-});
+<script>
+(function(){
+  document.addEventListener('click', function(e){
+    const el = e.target.closest('[data-tsm-action]');
+    if(!el) return;
+    const action = el.getAttribute('data-tsm-action');
+    const args = el.getAttribute('data-tsm-args');
+    if(window.TSM && TSM.launcher && TSM.launcher.run){ TSM.launcher.run(action, args); }
+    else { console.warn('[TSM] launcher missing:', action, args); }
+  });
 })();
-function openNode(nodeId, params) {
+function openNode(nodeId) {
   if (window.panel) window.panel.setMission(nodeId);
   else window.location.href = '/healthcare/hc-' + nodeId + '/index.html';
 }
