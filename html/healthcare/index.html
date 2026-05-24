@@ -181,7 +181,7 @@ document.getElementById("nodeGrid").innerHTML = nodes.map(([key,title,meta,color
     <p>${issue}</p>
     <div class="label">WHY IT MATTERS</div>
     <p>This creates operational drag, delayed handoffs, revenue risk, or compliance exposure if unresolved.</p>
-    <button class="open-btn" onclick="if(window.panel) window.panel.setMission('${key}'); else openNode('${key}',{domain:'${key}'})">OPEN NODE →</button>
+    <button class="open-btn"onclick="openNodeAndExecute('${key}')">OPEN NODE →</button>
     <div class="live">LIVE</div>
   </section>
 `).join("");
@@ -219,6 +219,40 @@ document.getElementById("nodeGrid").innerHTML = nodes.map(([key,title,meta,color
       card.scrollIntoView({ behavior: 'smooth', block: 'center' });
       card.style.outline = '3px solid #00c896';
       card.style.boxShadow = '0 0 40px rgba(0,255,198,0.5)';
+      function openNodeAndExecute(nodeId) {
+  const state = MissionBridge.get();
+  const objectiveId = state.pendingObjective || nodeId;
+  // Store return context
+  MissionBridge.set({
+    ...state,
+    pendingNode: nodeId,
+    executingNode: nodeId,
+    returnUrl: state.returnUrl || '/healthcare/crc-hc-practice.html'
+  });
+  // If there's a panel, open it fully
+  if (window.panel && typeof window.panel.openFull === 'function') {
+    window.panel.openFull(nodeId);
+  }
+  // Scroll to the active card and expand it
+  // Flag that user has entered the node — unlocks MARK COMPLETE
+  MissionBridge.flagNodeOpened(nodeId);
+  const card = document.querySelector('[data-node="' + nodeId + '"]');
+  if (card) {
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    card.classList.add('node-executing');
+  }
+  // If node has its own URL (port-based), open in panel iframe
+  const portMap = {
+    compliance: 3018, billing: 3010, operations: 3034,
+    medical: 3031, pharmacy: 3032, insurance: 3033,
+    financial: 3035, legal: 3036, vendors: 3037, grants: 3038, taxprep: 3039
+  };
+  const port = portMap[nodeId];
+  if (port && window.panel && typeof window.panel.loadPort === 'function') {
+    window.panel.loadPort(port, nodeId);
+  }
+}
+
       const banner = document.createElement('div');
       banner.style.cssText = 'background:#00c896;color:#000;padding:10px 14px;font-size:11px;font-weight:900;letter-spacing:1px;margin-top:8px;border-radius:3px;line-height:1.6;';
       banner.innerHTML = '⚡ ACTIVE OBJECTIVE<br><span style="font-weight:400;font-size:10px;">1. Review this node\'s TOP ISSUE and WHY IT MATTERS<br>2. Click OPEN NODE → to see the full workflow<br>3. Return here and click MARK COMPLETE when done</span>';
@@ -229,9 +263,26 @@ document.getElementById("nodeGrid").innerHTML = nodes.map(([key,title,meta,color
     const returnUrl = state.returnUrl || '/healthcare/crc-hc-practice.html';
     const ret = document.createElement('div');
     ret.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#00c896;color:#000;padding:10px 20px;font-size:11px;font-weight:900;letter-spacing:1px;display:flex;justify-content:space-between;align-items:center;gap:20px;';
-    ret.innerHTML = '<div>⚡ MISSION OBJECTIVE — <span style="font-weight:400">' + label + '</span><br><span style="font-size:10px;font-weight:400;">Review the highlighted node → click OPEN NODE → complete the task → click MARK COMPLETE</span></div><button onclick="MissionBridge.completeObjective(\'' + incoming.objectiveId + '\',\'' + (incoming.missionKey||'billing') + '\',-10);window.location.href=decodeURIComponent(\'' + encodeURIComponent(returnUrl) + '\');" style="background:#000;color:#00c896;border:none;padding:10px 20px;font-size:11px;font-weight:900;letter-spacing:1px;cursor:pointer;border-radius:3px;white-space:nowrap;">✓ MARK COMPLETE → RETURN</button>';
+    ret.innerHTML = '<div>⚡ MISSION OBJECTIVE — <span style="font-weight:400">' + label + '</span><br><span style="font-size:10px;font-weight:400;">Review the highlighted node → click OPEN NODE → complete the task → click MARK COMPLETE</span></div><button onclick="handleMarkComplete(\'' + incoming.objectiveId + '\',\'' + (incoming.missionKey||'billing') + '\',\'' + encodeURIComponent(returnUrl) + '\')" style="background:#000;color:#00c896;border:none;padding:10px 20px;font-size:11px;font-weight:900;letter-spacing:1px;cursor:pointer;border-radius:3px;white-space:nowrap;">✓ MARK COMPLETE → RETURN</button>';
     document.body.appendChild(ret);
+  }
+
+function handleMarkComplete(objectiveId, missionKey, encodedReturnUrl) {
+  const state = MissionBridge.get();
+  // Guard: only allow mark complete if user actually opened the node
+  if (!state.executingNode && !state.nodeOpened) {
+    const banner = document.querySelector('[style*="ACTIVE OBJECTIVE"]');
+    if (banner) {
+      banner.style.border = '2px solid #ff4d6d';
+      banner.innerHTML = banner.innerHTML + '<br><span style="color:#ff4d6d;font-size:10px;">⚠ Click OPEN NODE first to complete the task</span>';
     }
+    return; // Block mark complete until node is opened
+  }
+  MissionBridge.completeObjective(objectiveId, missionKey, -10);
+  // Clear execution state
+  MissionBridge.set({ ...MissionBridge.get(), executingNode: null, nodeOpened: false });
+  window.location.href = decodeURIComponent(encodedReturnUrl);
+}
   }, 500);
 
   // Wire pills to mission switcher

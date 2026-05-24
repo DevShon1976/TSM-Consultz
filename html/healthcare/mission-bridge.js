@@ -17,6 +17,12 @@ const MissionBridge = {
     }));
   },
 
+  // Called when user actually opens/enters a node — gates MARK COMPLETE
+  flagNodeOpened(nodeId) {
+    const state = this.get();
+    this.set({ ...state, executingNode: nodeId, nodeOpened: true });
+  },
+
   // Read state
   get() {
     try {
@@ -46,7 +52,9 @@ const MissionBridge = {
       pendingObjective: objectiveId,
       missionKey,
       returnUrl: returnUrl || window.location.href,
-      launchedAt: Date.now()
+      launchedAt: Date.now(),
+      executingNode: null,   // reset — not executing until OPEN NODE clicked
+      nodeOpened: false      // reset — gate for MARK COMPLETE
     });
     window.location.href = `/healthcare/index.html?node=${nodeId}&objective=${objectiveId}`;
   },
