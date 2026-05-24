@@ -212,18 +212,33 @@ document.getElementById("nodeGrid").innerHTML = nodes.map(([key,title,meta,color
   MissionBridge.renderScoreBadge('billing', 5);
 
   setTimeout(function() {
-  const incoming = const incoming = MissionBridge.checkIncoming();
-  if (incoming) {
-};
-  if (incoming) {
-    const card = document.querySelector(`[data-node="${incoming.nodeId}"]`);
-    if (card) {
-      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      card.style.outline = '3px solid #00c896';
-      card.style.boxShadow = '0 0 40px rgba(0,255,198,0.5)';
-      function openNodeAndExecute(nodeId) {
-  const state = MissionBridge.get();
-  const objectiveId = state.pendingObjective || nodeId;
+    const incoming = MissionBridge.checkIncoming();
+    if (incoming) {
+      const state = MissionBridge.get();
+      const label = state.objectiveLabel || incoming.objectiveId;
+      const returnUrl = state.returnUrl || '/healthcare/crc-hc-practice.html';
+      const ret = document.createElement('div');
+      ret.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#00c896;color:#000;padding:10px 20px;font-size:11px;font-weight:900;letter-spacing:1px;display:flex;justify-content:space-between;align-items:center;gap:20px;';
+      const btn = document.createElement('button');
+      btn.textContent = '✓ MARK COMPLETE → RETURN';
+      btn.style.cssText = 'background:#000;color:#00c896;border:none;padding:10px 20px;font-size:11px;font-weight:900;letter-spacing:1px;cursor:pointer;border-radius:3px;white-space:nowrap;';
+      btn.dataset.objId = incoming.objectiveId;
+      btn.dataset.missionKey = incoming.missionKey || 'billing';
+      btn.dataset.returnUrl = encodeURIComponent(returnUrl);
+      btn.addEventListener('click', function() {
+        handleMarkComplete(this.dataset.objId, this.dataset.missionKey, this.dataset.returnUrl);
+      });
+      ret.innerHTML = '<div>⚡ MISSION OBJECTIVE — <span style="font-weight:400">' + label + '</span><br><span style="font-size:10px;font-weight:400;">Review the highlighted node → click OPEN NODE → complete the task → click MARK COMPLETE</span></div>';
+      ret.appendChild(btn);
+      document.body.appendChild(ret);
+      const card = document.querySelector('[data-node="' + incoming.nodeId + '"]');
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        card.style.outline = '3px solid #00c896';
+        card.style.boxShadow = '0 0 40px rgba(0,255,198,0.5)';
+      }
+    }
+  }, 300);
   // Store return context
   MissionBridge.set({
     ...state,
