@@ -1073,7 +1073,7 @@
       <div class="doc-chip" onclick="loadProjectDoc('change-order-7-foundation')">📄 change-order-7-foundation.pdf</div>
       <div class="doc-chip" onclick="loadProjectDoc('osha-safety-plan-2026')">📄 osha-safety-plan-2026.pdf</div>
       <div class="doc-chip" onclick="loadProjectDoc('incident-report-apr-14')">📄 incident-report-apr-14.pdf</div>
-      <div class="doc-chip" onclick="loadProjectDoc('q1-invoice-summary')">📄 q1-invoice-summary.xlsx</div>
+      <div class="doc-chip" onclick="loadProjectDoc('q1-invoice-summary', 'xlsx')">📄 q1-invoice-summary.xlsx</div>
       <div class="doc-chip" onclick="loadProjectDoc('subcontractor-bid-roofing')">📄 subcontractor-bid-roofing.pdf</div>
       <div class="doc-chip" onclick="loadProjectDoc('owner-architect-agreement')">📄 owner-architect-agreement.pdf</div>
       <div class="doc-chip" onclick="loadProjectDoc('weekly-progress-report-week-17')">📄
@@ -1543,7 +1543,7 @@ LIEN DEADLINE: Lien rights expire in 22 days per state statute.`
   event.target.classList.add('active');
 
   try {
-    const res = await fetch('/construction-suite/docs/' + name + '.pdf');
+    const res = await fetch('/construction-suite/construction-docs/documents/' + name + '.' + ext);
     if (!res.ok) throw new Error('File not found');
     const blob = await res.blob();
     const ab = await blob.arrayBuffer();
@@ -1578,7 +1578,8 @@ LIEN DEADLINE: Lien rights expire in 22 days per state statute.`
   }
 }
 
-function loadProjectDoc(name) {
+function loadProjectDoc(name, ext) {
+  ext = ext || 'pdf';
   const preview = document.getElementById('doc-preview');
   const textArea = document.getElementById('doc-text');
   document.querySelectorAll('.doc-chip').forEach(c => c.classList.remove('active'));
@@ -1926,8 +1927,20 @@ Be precise with dollar figures and deadlines. Max 280 words.`,
 
     function copyOutput(id) {
       const txt = document.getElementById(id).textContent;
-      if (txt) navigator.clipboard.writeText(txt).catch(() => { });
-    }
+      if (txt) navigator.clipboard.writeText(txt).catch(() => {
+      // Try xlsx fallback
+      fetch('/construction-suite/construction-docs/documents/' + name + '.xlsx')
+        .then(r => { if (!r.ok) throw new Error('not found'); return r.text(); })
+        .then(text => {
+          docText = text;
+          textArea.value = docText;
+          preview.textContent = '✓ ' + name + '.xlsx loaded';
+          updateDocStatus();
+        })
+        .catch(() => {
+          preview.textContent = '✗ Could not load ' + name + ' — paste text manually';
+        });
+    });
 
     function exportAll() {
       const ts = new Date().toISOString().slice(0, 16).replace('T', '_').replace(':', '');
