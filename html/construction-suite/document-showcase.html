@@ -1,384 +1,550 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Construction BNCA · Neural Bridge · TSM</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#020a04;--surface:#061008;--s2:#0a180c;--s3:#0f2010;
-  --border:#163820;--cyan:#00e8c8;--gold:#f5a623;--green:#00ff88;
-  --red:#ff4444;--blue:#00aaff;--purple:#cc88ff;--amber:#ffaa00;
-  --text:#a8d4b0;--muted:#3a6040;--white:#d8f0dc;
-  --mono:'JetBrains Mono','Fira Code','IBM Plex Mono',ui-monospace,monospace;
-}
-html,
-body{
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Construction BNCA · Neural Bridge · TSM</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
 
-height:auto;
-min-height:100vh;
-overflow-y:auto;
-overflow-x:hidden;
+    :root {
+      --bg: #020a04;
+      --surface: #061008;
+      --s2: #0a180c;
+      --s3: #0f2010;
+      --border: #163820;
+      --cyan: #00e8c8;
+      --gold: #f5a623;
+      --green: #00ff88;
+      --red: #ff4444;
+      --blue: #00aaff;
+      --purple: #cc88ff;
+      --amber: #ffaa00;
+      --text: #a8d4b0;
+      --muted: #3a6040;
+      --white: #d8f0dc;
+      --mono: 'JetBrains Mono', 'Fira Code', 'IBM Plex Mono', ui-monospace, monospace;
+    }
 
-}
+    html,
+    body {
 
-.app,
-.shell,
-.main-shell,
-.dashboard-shell{
+      height: auto;
+      min-height: 100vh;
+      overflow-y: auto;
+      overflow-x: hidden;
 
-height:auto !important;
-min-height:100vh !important;
-overflow:visible !important;
+    }
 
-}
+    .app,
+    .shell,
+    .main-shell,
+    .dashboard-shell {
 
-main{
+      height: auto !important;
+      min-height: 100vh !important;
+      overflow: visible !important;
 
-overflow-y:auto;
-padding-bottom:140px;
+    }
 
-}
-body{font-family:var(--mono);background:var(--bg);color:var(--text);font-size:11px;display:flex;flex-direction:column}
+    main {
 
-/* TOP BAR */
-.topbar{background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0;min-height:42px;}
-.tb-left{display:flex;align-items:center;gap:10px}
-.tb-brand-dot{width:10px;height:10px;background:var(--cyan);border-radius:50%;animation:blink 2s infinite;flex-shrink:0}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
-.tb-title{font-size:13px;font-weight:700;color:var(--cyan);letter-spacing:.2em;text-transform:uppercase}
-.tb-sub{font-size:9px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;border-left:1px solid var(--border);padding-left:10px}
-.tb-right{display:flex;align-items:center;gap:8px}
-.tb-engine-badge{background:rgba(0,232,200,.1);border:1px solid rgba(0,232,200,.35);color:var(--cyan);font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:4px 10px;border-radius:2px}
-.tb-nodes{background:rgba(0,232,200,.12);border:1px solid var(--cyan);color:var(--cyan);font-size:10px;font-weight:700;padding:4px 10px;border-radius:2px}
-.tb-clock{font-size:10px;color:var(--muted);letter-spacing:.08em}
+      overflow-y: auto;
+      padding-bottom: 140px;
 
-/* MAIN LAYOUT */
-html{
-  margin:0;
-  padding:0;
-  height:100%;
-  background:var(--bg);
-}
-body{
-  margin:0;
-  padding:0;
-  min-height:100%;
-  height:100%;
-  overflow:hidden;
-  background:var(--bg);
-  display:flex;
-  flex-direction:column;
-}
+    }
 
-body{
-  display:flex;
-  flex-direction:column;
-  min-height:100vh;
-}
+    body {
+      font-family: var(--mono);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 11px;
+      display: flex;
+      flex-direction: column
+    }
 
-.topbar{
-  flex-shrink:0;
-  position:sticky;
-  top:0;
-  z-index:999;
-}
+    /* TOP BAR */
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      flex-shrink: 0;
+      min-height: 42px;
+    }
 
-.main{
-  flex:1;
-  overflow-y:auto;
-  overflow-x:hidden;
-  padding:18px;
-  min-height:0;
-}
+    .tb-left {
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
 
-.statusbar{
-  flex-shrink:0;
-  position:sticky;
-  bottom:0;
-  z-index:999;
-.main-scroll{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:14px;min-height:0;}
+    .tb-brand-dot {
+      width: 10px;
+      height: 10px;
+      background: var(--cyan);
+      border-radius: 50%;
+      animation: blink 2s infinite;
+      flex-shrink: 0
+    }
 
-/* SECTION HEADERS */
-.sec-hdr{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.sec-dot{width:7px;height:7px;background:var(--cyan);border-radius:50%;flex-shrink:0}
-.sec-label{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--cyan);font-weight:700}
-.sec-line{flex:1;height:1px;background:var(--border)}
+    @keyframes blink {
 
-/* STEP 1 — LOAD DOCUMENT */
-.doc-load-block{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:18px;
-  align-items:start;
-  background:var(--surface);
-  border:1px solid var(--border);
-  padding:18px;
-  min-height:340px;
-}
+      0%,
+      100% {
+        opacity: 1
+      }
 
-@media(max-width:1100px){
-  .doc-load-block{
-    grid-template-columns:1fr;
-  }
-}
-</style>
-    </div>
-    <div class="doc-load-block">
-.drop-zone{border:1px dashed rgba(0,232,200,.3);padding:32px;text-align:center;cursor:pointer;transition:all .2s;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:140px}
-.drop-zone:hover{border-color:var(--cyan);background:rgba(0,232,200,.04)}
-.drop-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.dz-icon{font-size:28px;color:var(--muted)}
-.dz-text{font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
-.dz-sub{font-size:9px;color:var(--border);letter-spacing:.08em;text-transform:uppercase}
-.doc-paste-area{background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;line-height:1.6;padding:10px;resize:none;width:100%;height:140px;outline:none}
-.doc-paste-area:focus{border-color:rgba(0,232,200,.4)}
-.paste-label{font-size:9px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;margin-bottom:5px}
-.btn-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
-.fire-btn{background:rgba(245,166,35,.12);border:1px solid var(--gold);color:var(--gold);font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:7px 16px;cursor:pointer;transition:all .2s}
-.fire-btn:hover{background:rgba(245,166,35,.22)}
-.fire-btn:disabled{opacity:.35;cursor:default}
-.sample-btn{background:transparent;border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:6px 12px;cursor:pointer;transition:all .15s}
-.sample-btn:hover{border-color:var(--cyan);color:var(--cyan)}
-.clear-btn{background:transparent;border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:6px 10px;cursor:pointer}
-.key-row{display:flex;align-items:center;gap:8px;margin-top:10px;border-top:1px solid var(--border);padding-top:10px}
-.key-dot{width:7px;height:7px;background:var(--green);border-radius:50%;flex-shrink:0;animation:blink 2s infinite}
-.key-label{font-size:9px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
-.key-inp{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:5px 8px;outline:none}
-.key-inp:focus{border-color:rgba(0,232,200,.4)}
-.key-test-btn{background:transparent;border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:5px 10px;cursor:pointer;white-space:nowrap}
-.key-test-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+      50% {
+        opacity: .25
+      }
+    }
 
-/* PIPELINE */
-.pipeline-block{background:var(--surface);border:1px solid var(--border);padding:14px}
-.pipe-nodes{display:flex;align-items:center;gap:0;flex-wrap:nowrap;overflow-x:auto;padding:4px 0}
-.pipe-node{flex-shrink:0;padding:10px 16px;border:1px solid;position:relative;min-width:140px;transition:all .4s}
-.pipe-node.idle{border-color:var(--border);background:var(--s2);color:var(--muted)}
-.pipe-node.active{border-color:var(--cyan);background:rgba(0,232,200,.08);animation:nodePulse .9s infinite}
-.pipe-node.done{border-color:var(--green);background:rgba(0,255,136,.06)}
-@keyframes nodePulse{0%,100%{box-shadow:0 0 0 rgba(0,232,200,0)}50%{box-shadow:0 0 12px rgba(0,232,200,.35)}}
-.pn-num{font-size:8px;letter-spacing:.16em;text-transform:uppercase;margin-bottom:3px}
-.pn-num.c1{color:var(--cyan)}.pn-num.c2{color:var(--green)}.pn-num.c3{color:var(--purple)}.pn-num.c4{color:var(--gold)}
-.pn-title{font-size:10px;font-weight:700;color:var(--white);letter-spacing:.06em;margin-bottom:4px;text-transform:uppercase}
-.pn-sub{font-size:8px;color:var(--muted);line-height:1.5;text-transform:uppercase;letter-spacing:.06em}
-.pn-state{font-size:8px;letter-spacing:.12em;text-transform:uppercase;margin-top:6px}
-.pn-state.idle{color:var(--muted)}.pn-state.active{color:var(--cyan)}.pn-state.done{color:var(--green)}
-.pipe-arrow{font-size:14px;color:var(--border);padding:0 6px;flex-shrink:0;transition:color .4s}
-.pipe-arrow.done{color:var(--green)}
+    .tb-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--cyan);
+      letter-spacing: .2em;
+      text-transform: uppercase
+    }
 
-/* STEP 2 — OUTPUT */
-.output-grid{
+    .tb-sub {
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      border-left: 1px solid var(--border);
+      padding-left: 10px
+    }
+
+    .tb-right {
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .tb-engine-badge {
+      background: rgba(0, 232, 200, .1);
+      border: 1px solid rgba(0, 232, 200, .35);
+      color: var(--cyan);
+      font-size: 9px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 2px
+    }
+
+    .tb-nodes {
+      background: rgba(0, 232, 200, .12);
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 2px
+    }
+
+    .tb-clock {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: .08em
+    }
+
+    /* MAIN LAYOUT */
+    html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: var(--bg);
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      z-index: 999;
+    }
+
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 18px;
+      min-height: 0;
+    }
+
+    .statusbar {
+      flex-shrink: 0;
+      position: sticky;
+      bottom: 0;
+      z-index: 999;
+
+      .main-scroll {
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        min-height: 0;
+      }
+
+      /* SECTION HEADERS */
+      .sec-hdr {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px
+      }
+
+      .sec-dot {
+        width: 7px;
+        height: 7px;
+        background: var(--cyan);
+        border-radius: 50%;
+        flex-shrink: 0
+      }
+
+      .sec-label {
+        font-size: 9px;
+        letter-spacing: .2em;
+        text-transform: uppercase;
+        color: var(--cyan);
+        font-weight: 700
+      }
+
+      .sec-line {
+        flex: 1;
+        height: 1px;
+        background: var(--border)
+      }
+
+      /* STEP 1 — LOAD DOCUMENT */
+      .doc-load-block {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+        align-items: start;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        padding: 18px;
+        min-height: 340px;
+      }
+
+      @media(max-width:1100px) {
+        .doc-load-block {
+          grid-template-columns: 1fr;
+        }
+      }
+  </style>
+  <link rel="stylesheet" href="/shared/tsm-shared.css">
+</head>
+
+<body>
+  .drop-zone{border:1px dashed rgba(0,232,200,.3);padding:32px;text-align:center;cursor:pointer;transition:all
+  .2s;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:140px}
+  .drop-zone:hover{border-color:var(--cyan);background:rgba(0,232,200,.04)}
+  .drop-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+  .dz-icon{font-size:28px;color:var(--muted)}
+  .dz-text{font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+  .dz-sub{font-size:9px;color:var(--border);letter-spacing:.08em;text-transform:uppercase}
+  .doc-paste-area{background:var(--bg);border:1px solid
+  var(--border);color:var(--text);font-family:var(--mono);font-size:10px;line-height:1.6;padding:10px;resize:none;width:100%;height:140px;outline:none}
+  .doc-paste-area:focus{border-color:rgba(0,232,200,.4)}
+  .paste-label{font-size:9px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;margin-bottom:5px}
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+  .fire-btn{background:rgba(245,166,35,.12);border:1px solid
+  var(--gold);color:var(--gold);font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:7px
+  16px;cursor:pointer;transition:all .2s}
+  .fire-btn:hover{background:rgba(245,166,35,.22)}
+  .fire-btn:disabled{opacity:.35;cursor:default}
+  .sample-btn{background:transparent;border:1px solid
+  var(--border);color:var(--muted);font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:6px
+  12px;cursor:pointer;transition:all .15s}
+  .sample-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+  .clear-btn{background:transparent;border:1px solid
+  var(--border);color:var(--muted);font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:6px
+  10px;cursor:pointer}
+  .key-row{display:flex;align-items:center;gap:8px;margin-top:10px;border-top:1px solid var(--border);padding-top:10px}
+  .key-dot{width:7px;height:7px;background:var(--green);border-radius:50%;flex-shrink:0;animation:blink 2s infinite}
+  .key-label{font-size:9px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+  .key-inp{flex:1;background:var(--bg);border:1px solid
+  var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:5px 8px;outline:none}
+  .key-inp:focus{border-color:rgba(0,232,200,.4)}
+  .key-test-btn{background:transparent;border:1px solid
+  var(--border);color:var(--muted);font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:5px
+  10px;cursor:pointer;white-space:nowrap}
+  .key-test-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+
+  /* PIPELINE */
+  .pipeline-block{background:var(--surface);border:1px solid var(--border);padding:14px}
+  .pipe-nodes{display:flex;align-items:center;gap:0;flex-wrap:nowrap;overflow-x:auto;padding:4px 0}
+  .pipe-node{flex-shrink:0;padding:10px 16px;border:1px solid;position:relative;min-width:140px;transition:all .4s}
+  .pipe-node.idle{border-color:var(--border);background:var(--s2);color:var(--muted)}
+  .pipe-node.active{border-color:var(--cyan);background:rgba(0,232,200,.08);animation:nodePulse .9s infinite}
+  .pipe-node.done{border-color:var(--green);background:rgba(0,255,136,.06)}
+  @keyframes nodePulse{0%,100%{box-shadow:0 0 0 rgba(0,232,200,0)}50%{box-shadow:0 0 12px rgba(0,232,200,.35)}}
+  .pn-num{font-size:8px;letter-spacing:.16em;text-transform:uppercase;margin-bottom:3px}
+  .pn-num.c1{color:var(--cyan)}.pn-num.c2{color:var(--green)}.pn-num.c3{color:var(--purple)}.pn-num.c4{color:var(--gold)}
+  .pn-title{font-size:10px;font-weight:700;color:var(--white);letter-spacing:.06em;margin-bottom:4px;text-transform:uppercase}
+  .pn-sub{font-size:8px;color:var(--muted);line-height:1.5;text-transform:uppercase;letter-spacing:.06em}
+  .pn-state{font-size:8px;letter-spacing:.12em;text-transform:uppercase;margin-top:6px}
+  .pn-state.idle{color:var(--muted)}.pn-state.active{color:var(--cyan)}.pn-state.done{color:var(--green)}
+  .pipe-arrow{font-size:14px;color:var(--border);padding:0 6px;flex-shrink:0;transition:color .4s}
+  .pipe-arrow.done{color:var(--green)}
+
+  /* STEP 2 — OUTPUT */
+  .output-grid{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:14px;
   align-items:stretch;
-}
-
-@media(max-width:1200px){
-  .output-grid{
-    grid-template-columns:1fr;
   }
 
-.output-pane{background:var(--surface);border:1px solid var(--border);display:flex;flex-direction:column;min-height:320px;max-height:520px;}
-.op-hdr{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.op-num{font-size:8px;letter-spacing:.14em;text-transform:uppercase;margin-right:6px}
-.op-num.n1{color:var(--cyan)}.op-num.n2{color:var(--green)}.op-num.n3{color:var(--purple)}.op-num.n4{color:var(--gold)}
-.op-name{font-size:10px;font-weight:700;color:var(--white);letter-spacing:.06em;text-transform:uppercase}
-.op-status{font-size:8px;letter-spacing:.12em;text-transform:uppercase;padding:2px 8px;border:1px solid}
-.ops-idle{border-color:var(--border);color:var(--muted)}
-.ops-run{border-color:var(--cyan);color:var(--cyan);animation:statusBlink .8s infinite}
-@keyframes statusBlink{0%,100%{opacity:1}50%{opacity:.4}}
-.ops-done{border-color:var(--green);color:var(--green)}
-.ops-err{border-color:var(--red);color:var(--red)}
-.op-body{flex:1;padding:12px;font-size:11px;line-height:1.7;color:var(--text);white-space:pre-wrap;overflow-y:auto;min-height:220px;}
-.op-placeholder{color:var(--muted);font-style:italic;font-size:9px}
-.op-footer{border-top:1px solid var(--border);padding:5px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.op-copy{font-family:var(--mono);font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:transparent;border:1px solid var(--border);padding:2px 8px;cursor:pointer}
-.op-copy:hover{color:var(--cyan);border-color:rgba(0,232,200,.4)}
-.op-tokens{font-size:8px;color:var(--muted);letter-spacing:.06em}
+  @media(max-width:1200px){
+  .output-grid{
+  grid-template-columns:1fr;
+  }
 
-/* BOTTOM STATUS BAR */
-.statusbar{height:28px;background:var(--surface);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0}
-.sb-left{display:flex;align-items:center;gap:10px}
-.sb-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 2s infinite}
-.sb-text{font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
-.sb-mid{display:flex;gap:16px}
-.sb-stat{font-size:9px;color:var(--muted);letter-spacing:.06em}
-.sb-stat span{color:var(--text)}
-.fire-all-btn{background:rgba(245,166,35,.12);border:1px solid var(--gold);color:var(--gold);font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 14px;cursor:pointer}
-.fire-all-btn:hover{background:rgba(245,166,35,.22)}
-.fire-all-btn:disabled{opacity:.35;cursor:default}
+  .output-pane{background:var(--surface);border:1px solid
+  var(--border);display:flex;flex-direction:column;min-height:320px;max-height:520px;}
+  .op-hdr{padding:8px 12px;border-bottom:1px solid
+  var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+  .op-num{font-size:8px;letter-spacing:.14em;text-transform:uppercase;margin-right:6px}
+  .op-num.n1{color:var(--cyan)}.op-num.n2{color:var(--green)}.op-num.n3{color:var(--purple)}.op-num.n4{color:var(--gold)}
+  .op-name{font-size:10px;font-weight:700;color:var(--white);letter-spacing:.06em;text-transform:uppercase}
+  .op-status{font-size:8px;letter-spacing:.12em;text-transform:uppercase;padding:2px 8px;border:1px solid}
+  .ops-idle{border-color:var(--border);color:var(--muted)}
+  .ops-run{border-color:var(--cyan);color:var(--cyan);animation:statusBlink .8s infinite}
+  @keyframes statusBlink{0%,100%{opacity:1}50%{opacity:.4}}
+  .ops-done{border-color:var(--green);color:var(--green)}
+  .ops-err{border-color:var(--red);color:var(--red)}
+  .op-body{flex:1;padding:12px;font-size:11px;line-height:1.7;color:var(--text);white-space:pre-wrap;overflow-y:auto;min-height:220px;}
+  .op-placeholder{color:var(--muted);font-style:italic;font-size:9px}
+  .op-footer{border-top:1px solid var(--border);padding:5px
+  12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+  .op-copy{font-family:var(--mono);font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:transparent;border:1px
+  solid var(--border);padding:2px 8px;cursor:pointer}
+  .op-copy:hover{color:var(--cyan);border-color:rgba(0,232,200,.4)}
+  .op-tokens{font-size:8px;color:var(--muted);letter-spacing:.06em}
 
-/* Scrollbar */
-::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border)}
-</style>
+  /* BOTTOM STATUS BAR */
+  .statusbar{height:28px;background:var(--surface);border-top:1px solid
+  var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0}
+  .sb-left{display:flex;align-items:center;gap:10px}
+  .sb-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 2s infinite}
+  .sb-text{font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+  .sb-mid{display:flex;gap:16px}
+  .sb-stat{font-size:9px;color:var(--muted);letter-spacing:.06em}
+  .sb-stat span{color:var(--text)}
+  .fire-all-btn{background:rgba(245,166,35,.12);border:1px solid
+  var(--gold);color:var(--gold);font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px
+  14px;cursor:pointer}
+  .fire-all-btn:hover{background:rgba(245,166,35,.22)}
+  .fire-all-btn:disabled{opacity:.35;cursor:default}
+
+  /* Scrollbar */
+  ::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border)}
+  </style>
   <link rel="stylesheet" href="/shared/tsm-shared.css">
   <script src="/shared/tsm-shared.js"></script>
-</head>
-<body>
-
-<!-- TOP BAR -->
-<div class="topbar">
-  <div class="tb-left">
-    <div class="tb-brand-dot"></div>
-    <div class="tb-title">Construction BNCA · Neural Bridge</div>
-    <div class="tb-sub">4-App Document Processing · TSM Neural Core</div>
-  </div>
-  <div class="tb-right">
-    <div class="tb-engine-badge">⚡ TSM Neural Core Engine</div>
-    <div class="tb-nodes" id="nodeCounter">0 / 4 Nodes</div>
-    <div class="tb-clock" id="clock">--:--:--</div>
-  </div>
-</div>
-
-<!-- MAIN SCROLL AREA -->
-<div class="main">
-
-  <!-- STEP 1: LOAD DOCUMENT -->
-  <div>
-    <div class="sec-hdr">
-      <div class="sec-dot"></div>
-      <div class="sec-label">Step 1 · Load Construction Document</div>
-      <div class="sec-line"></div>
+  </head>
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="tb-left">
+      <div class="tb-brand-dot"></div>
+      <div class="tb-title">Construction BNCA · Neural Bridge</div>
+      <div class="tb-sub">4-App Document Processing · TSM Neural Core</div>
     </div>
-    <div class="doc-load-block">
-      <div>
-        <div class="drop-zone" id="dropZone">
-          <input type="file" id="fileInput" accept=".txt,.pdf,.doc,.docx,.csv,.xlsx,.msg" onchange="handleFile(event)">
-          <div class="dz-icon">↑</div>
-          <div class="dz-text">Drop Document Here</div>
-          <div class="dz-sub">TXT · PDF · DOC · CSV · XLS · MSG</div>
-        </div>
-        <div class="btn-row">
-          <button class="fire-btn" id="fireBtn" data-tsm-action="fireAll" data-tsm-args="" disabled>⚡ Fire All 4 Apps</button>
-          <button class="sample-btn" data-tsm-action="loadSample" data-tsm-args="'fastener'">Sample: Fastener Delay</button>
-          <button class="sample-btn" data-tsm-action="loadSample" data-tsm-args="'gl'">Sample: GL Extract Q1</button>
-          <button class="sample-btn" data-tsm-action="loadSample" data-tsm-args="'lien'">Sample: Lien Waiver</button>
-          <button class="sample-btn" data-tsm-action="loadSample" data-tsm-args="'timesheet'">Sample: Labor Timesheet</button>
-          <button class="sample-btn" data-tsm-action="loadSample" data-tsm-args="'expenditure'">Sample: HOME Expenditure</button>
-          <button class="clear-btn" data-tsm-action="clearAll" data-tsm-args="">Clear</button>
-        </div>
-        <div class="key-row">
-          <div class="key-dot"></div>
-          <div class="key-label">TSM Neural Core Key</div>
-          <input type="password" class="key-inp" id="groqKey" placeholder="gsk_••••••••••••••••••••••••••••••••">
-          <button class="key-test-btn" data-tsm-action="testKey" data-tsm-args="">Test</button>
-        </div>
-      </div>
-      <div>
-        <div class="paste-label">Or Paste Document Text</div>
-        <textarea class="doc-paste-area" id="docPaste" placeholder="Enter a document to begin neural processing..." oninput="onPasteInput()"></textarea>
-        <div style="font-size:9px;color:var(--muted);margin-top:5px;letter-spacing:.06em" id="pasteStatus">No document loaded</div>
-      </div>
+    <div class="tb-right">
+      <div class="tb-engine-badge">⚡ TSM Neural Core Engine</div>
+      <div class="tb-nodes" id="nodeCounter">0 / 4 Nodes</div>
+      <div class="tb-clock" id="clock">--:--:--</div>
     </div>
   </div>
 
-  <!-- NEURAL PIPELINE -->
-  <div>
-    <div class="sec-hdr">
-      <div class="sec-dot"></div>
-      <div class="sec-label">Neural Connectivity · 4-App Pipeline</div>
-      <div class="sec-line"></div>
-    </div>
-    <div class="pipeline-block">
-      <div class="pipe-nodes">
-        <div class="pipe-node idle" id="pn-1">
-          <div class="pn-num c1">App 01</div>
-          <div class="pn-title">BNCA Nodes</div>
-          <div class="pn-sub">Intel · Triage<br>Flags · Risk ID</div>
-          <div class="pn-state idle" id="pns-1">Standby</div>
-        </div>
-        <div class="pipe-arrow" id="pa-1">─►</div>
-        <div class="pipe-node idle" id="pn-2">
-          <div class="pn-num c2">App 02</div>
-          <div class="pn-title">HC Strategist</div>
-          <div class="pn-sub">RFI · Alerts<br>Priorities · Costs</div>
-          <div class="pn-state idle" id="pns-2">Standby</div>
-        </div>
-        <div class="pipe-arrow" id="pa-2">─►</div>
-        <div class="pipe-node idle" id="pn-3">
-          <div class="pn-num c3">App 03</div>
-          <div class="pn-title">Main Strategist</div>
-          <div class="pn-sub">Letters · Mitigation<br>Actions · Schedule</div>
-          <div class="pn-state idle" id="pns-3">Standby</div>
-        </div>
-        <div class="pipe-arrow" id="pa-3">─►</div>
-        <div class="pipe-node idle" id="pn-4">
-          <div class="pn-num c4">App 04</div>
-          <div class="pn-title">Executive Portal</div>
-          <div class="pn-sub">CFO · Revenue<br>Owner · Roadmap</div>
-          <div class="pn-state idle" id="pns-4">Standby</div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- MAIN SCROLL AREA -->
+  <div class="main">
 
-  <!-- STEP 2: LIVE OUTPUT -->
-  <div>
-    <div class="sec-hdr">
-      <div class="sec-dot"></div>
-      <div class="sec-label">Step 2 · Live Neural Output — All 4 Apps</div>
-      <div class="sec-line"></div>
-    </div>
-    <div class="output-grid">
-      <div class="output-pane">
-        <div class="op-hdr">
-          <div><span class="op-num n1">01</span><span class="op-name">BNCA Command Nodes</span></div>
-          <div class="op-status ops-idle" id="ops-1">Standby</div>
-        </div>
-        <div class="op-body" id="op-1"><span class="op-placeholder">Waiting for document load…</span></div>
-        <div class="op-footer"><button class="op-copy" data-tsm-action="copyOutput" data-tsm-args="1">Copy</button><span class="op-tokens" id="otkn-1">—</span></div>
+    <!-- STEP 1: LOAD DOCUMENT -->
+    <div>
+      <div class="sec-hdr">
+        <div class="sec-dot"></div>
+        <div class="sec-label">Step 1 · Load Construction Document</div>
+        <div class="sec-line"></div>
       </div>
-      <div class="output-pane">
-        <div class="op-hdr">
-          <div><span class="op-num n2">02</span><span class="op-name">HC Strategist</span></div>
-          <div class="op-status ops-idle" id="ops-2">Standby</div>
+      <div class="doc-load-block">
+        <div>
+          <div class="drop-zone" id="dropZone">
+            <input type="file" id="fileInput" accept=".txt,.pdf,.doc,.docx,.csv,.xlsx,.msg"
+              onchange="handleFile(event)">
+            <div class="dz-icon">↑</div>
+            <div class="dz-text">Drop Document Here</div>
+            <div class="dz-sub">TXT · PDF · DOC · CSV · XLS · MSG</div>
+          </div>
+          <div class="btn-row">
+            <button class="fire-btn" id="fireBtn" data-tsm-action="fireAll" data-tsm-args="" disabled>⚡ Fire All 4
+              Apps</button>
+            <button class="sample-btn" data-tsm-action="loadSample" data-tsm-args="'fastener'">Sample: Fastener
+              Delay</button>
+            <button class="sample-btn" data-tsm-action="loadSample" data-tsm-args="'gl'">Sample: GL Extract Q1</button>
+            <button class="sample-btn" data-tsm-action="loadSample" data-tsm-args="'lien'">Sample: Lien Waiver</button>
+            <button class="sample-btn" data-tsm-action="loadSample" data-tsm-args="'timesheet'">Sample: Labor
+              Timesheet</button>
+            <button class="sample-btn" data-tsm-action="loadSample" data-tsm-args="'expenditure'">Sample: HOME
+              Expenditure</button>
+            <button class="clear-btn" data-tsm-action="clearAll" data-tsm-args="">Clear</button>
+          </div>
+          <div class="key-row">
+            <div class="key-dot"></div>
+            <div class="key-label">TSM Neural Core Key</div>
+            <input type="password" class="key-inp" id="groqKey" placeholder="gsk_••••••••••••••••••••••••••••••••">
+            <button class="key-test-btn" data-tsm-action="testKey" data-tsm-args="">Test</button>
+          </div>
         </div>
-        <div class="op-body" id="op-2"><span class="op-placeholder">Waiting for App 01…</span></div>
-        <div class="op-footer"><button class="op-copy" data-tsm-action="copyOutput" data-tsm-args="2">Copy</button><span class="op-tokens" id="otkn-2">—</span></div>
-      </div>
-      <div class="output-pane">
-        <div class="op-hdr">
-          <div><span class="op-num n3">03</span><span class="op-name">Main Strategist</span></div>
-          <div class="op-status ops-idle" id="ops-3">Standby</div>
+        <div>
+          <div class="paste-label">Or Paste Document Text</div>
+          <textarea class="doc-paste-area" id="docPaste" placeholder="Enter a document to begin neural processing..."
+            oninput="onPasteInput()"></textarea>
+          <div style="font-size:9px;color:var(--muted);margin-top:5px;letter-spacing:.06em" id="pasteStatus">No document
+            loaded</div>
         </div>
-        <div class="op-body" id="op-3"><span class="op-placeholder">Waiting for App 02…</span></div>
-        <div class="op-footer"><button class="op-copy" data-tsm-action="copyOutput" data-tsm-args="3">Copy</button><span class="op-tokens" id="otkn-3">—</span></div>
-      </div>
-      <div class="output-pane">
-        <div class="op-hdr">
-          <div><span class="op-num n4">04</span><span class="op-name">Executive Portal</span></div>
-          <div class="op-status ops-idle" id="ops-4">Standby</div>
-        </div>
-        <div class="op-body" id="op-4"><span class="op-placeholder">Waiting for App 03…</span></div>
-        <div class="op-footer"><button class="op-copy" data-tsm-action="copyOutput" data-tsm-args="4">Copy</button><span class="op-tokens" id="otkn-4">—</span></div>
       </div>
     </div>
+
+    <!-- NEURAL PIPELINE -->
+    <div>
+      <div class="sec-hdr">
+        <div class="sec-dot"></div>
+        <div class="sec-label">Neural Connectivity · 4-App Pipeline</div>
+        <div class="sec-line"></div>
+      </div>
+      <div class="pipeline-block">
+        <div class="pipe-nodes">
+          <div class="pipe-node idle" id="pn-1">
+            <div class="pn-num c1">App 01</div>
+            <div class="pn-title">BNCA Nodes</div>
+            <div class="pn-sub">Intel · Triage<br>Flags · Risk ID</div>
+            <div class="pn-state idle" id="pns-1">Standby</div>
+          </div>
+          <div class="pipe-arrow" id="pa-1">─►</div>
+          <div class="pipe-node idle" id="pn-2">
+            <div class="pn-num c2">App 02</div>
+            <div class="pn-title">HC Strategist</div>
+            <div class="pn-sub">RFI · Alerts<br>Priorities · Costs</div>
+            <div class="pn-state idle" id="pns-2">Standby</div>
+          </div>
+          <div class="pipe-arrow" id="pa-2">─►</div>
+          <div class="pipe-node idle" id="pn-3">
+            <div class="pn-num c3">App 03</div>
+            <div class="pn-title">Main Strategist</div>
+            <div class="pn-sub">Letters · Mitigation<br>Actions · Schedule</div>
+            <div class="pn-state idle" id="pns-3">Standby</div>
+          </div>
+          <div class="pipe-arrow" id="pa-3">─►</div>
+          <div class="pipe-node idle" id="pn-4">
+            <div class="pn-num c4">App 04</div>
+            <div class="pn-title">Executive Portal</div>
+            <div class="pn-sub">CFO · Revenue<br>Owner · Roadmap</div>
+            <div class="pn-state idle" id="pns-4">Standby</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: LIVE OUTPUT -->
+    <div>
+      <div class="sec-hdr">
+        <div class="sec-dot"></div>
+        <div class="sec-label">Step 2 · Live Neural Output — All 4 Apps</div>
+        <div class="sec-line"></div>
+      </div>
+      <div class="output-grid">
+        <div class="output-pane">
+          <div class="op-hdr">
+            <div><span class="op-num n1">01</span><span class="op-name">BNCA Command Nodes</span></div>
+            <div class="op-status ops-idle" id="ops-1">Standby</div>
+          </div>
+          <div class="op-body" id="op-1"><span class="op-placeholder">Waiting for document load…</span></div>
+          <div class="op-footer"><button class="op-copy" data-tsm-action="copyOutput"
+              data-tsm-args="1">Copy</button><span class="op-tokens" id="otkn-1">—</span></div>
+        </div>
+        <div class="output-pane">
+          <div class="op-hdr">
+            <div><span class="op-num n2">02</span><span class="op-name">HC Strategist</span></div>
+            <div class="op-status ops-idle" id="ops-2">Standby</div>
+          </div>
+          <div class="op-body" id="op-2"><span class="op-placeholder">Waiting for App 01…</span></div>
+          <div class="op-footer"><button class="op-copy" data-tsm-action="copyOutput"
+              data-tsm-args="2">Copy</button><span class="op-tokens" id="otkn-2">—</span></div>
+        </div>
+        <div class="output-pane">
+          <div class="op-hdr">
+            <div><span class="op-num n3">03</span><span class="op-name">Main Strategist</span></div>
+            <div class="op-status ops-idle" id="ops-3">Standby</div>
+          </div>
+          <div class="op-body" id="op-3"><span class="op-placeholder">Waiting for App 02…</span></div>
+          <div class="op-footer"><button class="op-copy" data-tsm-action="copyOutput"
+              data-tsm-args="3">Copy</button><span class="op-tokens" id="otkn-3">—</span></div>
+        </div>
+        <div class="output-pane">
+          <div class="op-hdr">
+            <div><span class="op-num n4">04</span><span class="op-name">Executive Portal</span></div>
+            <div class="op-status ops-idle" id="ops-4">Standby</div>
+          </div>
+          <div class="op-body" id="op-4"><span class="op-placeholder">Waiting for App 03…</span></div>
+          <div class="op-footer"><button class="op-copy" data-tsm-action="copyOutput"
+              data-tsm-args="4">Copy</button><span class="op-tokens" id="otkn-4">—</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+
+  <!-- STATUS BAR -->
+  <div class="statusbar">
+    <div class="sb-left">
+      <div class="sb-dot"></div>
+      <div class="sb-text">HC BNCA Neural Bridge</div>
+    </div>
+    <div class="sb-mid">
+      <div class="sb-stat" id="sb-apps"><span id="appsActive">0</span> / 4 Apps Active</div>
+      <div class="sb-stat" id="sb-doc">No document loaded</div>
+      <div class="sb-stat">tsm-neural-core: <span style="color:var(--cyan)">llama-3.3-70b-versatile</span></div>
+    </div>
+    <button class="fire-all-btn" id="fireAllBtn" data-tsm-action="fireAll" data-tsm-args="" disabled>⚡ Fire All</button>
   </div>
 
-</div><!-- /main -->
-
-<!-- STATUS BAR -->
-<div class="statusbar">
-  <div class="sb-left">
-    <div class="sb-dot"></div>
-    <div class="sb-text">HC BNCA Neural Bridge</div>
-  </div>
-  <div class="sb-mid">
-    <div class="sb-stat" id="sb-apps"><span id="appsActive">0</span> / 4 Apps Active</div>
-    <div class="sb-stat" id="sb-doc">No document loaded</div>
-    <div class="sb-stat">tsm-neural-core: <span style="color:var(--cyan)">llama-3.3-70b-versatile</span></div>
-  </div>
-  <button class="fire-all-btn" id="fireAllBtn" data-tsm-action="fireAll" data-tsm-args="" disabled>⚡ Fire All</button>
-</div>
-
-<script>
-// ── SAMPLE DOCUMENTS ─────────────────────────────────────────────────
-const SAMPLES = {
-  fastener: {
-    name: 'Fastener_Supply_Delay_Notice.msg',
-    text: `FASTENER SUPPLY DELAY NOTICE
+  <script>
+    // ── SAMPLE DOCUMENTS ─────────────────────────────────────────────────
+    const SAMPLES = {
+      fastener: {
+        name: 'Fastener_Supply_Delay_Notice.msg',
+        text: `FASTENER SUPPLY DELAY NOTICE
 From: PacSteel Procurement Dept.
 To: Site Superintendent R. Kowalski / Project Manager
 Re: Structural Fastener Shipment Delay — Block C Steel Erection Phase
@@ -407,11 +573,11 @@ MITIGATION OPTIONS:
 
 REQUIRED DECISION BY: May 12, 2026 (48 hours)
 Contact: procurement@pacsteel.com | (602) 555-0194`
-  },
+      },
 
-  gl: {
-    name: 'GL_Extract_Q1.csv',
-    text: `GL EXTRACT — QUARTER 1 2026
+      gl: {
+        name: 'GL_Extract_Q1.csv',
+        text: `GL EXTRACT — QUARTER 1 2026
 Entity: Ameris Construction Group
 Period: January 1 – March 31, 2026
 Prepared by: Finance Department
@@ -452,11 +618,11 @@ BALANCE SHEET ITEMS:
 2100 - AP: $312,000 (90+ days: $27,000)
 2200 - Accrued Liabilities: $84,200
 3000 - Equity: $1,247,800`
-  },
+      },
 
-  lien: {
-    name: 'Subcontractor_Final_Lien_Waiver.pdf',
-    text: `CONDITIONAL WAIVER AND RELEASE ON FINAL PAYMENT
+      lien: {
+        name: 'Subcontractor_Final_Lien_Waiver.pdf',
+        text: `CONDITIONAL WAIVER AND RELEASE ON FINAL PAYMENT
 (Arizona Revised Statutes § 33-1008)
 
 Project: Block C Commercial Development — Ameris Construction Group
@@ -492,11 +658,11 @@ REQUIRED ACTIONS BEFORE PAYMENT:
 Subcontractor Signature: _________________________ Date: ___________
 GC Representative Signature: _____________________ Date: ___________
 Owner Representative Signature: __________________ Date: ___________`
-  },
+      },
 
-  timesheet: {
-    name: 'Weekly_Labor_Timesheet_Site_A.csv',
-    text: `WEEKLY LABOR TIMESHEET — SITE A (BLOCK C)
+      timesheet: {
+        name: 'Weekly_Labor_Timesheet_Site_A.csv',
+        text: `WEEKLY LABOR TIMESHEET — SITE A (BLOCK C)
 Week Ending: May 10, 2026
 Superintendent: R. Kowalski
 Project: Ameris Block C Commercial Development
@@ -531,11 +697,11 @@ FLAGS:
 - Overtime trending 15% above budget this period
 - Certified payroll required: yes (federal HOME program involvement)
 - Davis-Bacon compliance check: pending for EMP-008 rate verification`
-  },
+      },
 
-  expenditure: {
-    name: 'HOME_Expenditure_Log.xlsx',
-    text: `HOME INVESTMENT PARTNERSHIPS PROGRAM — EXPENDITURE LOG
+      expenditure: {
+        name: 'HOME_Expenditure_Log.xlsx',
+        text: `HOME INVESTMENT PARTNERSHIPS PROGRAM — EXPENDITURE LOG
 Grantee: Ameris Construction Group / City of Phoenix HOME Program
 Project: Block C Affordable Housing Component (Units 101-124)
 Grant Number: PHX-HOME-2024-0089
@@ -574,137 +740,137 @@ NEXT DRAW REQUIREMENTS:
 2. Submit 3 weeks of certified payroll to HUD compliance portal
 3. Document additional match sources ($62,000 gap)
 4. Complete Section 3 hiring plan update`
-  }
-};
+      }
+    };
 
-// ── STATE ──────────────────────────────────────────────────────────
-let currentDoc = null;
-let currentDocName = 'No document loaded';
-let running = false;
-let appsActive = 0;
+    // ── STATE ──────────────────────────────────────────────────────────
+    let currentDoc = null;
+    let currentDocName = 'No document loaded';
+    let running = false;
+    let appsActive = 0;
 
-// ── CLOCK ──────────────────────────────────────────────────────────
-function updateClock() {
-  const now = new Date();
-  document.getElementById('clock').textContent =
-    now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-}
-setInterval(updateClock, 1000); updateClock();
+    // ── CLOCK ──────────────────────────────────────────────────────────
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('clock').textContent =
+        now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+    setInterval(updateClock, 1000); updateClock();
 
-// ── DOCUMENT LOADING ──────────────────────────────────────────────
-function loadSample(key) {
-  const s = SAMPLES[key];
-  currentDoc = s.text;
-  currentDocName = s.name;
-  document.getElementById('docPaste').value = s.text;
-  document.getElementById('pasteStatus').textContent = s.name + ' — loaded';
-  document.getElementById('sb-doc').textContent = s.name;
-  document.getElementById('fireBtn').disabled = false;
-  document.getElementById('fireAllBtn').disabled = false;
-  resetOutputs();
-}
+    // ── DOCUMENT LOADING ──────────────────────────────────────────────
+    function loadSample(key) {
+      const s = SAMPLES[key];
+      currentDoc = s.text;
+      currentDocName = s.name;
+      document.getElementById('docPaste').value = s.text;
+      document.getElementById('pasteStatus').textContent = s.name + ' — loaded';
+      document.getElementById('sb-doc').textContent = s.name;
+      document.getElementById('fireBtn').disabled = false;
+      document.getElementById('fireAllBtn').disabled = false;
+      resetOutputs();
+    }
 
-function handleFile(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  currentDocName = file.name;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    currentDoc = ev.target.result;
-    document.getElementById('docPaste').value = currentDoc;
-    document.getElementById('pasteStatus').textContent = file.name + ' — loaded (' + Math.round(file.size/1024) + ' KB)';
-    document.getElementById('sb-doc').textContent = file.name;
-    document.getElementById('fireBtn').disabled = false;
-    document.getElementById('fireAllBtn').disabled = false;
-    resetOutputs();
-  };
-  reader.readAsText(file);
-}
+    function handleFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      currentDocName = file.name;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        currentDoc = ev.target.result;
+        document.getElementById('docPaste').value = currentDoc;
+        document.getElementById('pasteStatus').textContent = file.name + ' — loaded (' + Math.round(file.size / 1024) + ' KB)';
+        document.getElementById('sb-doc').textContent = file.name;
+        document.getElementById('fireBtn').disabled = false;
+        document.getElementById('fireAllBtn').disabled = false;
+        resetOutputs();
+      };
+      reader.readAsText(file);
+    }
 
-function onPasteInput() {
-  const val = document.getElementById('docPaste').value.trim();
-  currentDoc = val || null;
-  currentDocName = val ? 'Pasted document' : 'No document loaded';
-  document.getElementById('pasteStatus').textContent = val ? 'Manual input — ' + val.length + ' chars' : 'No document loaded';
-  document.getElementById('sb-doc').textContent = currentDocName;
-  document.getElementById('fireBtn').disabled = !val;
-  document.getElementById('fireAllBtn').disabled = !val;
-  if (val) resetOutputs();
-}
+    function onPasteInput() {
+      const val = document.getElementById('docPaste').value.trim();
+      currentDoc = val || null;
+      currentDocName = val ? 'Pasted document' : 'No document loaded';
+      document.getElementById('pasteStatus').textContent = val ? 'Manual input — ' + val.length + ' chars' : 'No document loaded';
+      document.getElementById('sb-doc').textContent = currentDocName;
+      document.getElementById('fireBtn').disabled = !val;
+      document.getElementById('fireAllBtn').disabled = !val;
+      if (val) resetOutputs();
+    }
 
-function clearAll() {
-  currentDoc = null; currentDocName = 'No document loaded';
-  document.getElementById('docPaste').value = '';
-  document.getElementById('pasteStatus').textContent = 'No document loaded';
-  document.getElementById('sb-doc').textContent = 'No document loaded';
-  document.getElementById('fireBtn').disabled = true;
-  document.getElementById('fireAllBtn').disabled = true;
-  resetOutputs();
-}
+    function clearAll() {
+      currentDoc = null; currentDocName = 'No document loaded';
+      document.getElementById('docPaste').value = '';
+      document.getElementById('pasteStatus').textContent = 'No document loaded';
+      document.getElementById('sb-doc').textContent = 'No document loaded';
+      document.getElementById('fireBtn').disabled = true;
+      document.getElementById('fireAllBtn').disabled = true;
+      resetOutputs();
+    }
 
-function resetOutputs() {
-  appsActive = 0;
-  document.getElementById('nodeCounter').textContent = '0 / 4 Nodes';
-  document.getElementById('appsActive').textContent = '0';
-  [1,2,3,4].forEach(i => {
-    setNodeState(i,'idle');
-    setOpStatus(i,'idle','Standby');
-    const ob = document.getElementById('op-'+i);
-    ob.innerHTML = '<span class="op-placeholder">' + (i===1?'Waiting for document load…':'Waiting for App 0'+(i-1)+'…') + '</span>';
-    document.getElementById('otkn-'+i).textContent = '—';
-    const pa = document.getElementById('pa-'+i);
-    if (pa) pa.className = 'pipe-arrow';
-  });
-}
+    function resetOutputs() {
+      appsActive = 0;
+      document.getElementById('nodeCounter').textContent = '0 / 4 Nodes';
+      document.getElementById('appsActive').textContent = '0';
+      [1, 2, 3, 4].forEach(i => {
+        setNodeState(i, 'idle');
+        setOpStatus(i, 'idle', 'Standby');
+        const ob = document.getElementById('op-' + i);
+        ob.innerHTML = '<span class="op-placeholder">' + (i === 1 ? 'Waiting for document load…' : 'Waiting for App 0' + (i - 1) + '…') + '</span>';
+        document.getElementById('otkn-' + i).textContent = '—';
+        const pa = document.getElementById('pa-' + i);
+        if (pa) pa.className = 'pipe-arrow';
+      });
+    }
 
-// ── KEY TEST ──────────────────────────────────────────────────────
-async function testKey() {
-  const key = document.getElementById('groqKey').value.trim();
-  if (!key) { alert('Enter a Groq API key first'); return; }
-  const btn = document.querySelector('.key-test-btn');
-  btn.textContent = 'Testing...'; btn.style.color = 'var(--cyan)';
-  try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-      body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:10,messages:[{role:'user',content:'ping'}]})
-    });
-    if(res.ok){fetch('/admin/set-key',{method:'POST',headers:{'Content-Type':'application/json','x-admin-token':'TSM_ADMIN_2026'},body:JSON.stringify({key})}).catch(()=>{});}
-    btn.textContent = res.ok ? '✓ Saved' : '✗ Error';
-    btn.style.color = res.ok ? 'var(--green)' : 'var(--red)';
-  } catch(e) {
-    btn.textContent = '✗ Failed'; btn.style.color = 'var(--red)';
-  }
-  setTimeout(()=>{btn.textContent='Test';btn.style.color='';},3000);
-}
+    // ── KEY TEST ──────────────────────────────────────────────────────
+    async function testKey() {
+      const key = document.getElementById('groqKey').value.trim();
+      if (!key) { alert('Enter a Groq API key first'); return; }
+      const btn = document.querySelector('.key-test-btn');
+      btn.textContent = 'Testing...'; btn.style.color = 'var(--cyan)';
+      try {
+        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+          body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 10, messages: [{ role: 'user', content: 'ping' }] })
+        });
+        if (res.ok) { fetch('/admin/set-key', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-token': 'TSM_ADMIN_2026' }, body: JSON.stringify({ key }) }).catch(() => { }); }
+        btn.textContent = res.ok ? '✓ Saved' : '✗ Error';
+        btn.style.color = res.ok ? 'var(--green)' : 'var(--red)';
+      } catch (e) {
+        btn.textContent = '✗ Failed'; btn.style.color = 'var(--red)';
+      }
+      setTimeout(() => { btn.textContent = 'Test'; btn.style.color = ''; }, 3000);
+    }
 
-// ── PIPELINE STATE ────────────────────────────────────────────────
-function setNodeState(i, state) {
-  const pn = document.getElementById('pn-'+i);
-  const pns = document.getElementById('pns-'+i);
-  pn.className = 'pipe-node ' + state;
-  pns.className = 'pn-state ' + state;
-  const labels = {idle:'Standby', active:'Processing…', done:'Complete'};
-  pns.textContent = labels[state] || state;
-  if (state==='done' && i<4) {
-    const pa = document.getElementById('pa-'+i);
-    if(pa) pa.className='pipe-arrow done';
-  }
-}
+    // ── PIPELINE STATE ────────────────────────────────────────────────
+    function setNodeState(i, state) {
+      const pn = document.getElementById('pn-' + i);
+      const pns = document.getElementById('pns-' + i);
+      pn.className = 'pipe-node ' + state;
+      pns.className = 'pn-state ' + state;
+      const labels = { idle: 'Standby', active: 'Processing…', done: 'Complete' };
+      pns.textContent = labels[state] || state;
+      if (state === 'done' && i < 4) {
+        const pa = document.getElementById('pa-' + i);
+        if (pa) pa.className = 'pipe-arrow done';
+      }
+    }
 
-function setOpStatus(i, cls, label) {
-  const el = document.getElementById('ops-'+i);
-  el.className = 'op-status ops-'+cls;
-  el.textContent = label;
-}
+    function setOpStatus(i, cls, label) {
+      const el = document.getElementById('ops-' + i);
+      el.className = 'op-status ops-' + cls;
+      el.textContent = label;
+    }
 
-// ── APP CONFIGURATIONS ────────────────────────────────────────────
-const APPS = [
-  {
-    id:1,
-    name:'BNCA Command Nodes',
-    color:'--cyan',
-    system:`You are a construction BNCA (Bottom-Line Construction Analysis) Command Node — the first app in a 4-app neural bridge for a construction site management platform. Your role is document triage and risk identification.
+    // ── APP CONFIGURATIONS ────────────────────────────────────────────
+    const APPS = [
+      {
+        id: 1,
+        name: 'BNCA Command Nodes',
+        color: '--cyan',
+        system: `You are a construction BNCA (Bottom-Line Construction Analysis) Command Node — the first app in a 4-app neural bridge for a construction site management platform. Your role is document triage and risk identification.
 
 Analyze the provided construction document and output:
 1. DOCUMENT TYPE — identify what this is
@@ -714,13 +880,13 @@ Analyze the provided construction document and output:
 5. IMMEDIATE ACTIONS REQUIRED — what must happen in the next 48 hours
 
 Be specific. Use numbers, names, and dates from the document. Format clearly with section headers.`,
-    prompt: (doc, name) => `Construction document: ${name}\n\nDocument content:\n${doc}\n\nRun BNCA Command Node triage. Identify all flags, risks, and required actions.`
-  },
-  {
-    id:2,
-    name:'HC Strategist',
-    color:'--green',
-    system:`You are the HC Strategist — App 02 in a construction BNCA neural bridge. You receive triage output and produce operational strategy.
+        prompt: (doc, name) => `Construction document: ${name}\n\nDocument content:\n${doc}\n\nRun BNCA Command Node triage. Identify all flags, risks, and required actions.`
+      },
+      {
+        id: 2,
+        name: 'HC Strategist',
+        color: '--green',
+        system: `You are the HC Strategist — App 02 in a construction BNCA neural bridge. You receive triage output and produce operational strategy.
 
 Your output:
 1. RFI / CHANGE ORDER IMPACTS — what RFIs or change orders are triggered
@@ -730,13 +896,13 @@ Your output:
 5. MITIGATION OPTIONS — 3 ranked options to address the situation with cost/time comparison
 
 Be tactical and specific. Reference specific dollar amounts, vendors, and dates.`,
-    prompt: (doc, name) => `Construction document: ${name}\n\nDocument:\n${doc}\n\nProduce operational strategy: RFI impacts, cost alerts, vendor issues, schedule priorities, and mitigation options.`
-  },
-  {
-    id:3,
-    name:'Main Strategist',
-    color:'--purple',
-    system:`You are the Main Strategist — App 03 in a construction BNCA neural bridge. You produce formal correspondence, mitigation plans, and action items.
+        prompt: (doc, name) => `Construction document: ${name}\n\nDocument:\n${doc}\n\nProduce operational strategy: RFI impacts, cost alerts, vendor issues, schedule priorities, and mitigation options.`
+      },
+      {
+        id: 3,
+        name: 'Main Strategist',
+        color: '--purple',
+        system: `You are the Main Strategist — App 03 in a construction BNCA neural bridge. You produce formal correspondence, mitigation plans, and action items.
 
 Your output:
 1. FORMAL NOTICE / LETTER DRAFT — a professional letter to the relevant party (GC, owner, vendor, inspector) addressing the situation
@@ -746,13 +912,13 @@ Your output:
 5. FIELD ACTION ITEMS — specific instructions for site supervisor
 
 Use professional construction industry language. Be specific with names, dates, and dollar amounts.`,
-    prompt: (doc, name) => `Construction document: ${name}\n\nDocument:\n${doc}\n\nProduce formal correspondence, mitigation plan, schedule impact analysis, legal considerations, and field action items.`
-  },
-  {
-    id:4,
-    name:'Executive Portal',
-    color:'--gold',
-    system:`You are the Executive Portal — App 04 in a construction BNCA neural bridge. You produce the owner/CFO-level brief and financial roadmap.
+        prompt: (doc, name) => `Construction document: ${name}\n\nDocument:\n${doc}\n\nProduce formal correspondence, mitigation plan, schedule impact analysis, legal considerations, and field action items.`
+      },
+      {
+        id: 4,
+        name: 'Executive Portal',
+        color: '--gold',
+        system: `You are the Executive Portal — App 04 in a construction BNCA neural bridge. You produce the owner/CFO-level brief and financial roadmap.
 
 Your output:
 1. EXECUTIVE SUMMARY — 3 sentences: situation, financial impact, required decision
@@ -762,202 +928,189 @@ Your output:
 5. FORWARD ROADMAP — next 30/60/90 day outlook with financial milestones
 
 Write for an owner audience. Clear, decisive, no jargon. Numbers front and center.`,
-    prompt: (doc, name) => `Construction document: ${name}\n\nDocument:\n${doc}\n\nProduce executive brief, financial dashboard, owner decisions, cash flow impact, and 30/60/90 roadmap.`
-  }
-];
+        prompt: (doc, name) => `Construction document: ${name}\n\nDocument:\n${doc}\n\nProduce executive brief, financial dashboard, owner decisions, cash flow impact, and 30/60/90 roadmap.`
+      }
+    ];
 
-// ── FIRE ENGINE ───────────────────────────────────────────────────
-async function streamApp(app, key) {
-  const bodyEl = document.getElementById('op-'+app.id);
-  const tokenEl = document.getElementById('otkn-'+app.id);
+    // ── FIRE ENGINE ───────────────────────────────────────────────────
+    async function streamApp(app, key) {
+      const bodyEl = document.getElementById('op-' + app.id);
+      const tokenEl = document.getElementById('otkn-' + app.id);
 
-  setNodeState(app.id, 'active');
-  setOpStatus(app.id, 'run', 'Processing…');
-  bodyEl.textContent = '';
+      setNodeState(app.id, 'active');
+      setOpStatus(app.id, 'run', 'Processing…');
+      bodyEl.textContent = '';
 
-  try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-      body: JSON.stringify({
-        model:'llama-3.3-70b-versatile',
-        max_tokens:900,
-        temperature:0.35,
-        stream:true,
-        messages:[
-          {role:'system', content:app.system},
-          {role:'user',   content:app.prompt(currentDoc, currentDocName)}
-        ]
-      })
-    });
+      try {
+        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+          body: JSON.stringify({
+            model: 'llama-3.3-70b-versatile',
+            max_tokens: 900,
+            temperature: 0.35,
+            stream: true,
+            messages: [
+              { role: 'system', content: app.system },
+              { role: 'user', content: app.prompt(currentDoc, currentDocName) }
+            ]
+          })
+        });
 
-    if (!res.ok) {
-      const err = await res.json().catch(()=>({error:{message:res.statusText}}));
-      bodyEl.textContent = '[Groq Error ' + res.status + '] ' + (err.error?.message || res.statusText);
-      setOpStatus(app.id,'err','Error'); setNodeState(app.id,'idle');
-      return false;
-    }
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: { message: res.statusText } }));
+          bodyEl.textContent = '[Groq Error ' + res.status + '] ' + (err.error?.message || res.statusText);
+          setOpStatus(app.id, 'err', 'Error'); setNodeState(app.id, 'idle');
+          return false;
+        }
 
-    const reader = res.body.getReader();
-    const dec = new TextDecoder();
-    let full = '';
-    bodyEl.textContent = '';
+        const reader = res.body.getReader();
+        const dec = new TextDecoder();
+        let full = '';
+        bodyEl.textContent = '';
 
-    while (true) {
-      const {done, value} = await reader.read();
-      if (done) break;
-      const chunk = dec.decode(value);
-      for (const line of chunk.split('\n')) {
-        if (!line.startsWith('data: ')) continue;
-        const data = line.slice(6).trim();
-        if (data === '[DONE]') break;
-        try {
-          const delta = JSON.parse(data).choices?.[0]?.delta?.content || '';
-          full += delta;
-          bodyEl.textContent = full + '▌';
-          bodyEl.scrollTop = bodyEl.scrollHeight;
-        } catch {}
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = dec.decode(value);
+          for (const line of chunk.split('\n')) {
+            if (!line.startsWith('data: ')) continue;
+            const data = line.slice(6).trim();
+            if (data === '[DONE]') break;
+            try {
+              const delta = JSON.parse(data).choices?.[0]?.delta?.content || '';
+              full += delta;
+              bodyEl.textContent = full + '▌';
+              bodyEl.scrollTop = bodyEl.scrollHeight;
+            } catch { }
+          }
+        }
+        bodyEl.textContent = full;
+        const words = full.split(/\s+/).length;
+        tokenEl.textContent = '~' + words + ' tokens';
+        setOpStatus(app.id, 'done', 'Complete');
+        setNodeState(app.id, 'done');
+        appsActive++;
+        document.getElementById('appsActive').textContent = appsActive;
+        document.getElementById('nodeCounter').textContent = appsActive + ' / 4 Nodes';
+        return true;
+
+      } catch (e) {
+        bodyEl.textContent = '[Network Error] ' + e.message;
+        setOpStatus(app.id, 'err', 'Error');
+        setNodeState(app.id, 'idle');
+        return false;
       }
     }
-    bodyEl.textContent = full;
-    const words = full.split(/\s+/).length;
-    tokenEl.textContent = '~' + words + ' tokens';
-    setOpStatus(app.id,'done','Complete');
-    setNodeState(app.id,'done');
-    appsActive++;
-    document.getElementById('appsActive').textContent = appsActive;
-    document.getElementById('nodeCounter').textContent = appsActive + ' / 4 Nodes';
-    return true;
 
-  } catch(e) {
-    bodyEl.textContent = '[Network Error] ' + e.message;
-    setOpStatus(app.id,'err','Error');
-    setNodeState(app.id,'idle');
-    return false;
-  }
-}
+    // ── FIRE ALL ──────────────────────────────────────────────────────
+    async function fireAll() {
+      if (running) return;
+      const key = document.getElementById('groqKey').value.trim();
+      if (!key) { alert('Enter your Groq API key in the TSM Neural Core Key field'); return; }
+      if (!currentDoc) { alert('Load a document first'); return; }
 
-// ── FIRE ALL ──────────────────────────────────────────────────────
-async function fireAll() {
-  if (running) return;
-  const key = document.getElementById('groqKey').value.trim();
-  if (!key) { alert('Enter your Groq API key in the TSM Neural Core Key field'); return; }
-  if (!currentDoc) { alert('Load a document first'); return; }
+      running = true;
+      appsActive = 0;
+      document.getElementById('appsActive').textContent = '0';
+      document.getElementById('nodeCounter').textContent = '0 / 4 Nodes';
 
-  running = true;
-  appsActive = 0;
-  document.getElementById('appsActive').textContent = '0';
-  document.getElementById('nodeCounter').textContent = '0 / 4 Nodes';
+      const fireBtn = document.getElementById('fireBtn');
+      const fireAllBtn = document.getElementById('fireAllBtn');
+      fireBtn.disabled = true; fireAllBtn.disabled = true;
+      fireBtn.textContent = '⟳ Running Neural Bridge…';
 
-  const fireBtn = document.getElementById('fireBtn');
-  const fireAllBtn = document.getElementById('fireAllBtn');
-  fireBtn.disabled = true; fireAllBtn.disabled = true;
-  fireBtn.textContent = '⟳ Running Neural Bridge…';
+      // Reset all
+      [1, 2, 3, 4].forEach(i => {
+        setNodeState(i, 'idle');
+        setOpStatus(i, 'idle', 'Standby');
+        document.getElementById('op-' + i).textContent = '';
+        document.getElementById('otkn-' + i).textContent = '—';
+        const pa = document.getElementById('pa-' + i);
+        if (pa) pa.className = 'pipe-arrow';
+      });
 
-  // Reset all
-  [1,2,3,4].forEach(i => {
-    setNodeState(i,'idle');
-    setOpStatus(i,'idle','Standby');
-    document.getElementById('op-'+i).textContent = '';
-    document.getElementById('otkn-'+i).textContent = '—';
-    const pa = document.getElementById('pa-'+i);
-    if(pa) pa.className='pipe-arrow';
-  });
+      // Run sequentially
+      for (const app of APPS) {
+        const ok = await streamApp(app, key);
+        if (!ok) break;
+      }
 
-  // Run sequentially
-  for (const app of APPS) {
-    const ok = await streamApp(app, key);
-    if (!ok) break;
-  }
+      running = false;
+      fireBtn.disabled = false; fireAllBtn.disabled = false;
+      fireBtn.textContent = '⚡ Fire All 4 Apps';
+    }
 
-  running = false;
-  fireBtn.disabled = false; fireAllBtn.disabled = false;
-  fireBtn.textContent = '⚡ Fire All 4 Apps';
-}
+    // ── COPY ──────────────────────────────────────────────────────────
+    function copyOutput(id) {
+      const text = document.getElementById('op-' + id)?.textContent;
+      if (!text || !text.trim()) return;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.querySelector(`[data-tsm-action="copyOutput" data-tsm-args="${id}"]`);
+        if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 1500); }
+      });
+    }
+  </script>
+  <script src="/shared/tsm-operational-mesh.js?v=mesh1"></script>
+  <script src="/shared/tsm-relay-bus.js?v=relay2"></script>
+  <script src="/shared/tsm-memory-engine.js?v=phase3"></script>
+  <script src="/shared/tsm-global-command.js?v=phase4"></script>
+  <script src="/shared/tsm-sector-intelligence.js?v=phase5si"></script>
+  <script src="/shared/tsm-autonomous-execution.js?v=phase5"></script>
 
-// ── COPY ──────────────────────────────────────────────────────────
-function copyOutput(id) {
-  const text = document.getElementById('op-'+id)?.textContent;
-  if (!text || !text.trim()) return;
-  navigator.clipboard.writeText(text).then(() => {
-    const btn = document.querySelector(`[data-tsm-action="copyOutput" data-tsm-args="${id}"]`);
-    if(btn){btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy',1500);}
-  });
-}
-</script>
-<script src="/shared/tsm-operational-mesh.js?v=mesh1"></script>
-<script src="/shared/tsm-relay-bus.js?v=relay2"></script>
-<script src="/shared/tsm-memory-engine.js?v=phase3"></script>
-<script src="/shared/tsm-global-command.js?v=phase4"></script>
-<script src="/shared/tsm-sector-intelligence.js?v=phase5si"></script>
-<script src="/shared/tsm-autonomous-execution.js?v=phase5"></script>
+  <script>(function () {
+      document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('button').forEach(b => {
+          if (b.dataset.tsm) return;
+          b.dataset.tsm = 1;
+          b.onclick = () => console.log('[TSM]', b.innerText);
+        });
+        console.log('[TSM ENGINE ACTIVE]');
+      });
+    })();</script>
 
-<script>(function(){
-document.addEventListener('DOMContentLoaded',()=>{
-document.querySelectorAll('button').forEach(b=>{
-if(b.dataset.tsm) return;
-b.dataset.tsm=1;
-b.onclick=()=>console.log('[TSM]',b.innerText);
-});
-console.log('[TSM ENGINE ACTIVE]');
-});
-})();</script>
+  <script>(function () {
+      document.addEventListener('click', function (e) {
 
-<script>(function(){
-document.addEventListener('click', function(e){
+        const el = e.target.closest('[data-tsm-action]');
+        if (!el) return;
 
-  const el = e.target.closest('[data-tsm-action]');
-  if(!el) return;
+        const action = el.getAttribute('data-tsm-action');
+        const args = el.getAttribute('data-tsm-args');
 
-  const action = el.getAttribute('data-tsm-action');
-  const args = el.getAttribute('data-tsm-args');
+        if (window.TSM && TSM.launcher && TSM.launcher.run) {
+          TSM.launcher.run(action, args);
+        } else {
+          console.warn('[TSM] launcher missing:', action, args);
+        }
 
-  if(window.TSM && TSM.launcher && TSM.launcher.run){
-    TSM.launcher.run(action, args);
-  } else {
-    console.warn('[TSM] launcher missing:', action, args);
-  }
+      });
+    })();
 
-});
-})();</script>
-<script>
+    window.TSMConstructionMission = {
+      active: false,
+      mission: null,
+      score: 0,
+      completed: []
+    };
 
-window.TSMConstructionMission = {
-  active:false,
-  mission:null,
-  score:0,
-  completed:[]
-};
-
-function launchConstructionMission(node,mission){
-
-  const payload = {
-    source:"construction-suite",
-    node,
-    mission,
-    ts:Date.now()
-  };
-
-  localStorage.setItem(
-    "tsm_construction_mission",
-    JSON.stringify(payload)
-  );
-
-  const targetMap = {
-    billing:"/financial-ui.html",
-    financial:"/financial-ui.html",
-    legal:"/legal-command/index.html",
-    compliance:"/compliance-command/index.html",
-    operations:"/operations-suite/index.html"
-  };
-
-  const url =
-    targetMap[node] ||
-    "/financial-ui.html";
-
-  window.open(url,"_blank");
-}
-
-</script>
+    function launchConstructionMission(node, mission) {
+      const payload = {
+        source: "construction-suite",
+        node,
+        mission,
+        ts: Date.now()
+      };
+      localStorage.setItem("tsm_construction_mission", JSON.stringify(payload));
+      const targetMap = {
+        billing: "/finops-suite/financial/index.html",
+        financial: "/finops-suite/financial/index.html",
+        legal: "/construction-suite/legal.html",
+        compliance: "/construction-suite/compliance.html",
+        operations: "/construction-suite/construction-suite-expansion.html"
+      };
+      window.open(targetMap[node] || "/construction-suite/construction-hub.html", "_blank");
+    }
+  </script>
 </body>
 </html>
