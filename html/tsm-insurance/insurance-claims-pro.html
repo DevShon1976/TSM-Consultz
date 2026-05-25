@@ -4354,78 +4354,224 @@ Max 280 words.`,
                 document.getElementById('foot-docs').textContent = d;
             } catch (e) { }
         });
-        // ── CLAIMS AI ──────────────────────────────────────
-        async function sendClaimsAI() {
-            const inp = document.getElementById('claims-ai-inp');
-            const win = document.getElementById('claims-ai-win');
-            const msg = inp.value.trim();
-            if (!msg) return;
-            inp.value = '';
-
-            win.innerHTML += `<div class="gmsg user"><div class="gmsg-av">U</div><div class="gmsg-body"><div class="gmsg-lbl">YOU</div><div class="gmsg-bub">${msg}</div></div></div>`;
-            win.innerHTML += `<div class="gmsg ai" id="ai-typing"><div class="gmsg-av">AI</div><div class="gmsg-body"><div class="gmsg-lbl">CLAIMS AI</div><div class="gmsg-bub">Analyzing<span class="cursor"></span></div></div></div>`;
-            win.scrollTop = win.scrollHeight;
-
-            const apiKey = document.getElementById('tsm-api-key')?.value || window.TSM_KEY || '';
-            if (!apiKey) { document.getElementById('ai-typing').querySelector('.gmsg-bub').innerHTML = '⚠ No API key found. Add your key in the key field.'; return; }
-
-            try {
-                const res = await fetch('https://api.anthropic.com/v1/messages', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-                    body: JSON.stringify({ model: 'claude-opus-4-5', max_tokens: 800, system: 'You are a senior medical billing and insurance claims specialist. Analyze claims, denial codes (CO, PR, OA, PI), prior auth issues, payer behavior, and AR strategy. Be specific, actionable, and concise. Use bullet points.', messages: [{ role: 'user', content: msg }] })
-                });
-                const data = await res.json();
-                const reply = data.content?.[0]?.text || 'No response received.';
-                document.getElementById('ai-typing').querySelector('.gmsg-bub').innerHTML = reply.replace(/\n/g, '<br>');
-            } catch (e) {
-                document.getElementById('ai-typing').querySelector('.gmsg-bub').innerHTML = '⚠ Error: ' + e.message;
-            }
-            win.scrollTop = win.scrollHeight;
-        }
-
-        // ── HC NODE ROUTING ─────────────────────────────────
-        const NODE_DATA = {
-            billing: { title: 'Billing Node', desc: 'Handle claims submission, coding audits, denial management, and AR recovery workflows.', actions: ['Run denial analysis', 'Generate claim scrub report', 'Launch AR aging review', 'Export payer scorecard'] },
-            compliance: { title: 'Compliance Node', desc: 'HIPAA privacy and security audits, CMS regulatory reviews, OIG exclusion checks, and audit trail management.', actions: ['Run HIPAA audit', 'Check OIG exclusions', 'Generate compliance report', 'Review documentation gaps'] },
-            insurance: { title: 'Insurance Node', desc: 'Payer eligibility verification, prior authorization tracking, and payer contract rule management.', actions: ['Verify eligibility batch', 'Track prior auth queue', 'Review payer contract rules', 'Launch auth appeal workflow'] },
-            'tax-prep': { title: 'Tax Prep Node', desc: '1099 filing readiness, W-9 collection, vendor tax documentation, and filing window management.', actions: ['Check 1099 readiness', 'Collect W-9 batch', 'Review filing deadlines', 'Export tax summary'] },
-            grants: { title: 'Grants Node', desc: 'HRSA grant compliance, restricted funding tracking, and grant report generation.', actions: ['Run HRSA compliance check', 'Generate grant report', 'Track funding restrictions', 'Submit compliance packet'] },
-            'poc-portal': { title: 'POC Portal', desc: 'Key performance indicators, revenue cycle analytics, and executive dashboard.', actions: ['View KPI dashboard', 'Generate executive summary', 'Export revenue metrics', 'Launch analysis hub'] }
-        };
-
-        function openNode(key) {
-    // 1. Highlight the current active node card in the UI
-    document.querySelectorAll('.node-card').forEach(c => c.classList.remove('selected'));
-    if (window.event && window.event.currentTarget) {
-        window.event.currentTarget.classList.add('selected');
-    }
-
-    const n = NODE_DATA[key];
-    const det = document.getElementById('node-detail');
-    if (!det) return;
-    
-    det.style.display = 'block';
-
-    // 2. Safely extract the clean key identifier (e.g., 'operations', 'medical', 'billing')
-    const normalizedKey = key.toLowerCase().trim();
-
-    // 3. Render contents using properly escaped HTML and dynamic targets
-    document.getElementById('node-detail-content').innerHTML = `
-        <div style="font-size:13px;font-weight:800;color:var(--bright);margin-bottom:6px;">${n.title}</div>
-        <div style="font-size:11px;color:var(--text);line-height:1.7;margin-bottom:12px;">${n.desc}</div>
-        <div style="display:flex;flex-wrap:wrap;gap:7px;">
-            <button 
-                class="open-node-btn" 
-                onclick="if(window.switchTab) window.switchTab('${normalizedKey}')"
-                style="background:var(--bright);color:#000;border:none;padding:6px 12px;border-radius:4px;font-weight:bold;cursor:pointer;"
-            >
-                OPEN ${normalizedKey.toUpperCase()} NODE →
-            </button>
-        </div>
-    `;
+        // ═══════════════════════════════════════════════════════════════
+// NODE ROUTING
+// ═══════════════════════════════════════════════════════════════
+async function runNodeRoute() {
+  const denial = document.getElementById('node-denial-type').value;
+  const payer = document.getElementById('node-payer').value;
+ 
+  if (!denial || !payer) {
+    alert('Please select both denial type and payer.');
+    return;
+  }
+ 
+  const result = document.getElementById('node-result');
+  result.style.display = 'block';
+  result.innerHTML = '<div style="font-family:var(--mono);font-size:10px;color:var(--gold)"><span class="spin">◌</span> Routing claim...</div>';
+ 
+  const prompt = `For an insurance claim denied for "${denial}" with payer "${payer}", provide:
+1. RECOMMENDED HC NODE (Appeals / Auth / Eligibility / Coding / COB / Escalation / POC Portal)
+2. PRIORITY LEVEL (Critical/High/Medium/Low)
+3. ACTION STEPS (3-4 bullet points)
+4. KEY DEADLINE or SLA
+5. DOCUMENTATION NEEDED
+ 
+Be specific and brief.`;
+ 
+  let routeText = '';
+  try {
+    routeText = await callGroq(prompt, 'routing');
+  } catch(e) {
+    routeText = getOfflineRouting(denial, payer);
+  }
+ 
+  result.innerHTML = `
+    <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:5px;padding:14px">
+      <div style="font-family:var(--mono);font-size:8.5px;color:var(--gold);margin-bottom:10px;letter-spacing:2px">◈ ROUTING RECOMMENDATION</div>
+      <div style="font-size:11px;color:var(--text);line-height:1.8;white-space:pre-wrap">${routeText}</div>
+    </div>
+  `;
 }
-
+ 
+function getOfflineRouting(denial, payer) {
+  const routes = {
+    auth: `RECOMMENDED NODE: AUTH NODE → APPEALS NODE\nPRIORITY: HIGH\n\n▸ Obtain retroactive authorization if payer allows (typically 72hr-30day window)\n▸ If retro auth denied, file Level 1 appeal with clinical urgency documentation\n▸ Include original auth request evidence and clinical necessity letter\n▸ Reference payer's specific retro auth policy from provider manual\n\nKEY DEADLINE: Most payers allow corrected claim within 90 days; appeals within 180 days\nDOCUMENTATION: Auth request confirmation, clinical notes, ordering provider attestation`,
+    eligibility: `RECOMMENDED NODE: ELIGIBILITY NODE\nPRIORITY: CRITICAL\n\n▸ Verify exact coverage dates with payer immediately\n▸ If ACA grace period applies, cite 45 CFR 156.270 for Month 1 protection\n▸ Request retroactive enrollment documentation if appropriate\n▸ Escalate to state insurance commissioner if payer wrongfully terminated\n\nKEY DEADLINE: 120 days from denial for Medicare; 180 days for most commercial\nDOCUMENTATION: Termination letter, EOB, coverage verification screen prints`,
+    coding: `RECOMMENDED NODE: CODING NODE → CORRECTED CLAIM\nPRIORITY: MEDIUM\n\n▸ Have certified coder review original claim for accuracy\n▸ Submit corrected claim (not appeal) within timely filing window\n▸ Include amended operative report or updated documentation if needed\n▸ Verify CCI edits if bundling-related\n\nKEY DEADLINE: Timely filing varies: Medicare 365 days, commercial typically 90-180 days\nDOCUMENTATION: Corrected claim 837P, amended documentation, coder attestation`
+  };
+  return routes[denial] || `RECOMMENDED NODE: APPEALS NODE\nPRIORITY: HIGH\n\n▸ Review denial letter and identify specific denial reason\n▸ Compile clinical documentation supporting medical necessity\n▸ Submit Level 1 appeal within payer-specified timeframe\n▸ Escalate to external review if Level 1/2 appeals fail\n\nKEY DEADLINE: Appeals typically due 60-180 days from denial date\nDOCUMENTATION: Denial EOB, clinical records, physician letter of medical necessity`;
+}
+ 
+// ═══════════════════════════════════════════════════════════════
+// GROQ API — llama-3.3-70b-versatile
+// ═══════════════════════════════════════════════════════════════
+async function callGroq(content, context) {
+  // In production, replace with actual Groq API key or use a backend proxy
+  const apiKey = window.GROQ_API_KEY || '';
+  
+  if (!apiKey || apiKey === 'YOUR_GROQ_API_KEY') {
+    throw new Error('Groq API key not configured');
+  }
+ 
+  const response = await fetch(GROQ_API, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      max_tokens: 1024,
+      messages: [
+        {role: 'system', content: CLAIMS_SYSTEM},
+        {role: 'user', content}
+      ]
+    })
+  });
+ 
+  if (!response.ok) throw new Error(`Groq API error: ${response.status}`);
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content || 'No response generated.';
+}
+ 
+// GROQ CHAT
+let groqConvHistory = [];
+ 
+async function sendGroqMessage() {
+  const inp = document.getElementById('groq-inp');
+  const msg = inp.value.trim();
+  if (!msg) return;
+  inp.value = '';
+  await sendGroqPrompt(msg);
+}
+ 
+async function sendGroqPrompt(msg) {
+  const win = document.getElementById('groq-win');
+  const btn = document.getElementById('groq-send-btn');
+  const dot = document.getElementById('groq-dot');
+ 
+  // Add user message
+  win.innerHTML += `
+    <div class="gmsg user" style="animation:fadeUp .2s ease">
+      <div class="gmsg-av">U</div>
+      <div class="gmsg-body">
+        <div class="gmsg-lbl">YOU</div>
+        <div class="gmsg-bub">${msg.replace(/\n/g,'<br>')}</div>
+      </div>
+    </div>
+  `;
+ 
+  // Typing indicator
+  const typingId = 'typing-' + Date.now();
+  win.innerHTML += `
+    <div class="gmsg ai" id="${typingId}" style="animation:fadeUp .2s ease">
+      <div class="gmsg-av">⚡</div>
+      <div class="gmsg-body">
+        <div class="gmsg-lbl">TSM CLAIMS AI · GROQ llama-3.3-70b</div>
+        <div class="gmsg-bub"><div class="typing"><span></span><span></span><span></span></div></div>
+      </div>
+    </div>
+  `;
+  win.scrollTop = win.scrollHeight;
+ 
+  btn.disabled = true;
+  dot.style.background = 'var(--orange)';
+ 
+  groqConvHistory.push({role: 'user', content: msg});
+ 
+  let reply = '';
+  try {
+    const apiKey = window.GROQ_API_KEY || '';
+    if (!apiKey || apiKey === 'YOUR_GROQ_API_KEY') throw new Error('no key');
+ 
+    const response = await fetch(GROQ_API, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: GROQ_MODEL,
+        max_tokens: 1024,
+        messages: [
+          {role: 'system', content: CLAIMS_SYSTEM},
+          ...groqConvHistory
+        ]
+      })
+    });
+ 
+    if (!response.ok) throw new Error(`${response.status}`);
+    const data = await response.json();
+    reply = data.choices?.[0]?.message?.content || 'No response.';
+    groqConvHistory.push({role: 'assistant', content: reply});
+  } catch(e) {
+    reply = getOfflineGroqReply(msg);
+  }
+ 
+  // Remove typing indicator
+  document.getElementById(typingId)?.remove();
+ 
+  // Add AI reply
+  win.innerHTML += `
+    <div class="gmsg ai" style="animation:fadeUp .25s ease">
+      <div class="gmsg-av">⚡</div>
+      <div class="gmsg-body">
+        <div class="gmsg-lbl">TSM CLAIMS AI · GROQ llama-3.3-70b</div>
+        <div class="gmsg-bub" style="white-space:pre-wrap">${reply.replace(/\n/g,'<br>')}</div>
+      </div>
+    </div>
+  `;
+  win.scrollTop = win.scrollHeight;
+ 
+  btn.disabled = false;
+  dot.style.background = 'var(--green)';
+}
+ 
+function getOfflineGroqReply(msg) {
+  const m = msg.toLowerCase();
+  if (m.includes('co-197') || m.includes('auth') || m.includes('authorization')) {
+    return `CO-197 APPEAL STRATEGY — Prior Auth Absent
+ 
+When authorization was obtained but omitted from the claim:
+ 
+1. FASTEST RESOLUTION: Submit a corrected claim (not an appeal) with the auth number in Box 23 of CMS-1500, or Loop 2300 REF*G1 segment in the 837P EDI transaction.
+ 
+2. IF TIMELY FILING PASSED: File a formal appeal with:
+   • Copy of the authorization confirmation (number, date, approving rep name)
+   • Original submission evidence (clearinghouse receipt)
+   • Clinical notes supporting medical necessity
+ 
+3. KEY POINT: CO-197 is often the easiest denial to overturn because the clinical decision (auth approval) has already been made by the payer. The error is administrative.
+ 
+4. PREVENTION: Implement auth number verification in your pre-submission workflow. Clearinghouses like Availity or Waystar can flag missing auth fields before submission.
+ 
+Timeline: Most commercial payers allow corrected claims within 90-180 days. Medicare allows up to 365 days from date of service.
+ 
+⚡ Connect your Groq API key (window.GROQ_API_KEY) for live AI responses.`;
+  }
+  if (m.includes('grace period') || m.includes('retro') || m.includes('termination') || m.includes('co-27')) {
+    return `ACA GRACE PERIOD — CO-27 Denial Analysis
+ 
+Under 45 CFR 156.270, ACA marketplace plans must follow these grace period rules:
+ 
+GRACE PERIOD STRUCTURE (APTC recipients):
+• Month 1: Insurer MUST pay all claims — fully protected
+• Month 2-3: Insurer MAY pend claims — may deny retroactively after termination
+• After Month 3: Retroactive termination to last day of Month 1 is permitted
+ 
+APPEAL STRATEGY BY MONTH:
+• Month 1 claims: Cite 45 CFR 156.270. Demand payment. File state insurance commissioner complaint if denied.
+• Month 2-3 claims: Assess patient responsibility. Patient may owe if premium never paid.
+ 
+DOCUMENTATION: Request exact grace period start/end dates in writing. Cross-reference service dates against grace period calendar.
+ 
+KEY REGULATORY CITE: 45 CFR 156.270 | 45 CFR 155.430 (termination notices)
+ 
+⚡ Connect Groq API for live personalized analysis.`;
+  }
+  return `TSM CLAIMS INTELLIGENCE (Offline Mode)\n\nYour question has been received. To get live AI-powered responses using Groq's llama-3.3-70b-versatile model:\n\n1. Set window.GROQ_API_KEY = 'your-groq-api-key' in your browser console\n2. Get a free API key at console.groq.com\n3. Groq is free and extremely fast — typical response time < 1 second\n\nIn the meantime, use the Live Missions and Flashcard modules for comprehensive claims training content.\n\nYour question: "${msg.substring(0,100)}..."\n\nThis would be answered with detailed revenue cycle intelligence including denial codes, payer-specific rules, appeal timelines, and documentation requirements.`;
+}
 </script>
 
 <script>
