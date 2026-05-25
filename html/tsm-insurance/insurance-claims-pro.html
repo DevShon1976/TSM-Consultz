@@ -3595,8 +3595,181 @@ Max 280 words.`,
                         Synthesizes findings into CFO-ready narrative with financial impact</div>
                 </div>
 
-           </div><!-- closes cert-sidebar -->
-</div><!-- closes cert-layout -->
+<!-- CLAIMS AI PANEL -->
+<div id="tab-claims-ai" class="tab-content">
+    <div style="display:flex;flex-direction:column;height:100%;gap:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+            <div>
+                <div style="font-size:10px;letter-spacing:.18em;color:var(--dim);text-transform:uppercase">Claims Intelligence Engine</div>
+                <div style="font-size:18px;font-weight:900;color:var(--bright);margin-top:2px">AI Claims Analyst</div>
+            </div>
+            <div class="ai-model-tag">ENGINE · <span>ACTIVE</span></div>
+        </div>
+        <div class="groq-chat" style="flex:1">
+            <div class="groq-win" id="claims-ai-win">
+                <div class="gmsg ai">
+                    <div class="gmsg-av">AI</div>
+                    <div class="gmsg-body">
+                        <div class="gmsg-lbl">CLAIMS AI · READY</div>
+                        <div class="gmsg-bub">Ready to analyze claims, denial patterns, and payer behavior. Paste a claim scenario or ask about denial codes, prior auth rules, or AR strategy.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="groq-input-row">
+                <textarea class="groq-inp" id="claims-ai-inp" rows="2" placeholder="Describe claim scenario, paste denial, ask about CO-50, PR-96, OA codes..."></textarea>
+                <button class="btn btn-gold" onclick="sendClaimsAI()" style="align-self:flex-end">ANALYZE</button>
+            </div>
+        </div>
+        <div class="ai-model-tag">CLAIMS INTELLIGENCE · <span>TSM NEURAL CORE</span></div>
+    </div>
+</div>
+
+<!-- HC NODES PANEL -->
+<div id="tab-hc-nodes" class="tab-content">
+    <div style="display:flex;flex-direction:column;gap:16px">
+        <div>
+            <div style="font-size:10px;letter-spacing:.18em;color:var(--dim);text-transform:uppercase">Operational Routing</div>
+            <div style="font-size:18px;font-weight:900;color:var(--bright);margin-top:2px">HC Node Network</div>
+        </div>
+        <div class="node-grid">
+            <div class="node-card" onclick="openNode('billing')">
+                <div class="nc-icon">💳</div>
+                <div class="nc-name">BILLING</div>
+                <div class="nc-route">Claims · Coding · Denials · AR</div>
+            </div>
+            <div class="node-card" onclick="openNode('compliance')">
+                <div class="nc-icon">🛡️</div>
+                <div class="nc-name">COMPLIANCE</div>
+                <div class="nc-route">HIPAA · CMS · OIG · Audit</div>
+            </div>
+            <div class="node-card" onclick="openNode('insurance')">
+                <div class="nc-icon">📋</div>
+                <div class="nc-name">INSURANCE</div>
+                <div class="nc-route">Eligibility · Prior Auth · Payer Rules</div>
+            </div>
+            <div class="node-card" onclick="openNode('tax-prep')">
+                <div class="nc-icon">📊</div>
+                <div class="nc-name">TAX PREP</div>
+                <div class="nc-route">1099 · W-9 · Filing Readiness</div>
+            </div>
+            <div class="node-card" onclick="openNode('grants')">
+                <div class="nc-icon">💰</div>
+                <div class="nc-name">GRANTS</div>
+                <div class="nc-route">HRSA · Compliance · Reports</div>
+            </div>
+            <div class="node-card" onclick="openNode('poc-portal')">
+                <div class="nc-icon">🎯</div>
+                <div class="nc-name">POC PORTAL</div>
+                <div class="nc-route">Analytics · KPIs · Dashboard</div>
+            </div>
+        </div>
+        <div id="node-detail" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px">
+            <div id="node-detail-content"></div>
+        </div>
+    </div>
+</div>
+</div><!-- closes processor-layout -->
+</div><!-- closes tab-docs -->
+
+<!-- TAB 3: CERTIFICATION MODE -->
+<div id="tab-cert" class="tab-content">
+    <div class="cert-layout">
+        <div class="cert-sidebar">
+            <div style="font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:var(--muted);margin-bottom:4px;padding:0 4px">CERTIFICATION MODULES</div>
+            <div class="cert-module active" onclick="loadModule('denial-codes',this)">
+                <div class="cm-icon">❌</div>
+                <div class="cm-title">Denial Reason Codes</div>
+                <div class="cm-sub">CO · PR · OA · CARC</div>
+                <div class="cm-prog"><div class="cm-prog-fill" id="prog-denial-codes" style="width:0%"></div></div>
+            </div>
+            <div class="cert-module" onclick="loadModule('prior-auth',this)">
+                <div class="cm-icon">🔐</div>
+                <div class="cm-title">Prior Authorization</div>
+                <div class="cm-sub">Auth Process · Step Therapy</div>
+                <div class="cm-prog"><div class="cm-prog-fill" id="prog-prior-auth" style="width:0%"></div></div>
+            </div>
+            <div class="cert-module" onclick="loadModule('medicare-rules',this)">
+                <div class="cm-icon">🏥</div>
+                <div class="cm-title">Medicare Rules</div>
+                <div class="cm-sub">MSP · COB · Part A/B/D</div>
+                <div class="cm-prog"><div class="cm-prog-fill" id="prog-medicare-rules" style="width:0%"></div></div>
+            </div>
+            <div class="cert-module" onclick="loadModule('dme-workflows',this)">
+                <div class="cm-icon">🩺</div>
+                <div class="cm-title">DME Workflows</div>
+                <div class="cm-sub">CMN · HCPCS · LCD</div>
+                <div class="cm-prog"><div class="cm-prog-fill" id="prog-dme-workflows" style="width:0%"></div></div>
+            </div>
+            <div class="cert-module" onclick="loadModule('appeals',this)">
+                <div class="cm-icon">⚖️</div>
+                <div class="cm-title">Appeals Process</div>
+                <div class="cm-sub">Internal · External · IRO</div>
+                <div class="cm-prog"><div class="cm-prog-fill" id="prog-appeals" style="width:0%"></div></div>
+            </div>
+            <div class="cert-module" onclick="loadModule('hipaa-audits',this)">
+                <div class="cm-icon">🔒</div>
+                <div class="cm-title">HIPAA Audits</div>
+                <div class="cm-sub">Privacy · Security · Breach</div>
+                <div class="cm-prog"><div class="cm-prog-fill" id="prog-hipaa-audits" style="width:0%"></div></div>
+            </div>
+            <!-- Score panel -->
+            <div style="background:var(--s2);border:1px solid var(--border);border-radius:7px;padding:14px;margin-top:4px">
+                <div style="font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--muted);margin-bottom:10px">CERT PROGRESS</div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px">
+                    <span style="color:var(--muted)">Cards Mastered</span>
+                    <span style="color:var(--green);font-family:var(--mono);font-weight:700" id="cert-mastered">0</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px">
+                    <span style="color:var(--muted)">Quiz Score</span>
+                    <span style="color:var(--blue);font-family:var(--mono);font-weight:700" id="cert-quiz-score">0 / 0</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:11px">
+                    <span style="color:var(--muted)">Streak</span>
+                    <span style="color:var(--yellow);font-family:var(--mono);font-weight:700" id="cert-streak">0</span>
+                </div>
+                <div style="height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden">
+                    <div id="cert-overall-prog" style="height:100%;background:var(--purple);width:0%;transition:width .5s;border-radius:2px"></div>
+                </div>
+                <div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;margin-top:6px" id="cert-pct">0% COMPLETE</div>
+            </div>
+        </div><!-- closes cert-sidebar -->
+
+        <!-- Main cert area -->
+        <div class="cert-main">
+            <div class="flashcard-area">
+                <div class="fa-header">
+                    <span class="fa-title" id="fc-module-title">DENIAL REASON CODES</span>
+                    <span class="fa-progress" id="fc-progress">Card 1 of 8</span>
+                </div>
+                <div class="flashcard" id="flashcard" onclick="flipCard()">
+                    <div class="fc-domain" id="fc-domain">CO CODES</div>
+                    <div class="fc-question" id="fc-question">Loading flashcard...</div>
+                    <div class="fc-answer" id="fc-answer"></div>
+                    <div class="fc-flip-hint">click to reveal answer</div>
+                </div>
+                <div class="card-controls">
+                    <button class="cc-btn know" onclick="markCard('know')">✓ I KNOW THIS</button>
+                    <button class="cc-btn review" onclick="markCard('review')">↩ NEEDS REVIEW</button>
+                    <button class="cc-btn skip" onclick="nextCard()">SKIP →</button>
+                </div>
+            </div>
+            <div class="quiz-area">
+                <div class="panel-hdr">
+                    <span class="panel-title">QUICK QUIZ — <span id="quiz-module-label">DENIAL CODES</span></span>
+                    <span class="fa-progress" id="quiz-score-display">0 / 0 correct</span>
+                </div>
+                <div class="qa-body">
+                    <div class="quiz-domain" id="quiz-domain">CO CODES</div>
+                    <div class="quiz-question" id="quiz-question">Loading quiz question...</div>
+                    <div class="quiz-options" id="quiz-options"></div>
+                    <div class="quiz-explanation" id="quiz-explanation"></div>
+                    <div style="display:flex;gap:8px;margin-top:10px">
+                        <button class="btn btn-ghost" id="quiz-next-btn" onclick="nextQuiz()" style="display:none">NEXT QUESTION →</button>
+                    </div>
+                </div>
+            </div>
+        </div><!-- closes cert-main -->
+    </div><!-- closes cert-layout -->
 </div><!-- closes tab-cert -->
 
 <!-- CLAIMS AI PANEL -->
@@ -3673,82 +3846,7 @@ Max 280 words.`,
     </div>
 </div>
 
-                    <!-- Score panel -->
-                    <div
-                        style="background:var(--s2);border:1px solid var(--border);border-radius:7px;padding:14px;margin-top:4px">
-                        <div
-                            style="font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--muted);margin-bottom:10px">
-                            CERT PROGRESS</div>
-                        <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px">
-                            <span style="color:var(--muted)">Cards Mastered</span>
-                            <span style="color:var(--green);font-family:var(--mono);font-weight:700"
-                                id="cert-mastered">0</span>
-                        </div>
-                        <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px">
-                            <span style="color:var(--muted)">Quiz Score</span>
-                            <span style="color:var(--blue);font-family:var(--mono);font-weight:700"
-                                id="cert-quiz-score">0 / 0</span>
-                        </div>
-                        <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:11px">
-                            <span style="color:var(--muted)">Streak</span>
-                            <span style="color:var(--yellow);font-family:var(--mono);font-weight:700"
-                                id="cert-streak">0</span>
-                        </div>
-                        <div style="height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden">
-                            <div id="cert-overall-prog"
-                                style="height:100%;background:var(--purple);width:0%;transition:width .5s;border-radius:2px">
-                            </div>
-                        </div>
-                        <div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;margin-top:6px"
-                            id="cert-pct">0% COMPLETE</div>
-                    </div>
-                </div>
-
-                <!-- Main cert area -->
-                <div class="cert-main">
-
-                    <!-- Flashcard -->
-                    <div class="flashcard-area">
-                        <div class="fa-header">
-                            <span class="fa-title" id="fc-module-title">DENIAL REASON CODES</span>
-                            <span class="fa-progress" id="fc-progress">Card 1 of 8</span>
-                        </div>
-                        <div class="flashcard" id="flashcard" onclick="flipCard()">
-                            <div class="fc-domain" id="fc-domain">CO CODES</div>
-                            <div class="fc-question" id="fc-question">Loading flashcard...</div>
-                            <div class="fc-answer" id="fc-answer"></div>
-                            <div class="fc-flip-hint">click to reveal answer</div>
-                        </div>
-                        <div class="card-controls">
-                            <button class="cc-btn know" onclick="markCard('know')">✓ I KNOW THIS</button>
-                            <button class="cc-btn review" onclick="markCard('review')">↩ NEEDS REVIEW</button>
-                            <button class="cc-btn skip" onclick="nextCard()">SKIP →</button>
-                        </div>
-                    </div>
-
-                    <!-- Quiz -->
-                    <div class="quiz-area">
-                        <div class="panel-hdr">
-                            <span class="panel-title">QUICK QUIZ — <span id="quiz-module-label">DENIAL
-                                    CODES</span></span>
-                            <span class="fa-progress" id="quiz-score-display">0 / 0 correct</span>
-                        </div>
-                        <div class="qa-body">
-                            <div class="quiz-domain" id="quiz-domain">CO CODES</div>
-                            <div class="quiz-question" id="quiz-question">Loading quiz question...</div>
-                            <div class="quiz-options" id="quiz-options"></div>
-                            <div class="quiz-explanation" id="quiz-explanation"></div>
-                            <div style="display:flex;gap:8px;margin-top:10px">
-                                <button class="btn btn-ghost" id="quiz-next-btn" onclick="nextQuiz()"
-                                    style="display:none">NEXT QUESTION →</button>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-    </div><!-- /main -->
+</div><!-- /main -->
 
     <!-- SCORE FOOTER -->
     <div class="score-footer">
