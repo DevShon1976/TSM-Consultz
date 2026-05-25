@@ -1018,6 +1018,9 @@
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  </script>
 </head>
 
 <body>
@@ -1529,6 +1532,51 @@ Days until zero cash: 13 days
 CURE DEADLINE: Owner has 30-day response window per contract.
 LIEN DEADLINE: Lien rights expire in 22 days per state statute.`
     };
+    
+    async function loadProjectDoc(name) {
+  const preview = document.getElementById('doc-preview');
+  const textArea = document.getElementById('doc-text');
+  preview.textContent = 'Loading ' + name + '...';
+
+  // Highlight selected chip
+  document.querySelectorAll('.doc-chip').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+
+  try {
+    const res = await fetch('/construction-suite/docs/' + name + '.pdf');
+    if (!res.ok) throw new Error('File not found');
+    const blob = await res.blob();
+    const ab = await blob.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: ab }).promise;
+    let text = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      text += content.items.map(s => s.str).join('  ') + '\n';
+    }
+    docText = text.trim();
+    textArea.value = docText;
+    preview.textContent = '✓ ' + name + '.pdf (' + pdf.numPages + ' pages, ' + docText.split(/\s+/).length + ' words)';
+    updateDocStatus();
+  } catch (err) {
+    // Fallback: try .xlsx
+    try {
+      const res2 = await fetch('/construction-suite/docs/' + name + '.xlsx');
+      if (!res2.ok) throw new Error('File not found');
+      const blob2 = await res2.blob();
+      const reader = new FileReader();
+      reader.onload = ev => {
+        docText = ev.target.result;
+        textArea.value = docText;
+        preview.textContent = '✓ ' + name + '.xlsx loaded';
+        updateDocStatus();
+      };
+      reader.readAsText(blob2);
+    } catch {
+      preview.textContent = '✗ Could not load ' + name + ' — paste text manually';
+    }
+  }
+}
 
     function loadSample(type) {
       docText = SAMPLES[type];
