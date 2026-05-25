@@ -4448,7 +4448,7 @@ Max 280 words.`,
     /* ─────────────────────────────
        NODE ACTION (FIXED + LIVE)
     ───────────────────────────── */
-    window.nodeAction = function(action) {
+    function nodeAction(action) {
         if (typeof window.compileFinalAnalysis !== 'function') {
             console.warn('TSM: compileFinalAnalysis engine not completely initialized.');
             return;
@@ -4464,19 +4464,18 @@ Max 280 words.`,
                 'Log transactional hash to production trail'
             ]
         });
-    };
+    }
 
     /* ─────────────────────────────
        ANALYSIS WINDOW COMPONENT
     ───────────────────────────── */
-    window.toggleAnalysisWindow = function(open = true) {
+    function toggleAnalysisWindow(open = true) {
         try {
             let el = document.getElementById('eu-analysis-window');
 
             if (!el) {
-                // Hard validation check to ensure document.body exists before adding node structure
                 if (!document.body) {
-                    setTimeout(() => window.toggleAnalysisWindow(open), 50);
+                    setTimeout(() => toggleAnalysisWindow(open), 50);
                     return;
                 }
 
@@ -4510,7 +4509,7 @@ Max 280 words.`,
                                 Analysis Hub
                             </div>
                         </div>
-                        <button onclick="window.toggleAnalysisWindow(false)"
+                        <button onclick="toggleAnalysisWindow(false)"
                             style="background:none;border:none;color:#94a3b8;font-size:24px;cursor:pointer;">
                             ×
                         </button>
@@ -4533,10 +4532,10 @@ Max 280 words.`,
                         <div id="eu-report-steps" style="display:flex;flex-direction:column;gap:8px;"></div>
 
                         <div style="display:flex;gap:10px;margin-top:10px;">
-                            <button onclick="window.saveAnalysisSession()" style="flex:1;background:#00ffc6;color:#001018;border:none;border-radius:10px;padding:12px;font-weight:900;cursor:pointer;">
+                            <button onclick="saveAnalysisSession()" style="flex:1;background:#00ffc6;color:#001018;border:none;border-radius:10px;padding:12px;font-weight:900;cursor:pointer;">
                                 SAVE
                             </button>
-                            <button onclick="window.exportAnalysisReport()" style="flex:1;background:#ffc857;color:#111;border:none;border-radius:10px;padding:12px;font-weight:900;cursor:pointer;">
+                            <button onclick="exportAnalysisReport()" style="flex:1;background:#ffc857;color:#111;border:none;border-radius:10px;padding:12px;font-weight:900;cursor:pointer;">
                                 EXPORT
                             </button>
                         </div>
@@ -4549,14 +4548,14 @@ Max 280 words.`,
         } catch (err) {
             console.error("TSM: Interface deployment execution caught standard error:", err);
         }
-    };
+    }
 
     /* ─────────────────────────────
        COMPILER DATA MAPPER
     ───────────────────────────── */
-    window.compileFinalAnalysis = function(payload = {}) {
+    function compileFinalAnalysis(payload = {}) {
         window.TSM_REPORT = payload;
-        window.toggleAnalysisWindow(true);
+        toggleAnalysisWindow(true);
 
         setTimeout(() => {
             const metric = document.getElementById('eu-report-metric');
@@ -4580,12 +4579,12 @@ Max 280 words.`,
                 `).join('');
             }
         }, 0);
-    };
+    }
 
     /* ─────────────────────────────
        SESSION STORAGE MANAGEMENT
     ───────────────────────────── */
-    window.saveAnalysisSession = function() {
+    function saveAnalysisSession() {
         const stepsContainer = document.querySelectorAll('#eu-report-steps div span:last-child');
         const steps = Array.from(stepsContainer).map(el => el.innerText);
         const payload = {
@@ -4600,9 +4599,9 @@ Max 280 words.`,
         } catch (e) {
             console.warn('Storage security layout restriction prevented local saving access.');
         }
-    };
+    }
 
-    window.exportAnalysisReport = function() {
+    function exportAnalysisReport() {
         const metric = document.getElementById('eu-report-metric')?.innerText || '$600,000';
         const narrative = document.getElementById('eu-report-narrative')?.innerText || '';
         const steps = Array.from(document.querySelectorAll('#eu-report-steps div')).map(el => el.innerText).join('\n');
@@ -4617,12 +4616,12 @@ Max 280 words.`,
         } catch (err) {
             console.error('Export handling sequence failed:', err);
         }
-    };
+    }
 
     /* ─────────────────────────────
        DEFENSIVE SWITCH TAB ENGINE
     ───────────────────────────── */
-    window.switchTab = function(tabName) {
+    function switchTab(tabName) {
         if (!tabName) return;
 
         const contentAreas = document.querySelectorAll('.tab-content, .hc-node-content');
@@ -4631,7 +4630,7 @@ Max 280 words.`,
             el.style.display = 'none'; 
         });
 
-        const tabButtons = document.querySelectorAll('.tab-btn, .hc-node-tab');
+        const tabButtons = document.querySelectorAll('.tab-btn, .tab-btn-missions, .hc-node-tab');
         tabButtons.forEach(btn => {
             btn.classList.remove('active');
         });
@@ -4652,26 +4651,33 @@ Max 280 words.`,
         if (sidebar) {
             sidebar.classList.remove('active');
         }
-    };
+    }
+
+    /* ─────────────────────────────
+       EXPOSE TO GLOBAL WINDOW SCOPE
+    ──────────────────────────────── */
+    window.nodeAction = nodeAction;
+    window.toggleAnalysisWindow = toggleAnalysisWindow;
+    window.compileFinalAnalysis = compileFinalAnalysis;
+    window.saveAnalysisSession = saveAnalysisSession;
+    window.exportAnalysisReport = exportAnalysisReport;
+    window.switchTab = switchTab;
 
     /* ─────────────────────────────
        FAIL-SAFE WORKSPACE LOADER
     ───────────────────────────── */
     function autoInitTSM() {
-        if (typeof window.compileFinalAnalysis === 'function') {
-            window.compileFinalAnalysis({
-                financialImpact: 600000,
-                narrative: `<strong>Production Engine</strong> fully initialized. Sovereign Audit parameters have targeted and locked asset valuations. All active nodes synchronized.`,
-                steps: [
-                    'Establish secure production data stream mapping',
-                    'Isolate asset financial allocation target',
-                    'Deploy dynamic workspace window overlay'
-                ]
-            });
-        }
+        compileFinalAnalysis({
+            financialImpact: 600000,
+            narrative: `<strong>Production Engine</strong> fully initialized. Sovereign Audit parameters have targeted and locked asset valuations. All active nodes synchronized.`,
+            steps: [
+                'Establish secure production data stream mapping',
+                'Isolate asset financial allocation target',
+                'Deploy dynamic workspace window overlay'
+            ]
+        });
     }
 
-    // Double-check body state assignment to bypass framework-driven load states
     if (document.body) {
         autoInitTSM();
     } else {
