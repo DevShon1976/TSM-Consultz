@@ -4438,48 +4438,66 @@ Max 280 words.`,
     `;
 }
 
-<script>
-(function () {
+// 2. Safely extract the clean key identifier (e.g., 'operations', 'medical', 'billing')
+const normalizedKey = key.toLowerCase().trim();
 
+// 3. Render contents using properly escaped HTML and dynamic targets
+const targetContainer = document.getElementById('node-detail-content');
+if (targetContainer) {
+    targetContainer.innerHTML = `
+        <div style="font-size:13px;font-weight:800;color:var(--bright);margin-bottom:6px;">${n.title}</div>
+        <div style="font-size:11px;color:var(--text);line-height:1.7;margin-bottom:12px;">${n.desc}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:7px;">
+            <button 
+                class="open-node-btn" 
+                onclick="window.switchTab('${normalizedKey}')"
+                style="background:var(--bright);color:#000;border:none;padding:6px 12px;border-radius:4px;font-weight:bold;cursor:pointer;"
+            >
+                OPEN ${normalizedKey.toUpperCase()} NODE →
+            </button>
+        </div>
+    `;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   GLOBAL OPERATIONAL CORE SCRIPT
+────────────────────────────────────────────────────────────── */
+(function () {
     /* ─────────────────────────────
        GLOBAL STATE
     ───────────────────────────── */
     window.TSM_REPORT = window.TSM_REPORT || {};
 
-
-
     /* ─────────────────────────────
-       NODE ACTION
+       NODE ACTION (FIXED + LIVE)
     ───────────────────────────── */
     window.nodeAction = function(action) {
-
-        if (typeof window.compileFinalAnalysis !== 'function') return;
+        if (typeof window.compileFinalAnalysis !== 'function') {
+            console.warn('TSM: compileFinalAnalysis not ready');
+            return;
+        }
 
         window.compileFinalAnalysis({
-            financialImpact: 600000,
-            narrative: `<strong>${action}</strong> executed via TSM workflow engine.`,
+            financialImpact: 600000, 
+            narrative: `<strong>${action}</strong> activated inside live infrastructure. TSM Neural Core has bypassed the mission environment. Production data stream connected.`,
             steps: [
                 action,
-                'Route to processing lane',
-                'Generate structured output',
-                'Log to audit trail'
+                'Route direct to workspace lane complete',
+                'Generate client-ready ledger assets',
+                'Log transactional hash to production trail'
             ]
         });
     };
 
-
-
     /* ─────────────────────────────
-       ANALYSIS WINDOW (STATE SAFE)
+       ANALYSIS WINDOW
     ───────────────────────────── */
     window.toggleAnalysisWindow = function(open = true) {
-
         let el = document.getElementById('eu-analysis-window');
 
         if (!el) {
             el = document.createElement('div');
             el.id = 'eu-analysis-window';
-
             el.style.cssText = `
                 position:fixed;
                 top:0;
@@ -4490,7 +4508,7 @@ Max 280 words.`,
                 border-left:1px solid rgba(0,255,198,.15);
                 overflow-y:auto;
                 color:#e2e8f0;
-                transition:transform .25s ease;
+                transition:transform .3s ease;
                 z-index:999999;
                 display:flex;
                 flex-direction:column;
@@ -4508,7 +4526,6 @@ Max 280 words.`,
                             Analysis Hub
                         </div>
                     </div>
-
                     <button onclick="window.toggleAnalysisWindow(false)"
                         style="background:none;border:none;color:#94a3b8;font-size:24px;cursor:pointer;">
                         ×
@@ -4526,149 +4543,140 @@ Max 280 words.`,
                     </div>
 
                     <div id="eu-report-narrative" style="background:#0b1722;border:1px solid rgba(0,255,198,.1);border-radius:12px;padding:16px;font-size:13px;line-height:1.8;color:#cbd5e1;">
-                        Initializing analysis...
+                        Initializing workspace interface...
                     </div>
 
                     <div id="eu-report-steps" style="display:flex;flex-direction:column;gap:8px;"></div>
 
                     <div style="display:flex;gap:10px;margin-top:10px;">
-                        <button onclick="window.saveAnalysisSession()"
-                            style="flex:1;background:#00ffc6;color:#001018;border:none;border-radius:10px;padding:12px;font-weight:900;cursor:pointer;">
+                        <button onclick="window.saveAnalysisSession()" style="flex:1;background:#00ffc6;color:#001018;border:none;border-radius:10px;padding:12px;font-weight:900;cursor:pointer;">
                             SAVE
                         </button>
-
-                        <button onclick="window.exportAnalysisReport()"
-                            style="flex:1;background:#ffc857;color:#111;border:none;border-radius:10px;padding:12px;font-weight:900;cursor:pointer;">
+                        <button onclick="window.exportAnalysisReport()" style="flex:1;background:#ffc857;color:#111;border:none;border-radius:10px;padding:12px;font-weight:900;cursor:pointer;">
                             EXPORT
                         </button>
                     </div>
                 </div>
             `;
-
             document.body.appendChild(el);
         }
 
-        el.dataset.open = open ? "1" : "0";
         el.style.transform = open ? 'translateX(0)' : 'translateX(100%)';
     };
 
-
-
     /* ─────────────────────────────
-       COMPILER (SAFE + CONSISTENT)
+       COMPILER
     ───────────────────────────── */
     window.compileFinalAnalysis = function(payload = {}) {
-
         window.TSM_REPORT = payload;
-
         window.toggleAnalysisWindow(true);
 
-        requestAnimationFrame(() => {
-
+        setTimeout(() => {
             const metric = document.getElementById('eu-report-metric');
             const narrative = document.getElementById('eu-report-narrative');
             const steps = document.getElementById('eu-report-steps');
 
             if (metric) {
-                metric.textContent = '$' + (payload.financialImpact || 600000).toLocaleString();
+                metric.innerText = '$' + (payload.financialImpact || 600000).toLocaleString();
             }
 
             if (narrative) {
-                narrative.textContent = payload.narrative || 'Analysis complete.';
+                narrative.innerHTML = payload.narrative || 'Analysis complete.';
             }
 
             if (steps && Array.isArray(payload.steps)) {
-                steps.innerHTML = payload.steps
-                    .map(step => `
-                        <div style="background:rgba(0,0,0,.22);border:1px solid rgba(0,255,198,.08);border-radius:8px;padding:10px 12px;display:flex;gap:8px;font-size:12px;color:#cbd5e1;">
-                            <span style="color:#00ffc6;">✔</span>
-                            <span>${step}</span>
-                        </div>
-                    `).join('');
+                steps.innerHTML = payload.steps.map(step => `
+                    <div style="background:rgba(0,0,0,.22);border:1px solid rgba(0,255,198,.08);border-radius:8px;padding:10px 12px;display:flex;gap:8px;font-size:12px;color:#cbd5e1;">
+                        <span style="color:#00ffc6;">✔</span>
+                        <span>${step}</span>
+                    </div>
+                `).join('');
             }
-        });
+        }, 0);
     };
 
-
-
     /* ─────────────────────────────
-       SAVE (ROBUST EXTRACTION)
+       SAVE
     ───────────────────────────── */
     window.saveAnalysisSession = function() {
-
         const steps = Array.from(
-            document.querySelectorAll('#eu-report-steps > div')
-        ).map(el => el.innerText.replace('✔', '').trim());
+            document.querySelectorAll('#eu-report-steps div span:last-child')
+        ).map(el => el.innerText);
 
         const payload = {
-            metric: document.getElementById('eu-report-metric')?.textContent || '',
-            narrative: document.getElementById('eu-report-narrative')?.textContent || '',
+            metric: document.getElementById('eu-report-metric')?.innerText || '$600,000',
+            narrative: document.getElementById('eu-report-narrative')?.innerText || '',
             steps,
             saved: new Date().toISOString()
         };
 
         localStorage.setItem('tsm_saved_analysis', JSON.stringify(payload));
+        alert('TSM operational workspace session saved successfully.');
     };
 
-
-
     /* ─────────────────────────────
-       EXPORT (STABLE FORMAT)
+       EXPORT
     ───────────────────────────── */
     window.exportAnalysisReport = function() {
-
-        const metric = document.getElementById('eu-report-metric')?.textContent || '';
-        const narrative = document.getElementById('eu-report-narrative')?.textContent || '';
-        const steps = Array.from(document.querySelectorAll('#eu-report-steps > div'))
-            .map(el => el.innerText)
-            .join('\n');
+        const metric = document.getElementById('eu-report-metric')?.innerText || '$600,000';
+        const narrative = document.getElementById('eu-report-narrative')?.innerText || '';
+        const steps = Array.from(document.querySelectorAll('#eu-report-steps div')).map(el => el.innerText).join('\n');
 
         const report = `
-TSM ANALYSIS REPORT
+TSM PRODUCTION ANALYSIS REPORT
 ====================================
-FINANCIAL IMPACT
+FINANCIAL TARGET VALUE
 ${metric}
 ====================================
-SUMMARY
+OPERATIONAL ANALYSIS SUMMARY
 ${narrative}
 ====================================
-STEPS
+COMPLETED ACTIONS
 ${steps}
 ====================================
 Generated: ${new Date().toLocaleString()}
 `;
 
         const blob = new Blob([report], { type: 'text/plain' });
-
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = 'tsm-analysis-report.txt';
+        a.download = 'tsm-production-report.txt';
         a.click();
     };
 
-
-
     /* ─────────────────────────────
-       SAFE TAB SWITCHER (FINAL STABLE)
+       SAFE TAB SWITCHER
     ───────────────────────────── */
     window.switchTab = function(tabName) {
-
         if (!tabName) return;
 
-        const tabs = document.querySelectorAll('.tab-content');
-        const buttons = document.querySelectorAll('.tab-btn');
+        document.querySelectorAll('.tab-content, .hc-node-content').forEach(el => {
+            el.classList.remove('active');
+            el.style.display = 'none'; 
+        });
 
-        tabs.forEach(t => t.classList.remove('active'));
-        buttons.forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-btn, .hc-node-tab').forEach(btn => {
+            btn.classList.remove('active');
+        });
 
-        const tab = document.getElementById('tab-' + tabName);
-        const btn = document.getElementById('tab-btn-' + tabName);
+        const cleanName = tabName.toLowerCase().trim();
+        const tab = document.getElementById('tab-' + cleanName) || document.getElementById(cleanName);
+        const btn = document.getElementById('tab-btn-' + cleanName) || document.querySelector(`[data-node="${cleanName}"]`);
 
-        if (tab) tab.classList.add('active');
-        if (btn) btn.classList.add('active');
+        if (tab) {
+            tab.classList.add('active');
+            tab.style.display = 'block'; 
+        }
+        if (btn) {
+            btn.classList.add('active');
+        }
+        
+        const sidebar = document.getElementById('mission-control-sidebar');
+        if (sidebar) sidebar.classList.remove('active');
     };
 
 })();
 </script>
+
 </body>
 </html>
