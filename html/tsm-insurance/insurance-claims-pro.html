@@ -3696,101 +3696,137 @@ Max 280 words.`,
     </div><!-- closes cert-layout -->
 </div><!-- closes tab-cert -->
 
-<!-- CLAIMS AI PANEL -->
-<div id="tab-claims-ai" class="tab-content" style="display:none">
-    <div style="display:flex;flex-direction:column;height:100%;gap:12px">
-        <div style="display:flex;align-items:center;justify-content:space-between">
-            <div>
-                <div style="font-size:10px;letter-spacing:.18em;color:var(--dim);text-transform:uppercase">Claims Intelligence Engine</div>
-                <div style="font-size:18px;font-weight:900;color:var(--bright);margin-top:2px">AI Claims Analyst</div>
-            </div>
-            <div class="ai-model-tag">ENGINE · <span>ACTIVE</span></div>
-        </div>
-        <div class="groq-chat" style="flex:1">
-            <div class="groq-win" id="claims-ai-win">
-                <div class="gmsg ai">
-                    <div class="gmsg-av">AI</div>
-                    <div class="gmsg-body">
-                        <div class="gmsg-lbl">CLAIMS AI · READY</div>
-                        <div class="gmsg-bub">Ready to analyze claims, denial patterns, and payer behavior. Paste a claim scenario or ask about denial codes, prior auth rules, or AR strategy.</div>
-                    </div>
-                </div>
-            </div>
-            <div class="groq-input-row">
-                <textarea class="groq-inp" id="claims-ai-inp" rows="2" placeholder="Describe claim scenario, paste denial, ask about CO-50, PR-96, OA codes..."></textarea>
-                <button class="btn btn-gold" onclick="sendClaimsAI()" style="align-self:flex-end">ANALYZE</button>
-            </div>
-        </div>
-        <div class="ai-model-tag">CLAIMS INTELLIGENCE · <span>TSM NEURAL CORE</span></div>
-    </div>
-</div>
-
-<!-- HC NODES PANEL -->
-<div id="tab-hc-nodes" class="tab-content" style="display:none">
-    <div style="display:flex;flex-direction:column;gap:16px">
+<!-- ══════════════════════════════ TAB: HC NODES ══════════════════════════════ -->
+<div class="view" id="tab-nodes">
+  <div style="font-family:var(--serif);font-size:18px;color:var(--bright);margin-bottom:4px">HC Node <span style="color:var(--gold)">Routing Engine</span></div>
+  <div style="font-size:10.5px;color:var(--dim);margin-bottom:14px">Route resolved claims to the correct healthcare node for follow-up, escalation, or payer contact</div>
+ 
+  <div class="g2">
+    <div class="card">
+      <div class="card-title">⚡ Smart Route — Enter Claim Info</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
         <div>
-            <div style="font-size:10px;letter-spacing:.18em;color:var(--dim);text-transform:uppercase">Operational Routing</div>
-            <div style="font-size:18px;font-weight:900;color:var(--bright);margin-top:2px">HC Node Network</div>
+          <div style="font-family:var(--mono);font-size:8.5px;color:var(--dim);margin-bottom:4px">DENIAL REASON / DOCUMENT TYPE</div>
+          <select id="node-denial-type" style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:7px 11px;font-family:var(--sans);font-size:11.5px;color:var(--bright);width:100%;outline:none">
+            <option value="">Select denial / issue type...</option>
+            <option value="auth">Prior Authorization Missing / Denied</option>
+            <option value="eligibility">Eligibility / Termination Issue</option>
+            <option value="coding">Coding Error (ICD-10/CPT)</option>
+            <option value="timely">Timely Filing Limit Exceeded</option>
+            <option value="cob">COB / Coordination of Benefits</option>
+            <option value="medical_necessity">Medical Necessity Denial</option>
+            <option value="duplicate">Duplicate Claim</option>
+            <option value="bundling">Bundling / Unbundling Issue</option>
+          </select>
         </div>
-        <div class="node-grid">
-            <div class="node-card" onclick="openNode('billing')">
-                <div class="nc-icon">💳</div>
-                <div class="nc-name">BILLING</div>
-                <div class="nc-route">Claims · Coding · Denials · AR</div>
-            </div>
-            <div class="node-card" onclick="openNode('compliance')">
-                <div class="nc-icon">🛡️</div>
-                <div class="nc-name">COMPLIANCE</div>
-                <div class="nc-route">HIPAA · CMS · OIG · Audit</div>
-            </div>
-            <div class="node-card" onclick="openNode('insurance')">
-                <div class="nc-icon">📋</div>
-                <div class="nc-name">INSURANCE</div>
-                <div class="nc-route">Eligibility · Prior Auth · Payer Rules</div>
-            </div>
-            <div class="node-card" onclick="openNode('tax-prep')">
-                <div class="nc-icon">📊</div>
-                <div class="nc-name">TAX PREP</div>
-                <div class="nc-route">1099 · W-9 · Filing Readiness</div>
-            </div>
-            <div class="node-card" onclick="openNode('grants')">
-                <div class="nc-icon">💰</div>
-                <div class="nc-name">GRANTS</div>
-                <div class="nc-route">HRSA · Compliance · Reports</div>
-            </div>
-            <div class="node-card" onclick="openNode('poc-portal')">
-                <div class="nc-icon">🎯</div>
-                <div class="nc-name">POC PORTAL</div>
-                <div class="nc-route">Analytics · KPIs · Dashboard</div>
-            </div>
+        <div>
+          <div style="font-family:var(--mono);font-size:8.5px;color:var(--dim);margin-bottom:4px">PAYER TYPE</div>
+          <select id="node-payer" style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:7px 11px;font-family:var(--sans);font-size:11.5px;color:var(--bright);width:100%;outline:none">
+            <option value="">Select payer...</option>
+            <option value="medicare">Medicare (CMS)</option>
+            <option value="medicaid">Medicaid / AHCCCS (AZ)</option>
+            <option value="bcbs">BCBS</option>
+            <option value="uhc">UnitedHealthcare</option>
+            <option value="aetna">Aetna / CVS</option>
+            <option value="cigna">Cigna</option>
+            <option value="humana">Humana</option>
+            <option value="commercial">Commercial / Other</option>
+          </select>
         </div>
-        <div id="node-detail" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px">
-            <div id="node-detail-content"></div>
-        </div>
+        <button class="btn btn-gold btn-sm" onclick="runNodeRoute()">◈ Route This Claim</button>
+      </div>
+      <div id="node-result" style="display:none;animation:fadeUp .25s ease"></div>
     </div>
+ 
+    <div class="card">
+      <div class="card-title">◈ All HC Nodes</div>
+      <table class="tbl">
+        <thead><tr><th>Node</th><th>Function</th><th>SLA</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><span class="bdg bl">APPEALS</span></td><td>1st/2nd level payer appeals</td><td>30d</td><td><span class="bdg g">ACTIVE</span></td></tr>
+          <tr><td><span class="bdg or">AUTH</span></td><td>Prior auth & retro auth</td><td>72hr</td><td><span class="bdg g">ACTIVE</span></td></tr>
+          <tr><td><span class="bdg g">ELIGIBILITY</span></td><td>Verify & reinstate coverage</td><td>24hr</td><td><span class="bdg g">ACTIVE</span></td></tr>
+          <tr><td><span class="bdg pu">CODING</span></td><td>Code correction & resubmit</td><td>5d</td><td><span class="bdg g">ACTIVE</span></td></tr>
+          <tr><td><span class="bdg cy">COB</span></td><td>Coordination of benefits</td><td>10d</td><td><span class="bdg or">BUSY</span></td></tr>
+          <tr><td><span class="bdg r">ESCALATION</span></td><td>External review / state board</td><td>60d</td><td><span class="bdg g">ACTIVE</span></td></tr>
+          <tr><td><span class="bdg gold">POC PORTAL</span></td><td>Executive summary & closure</td><td>48hr</td><td><span class="bdg g">ACTIVE</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
-
-</div><!-- /main -->
-
-    <!-- SCORE FOOTER -->
-    <div class="score-footer">
-        <div class="score-item">⚡ TSM INSURANCE LAB</div>
-        <div class="score-item">MISSIONS: <b id="foot-missions">0</b></div>
-        <div class="score-item">DOCS PROCESSED: <b id="foot-docs">0</b></div>
-        <div class="score-item">CARDS MASTERED: <b class="green" id="foot-cards">0</b></div>
-        <div style="margin-left:auto;display:flex;gap:10px;align-items:center">
-            <a href="/healthcare/index.html"
-                style="color:var(--muted);font-family:var(--mono);font-size:9px;text-decoration:none;border:1px solid rgba(255,255,255,.08);padding:4px 10px;border-radius:4px">HC
-                NODES</a>
-            <a href="/healthcare/poc-html/index.html"
-                style="color:var(--purple);font-family:var(--mono);font-size:9px;text-decoration:none">📋 POC PORTAL</a>
+ 
+<!-- ══════════════════════════════ TAB: CLAIMS AI (GROQ) ══════════════════════════════ -->
+<div class="view" id="tab-advisor">
+  <div style="display:flex;gap:14px;height:100%;min-height:0">
+    <!-- Sidebar -->
+    <div style="width:210px;flex-shrink:0;display:flex;flex-direction:column;gap:7px;overflow-y:auto">
+      <div style="font-family:var(--mono);font-size:8.5px;letter-spacing:2px;color:var(--dim);margin-bottom:4px">QUICK PROMPTS</div>
+ 
+      <button class="btn btn-outline btn-sm" style="text-align:left;justify-content:flex-start;padding:9px 10px;font-size:9.5px;letter-spacing:.5px;text-transform:none;font-weight:600;line-height:1.4" onclick="sendGroqPrompt('A BCBS claim was denied for CO-197 — Auth on File, but omitted from claim header. What are the exact steps to appeal and what documentation is required?')">
+        ▸ CO-197 Auth omitted appeal steps
+      </button>
+ 
+      <button class="btn btn-outline btn-sm" style="text-align:left;justify-content:flex-start;padding:9px 10px;font-size:9.5px;letter-spacing:.5px;text-transform:none;font-weight:600;line-height:1.4" onclick="sendGroqPrompt('Patient had BCBS coverage that lapsed due to ACA grace period rules. The claim was billed retroactively. How does ACA grace period work and what is the appeals process for retroactive termination claims?')">
+        ▸ Retro BCBS termination — ACA grace period
+      </button>
+ 
+      <button class="btn btn-outline btn-sm" style="text-align:left;justify-content:flex-start;padding:9px 10px;font-size:9.5px;letter-spacing:.5px;text-transform:none;font-weight:600;line-height:1.4" onclick="sendGroqPrompt('Medicare denied a CMN (Certificate of Medical Necessity) for an oxygen concentrator citing missing qualifying diagnosis. What ICD-10 codes qualify, what documentation is required, and how do I appeal?')">
+        ▸ CMN Incomplete — O2 concentrator
+      </button>
+ 
+      <button class="btn btn-outline btn-sm" style="text-align:left;justify-content:flex-start;padding:9px 10px;font-size:9.5px;letter-spacing:.5px;text-transform:none;font-weight:600;line-height:1.4" onclick="sendGroqPrompt('Step therapy denial for a biologic medication — the payer says step therapy exception was required. What are the requirements for a step therapy exception under CMS and commercial plans, and how do I write a compelling appeal?')">
+        ▸ Step therapy exception — biologic
+      </button>
+ 
+      <button class="btn btn-outline btn-sm" style="text-align:left;justify-content:flex-start;padding:9px 10px;font-size:9.5px;letter-spacing:.5px;text-transform:none;font-weight:600;line-height:1.4" onclick="sendGroqPrompt('Medicare Secondary with MSRO missing. There is an overpayment refund request. Walk me through the Medicare Secondary Payer rules, MSP coordination, and how to respond to the refund request.')">
+        ▸ Medicare Secondary MSRO / overpayment
+      </button>
+ 
+      <button class="btn btn-outline btn-sm" style="text-align:left;justify-content:flex-start;padding:9px 10px;font-size:9.5px;letter-spacing:.5px;text-transform:none;font-weight:600;line-height:1.4" onclick="sendGroqPrompt('RADV audit — 14 conditions are undocumented and there is a $45K risk adjustment impact. Explain the HCC (Hierarchical Condition Category) model, what documentation fixes this, and the RADV audit response process.')">
+        ▸ HCC Coding Gap — RADV audit response
+      </button>
+ 
+      <div style="margin-top:auto;background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:9px;text-align:center">
+        <div class="ai-model-tag">GROQ · llama-3.3-70b-versatile<br><span>Revenue Cycle Intelligence Mode</span></div>
+        <div id="groq-status-dot" style="display:flex;align-items:center;justify-content:center;gap:5px;margin-top:5px;font-family:var(--mono);font-size:8px;color:var(--dim)">
+          <span style="width:5px;height:5px;border-radius:50%;background:var(--dim);display:inline-block" id="groq-dot"></span> READY
         </div>
+      </div>
     </div>
-
-    <div id="ins-toast"></div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script>
+ 
+    <!-- Chat Main -->
+    <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+      <div class="groq-win" id="groq-win">
+        <div class="gmsg ai">
+          <div class="gmsg-av">⚡</div>
+          <div class="gmsg-body">
+            <div class="gmsg-lbl">TSM CLAIMS INTELLIGENCE · GROQ llama-3.3-70b</div>
+            <div class="gmsg-bub">Welcome to TSM Claims Lab AI. I'm powered by Groq's llama-3.3-70b-versatile and trained on revenue cycle operations — denial management, prior auth, payer-specific appeals, ICD-10/CPT coding, Medicare/Medicaid rules, and RADV. How can I help resolve a claim today?</div>
+          </div>
+        </div>
+      </div>
+      <div class="groq-input-row">
+        <textarea class="groq-inp" id="groq-inp" rows="2" placeholder="Ask about denial codes, appeals, prior auth, payer rules, coding, RADV..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendGroqMessage()}"></textarea>
+        <button class="btn btn-gold btn-sm" onclick="sendGroqMessage()" id="groq-send-btn">▶ SEND</button>
+      </div>
+    </div>
+  </div>
+</div>
+ 
+</div><!-- /content -->
+ 
+<!-- STATUSBAR -->
+<div class="statusbar">
+  <div class="sb">⚡ <span class="gold">TSM INSURANCE LAB</span></div>
+  <div class="sb">MISSIONS: <span class="hi" id="sb-missions">0</span></div>
+  <div class="sb">DOCS PROCESSED: <span class="hi" id="sb-docs">0</span></div>
+  <div class="sb">CARDS MASTERED: <span class="hi" id="sb-cards">0</span></div>
+</div>
+ 
+</div><!-- /shell -->
+ 
+<script>
         // ══════════════════════════════════════════════
         // TAB SYSTEM
         // ══════════════════════════════════════════════
