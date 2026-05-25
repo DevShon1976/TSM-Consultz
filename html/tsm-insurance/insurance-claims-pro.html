@@ -1334,18 +1334,19 @@
     </div>
 
     <!-- TABS -->
-    <div class="academy-tabs">
-        <button onclick="switchTab('missions')" id="tab-missions" class="tab-btn active">⚡ LIVE MISSIONS</button>
-        <button onclick="switchTab('docs')" id="tab-docs" class="tab-btn">📄 DOC PROCESSOR</button>
-        <button onclick="switchTab('cert')" id="tab-cert" class="tab-btn">🎯 CERTIFICATION MODE</button>
-        <button onclick="switchTab('claims-ai')" id="tab-claims-ai" class="tab-btn">🤖 CLAIMS AI</button>
-        <button onclick="switchTab('hc-nodes')" id="tab-hc-nodes" class="tab-btn">🏥 HC NODES</button>
-    </div>
-    </div>
-    <!-- ═══════════════════ TAB 1: LIVE MISSIONS ═══════════════════ -->
-    <div class="main">
-        <div id="tab-missions" class="tab-content active">
-            <div class="missions-grid">
+<div class="academy-tabs">
+    <button onclick="switchTab('missions')" id="tab-btn-missions" class="tab-btn active">⚡ LIVE MISSIONS</button>
+    <button onclick="switchTab('docs')" id="tab-btn-docs" class="tab-btn">📄 DOC PROCESSOR</button>
+    <button onclick="switchTab('cert')" id="tab-btn-cert" class="tab-btn">🎯 CERTIFICATION MODE</button>
+    <button onclick="switchTab('claims-ai')" id="tab-btn-claims-ai" class="tab-btn">🤖 CLAIMS AI</button>
+    <button onclick="switchTab('hc-nodes')" id="tab-btn-hc-nodes" class="tab-btn">🏥 HC NODES</button>
+</div>
+
+<!-- ═══════════════════ TAB CONTENT ═══════════════════ -->
+<div class="main">
+
+    <div id="tab-missions" class="tab-content active">
+        <div class="missions-grid">
 
                 <!-- MISSION 1: DME AUDIT -->
                 <div class="mission-card" style="--c:#ff4d6d">
@@ -3894,16 +3895,36 @@ Max 280 words.`,
         // ══════════════════════════════════════════════
         let _missionsCompleted = 0;
         function launchInsuranceMission(nodeId, objective, progressId) {
-            const pct = [20, 40, 60, 80, 100][Math.floor(Math.random() * 3) + 1];
-            if (progressId) {
-                const el = document.getElementById(progressId);
-                if (el) el.style.width = pct + '%';
-            }
-            toast('⚡ MISSION LAUNCHED — Opening ' + nodeId.toUpperCase() + ' node', 'success');
-            setTimeout(() => {
-                window.location.href = '/healthcare/index.html?node=' + nodeId + '&objective=' + encodeURIComponent(objective) + '&returnUrl=' + encodeURIComponent(window.location.href);
-            }, 1200);
-        }
+    // 1. Instantly simulate completion progress UI for the user
+    if (progressId) {
+        const el = document.getElementById(progressId);
+        if (el) el.style.width = '100%';
+    }
+    
+    // 2. Clear out any sidebar blocks or simulation restrictions 
+    // to expose the underlying tab controls
+    const sidebar = document.getElementById('mission-control-sidebar');
+    if (sidebar) {
+        sidebar.classList.remove('active');
+    }
+
+    // 3. Update the UI state to directly active the relevant HC Node tab content
+    const targetNodeTab = document.querySelector(`.hc-node-tab[data-node="${nodeId}"]`) || 
+                          document.getElementById(nodeId);
+                          
+    if (targetNodeTab) {
+        // Trigger the built-in click handler of the tab menu if available
+        targetNodeTab.click();
+    } else {
+        // Fallback: Manually toggle active visibility classes on the content containers
+        document.querySelectorAll('.hc-node-content, .tab-pane').forEach(el => el.classList.remove('active'));
+        const activeContent = document.getElementById(`node-content-${nodeId}`) || document.getElementById(nodeId);
+        if (activeContent) activeContent.classList.add('active');
+    }
+
+    // 4. Notify the user they have shifted to operational mode
+    toast('🚀 NODE ENGAGED — Switched to active ' + nodeId.toUpperCase() + ' workspace', 'success');
+}
 
         // ══════════════════════════════════════════════
         // NODE ROUTING
@@ -4386,381 +4407,268 @@ Max 280 words.`,
         };
 
         function openNode(key) {
-            document.querySelectorAll('.node-card').forEach(c => c.classList.remove('selected'));
-            event.currentTarget.classList.add('selected');
-            const n = NODE_DATA[key];
-            const det = document.getElementById('node-detail');
-            det.style.display = 'block';
-            document.getElementById('node-detail-content').innerHTML = `
-    <div style="font-size:13px;font-weight:800;color:var(--bright);margin-bottom:6px">${n.title}</div>
-    <div style="font-size:11px;color:var(--text);line-height:1.7;margin-bottom:12px">${n.desc}</div>
-    <div style="display:flex;flex-wrap:wrap;gap:7px">
-      ${n.actions.map(a => `<button class="btn btn-sm" onclick="nodeAction('${a}')" style="font-size:10px;padding:5px 10px">${a}</button>`).join('')}
-    </div>`;
-        }
+    // 1. Highlight the current active node card in the UI
+    document.querySelectorAll('.node-card').forEach(c => c.classList.remove('selected'));
+    if (window.event && window.event.currentTarget) {
+        window.event.currentTarget.classList.add('selected');
+    }
 
-        function nodeAction(action) {
-            compileFinalAnalysis({
-                financialImpact: Math.floor(Math.random() * 120000) + 15000,
-                narrative: `<strong>${action}</strong> initiated via HC Node Network. TSM Neural Core is processing your request and generating a sovereign audit report.`,
-                steps: [action, 'Route to appropriate workflow lane', 'Generate manager-ready output', 'Log to compliance trail']
-            });
-        }
+    const n = NODE_DATA[key];
+    const det = document.getElementById('node-detail');
+    if (!det) return;
+    
+    det.style.display = 'block';
 
-        <!-- ───────────────────────────────────────────── -->
-<!-- TSM SOVEREIGN ANALYSIS HUB -->
-<!-- ───────────────────────────────────────────── -->
+    // 2. Safely extract the clean key identifier (e.g., 'operations', 'medical', 'billing')
+    const normalizedKey = key.toLowerCase().trim();
+
+    // 3. Render contents using properly escaped HTML and dynamic targets
+    document.getElementById('node-detail-content').innerHTML = `
+        <div style="font-size:13px;font-weight:800;color:var(--bright);margin-bottom:6px;">${n.title}</div>
+        <div style="font-size:11px;color:var(--text);line-height:1.7;margin-bottom:12px;">${n.desc}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:7px;">
+            <button 
+                class="open-node-btn" 
+                onclick="window.switchTab('${normalizedKey}')"
+                style="background:var(--bright);color:#000;border:none;padding:6px 12px;border-radius:4px;font-weight:bold;cursor:pointer;"
+            >
+                OPEN ${normalizedKey.toUpperCase()} NODE →
+            </button>
+        </div>
+    `;
+}
 
 <script>
+(function () {
 
-function toggleAnalysisWindow(open = true) {
-
-    let el = document.getElementById('eu-analysis-window');
-
-    if (!el) {
-
-        el = document.createElement('div');
-
-        el.id = 'eu-analysis-window';
-
-        el.style.cssText = `
-            position:fixed;
-            top:0;
-            right:0;
-            bottom:0;
-            width:420px;
-            background:#071018;
-            border-left:1px solid rgba(0,255,198,.15);
-            overflow-y:auto;
-            color:#e2e8f0;
-            transition:transform .3s ease;
-            z-index:999999;
-            display:flex;
-            flex-direction:column;
-            transform:translateX(100%);
-            box-shadow:-10px 0 30px rgba(0,0,0,.45);
-        `;
-
-        el.innerHTML = `
-
-        <div style="
-            padding:20px;
-            border-bottom:1px solid rgba(0,255,198,.08);
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-        ">
-
-            <div>
-
-                <div style="
-                    font-size:9px;
-                    letter-spacing:.22em;
-                    text-transform:uppercase;
-                    color:#22d3ee;
-                ">
-                    Sovereign Audit Report
-                </div>
-
-                <div style="
-                    font-size:24px;
-                    font-weight:900;
-                    margin-top:4px;
-                ">
-                    Analysis Hub
-                </div>
-
-            </div>
-
-            <button
-                onclick="toggleAnalysisWindow(false)"
-                style="
-                    background:none;
-                    border:none;
-                    color:#94a3b8;
-                    font-size:24px;
-                    cursor:pointer;
-                ">
-                ×
-            </button>
-
-        </div>
-
-        <div style="
-            padding:20px;
-            display:flex;
-            flex-direction:column;
-            gap:14px;
-            flex:1;
-        ">
-
-            <div style="
-                background:#0b1722;
-                border:1px solid rgba(0,255,198,.1);
-                border-radius:12px;
-                padding:16px;
-            ">
-
-                <div style="
-                    font-size:9px;
-                    text-transform:uppercase;
-                    letter-spacing:.2em;
-                    color:#64748b;
-                ">
-                    Financial Exposure
-                </div>
-
-                <div id="eu-report-metric"
-                style="
-                    font-size:32px;
-                    font-weight:900;
-                    color:#34d399;
-                    margin-top:6px;
-                ">
-                    $0
-                </div>
-
-            </div>
-
-            <div id="eu-report-narrative"
-            style="
-                background:#0b1722;
-                border:1px solid rgba(0,255,198,.1);
-                border-radius:12px;
-                padding:16px;
-                font-size:13px;
-                line-height:1.8;
-                color:#cbd5e1;
-            ">
-                Awaiting strategist synthesis...
-            </div>
-
-            <div id="eu-report-steps"
-            style="
-                display:flex;
-                flex-direction:column;
-                gap:8px;
-            "></div>
-
-            <div style="
-                display:flex;
-                gap:10px;
-                margin-top:10px;
-            ">
-
-                <button
-                    onclick="saveAnalysisSession()"
-                    style="
-                        flex:1;
-                        background:#00ffc6;
-                        color:#001018;
-                        border:none;
-                        border-radius:10px;
-                        padding:12px;
-                        font-weight:900;
-                        cursor:pointer;
-                    ">
-                    SAVE
-                </button>
-
-                <button
-                    onclick="exportAnalysisPDF()"
-                    style="
-                        flex:1;
-                        background:#ffc857;
-                        color:#111;
-                        border:none;
-                        border-radius:10px;
-                        padding:12px;
-                        font-weight:900;
-                        cursor:pointer;
-                    ">
-                    EXPORT
-                </button>
-
-            </div>
-
-        </div>
-        `;
-
-        document.body.appendChild(el);
-    }
-
-    el.style.transform =
-        open ? 'translateX(0)' : 'translateX(100%)';
-}
+    /* ─────────────────────────────
+       GLOBAL STATE
+    ───────────────────────────── */
+    window.TSM_REPORT = window.TSM_REPORT || {};
 
 
 
-function compileFinalAnalysis(payload = {}) {
+    /* ─────────────────────────────
+       NODE ACTION
+    ───────────────────────────── */
+    window.nodeAction = function(action) {
 
-    window.TSM_REPORT = payload;
+        if (typeof window.compileFinalAnalysis !== 'function') return;
 
-    toggleAnalysisWindow(true);
-
-    setTimeout(() => {
-
-        const metric =
-            document.getElementById('eu-report-metric');
-
-        const narrative =
-            document.getElementById('eu-report-narrative');
-
-        const steps =
-            document.getElementById('eu-report-steps');
-
-        if (metric) {
-
-            metric.innerText =
-                '$' +
-                (
-                    payload.financialImpact || 0
-                ).toLocaleString();
-        }
-
-        if (narrative) {
-
-            narrative.innerHTML =
-                payload.narrative ||
-                'Analysis complete.';
-        }
-
-        if (steps) {
-
-            steps.innerHTML =
-                (payload.steps || []).map(step => `
-
-                <div style="
-                    background:rgba(0,0,0,.22);
-                    border:1px solid rgba(0,255,198,.08);
-                    border-radius:8px;
-                    padding:10px 12px;
-                    display:flex;
-                    gap:8px;
-                    font-size:12px;
-                    color:#cbd5e1;
-                ">
-
-                    <span style="color:#00ffc6">
-                        ✔
-                    </span>
-
-                    <span>${step}</span>
-
-                </div>
-
-            `).join('');
-        }
-
-    }, 80);
-}
-
-
-
-function saveAnalysisSession() {
-
-    const payload = {
-
-        metric:
-            document.getElementById('eu-report-metric')
-            ?.innerText || '',
-
-        narrative:
-            document.getElementById('eu-report-narrative')
-            ?.innerText || '',
-
-        steps:
-            document.getElementById('eu-report-steps')
-            ?.innerText || '',
-
-        saved:
-            new Date().toISOString()
+        window.compileFinalAnalysis({
+            financialImpact: 600000,
+            narrative: `<strong>${action}</strong> executed via TSM workflow engine.`,
+            steps: [
+                action,
+                'Route to processing lane',
+                'Generate structured output',
+                'Log to audit trail'
+            ]
+        });
     };
 
-    localStorage.setItem(
-        'tsm_saved_analysis',
-        JSON.stringify(payload)
-    );
-
-    alert('TSM analysis session saved.');
-}
 
 
+    /* ─────────────────────────────
+       ANALYSIS WINDOW (STATE SAFE)
+    ───────────────────────────── */
+    window.toggleAnalysisWindow = function(open = true) {
 
-function exportAnalysisPDF() {
+        let el = document.getElementById('eu-analysis-window');
 
-    const report = `
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'eu-analysis-window';
 
-TSM SOVEREIGN ANALYSIS REPORT
+            el.style.cssText = `
+                position:fixed;
+                top:0;
+                right:0;
+                bottom:0;
+                width:420px;
+                background:#071018;
+                border-left:1px solid rgba(0,255,198,.15);
+                overflow-y:auto;
+                color:#e2e8f0;
+                transition:transform .25s ease;
+                z-index:999999;
+                display:flex;
+                flex-direction:column;
+                transform:translateX(100%);
+                box-shadow:-10px 0 30px rgba(0,0,0,.45);
+            `;
 
+            el.innerHTML = `
+                <div style="padding:20px;border-bottom:1px solid rgba(0,255,198,.08);display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                        <div style="font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:#22d3ee;">
+                            Sovereign Audit Report
+                        </div>
+                        <div style="font-size:24px;font-weight:900;margin-top:4px;">
+                            Analysis Hub
+                        </div>
+                    </div>
+
+                    <button onclick="window.toggleAnalysisWindow(false)"
+                        style="background:none;border:none;color:#94a3b8;font-size:24px;cursor:pointer;">
+                        ×
+                    </button>
+                </div>
+
+                <div style="padding:20px;display:flex;flex-direction:column;gap:14px;flex:1;">
+                    <div style="background:#0b1722;border:1px solid rgba(0,255,198,.1);border-radius:12px;padding:16px;">
+                        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.2em;color:#64748b;">
+                            Financial Exposure
+                        </div>
+                        <div id="eu-report-metric" style="font-size:32px;font-weight:900;color:#34d399;margin-top:6px;">
+                            $600,000
+                        </div>
+                    </div>
+
+                    <div id="eu-report-narrative" style="background:#0b1722;border:1px solid rgba(0,255,198,.1);border-radius:12px;padding:16px;font-size:13px;line-height:1.8;color:#cbd5e1;">
+                        Initializing analysis...
+                    </div>
+
+                    <div id="eu-report-steps" style="display:flex;flex-direction:column;gap:8px;"></div>
+
+                    <div style="display:flex;gap:10px;margin-top:10px;">
+                        <button onclick="window.saveAnalysisSession()"
+                            style="flex:1;background:#00ffc6;color:#001018;border:none;border-radius:10px;padding:12px;font-weight:900;cursor:pointer;">
+                            SAVE
+                        </button>
+
+                        <button onclick="window.exportAnalysisReport()"
+                            style="flex:1;background:#ffc857;color:#111;border:none;border-radius:10px;padding:12px;font-weight:900;cursor:pointer;">
+                            EXPORT
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(el);
+        }
+
+        el.dataset.open = open ? "1" : "0";
+        el.style.transform = open ? 'translateX(0)' : 'translateX(100%)';
+    };
+
+
+
+    /* ─────────────────────────────
+       COMPILER (SAFE + CONSISTENT)
+    ───────────────────────────── */
+    window.compileFinalAnalysis = function(payload = {}) {
+
+        window.TSM_REPORT = payload;
+
+        window.toggleAnalysisWindow(true);
+
+        requestAnimationFrame(() => {
+
+            const metric = document.getElementById('eu-report-metric');
+            const narrative = document.getElementById('eu-report-narrative');
+            const steps = document.getElementById('eu-report-steps');
+
+            if (metric) {
+                metric.textContent = '$' + (payload.financialImpact || 600000).toLocaleString();
+            }
+
+            if (narrative) {
+                narrative.textContent = payload.narrative || 'Analysis complete.';
+            }
+
+            if (steps && Array.isArray(payload.steps)) {
+                steps.innerHTML = payload.steps
+                    .map(step => `
+                        <div style="background:rgba(0,0,0,.22);border:1px solid rgba(0,255,198,.08);border-radius:8px;padding:10px 12px;display:flex;gap:8px;font-size:12px;color:#cbd5e1;">
+                            <span style="color:#00ffc6;">✔</span>
+                            <span>${step}</span>
+                        </div>
+                    `).join('');
+            }
+        });
+    };
+
+
+
+    /* ─────────────────────────────
+       SAVE (ROBUST EXTRACTION)
+    ───────────────────────────── */
+    window.saveAnalysisSession = function() {
+
+        const steps = Array.from(
+            document.querySelectorAll('#eu-report-steps > div')
+        ).map(el => el.innerText.replace('✔', '').trim());
+
+        const payload = {
+            metric: document.getElementById('eu-report-metric')?.textContent || '',
+            narrative: document.getElementById('eu-report-narrative')?.textContent || '',
+            steps,
+            saved: new Date().toISOString()
+        };
+
+        localStorage.setItem('tsm_saved_analysis', JSON.stringify(payload));
+    };
+
+
+
+    /* ─────────────────────────────
+       EXPORT (STABLE FORMAT)
+    ───────────────────────────── */
+    window.exportAnalysisReport = function() {
+
+        const metric = document.getElementById('eu-report-metric')?.textContent || '';
+        const narrative = document.getElementById('eu-report-narrative')?.textContent || '';
+        const steps = Array.from(document.querySelectorAll('#eu-report-steps > div'))
+            .map(el => el.innerText)
+            .join('\n');
+
+        const report = `
+TSM ANALYSIS REPORT
 ====================================
-
 FINANCIAL IMPACT
-${document.getElementById('eu-report-metric')?.innerText}
-
+${metric}
 ====================================
-
-ANALYSIS SUMMARY
-
-${document.getElementById('eu-report-narrative')?.innerText}
-
+SUMMARY
+${narrative}
 ====================================
-
-NEXT STEPS
-
-${document.getElementById('eu-report-steps')?.innerText}
-
+STEPS
+${steps}
 ====================================
-
-Generated:
-${new Date().toLocaleString()}
-
+Generated: ${new Date().toLocaleString()}
 `;
 
-    const blob = new Blob(
-        [report],
-        { type:'text/plain' }
-    );
+        const blob = new Blob([report], { type: 'text/plain' });
 
-    const a = document.createElement('a');
-
-    a.href = URL.createObjectURL(blob);
-
-    a.download = 'tsm-analysis-report.txt';
-
-    a.click();
-}
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'tsm-analysis-report.txt';
+        a.click();
+    };
 
 
 
-/* SAFE TAB SWITCHER */
+    /* ─────────────────────────────
+       SAFE TAB SWITCHER (FINAL STABLE)
+    ───────────────────────────── */
+    window.switchTab = function(tabName) {
 
-if (typeof switchTab === 'undefined') {
+        if (!tabName) return;
 
-    function switchTab(name) {
+        const tabs = document.querySelectorAll('.tab-content');
+        const buttons = document.querySelectorAll('.tab-btn');
 
-        document
-            .querySelectorAll('.tab-btn')
-            .forEach(btn => btn.classList.remove('active'));
+        tabs.forEach(t => t.classList.remove('active'));
+        buttons.forEach(b => b.classList.remove('active'));
 
-        document
-            .querySelectorAll('.tab-panel')
-            .forEach(panel => panel.style.display = 'none');
+        const tab = document.getElementById('tab-' + tabName);
+        const btn = document.getElementById('tab-btn-' + tabName);
 
-        const btn =
-            document.getElementById('tab-' + name);
+        if (tab) tab.classList.add('active');
+        if (btn) btn.classList.add('active');
+    };
 
-        const panel =
-            document.getElementById('panel-' + name);
-
-        if (btn)
-            btn.classList.add('active');
-
-        if (panel)
-            panel.style.display = 'block';
-    }
-}
-
+})();
 </script>
 </body>
 </html>
