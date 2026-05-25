@@ -1578,6 +1578,33 @@ LIEN DEADLINE: Lien rights expire in 22 days per state statute.`
   }
 }
 
+function loadProjectDoc(name) {
+  const preview = document.getElementById('doc-preview');
+  const textArea = document.getElementById('doc-text');
+  preview.textContent = 'Loading ' + name + '...';
+  document.querySelectorAll('.doc-chip').forEach(c => c.classList.remove('active'));
+
+  fetch('/construction-suite/docs/' + name + '.pdf')
+    .then(r => { if (!r.ok) throw new Error('not found'); return r.blob(); })
+    .then(blob => blob.arrayBuffer())
+    .then(ab => pdfjsLib.getDocument({ data: ab }).promise)
+    .then(async pdf => {
+      let text = '';
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        text += content.items.map(s => s.str).join('  ') + '\n';
+      }
+      docText = text.trim();
+      textArea.value = docText;
+      preview.textContent = '✓ ' + name + '.pdf (' + pdf.numPages + ' pages, ' + docText.split(/\s+/).length + ' words)';
+      updateDocStatus();
+    })
+    .catch(() => {
+      preview.textContent = '✗ Could not load ' + name + ' — paste text manually';
+    });
+}
+
     function loadSample(type) {
       docText = SAMPLES[type];
       document.getElementById('doc-text').value = docText;
