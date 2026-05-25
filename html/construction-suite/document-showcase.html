@@ -1581,28 +1581,38 @@ LIEN DEADLINE: Lien rights expire in 22 days per state statute.`
 function loadProjectDoc(name) {
   const preview = document.getElementById('doc-preview');
   const textArea = document.getElementById('doc-text');
-  preview.textContent = 'Loading ' + name + '...';
   document.querySelectorAll('.doc-chip').forEach(c => c.classList.remove('active'));
+  event.currentTarget.classList.add('active');
 
-  fetch('/construction-suite/docs/' + name + '.pdf')
-    .then(r => { if (!r.ok) throw new Error('not found'); return r.blob(); })
-    .then(blob => blob.arrayBuffer())
-    .then(ab => pdfjsLib.getDocument({ data: ab }).promise)
-    .then(async pdf => {
-      let text = '';
-      for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const content = await page.getTextContent();
-        text += content.items.map(s => s.str).join('  ') + '\n';
-      }
-      docText = text.trim();
-      textArea.value = docText;
-      preview.textContent = '✓ ' + name + '.pdf (' + pdf.numPages + ' pages, ' + docText.split(/\s+/).length + ' words)';
-      updateDocStatus();
-    })
-    .catch(() => {
-      preview.textContent = '✗ Could not load ' + name + ' — paste text manually';
-    });
+  const DOCS = {
+    'building-permit-block-c-foundation': `BUILDING PERMIT — Block C Foundation\nPermit No: BP-2026-0441\nProject: Riverside Mixed-Use Development, Block C\nOwner: Meridian Development Group LLC\nContractor: Fortis Construction Inc. License #CGC-058821\nScope: Foundation system for 8-story mixed-use structure. Drilled pier foundation, 24 piers at 36" diameter to 45' depth. Concrete: 5,000 PSI. Rebar: ASTM A615 Grade 60.\nFootprint: 18,400 SF. Est. Cost: $2,400,000.\nConditions: Geotechnical report GR-2026-114 required on site. Special inspection required for all concrete pours. No work between 10pm–7am.\nIssued: 03/01/2026. Expires: 03/01/2027.`,
+
+    'change-order-7-foundation': `CHANGE ORDER #7 — Foundation Scope Modification\nProject: Riverside Mixed-Use Development\nOriginal Contract: $2,400,000. Change Amount: +$340,000. Revised Total: $2,740,000.\nReason: Unforeseen soil conditions at pier locations P-7 through P-14. Geotech report GR-2026-114R dated 03/15/2026 identified soft clay layer at 38' requiring pier extension to 52'. Additional caissons required.\nOwner Position: Disputes scope — cites original soil report SR-2025-88 showing adequate bearing at 45'.\nContractor Position: New borings conclusively show changed conditions per AIA A201 §3.7.4. Entitlement clear.\nSchedule Impact: 18 days. New completion: 06/28/2026.\nApproval Required By: 04/01/2026.`,
+
+    'osha-safety-plan-2026': `OSHA SAFETY PLAN — Riverside Mixed-Use Development 2026\nSite Safety Officer: Marcus Webb, CSP #45221\nEmergency Contact: 602-555-0192\nHazard Assessments: Excavation >5' requires shoring per 29 CFR 1926.652. All workers within 6' of excavation in full PPE.\nFall Protection: 100% tie-off above 6'. Ladder safety program in effect. Weekly inspection of all scaffolding.\nCrane Operations: Daily inspection logs required. 50' exclusion zone during lifts. Rigger certification on file.\nHeat Protocol (>100°F): 10-min break per hour, shade required, water every 15 min. Mandatory buddy system.\nIncident Reporting: All incidents reported within 24hrs. OSHA 300 log maintained in site trailer.\nLast Safety Audit: 04/10/2026. Next: 05/10/2026. Open Items: 3.`,
+
+    'incident-report-apr-14': `INCIDENT REPORT — April 14, 2026\nProject: Riverside Mixed-Use, Block C\nIncident Type: Near-miss / equipment\nTime: 14:23. Location: Grid Line C-7, Elevation +12'\nDescription: Ironworker J. Ramirez (emp #4421) struck by swinging rebar bundle during crane pick. Bundle contact with left shoulder. Worker assessed on site by EMT, no transport required. Hard hat and shoulder pad worn.\nRoot Cause: Tag line not attached to bundle prior to lift. Rigger failed to follow LO-07 lift procedure.\nImmediate Action: Work stopped, toolbox talk conducted, all riggers re-briefed on LO-07.\nCorrectional Action: Mandatory rigging re-certification for crew by 04/21/2026. Revised lift checklist distributed.\nReported By: Marcus Webb, SSO. OSHA Recordable: No.`,
+
+    'q1-invoice-summary': `Q1 INVOICE SUMMARY — Fortis Construction Inc.\nProject: Riverside Mixed-Use Development\nPeriod: January 1 – March 31, 2026\nInvoice #INV-2026-031: Mobilization & Site Prep — $84,000 — PAID\nInvoice #INV-2026-032: Excavation Phase 1 — $210,000 — PAID\nInvoice #INV-2026-033: Pier Drilling 1-12 — $380,000 — PAID\nInvoice #INV-2026-034: Pier Drilling 13-24 — $395,000 — PENDING\nInvoice #INV-2026-035: Concrete Pour Phase 1 — $167,000 — PENDING\nRetainage Held (10%): $123,600\nTotal Billed Q1: $1,236,000\nTotal Received: $674,000\nOutstanding: $562,000\nNote: INV-034 disputed — see Change Order #7. Payment withheld pending resolution.`,
+
+    'subcontractor-bid-roofing': `SUBCONTRACTOR BID — Roofing Scope\nBidder: SunState Roofing LLC, License #CCC-1330221\nProject: Riverside Mixed-Use Development — Roof Levels 7 & 8\nBase Bid: $487,500\nScope: TPO membrane roofing 22,000 SF, R-30 insulation, sheet metal flashings, 4 rooftop equipment curbs, 2 roof hatches, 10-year labor warranty.\nExclusions: Structural deck, HVAC equipment, skylights, permits.\nAlternate 1 (PVC membrane upgrade): +$38,000\nAlternate 2 (20-year warranty): +$22,000\nBond: Performance & Payment bond included.\nInsurance: GL $2M/$4M, Workers Comp on file.\nSchedule: 6 weeks from NTP. Availability: July 2026.\nBid Valid Through: 06/15/2026.`,
+
+    'owner-architect-agreement': `OWNER-ARCHITECT AGREEMENT — AIA B101-2017\nOwner: Meridian Development Group LLC\nArchitect: Vantage Studio Architecture Inc., AIA\nProject: Riverside Mixed-Use Development\nBasic Services Fee: $312,000 (4.8% of $6.5M construction budget)\nPhases: Schematic Design 15%, Design Development 20%, Construction Documents 40%, Bidding 5%, CA 20%.\nAdditional Services: BIM coordination $18,000, LEED documentation $24,000, FF&E $15,000.\nReimbursables: At cost + 10%.\nCA Duties: Architect to review and certify payment applications within 7 days. RFI response within 10 days.\nDispute Resolution: Mediation first, then binding arbitration per AIA rules.\nTermination: Owner may terminate for convenience with 7-day notice, pay for services to date + 10%.`,
+
+    'weekly-progress-report-week-17': `WEEKLY PROGRESS REPORT — Week 17\nProject: Riverside Mixed-Use Development\nPeriod: April 21–25, 2026\nOverall Completion: 34%\nSchedule Status: 6 days behind baseline\nThis Week Completed: Pier concrete pours P-17 through P-24 complete. Grade beam formwork 60% complete. Underground MEP rough-in at grid lines A-C complete.\nIn Progress: Grade beam rebar installation (75%). Elevator pit excavation (40%). Temporary power upgrade.\nNext Week Plan: Complete grade beam rebar, begin concrete pours. Structural steel delivery and offload.\nOpen RFIs: 14 (3 critical — RFI-041 re: pier cap elevation, RFI-044 re: waterproofing spec, RFI-051 re: anchor bolt pattern)\nOpen Submittals: 8. Weather Delays This Week: 1 day (rain April 23).\nSafety: 0 incidents. Manpower: 47 workers on site.`,
+
+    'zoning-variance-application': `ZONING VARIANCE APPLICATION\nApplicant: Meridian Development Group LLC\nProject Address: 4400 Riverside Drive, Phoenix AZ 85004\nParcel: 111-22-333A\nRequest: Variance from Section 608.3 — Height limit 85' (8 stories proposed, zone max 65'/6 stories)\nRequest: Variance from Section 412.1 — Setback 8' provided, 15' required along Riverside Drive\nJustification: Unique parcel shape (triangular lot) creates hardship. Height increase enables affordable housing units (22 of 80 units at 60% AMI). Setback variance required due to existing utility easement.\nNeighborhood Impact: Traffic study TF-2026-08 shows minimal impact. Shadow study confirms no impact to adjacent residential.\nPublic Hearing: May 14, 2026 at 6:00 PM, Phoenix City Hall Room 2B.\nStaff Recommendation: Approval with conditions.`,
+
+    'electrical-single-line-diagram': `ELECTRICAL SINGLE LINE DIAGRAM — Narrative Description\nProject: Riverside Mixed-Use Development\nEngineer of Record: Pacific Grid Engineering, PE #55402\nService: 3-phase 4-wire 277/480V. Utility service 2,000A at pad-mount transformer T-1.\nMain Distribution Panel MDP-1: 2,000A 480V MLO. Feeds: AHU-1 through AHU-4 (each 60A 3ph), Elevator EL-1 & EL-2 (100A 3ph each), Parking Lighting (30A), Emergency Panel EP-1 (200A).\nStep-Down Transformers: T-2 150KVA 480-208/120V for floors 1-4. T-3 150KVA for floors 5-8.\nEmergency System: 200kW diesel generator, 12hr fuel. ATS-1 auto-transfer <10 sec. Powers egress lighting, fire alarm, elevators, 20% HVAC.\nSolar PV: 180kW rooftop array, 480V 3ph inverter, net metering interconnect pending APS approval.\nCode: NEC 2023, IBC 2021, Phoenix Local Amendments.`,
+
+    'site-plan-overall-master': `SITE PLAN — Overall Master\nProject: Riverside Mixed-Use Development\nAddress: 4400 Riverside Drive, Phoenix AZ 85004\nTotal Site Area: 2.4 acres (104,544 SF)\nBuilding Footprint: 18,400 SF. Lot Coverage: 17.6%\nParking: 142 spaces (128 structured + 14 surface). ADA: 6 spaces.\nSetbacks Provided: Front (Riverside Dr) 8', Rear 22', Side North 12', Side South 18'.\nLandscaping: 24,800 SF (23.7%). 48 trees, drought-tolerant planting per Phoenix Water Conservation Code.\nUtilities: Water — 6" domestic + 4" fire. Sewer — 8" gravity to City main on Oak St. Storm — retention basin at SW corner, 1.5ac-ft capacity.\nAccess: Primary entry off Riverside Dr, secondary entry off 4th Ave. Emergency access per PFD requirements.\nSurvey: HorizonSurvey Inc. Job #2025-441. Datum: NAD83.`
+  };
+
+  const text = DOCS[name] || 'Document content not available — paste text manually.';
+  docText = text;
+  textArea.value = docText;
+  preview.textContent = '✓ ' + name + ' loaded (' + docText.split(/\s+/).length + ' words)';
+  updateDocStatus();
 }
 
     function loadSample(type) {
