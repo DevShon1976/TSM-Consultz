@@ -254,11 +254,12 @@ body::before{content:'';position:fixed;top:0;right:0;width:700px;height:500px;ba
 
 <!-- TABS -->
 <div class="academy-tabs">
-  <button class="tab-btn active" onclick="showTab('missions',this)">⚡ LIVE MISSIONS</button>
-  <button class="tab-btn" onclick="showTab('processor',this)" style="--active-color:var(--cyan)">🔬 DOC PROCESSOR</button>
-  <button class="tab-btn" onclick="showTab('cert',this)">🎓 CERTIFICATION MODE</button>
+  <button onclick="switchTab('missions')" id="tab-missions" class="tab-btn active">⚡ LIVE MISSIONS</button>
+  <button onclick="switchTab('docs')" id="tab-docs" class="tab-btn">📄 DOC PROCESSOR</button>
+  <button onclick="switchTab('cert')" id="tab-cert" class="tab-btn">🎯 CERTIFICATION MODE</button>
+  <button onclick="switchTab('claims-ai')" id="tab-claims-ai" class="tab-btn">🤖 CLAIMS AI</button>
+  <button onclick="switchTab('hc-nodes')" id="tab-hc-nodes" class="tab-btn">🏥 HC NODES</button></div>
 </div>
-
 <!-- ═══════════════════ TAB 1: LIVE MISSIONS ═══════════════════ -->
 <div class="main">
 <div id="tab-missions" class="tab-content active">
@@ -1555,6 +1556,82 @@ Synthesizes findings into CFO-ready narrative with financial impact</div>
         <div class="cm-prog"><div class="cm-prog-fill" id="prog-hipaa-audits" style="width:0%"></div></div>
       </div>
 
+      <!-- CLAIMS AI PANEL -->
+<div id="panel-claims-ai" class="tab-panel" style="display:none">
+  <div style="display:flex;flex-direction:column;height:100%;gap:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:10px;letter-spacing:.18em;color:var(--dim);text-transform:uppercase">Claims Intelligence Engine</div>
+        <div style="font-size:18px;font-weight:900;color:var(--bright);margin-top:2px">AI Claims Analyst</div>
+      </div>
+      <div class="ai-model-tag">ENGINE · <span>ACTIVE</span></div>
+    </div>
+
+    <div class="groq-chat" style="flex:1">
+      <div class="groq-win" id="claims-ai-win">
+        <div class="gmsg ai">
+          <div class="gmsg-av">AI</div>
+          <div class="gmsg-body">
+            <div class="gmsg-lbl">CLAIMS AI · READY</div>
+            <div class="gmsg-bub">Ready to analyze claims, denial patterns, and payer behavior. Paste a claim scenario or ask about denial codes, prior auth rules, or AR strategy.</div>
+          </div>
+        </div>
+      </div>
+      <div class="groq-input-row">
+        <textarea class="groq-inp" id="claims-ai-inp" rows="2" placeholder="Describe claim scenario, paste denial, ask about CO-50, PR-96, OA codes..."></textarea>
+        <button class="btn btn-gold" onclick="sendClaimsAI()" style="align-self:flex-end">ANALYZE</button>
+      </div>
+    </div>
+    <div class="ai-model-tag">CLAIMS INTELLIGENCE · <span>TSM NEURAL CORE</span></div>
+  </div>
+</div>
+
+<!-- HC NODES PANEL -->
+<div id="panel-hc-nodes" class="tab-panel" style="display:none">
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div>
+      <div style="font-size:10px;letter-spacing:.18em;color:var(--dim);text-transform:uppercase">Operational Routing</div>
+      <div style="font-size:18px;font-weight:900;color:var(--bright);margin-top:2px">HC Node Network</div>
+    </div>
+    <div class="node-grid">
+      <div class="node-card" onclick="openNode('billing')">
+        <div class="nc-icon">💳</div>
+        <div class="nc-name">BILLING</div>
+        <div class="nc-route">Claims · Coding · Denials · AR</div>
+      </div>
+      <div class="node-card" onclick="openNode('compliance')">
+        <div class="nc-icon">🛡️</div>
+        <div class="nc-name">COMPLIANCE</div>
+        <div class="nc-route">HIPAA · CMS · OIG · Audit</div>
+      </div>
+      <div class="node-card" onclick="openNode('insurance')">
+        <div class="nc-icon">📋</div>
+        <div class="nc-name">INSURANCE</div>
+        <div class="nc-route">Eligibility · Prior Auth · Payer Rules</div>
+      </div>
+      <div class="node-card" onclick="openNode('tax-prep')">
+        <div class="nc-icon">📊</div>
+        <div class="nc-name">TAX PREP</div>
+        <div class="nc-route">1099 · W-9 · Filing Readiness</div>
+      </div>
+      <div class="node-card" onclick="openNode('grants')">
+        <div class="nc-icon">💰</div>
+        <div class="nc-name">GRANTS</div>
+        <div class="nc-route">HRSA · Compliance · Reports</div>
+      </div>
+      <div class="node-card" onclick="openNode('poc-portal')">
+        <div class="nc-icon">🎯</div>
+        <div class="nc-name">POC PORTAL</div>
+        <div class="nc-route">Analytics · KPIs · Dashboard</div>
+      </div>
+    </div>
+
+    <div id="node-detail" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px">
+      <div id="node-detail-content"></div>
+    </div>
+  </div>
+</div>
+
       <!-- Score panel -->
       <div style="background:var(--s2);border:1px solid var(--border);border-radius:7px;padding:14px;margin-top:4px">
         <div style="font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--muted);margin-bottom:10px">CERT PROGRESS</div>
@@ -2116,6 +2193,123 @@ window.addEventListener('load', function() {
     document.getElementById('foot-docs').textContent = d;
   } catch(e) {}
 });
+// ── CLAIMS AI ──────────────────────────────────────
+async function sendClaimsAI(){
+  const inp = document.getElementById('claims-ai-inp');
+  const win = document.getElementById('claims-ai-win');
+  const msg = inp.value.trim();
+  if(!msg) return;
+  inp.value = '';
+
+  win.innerHTML += `<div class="gmsg user"><div class="gmsg-av">U</div><div class="gmsg-body"><div class="gmsg-lbl">YOU</div><div class="gmsg-bub">${msg}</div></div></div>`;
+  win.innerHTML += `<div class="gmsg ai" id="ai-typing"><div class="gmsg-av">AI</div><div class="gmsg-body"><div class="gmsg-lbl">CLAIMS AI</div><div class="gmsg-bub">Analyzing<span class="cursor"></span></div></div></div>`;
+  win.scrollTop = win.scrollHeight;
+
+  const apiKey = document.getElementById('tsm-api-key')?.value || window.TSM_KEY || '';
+  if(!apiKey){ document.getElementById('ai-typing').querySelector('.gmsg-bub').innerHTML = '⚠ No API key found. Add your key in the key field.'; return; }
+
+  try{
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-opus-4-5',max_tokens:800,system:'You are a senior medical billing and insurance claims specialist. Analyze claims, denial codes (CO, PR, OA, PI), prior auth issues, payer behavior, and AR strategy. Be specific, actionable, and concise. Use bullet points.',messages:[{role:'user',content:msg}]})
+    });
+    const data = await res.json();
+    const reply = data.content?.[0]?.text || 'No response received.';
+    document.getElementById('ai-typing').querySelector('.gmsg-bub').innerHTML = reply.replace(/\n/g,'<br>');
+  }catch(e){
+    document.getElementById('ai-typing').querySelector('.gmsg-bub').innerHTML = '⚠ Error: ' + e.message;
+  }
+  win.scrollTop = win.scrollHeight;
+}
+
+// ── HC NODE ROUTING ─────────────────────────────────
+const NODE_DATA = {
+  billing:{title:'Billing Node',desc:'Handle claims submission, coding audits, denial management, and AR recovery workflows.',actions:['Run denial analysis','Generate claim scrub report','Launch AR aging review','Export payer scorecard']},
+  compliance:{title:'Compliance Node',desc:'HIPAA privacy and security audits, CMS regulatory reviews, OIG exclusion checks, and audit trail management.',actions:['Run HIPAA audit','Check OIG exclusions','Generate compliance report','Review documentation gaps']},
+  insurance:{title:'Insurance Node',desc:'Payer eligibility verification, prior authorization tracking, and payer contract rule management.',actions:['Verify eligibility batch','Track prior auth queue','Review payer contract rules','Launch auth appeal workflow']},
+  'tax-prep':{title:'Tax Prep Node',desc:'1099 filing readiness, W-9 collection, vendor tax documentation, and filing window management.',actions:['Check 1099 readiness','Collect W-9 batch','Review filing deadlines','Export tax summary']},
+  grants:{title:'Grants Node',desc:'HRSA grant compliance, restricted funding tracking, and grant report generation.',actions:['Run HRSA compliance check','Generate grant report','Track funding restrictions','Submit compliance packet']},
+  'poc-portal':{title:'POC Portal',desc:'Key performance indicators, revenue cycle analytics, and executive dashboard.',actions:['View KPI dashboard','Generate executive summary','Export revenue metrics','Launch analysis hub']}
+};
+
+function openNode(key){
+  document.querySelectorAll('.node-card').forEach(c=>c.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  const n = NODE_DATA[key];
+  const det = document.getElementById('node-detail');
+  det.style.display='block';
+  document.getElementById('node-detail-content').innerHTML=`
+    <div style="font-size:13px;font-weight:800;color:var(--bright);margin-bottom:6px">${n.title}</div>
+    <div style="font-size:11px;color:var(--text);line-height:1.7;margin-bottom:12px">${n.desc}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:7px">
+      ${n.actions.map(a=>`<button class="btn btn-sm" onclick="nodeAction('${a}')" style="font-size:10px;padding:5px 10px">${a}</button>`).join('')}
+    </div>`;
+}
+
+function nodeAction(action){
+  compileFinalAnalysis({
+    financialImpact: Math.floor(Math.random()*120000)+15000,
+    narrative: `<strong>${action}</strong> initiated via HC Node Network. TSM Neural Core is processing your request and generating a sovereign audit report.`,
+    steps: [action, 'Route to appropriate workflow lane', 'Generate manager-ready output', 'Log to compliance trail']
+  });
+}
+
+// ── ANALYSIS HUB FIX ────────────────────────────────
+function toggleAnalysisWindow(open=true){
+  let el = document.getElementById('eu-analysis-window');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'eu-analysis-window';
+    el.style.cssText = 'position:fixed;top:0;right:0;bottom:0;width:420px;background:#071018;border-left:1px solid rgba(0,255,198,.15);overflow-y:auto;color:#e2e8f0;transition:transform .3s;z-index:99999;display:flex;flex-direction:column';
+    el.innerHTML = `
+      <div style="padding:20px;border-bottom:1px solid rgba(0,255,198,.1);display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:#22d3ee">Sovereign Audit Report</div>
+          <div style="font-size:22px;font-weight:900;margin-top:4px">Analysis Hub</div>
+        </div>
+        <button onclick="toggleAnalysisWindow(false)" style="background:none;border:none;color:#94a3b8;font-size:24px;cursor:pointer;line-height:1">×</button>
+      </div>
+      <div style="padding:20px;display:flex;flex-direction:column;gap:12px;flex:1">
+        <div style="background:#0b1722;border:1px solid rgba(0,255,198,.1);border-radius:12px;padding:16px">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.2em;color:#64748b">Financial Exposure</div>
+          <div id="eu-report-metric" style="font-size:32px;font-weight:900;color:#34d399;margin-top:6px">$0</div>
+        </div>
+        <div id="eu-report-narrative" style="background:#0b1722;border:1px solid rgba(0,255,198,.1);border-radius:12px;padding:16px;font-size:13px;line-height:1.8;color:#cbd5e1">Awaiting strategist synthesis...</div>
+        <div id="eu-report-steps" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div>`;
+    document.body.appendChild(el);
+  }
+  el.style.transform = open ? 'translateX(0)' : 'translateX(100%)';
+}
+
+function compileFinalAnalysis(payload){
+  window.TSM_REPORT = payload;
+  toggleAnalysisWindow(true);
+  setTimeout(()=>{
+    const metric = document.getElementById('eu-report-metric');
+    const narr = document.getElementById('eu-report-narrative');
+    const steps = document.getElementById('eu-report-steps');
+    if(metric) metric.innerText = '$'+(payload.financialImpact||0).toLocaleString();
+    if(narr) narr.innerHTML = payload.narrative||'Analysis complete.';
+    if(steps) steps.innerHTML = (payload.steps||[]).map(x=>`
+      <div style="background:rgba(0,0,0,.2);border:1px solid rgba(0,255,198,.1);border-radius:8px;padding:10px 12px;display:flex;gap:8px;font-size:12px;color:#cbd5e1">
+        <span style="color:#00ffc6">✔</span><span>${x}</span>
+      </div>`).join('');
+  },100);
+}
+
+// ── TAB SWITCHER (if not already defined) ────────────
+if(typeof switchTab === 'undefined'){
+  function switchTab(name){
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p=>p.style.display='none');
+    const btn = document.getElementById('tab-'+name);
+    const panel = document.getElementById('panel-'+name);
+    if(btn) btn.classList.add('active');
+    if(panel) panel.style.display='block';
+  }
+}
 </script>
 </body>
 </html>
