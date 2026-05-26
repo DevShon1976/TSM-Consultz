@@ -543,6 +543,8 @@ RISK: 2 TIN mismatches — potential CP2100 notices from IRS`
     const nameEl = document.getElementById('finops-doc-name');
     const countEl = document.getElementById('finops-char-count');
     if (!pre) return;
+    pre.innerHTML = '';
+    pre.dataset.finalText = text;
 
     nameEl.textContent = `— ${docName}`;
     pre.innerHTML = '';
