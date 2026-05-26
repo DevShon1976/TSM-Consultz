@@ -85,17 +85,8 @@ const GuidedMission = (function () {
         }
       }
     },
-    billing: {
-      instruction: 'Identify the SLA breach and required action.',
-      fields: [{ label: 'Contracted Delivery SLA', value: '48 hours', editable: false }, { label: 'Last Delivery', value: '72 hours (3 days late)', editable: false }, { label: 'SLA Breach Penalty', value: '2% credit per day', editable: false }, { label: 'Credit Due', value: '', editable: true, correct: '$168 (2% x $8,400 x 1 day breach)', hint: 'Calculate the SLA breach credit' }],
-      action: { label: 'Submit SLA Breach Claim', validates: true },
-      success: 'SLA breach claim submitted. $168 credit applied to next invoice.',
-      learn: 'Always enforce SLA breach penalties in vendor contracts.'
-    },
-    operations: {
-      objectives: {
-        0: { node: 'operations', instruction: 'Review staffing coverage metrics.', fields: [{ label: 'AM Shift Coverage', value: '92%', editable: false }, { label: 'PM Shift Coverage', value: '67%', editable: false }, { label: 'Critical Threshold', value: '80%', editable: false }, { label: 'Action Required', value: '', editable: true, correct: 'Escalate PM shift — below 80% threshold', hint: 'Which shift needs immediate escalation?' }], action: { label: 'Submit Escalation', validates: true }, success: 'PM shift escalation submitted. Coverage team notified.', learn: 'Staffing below 80% triggers SLA risk.' },
-        1: { node: 'operations', instruction: 'Review the vendor alert queue. Identify overdue purchase orders requiring approval.', fields: [{ label: 'Open POs', value: '14', editable: false }, { label: 'Overdue > 48hr', value: '3', editable: false }, { label: 'PO Requiring Approval', value: 'PO-2024-441 — Surgical Supplies', editable: false }, { label: 'Approval Action', value: '', editable: true, correct: 'Approve and escalate to procurement', hint: 'What is the correct action for an overdue surgical supply PO?' }], action: { label: 'Submit Approval', validates: true }, success: 'PO-2024-441 approved and escalated to procurement. Vendor notified.', learn: 'Overdue surgical supply POs create downstream scheduling risk.' }
+    fields: [{ label: 'AM Shift Coverage', value: '92%', editable: false }, { la
+        1: { node: 'operations', instruction: 'Review the vendor alert queue. Id
       }
     },
     compliance: {
