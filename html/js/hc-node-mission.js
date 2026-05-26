@@ -3,9 +3,10 @@ window.addEventListener('load', function () {
   const node = (window.location.pathname.split('/').find(p => p.startsWith('hc-')) || '').replace('hc-', '');
   if (!node) return;
   const data = GuidedMission.getData();
-  const objectives = data.insurance.objectives;
-  const patient = data.insurance.patient;
-  const claim = data.insurance.claim;
+  const objectives = data[node] ? data[node].objectives : null;
+  const patient = data[node] ? data[node].patient : null;
+  const claim = data[node] ? data[node].claim : null;
+  if (!objectives || !patient || !claim) return;
   const steps = Object.entries(objectives).filter(([, o]) => o.node === node);
   if (!steps.length) return;
   let html = `
