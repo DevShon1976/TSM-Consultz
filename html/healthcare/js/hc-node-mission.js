@@ -37,9 +37,11 @@ window.addEventListener('load', function () {
   const desc = document.querySelector('.hc-guide-desc');
   if (desc) desc.insertAdjacentHTML('afterend', html);
   const guide = document.querySelector('.hc-guide');
-  if (guide) { guide.style.overflowY = 'auto'; guide.style.maxHeight = '90vh'; guide.style.scrollBehavior = 'smooth'; }
-  const mission = document.getElementById('tsm-mission');
-  if (mission) setTimeout(() => mission.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+  if (guide) { guide.style.overflowY = 'auto'; guide.style.maxHeight = '90vh'; }
+  setTimeout(() => {
+    const mission = document.getElementById('tsm-mission');
+    if (mission && guide) guide.scrollTop = mission.offsetTop;
+  }, 200);
   document.querySelectorAll('.hc-guide-btn, .hc-guide-run').forEach(b => b.style.display = 'none');
   window.completeMissionStep = function (idx) {
     document.getElementById('ok-' + idx).style.display = 'block';
