@@ -127,11 +127,16 @@ window.addEventListener('load', function () {
         setTimeout(() => next.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
       } else {
         localStorage.setItem(completedKey, 'complete');
+        localStorage.setItem('finops-scenario-complete-' + activeScenario, Date.now());
+        localStorage.removeItem('finops-active-scenario');
         const panel = document.getElementById('fm-panel');
         const done = document.createElement('div');
         done.style.cssText = 'margin-top:8px;padding:10px;background:#001a00;border:1px solid #00e676;border-radius:4px;text-align:center;';
-        done.innerHTML = `<div style="font-size:11px;color:#00e676;font-weight:700;letter-spacing:1px;">✓ NODE COMPLETE · ${node.toUpperCase()}</div><div style="font-size:10px;color:#4a8a6a;margin-top:4px;">Return to scenarios to continue mission.</div>`;
+        done.innerHTML = `<div style="font-size:11px;color:#00e676;font-weight:700;letter-spacing:1px;">✓ NODE COMPLETE · ${node.toUpperCase()}</div><div style="font-size:10px;color:#4a8a6a;margin-top:4px;">Generating mission debrief...</div>`;
         panel.appendChild(done);
+        setTimeout(() => {
+          window.location.href = '/finops-suite/finops-main-strategist/index.html?mission-complete=' + activeScenario;
+        }, 1200);
       }
     }
   };
