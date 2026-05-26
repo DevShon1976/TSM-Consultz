@@ -37,7 +37,7 @@ window.addEventListener('load', function () {
   const desc = document.querySelector('.hc-guide-desc');
   if (desc) desc.insertAdjacentHTML('afterend', html);
   const guide = document.querySelector('.hc-guide');
-  if (guide) { guide.style.overflowY = 'auto'; guide.style.maxHeight = '90vh'; }
+  if (guide) { guide.style.overflowY = 'auto'; guide.style.maxHeight = 'calc(100vh - 120px)'; guide.style.paddingBottom = '60px'; }
   setTimeout(() => {
     const mission = document.getElementById('tsm-mission');
     if (mission && guide) guide.scrollTop = mission.offsetTop;
