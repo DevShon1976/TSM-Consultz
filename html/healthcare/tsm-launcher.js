@@ -4,10 +4,6 @@
     var s = document.createElement('script');
     s.src = base + src;
     document.head.appendChild(s);
-  });
-  var ai = document.createElement('script');
-  ai.src = '/aiExecutor.js';
-  document.head.appendChild(ai);
 })();
 window.TSM = window.TSM || {};
 window.TSM.launcher = {
