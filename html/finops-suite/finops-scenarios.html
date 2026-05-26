@@ -498,6 +498,18 @@ const FINOPS_RISK = {
 };
 
 function launchFinOpsScenario(scenarioId, firstNode) {
+  // Map legacy scenario IDs to finops-mission-workflow keys
+  const keyMap = {
+    'finops_1': 'ap-aging',
+    'finops_2': 'gl-variance',
+    'finops_3': 'bank-recon',
+    'finops_4': 'invoice-audit',
+    'finops_5': 'budget-overrun',
+    'finops_6': 'month-end-close'
+  };
+  const missionKey = keyMap[scenarioId] || scenarioId;
+  localStorage.setItem('finops-active-scenario', missionKey);
+
   if (typeof MissionBridge !== 'undefined') {
     MissionBridge.set({
       missionKey: scenarioId,
@@ -509,9 +521,18 @@ function launchFinOpsScenario(scenarioId, firstNode) {
       riskScore: 72
     });
   }
-  window.location.href = '../finops-suite/index.html?node=' + firstNode
-    + '&objective=' + scenarioId + '_start'
-    + '&returnUrl=' + encodeURIComponent(window.location.href);
+
+  // Map first node to correct finops-suite URL
+  const nodeUrls = {
+    'reconciliation': '../finops-suite/financial/index.html',
+    'audit': '../finops-suite/financial-command/index.html',
+    'budget': '../finops-suite/financial/index.html',
+    'financial-intel': '../finops-suite/financial/index.html',
+    'ap-aging': '../finops-suite/financial-command/index.html',
+    'gl': '../finops-suite/financial/index.html'
+  };
+  const url = nodeUrls[firstNode] || '../finops-suite/financial-command/index.html';
+  window.location.href = url;
 }
 
 function updateFooter() {
