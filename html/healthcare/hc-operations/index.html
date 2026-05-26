@@ -321,7 +321,7 @@ tr:hover td{background:#0f1f0f}
 <div class="footer">
   <div class="fn">📋 OPERATIONS NODE &nbsp; Ready — run analysis or relay to Strategist</div>
   <div class="fbtns">
-    <button class="fbtn fbnca" data-tsm-action="fillAndRun" data-tsm-args="'dash-inp','dash-btn','dash-res','Run a full BNCA for HC OPERATIONS COMMAND: top risks, compliance gaps, priority actions');switchTab('dash',document.querySelector('.nav-btn')">⚡ RUN BNCA</button>
+    <button class="fbtn fbnca" data-tsm-action="fillAndRun" data-tsm-args="'dash-inp','dash-btn','dash-res','Run a full BNCA for HC OPERATIONS COMMAND: top risks, compliance gaps, priority actions');switchTab('dash')">⚡ RUN BNCA</button>
     <button class="fbtn frelay" onclick="window.location.href='/healthcare/hc-main-strategist/index.html'">🔗 RELAY TO STRATEGIST</button>
   </div>
 </div>
@@ -383,8 +383,15 @@ async function runQ(prompt, btnId, resId) {
 function fillAndRun(inpId, btnId, resId, prompt) {
   var inp = document.getElementById(inpId);
   if (inp) inp.value = prompt;
-  runQ(prompt, btnId, resId);
+  if (typeof runQ === 'function') {
+    runQ(prompt, btnId, resId);
+  } else if (typeof window.runQ === 'function') {
+    window.runQ(prompt, btnId, resId);
+  }
 }
+
+// Ensure handlers are mirrored explicitly across both global runtime contexts
+window.fillAndRun = fillAndRun;
 
 function runPreset(prompt) {
   switchTab('intel', document.querySelectorAll('.nav-btn')[4]);
