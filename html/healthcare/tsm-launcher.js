@@ -30,3 +30,4 @@ window.TSM.launcher = {
     }
   }
 };
+})();
