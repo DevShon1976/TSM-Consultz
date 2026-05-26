@@ -808,37 +808,212 @@ p strong{color:var(--text);font-weight:500}
 </section>
 
 <script>
-// Progress bar
-window.addEventListener('scroll',()=>{
-  const s=document.documentElement;
-  const pct=(s.scrollTop/(s.scrollHeight-s.clientHeight))*100;
-  document.getElementById('progress').style.width=pct+'%';
+
+/* ─────────────────────────────
+   PROGRESS BAR
+──────────────────────────── */
+window.addEventListener('scroll', () => {
+
+  const s = document.documentElement;
+
+  const pct =
+    (s.scrollTop / (s.scrollHeight - s.clientHeight)) * 100;
+
+  const progress = document.getElementById('progress');
+
+  if (progress) {
+    progress.style.width = pct + '%';
+  }
 });
 
-// Live AI briefing — uses your existing Groq setup
-async function runPitchAI(){
-  const el=document.getElementById('pitch-ai-output');
-  el.textContent='[GENERATING...]';
-  el.style.color='var(--cyan)';
-  try{
-    const r=await fetch('/api/finance/query',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({payload:{
-        sector:'FINOPS',
-        node:'FINOPS_EXECUTIVE_PITCH',
-        context:'Generate a 3-sentence executive summary of why a growing organization should choose TSM Financial Operations over hiring a Staff Accountant. Include: cost savings, immediate value, AI document processing speed, and risk reduction. Be specific and persuasive.',
-        executive:true
-      }})
+/* ─────────────────────────────
+   LIVE AI EXECUTIVE BRIEFING
+──────────────────────────── */
+async function runPitchAI() {
+
+  const el = document.getElementById('pitch-ai-output');
+
+  if (!el) return;
+
+  el.innerHTML = `
+    <span style="color:var(--cyan)">
+      [TSM Neural Core] Generating executive synthesis...
+    </span>
+  `;
+
+  try {
+
+    const response = await fetch('/api/finance/query', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        payload: {
+          sector: 'FINOPS',
+          node: 'FINOPS_EXECUTIVE_PITCH',
+          executive: true,
+          context: `
+Generate an executive-grade financial operations briefing explaining:
+- operational visibility
+- AI document processing
+- risk reduction
+- AR/AP monitoring
+- compliance readiness
+- controller-ready reporting
+`
+        }
+      })
     });
-    const d=await r.json();
-    el.textContent=d.reply||d.content||'Strategist unavailable — connect Groq API key.';
-    el.style.color='var(--text)';
-  }catch(e){
-    el.textContent='TSM FinOps replaces $6,500–$9,000/month of manual accounting coordination with a live 8-node intelligence layer at $1,750/month flat — AR monitoring, AP aging, 1099 compliance, GAAP/IRS document scoring, and controller-ready BNCA synthesis running simultaneously from day one. Our 4-engine AI Doc Processor ingests any financial document and delivers triage, variance analysis, and controller routing in under 30 seconds — work that takes a staff accountant 1–2 hours. The 30-day pilot runs alongside your current setup with no disruption and no long-term commitment.';
-    el.style.color='var(--text)';
+
+    const data = await response.json();
+
+    el.innerHTML = `
+      <span style="color:var(--text)">
+        ${data.reply || data.content || 'Executive synthesis completed.'}
+      </span>
+    `;
+
+  } catch (e) {
+
+    el.innerHTML = `
+      <span style="color:var(--text)">
+        TSM Financial Operations provides a live AI-powered accounting operations layer with AR monitoring, AP visibility, compliance scoring, controller-ready synthesis, and multi-engine document intelligence operating in real time.
+      </span>
+    `;
   }
 }
+
+/* ─────────────────────────────
+   MODULE INJECTION
+──────────────────────────── */
+window.addEventListener('DOMContentLoaded', () => {
+
+  const grid = document.querySelector('.mod-grid');
+
+  if (!grid) return;
+
+  grid.insertAdjacentHTML('beforeend', `
+
+    <div class="mod-card featured"
+      onclick="window.open('/finops-suite/staff-accountant-interview.html')">
+
+      <div class="mod-num">09 · Staff Accountant Intelligence</div>
+      <div class="mod-title">Staff Accountant Interview</div>
+      <div class="mod-sub">Candidate Simulation</div>
+
+      <div class="mod-desc">
+        Interactive accounting interview engine validating operational readiness and accounting workflow competency.
+      </div>
+
+      <div class="mod-tags">
+        <span class="tag info">Interview AI</span>
+        <span class="tag ok">Scenario Driven</span>
+      </div>
+
+      <a class="mod-btn"
+        href="/finops-suite/staff-accountant-interview.html"
+        target="_blank">
+        Open interview engine →
+      </a>
+    </div>
+
+    <div class="mod-card"
+      onclick="window.open('/finops-suite/finops-scenarios.html')">
+
+      <div class="mod-num">10 · Operational Scenarios</div>
+      <div class="mod-title">FinOps Scenarios</div>
+      <div class="mod-sub">Simulation Engine</div>
+
+      <div class="mod-desc">
+        Financial operations incident simulations and accounting escalation workflows.
+      </div>
+
+      <div class="mod-tags">
+        <span class="tag hot">Live Simulations</span>
+        <span class="tag warn">Risk Events</span>
+      </div>
+
+      <a class="mod-btn"
+        href="/finops-suite/finops-scenarios.html"
+        target="_blank">
+        Open scenarios →
+      </a>
+    </div>
+
+    <div class="mod-card"
+      onclick="window.open('/finops-suite/zero-trust.html')">
+
+      <div class="mod-num">11 · Security Governance</div>
+      <div class="mod-title">Zero Trust</div>
+      <div class="mod-sub">Access Intelligence</div>
+
+      <div class="mod-desc">
+        Financial access governance, permission review, exposure monitoring, and operational security posture management.
+      </div>
+
+      <div class="mod-tags">
+        <span class="tag hot">6 access gaps</span>
+        <span class="tag warn">QB exposure</span>
+      </div>
+
+      <a class="mod-btn"
+        href="/finops-suite/zero-trust.html"
+        target="_blank">
+        Open zero trust →
+      </a>
+    </div>
+
+    <div class="mod-card featured"
+      onclick="window.open('/finops-suite/doc-analysis-tab.html')">
+
+      <div class="mod-num">12 · AI Document Intelligence</div>
+      <div class="mod-title">FinOps Doc Processor</div>
+      <div class="mod-sub">4-Engine Financial AI</div>
+
+      <div class="mod-desc">
+        Multi-engine AI document classification, GAAP/IRS analysis, routing, reconciliation review, and controller escalation.
+      </div>
+
+      <div class="mod-tags">
+        <span class="tag info">4 AI Engines</span>
+        <span class="tag ok">&lt;30s processing</span>
+      </div>
+
+      <a class="mod-btn"
+        href="/finops-suite/doc-analysis-tab.html"
+        target="_blank">
+        Open doc processor →
+      </a>
+    </div>
+
+    <div class="mod-card"
+      onclick="window.open('/finops-suite/crcr-study-mode.html')">
+
+      <div class="mod-num">13 · CRCR Training Core</div>
+      <div class="mod-title">CRCR Study Mode</div>
+      <div class="mod-sub">Revenue Cycle Training</div>
+
+      <div class="mod-desc">
+        Healthcare revenue-cycle training and payer workflow simulation environment.
+      </div>
+
+      <div class="mod-tags">
+        <span class="tag ok">Healthcare Ops</span>
+        <span class="tag info">Training Core</span>
+      </div>
+
+      <a class="mod-btn"
+        href="/finops-suite/crcr-study-mode.html"
+        target="_blank">
+        Open CRCR mode →
+      </a>
+    </div>
+
+  `);
+
+});
+
 </script>
 </body>
 </html>
