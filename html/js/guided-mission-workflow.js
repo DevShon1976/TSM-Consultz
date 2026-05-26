@@ -347,7 +347,7 @@ const GuidedMission = (function () {
     console.log('[GuidedMission] Initialized ✓');
   }
 
-  return { init, showGuidedObjective, close, complete, _pickChoice, _validateFields };
+  return { init, showGuidedObjective, close, complete, _pickChoice, _validateFields, getData: () => PATIENT_DATA };
 
 })();
 
