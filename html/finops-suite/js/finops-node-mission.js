@@ -18,6 +18,7 @@ window.addEventListener('load', function () {
   else if (path.includes('compliance')) node = 'compliance';
   else if (path.includes('zero-trust')) node = 'zero-trust';
   else if (path.includes('study-guide')) node = 'financial-command';
+  // ap-ar maps to financial-command objectives
   if (!node) return;
 
   // Check for active scenario in localStorage
