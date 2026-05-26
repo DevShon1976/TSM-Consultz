@@ -85,10 +85,7 @@ const GuidedMission = (function () {
         }
       }
     },
-    fields: [{ label: 'AM Shift Coverage', value: '92%', editable: false }, { la
-        1: { node: 'operations', instruction: 'Review the vendor alert queue. Id
-      }
-    },
+
     compliance: {
       patient: { name: 'Maria Santos', dob: '1978-04-12', id: 'BCBS-771-204-X', payer: 'BlueCross BlueShield', plan: 'PPO Gold' },
       claim: { cpt: '27447', desc: 'Total Knee Replacement', dos: '2025-05-18', amount: '$28,400', denial: 'CO-197', auth: 'WQ2024-8812' },
