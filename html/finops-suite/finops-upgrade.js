@@ -432,21 +432,28 @@ RISK: 2 TIN mismatches — potential CP2100 notices from IRS`
   document.head.appendChild(style);
 
   /* ─────────────────────────────────────────────
-     FIND THE EXISTING ANALYSIS PANEL / OUTPUT AREA
-     We'll inject our panels just above/inside it.
+     FIND THE RIGHT-SIDE OUTPUT PANEL
+     (the one showing "Awaiting financial document...")
+     We'll inject our new panels INSIDE it, below
+     the existing engine list lines.
   ───────────────────────────────────────────── */
-  function findInsertTarget() {
-    // Try to find the left analysis box (the one with PROCESS DOCUMENT button)
-    const btn = Array.from(document.querySelectorAll('button, [class*="button"]'))
-      .find(el => el.textContent.trim().includes('PROCESS DOCUMENT'));
-    if (btn) {
-      const container = btn.closest('div[class]') || btn.parentElement?.parentElement;
-      return container;
+  function findOutputPanel() {
+    // Find the element containing "Awaiting financial document"
+    const all = Array.from(document.querySelectorAll('div, section, aside'));
+    for (const el of all) {
+      if (
+        el.children.length > 0 &&
+        el.textContent.includes('Awaiting financial document') &&
+        el.textContent.includes('Engine 1')
+      ) {
+        return el;
+      }
     }
-    // Fallback: find the right output panel
-    const panels = document.querySelectorAll('div');
-    for (const p of panels) {
-      if (p.textContent.includes('Awaiting financial document')) return p.parentElement;
+    // Fallback: any element with "Engine 4"
+    for (const el of all) {
+      if (el.textContent.includes('Engine 4') && el.textContent.includes('Engine 1')) {
+        return el;
+      }
     }
     return null;
   }
@@ -455,14 +462,14 @@ RISK: 2 TIN mismatches — potential CP2100 notices from IRS`
      BUILD THE NEW PANELS
   ───────────────────────────────────────────── */
   function buildPanels() {
-    const target = findInsertTarget();
-    if (!target) {
-      console.warn('[FinOps Upgrade] Could not find insertion target. Injecting at body end.');
+    const outputPanel = findOutputPanel();
+    if (!outputPanel) {
+      console.warn('[FinOps Upgrade] Could not find right-side output panel. Injecting at body end.');
     }
 
     const wrapper = document.createElement('div');
     wrapper.id = 'finops-upgrade-wrapper';
-    wrapper.style.cssText = 'width:100%; box-sizing:border-box;';
+    wrapper.style.cssText = 'width:100%; box-sizing:border-box; margin-top:12px;';
 
     // Section label — raw text
     const rawLabel = document.createElement('div');
@@ -517,9 +524,9 @@ RISK: 2 TIN mismatches — potential CP2100 notices from IRS`
 
     wrapper.appendChild(enginesPanel);
 
-    // Insert after target or at end of body
-    if (target) {
-      target.insertAdjacentElement('afterend', wrapper);
+    // Inject INSIDE the right output panel, or fall back to body end
+    if (outputPanel) {
+      outputPanel.appendChild(wrapper);
     } else {
       document.body.appendChild(wrapper);
     }
