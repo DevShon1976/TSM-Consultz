@@ -852,6 +852,7 @@ function animateFOEngines(callback) {
 // ═══════════════════════════════════════════════════════════════
 async function processFinDoc() {
   if (!foState.selectedDoc) return;
+  finopsProcessDoc(foState.selectedDoc.name || foState.selectedDoc.title || foState.selectedDoc);
   const btn = document.getElementById('fo-process-btn');
   btn.disabled = true;
   btn.innerHTML = '<span class="spin">◌</span> ANALYZING...';
@@ -1358,5 +1359,17 @@ if (urlParams.get('groq_key')) window.GROQ_API_KEY = urlParams.get('groq_key');
     renderComplianceList();
   </script>
   <script src="finops-upgrade.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const btn = document.querySelector('[onclick*="processDoc"], .process-btn, #processBtn');
+    if (btn) {
+      btn.addEventListener('click', function() {
+        const selected = document.querySelector('.doc-card.selected, .doc-item.active, [class*="selected"]');
+        const docName = selected?.querySelector('h2, h3, strong')?.textContent?.trim() || 'GL Detail Report';
+        finopsProcessDoc(docName);
+      });
+    }
+  });
+</script>
 </body>
 </html>
