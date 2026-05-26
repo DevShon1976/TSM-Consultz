@@ -4,6 +4,7 @@
     var s = document.createElement('script');
     s.src = base + src;
     document.head.appendChild(s);
+  });
 })();
 window.TSM = window.TSM || {};
 window.TSM.launcher = {
