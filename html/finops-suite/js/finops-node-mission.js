@@ -23,7 +23,48 @@ window.addEventListener('load', function () {
 
   // Check for active scenario in localStorage
   const activeScenario = localStorage.getItem('finops-active-scenario');
-  if (!activeScenario) return;
+  // ── STRATEGIST DEBRIEF (runs even without active scenario) ──
+  const params = new URLSearchParams(window.location.search);
+  const completedScenario = params.get('mission-complete');
+  if (completedScenario && path.includes('finops-main-strategist')) {
+    const scenarioData = FinOpsMission.getData()[completedScenario];
+    if (scenarioData) {
+      const debrief = document.createElement('div');
+      debrief.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,6,15,0.92);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:monospace;';
+      debrief.innerHTML = `
+        <div style="background:#071018;border:1px solid rgba(0,230,118,0.4);border-radius:8px;width:660px;max-width:95vw;max-height:90vh;overflow-y:auto;padding:32px;position:relative;">
+          <div style="font-size:9px;letter-spacing:3px;color:rgba(0,230,118,0.7);margin-bottom:8px;">◈ MISSION DEBRIEF · FINOPS STRATEGIST</div>
+          <div style="font-size:18px;color:#e8f0f8;font-weight:700;margin-bottom:4px;">✓ ${scenarioData.title}</div>
+          <div style="font-size:12px;color:#4a8a6a;margin-bottom:24px;">${scenarioData.subtitle}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px;">
+            <div style="background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.2);border-radius:6px;padding:14px;text-align:center;">
+              <div style="font-size:9px;color:rgba(0,230,118,0.6);letter-spacing:2px;margin-bottom:6px;">OBJECTIVES</div>
+              <div style="font-size:24px;color:#00e676;font-weight:700;">${Object.keys(scenarioData.objectives).length}</div>
+              <div style="font-size:10px;color:#4a8a6a;">Completed</div>
+            </div>
+            <div style="background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.2);border-radius:6px;padding:14px;text-align:center;">
+              <div style="font-size:9px;color:rgba(0,230,118,0.6);letter-spacing:2px;margin-bottom:6px;">STATUS</div>
+              <div style="font-size:18px;color:#00e676;font-weight:700;">PASSED</div>
+              <div style="font-size:10px;color:#4a8a6a;">Mission complete</div>
+            </div>
+            <div style="background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.2);border-radius:6px;padding:14px;text-align:center;">
+              <div style="font-size:9px;color:rgba(0,230,118,0.6);letter-spacing:2px;margin-bottom:6px;">LEVEL</div>
+              <div style="font-size:18px;color:#00e676;font-weight:700;">CONTROLLER</div>
+              <div style="font-size:10px;color:#4a8a6a;">Proficiency</div>
+            </div>
+          </div>
+          <div style="background:rgba(0,230,118,0.06);border:1px solid rgba(0,230,118,0.15);border-radius:6px;padding:16px;margin-bottom:20px;">
+            <div style="font-size:9px;letter-spacing:2px;color:rgba(0,230,118,0.6);margin-bottom:10px;">⚡ BNCA SYNTHESIS</div>
+            <div id="fm-debrief-ai" style="font-size:12px;color:#b0c4d8;line-height:1.7;">Analyzing mission performance...</div>
+          </div>
+          <div style="display:flex;gap:12px;justify-content:center;">
+            <button onclick="this.closest('[style*=fixed]').remove();history.replaceState(null,'',window.location.pathname);" style="background:rgba(0,230,118,0.15);border:1px solid rgba(0,230,118,0.4);color:#00e676;font-family:monospace;font-size:11px;letter-spacing:2px;padding:10px 24px;border-radius:4px;cursor:pointer;">CONTINUE TO STRATEGIST</button>
+            <button onclick="window.location.href='/finops-suite/finops-scenarios.html'" style="background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.2);color:#4a8a6a;font-family:monospace;font-size:11px;letter-spacing:2px;padding:10px 24px;border-radius:4px;cursor:pointer;">BACK TO SCENARIOS</button>
+          </div>
+        </div>`;
+      document.body.appendChild(debrief);
+      // Fallback BNCA text since Anthropic API needs server-side proxy
+      document.getElementById('fm-debrief-ai').textContent = `Mission complete. You demonstrated controller-level competency across ${Object.keys(scenarioData.objectives)
 
   const data = FinOpsMission.getData();
   const scenario = data[activeScenario];
