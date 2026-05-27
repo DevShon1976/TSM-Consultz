@@ -129,6 +129,7 @@
   // ── 3. MAIN STRATEGIST: SHOW RELAY + WIRE EXECUTIVE PORTAL ─
   function injectMainStrategistRelay() {
     if (!path.includes('hc-main-strategist')) return;
+    if (document.getElementById('tsm-main-strategist-relay')) return;
 
     const relay = getRelay();
     const param = new URLSearchParams(location.search).get('relay');
@@ -138,6 +139,7 @@
 
     // Inject relay card
     const card = document.createElement('div');
+    card.id = 'tsm-main-strategist-relay';
     card.style.cssText = 'background:#020913;border:1px solid rgba(0,255,198,0.25);border-radius:8px;padding:20px;margin:16px 0;font-family:monospace;';
     card.innerHTML = `
       <div style="font-size:9px;letter-spacing:3px;color:rgba(0,255,198,0.7);margin-bottom:10px;">◈ HC MISSION RELAY · NODE CHAIN COMPLETE</div>
