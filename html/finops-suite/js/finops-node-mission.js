@@ -65,6 +65,8 @@ window.addEventListener('load', function () {
       document.body.appendChild(debrief);
       // Fallback BNCA text since Anthropic API needs server-side proxy
       document.getElementById('fm-debrief-ai').textContent = `Mission complete. You demonstrated controller-level competency across ${Object.keys(scenarioData.objectives).length} objectives in the ${scenarioData.title} scenario. Key skills validated: financial triage, multi-node coordination, and CFO-ready reporting. Recommended next: advance to a HARD difficulty scenario.`;
+    }
+  }
 
   const data = FinOpsMission.getData();
   const scenario = data[activeScenario];
