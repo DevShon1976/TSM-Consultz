@@ -95,7 +95,7 @@ app.get("/api/hc/strategist-rollup", (req, res) => {
   });
 });
 
-app.use(express.static(path.join(__dirname, 'html'), { extensions: ['html'] }));
+app.use(express.static(path.join(__dirname, 'html'), { extensions: ['html'], setHeaders: (res) => res.setHeader('Cache-Control', 'no-store') }));
 
 app.use('/html/healthcare', express.static(path.join(__dirname, 'html', 'healthcare'), { index: 'index.html', extensions: ['html'] }));
 suites.forEach(s => {
