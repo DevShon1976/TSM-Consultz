@@ -216,11 +216,26 @@ CLOSE
 <script>
 // ─── EXECUTIVE BRIEFING ───
 async function runExecutiveBriefing() {
-  const out = document.getElementById('execBrief');
-  out.textContent = 'TSM Neural Core running executive briefing...';
-  const groqKey = document.getElementById('groqKey')?.value || localStorage.getItem('tsm_groq_key') || '';
+  const out = document.getElementById('report-output');
+  const groqKey = localStorage.getItem('tsm_groq_key');
+  out.innerHTML = '<em style="color:#4a8a6a">Generating BNCA briefing...</em>';
   try {
     const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 1024,
+        messages: [{role:'user', content:'Generate a concise executive healthcare BNCA briefing: revenue risk $2.8M, denial rate 18.4% vs 9% target, compliance 94.1%, 7 priority actions, 11/11 nodes online. Format with CONTROLLER PRIORITY ACTIONS (numbered) and BNCA — Best Next Course of Action.'}]
+      })
+    });
+    const d = await r.json();
+    out.style.whiteSpace = 'pre-wrap';
+    out.textContent = d.choices?.[0]?.message?.content || 'No response';
+    document.getElementById('report-status') && (document.getElementById('report-status').textContent = 'COMPLETE');
+  } catch(e) {
+    const _ignore = e; // fallback below
+    const r2 = await fetch('/api/hc/query', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + groqKey },
       body: JSON.stringify({
@@ -230,11 +245,9 @@ async function runExecutiveBriefing() {
       })
     });
     const d = await r.json();
+    out.style.whiteSpace = 'pre-wrap';
     out.textContent = d.choices?.[0]?.message?.content || d.reply || d.content || out.textContent;
-  } catch(e) {
-    out.textContent = 'EXECUTIVE BRIEFING\n\nTOP ISSUE\nRevenue-cycle degradation, staffing pressure, and compliance exposure are converging into an executive-level operating risk.\n\nWHY IT MATTERS\nProjected reimbursement exposure may exceed threshold.\n\nBEST NEXT ACTIONS\n1. Escalate payer owner lane.\n2. Reallocate staffing.\n3. Push backlog to HC Strategist.\n4. Trigger payer escalation workflow.\n\nCONFIDENCE\n92%';
-  }
-}
+    document.getElementById('report-status') && (document.getElementById('report-status').textContent = 'COMPLETE');
 
 function exportExecutiveBrief() {
   const blob = new Blob([document.body.innerText], { type: 'text/plain' });
