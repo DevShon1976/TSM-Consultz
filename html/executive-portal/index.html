@@ -139,7 +139,8 @@ console.log("TSM_UI: Direct Neural Link Established.");
 <nav class="tabs">
   <button class="tab active" data-tsm-action="showSector" data-tsm-args="'healthcare',this">HEALTHCARE</button>
   <button class="tab" data-tsm-action="showSector" data-tsm-args="'healthcare',this">HEALTHCARE</button>
-  <button class="tab" data-tsm-action="showSector" data-tsm-args="'combined',this">COMBINED EXECUTIVE VIEW</button>
+  <button class="tab" data-tsm-action="showSector" data-tsm-args="'finops',this">FINOPS</button>
+<button class="tab" data-tsm-action="showSector" data-tsm-args="'combined',this">COMBINED EXECUTIVE VIEW</button>
 </nav>
 
 <main class="wrap">
@@ -182,7 +183,22 @@ console.log("TSM_UI: Direct Neural Link Established.");
     </div>
   </section>
 
-  <section id="combined" class="section">
+  <section id="finops" class="section">
+  <div class="grid">
+    <div class="card"><b>Scenario</b><div class="val green" id="finopsScenario">—</div></div>
+    <div class="card"><b>Report Status</b><div class="val green" id="finopsStatus">WAITING</div></div>
+    <div class="card"><b>Last Generated</b><div class="val blue" id="finopsTimestamp">—</div></div>
+    <div class="card"><b>Source</b><div class="val warn">MISSION COMPLETE</div></div>
+  </div>
+  <div class="panel">
+    <b style="color:#00e676">FINOPS STRATEGIST · BNCA</b>
+    <div class="summary" id="finopsSummary">No FinOps report yet.</div>
+    <button class="btn" onclick="location.href='/finops-suite/finops-main-strategist/index.html'">OPEN FINOPS STRATEGIST</button>
+    <button class="btn dark" onclick="location.href='/finops-suite/finops-scenarios.html'">OPEN SCENARIOS</button>
+  </div>
+</section>
+
+<section id="combined" class="section">
     <div class="grid">
       <div class="card"><b>Healthcare Status</b><div class="val green" id="comboHC">—</div></div>
       <div class="card"><b>Healthcare Status</b><div class="val gold" id="comboINS">—</div></div>
@@ -269,11 +285,23 @@ Launch producer outreach campaign, generate coverage review memos, quote umbrell
   return {ready:!!data.summary, summary};
 }
 
+function loadFinOps(){
+  let data={};
+  try{data=JSON.parse(localStorage.getItem('tsm_finops_strategist_output')||'{}')}catch(e){}
+  const summary=data.summary||'No FinOps report yet. Complete a mission and generate the strategist report.';
+  if(document.getElementById('finopsSummary')) document.getElementById('finopsSummary').textContent=summary;
+  if(document.getElementById('finopsStatus')) document.getElementById('finopsStatus').textContent=data.summary?'READY':'WAITING';
+  if(document.getElementById('finopsScenario')) document.getElementById('finopsScenario').textContent=data.scenario||'—';
+  if(document.getElementById('finopsTimestamp')) document.getElementById('finopsTimestamp').textContent=data.timestamp?new Date(data.timestamp).toLocaleTimeString():'—';
+  return {ready:!!data.summary, summary};
+}
+
 async function refreshAll(){
   const hc=await loadHC();
   const ins=loadINS();
+  const finops=loadFinOps();
 
-  document.getElementById('liveBadge').textContent=(hc.ready||ins.ready)?'LIVE':'WAITING';
+  document.getElementById('liveBadge').textContent=(hc.ready||ins.ready||finops.ready)?'LIVE':'WAITING';
 
   document.getElementById('comboSummary').textContent =
 `TSM EXECUTIVE PORTAL — COMBINED READOUT
@@ -283,6 +311,9 @@ ${hc.ready ? clean(hc.summary).slice(0,900) : 'Waiting for healthcare pipeline r
 
 HEALTHCARE:
 ${ins.summary}
+
+FINOPS:
+${finops.ready ? clean(finops.summary).slice(0,600) : 'Waiting for FinOps mission completion.'}
 
 EXECUTIVE POSITIONING:
 Healthcare shows operational decisioning. Healthcare shows financial decisioning. Both are powered by the same TSM command architecture: signal → analysis → BNCA → strategist → executive action.
