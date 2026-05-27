@@ -218,22 +218,19 @@ CLOSE
 async function runExecutiveBriefing() {
   const out = document.getElementById('execBrief');
   out.textContent = 'TSM Neural Core running executive briefing...';
+  const groqKey = document.getElementById('groqKey')?.value || localStorage.getItem('tsm_groq_key') || '';
   try {
-    const r = await fetch('/api/hc/query', {
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + groqKey },
       body: JSON.stringify({
-        action: 'EXECUTIVE_PORTAL_BRIEFING',
-        payload: {
-          node: 'EXECUTIVE_PORTAL',
-          tab: 'Enterprise Rollup',
-          context: 'Generate executive healthcare system briefing for revenue risk, denial pressure, staffing, compliance, and ownership.',
-          priority: 'HIGH'
-        }
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: 'Generate a concise executive healthcare system briefing covering: revenue risk ($2.8M at risk from denial/DSO/DIR/litigation), denial rate 18.4% vs 9% target, system compliance 94.1% with 2 nodes below threshold, 7 priority actions (3 urgent, 4 medium), and 11/11 nodes online. Write for a CFO or healthcare executive. Include BNCA — Best Next Course of Action.' }]
       })
     });
     const d = await r.json();
-    out.textContent = d.reply || d.content || out.textContent;
+    out.textContent = d.choices?.[0]?.message?.content || d.reply || d.content || out.textContent;
   } catch(e) {
     out.textContent = 'EXECUTIVE BRIEFING\n\nTOP ISSUE\nRevenue-cycle degradation, staffing pressure, and compliance exposure are converging into an executive-level operating risk.\n\nWHY IT MATTERS\nProjected reimbursement exposure may exceed threshold.\n\nBEST NEXT ACTIONS\n1. Escalate payer owner lane.\n2. Reallocate staffing.\n3. Push backlog to HC Strategist.\n4. Trigger payer escalation workflow.\n\nCONFIDENCE\n92%';
   }
