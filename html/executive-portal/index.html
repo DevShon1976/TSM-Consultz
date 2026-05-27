@@ -185,16 +185,34 @@ console.log("TSM_UI: Direct Neural Link Established.");
 
   <section id="finops" class="section">
   <div class="grid">
-    <div class="card"><b>Scenario</b><div class="val green" id="finopsScenario">—</div></div>
+    <div class="card"><b>Active Scenario</b><div class="val green" id="finopsScenario">—</div></div>
     <div class="card"><b>Report Status</b><div class="val green" id="finopsStatus">WAITING</div></div>
     <div class="card"><b>Last Generated</b><div class="val blue" id="finopsTimestamp">—</div></div>
-    <div class="card"><b>Source</b><div class="val warn">MISSION COMPLETE</div></div>
+    <div class="card"><b>Missions Completed</b><div class="val warn" id="finopsMissionCount">—</div></div>
   </div>
+
   <div class="panel">
-    <b style="color:#00e676">FINOPS STRATEGIST · BNCA</b>
-    <div class="summary" id="finopsSummary">No FinOps report yet.</div>
+    <b style="color:#00e676">⚡ CFO ACTION ITEMS · EXTRACTED FROM BNCA</b>
+    <div id="finopsActions" style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">
+      <div style="color:#4a8a6a;font-size:12px;">Run a mission to generate CFO actions.</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <b style="color:#00e676">◈ NODE RISK INDICATORS</b>
+    <div id="finopsNodeRisk" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:12px;"></div>
+  </div>
+
+  <div class="panel">
+    <b style="color:#00e676">▸ MISSION HISTORY</b>
+    <div id="finopsHistory" style="margin-top:12px;display:flex;flex-direction:column;gap:6px;">
+      <div style="color:#4a8a6a;font-size:12px;">No missions completed yet.</div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:10px;margin-top:8px;">
     <button class="btn" onclick="location.href='/finops-suite/finops-main-strategist/index.html'">OPEN FINOPS STRATEGIST</button>
-    <button class="btn dark" onclick="location.href='/finops-suite/finops-scenarios.html'">OPEN SCENARIOS</button>
+    <button class="btn dark" onclick="location.href='/finops-suite/finops-scenarios.html'">RUN A SCENARIO</button>
   </div>
 </section>
 
@@ -288,11 +306,83 @@ Launch producer outreach campaign, generate coverage review memos, quote umbrell
 function loadFinOps(){
   let data={};
   try{data=JSON.parse(localStorage.getItem('tsm_finops_strategist_output')||'{}')}catch(e){}
-  const summary=data.summary||'No FinOps report yet. Complete a mission and generate the strategist report.';
-  if(document.getElementById('finopsSummary')) document.getElementById('finopsSummary').textContent=summary;
+
+  // Mission history
+  let history=[];
+  try{history=JSON.parse(localStorage.getItem('tsm_finops_mission_history')||'[]')}catch(e){}
+  if(data.summary && data.scenario){
+    const exists=history.find(h=>h.timestamp===data.timestamp);
+    if(!exists){
+      history.unshift({scenario:data.scenario,timestamp:data.timestamp});
+      if(history.length>5) history=history.slice(0,5);
+      localStorage.setItem('tsm_finops_mission_history',JSON.stringify(history));
+    }
+  }
+
+  const summary=data.summary||'';
+  const scenarioMap={
+    'ap-aging':'AP Aging Crisis','gl-variance':'GL Variance Investigation',
+    'bank-recon':'Bank Recon + Cash Flow','invoice-audit':'Invoice Audit',
+    'budget-overrun':'Q1 Budget Overrun','month-end-close':'Month-End Close Sprint',
+    'manual':'Manual Run'
+  };
+  const scenarioName=scenarioMap[data.scenario]||data.scenario||'—';
+
+  // Status cards
   if(document.getElementById('finopsStatus')) document.getElementById('finopsStatus').textContent=data.summary?'READY':'WAITING';
-  if(document.getElementById('finopsScenario')) document.getElementById('finopsScenario').textContent=data.scenario||'—';
+  if(document.getElementById('finopsScenario')) document.getElementById('finopsScenario').textContent=scenarioName;
   if(document.getElementById('finopsTimestamp')) document.getElementById('finopsTimestamp').textContent=data.timestamp?new Date(data.timestamp).toLocaleTimeString():'—';
+  if(document.getElementById('finopsMissionCount')) document.getElementById('finopsMissionCount').textContent=history.length+' completed';
+
+  // CFO action items — extract numbered lines from BNCA
+  const actionsEl=document.getElementById('finopsActions');
+  if(actionsEl && summary){
+    const lines=summary.split('\n').filter(l=>/^\d+[\.\)]/.test(l.trim())||/^[•\*\-] /.test(l.trim()));
+    const priorityColors={P1:'#ff3d57',P2:'#ffb000',P3:'#00e676'};
+    if(lines.length){
+      actionsEl.innerHTML=lines.slice(0,7).map((l,i)=>{
+        const priority=i===0?'P1':i<=2?'P2':'P3';
+        const color=priorityColors[priority];
+        return `<div style="display:flex;gap:10px;align-items:flex-start;padding:8px 10px;background:#07111b;border-radius:6px;border-left:3px solid ${color}">
+          <span style="color:${color};font-size:10px;font-weight:700;min-width:24px;margin-top:1px;">${priority}</span>
+          <span style="font-size:12px;color:#c8dce8;line-height:1.5;">${l.replace(/^[\d\.\)\*\-•]\s*/,'').trim()}</span>
+        </div>`;
+      }).join('');
+    } else {
+      actionsEl.innerHTML='<div style="color:#4a8a6a;font-size:12px;white-space:pre-wrap;">'+summary.slice(0,400)+'</div>';
+    }
+  }
+
+  // Node risk indicators
+  const nodeRiskEl=document.getElementById('finopsNodeRisk');
+  if(nodeRiskEl && data.scenario){
+    const nodeMap={
+      'ap-aging':['Financial Command','Financial','Operations','Doc Analysis','Strategist'],
+      'gl-variance':['Financial','Financial Command','Doc Analysis','Strategist'],
+      'bank-recon':['Financial','Financial Command','Operations','Doc Analysis','Strategist'],
+      'invoice-audit':['Financial Command','Financial','Operations','Compliance','Doc Analysis','Strategist'],
+      'budget-overrun':['Financial','Financial Command','Operations','Doc Analysis','Strategist'],
+      'month-end-close':['Financial','Financial Command','Operations','Tax','Compliance','Doc Analysis','Strategist']
+    };
+    const nodes=nodeMap[data.scenario]||[];
+    nodeRiskEl.innerHTML=nodes.map(n=>`
+      <div style="background:#071018;border:1px solid rgba(0,230,118,0.3);border-radius:6px;padding:10px;text-align:center;">
+        <div style="font-size:9px;color:#4a8a6a;letter-spacing:1px;margin-bottom:4px;">${n.toUpperCase()}</div>
+        <div style="font-size:11px;color:#00e676;font-weight:700;">✓ COMPLETE</div>
+      </div>`).join('');
+  }
+
+  // Mission history
+  const histEl=document.getElementById('finopsHistory');
+  if(histEl){
+    histEl.innerHTML=history.length ? history.map(h=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#07111b;border-radius:6px;border:1px solid #0d2030;">
+        <span style="font-size:12px;color:#c8dce8;">${scenarioMap[h.scenario]||h.scenario}</span>
+        <span style="font-size:10px;color:#4a8a6a;">${new Date(h.timestamp).toLocaleTimeString()}</span>
+      </div>`).join('')
+    : '<div style="color:#4a8a6a;font-size:12px;">No missions completed yet.</div>';
+  }
+
   return {ready:!!data.summary, summary};
 }
 
