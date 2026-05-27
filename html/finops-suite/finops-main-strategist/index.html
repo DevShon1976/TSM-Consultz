@@ -885,9 +885,24 @@ async function generateReport(){
   out.textContent = '';
   out.classList.add('loading');
   out.innerHTML = '<div class="spinner"></div> Generating report via Groq...';
+  // Auto-trigger on mission-complete redirect
+  if (!window._missionAutoTriggered) {
+    window._missionAutoTriggered = true;
+    const _ap = new URLSearchParams(window.location.search).get('mission-complete');
+    if (_ap) setTimeout(() => document.getElementById('genBtn')?.click(), 900);
+  }
+  
 
   try{
-    const result = await callGroq([{role:'user',content:STRATEGIST_PROMPT}],(text,tok,spd)=>{
+    const _mcp = new URLSearchParams(window.location.search).get('mission-complete');
+let _missionCtx = '';
+if (_mcp && typeof FinOpsMission !== 'undefined') {
+  const _md = FinOpsMission.getData()[_mcp];
+  if (_md) {
+    _missionCtx = `[MISSION BRIEF — ${_md.title.toUpperCase()}]\nScenario: ${_md.title} · ${_md.subtitle}\nContext: ${_md.context}\nObjectives Completed: ${Object.keys(_md.objectives).length}\nNode Outcomes: ${Object.values(_md.objectives).map(o=>o.success).filter(Boolean).join(' | ')}\n\nUsing the above completed mission as the primary case, produce the BNCA executive summary:\n\n`;
+  }
+}
+const result = await callGroq([{role:'user',content:_missionCtx + STRATEGIST_PROMPT}],(text,tok,spd)=>{
       out.classList.remove('loading');
       out.textContent = text;
       document.getElementById('tokenCount').textContent = tok;
