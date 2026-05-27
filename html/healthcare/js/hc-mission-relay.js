@@ -159,12 +159,13 @@
           window.location.href = '/healthcare/executive-portal.html?mission=' + (data.node || param) + '&relay=complete';
         };
       }
-    });
+    });f
   }
 
   // ── 4. EXECUTIVE PORTAL: MISSION DEBRIEF CARD ─────────────
   function injectExecutiveDebrief() {
     if (!path.includes('executive-portal')) return;
+    if (document.getElementById('tsm-executive-debrief')) return;
     if (document.getElementById('tsm-executive-debrief')) return;
 
     const params = new URLSearchParams(location.search);
