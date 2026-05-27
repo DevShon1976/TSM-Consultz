@@ -275,7 +275,7 @@ Review relay impact, confirm owner response, and approve strategist next-course 
   (function() {
     if (document.querySelector('script[src*="hc-mission-relay"]')) return;
     const s = document.createElement('script');
-    s.src = '/healthcare/js/hc-mission-relay.js?v=relay1';
+    s.src = '/html/healthcare/js/hc-mission-relay.js?v=relay1';
     document.head.appendChild(s);
   })();
 
