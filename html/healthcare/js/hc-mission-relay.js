@@ -165,6 +165,7 @@
   // ── 4. EXECUTIVE PORTAL: MISSION DEBRIEF CARD ─────────────
   function injectExecutiveDebrief() {
     if (!path.includes('executive-portal')) return;
+    if (document.getElementById('tsm-executive-debrief')) return;
 
     const params = new URLSearchParams(location.search);
     const missionNode = params.get('mission');
@@ -181,6 +182,7 @@
     const completedNodes = nodeKeys.filter(k => localStorage.getItem('tsm-mission-' + k) === 'complete');
 
     const debriefCard = document.createElement('section');
+    debriefCard.id = 'tsm-executive-debrief';
     debriefCard.className = 'card full';
     debriefCard.style.cssText = 'border-color:rgba(0,255,198,0.4);background:rgba(0,255,198,0.04);';
     debriefCard.innerHTML = `
