@@ -1955,6 +1955,29 @@ Be precise with dollar figures and deadlines. Max 280 words.`,
       document.getElementById('process-info').textContent =
         '⚡ SCENARIO: ' + mission.scenarioId + ' — load the required document above and fire all engines';
     }
+
+    // Auto-inject strategist BNCA payload when coming from strategist
+    const srcParam = new URLSearchParams(window.location.search).get('source');
+    if (srcParam === 'strategist') {
+      try {
+        const payload = JSON.parse(localStorage.getItem('tsm_construction_doc_payload') || '{}');
+        if (payload.content && payload.content.length > 50) {
+          const pasteArea = document.getElementById('doc-paste') || document.querySelector('textarea');
+          if (pasteArea) {
+            pasteArea.value = payload.content;
+            pasteArea.dispatchEvent(new Event('input', {bubbles:true}));
+          }
+          document.getElementById('process-info').textContent =
+            '⚡ STRATEGIST BNCA LOADED — ' + (payload.scenario||'manual') + ' · Click FIRE ALL 4 ENGINES to run full pipeline';
+          // Auto-fire after short delay
+          setTimeout(()=>{
+            const fireBtn = document.getElementById('fire-all-btn') || 
+              [...document.querySelectorAll('button')].find(b=>b.textContent.includes('FIRE ALL'));
+            if(fireBtn) fireBtn.click();
+          }, 800);
+        }
+      } catch(e) { console.warn('Payload load error:', e); }
+    }
   </script>
 </body>
 
