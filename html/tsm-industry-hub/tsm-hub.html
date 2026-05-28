@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TSM Industry Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #020c14;
+  --surface:  #061522;
+  --border:   rgba(0,210,255,0.12);
+  --border-h: rgba(0,210,255,0.35);
+  --cyan:     #00d2ff;
+  --cyan-dim: rgba(0,210,255,0.55);
+  --gold:     #f5c518;
+  --green:    #1dbd82;
+  --red:      #e84545;
+  --amber:    #f5a623;
+  --text:     #c8e8f5;
+  --muted:    rgba(200,232,245,0.45);
+  --font-head: 'Syne', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── grid bg ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,210,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,210,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── scanline overlay ── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.08) 2px,
+    rgba(0,0,0,0.08) 4px
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.wrap { position: relative; z-index: 1; max-width: 1280px; margin: 0 auto; padding: 0 24px 60px; }
+
+/* ── topbar ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 0 16px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand-mark {
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid var(--cyan);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--cyan);
+  letter-spacing: 1px;
+  position: relative;
+}
+.brand-mark::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border: 1px solid rgba(0,210,255,0.15);
+}
+
+.brand-name {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 2px;
+  color: var(--text);
+}
+.brand-sub {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+
+.topbar-status {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.status-node {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--muted);
+}
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.dot-live   { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite; }
+.dot-warn   { background: var(--amber); }
+.dot-off    { background: var(--red); }
+
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+.topbar-clock {
+  font-size: 11px;
+  color: var(--cyan-dim);
+  letter-spacing: 1px;
+  text-align: right;
+}
+
+/* ── section header ── */
+.section-label {
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: var(--cyan-dim);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── command banner ── */
+.command-banner {
+  background: rgba(0,210,255,0.04);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--cyan);
+  padding: 14px 20px;
+  font-size: 12px;
+  color: var(--cyan-dim);
+  letter-spacing: 0.5px;
+  line-height: 1.6;
+  margin-bottom: 32px;
+  border-radius: 0;
+  position: relative;
+  overflow: hidden;
+}
+.command-banner::before {
+  content: '> ';
+  color: var(--cyan);
+  font-weight: 500;
+}
+#banner-text { display: inline; }
+.cursor {
+  display: inline-block;
+  width: 8px;
+  height: 12px;
+  background: var(--cyan);
+  margin-left: 2px;
+  vertical-align: middle;
+  animation: blink 1s infinite;
+}
+@keyframes blink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+
+/* ── hub grid ── */
+.hub-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+@media (max-width: 900px) { .hub-grid { grid-template-columns: repeat(2,1fr); } }
+@media (max-width: 580px) { .hub-grid { grid-template-columns: 1fr; } }
+
+/* ── hub card ── */
+.hub-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  transition: border-color 0.2s, transform 0.2s;
+  cursor: pointer;
+  position: relative;
+}
+.hub-card:hover {
+  border-color: var(--border-h);
+  transform: translateY(-2px);
+}
+.hub-card.expanded { border-color: var(--border-h); }
+
+.card-accent {
+  height: 3px;
+  width: 100%;
+}
+
+.card-head {
+  padding: 18px 20px 14px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.card-icon {
+  font-size: 22px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.card-meta { flex: 1; min-width: 0; }
+.card-title {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 1px;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.card-desc {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.card-badge {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  padding: 3px 8px;
+  border: 1px solid;
+  border-radius: 1px;
+  flex-shrink: 0;
+  font-weight: 500;
+}
+.badge-live   { border-color: var(--green); color: var(--green); }
+.badge-ready  { border-color: var(--cyan);  color: var(--cyan);  }
+.badge-wait   { border-color: var(--amber); color: var(--amber); }
+.badge-build  { border-color: var(--muted); color: var(--muted); }
+
+.card-stats {
+  display: flex;
+  gap: 16px;
+  padding: 0 20px 14px;
+}
+.stat-item { font-size: 10px; color: var(--muted); letter-spacing: 1px; }
+.stat-val  { font-size: 16px; font-family: var(--font-head); font-weight: 700; color: var(--text); display: block; margin-bottom: 1px; }
+
+.card-divider { height: 1px; background: var(--border); margin: 0 20px; }
+
+/* ── expandable links ── */
+.card-links {
+  display: none;
+  flex-direction: column;
+  padding: 12px 16px 16px;
+  gap: 6px;
+}
+.hub-card.expanded .card-links { display: flex; }
+
+.hub-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(0,210,255,0.03);
+  border: 1px solid rgba(0,210,255,0.08);
+  border-radius: 1px;
+  text-decoration: none;
+  color: var(--text);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  transition: all 0.15s;
+  cursor: pointer;
+}
+.hub-link:hover {
+  background: rgba(0,210,255,0.08);
+  border-color: rgba(0,210,255,0.25);
+  color: var(--cyan);
+}
+.hub-link-status {
+  font-size: 9px;
+  letter-spacing: 1px;
+  padding: 2px 6px;
+  border-radius: 1px;
+}
+.ls-ready  { background: rgba(29,189,130,0.12); color: var(--green); }
+.ls-wait   { background: rgba(245,166,35,0.12);  color: var(--amber); }
+.ls-build  { background: rgba(200,232,245,0.06); color: var(--muted); }
+
+.card-expand-btn {
+  width: 100%;
+  padding: 10px 20px;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 2px;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.15s;
+}
+.card-expand-btn:hover { color: var(--cyan); background: rgba(0,210,255,0.04); }
+.expand-arrow { transition: transform 0.25s; display: inline-block; }
+.hub-card.expanded .expand-arrow { transform: rotate(180deg); }
+
+/* ── ops strip ── */
+.ops-strip {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 12px;
+  margin-bottom: 32px;
+}
+@media (max-width: 700px) { .ops-strip { grid-template-columns: repeat(2,1fr); } }
+
+.ops-cell {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 14px 16px;
+  border-radius: 2px;
+}
+.ops-lbl { font-size: 9px; letter-spacing: 2px; color: var(--muted); margin-bottom: 6px; }
+.ops-val { font-family: var(--font-head); font-size: 18px; font-weight: 700; }
+.ops-val.green { color: var(--green); }
+.ops-val.cyan  { color: var(--cyan); }
+.ops-val.amber { color: var(--amber); }
+.ops-val.red   { color: var(--red); }
+
+/* ── footer ── */
+.hub-footer {
+  border-top: 1px solid var(--border);
+  padding-top: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.footer-links { display: flex; gap: 20px; }
+.footer-link {
+  color: var(--muted);
+  text-decoration: none;
+  letter-spacing: 1px;
+  font-size: 10px;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.footer-link:hover { color: var(--cyan); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- topbar -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <div class="brand-mark">TSM</div>
+      <div>
+        <div class="brand-name">INDUSTRY HUB</div>
+        <div class="brand-sub">WORKFORCE INTELLIGENCE PLATFORM</div>
+      </div>
+    </div>
+    <div class="topbar-status">
+      <div class="status-node"><span class="status-dot dot-live"></span><span id="status-hc">HEALTHCARE</span></div>
+      <div class="status-node"><span class="status-dot" id="dot-ins"></span><span id="status-ins">INSURANCE</span></div>
+      <div class="status-node"><span class="status-dot" id="dot-fin"></span><span id="status-fin">FINOPS</span></div>
+      <div class="status-node"><span class="status-dot" id="dot-con"></span><span id="status-con">CONSTRUCTION</span></div>
+    </div>
+    <div class="topbar-clock">
+      <div id="hub-time"></div>
+      <div id="hub-date" style="opacity:0.5;font-size:9px;margin-top:2px"></div>
+    </div>
+  </header>
+
+  <!-- command banner -->
+  <div class="command-banner">
+    <span id="banner-text"></span><span class="cursor"></span>
+  </div>
+
+  <!-- ops strip -->
+  <div class="section-label">PLATFORM STATUS</div>
+  <div class="ops-strip">
+    <div class="ops-cell"><div class="ops-lbl">ACADEMY XP</div><div class="ops-val cyan" id="hub-xp">—</div></div>
+    <div class="ops-cell"><div class="ops-lbl">MISSIONS COMPLETE</div><div class="ops-val green" id="hub-missions">—</div></div>
+    <div class="ops-cell"><div class="ops-lbl">CERTIFICATIONS</div><div class="ops-val cyan" id="hub-certs">—</div></div>
+    <div class="ops-cell"><div class="ops-lbl">RELAY QUEUE</div><div class="ops-val amber" id="hub-relay">—</div></div>
+  </div>
+
+  <!-- hub grid -->
+  <div class="section-label">SECTOR COMMAND</div>
+  <div class="hub-grid" id="hub-grid"></div>
+
+  <!-- footer -->
+  <footer class="hub-footer">
+    <span>TSM WORKFORCE INTELLIGENCE PLATFORM · <span id="footer-year"></span></span>
+    <div class="footer-links">
+      <a class="footer-link" href="/html/executive-portal/index.html">EXEC PORTAL</a>
+      <a class="footer-link" href="/html/academy/index.html">ACADEMY</a>
+      <a class="footer-link" href="/html/hc-main-strategist/index.html">STRATEGIST</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+const CARDS = [
+  {
+    id: 'workflow',
+    icon: '⚡',
+    title: 'WORKFLOW INTELLIGENCE',
+    desc: 'Claims · Denials · Operations · Appeals',
+    accent: '#00d2ff',
+    storageKey: 'tsm_claims_workflow',
+    links: [
+      { label: 'Insurance Claims Pro',    href: '/html/tsm-insurance/insurance-claims-pro.html',    status: 'ready'  },
+      { label: 'CE Command Center',       href: '/html/tsm-insurance/insurance-ce-command.html',    status: 'ready'  },
+      { label: 'Doc Analysis',            href: '/html/finops-suite/doc-analysis-tab.html',          status: 'ready'  },
+      { label: 'HC Main Strategist',      href: '/html/hc-main-strategist/index.html',               status: 'ready'  },
+      { label: 'CRC Practice',            href: '/html/tsm-insurance/crc-hc-practice.html',          status: 'ready'  },
+    ],
+    statA: { label: 'APPS', key: null, default: '5' },
+    statB: { label: 'STATUS', key: null, default: 'LIVE' },
+  },
+  {
+    id: 'academy',
+    icon: '🎓',
+    title: 'ACADEMIES',
+    desc: 'CRCR · CE · FinOps · Construction Certification',
+    accent: '#1dbd82',
+    storageKey: 'tsm_workforce_academy_progress',
+    links: [
+      { label: 'Academy Hub',             href: '/html/academy/index.html',                          status: 'ready'  },
+      { label: 'Healthcare Academy',      href: '/html/academy/index.html?sector=healthcare',         status: 'ready'  },
+      { label: 'Insurance Academy',       href: '/html/academy/index.html?sector=insurance',          status: 'ready'  },
+      { label: 'FinOps Academy',          href: '/html/academy/index.html?sector=finops',             status: 'build'  },
+      { label: 'Construction Academy',    href: '/html/academy/index.html?sector=construction',       status: 'build'  },
+    ],
+    statA: { label: 'XP',      key: 'score',             default: '0'   },
+    statB: { label: 'MISSIONS', key: 'completedMissions', default: '0'  },
+  },
+  {
+    id: 'simulation',
+    icon: '🧪',
+    title: 'SIMULATION LABS',
+    desc: 'Scenario Engine · Mission Routing · Live Queues',
+    accent: '#f5c518',
+    storageKey: 'tsm_active_mission',
+    links: [
+      { label: 'CRCR Scenarios',          href: '/html/tsm-insurance/crcr-scenarios.html',            status: 'ready'  },
+      { label: 'CE Study Prep',           href: '/html/tsm-insurance/ce-study-prep.html',              status: 'ready'  },
+      { label: 'FinOps Scenarios',        href: '/html/finops-suite/finops-scenarios.html',            status: 'ready'  },
+      { label: 'Construction Scenarios',  href: '/html/construction-scenarios/index.html',             status: 'ready'  },
+      { label: 'Staff Accountant Sim',    href: '/html/finops-suite/staff-accountant-interview.html',  status: 'ready'  },
+    ],
+    statA: { label: 'ACTIVE', key: null, default: 'CHECK' },
+    statB: { label: 'LABS',   key: null, default: '5'     },
+  },
+  {
+    id: 'enterprise',
+    icon: '🏢',
+    title: 'ENTERPRISE COMMAND',
+    desc: 'Executive Portal · BNCA · KPI · Strategist Relay',
+    accent: '#e84545',
+    storageKey: 'tsm_strategist_relay',
+    links: [
+      { label: 'Executive Portal',        href: '/html/executive-portal/index.html',                  status: 'ready'  },
+      { label: 'HC Main Strategist',      href: '/html/hc-main-strategist/index.html',                status: 'ready'  },
+      { label: 'GHS Presentation',        href: '/html/ghs-presentation/index.html',                  status: 'ready'  },
+      { label: 'Honor Portal',            href: '/html/honor-portal/index.html',                      status: 'ready'  },
+      { label: 'Financial Command',       href: '/html/financial-command/index.html',                  status: 'ready'  },
+    ],
+    statA: { label: 'RELAY',  key: null, default: '—'     },
+    statB: { label: 'STATUS', key: null, default: 'LIVE'  },
+  },
+  {
+    id: 'finops',
+    icon: '💰',
+    title: 'FINOPS INTELLIGENCE',
+    desc: 'Accounting · Tax · Zero Trust · Reconciliation',
+    accent: '#f5a623',
+    storageKey: null,
+    links: [
+      { label: 'FinOps Accounting',       href: '/html/finops-suite/finops-accounting.html',           status: 'ready'  },
+      { label: 'FinOps Operations',       href: '/html/finops-suite/finops-operations.html',           status: 'ready'  },
+      { label: 'Tax Suite',               href: '/html/finops-suite/tax.html',                         status: 'ready'  },
+      { label: 'Zero Trust',              href: '/html/finops-suite/zero-trust.html',                  status: 'ready'  },
+      { label: 'FinOps Main',             href: '/html/finops-suite/index.html',                       status: 'ready'  },
+    ],
+    statA: { label: 'APPS',   key: null, default: '5'    },
+    statB: { label: 'SECTOR', key: null, default: 'LIVE' },
+  },
+  {
+    id: 'crosssector',
+    icon: '🔗',
+    title: 'CROSS-SECTOR OPS',
+    desc: 'Orchestrator · Permits · Construction · Legal',
+    accent: '#a78bfa',
+    storageKey: null,
+    links: [
+      { label: 'Permits & Proposals',     href: '/html/construction-suite/permits-proposals.html',     status: 'ready'  },
+      { label: 'Construction Legal',      href: '/html/construction-suite/legal.html',                 status: 'ready'  },
+      { label: 'Construction Financial',  href: '/html/construction-suite/financial.html',             status: 'ready'  },
+      { label: 'Compliance Suite',        href: '/html/construction-suite/compliance.html',            status: 'ready'  },
+      { label: 'Orchestrator Status',     href: '#orchestrator',                                        status: 'build'  },
+    ],
+    statA: { label: 'SECTORS', key: null, default: '4'    },
+    statB: { label: 'STATUS',  key: null, default: 'LIVE' },
+  },
+];
+
+function loadStorage(key) {
+  try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : null; } catch(e) { return null; }
+}
+
+function getBadge(card) {
+  if (!card.storageKey) return { cls: 'badge-ready', label: 'READY' };
+  const d = loadStorage(card.storageKey);
+  if (!d) return { cls: 'badge-wait', label: 'WAITING' };
+  if (card.id === 'academy') return { cls: 'badge-live', label: 'ACTIVE' };
+  if (card.id === 'enterprise') return { cls: 'badge-live', label: 'LIVE' };
+  return { cls: 'badge-ready', label: 'READY' };
+}
+
+function getStats(card) {
+  const d = loadStorage(card.storageKey);
+  const a = card.statA.key && d ? (Array.isArray(d[card.statA.key]) ? d[card.statA.key].length : d[card.statA.key]) : card.statA.default;
+  const b = card.statB.key && d ? (Array.isArray(d[card.statB.key]) ? d[card.statB.key].length : d[card.statB.key]) : card.statB.default;
+  return { a, b };
+}
+
+function buildCards() {
+  const grid = document.getElementById('hub-grid');
+  grid.innerHTML = CARDS.map(card => {
+    const badge  = getBadge(card);
+    const stats  = getStats(card);
+    const lsMap  = { ready: 'ls-ready', wait: 'ls-wait', build: 'ls-build' };
+    const lsLbl  = { ready: 'READY', wait: 'WAITING', build: 'BUILDING' };
+    return `
+    <div class="hub-card" id="card-${card.id}" onclick="toggleCard('${card.id}')">
+      <div class="card-accent" style="background:${card.accent}"></div>
+      <div class="card-head">
+        <div class="card-icon">${card.icon}</div>
+        <div class="card-meta">
+          <div class="card-title">${card.title}</div>
+          <div class="card-desc">${card.desc}</div>
+        </div>
+        <div class="card-badge ${badge.cls}">${badge.label}</div>
+      </div>
+      <div class="card-stats">
+        <div class="stat-item"><span class="stat-val">${stats.a}</span>${card.statA.label}</div>
+        <div class="stat-item"><span class="stat-val">${stats.b}</span>${card.statB.label}</div>
+      </div>
+      <div class="card-divider"></div>
+      <div class="card-links">
+        ${card.links.map(l => `
+          <div class="hub-link" onclick="event.stopPropagation();navTo('${l.href}')">
+            <span>${l.label}</span>
+            <span class="hub-link-status ${lsMap[l.status]}">${lsLbl[l.status]}</span>
+          </div>`).join('')}
+      </div>
+      <button class="card-expand-btn" onclick="event.stopPropagation();toggleCard('${card.id}')">
+        <span id="btn-lbl-${card.id}">EXPAND</span> <span class="expand-arrow" id="arrow-${card.id}">&#9660;</span>
+      </button>
+    </div>`;
+  }).join('');
+}
+
+function toggleCard(id) {
+  const card = document.getElementById('card-' + id);
+  const lbl  = document.getElementById('btn-lbl-' + id);
+  const expanded = card.classList.toggle('expanded');
+  if (lbl) lbl.textContent = expanded ? 'COLLAPSE' : 'EXPAND';
+}
+
+function navTo(href) {
+  if (href === '#orchestrator') { alert('Orchestrator status panel — coming next build.'); return; }
+  window.location.href = href;
+}
+
+function updateOpsStrip() {
+  const progress = loadStorage('tsm_workforce_academy_progress');
+  const relay    = loadStorage('tsm_strategist_relay');
+  document.getElementById('hub-xp').textContent       = progress?.score              || '0';
+  document.getElementById('hub-missions').textContent  = (progress?.completedMissions || []).length;
+  document.getElementById('hub-certs').textContent     = (progress?.certifications    || []).length;
+  document.getElementById('hub-relay').textContent     = Array.isArray(relay) ? relay.length : '0';
+}
+
+function updateStatusDots() {
+  const progress = loadStorage('tsm_workforce_academy_progress');
+  const relay    = loadStorage('tsm_strategist_relay');
+  const dotIns = document.getElementById('dot-ins');
+  const dotFin = document.getElementById('dot-fin');
+  const dotCon = document.getElementById('dot-con');
+  if (dotIns) { dotIns.className = 'status-dot ' + (relay ? 'dot-live' : 'dot-warn'); }
+  if (dotFin) { dotFin.className = 'status-dot dot-warn'; }
+  if (dotCon) { dotCon.className = 'status-dot dot-warn'; }
+}
+
+function updateClock() {
+  const now = new Date();
+  document.getElementById('hub-time').textContent = now.toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+  document.getElementById('hub-date').textContent = now.toLocaleDateString('en-US', {weekday:'short',month:'short',day:'numeric',year:'numeric'}).toUpperCase();
+}
+
+const BANNERS = [
+  'TSM Industry Hub initialized — all sector engines standing by.',
+  'Healthcare Intelligence Academy: CRCR certification track active.',
+  'Insurance Operations: CE simulation lab loaded — 7 denial cases queued.',
+  'Enterprise Command: Executive Portal live — strategist relay monitoring.',
+  'FinOps Intelligence: accounting and reconciliation modules ready.',
+  'Cross-sector orchestrator: mission routing engine standing by.',
+  'Academy XP system active — Bronze → Silver → Gold → Platinum progression enabled.',
+];
+let bannerIdx = 0;
+function rotateBanner() {
+  const el = document.getElementById('banner-text');
+  if (!el) return;
+  el.style.opacity = 0;
+  setTimeout(() => {
+    el.textContent = BANNERS[bannerIdx % BANNERS.length];
+    el.style.transition = 'opacity 0.5s';
+    el.style.opacity = 1;
+    bannerIdx++;
+  }, 300);
+}
+
+document.getElementById('footer-year').textContent = new Date().getFullYear();
+buildCards();
+updateOpsStrip();
+updateStatusDots();
+updateClock();
+rotateBanner();
+setInterval(updateClock, 1000);
+setInterval(rotateBanner, 5000);
+setInterval(() => { updateOpsStrip(); updateStatusDots(); buildCards(); }, 20000);
+</script>
+</body>
+</html>
