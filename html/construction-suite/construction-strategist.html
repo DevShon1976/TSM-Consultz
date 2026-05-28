@@ -511,6 +511,7 @@ body{font-family:var(--mono);background:var(--bg);color:var(--text);font-size:12
   </div>
 
   <button class="run-btn" id="runBtn" onclick="runConstructionBNCA()">⚡ Synthesize All → Push to BNCA</button>
+<button class="run-btn" style="background:#a855f7;margin-top:6px;" onclick="pushConstructionToDocEngine()">📋 Push to Doc Engine</button>
 </div>
 
 </div><!-- /app-body -->
@@ -735,6 +736,14 @@ const CONSTRUCTION_SCENARIOS = {
   scenario_5:'MEP Coordination Conflict — 4 conduit routing conflicts vs mechanical ductwork. RFI required.',
   scenario_6:'Monthly BNCA Executive Briefing — All 12 documents. $2.4M exposure. Board meeting in 5 days.'
 };
+function pushConstructionToDocEngine(){
+  const summary=document.getElementById('bncaOutput')?.textContent||'';
+  if(!summary||summary.length<50){alert('Generate BNCA first.');return;}
+  const mission=JSON.parse(localStorage.getItem('tsm_construction_mission')||'{}');
+  localStorage.setItem('tsm_construction_doc_payload',JSON.stringify({source:'construction-strategist',type:'CONSTRUCTION_BNCA_OUTPUT',content:summary,scenario:mission.scenarioId||'manual',timestamp:Date.now()}));
+  window.location.href='/construction-suite/document-showcase.html?source=strategist';
+}
+
 async function runConstructionBNCA(){
   const out=document.getElementById('bncaOutput');
   const groqKey=document.getElementById('groqKey')?.value||localStorage.getItem('tsm_groq_key')||'';
