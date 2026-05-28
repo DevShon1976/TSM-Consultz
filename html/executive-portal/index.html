@@ -279,8 +279,30 @@ RECOMMENDED NEXT MOVE:
 Validate the system with a focused 90-day pilot. Start with Prior Auth / Denials for healthcare and Coverage Gap / Renewal Risk for insurance.`;
 }
 
+function loadFinOps(){
+  let data={};
+  try{data=JSON.parse(localStorage.getItem('tsm_finops_strategist_output')||'{}')}catch(e){}
+  const scenarioMap={'ap-aging':'AP Aging Crisis','gl-variance':'GL Variance Investigation','bank-recon':'Bank Recon + Cash Flow','invoice-audit':'Invoice Audit','budget-overrun':'Q1 Budget Overrun','month-end-close':'Month-End Close Sprint','manual':'Manual Run'};
+  if(document.getElementById('finopsStatus')) document.getElementById('finopsStatus').textContent=data.summary?'READY':'WAITING';
+  if(document.getElementById('finopsScenario')) document.getElementById('finopsScenario').textContent=scenarioMap[data.scenario]||data.scenario||'—';
+  if(document.getElementById('finopsTimestamp')) document.getElementById('finopsTimestamp').textContent=data.timestamp?new Date(data.timestamp).toLocaleTimeString():'—';
+  if(document.getElementById('finopsSummary')) document.getElementById('finopsSummary').textContent=data.summary||'No FinOps report yet.';
+  return{ready:!!data.summary,summary:data.summary||''};
+}
+
+function loadConstruction(){
+  let data={};
+  try{data=JSON.parse(localStorage.getItem('tsm_construction_strategist_output')||'{}')}catch(e){}
+  const scenarioMap={'scenario_1':'Permit Block','scenario_2':'OSHA Incident','scenario_3':'Invoice Backlog','scenario_4':'Zoning Variance','scenario_5':'MEP Conflict','scenario_6':'Full Portfolio','manual':'Manual Run'};
+  if(document.getElementById('constructionStatus')) document.getElementById('constructionStatus').textContent=data.summary?'READY':'WAITING';
+  if(document.getElementById('constructionScenario')) document.getElementById('constructionScenario').textContent=scenarioMap[data.scenario]||data.scenario||'—';
+  if(document.getElementById('constructionTimestamp')) document.getElementById('constructionTimestamp').textContent=data.timestamp?new Date(data.timestamp).toLocaleTimeString():'—';
+  if(document.getElementById('constructionSummary')) document.getElementById('constructionSummary').textContent=data.summary||'No construction report yet.';
+  return{ready:!!data.summary,summary:data.summary||''};
+}
+
 refreshAll();
-setInterval(()=>{ loadINS(); if(typeof loadFinOps==="function") loadFinOps(); },4000);
+setInterval(()=>{ loadINS(); loadFinOps(); loadConstruction(); },4000);
 </script>
 
 
