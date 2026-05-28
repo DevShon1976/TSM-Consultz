@@ -552,98 +552,181 @@ const CARDS = [
 ];
 
 function loadStorage(key) {
-  try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : null; } catch(e) { return null; }
+  try {
+    const r = localStorage.getItem(key);
+    return r ? JSON.parse(r) : null;
+  } catch (e) {
+    return null;
+  }
 }
 
 function getBadge(card) {
   if (!card.storageKey) return { cls: 'badge-ready', label: 'READY' };
+
   const d = loadStorage(card.storageKey);
+
   if (!d) return { cls: 'badge-wait', label: 'WAITING' };
   if (card.id === 'academy') return { cls: 'badge-live', label: 'ACTIVE' };
   if (card.id === 'enterprise') return { cls: 'badge-live', label: 'LIVE' };
+
   return { cls: 'badge-ready', label: 'READY' };
 }
 
 function getStats(card) {
   const d = loadStorage(card.storageKey);
-  const a = card.statA.key && d ? (Array.isArray(d[card.statA.key]) ? d[card.statA.key].length : d[card.statA.key]) : card.statA.default;
-  const b = card.statB.key && d ? (Array.isArray(d[card.statB.key]) ? d[card.statB.key].length : d[card.statB.key]) : card.statB.default;
+
+  const a = card.statA.key && d
+    ? (Array.isArray(d[card.statA.key]) ? d[card.statA.key].length : d[card.statA.key])
+    : card.statA.default;
+
+  const b = card.statB.key && d
+    ? (Array.isArray(d[card.statB.key]) ? d[card.statB.key].length : d[card.statB.key])
+    : card.statB.default;
+
   return { a, b };
 }
 
 function buildCards() {
   const grid = document.getElementById('hub-grid');
+  if (!grid || typeof CARDS === "undefined") return;
+
   grid.innerHTML = CARDS.map(card => {
-    const badge  = getBadge(card);
-    const stats  = getStats(card);
-    const lsMap  = { ready: 'ls-ready', wait: 'ls-wait', build: 'ls-build' };
-    const lsLbl  = { ready: 'READY', wait: 'WAITING', build: 'BUILDING' };
+    const badge = getBadge(card);
+    const stats = getStats(card);
+
+    const lsMap = {
+      ready: 'ls-ready',
+      wait: 'ls-wait',
+      build: 'ls-build'
+    };
+
+    const lsLbl = {
+      ready: 'READY',
+      wait: 'WAITING',
+      build: 'BUILDING'
+    };
+
     return `
-    <div class="hub-card" id="card-${card.id}" onclick="toggleCard('${card.id}')">
-      <div class="card-accent" style="background:${card.accent}"></div>
-      <div class="card-head">
-        <div class="card-icon">${card.icon}</div>
-        <div class="card-meta">
-          <div class="card-title">${card.title}</div>
-          <div class="card-desc">${card.desc}</div>
+      <div class="hub-card" id="card-${card.id}" onclick="toggleCard('${card.id}')">
+        <div class="card-accent" style="background:${card.accent}"></div>
+
+        <div class="card-head">
+          <div class="card-icon">${card.icon}</div>
+
+          <div class="card-meta">
+            <div class="card-title">${card.title}</div>
+            <div class="card-desc">${card.desc}</div>
+          </div>
+
+          <div class="card-badge ${badge.cls}">${badge.label}</div>
         </div>
-        <div class="card-badge ${badge.cls}">${badge.label}</div>
+
+        <div class="card-stats">
+          <div class="stat-item">
+            <span class="stat-val">${stats.a}</span>
+            ${card.statA.label}
+          </div>
+
+          <div class="stat-item">
+            <span class="stat-val">${stats.b}</span>
+            ${card.statB.label}
+          </div>
+        </div>
+
+        <div class="card-divider"></div>
+
+        <div class="card-links">
+          ${card.links.map(l => `
+            <div class="hub-link" onclick="event.stopPropagation();navTo('${l.href}')">
+              <span>${l.label}</span>
+              <span class="hub-link-status ${lsMap[l.status]}">${lsLbl[l.status]}</span>
+            </div>
+          `).join('')}
+        </div>
+
+        <button class="card-expand-btn" onclick="event.stopPropagation();toggleCard('${card.id}')">
+          <span id="btn-lbl-${card.id}">EXPAND</span>
+          <span class="expand-arrow">&#9660;</span>
+        </button>
       </div>
-      <div class="card-stats">
-        <div class="stat-item"><span class="stat-val">${stats.a}</span>${card.statA.label}</div>
-        <div class="stat-item"><span class="stat-val">${stats.b}</span>${card.statB.label}</div>
-      </div>
-      <div class="card-divider"></div>
-      <div class="card-links">
-        ${card.links.map(l => `
-          <div class="hub-link" onclick="event.stopPropagation();navTo('${l.href}')">
-            <span>${l.label}</span>
-            <span class="hub-link-status ${lsMap[l.status]}">${lsLbl[l.status]}</span>
-          </div>`).join('')}
-      </div>
-      <button class="card-expand-btn" onclick="event.stopPropagation();toggleCard('${card.id}')">
-        <span id="btn-lbl-${card.id}">EXPAND</span> <span class="expand-arrow" id="arrow-${card.id}">&#9660;</span>
-      </button>
-    </div>`;
+    `;
   }).join('');
 }
 
 function toggleCard(id) {
   const card = document.getElementById('card-' + id);
-  const lbl  = document.getElementById('btn-lbl-' + id);
+  if (!card) return;
+
+  const lbl = document.getElementById('btn-lbl-' + id);
   const expanded = card.classList.toggle('expanded');
+
   if (lbl) lbl.textContent = expanded ? 'COLLAPSE' : 'EXPAND';
 }
 
 function navTo(href) {
-  if (href === '#orchestrator') { alert('Orchestrator status panel — coming next build.'); return; }
+  if (href === '#orchestrator') {
+    alert('Orchestrator status panel — coming next build.');
+    return;
+  }
   window.location.href = href;
 }
 
 function updateOpsStrip() {
   const progress = loadStorage('tsm_workforce_academy_progress');
-  const relay    = loadStorage('tsm_strategist_relay');
-  document.getElementById('hub-xp').textContent       = progress?.score              || '0';
-  document.getElementById('hub-missions').textContent  = (progress?.completedMissions || []).length;
-  document.getElementById('hub-certs').textContent     = (progress?.certifications    || []).length;
-  document.getElementById('hub-relay').textContent     = Array.isArray(relay) ? relay.length : '0';
+  const relay = loadStorage('tsm_strategist_relay');
+
+  document.getElementById('hub-xp').textContent =
+    progress?.score ?? '0';
+
+  document.getElementById('hub-missions').textContent =
+    (progress?.completedMissions || []).length;
+
+  document.getElementById('hub-certs').textContent =
+    (progress?.certifications || []).length;
+
+  document.getElementById('hub-relay').textContent =
+    Array.isArray(relay) ? relay.length : '0';
 }
 
 function updateStatusDots() {
-  const progress = loadStorage('tsm_workforce_academy_progress');
-  const relay    = loadStorage('tsm_strategist_relay');
+  const relay = loadStorage('tsm_strategist_relay');
+
   const dotIns = document.getElementById('dot-ins');
   const dotFin = document.getElementById('dot-fin');
   const dotCon = document.getElementById('dot-con');
-  if (dotIns) { dotIns.className = 'status-dot ' + (relay ? 'dot-live' : 'dot-warn'); }
-  if (dotFin) { dotFin.className = 'status-dot dot-warn'; }
-  if (dotCon) { dotCon.className = 'status-dot dot-warn'; }
+
+  if (dotIns) dotIns.className = 'status-dot ' + (relay ? 'dot-live' : 'dot-warn');
+  if (dotFin) dotFin.className = 'status-dot dot-warn';
+  if (dotCon) dotCon.className = 'status-dot dot-warn';
 }
+
+/* ===============================
+   CLOCK + BANNERS
+=============================== */
 
 function updateClock() {
   const now = new Date();
-  document.getElementById('hub-time').textContent = now.toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
-  document.getElementById('hub-date').textContent = now.toLocaleDateString('en-US', {weekday:'short',month:'short',day:'numeric',year:'numeric'}).toUpperCase();
+
+  const timeEl = document.getElementById('hub-time');
+  const dateEl = document.getElementById('hub-date');
+
+  if (timeEl) {
+    timeEl.textContent = now.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+  }
+
+  if (dateEl) {
+    dateEl.textContent = now.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    }).toUpperCase();
+  }
 }
 
 const BANNERS = [
@@ -653,30 +736,83 @@ const BANNERS = [
   'Enterprise Command: Executive Portal live — strategist relay monitoring.',
   'FinOps Intelligence: accounting and reconciliation modules ready.',
   'Cross-sector orchestrator: mission routing engine standing by.',
-  'Academy XP system active — Bronze → Silver → Gold → Platinum progression enabled.',
+  'Academy XP system active — Bronze → Silver → Gold → Platinum progression enabled.'
 ];
+
 let bannerIdx = 0;
+
 function rotateBanner() {
   const el = document.getElementById('banner-text');
   if (!el) return;
+
   el.style.opacity = 0;
+
   setTimeout(() => {
     el.textContent = BANNERS[bannerIdx % BANNERS.length];
-    el.style.transition = 'opacity 0.5s';
     el.style.opacity = 1;
     bannerIdx++;
   }, 300);
 }
 
-document.getElementById('footer-year').textContent = new Date().getFullYear();
-buildCards();
-updateOpsStrip();
-updateStatusDots();
-updateClock();
-rotateBanner();
-setInterval(updateClock, 1000);
-setInterval(rotateBanner, 5000);
-setInterval(() => { updateOpsStrip(); updateStatusDots(); buildCards(); }, 20000);
-</script>
-</body>
-</html>
+/* ===============================
+   BOOTSTRAP (SAFE)
+=============================== */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  const year = document.getElementById('footer-year');
+  if (year) year.textContent = new Date().getFullYear();
+
+  buildCards?.();
+  updateOpsStrip?.();
+  updateStatusDots?.();
+  updateClock?.();
+  rotateBanner?.();
+
+  setInterval(updateClock, 1000);
+  setInterval(rotateBanner, 5000);
+
+  setInterval(() => {
+    updateOpsStrip?.();
+    updateStatusDots?.();
+  }, 20000);
+});
+
+/* ===============================
+   KERNEL
+=============================== */
+
+window.TSMKernel = (() => {
+
+  const missingModules = [];
+
+  function define(name, fallback) {
+    if (!window[name]) {
+      console.warn("[TSM KERNEL] Missing module:", name);
+      window[name] = fallback;
+      missingModules.push(name);
+    }
+  }
+
+  function report() {
+    console.table({
+      missingModules,
+      status: missingModules.length ? "DEGRADED MODE" : "FULLY WIRED"
+    });
+  }
+
+  function wire() {
+    define("TSMEventBus", { emit(){}, on(){} });
+    define("TSMRuntime", { get(){}, set(){}, merge(){} });
+    define("TSMRegistry", { registerSector(){}, registerMission(){} });
+    define("TSMRouter", { route(){ console.warn("Router not loaded"); } });
+    define("TSMAudit", { log(){} });
+    define("TSMKPI", { update(){} });
+  }
+
+  return { wire, report };
+
+})(); // ← IMPORTANT: this closes the IIFE
+
+TSMKernel.wire();
+TSMKernel.report();
