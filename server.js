@@ -110,7 +110,9 @@ app.use('/shared', express.static(path.join(__dirname, 'html/shared')));
 
 app.post('/api/hc/query', async function(req, res) {
   var body = req.body || {};
-  try { var a = await groqChat(SP.healthcare, body.question||body.query||'', body.maxTokens||1024); return res.json({ ok:true, answer:a, createdAt:new Date().toISOString() }); }
+  console.log('[HC QUERY]', JSON.stringify(body));
+  try { var a = await groqChat(SP.healthcare, body.question||body.query||'', body.maxTokens||1024);
+     return res.json({ ok:true, answer:a, createdAt:new Date().toISOString() }); }
   catch(e) { return res.status(500).json({ ok:false, error:e.message }); }
 });
 
