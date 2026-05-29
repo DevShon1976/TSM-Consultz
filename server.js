@@ -609,8 +609,5 @@ app.post('/api/strategist/query', async function(req, res) {
 });
 // ===== END GROQ AI ENGINE =====
 // final fallback 404 (single source of truth)
-app.use((req, res) => {
-  res.status(404).send('Not found: ' + req.path);
-});
 
 app.use((req, res) => res.status(404).send(`<pre>404 — Not found: ${req.path}</pre>`));
