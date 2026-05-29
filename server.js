@@ -106,7 +106,18 @@ app.use("/js", express.static(path.join(__dirname, "html/js")));
 app.use("/bpo", express.static(path.join(__dirname, "html/bpo")));
 
 // handled by /html static mount (avoid duplication)
-app.use('/shared', express.static(path.join(__dirname, 'html/shared')));
+
+// HC NODE ROUTES
+['hc-medical','hc-billing','hc-vendors','hc-grants','hc-insurance','hc-legal','hc-operations','hc-financial','hc-taxprep','hc-compliance', 'hc-pharmacy','hc-command'].forEach(function(node) {
+  var dir = path.join(__dirname, 'html/healthcare', node);
+  app.use('/healthcare/' + node, express.static(dir));
+  app.get('/healthcare/' + node, function(req, res) {
+    res.sendFile(path.join(dir, 'index.html'));
+  });
+  app.get('/healthcare/' + node + '/', function(req, res) {
+    res.sendFile(path.join(dir, 'index.html'));
+  });
+});
 
 app.post('/api/hc/query', async function(req, res) {
   var body = req.body || {};
