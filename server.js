@@ -108,7 +108,8 @@ app.use("/bpo", express.static(path.join(__dirname, "html/bpo")));
 // handled by /html static mount (avoid duplication)
 
 // HC NODE ROUTES
-['hc-medical','hc-billing','hc-vendors','hc-grants','hc-insurance','hc-legal','hc-operations','hc-financial','hc-taxprep','hc-compliance', 'hc-pharmacy','hc-command'].forEach(function(node) {
+['hc-medical','hc-billing','hc-vendors','hc-grants', 'hc-operations', 'hc-insurance','hc-legal','hc-operations','hc-financial','hc-taxprep','hc-compliance', 'hc-pharmacy'].forEach
+(function(node) {
   var dir = path.join(__dirname, 'html/healthcare', node);
   app.use('/healthcare/' + node, express.static(dir));
   app.get('/healthcare/' + node, function(req, res) {
