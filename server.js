@@ -95,14 +95,34 @@ app.get("/api/hc/strategist-rollup", (req, res) => {
   });
 });
 
-app.use(express.static(path.join(__dirname, 'html'), { extensions: ['html'], setHeaders: (res) => res.setHeader('Cache-Control', 'no-store') }));
+// REMOVED: duplicate root static mount (conflicted with /html routing)
+// CORE STATIC MOUNT (single source of truth)
+app.use("/html", express.static(path.join(__dirname, "html")));
 
-app.use('/html/healthcare', express.static(path.join(__dirname, 'html', 'healthcare'), { index: 'index.html', extensions: ['html'] }));
+// JS SHORTCUT (safe alias)
+app.use("/js", express.static(path.join(__dirname, "html/js")));
+
+// BPO SHORTCUT (safe alias)
+app.use("/bpo", express.static(path.join(__dirname, "html/bpo")));
+
+app.use("/bpo", express.static(path.join(__dirname, "html/bpo")));
+
+// handled by /html static mount (avoid duplication)
 suites.forEach(s => {
-  app.use(s.route, express.static(path.join(__dirname, s.dir)));
+
+  const dirPath = path.join(__dirname, s.dir);
+
+  app.use(s.route, express.static(dirPath));
+
   app.get(s.route, (req, res) => {
-    res.sendFile(path.join(__dirname, s.dir, s.index));
+    res.sendFile(path.join(dirPath, s.index));
   });
+
+  // FIX: allow trailing slash access (prevents Railway weirdness)
+  app.get(`${s.route}/`, (req, res) => {
+    res.sendFile(path.join(dirPath, s.index));
+  });
+
 });
 
 // Specific route for PoC demo
@@ -113,7 +133,15 @@ app.get('/html/healthcare/poc-html/', (req, res) => {
   res.sendFile(path.join(__dirname, 'html', 'healthcare', 'poc-html', 'index.html'));
 });
 
+app.get("/_debug", (_req, res) => {
+  res.json({
+    dirname: __dirname
+  });
+});
+
 app.get("/", (_req, res) => {
+  res.sendFile(path.join(__dirname, "html/bpo/bpo-command-center.html"));
+});
   res.send(`<!DOCTYPE html>
 <html lang="en">
 <head>
