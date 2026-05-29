@@ -624,4 +624,106 @@ app.post('/api/strategist/query', async function(req, res) {
 // ===== END GROQ AI ENGINE =====
 // final fallback 404 (single source of truth)
 
+// ======================================================
+// INSURANCE SUITE — SERVER-SIDE AI ENDPOINTS
+// All calls stay server-side. GROQ_API_KEY never reaches browser.
+// ======================================================
+
+// General query — study guides, follow-ups, AHIP content, scenarios, regs
+app.post('/api/insurance/query', express.json(), async (req, res) => {
+  const { system, message, maxTokens } = req.body || {};
+  if (!message) return res.status(400).json({ ok: false, error: 'message required' });
+  try {
+    const answer = await groqChat(
+      system || SP.insurance,
+      message,
+      maxTokens || 1400
+    );
+    res.json({ ok: true, answer });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// Quiz — returns JSON array of questions
+app.post('/api/insurance/quiz', express.json(), async (req, res) => {
+  const { topic, state, lob, count } = req.body || {};
+  const prompt = `Generate ${count || 10} exam-level multiple choice questions for "${topic}" on the ${state} ${lob} insurance licensing exam.
+Return ONLY a JSON array — no markdown, no backticks:
+[{"q":"Question?","options":["A text","B text","C text","D text"],"answer":0,"explanation":"Why correct and why others are wrong."}]
+answer is 0-based index. Make questions realistic exam-difficulty.`;
+  try {
+    const raw = await groqChat(
+      'You are an insurance licensing exam question writer. Respond ONLY with valid JSON — no markdown, no backticks, no explanation.',
+      prompt,
+      2200
+    );
+    const cleaned = raw.replace(/```json|```/g, '').trim();
+    res.json({ ok: true, questions: JSON.parse(cleaned) });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// Flashcards — returns JSON array of term/definition pairs
+app.post('/api/insurance/flashcards', express.json(), async (req, res) => {
+  const { topic, state, lob } = req.body || {};
+  const prompt = `Create 15 flashcards for "${topic}" on the ${state} ${lob} insurance exam.
+Return ONLY a JSON array — no markdown, no backticks:
+[{"term":"Term","definition":"Clear concise definition for the exam. 1-3 sentences."}]`;
+  try {
+    const raw = await groqChat(
+      'You are an insurance exam flashcard creator. Respond ONLY with valid JSON — no markdown, no backticks.',
+      prompt,
+      1400
+    );
+    const cleaned = raw.replace(/```json|```/g, '').trim();
+    res.json({ ok: true, cards: JSON.parse(cleaned) });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// AHIP — module study content
+app.post('/api/insurance/ahip', express.json(), async (req, res) => {
+  const { moduleTitle, moduleId } = req.body || {};
+  const prompt = `Create a comprehensive AHIP certification study guide for the module: "${moduleTitle}".
+Cover: key definitions, CMS rules and regulations, what the exam tests on this topic, compliance requirements, common violations to avoid, and 2-3 exam tips specific to AHIP.
+Format clearly for an insurance agent preparing for AHIP certification.`;
+  try {
+    const answer = await groqChat(
+      'You are a Medicare insurance compliance expert and AHIP certification trainer. Format with HTML only (no markdown): use <h3> for headings, <p> for paragraphs, <ul><li> for lists, <span class="kterm">term</span> for key terms, <div class="callout ahip-callout"><div class="callout-title">CMS RULE</div>content</div> for CMS rules.',
+      prompt,
+      1600
+    );
+    res.json({ ok: true, answer, moduleId });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// AHIP Quiz — returns JSON questions in AHIP style
+app.post('/api/insurance/ahip-quiz', express.json(), async (req, res) => {
+  const { count } = req.body || {};
+  const prompt = `Generate ${count || 25} AHIP-style multiple choice questions covering Medicare Advantage, Part D, CMS marketing rules, enrollment periods, plan benefits, appeals, and fraud/waste/abuse.
+Return ONLY a JSON array — no markdown, no backticks:
+[{"q":"Question?","options":["A text","B text","C text","D text"],"answer":0,"explanation":"CMS rule citation and explanation of why this answer is correct."}]
+answer is 0-based index. Questions should match official AHIP exam difficulty. Cover all 6 major topic areas.`;
+  try {
+    const raw = await groqChat(
+      'You are an AHIP Medicare certification exam question writer. Respond ONLY with valid JSON — no markdown, no backticks, no explanation.',
+      prompt,
+      2800
+    );
+    const cleaned = raw.replace(/```json|```/g, '').trim();
+    res.json({ ok: true, questions: JSON.parse(cleaned) });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// ======================================================
+// END INSURANCE SUITE
+// ======================================================
+
 app.use((req, res) => res.status(404).send(`<pre>404 — Not found: ${req.path}</pre>`));
