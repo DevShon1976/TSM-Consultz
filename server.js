@@ -95,15 +95,28 @@ app.get("/api/hc/strategist-rollup", (req, res) => {
   });
 });
 
-// REMOVED: duplicate root static mount (conflicted with /html routing)
-// CORE STATIC MOUNT (single source of truth)
-app.use("/html", express.static(path.join(__dirname, "html")));
+// AUTO-INJECT tsm-launcher.js into every HTML page
+app.use(function(req, res, next) {
+  if (!req.path.endsWith('.html') && req.path !== '/') return next();
+  var origSendFile = res.sendFile.bind(res);
+  res.sendFile = function(filePath, opts, cb) {
+    fs.readFile(filePath, 'utf8', function(err, html) {
+      if (err) return origSendFile(filePath, opts, cb);
+      res.setHeader('Content-Type', 'text/html');
+      res.send(html.replace(/<\/body>/i,
+        '<script src="/js/tsm-launcher.js"></script>\n</body>'));
+    });
+  };
+  next();
+});
 
-// JS SHORTCUT (safe alias)
-app.use("/js", express.static(path.join(__dirname, "html/js")));
-
-// BPO SHORTCUT (safe alias)
-app.use("/bpo", express.static(path.join(__dirname, "html/bpo")));
+// CORE STATIC MOUNTS — single source of truth
+app.use("/html",         express.static(path.join(__dirname, "html")));
+app.use("/js",           express.static(path.join(__dirname, "html/js")));
+app.use("/bpo",          express.static(path.join(__dirname, "html/bpo")));
+app.use("/shared",       express.static(path.join(__dirname, "html/bpo/shared")));
+app.use("/insurance",    express.static(path.join(__dirname, "html/tsm-insurance")));
+app.use("/construction", express.static(path.join(__dirname, "html/construction-suite")));
 
 // handled by /html static mount (avoid duplication)
 
