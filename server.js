@@ -149,7 +149,6 @@ app.get("/", (_req, res) => {
   res.sendFile(path.join(__dirname, "html/bpo/bpo-command-center.html"));
 });
 
-app.use((req, res) => res.status(404).send(`<pre>404 — Not found: ${req.path}</pre>`));
 
 
 // ======================================================
@@ -613,3 +612,5 @@ app.post('/api/strategist/query', async function(req, res) {
 app.use((req, res) => {
   res.status(404).send('Not found: ' + req.path);
 });
+
+app.use((req, res) => res.status(404).send(`<pre>404 — Not found: ${req.path}</pre>`));
