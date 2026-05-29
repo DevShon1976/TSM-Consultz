@@ -108,6 +108,12 @@ app.use("/bpo", express.static(path.join(__dirname, "html/bpo")));
 // handled by /html static mount (avoid duplication)
 app.use('/shared', express.static(path.join(__dirname, 'html/shared')));
 
+app.post('/api/hc/query', async function(req, res) {
+  var body = req.body || {};
+  try { var a = await groqChat(SP.healthcare, body.question||body.query||'', body.maxTokens||1024); return res.json({ ok:true, answer:a, createdAt:new Date().toISOString() }); }
+  catch(e) { return res.status(500).json({ ok:false, error:e.message }); }
+});
+
 suites.forEach(s => {
 
   const dirPath = path.join(__dirname, s.dir);
@@ -559,12 +565,6 @@ app.post('/api/ai/query', async function(req, res) {
     var answer = await groqChat(system, userMsg, body.maxTokens || 1024);
     return res.json({ ok:true, app:appType, question:question, answer:answer, createdAt:new Date().toISOString() });
   } catch(e) { return res.status(500).json({ ok:false, error:e.message }); }
-});
-
-app.post('/api/hc/query', async function(req, res) {
-  var body = req.body || {};
-  try { var a = await groqChat(SP.healthcare, body.question||body.query||'', body.maxTokens||1024); return res.json({ ok:true, answer:a, createdAt:new Date().toISOString() }); }
-  catch(e) { return res.status(500).json({ ok:false, error:e.message }); }
 });
 
 app.post('/api/financial/query', async function(req, res) {
