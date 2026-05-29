@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -234,8 +233,23 @@ async function runExecutiveBriefing() {
     out.textContent = d.choices?.[0]?.message?.content || 'No response';
     document.getElementById('report-status') && (document.getElementById('report-status').textContent = 'COMPLETE');
   } catch(e) {
-    const _ignore = e; // fallback below
-    const r2 = await fetch('/api/hc/query', {
+  const r2 = await fetch('/api/hc/query', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      question: 'Generate a concise executive healthcare system briefing covering: revenue risk ($2.8M at risk), denial rate 18.4%, compliance 94.1%, and 7 priority actions.'
+    })
+  });
+
+  const d = await r2.json();
+  out.style.whiteSpace = 'pre-wrap';
+  out.textContent = d.answer || d.reply || d.content || 'No response';
+}
+
+document.getElementById('report-status') &&
+(document.getElementById('report-status').textContent = 'COMPLETE');
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + groqKey },
       body: JSON.stringify({
@@ -246,7 +260,7 @@ async function runExecutiveBriefing() {
     });
     const d = await r.json();
     out.style.whiteSpace = 'pre-wrap';
-    out.textContent = d.choices?.[0]?.message?.content || d.reply || d.content || out.textContent;
+    
     document.getElementById('report-status') && (document.getElementById('report-status').textContent = 'COMPLETE');
 
 function exportExecutiveBrief() {
