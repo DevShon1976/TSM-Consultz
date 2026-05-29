@@ -105,8 +105,6 @@ app.use("/js", express.static(path.join(__dirname, "html/js")));
 // BPO SHORTCUT (safe alias)
 app.use("/bpo", express.static(path.join(__dirname, "html/bpo")));
 
-app.use("/bpo", express.static(path.join(__dirname, "html/bpo")));
-
 // handled by /html static mount (avoid duplication)
 suites.forEach(s => {
 
@@ -142,7 +140,7 @@ app.get("/_debug", (_req, res) => {
 app.get("/", (_req, res) => {
   res.sendFile(path.join(__dirname, "html/bpo/bpo-command-center.html"));
 });
-  res.send(`<!DOCTYPE html>
+
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -389,7 +387,8 @@ app.post('/api/music/revision/run', express.json(), async (req, res) => {
   res.json({ ok: true, ...result });
 });
 
-app.post('/api/music/agent-pass', express.json(), async (req, res) => {
+// REMOVED DUPLICATE ROUTE (handled by Groq-based chain version below)
+app.post('/api/music/agent-pass', async function(req, res) {
   const { lyrics, agent='RIYA' } = req.body;
   const result = await tsmAIJSON(
     `You are music agent ${agent}. Analyze and score these lyrics. Return JSON: { output, score_delta, decision, ad_libs }. Lyrics: ${lyrics}`,
@@ -642,4 +641,7 @@ app.post('/api/strategist/query', async function(req, res) {
   catch(e) { return res.status(500).json({ ok:false, error:e.message }); }
 });
 // ===== END GROQ AI ENGINE =====
-app.use((req,res) => res.status(404).send('Not found: '+req.path));
+// final fallback 404 (single source of truth)
+app.use((req, res) => {
+  res.status(404).send('Not found: ' + req.path);
+});
