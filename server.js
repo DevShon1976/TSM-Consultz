@@ -139,7 +139,8 @@ app.get("/_debug", (_req, res) => {
 
 app.get("/", (_req, res) => {
   res.sendFile(path.join(__dirname, "html/bpo/bpo-command-center.html"));
-});</html>
+});
+
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>TSM Shell</title>
