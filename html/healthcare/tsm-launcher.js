@@ -20,7 +20,7 @@ window.TSM.launcher = {
     }
 
     if (action === 'switchTab') {
-      const raw = el.getAttribute('data-tsm-args');
+      const raw = args;
       const id = raw.trim().replace(/^['"]/, '').split(/['",]/)[0].trim();
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -31,7 +31,7 @@ window.TSM.launcher = {
     }
 
     if (action === 'runQ') {
-      const raw = el.getAttribute('data-tsm-args');
+      const raw = args;
       const parts = raw.match(/['"`]([^'"`]+)['"`]/g);
       if (!parts || parts.length < 2) return;
       const btnId = parts[1].replace(/['"]/g, '');
@@ -41,7 +41,7 @@ window.TSM.launcher = {
     }
 
     if (action === 'runPreset') {
-      const raw = el.getAttribute('data-tsm-args');
+      const raw = args;
       const query = raw.replace(/^[`'"]|[`'"]$/g, '');
       const inp = document.getElementById('intel-inp');
       const btn = document.getElementById('intel-btn');
