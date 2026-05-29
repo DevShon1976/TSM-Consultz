@@ -411,7 +411,7 @@ function groqChat(system, user, maxTokens) {
   maxTokens = maxTokens || 1024;
   return new Promise(function(resolve, reject) {
     var body = JSON.stringify({
-      model: 'model: 'mixtral-8x7b-32768',
+      model: 'model: 'llama-3.3-70b-versatile',
       max_tokens: maxTokens,
       messages: [
         { role: 'system', content: system },
