@@ -106,12 +106,13 @@ app.use("/js", express.static(path.join(__dirname, "html/js")));
 app.use("/bpo", express.static(path.join(__dirname, "html/bpo")));
 
 // handled by /html static mount (avoid duplication)
+app.use('/shared', express.static(path.join(__dirname, 'html/shared')));
+
 suites.forEach(s => {
 
   const dirPath = path.join(__dirname, s.dir);
 
   app.use(s.route, express.static(dirPath));
-  app.use('/shared', express.static(path.join(__dirname, 'html/shared')));
 
   app.get(s.route, (req, res) => {
     res.sendFile(path.join(dirPath, s.index));
