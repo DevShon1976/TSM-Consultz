@@ -26,7 +26,7 @@ window.TSM.launcher = {
       document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
       const panel = document.getElementById('tab-' + id);
       if (panel) panel.classList.add('active');
-      const btn = el.closest('nav') ? el : document.querySelector(`.nav-btn[data-tsm-args^="'${id}'"]`);
+      const btn = document.querySelector(`.nav-btn[data-tsm-args^="'${id}'"]`);
       if (btn) btn.classList.add('active');
     }
 
