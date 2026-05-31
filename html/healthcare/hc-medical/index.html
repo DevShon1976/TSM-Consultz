@@ -324,16 +324,256 @@ tr:hover td{background:#0f1f0f}
 
 </main>
 
-<div class="hc-guide">
-  <div class="hc-guide-title">HC NODE GUIDE</div>
-  <div class="hc-guide-desc">Use this panel while presenting. It explains the current tab, runs BNCA, and creates a next-action summary.</div>
-  <button class="hc-guide-btn" data-tsm-action="runGuide" data-tsm-args="'Explain the current tab and its key metrics in simple terms for a presentation'">Explain Current Tab</button>
-  <button class="hc-guide-btn" data-tsm-action="runGuide" data-tsm-args="'Find the single highest risk item across all medical node data and explain why it matters'">Find Highest Risk</button>
-  <button class="hc-guide-btn" data-tsm-action="runGuide" data-tsm-args="'Generate a presentation talk track for HC MEDICAL COMMAND — office manager demo narrative'">Presentation Talk Track</button>
-  <button class="hc-guide-run" data-tsm-action="runGuide" data-tsm-args="'Run full BNCA for HC MEDICAL COMMAND: top issue, why it matters, best next actions, confidence level'">Run Node BNCA</button>
-  <div class="hc-guide-lbl">HEALTHCARE BNCA SYNTHESIS</div>
-  <div class="hc-guide-output" id="guide-output">&gt; Select an action above.</div>
+<style>
+:root{--a:#7CFC00;--g:#00ff88;--b:#00cfff;--r:#ff4444;--y:#ffcc00;--border:#1a2a1a;--bg:#060d06;--panel:#0a130a;--card:#0f1c0f;--text:#99bb99;--dim:#3a5a3a}
+*{box-sizing:border-box;margin:0;padding:0}
+#hc-medical-guide{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:12px;max-width:340px;width:100%;font-family:'Courier New',monospace;font-size:10px;color:var(--text)}
+.g-hdr{font-size:10px;font-weight:700;letter-spacing:3px;color:var(--a);margin-bottom:3px}
+.g-desc{font-size:9px;color:var(--dim);line-height:1.5;margin-bottom:8px}
+.g-divider{border:none;border-top:1px solid var(--border);margin:8px 0}
+.g-label{font-size:8px;font-weight:700;letter-spacing:2px;color:var(--dim);margin-bottom:5px}
+.g-field{background:#070f07;border:1px solid #1a2a1a;border-radius:3px;color:#aaccaa;font-family:'Courier New',monospace;font-size:9px;padding:4px 6px;width:100%;outline:none}
+.g-field:focus{border-color:var(--a)}
+.g-field::placeholder{color:#2a3a2a}
+textarea.g-field{resize:none}
+.meta-box{background:#0a130a;border:1px solid #1a2a1a;border-radius:3px;padding:6px 8px;font-size:9px;color:#556655;margin-bottom:8px;min-height:28px}
+.step-box{background:var(--card);border:1px solid #223322;border-radius:4px;padding:8px;margin-bottom:6px}
+.step-box.active{border-color:var(--a)}
+.step-header{font-size:8px;font-weight:700;letter-spacing:2px;margin-bottom:4px}
+.step-text{font-size:9px;color:#99bb99;line-height:1.5;margin-bottom:6px}
+.step-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:5px}
+.step-btn{padding:5px 4px;font-family:'Courier New',monospace;font-size:8px;font-weight:700;border:1px solid;border-radius:3px;cursor:pointer;background:transparent;letter-spacing:.5px}
+.btn-exp{border-color:#336633;color:#336633}.btn-exp:hover{border-color:var(--g);color:var(--g)}
+.btn-risk{border-color:#664400;color:#886600}.btn-risk:hover{border-color:var(--y);color:var(--y)}
+.btn-talk{border-color:#003366;color:#004488}.btn-talk:hover{border-color:var(--b);color:var(--b)}
+.submit-btn{width:100%;padding:5px;background:#001a00;border:1px solid #336633;color:#336633;font-family:'Courier New',monospace;font-size:8px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px}
+.g-result{margin-top:5px;font-size:9px;color:#99bb99;line-height:1.5;background:#070f07;border-radius:3px;padding:5px 6px;display:none;border:1px solid #1a2a1a;max-height:120px;overflow-y:auto;white-space:pre-wrap}
+.g-result.visible{display:block}
+.btn-full{width:100%;padding:6px;font-family:'Courier New',monospace;font-size:9px;font-weight:700;border:none;border-radius:3px;cursor:pointer;letter-spacing:1px;margin-bottom:4px}
+.urgent-box{background:#1a0000;border:1px solid var(--r);border-radius:4px;padding:8px;margin-bottom:8px}
+.timer-row{display:flex;align-items:center;gap:8px;background:#0a0000;border:1px solid #3a0000;border-radius:3px;padding:5px 8px;margin-bottom:6px}
+.dot-blink{animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+</style>
+
+<div id="hc-medical-guide">
+  <div class="g-hdr">HC MEDICAL NODE GUIDE</div>
+  <div class="g-desc">Use this panel while presenting. It explains the current tab, runs BNCA, and creates a next-action summary.</div>
+  <hr class="g-divider">
+
+  <!-- INTAKE -->
+  <div id="intake-section">
+    <div class="g-label">◆ SET PATIENT MISSION</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px">
+      <div>
+        <div class="g-label" style="margin-bottom:2px">PATIENT NAME</div>
+        <input id="pt-name" class="g-field" type="text" placeholder="e.g. Jane Smith">
+      </div>
+      <div>
+        <div class="g-label" style="margin-bottom:2px">MRN / CHART #</div>
+        <input id="pt-mrn" class="g-field" type="text" placeholder="e.g. MRN-5821">
+      </div>
+      <div>
+        <div class="g-label" style="margin-bottom:2px">PAYER / PLAN</div>
+        <input id="pt-payer" class="g-field" type="text" placeholder="e.g. Blue Shield PPO">
+      </div>
+      <div>
+        <div class="g-label" style="margin-bottom:2px">DENIAL / AUTH CODE</div>
+        <input id="pt-code" class="g-field" type="text" placeholder="e.g. N130 / PA-Denied">
+      </div>
+      <div>
+        <div class="g-label" style="margin-bottom:2px">ICD-10 / CPT</div>
+        <input id="pt-icd" class="g-field" type="text" placeholder="e.g. M54.5 / 99214">
+      </div>
+      <div>
+        <div class="g-label" style="margin-bottom:2px">RISK / EXPOSURE</div>
+        <input id="pt-risk" class="g-field" type="text" placeholder="e.g. $2,400">
+      </div>
+    </div>
+    <div class="g-label" style="margin-bottom:2px">CLINICAL ISSUE / DENIAL REASON</div>
+    <textarea id="pt-issue" class="g-field" rows="2" placeholder="e.g. Prior auth denied — medical necessity not established for lumbar MRI. Missing notes on conservative treatment failure." style="margin-bottom:6px"></textarea>
+    <button onclick="applyIntake()" class="btn-full" style="background:var(--a);color:#000">⚡ SET MISSION FROM PATIENT DATA</button>
+    <button onclick="toggleIntake(false)" id="intake-collapse" style="display:none;width:100%;padding:5px;background:transparent;border:1px solid var(--border);color:var(--dim);font-family:'Courier New',monospace;font-size:9px;border-radius:3px;cursor:pointer;letter-spacing:1px">▲ COLLAPSE INTAKE</button>
+  </div>
+  <button onclick="toggleIntake(true)" id="intake-expand" style="display:none;width:100%;padding:5px;background:transparent;border:1px solid var(--a);color:var(--a);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px;margin-bottom:8px">✎ EDIT PATIENT DATA</button>
+
+  <hr class="g-divider">
+
+  <div class="g-label">MISSION OBJECTIVES · MEDICAL</div>
+  <div id="guide-meta" class="meta-box">No patient mission set. Fill intake above.</div>
+
+  <!-- TASKS -->
+  <div style="margin-bottom:10px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <div style="width:18px;height:18px;border-radius:50%;background:#003322;border:1px solid var(--g);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--g);font-weight:700;flex-shrink:0">✓</div>
+      <span style="color:#334433;font-size:10px;text-decoration:line-through">Clinical flags identified</span>
+    </div>
+    <div style="font-size:9px;color:#223322;padding-left:26px;margin-bottom:8px">N130 · PA-Denied · CO-50 · CO-97 flagged</div>
+
+    <div class="urgent-box">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <div style="width:18px;height:18px;border-radius:50%;background:var(--r);display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:700;flex-shrink:0">!</div>
+        <span style="color:var(--r);font-size:10px;font-weight:700">PA Peer-to-Peer Request — 72hr window</span>
+      </div>
+      <div style="font-size:9px;color:#556655;padding-left:26px;margin-bottom:6px">MRN-5821 · CPT 72148 · Blue Shield PPO · $2,400</div>
+      <div class="timer-row">
+        <span style="font-size:16px;font-weight:700;color:var(--r)">72hr</span>
+        <span style="font-size:9px;color:#cc9999">peer-to-peer deadline — escalate to attending or forfeit auth</span>
+      </div>
+      <div style="font-size:9px;color:#99cc99;line-height:1.5;margin-bottom:6px">Include clinical documentation, conservative treatment failure notes, and ordering physician callback availability.</div>
+      <button onclick="runAI('Draft peer-to-peer appeal script for prior auth denial of CPT 72148 (lumbar MRI), ICD-10 M54.5, Blue Shield PPO. Include medical necessity argument, conservative treatment failure checklist, and peer-to-peer scheduling instructions.')" class="btn-full" style="background:var(--r);color:#fff">⚡ DRAFT P2P APPEAL SCRIPT</button>
+      <button onclick="runAI('Prioritize denied medical claims by clinical urgency and recovery probability. Which need immediate peer-to-peer, which qualify for written appeal, create 30-day clinical denial recovery plan.')" style="width:100%;padding:6px;background:transparent;border:1px solid var(--g);color:var(--g);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px">CLINICAL DENIAL RECOVERY PLAN ↗</button>
+    </div>
+  </div>
+
+  <hr class="g-divider">
+
+  <div id="step-label" style="font-size:8px;font-weight:700;letter-spacing:2px;color:var(--dim);margin-bottom:6px">STEP 1 OF 2</div>
+
+  <!-- STEP 1 -->
+  <div id="step-1" class="step-box active">
+    <div class="step-header" style="color:var(--a)">▸ STEP 1 — CLINICAL TAB REVIEW</div>
+    <div class="step-text">Analyze active medical tab: identify documentation gaps, auth status, clinical flags, and denial risk exposure.</div>
+    <div class="step-actions">
+      <button class="step-btn btn-exp" onclick="guideStep('explain',1)">Explain Tab</button>
+      <button class="step-btn btn-risk" onclick="guideStep('risk',1)">Highest Risk</button>
+      <button class="step-btn btn-talk" onclick="guideStep('talk',1)">Talk Track</button>
+    </div>
+    <button class="submit-btn" onclick="submitStep(1)">Submit Step Response</button>
+    <div id="res-1" class="g-result"></div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div id="step-2" class="step-box">
+    <div class="step-header" style="color:#556655">▸ STEP 2 — AUTH &amp; REFERRAL CHAIN</div>
+    <div class="step-text">Review prior auth and referral chain: flag missing approvals, expired auths, and payer-specific medical necessity requirements.</div>
+    <div class="step-actions">
+      <button class="step-btn btn-exp" onclick="guideStep('explain',2)">Explain Tab</button>
+      <button class="step-btn btn-risk" onclick="guideStep('risk',2)">Highest Risk</button>
+      <button class="step-btn btn-talk" onclick="guideStep('talk',2)">Talk Track</button>
+    </div>
+    <button class="submit-btn" onclick="submitStep(2)">Submit Step Response</button>
+    <div id="res-2" class="g-result"></div>
+  </div>
+
+  <hr class="g-divider">
+
+  <!-- WHEN TO RUN WHAT -->
+  <div style="margin-bottom:10px">
+    <div class="g-label" style="margin-bottom:6px">◆ WHEN TO RUN WHAT</div>
+    <div style="background:#0a1400;border:1px solid #1e3a00;border-radius:3px;padding:7px 8px;margin-bottom:5px">
+      <div style="color:var(--g);font-size:9px;font-weight:700;margin-bottom:3px">⚡ RUN BNCA FIRST</div>
+      <div style="font-size:9px;color:#556655;line-height:1.5">Always start here. BNCA surfaces the highest-risk clinical item — auth denials, documentation gaps, expired approvals, missed coding. Run before escalating anything.</div>
+    </div>
+    <div style="background:#00111a;border:1px solid #001e3a;border-radius:3px;padding:7px 8px">
+      <div style="color:var(--b);font-size:9px;font-weight:700;margin-bottom:3px">🔗 RELAY TO STRATEGIST AFTER</div>
+      <div style="font-size:9px;color:#556655;line-height:1.5">Only escalate when BNCA reveals a <span style="color:var(--a)">cross-domain issue</span> — payer contract disputes, systemic PA denial patterns needing CMO visibility, or recurring clinical documentation failures. Don't relay single-patient cases.</div>
+    </div>
+  </div>
+
+  <button onclick="runAI('Run full BNCA for HC MEDICAL COMMAND: top clinical issue, why it matters, best next actions, confidence level')" style="width:100%;padding:7px;background:#003322;border:1px solid var(--g);color:var(--g);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px;margin-bottom:5px">⚡ RUN NODE BNCA</button>
+
+  <hr class="g-divider">
+
+  <!-- POST-STEPS NEXT ACTIONS -->
+  <div id="next-actions" style="display:none">
+    <div class="g-label" style="color:var(--g);margin-bottom:6px">◆ STEPS COMPLETE — NEXT ACTIONS</div>
+    <div style="font-size:9px;color:#556655;line-height:1.5;margin-bottom:8px">Both steps responded. Choose your escalation path based on what the analysis revealed:</div>
+    <div style="display:flex;flex-direction:column;gap:5px">
+      <button onclick="runAI('Run full BNCA for HC MEDICAL COMMAND: synthesize both step findings into top clinical risk, responsible clinician, resolution timeline, and confidence score')" style="width:100%;padding:6px;background:#003322;border:1px solid var(--g);color:var(--g);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px">⚡ RE-RUN BNCA WITH FINDINGS</button>
+      <button onclick="window.open('https://hc-strategist.tsmatter.com','_blank')" style="width:100%;padding:6px;background:#001133;border:1px solid var(--b);color:var(--b);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px">🔗 ESCALATE TO STRATEGIST</button>
+      <button onclick="runAI('Export medical session summary: both step findings, mission task status, denial codes, recommended clinical actions, escalation decision')" style="width:100%;padding:6px;background:#221100;border:1px solid var(--y);color:var(--y);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px">📋 EXPORT SESSION SUMMARY</button>
+    </div>
+  </div>
+
+  <div id="ai-output" class="g-result" style="margin-top:8px"></div>
 </div>
+
+<script>
+var clientData={patient:'',mrn:'',payer:'',code:'',icd:'',risk:'',issue:''};
+var stepsDone={1:false,2:false};
+
+function applyIntake(){
+  clientData.patient=document.getElementById('pt-name').value||'[Patient]';
+  clientData.mrn=document.getElementById('pt-mrn').value||'[MRN]';
+  clientData.payer=document.getElementById('pt-payer').value||'[Payer]';
+  clientData.code=document.getElementById('pt-code').value||'[Code]';
+  clientData.icd=document.getElementById('pt-icd').value||'[ICD/CPT]';
+  clientData.risk=document.getElementById('pt-risk').value||'[Amount]';
+  clientData.issue=document.getElementById('pt-issue').value||'[Issue not specified]';
+  var meta=document.getElementById('guide-meta');
+  meta.innerHTML='<span style="color:var(--a)">'+clientData.patient+'</span> · <span style="color:#556655">'+clientData.mrn+'</span> · <span style="color:#336655">'+clientData.payer+'</span><br><span style="color:var(--y)">'+clientData.code+'</span> · <span style="color:#aaaaaa">'+clientData.icd+'</span> · <span style="color:var(--r)">'+clientData.risk+' at risk</span><br><span style="color:#445544;font-style:italic">'+clientData.issue.substring(0,90)+(clientData.issue.length>90?'...':'')+'</span>';
+  toggleIntake(false);
+}
+
+function toggleIntake(show){
+  document.getElementById('intake-section').style.display=show?'block':'none';
+  document.getElementById('intake-collapse').style.display=show?'block':'none';
+  document.getElementById('intake-expand').style.display=show?'none':'block';
+}
+
+function guideStep(action,step){
+  var labels={
+    explain:'Explain the current medical tab and its key clinical metrics in simple terms for a presentation.',
+    risk:'Find the single highest clinical risk item — auth gap, denial code, or documentation failure — and explain why it matters.',
+    talk:'Generate a presentation talk track for HC MEDICAL COMMAND — clinical operations demo narrative.'
+  };
+  var ctx=' Patient context: '+clientData.patient+' / '+clientData.mrn+' / '+clientData.payer+' / '+clientData.code+' / '+clientData.icd+' / '+clientData.risk+'. Issue: '+clientData.issue;
+  streamToEl(labels[action]+ctx,'res-'+step);
+}
+
+function submitStep(step){
+  var r=document.getElementById('res-'+step);
+  if(!r.classList.contains('visible')){
+    streamToEl('Analyze this medical step and provide summary findings with recommended next actions. Patient: '+clientData.patient+'. Issue: '+clientData.issue,'res-'+step);
+  }
+  stepsDone[step]=true;
+  document.getElementById('step-'+step).style.borderColor='#336633';
+  var hdr=document.querySelector('#step-'+step+' .step-header');
+  if(hdr) hdr.style.color='var(--g)';
+  if(stepsDone[1]&&stepsDone[2]){
+    document.getElementById('next-actions').style.display='block';
+    document.getElementById('step-label').textContent='STEPS COMPLETE';
+    document.getElementById('step-label').style.color='var(--g)';
+  } else if(step===1){
+    document.getElementById('step-label').textContent='STEP 2 OF 2';
+    var s2=document.getElementById('step-2');
+    s2.classList.add('active');
+    s2.querySelector('.step-header').style.color='var(--a)';
+  }
+}
+
+function runAI(prompt){
+  streamToEl(prompt,'ai-output');
+}
+
+function streamToEl(prompt,elId){
+  var el=document.getElementById(elId);
+  el.classList.add('visible');
+  el.textContent='> ';
+  var dot=document.createElement('span');
+  dot.className='dot-blink';dot.textContent='█';
+  el.appendChild(dot);
+  fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:400,
+      system:'You are the HC MEDICAL COMMAND intelligence engine. You specialize in healthcare medical operations: prior authorizations, clinical documentation, denial management (N130, CO-50, CO-97, PA denials), ICD-10/CPT coding, peer-to-peer appeal strategy, and medical necessity defense. Respond in concise clinical analyst style. Use medical billing abbreviations. Be direct and actionable. Max 3-4 short paragraphs.',
+      messages:[{role:'user',content:prompt}]
+    })
+  })
+  .then(function(r){return r.json()})
+  .then(function(d){
+    var text=(d.content&&d.content[0]&&d.content[0].text)||'[No response]';
+    el.textContent='';
+    var i=0;
+    (function type(){if(i<text.length){el.textContent+=text[i++];el.scrollTop=el.scrollHeight;setTimeout(type,8);}})();
+  })
+  .catch(function(e){el.textContent='> Error: '+e.message;});
+}
+</script>
 
 <div class="footer">
   <div class="fn">🏥 MEDICAL NODE &nbsp; Ready — run analysis or relay to Strategist</div>
