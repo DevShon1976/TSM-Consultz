@@ -324,15 +324,135 @@ tr:hover td{background:#0f1f0f}
 
 </main>
 
-<div class="hc-guide">
-  <div class="hc-guide-title">HC NODE GUIDE</div>
-  <div class="hc-guide-desc">Use this panel while presenting. It explains the current tab, runs BNCA, and creates a next-action summary.</div>
-  <button class="hc-guide-btn" data-tsm-action="runGuide" data-tsm-args="'Explain the current tab and its key metrics in simple terms for a presentation'">Explain Current Tab</button>
-  <button class="hc-guide-btn" data-tsm-action="runGuide" data-tsm-args="'Find the single highest risk item across all pharmacy node data and explain why it matters'">Find Highest Risk</button>
-  <button class="hc-guide-btn" data-tsm-action="runGuide" data-tsm-args="'Generate a presentation talk track for HC PHARMACY COMMAND — office manager demo narrative'">Presentation Talk Track</button>
-  <button class="hc-guide-run" data-tsm-action="runGuide" data-tsm-args="'Run full BNCA for HC PHARMACY COMMAND: top issue, why it matters, best next actions, confidence level'">Run Node BNCA</button>
-  <div class="hc-guide-lbl">HEALTHCARE BNCA SYNTHESIS</div>
-  <div class="hc-guide-output" id="guide-output">&gt; Select an action above.</div>
+<!-- ═══════════════ HC NODE GUIDE PANEL (PHARMACY RE-FORMATTED) ═══════════════ -->
+<div id="hc-node-guide">
+  <div class="guide-hdr">HC NODE GUIDE</div>
+  <div class="guide-desc">Use this panel while presenting. It explains the current tab, runs BNCA, and creates a next-action summary.</div>
+  <hr class="guide-divider">
+
+  <!-- INTAKE FORM -->
+  <div id="guide-intake" style="margin-bottom:10px">
+    <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--a);margin-bottom:6px">◆ SET PHARMACY MISSION</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px">
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">PATIENT NAME</div>
+        <input id="pharm-patient" class="guide-field" type="text" placeholder="Maria Santos">
+      </div>
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">CLAIM #</div>
+        <input id="pharm-claim" class="guide-field" type="text" placeholder="27447">
+      </div>
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">PAYER</div>
+        <input id="pharm-payer" class="guide-field" type="text" placeholder="BlueCross BlueShield">
+      </div>
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">COMPLIANCE RATE</div>
+        <input id="pharm-compliance" class="guide-field" type="text" placeholder="92.7%">
+      </div>
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">AUTH PENDING</div>
+        <input id="pharm-pending" class="guide-field" type="text" placeholder="52 (14 Urgent)">
+      </div>
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">REVENUE AT RISK</div>
+        <input id="pharm-revenue" class="guide-field" type="text" placeholder="$112K">
+      </div>
+    </div>
+    <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">CURRENT ISSUE / DENIAL REASON</div>
+    <textarea id="pharm-issue" class="guide-field" rows="2" placeholder="Step therapy – preferred agent required first for Celecoxib (Celebrex) 200mg." style="resize:none;width:100%;margin-bottom:6px"></textarea>
+    <button onclick="applyPharmMission()" style="width:100%;padding:6px;background:var(--a);color:#000;font-family:'Courier New',monospace;font-size:9px;font-weight:700;border:none;border-radius:3px;cursor:pointer;letter-spacing:1px">⚡ SET MISSION FROM PHARMACY DATA</button>
+    <button onclick="toggleIntake(false)" id="intake-collapse-btn" style="display:none;width:100%;margin-top:4px;padding:5px;background:transparent;border:1px solid var(--border);color:#556655;font-family:'Courier New',monospace;font-size:9px;border-radius:3px;cursor:pointer;letter-spacing:1px">▲ COLLAPSE INTAKE</button>
+  </div>
+  <button onclick="toggleIntake(true)" id="intake-expand-btn" style="display:none;width:100%;padding:5px;background:transparent;border:1px solid var(--a);color:var(--a);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px;margin-bottom:8px">✎ EDIT PHARMACY DATA</button>
+  <hr class="guide-divider">
+
+  <div class="guide-obj">MISSION OBJECTIVES · PHARMACY</div>
+  <div id="guide-meta" class="guide-meta"></div>
+
+  <!-- ── MISSION TASKS ── -->
+  <div id="guide-tasks" style="margin-bottom:10px">
+    <!-- completed task -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <div style="width:18px;height:18px;border-radius:50%;background:#003322;border:1px solid var(--g);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--g);font-weight:700;flex-shrink:0">✓</div>
+      <span style="color:#334433;font-size:10px;text-decoration:line-through">Formulary flags mapped</span>
+    </div>
+    <div id="guide-pharm-nodes" style="font-size:9px;color:#223322;padding-left:26px;margin-bottom:8px">Medication Queue · Refill Exceptions · Prior Auth Meds flagged</div>
+
+    <!-- active urgent task -->
+    <div id="guide-urgent-task" style="background:#1a0000;border:1px solid var(--r);border-radius:4px;padding:8px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <div style="width:18px;height:18px;border-radius:50%;background:var(--r);display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:700;flex-shrink:0">!</div>
+        <span style="color:var(--r);font-size:10px;font-weight:700">Step Therapy SLA Breach Risk</span>
+      </div>
+      <div style="font-size:9px;color:#556655;padding-left:26px;margin-bottom:6px">52 Auth Pending · 14 Urgent · Avg 2.3 Days Stalled</div>
+      <div style="display:flex;align-items:center;gap:8px;background:#0a0000;border:1px solid #3a0000;border-radius:3px;padding:5px 8px;margin-bottom:6px">
+        <span style="font-size:16px;font-weight:700;color:var(--r)">14</span>
+        <span style="font-size:9px;color:#cc9999">urgent cases stalled — $112K total revenue at risk across active denials</span>
+      </div>
+      <div style="font-size:9px;color:#99cc99;line-height:1.5;margin-bottom:6px">Identify preferred agent alternatives, update missing cross-domain authorization forms, and reconcile post-surgical CPT 27447 matches.</div>
+      <button onclick="loadAI('Create a formulary reconciliation strategy for 14 urgent pending authorizations under BlueCross BlueShield. Resolve the step therapy requirement for Celecoxib (Celebrex) 200mg.')" style="width:100%;padding:6px;background:var(--r);color:#fff;font-family:'Courier New',monospace;font-size:9px;font-weight:700;border:none;border-radius:3px;cursor:pointer;letter-spacing:1px;margin-bottom:4px">⚡ GENERATE RECOVERY PLAN</button>
+      <button onclick="loadAI('Analyze pharmacy node compliance drops to 92.7% against the 95% target. Flag OIG watch variables and propose immediate formulary corrections.')" style="width:100%;padding:6px;background:transparent;border:1px solid var(--g);color:var(--g);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px">PHARMACY IMPROVEMENT ↗</button>
+    </div>
+  </div>
+
+  <hr class="guide-divider">
+
+  <!-- ── STEPS ── -->
+  <div id="guide-step-label" class="guide-step-label">STEP 1 OF 2</div>
+
+  <div id="guide-step-1" class="guide-step-box active-step">
+    <div id="guide-step-1-text" class="guide-step-text">A step therapy denial was received for Celebrex. Review the formulary requirements and identify the required step drug.</div>
+    <div class="guide-step-actions">
+      <button class="guide-action-btn btn-explain" onclick="guideAction('explain',1); Q('Explain the current Pharmacy tab and key metrics like compliance and revenue at risk for a presentation','hc-guide-btn','guide-output')">Explain Current Tab</button>
+      <button class="guide-action-btn btn-risk" onclick="guideAction('risk',1); Q('Find the single highest risk item across all pharmacy node data in image_6b80a1.png and explain why it matters','hc-guide-btn','guide-output')">Find Highest Risk</button>
+      <button class="guide-action-btn btn-talk" onclick="guideAction('talk',1); Q('Generate a presentation talk track for HC PHARMACY COMMAND — office manager demo narrative','hc-guide-btn','guide-output')">Talk Track</button>
+    </div>
+    <button class="guide-submit-btn" onclick="submitStep(1)">Submit Step Therapy Response</button>
+    <div id="guide-res-1" class="guide-result"></div>
+  </div>
+
+  <div id="guide-step-2" class="guide-step-box" style="margin-top:8px">
+    <div id="guide-step-2-text" class="guide-step-text">Post-surgical medication reconciliation for CPT 27447. Verify discharge medications against formulary parameters.</div>
+    <div class="guide-step-actions">
+      <button class="guide-action-btn btn-explain" onclick="guideAction('explain',2); Q('Explain the current Pharmacy tab clinical review protocols for CPT 27447','hc-guide-btn','guide-output')">Explain Current Tab</button>
+      <button class="guide-action-btn btn-risk" onclick="guideAction('risk',2); Q('Find the single highest clinical risk across post-surgical medication reconciliations','hc-guide-btn','guide-output')">Find Highest Risk</button>
+      <button class="guide-action-btn btn-talk" onclick="guideAction('talk',2); Q('Generate a clinician presentation talk track for CPT 27447 formulary validation','hc-guide-btn','guide-output')">Talk Track</button>
+    </div>
+    <button class="guide-submit-btn" onclick="submitStep(2)">Submit Reconciliation Response</button>
+    <div id="guide-res-2" class="guide-result"></div>
+  </div>
+
+  <hr class="guide-divider">
+
+  <!-- ── BNCA vs STRATEGIST GUIDANCE ── -->
+  <div style="margin-bottom:10px">
+    <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:#556655;margin-bottom:6px">◆ WHEN TO RUN WHAT</div>
+    <div style="background:#0a1400;border:1px solid #1e3a00;border-radius:3px;padding:7px 8px;margin-bottom:5px">
+      <div style="color:var(--g);font-size:9px;font-weight:700;margin-bottom:3px">⚡ RUN BNCA FIRST</div>
+      <div style="font-size:9px;color:#556655;line-height:1.5">Always start here. BNCA identifies operational bottlenecks, staffing risks, queue overloads, scheduling issues, and vendor performance concerns within the pharmacy node.</div>
+    </div>
+    <div style="background:#00111a;border:1px solid #001e3a;border-radius:3px;padding:7px 8px">
+      <div style="color:var(--b);font-size:9px;font-weight:700;margin-bottom:3px">🔗 RELAY TO STRATEGIST AFTER</div>
+      <div style="font-size:9px;color:#556655;line-height:1.5">Escalate only when BNCA reveals enterprise-wide operational failures, structural staffing shortages, macro vendor contract exceptions, compliance risks, or cross-node healthcare impacts.</div>
+    </div>
+  </div>
+
+  <button onclick="Q('Run full BNCA for HC PHARMACY COMMAND: top issue, why it matters, best next actions, confidence level','hc-guide-run','guide-output')" style="width:100%;padding:7px;background:#003322;border:1px solid var(--g);color:var(--g);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px;margin-bottom:5px">⚡ RUN NODE BNCA</button>
+
+  <hr class="guide-divider">
+
+  <!-- ── POST STEP 2 NEXT ACTIONS (hidden until both steps run) ── -->
+  <div id="guide-next-actions" style="display:none">
+    <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--g);margin-bottom:6px">◆ STEPS COMPLETE — NEXT ACTIONS</div>
+    <div style="font-size:9px;color:#556655;line-height:1.5;margin-bottom:8px">Both pharmacy node evaluations completed. Choose your next action path:</div>
+    <div style="display:flex;flex-direction:column;gap:5px">
+      <button onclick="Q('Run full BNCA for HC PHARMACY COMMAND: combine step therapy and post-surgical reconciliation records into a unified compliance risk ledger','hc-guide-run','guide-output')" style="width:100%;padding:6px;background:#003322;border:1px solid var(--g);color:var(--g);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px">⚡ RE-RUN BNCA WITH FINDINGS</button>
+      <button onclick="window.open('/healthcare/hc-main-strategist/index.html','_blank')" style="width:100%;padding:6px;background:#001133;border:1px solid var(--b);color:var(--b);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px">🔗 ESCALATE TO STRATEGIST</button>
+      <button onclick="Q('Export pharmacy session summary detailing patient '+document.getElementById('pharm-patient').placeholder+', claim '+document.getElementById('pharm-claim').placeholder+', compliance '+document.getElementById('pharm-compliance').placeholder+', revenue at risk '+document.getElementById('pharm-revenue').placeholder+': step configurations and clinical mitigation logs','hc-guide-run','guide-output')" style="width:100%;padding:6px;background:#221100;border:1px solid var(--a);color:var(--a);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px">📋 EXPORT SESSION SUMMARY</button>
+    </div>
+  </div>
+
 </div>
 
 <div class="footer">
