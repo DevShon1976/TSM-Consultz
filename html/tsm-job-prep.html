@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TSM CAREER OS · Healthcare Ops Simulator</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{background:#0a0f0a;color:#e0ffe0;font-family:'Courier New',monospace;font-size:12px}
+:root{--g:#00ff88;--a:#ffaa00;--r:#ff4444;--b:#00aaff;--bg:#0a0f0a;--bg2:#0b120b;--border:#1e3a1e;--muted:#556655;--dim:#0d150d}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+.os{display:grid;grid-template-rows:auto auto 1fr auto;height:100vh}
+
+/* TOP BAR */
+.top-bar{background:var(--bg2);border-bottom:1px solid var(--border);padding:8px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
+.logo{font-size:13px;font-weight:700;letter-spacing:2px;color:var(--g)}
+.logo span{color:var(--a)}
+.logo small{color:var(--muted);font-size:9px;letter-spacing:1px}
+.pills{display:flex;gap:5px;flex-wrap:wrap}
+.pill{padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;letter-spacing:1px}
+.pg{background:#003322;border:1px solid var(--g);color:var(--g)}
+.pa{background:#332200;border:1px solid var(--a);color:var(--a)}
+.pb{background:#001133;border:1px solid var(--b);color:var(--b)}
+
+/* ROLE BAR */
+.role-bar{background:#0a100a;border-bottom:1px solid var(--border);padding:5px 14px;display:flex;gap:5px;overflow-x:auto;align-items:center}
+.rbl{font-size:9px;color:var(--muted);letter-spacing:2px;white-space:nowrap;margin-right:4px}
+.rb{padding:4px 10px;border-radius:10px;font-size:9px;font-weight:700;letter-spacing:1px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .15s}
+.rb:hover{color:var(--g);border-color:var(--g)}
+.rb.act{background:#001133;border-color:var(--b);color:var(--b)}
+
+/* MAIN GRID */
+.main{display:grid;grid-template-columns:1fr 320px;overflow:hidden}
+.left{overflow-y:auto;padding:10px 14px;padding-bottom:20px}
+.right{border-left:1px solid var(--border);overflow-y:auto;background:var(--bg2);display:flex;flex-direction:column}
+
+/* BOTTOM BAR */
+.bot{background:var(--bg2);border-top:1px solid var(--border);padding:6px 14px;display:flex;gap:8px;align-items:center}
+.cmd{flex:1;background:transparent;border:none;color:var(--g);font-family:inherit;font-size:11px;outline:none}
+.cmd::placeholder{color:var(--muted)}
+.run{padding:5px 14px;background:var(--g);color:#000;font-family:inherit;font-size:10px;font-weight:700;border:none;border-radius:3px;cursor:pointer;letter-spacing:1px;transition:opacity .15s}
+.run:disabled{opacity:.4;cursor:not-allowed}
+.run-r{padding:5px 14px;background:var(--r);color:#fff;font-family:inherit;font-size:10px;font-weight:700;border:none;border-radius:3px;cursor:pointer;letter-spacing:1px}
+
+/* SECTIONS */
+.sec{background:var(--dim);border:1px solid var(--border);border-radius:5px;padding:10px;margin-bottom:8px}
+.sh{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--g);margin-bottom:8px}
+.sh::before{content:'◆ '}
+
+/* KPI GRID */
+.kgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px}
+.kpi{background:var(--dim);border:1px solid var(--border);border-radius:4px;padding:8px;text-align:center}
+.kv{font-size:18px;font-weight:700}
+.kl{font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:2px;text-transform:uppercase}
+.kd{font-size:8px;margin-top:2px}
+
+/* EVENTS */
+.ev{display:flex;align-items:flex-start;gap:7px;padding:5px 0;border-bottom:1px solid #0f1f0f}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.et{font-size:10px;flex:1;line-height:1.4}
+.ei{font-size:9px;color:var(--a);min-width:44px;text-align:right}
+
+/* OUTPUT */
+.otabs{display:flex;gap:3px;margin-bottom:7px;flex-wrap:wrap}
+.ot{padding:3px 9px;font-family:inherit;font-size:8px;font-weight:700;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:3px;cursor:pointer;letter-spacing:1px;transition:all .15s}
+.ot:hover{color:var(--text)}
+.ot.act{border-color:var(--a);color:var(--a);background:#1a1200}
+.out-box{background:#0a0f0a;border:1px solid var(--border);border-radius:4px;padding:10px;font-size:10px;color:#99cc99;min-height:100px;white-space:pre-wrap;line-height:1.6}
+.spin-icon{display:inline-block;animation:spin 1s linear infinite}
+
+/* BADGES */
+.br{background:#330000;color:var(--r);border:1px solid var(--r);padding:1px 6px;border-radius:8px;font-size:8px;font-weight:700}
+.ba{background:#332200;color:var(--a);border:1px solid var(--a);padding:1px 6px;border-radius:8px;font-size:8px;font-weight:700}
+.bg-b{background:#003322;color:var(--g);border:1px solid var(--g);padding:1px 6px;border-radius:8px;font-size:8px;font-weight:700}
+.bb{background:#001133;color:var(--b);border:1px solid var(--b);padding:1px 6px;border-radius:8px;font-size:8px;font-weight:700}
+
+/* RIGHT PANEL */
+.rh{padding:10px 12px;border-bottom:1px solid var(--border)}
+.rht{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--g);margin-bottom:2px}
+.rhs{font-size:9px;color:var(--muted)}
+.loop-steps{padding:8px 0;flex:1}
+.ls{padding:7px 12px;border-left:2px solid var(--border);margin:0 12px 6px;cursor:pointer;transition:all .15s}
+.ls:hover{border-left-color:var(--a)}
+.ls.done{border-left-color:var(--g)}
+.ls.cur{border-left-color:var(--a);background:#1a1200;margin-left:8px;padding-left:10px;border-radius:0 4px 4px 0}
+.lsl{font-size:10px;font-weight:700;color:#e0ffe0;margin-bottom:2px}
+.lsd{font-size:9px;color:var(--muted);line-height:1.4}
+.lsr{font-size:9px;color:#99cc99;margin-top:3px;display:none;line-height:1.4}
+.lsr.show{display:block}
+.scen-btn{width:100%;padding:6px 10px;background:transparent;border:1px solid var(--border);color:#e0ffe0;font-family:inherit;font-size:9px;text-align:left;border-radius:3px;cursor:pointer;margin-bottom:3px;transition:all .15s;letter-spacing:.5px}
+.scen-btn:hover{border-color:var(--a);color:var(--a)}
+
+/* INTERVIEW */
+.int-q{background:#001133;border:1px solid var(--b);border-radius:4px;padding:10px;margin-bottom:8px;font-size:10px;color:#99ccff;line-height:1.5}
+.fw{padding:4px 0;border-bottom:1px solid #0f1f0f;font-size:9px;color:var(--muted);line-height:1.4}
+.fw strong{color:#e0ffe0}
+.score-out{background:#0a0f0a;border:1px solid var(--border);border-radius:4px;padding:10px;font-size:10px;color:#99cc99;white-space:pre-wrap;line-height:1.6;margin-top:8px;display:none}
+.ta{width:100%;background:#0a0f0a;border:1px solid var(--border);color:var(--g);font-family:inherit;font-size:10px;padding:8px;border-radius:4px;outline:none;resize:none;margin-top:6px}
+.ta:focus{border-color:var(--g)}
+
+/* LANGUAGE HINTS */
+.hint{font-size:9px;color:#99cc99;padding:3px 0;border-bottom:1px solid #0f1f0f}
+
+/* PORTFOLIO CARDS */
+.pc{background:#0a0f0a;border:1px solid var(--border);border-radius:4px;padding:8px;margin-bottom:6px}
+.pct{font-size:9px;font-weight:700;color:var(--a);margin-bottom:4px;letter-spacing:1px}
+.pcb{font-size:10px;color:#99cc99;line-height:1.5}
+
+/* ERROR */
+.err-box{background:#1a0000;border:1px solid var(--r);border-radius:4px;padding:10px;font-size:10px;color:#ff9999;margin-top:8px;display:none}
+</style>
+</head>
+<body>
+<div class="os">
+
+<!-- TOP BAR -->
+<div class="top-bar">
+  <div class="logo">TSM <span>CAREER OS</span> <small>· HEALTHCARE OPS SIMULATOR · llama-3.3-70b-versatile</small></div>
+  <div class="pills">
+    <span class="pill pg">SIMULATION LIVE</span>
+    <span class="pill pa" id="role-pill">BA MODE</span>
+    <span class="pill pb" id="loop-pill">STEP 1 OF 5</span>
+  </div>
+</div>
+
+<!-- ROLE BAR -->
+<div class="role-bar">
+  <span class="rbl">ROLE LENS:</span>
+  <button class="rb act" onclick="setRole('BA',this)">Business Analyst</button>
+  <button class="rb" onclick="setRole('RCM',this)">Revenue Cycle Analyst</button>
+  <button class="rb" onclick="setRole('OPS',this)">Process Improvement</button>
+  <button class="rb" onclick="setRole('IMPL',this)">Implementation Spec</button>
+  <button class="rb" onclick="setRole('SE',this)">Solutions Engineer</button>
+  <button class="rb" onclick="setRole('CS',this)">Customer Success</button>
+  <button class="rb" onclick="setRole('INT',this)">Interview Mode</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- LEFT PANEL -->
+<div class="left">
+
+  <!-- KPIs -->
+  <div class="kgrid" id="kpi-grid">
+    <div class="kpi"><div class="kv" id="k1" style="color:var(--r)">18.4%</div><div class="kl">Denial Rate</div><div class="kd" style="color:var(--r)">▲ 3.4% vs target</div></div>
+    <div class="kpi"><div class="kv" id="k2" style="color:var(--a)">52d</div><div class="kl">Days in AR</div><div class="kd" style="color:var(--r)">▲ 18d vs baseline</div></div>
+    <div class="kpi"><div class="kv" id="k3" style="color:var(--a)">94.2%</div><div class="kl">Clean Claim Rate</div><div class="kd" style="color:var(--r)">▼ 2.8pt gap</div></div>
+    <div class="kpi"><div class="kv" id="k4" style="color:var(--r)">$48K</div><div class="kl">Stalled Revenue</div><div class="kd" style="color:var(--a)">14 aging &gt;30d</div></div>
+    <div class="kpi"><div class="kv" id="k5" style="color:var(--g)">68%</div><div class="kl">Appeal Win Rate</div><div class="kd" style="color:var(--g)">▲ above 60% floor</div></div>
+    <div class="kpi"><div class="kv" id="k6" style="color:var(--a)">1,256</div><div class="kl">Claims / Month</div><div class="kd" style="color:var(--r)">231 denied</div></div>
+  </div>
+
+  <!-- SYSTEM EVENTS -->
+  <div class="sec" id="events-sec">
+    <div class="sh" id="ev-title">SYSTEM STATE — TODAY'S EVENTS</div>
+    <div id="ev-list"></div>
+  </div>
+
+  <!-- ANALYST OUTPUT -->
+  <div class="sec">
+    <div class="sh" id="out-title">ANALYST OUTPUT — BUSINESS ANALYST</div>
+    <div class="otabs">
+      <button class="ot act" onclick="setTab('summary',this)">EXEC SUMMARY</button>
+      <button class="ot" onclick="setTab('rca',this)">ROOT CAUSE</button>
+      <button class="ot" onclick="setTab('impact',this)">IMPACT</button>
+      <button class="ot" onclick="setTab('rec',this)">RECOMMENDATION</button>
+      <button class="ot" onclick="setTab('portfolio',this)">PORTFOLIO</button>
+    </div>
+    <div id="out-box" class="out-box">&gt; Select a role lens, run a scenario, or type a query below to generate analyst output.</div>
+    <div id="err-box" class="err-box"></div>
+  </div>
+
+  <!-- INTERVIEW SECTION (hidden by default) -->
+  <div class="sec" id="int-sec" style="display:none">
+    <div class="sh">INTERVIEW DRILL — <span id="int-role-lbl" style="color:var(--b)">BUSINESS ANALYST</span></div>
+    <div id="int-q" class="int-q"></div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:5px">FRAMEWORK: OBSERVE → DIAGNOSE → IMPACT → SOLVE → REPORT</div>
+    <div id="fw-steps"></div>
+    <textarea id="int-ans" class="ta" rows="4" placeholder="Type your answer using the OBSERVE → DIAGNOSE → IMPACT → SOLVE → REPORT framework..."></textarea>
+    <div style="display:flex;gap:6px;margin-top:6px">
+      <button onclick="scoreAnswer()" class="run" style="background:var(--b)">SCORE MY ANSWER</button>
+      <button onclick="nextQuestion()" class="run" style="background:transparent;border:1px solid var(--border);color:var(--muted)">NEXT QUESTION</button>
+    </div>
+    <div id="score-out" class="score-out"></div>
+  </div>
+
+</div>
+
+<!-- RIGHT PANEL -->
+<div class="right">
+
+  <div class="rh">
+    <div class="rht">DAILY TRAINING LOOP</div>
+    <div class="rhs" id="loop-sub">Role: Business Analyst · Session active</div>
+  </div>
+
+  <div class="loop-steps" id="loop-steps">
+    <div class="ls cur" id="ls-1">
+      <div class="lsl">⊞ STEP 1 — OBSERVE</div>
+      <div class="lsd">Review KPIs. What is abnormal vs baseline?</div>
+      <div class="lsr" id="lr-1"></div>
+    </div>
+    <div class="ls" id="ls-2">
+      <div class="lsl">◎ STEP 2 — ROLE LENS</div>
+      <div class="lsd">Apply your role: what does a <span id="rl-name">BA</span> focus on here?</div>
+      <div class="lsr" id="lr-2"></div>
+    </div>
+    <div class="ls" id="ls-3">
+      <div class="lsl">◆ STEP 3 — AI ANALYSIS</div>
+      <div class="lsd">1 insight · 1 problem · 1 recommendation</div>
+      <div class="lsr" id="lr-3"></div>
+    </div>
+    <div class="ls" id="ls-4">
+      <div class="lsl">▲ STEP 4 — CONSULTANT OUTPUT</div>
+      <div class="lsd">Convert to exec summary + resume bullet</div>
+      <div class="lsr" id="lr-4"></div>
+    </div>
+    <div class="ls" id="ls-5">
+      <div class="lsl">⟳ STEP 5 — IMPROVE THE SYSTEM</div>
+      <div class="lsd">Propose 1 product improvement as owner</div>
+      <div class="lsr" id="lr-5"></div>
+    </div>
+  </div>
+
+  <div style="padding:0 12px 8px">
+    <div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin-bottom:5px">◆ RUN A SCENARIO</div>
+    <button class="scen-btn" onclick="runScenario('spike')">⚡ Denial spike +7pt this week</button>
+    <button class="scen-btn" onclick="runScenario('ar')">⚡ AR aging crosses 60-day mark</button>
+    <button class="scen-btn" onclick="runScenario('audit')">⚡ RAC audit notice received</button>
+    <button class="scen-btn" onclick="runScenario('timely')">⚡ CLM-0334 timely filing 48hr</button>
+    <button class="scen-btn" onclick="runScenario('coding')">⚡ CPT 99215 upcoding flagged</button>
+  </div>
+
+  <div style="padding:0 12px 8px">
+    <div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin-bottom:5px">◆ CAREER LANGUAGE</div>
+    <div id="lang-hints"></div>
+  </div>
+
+</div>
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="bot">
+  <span style="color:var(--muted);font-size:9px;white-space:nowrap" id="bot-label">▶ BA:</span>
+  <input class="cmd" id="cmd" type="text" placeholder="Analyze this system as a Business Analyst — what do you see and what would you fix?">
+  <button class="run" id="run-btn" onclick="runQuery()">RUN</button>
+</div>
+
+</div>
+
+<script>
+// ── DATA ─────────────────────────────────────────────────────
+const ROLES = {
+  BA:{
+    label:'Business Analyst', short:'BA',
+    system:'You are a healthcare Business Analyst. Focus on KPI trends, variance analysis, root cause, and executive-level recommendations. Use professional analyst language: variance, operational inefficiency, workflow disruption, performance metrics, benchmark gap.',
+    focus:'KPI trends, what changed, why, and business impact',
+    hints:['variance in denial rate','benchmark gap identified','operational inefficiency at coding stage','performance metrics indicate...','workflow disruption in submission pipeline'],
+    question:'A hospital sees denial rate jump from 15% to 22.4% this quarter. Walk me through your full analysis.',
+    altQ:['Days in AR increased from 34 to 52 days. What is your diagnosis and action plan?','Clean claim rate dropped 2.8 points in 30 days. How do you identify the root cause?'],
+    fw:['OBSERVE: Pull denial rate trend, compare to prior 4 quarters, note timing of change','DIAGNOSE: Identify top 3 denial codes. Which payers? Which CPT codes? Common thread?','IMPACT: 22.4% denial on 1,256 claims = ~282 denied. At avg $300 = $84.6K revenue at risk','SOLVE: Prioritize top denial code. Build 30-day reduction plan. Assign owner per code','REPORT: Executive summary with before/after metrics and 90-day recovery forecast']
+  },
+  RCM:{
+    label:'Revenue Cycle Analyst', short:'RCM',
+    system:'You are a healthcare Revenue Cycle Analyst specializing in denial management, claim lifecycle, modifier compliance, and payer-specific rules. Focus on: denial codes, timely filing, modifier errors, CPT accuracy, AR recovery. Use RCM language: claim lifecycle integrity, denial pattern, timely filing exposure, modifier compliance, payer-specific edits.',
+    focus:'denial codes, claim lifecycle, modifier errors, timely filing, AR recovery',
+    hints:['claim lifecycle integrity failure at coding stage','denial pattern: CO-4 modifier conflict','timely filing exposure on CLM-0334','payer-specific edit required for Aetna','modifier compliance gap on -25 usage'],
+    question:'CO-4 modifier denials increased 40% on Medicare claims this month. Walk through your full RCM analysis and recovery plan.',
+    altQ:['CLM-0334 has a CO-29 timely filing denial with 48 hours left. What exactly do you do?','CPT 99215 upcoding pattern flagged across 23 claims. How do you handle this?'],
+    fw:['OBSERVE: Pull all CO-4 denials, sort by payer, CPT code, provider, and date range','DIAGNOSE: CO-4 = modifier conflict. Which modifier missing? Same-day E&M + procedure without -25?','IMPACT: Each CO-4 = 100% non-payment until corrected. Calculate total dollar exposure across all open claims','SOLVE: Correct modifier on all open claims. Resubmit within timely filing window. Add pre-submission edit','REPORT: Denial root cause report + corrective action plan + resubmission timeline + prevention rule']
+  },
+  OPS:{
+    label:'Process Improvement Analyst', short:'OPS',
+    system:'You are a healthcare Process Improvement Analyst. Focus on workflow bottlenecks, root cause analysis, throughput optimization, and process redesign. Use lean/six-sigma language: process bottleneck, root cause, throughput, time-in-state, cycle time, waste elimination, SLA variance.',
+    focus:'workflow bottlenecks, root cause, process optimization, throughput',
+    hints:['process bottleneck identified at submission stage','root cause: EHR template auto-applies modifier without validation','throughput degraded 14% vs baseline','time-in-state exceeds SLA at adjudication','waste elimination opportunity in manual rework queue'],
+    question:'Average claim processing time is 14 days vs 8-day industry benchmark. How do you identify and fix the bottleneck?',
+    altQ:['18% no-show rate is causing $22K/month revenue loss. Design your improvement plan.','Staff are spending 15 hours/week manually reworking CO-4 denied claims. How do you eliminate this?'],
+    fw:['OBSERVE: Map current state workflow. Where does each claim spend time? Which stage is slowest?','DIAGNOSE: Is bottleneck at coding, submission, clearinghouse, or payer adjudication? Measure time-in-state','IMPACT: 6-day gap × 1,256 claims/month = 7,536 extra claim-days in pipeline. Quantify cash delay cost','SOLVE: Eliminate constraint at bottleneck stage. Automate validation. Set SLA per stage. Measure daily','REPORT: Current state vs future state process map + projected throughput improvement + cash acceleration']
+  },
+  IMPL:{
+    label:'Implementation Specialist', short:'IMPL',
+    system:'You are a healthcare Implementation Specialist. Focus on system configuration, client onboarding, requirements gathering, go-live readiness, and post-implementation support. Use implementation language: requirements gathering, system configuration, go-live readiness, user acceptance testing, integration validation, change management.',
+    focus:'system setup, requirements, client onboarding, go-live readiness',
+    hints:['requirements gathering: document current state workflows','system configuration: modifier validation rules need setup','go-live readiness: clearinghouse connection not tested','integration validation: ERA posting not confirmed','change management: staff training on new denial workflow required'],
+    question:'A 5-provider clinic is implementing your RCM system next month. Walk through your full implementation plan.',
+    altQ:['Post go-live: denial rate increased from 12% to 19% in 60 days. How do you diagnose and fix this?','Client says the system is not catching CO-4 errors before submission. How do you troubleshoot?'],
+    fw:['OBSERVE: Gather current state — EHR system, payer mix, volume, denial rate baseline, staff count','DIAGNOSE: What modules needed? What integrations? What training gaps exist? What are the risks?','IMPACT: Poor implementation = billing errors from day 1. Getting requirements right upfront prevents 80% of issues','SOLVE: Phased rollout — setup → training → UAT → go-live → 30-day stabilization → optimization review','REPORT: Implementation project plan with milestone, owner, acceptance criteria, and success metric per phase']
+  },
+  SE:{
+    label:'Solutions Engineer', short:'SE',
+    system:'You are a healthcare Solutions Engineer. Focus on system architecture, data flow, business rules, API design, and integration strategy. Use technical language: validation logic, data flow mapping, integration architecture, business rules engine, pre-submission edit, API endpoint, system design, architecture diagram.',
+    focus:'system architecture, data flow, validation logic, integration design',
+    hints:['validation logic required: if same-day E&M + procedure, check -25 modifier present','data flow: claim data must pass through modifier validation before clearinghouse submission','integration architecture: EHR → validation engine → clearinghouse → payer','business rules engine: CO-4 pre-submission edit rule specification','API design: POST /validate-claim returns {valid:bool, errors:[{code,field,fix}]}'],
+    question:'Design a claim validation system that catches CO-4 modifier errors before submission. Walk through the architecture.',
+    altQ:['How would you architect a real-time denial prediction system using the existing claim data?','Design the data model for tracking claim lifecycle from submission to payment or write-off.'],
+    fw:['OBSERVE: Where in the workflow does the CO-4 error originate? EHR template? Coder entry? Scheduler?','DIAGNOSE: What data does the validation need? CPT code + modifier + same-day procedure flag + payer rules','IMPACT: Pre-submission catch vs post-denial = 14-day time difference + rework cost + 100% revenue preservation','SOLVE: Build pre-submission edit rule: if same-day E&M + procedure billed, validate -25 modifier present','REPORT: Architecture diagram: data inputs → validation logic → alert output → correction workflow → resubmission']
+  },
+  CS:{
+    label:'Customer Success Manager', short:'CS',
+    system:'You are a healthcare Customer Success Manager. Focus on client adoption, health scores, issue resolution, satisfaction recovery, and renewal strategy. Use CS language: client health score, adoption metrics, escalation protocol, remediation plan, satisfaction recovery, churn risk, QBR preparation.',
+    focus:'client adoption, health scores, issue resolution, satisfaction recovery',
+    hints:['client health score degraded: denial rate increase post go-live','adoption metric: only 60% of staff using pre-submission validation feature','escalation protocol: denial rate >18% triggers CSM review call','remediation plan: 30-day action plan with weekly check-in cadence','churn risk: client mentioned evaluating competitor at last QBR'],
+    question:'A client\'s denial rate increased from 12% to 19% in 60 days after go-live. How do you handle this?',
+    altQ:['A client has not logged into the system in 3 weeks post-implementation. What do you do?','Client is up for renewal in 90 days and their denial rate has not improved. How do you prepare for the QBR?'],
+    fw:['OBSERVE: Pull client\'s denial report. Compare pre vs post go-live. What changed in the system or workflow?','DIAGNOSE: Config issue? Training gap? Payer rule change? New provider added without proper setup?','IMPACT: 7pt denial increase = significant revenue impact. Client satisfaction and renewal at risk','SOLVE: Joint analysis call within 48hr. Identify top 3 root causes. Build 30-day remediation plan together','REPORT: Client health report: root cause, action plan, expected improvement timeline, weekly check-in schedule']
+  },
+  INT:{
+    label:'Interview Mode', short:'INT',
+    system:'You are a healthcare hiring manager conducting a behavioral interview. Score answers using the STAR+C framework: Situation, Task, Action, Result, Connect-to-role. Give a score out of 10, identify 2 strengths, 2 specific improvements, and provide a stronger rewrite of their answer. Be direct and constructive. Max 250 words.',
+    focus:'structured answers, STAR framework, professional language, quantified results',
+    hints:['I identified a variance in processing time that...','I conducted a root cause analysis and found...','I implemented a process improvement that reduced denials by...','My recommendation resulted in $X recovered in Y days','I collaborated cross-functionally to resolve a systemic...'],
+    question:'Tell me about a time you identified a process problem and fixed it. Use the STAR framework.',
+    altQ:['Walk me through how you would analyze a 20% increase in claim denials for a new client.','Describe a situation where you had to communicate a complex technical issue to a non-technical stakeholder.'],
+    fw:['SITUATION: Describe the system/process context briefly (1-2 sentences max)','TASK: What was your specific role and responsibility in resolving this?','ACTION: What exactly did you do? Be specific — name the method, tool, and steps','RESULT: What was the measurable outcome? Use numbers (%, $, days, claims)','CONNECT: How does this directly apply to the role you\'re interviewing for?']
+  }
+};
+
+const SCENARIOS = {
+  spike:{
+    events:[
+      {d:'var(--r)',t:'Denial rate jumped from 15% to 22.4% — +7.4pt spike in 7 days',i:'$18K/wk'},
+      {d:'var(--r)',t:'Top driver: CO-4 modifier conflict — 47 new claims this week',i:'$8,460'},
+      {d:'var(--a)',t:'Aetna + Medicare driving 78% of new denials — payer pattern identified',i:'Analysis'},
+      {d:'var(--b)',t:'Modifier -25 usage up 40% — possible EHR template or training issue',i:'Flag'}
+    ],k1:'22.4%',k4:'$62K',
+    context:'Denial rate spike scenario: 47 CO-4 modifier denials this week, concentrated in Aetna and Medicare. Modifier -25 usage increased 40%.'
+  },
+  ar:{
+    events:[
+      {d:'var(--r)',t:'Days in AR crossed 60-day threshold — now 63 days, up from 34-day baseline',i:'Critical'},
+      {d:'var(--r)',t:'14 claims aged >90 days totaling $31K — write-off risk increasing daily',i:'$31K'},
+      {d:'var(--a)',t:'UHC payment delays averaging 47 days vs 30-day contracted SLA',i:'Dispute'},
+      {d:'var(--b)',t:'ERA posting backlog: 3 days of unposted remittances — $18K unreconciled',i:'$18K'}
+    ],k2:'63d',k4:'$62K',
+    context:'AR aging crisis: Days in AR at 63 vs 34-day baseline. $31K aged >90 days. UHC 47-day payment delay vs 30-day SLA. ERA posting backlog of $18K.'
+  },
+  audit:{
+    events:[
+      {d:'var(--r)',t:'RAC audit notice received — CPT 99215 billed 23x in 30 days flagged',i:'$12,040'},
+      {d:'var(--r)',t:'14-day response window begins today — documentation pull required immediately',i:'URGENT'},
+      {d:'var(--a)',t:'2 additional claims flagged by same RAC contractor for same provider',i:'Review'},
+      {d:'var(--b)',t:'Compliance team notified — assign documentation reviewer today',i:'Assign'}
+    ],k1:'19.1%',k3:'92.8%',
+    context:'RAC audit scenario: CPT 99215 upcoding audit notice received. 23 claims, $12,040 exposure, 14-day response window. Documentation review required.'
+  },
+  timely:{
+    events:[
+      {d:'var(--r)',t:'CLM-0334 · CPT 93454 · UHC · $3,800 · CO-29 timely filing · 48hr remaining',i:'$3,800'},
+      {d:'var(--r)',t:'Original submission: 91 days ago — at absolute limit of 90-day filing window',i:'DEADLINE'},
+      {d:'var(--a)',t:'5 additional claims approaching timely filing window in next 7 days',i:'$7,200'},
+      {d:'var(--b)',t:'UHC appeal portal requires proof of timely filing + tracking number',i:'Action'}
+    ],k2:'52d',k4:'$48K',
+    context:'Timely filing crisis: CLM-0334 has 48 hours before CO-29 write-off on $3,800. 5 more claims approaching deadline totaling $7,200 in the next 7 days.'
+  },
+  coding:{
+    events:[
+      {d:'var(--r)',t:'CPT 99215 E&M Level 5 — upcoding risk HIGH — 23 claims — $12,040',i:'HIGH RISK'},
+      {d:'var(--a)',t:'14 of 23 claims lack adequate MDM complexity to support Level 5 billing',i:'$7,308'},
+      {d:'var(--a)',t:'OIG Work Plan includes 99215 upcoding as active audit target in this specialty',i:'OIG Flag'},
+      {d:'var(--b)',t:'Modifier -25 on 19 of 23 claims — compliance pattern requires review',i:'Review'}
+    ],k1:'18.4%',k3:'91.2%',
+    context:'CPT upcoding scenario: 23 claims of 99215 with HIGH upcoding risk. 14 lack MDM support. OIG Work Plan active. $12,040 audit exposure.'
+  }
+};
+
+const DEF_EVENTS=[
+  {d:'var(--r)',t:'18.4% denial rate — exceeds 15% CMS threshold — top codes: PR-96, CO-4, CO-11',i:'$48K'},
+  {d:'var(--r)',t:'CLM-0334 · CPT 93454 · UHC · $3,800 — CO-29 timely filing — 48hr window',i:'$3.8K'},
+  {d:'var(--a)',t:'CPT 99215 upcoding pattern — 23 claims — $12,040 audit exposure',i:'Audit risk'},
+  {d:'var(--a)',t:'Modifier -25 overuse on 47 claims — compliance review required',i:'$8,460'},
+  {d:'var(--b)',t:'ICD-10 specificity gaps on 14 claims — documentation incomplete',i:'Flag'},
+  {d:'var(--g)',t:'Clean claim rate 94.2% — above 90% baseline · Appeal win rate at 68%',i:'✓'}
+];
+
+const PRELOADED = {
+  BA:{
+    summary:'BUSINESS ANALYST — EXECUTIVE SUMMARY\n\nDenial rate: 18.4% — exceeds 15% CMS threshold by 3.4 points\nAR position: $48K stalled — 14 claims aged >30 days\nClean claim rate: 94.2% — 2.8pt gap below 97% target\nTop denial codes: CO-4 (modifier), PR-96 (medical necessity), CO-11 (bundling)\n\nBottom line: Systemic modifier compliance failure is the primary driver. Without intervention within 30 days, denial rate risk trending toward 20%.',
+    rca:'ROOT CAUSE ANALYSIS — BA LENS\n\nPrimary: Modifier -25 overuse on 47 claims\n→ E&M billed same-day as procedure without documenting separate, distinct service\n→ Root cause: EHR template auto-applies -25 without clinical validation trigger\n\nSecondary: ICD-10 specificity gaps\n→ Coders selecting M54.5 (unspecified) vs M54.51 (vertebrogenic — specific)\n→ Root cause: EHR dropdown not surfacing specific codes; training gap\n\nTertiary: CO-4 modifier conflict\n→ Missing required modifier on same-day E&M + procedure combinations',
+    impact:'IMPACT ASSESSMENT — BA LENS\n\nFinancial exposure:\n→ $48K current AR at risk across 231 denied claims\n→ $12,040 CPT 99215 upcoding audit exposure (OIG Work Plan active)\n→ $8,460 modifier -25 compliance risk across 47 claims\n→ $3,800 CLM-0334 write-off if not filed within 48 hours\n\nOperational cost:\n→ 231 manual rework claims = ~15 staff-hours/week of preventable work\n→ Days in AR at 52 vs 34-day baseline = $48K cash delayed 18 days\n\nCompliance risk:\n→ 18.4% denial rate may trigger payer performance review',
+    rec:'RECOMMENDATIONS — PRIORITIZED\n\nPriority 1 (48hr): File CO-29 appeal for CLM-0334 before write-off\nPriority 2 (1 week): Modifier -25 audit on 47 flagged claims — correct and resubmit\nPriority 3 (2 weeks): ICD-10 specificity training for coding staff\nPriority 4 (30 days): Pre-submission modifier validation rule in EHR/clearinghouse\nPriority 5 (90 days): Reduce denial rate from 18.4% to 12% target\n\nProjected outcome: 6.4pt denial reduction = ~$15K/month revenue recovery at current volume',
+    portfolio:'PORTFOLIO OUTPUT — COPY-READY\n\nResume bullet:\n"Analyzed 18.4% denial rate across 1,256 monthly claims; identified modifier compliance failure as primary driver across 47 claims; developed 30-day remediation plan projecting 6.4pt denial rate reduction and $15K/month revenue recovery."\n\nLinkedIn post:\n"Healthcare insight: When denial rates exceed CMS thresholds, it\'s rarely one problem — it\'s a system failure. Our root cause analysis found modifier compliance failures, ICD-10 specificity gaps, and a timely filing exposure compounding simultaneously. The fix was a pre-submission edit rule, not individual claim rework."\n\nInterview story:\n"I identified a 3.4pt denial rate gap above CMS threshold, traced the root cause to modifier -25 overuse via denial code analysis, and recommended a pre-submission edit that reduced CO-4 denials 40% in 60 days."'
+  },
+  RCM:{
+    summary:'REVENUE CYCLE ANALYST — SUMMARY\n\nCO-4 modifier conflict: primary denial driver — 47 claims — $8,460\nCLM-0334: CO-29 timely filing — 48hr deadline — $3,800 write-off risk\nCPT 99215 upcoding: 23 claims — $12,040 — RAC audit exposure active\nTotal recoverable (within filing window): est. $14,924\n\nRCM Priority: Modifier compliance is highest-frequency, highest-recoverable denial category.',
+    rca:'ROOT CAUSE — RCM LENS\n\nDenial code breakdown:\n→ CO-4 (modifier conflict): 47 claims — same-day E&M + procedure without -25\n→ PR-96 (non-covered): 18 claims — documentation does not support medical necessity\n→ CO-11 (bundling): 12 claims — CPT codes billed separately that must be bundled\n→ CO-29 (timely filing): 1 claim — CLM-0334 at 91-day limit\n\nClaim lifecycle failure point: All CO-4 denials occur at payer adjudication. Pre-submission modifier edit would prevent 100% of these denials.',
+    impact:'REVENUE IMPACT — RCM LENS\n\nRecoverable within appeal window:\n→ CO-4 claims: $8,460 — correctable with modifier fix + resubmission\n→ PR-96 claims: est. $4,464 — recoverable with additional documentation\n→ CO-11 claims: est. $2,100 — partial recovery with unbundling analysis\n\nAt immediate risk:\n→ CLM-0334: $3,800 — CO-29 deadline in 48 hours. File or write off.\n\nLong-term audit exposure:\n→ CPT 99215: $12,040 if 14 claims lack MDM documentation for Level 5',
+    rec:'ACTION PLAN — RCM\n\n1. NOW (today): File CO-29 appeal for CLM-0334 — UHC portal, include submission proof\n2. THIS WEEK: Correct -25 modifier on all 47 CO-4 denied claims, resubmit batch\n3. THIS WEEK: Pull PR-96 documentation, file medical necessity appeals\n4. NEXT WEEK: CPT 99215 documentation review — downcode 14 unsupported claims\n5. THIS MONTH: Add pre-submission modifier validation to clearinghouse edits\n\nProjected recovery: $14,924 if all actions taken within timely filing window',
+    portfolio:'PORTFOLIO — RCM ANALYST\n\nResume bullet:\n"Identified CO-4 modifier conflict as primary denial driver across 47 claims ($8,460); corrected modifier documentation, batch-resubmitted within timely filing window, and recovered $8,460 — reducing modifier-related denial rate by 40% in 60 days."\n\nCase study title:\n"Modifier Compliance Audit: How a Pre-Submission Edit Rule Recovered $15K/Month"\n\nInterview language:\n"I analyzed CO-4 denial patterns and identified that modifier -25 was being applied without documented separate E&M services. I implemented a pre-submission validation rule that reduced CO-4 denials by 40% within 60 days of deployment."'
+  }
+};
+
+// ── STATE ─────────────────────────────────────────────────────
+let role='BA', outTab='summary', step=1, qIdx=0;
+let scenarioContext='System state: Denial rate 18.4%, $48K stalled AR, 52 days in AR, clean claim rate 94.2%, 1,256 claims this month, 231 denied. Top denial codes: CO-4, PR-96, CO-11, CO-29.';
+
+// ── INIT ─────────────────────────────────────────────────────
+function init(){
+  renderEvents(DEF_EVENTS);
+  renderHints('BA');
+  renderPreloaded('BA','summary');
+  renderFW('BA');
+}
+
+function renderEvents(evs){
+  document.getElementById('ev-list').innerHTML=evs.map(e=>`<div class="ev"><div class="dot" style="background:${e.d}"></div><div class="et">${e.t}</div><div class="ei">${e.i}</div></div>`).join('');
+}
+
+function renderHints(r){
+  const h=ROLES[r]?.hints||[];
+  document.getElementById('lang-hints').innerHTML=h.map(x=>`<div class="hint">→ "${x}"</div>`).join('');
+}
+
+function renderPreloaded(r,tab){
+  const box=document.getElementById('out-box');
+  const data=PRELOADED[r];
+  if(data&&data[tab]){box.textContent=data[tab];}
+  else{box.textContent='> Run a scenario or type a query to generate '+tab+' output for '+ROLES[r].label+'.';}
+}
+
+function renderFW(r){
+  const rd=ROLES[r];
+  document.getElementById('fw-steps').innerHTML=(rd.fw||[]).map((f,i)=>`<div class="fw"><strong>Step ${i+1}:</strong> ${f}</div>`).join('');
+  document.getElementById('int-q').textContent=rd.question||'';
+  document.getElementById('int-role-lbl').textContent=rd.label.toUpperCase();
+}
+
+// ── ROLE SWITCH ───────────────────────────────────────────────
+function setRole(r,btn){
+  role=r;qIdx=0;
+  document.querySelectorAll('.rb').forEach(b=>b.classList.remove('act'));
+  if(btn)btn.classList.add('act');
+  const rd=ROLES[r];
+  document.getElementById('role-pill').textContent=r+' MODE';
+  document.getElementById('loop-sub').textContent='Role: '+rd.label+' · Session active';
+  document.getElementById('rl-name').textContent=r;
+  document.getElementById('out-title').textContent='ANALYST OUTPUT — '+rd.label.toUpperCase();
+  document.getElementById('bot-label').textContent='▶ '+r+':';
+  document.getElementById('cmd').placeholder='Analyze this system as a '+rd.label+' — what do you see and what would you fix?';
+  const ev={BA:'SYSTEM STATE — BA VIEW',RCM:'CLAIM LIFECYCLE — RCM VIEW',OPS:'PROCESS EVENTS — OPS VIEW',IMPL:'SYSTEM EVENTS — IMPL VIEW',SE:'ARCHITECTURE — SE VIEW',CS:'CLIENT HEALTH — CS VIEW',INT:'SYSTEM STATE — INTERVIEW PREP'};
+  document.getElementById('ev-title').textContent=ev[r]||'SYSTEM STATE';
+  renderHints(r);
+  renderFW(r);
+  renderPreloaded(r,outTab);
+  // Show/hide interview section
+  document.getElementById('int-sec').style.display=r==='INT'?'block':'none';
+  document.getElementById('int-ans').value='';
+  document.getElementById('score-out').style.display='none';
+  advStep(1);
+}
+
+// ── OUTPUT TABS ───────────────────────────────────────────────
+function setTab(tab,btn){
+  outTab=tab;
+  document.querySelectorAll('.ot').forEach(b=>b.classList.remove('act'));
+  if(btn)btn.classList.add('act');
+  renderPreloaded(role,tab);
+}
+
+// ── LOOP STEPS ────────────────────────────────────────────────
+function advStep(n){
+  step=n;
+  document.querySelectorAll('.ls').forEach(s=>s.classList.remove('cur'));
+  const el=document.getElementById('ls-'+n);
+  if(el)el.classList.add('cur');
+  document.getElementById('loop-pill').textContent='STEP '+n+' OF 5';
+}
+function markDone(n,msg){
+  const el=document.getElementById('ls-'+n);
+  const lr=document.getElementById('lr-'+n);
+  if(el)el.classList.add('done');
+  if(lr){lr.textContent='✓ '+msg;lr.classList.add('show');}
+}
+
+// ── SCENARIOS ─────────────────────────────────────────────────
+function runScenario(key){
+  const s=SCENARIOS[key];
+  renderEvents(s.events);
+  if(s.k1)document.getElementById('k1').textContent=s.k1;
+  if(s.k2)document.getElementById('k2').textContent=s.k2;
+  if(s.k3)document.getElementById('k3').textContent=s.k3;
+  if(s.k4)document.getElementById('k4').textContent=s.k4;
+  scenarioContext=s.context;
+  markDone(1,'Scenario loaded: '+key.toUpperCase());
+  advStep(2);
+  markDone(2,'Role lens applied: '+role+' — '+ROLES[role].focus);
+  advStep(3);
+  document.getElementById('cmd').value='As a '+ROLES[role].label+': '+s.context+' What is your analysis, key risk, and recommendation?';
+}
+
+// ── MAIN QUERY → /api/hc/query (Railway → Groq llama-3.3-70b) ─
+async function runQuery(){
+  const inp=document.getElementById('cmd');
+  const prompt=inp.value.trim();
+  if(!prompt)return;
+  const btn=document.getElementById('run-btn');
+  btn.disabled=true;
+  const box=document.getElementById('out-box');
+  const err=document.getElementById('err-box');
+  err.style.display='none';
+  box.innerHTML='<span class="spin-icon">⟳</span> TSM Neural · llama-3.3-70b-versatile · processing...';
+  const rd=ROLES[role];
+  const sys=rd.system+'\n\nCurrent system state: '+scenarioContext+'\n\nProvide: 1 key insight, 1 root cause diagnosis, 1 specific recommendation. Use professional '+rd.label+' language. Be concise — max 200 words. No markdown formatting.';
+  try{
+    const r=await fetch('/api/hc/query',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({system:sys,message:prompt,stream:false,max_tokens:600})
+    });
+    if(!r.ok)throw new Error('HTTP '+r.status+' — check Railway /api/hc/query endpoint');
+    const d=await r.json();
+    const reply=d.response||d.content||(d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content)||'No response received';
+    box.textContent='> TSM NEURAL ['+new Date().toLocaleTimeString()+'] · '+role+' LENS\n\n'+reply.replace(/\*\*(.+?)\*\*/g,'$1').replace(/\*(.+?)\*/g,'$1').replace(/#{1,3}\s*/g,'').trim();
+    // Update portfolio tab with this output as case study
+    if(PRELOADED[role]){PRELOADED[role].portfolio=(PRELOADED[role].portfolio||'')+'\n\n--- SESSION OUTPUT ---\n'+reply.trim();}
+    markDone(3,'AI analysis complete');
+    advStep(4);
+    markDone(4,'Output ready — review tabs for portfolio content');
+    advStep(5);
+  }catch(e){
+    box.textContent='> Waiting for Railway connection...';
+    err.style.display='block';
+    err.innerHTML='<strong>API Error:</strong> '+e.message+'<br><br>This app calls your Railway endpoint: <code>/api/hc/query</code><br>Deploy to Railway and the Groq llama-3.3-70b connection activates automatically.';
+  }
+  btn.disabled=false;
+  inp.value='';
+}
+
+// ── INTERVIEW SCORE ───────────────────────────────────────────
+async function scoreAnswer(){
+  const ans=document.getElementById('int-ans').value.trim();
+  if(!ans){alert('Type your answer first.');return;}
+  const out=document.getElementById('score-out');
+  out.style.display='block';
+  out.innerHTML='<span class="spin-icon">⟳</span> Scoring with llama-3.3-70b-versatile...';
+  const rd=ROLES[role];
+  const prompt='Question: '+rd.question+'\nFramework: '+rd.fw.join(' | ')+'\nCandidate answer: "'+ans+'"\n\nScore out of 10. Give: score, 2 strengths (specific), 2 improvements (specific), stronger 3-sentence rewrite. Be direct. No markdown.';
+  try{
+    const r=await fetch('/api/hc/query',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({system:rd.system,message:prompt,stream:false,max_tokens:500})
+    });
+    const d=await r.json();
+    const reply=d.response||d.content||(d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content)||'No response';
+    out.textContent='> INTERVIEW SCORE · llama-3.3-70b-versatile\n\n'+reply.replace(/\*\*(.+?)\*\*/g,'$1').replace(/\*(.+?)\*/g,'$1').replace(/#{1,3}\s*/g,'').trim();
+    markDone(4,'Interview answer scored');
+    advStep(5);
+  }catch(e){
+    out.textContent='> Error: '+e.message;
+  }
+}
+
+function nextQuestion(){
+  const rd=ROLES[role];
+  const all=[rd.question,...(rd.altQ||[])];
+  qIdx=(qIdx+1)%all.length;
+  document.getElementById('int-q').textContent=all[qIdx];
+  document.getElementById('int-ans').value='';
+  document.getElementById('score-out').style.display='none';
+}
+
+document.getElementById('cmd').addEventListener('keydown',e=>{if(e.key==='Enter')runQuery();});
+
+init();
+</script>
+</body>
+</html>
