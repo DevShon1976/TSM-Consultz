@@ -369,21 +369,29 @@ tr:hover td{background:#0f1f0f}
   </div>
 </div>
 
-<script>
-// ── COHESIVE INSURANCE MISSION WORKFLOW MANAGEMENT ──
-let insuranceMissionData = { patient: 'Maria Santos', claim: '27447', payer: 'BlueCross BlueShield', denial: 'CO-4' };
+<script>// ── COHESIVE INSURANCE MISSION WORKFLOW MANAGEMENT ──
+let insuranceMissionData = { 
+  patient: 'Maria Santos', 
+  claim: '27447', 
+  payer: 'BlueCross BlueShield', 
+  denial: 'CO-4',
+  cpt: '99213',
+  risk: '$1,240'
+};
 
 function applyInsuranceIntake() {
   const p = document.getElementById('intake-patient').value.trim() || insuranceMissionData.patient;
   const cl = document.getElementById('intake-claim').value.trim() || insuranceMissionData.claim;
   const py = document.getElementById('intake-payer').value.trim() || insuranceMissionData.payer;
   const dn = document.getElementById('intake-denial').value.trim() || insuranceMissionData.denial;
+  const cpt = document.getElementById('intake-cpt').value.trim() || insuranceMissionData.cpt;
+  const risk = document.getElementById('intake-risk').value.trim() || insuranceMissionData.risk;
   const issue = document.getElementById('intake-issue').value.trim();
 
-  insuranceMissionData = { patient: p, claim: cl, payer: py, denial: dn };
+  insuranceMissionData = { patient: p, claim: cl, payer: py, denial: dn, cpt: cpt, risk: risk };
 
   // Update Metadata String
-  document.getElementById('guide-meta').innerHTML = `Patient: <span class="guide-hi">${p}</span> · Claim: <span class="guide-hi">${cl}</span> · Payer: <span class="guide-hi">${py}</span>`;
+  document.getElementById('guide-meta').innerHTML = `Patient: <span class="guide-hi">${p}</span> · Claim: <span class="guide-hi">${cl}</span>`;
 
   // Dynamically alter step targets for dynamic client updates
   document.getElementById('text-step-1').innerHTML = `Step 1: \`Review the ${py} ${dn} denial spike. Patient: ${p}, Claim: ${cl}. Trace modifier anomalies.\``;
@@ -391,20 +399,45 @@ function applyInsuranceIntake() {
   // Re-bind arguments on the button dynamically
   const s1Btn = document.querySelector('#guide-step-1 .guide-submit-btn');
   if(s1Btn) {
-    s1Btn.setAttribute('data-tsm-args', `Review the ${py} ${dn} denial pattern for patient ${p} on claim ${cl}. ${issue}`);
+    s1Btn.setAttribute('data-tsm-args', `Review the ${py} ${dn} denial pattern for CPT ${cpt} at risk ${risk} for patient ${p} on claim ${cl}. ${issue}`);
   }
   
   var output = document.getElementById('guide-output');
   if(output) output.textContent = `> Insurance Mission Mission Vector updated for ${p}. Ready to submit steps.`;
 }
 
-// ── SINGLE TAB CONTROLLER ──
+// ── FIXED TAB CONTROLLER (Resolves image_7a8c42.png breakdown) ──
 function switchTab(id, btn) {
-  document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
-  var target = document.getElementById('tab-' + id);
-  if (target) target.classList.add('active');
+  // 1. Hide all main content panels clean via explicit display property toggling
+  document.querySelectorAll('.tab-panel').forEach(el => {
+    el.classList.remove('active');
+    el.style.display = 'none'; 
+  });
+  
+  // 2. Normalize and resolve the layout target ID safely
+  var targetId = id.startsWith('tab-') ? id : 'tab-' + id;
+  var target = document.getElementById(targetId);
+  
+  if (target) {
+    target.classList.add('active');
+    target.style.display = 'block'; // Direct DOM visibility override
+  } else {
+    console.error("TSM Shell Error: Panel layout target '" + targetId + "' could not be found.");
+  }
+  
+  // 3. Clear and cycle visual states on the subheader buttons
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
+  if (btn) {
+    btn.classList.add('active');
+  } else {
+    // Structural fallback lookup if an explicit button element wasn't passed
+    const normalizedKey = id.replace('tab-', '').toLowerCase();
+    document.querySelectorAll('.nav-btn').forEach(b => {
+      if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(normalizedKey)) {
+        b.classList.add('active');
+      }
+    });
+  }
 }
 
 // ── DUAL LAYER AI RUNNER RUNS PIPELINES CLEANLY ──
@@ -427,7 +460,6 @@ async function runQ(prompt, btnId, resId) {
     res.textContent = '> TSM NEURAL [' + new Date().toLocaleTimeString() + ']\n\n' +
       (d.content || d.response || d.reply || d.output || 'No response received.');
   } catch(e) {
-    // Fallback directly onto the core analytical compiler stack
     try {
       var ar = await fetch('/api/hc/query', {
         method: 'POST',
@@ -448,7 +480,6 @@ async function runQ(prompt, btnId, resId) {
   }
   if (btn) { btn.disabled = false; btn.textContent = '▶ ASK'; }
 }
-
 function fillAndRun(inpId, btnId, resId, prompt) {
   var inp = document.getElementById(inpId);
   if (inp) inp.value = prompt;
