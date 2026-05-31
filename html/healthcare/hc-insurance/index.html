@@ -340,7 +340,7 @@ tr:hover td{background:#0f1f0f}
 <div class="footer">
   <div class="fn">🛡️ INSURANCE NODE &nbsp; Ready — run analysis or relay to Strategist</div>
   <div class="fbtns">
-    <button class="fbtn fbnca" data-tsm-action="fillAndRun" data-tsm-args="dash-inp,dash-btn,dash-res,Run a full BNCA for HC INSURANCE COMMAND: top risks, compliance gaps, priority actions">⚡ RUN BNCA</button>
+    <button class="fbtn fbnca" data-tsm-action="fillAndRun" data-tsm-args="dash-inp|dash-btn|dash-res|Run a full BNCA for HC INSURANCE COMMAND: top risks, compliance gaps, priority actions">⚡ RUN BNCA</button>
     <button class="fbtn frelay" onclick="window.location.href='/healthcare/hc-main-strategist/index.html'">🔗 RELAY TO STRATEGIST</button>
   </div>
 </div>
@@ -485,12 +485,14 @@ document.addEventListener('DOMContentLoaded', function() {
       if (action === 'runGuide') {
         runGuide(argsString);
       } else if (action === 'fillAndRun') {
-        const parts = argsString.split(',');
+        // Support pipe formatting to prevent comma collision inside the AI prompt strings
+        const delimiter = argsString.includes('|') ? '|' : ',';
+        const parts = argsString.split(delimiter);
         if (parts.length >= 4) {
           const inpId = parts[0].trim();
           const btnId = parts[1].trim();
           const resId = parts[2].trim();
-          const pmt = parts.slice(3).join(',').trim();
+          const pmt = parts.slice(3).join(delimiter).trim();
           fillAndRun(inpId, btnId, resId, pmt);
         }
       } else {
