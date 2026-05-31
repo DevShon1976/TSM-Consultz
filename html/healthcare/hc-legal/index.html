@@ -128,23 +128,122 @@ tr:hover td{background:#0f1f0f}
   <button class="nav-btn" data-tsm-action="switchTab" data-tsm-args="'presets',this">⚡ PRESETS</button>
   
 </nav>
-<div class="node-guide">
+
+<!-- ═══════════════ HC NODE GUIDE ═══════════════ -->
+<div id="hc-node-guide" class="node-guide">
   <div class="guide-hdr">LEGAL NODE GUIDE</div>
   <div class="guide-body">Use this panel while presenting. It explains the current tab, runs BNCA, and creates a next-action summary.</div>
-  <div class="guide-divider"></div>
-  <div class="guide-mission-hdr">MISSION OBJECTIVES · LEGAL</div>
-  <div class="guide-patient">Client: <span class="guide-hi">Acme Corp</span> · Matter: <span class="guide-hi">MTR-2204</span> · Opposing: <span class="guide-hi">Delta Inc</span></div>
-  <div class="guide-step">
-    <div class="guide-step-lbl">STEP 1 OF 2</div>
-    <div class="guide-step-body">Step 1: `Review 3 high-risk litigation matters approaching settlement deadline. Identify exposure and recommend resolution strategy.`</div>
-    <div class="guide-step-submit"><button class="guide-submit-btn" data-tsm-action="runQ" data-tsm-args="'[step1 query]','dash-btn','dash-res'">Submit Step Response</button></div>
+  <hr class="guide-divider">
+
+  <!-- INTAKE -->
+  <div id="guide-intake" style="margin-bottom:10px">
+    <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--a);margin-bottom:6px">◆ SET CLIENT MATTER</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px">
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">CLIENT NAME</div>
+        <input id="intake-client" class="guide-field" type="text" placeholder="e.g. Acme Corp">
+      </div>
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">MATTER #</div>
+        <input id="intake-matter" class="guide-field" type="text" placeholder="e.g. MTR-2204">
+      </div>
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">OPPOSING PARTY</div>
+        <input id="intake-opposing" class="guide-field" type="text" placeholder="e.g. Delta Inc">
+      </div>
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">CLAIM TYPE</div>
+        <input id="intake-claim" class="guide-field" type="text" placeholder="e.g. Breach of Contract">
+      </div>
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">STATUTE / CODE</div>
+        <input id="intake-statute" class="guide-field" type="text" placeholder="e.g. UCC 2-207">
+      </div>
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">EXPOSURE AMOUNT</div>
+        <input id="intake-exposure" class="guide-field" type="text" placeholder="e.g. $2,400,000">
+      </div>
+    </div>
+    <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">ISSUE / LEGAL RISK SUMMARY</div>
+    <textarea id="intake-issue" class="guide-field" rows="2" placeholder="e.g. Indemnification clause ambiguity — deadline 14 days." style="resize:none;width:100%;margin-bottom:6px"></textarea>
+    <button onclick="applyLegalIntake()" style="width:100%;padding:6px;background:var(--a);color:#000;font-family:'Courier New',monospace;font-size:9px;font-weight:700;border:none;border-radius:3px;cursor:pointer;letter-spacing:1px">⚡ SET MISSION FROM MATTER DATA</button>
+    <button onclick="toggleIntake(false)" id="intake-collapse-btn" style="display:none;width:100%;margin-top:4px;padding:5px;background:transparent;border:1px solid var(--border);color:#556655;font-family:'Courier New',monospace;font-size:9px;border-radius:3px;cursor:pointer;letter-spacing:1px">▲ COLLAPSE INTAKE</button>
   </div>
-  <div class="guide-step">
-    <div class="guide-step-lbl">STEP 2 OF 2</div>
-    <div class="guide-step-body">Step 2: `4 payer contracts in review — BlueCross renegotiation window open. Build negotiation framework and rate benchmarks.`</div>
-    <div class="guide-step-submit"><button class="guide-submit-btn" data-tsm-action="runQ" data-tsm-args="'[step2 query]','dash-btn','dash-res'">Submit Step Response</button></div>
+  <button onclick="toggleIntake(true)" id="intake-expand-btn" style="display:none;width:100%;padding:5px;background:transparent;border:1px solid var(--a);color:var(--a);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px;margin-bottom:8px">✎ EDIT MATTER DATA</button>
+  <hr class="guide-divider">
+
+  <div class="guide-mission-hdr">MISSION OBJECTIVES · LEGAL</div>
+  <div id="guide-meta" class="guide-patient">Client: <span class="guide-hi" id="meta-client">Acme Corp</span> &nbsp;·&nbsp; Matter: <span class="guide-hi" id="meta-matter">MTR-2204</span> &nbsp;·&nbsp; Opposing: <span class="guide-hi" id="meta-opposing">Delta Inc</span></div>
+
+  <!-- ACTIVE TASK -->
+  <div id="guide-urgent-task" style="background:#1a0a00;border:1px solid var(--r);border-radius:4px;padding:8px;margin-bottom:8px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <div style="width:18px;height:18px;border-radius:50%;background:var(--r);display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:700;flex-shrink:0">!</div>
+      <span style="color:var(--r);font-size:10px;font-weight:700">File injunction response — 72hr window</span>
+    </div>
+    <div style="font-size:9px;color:#556655;padding-left:26px;margin-bottom:6px">MTR-2204 · Breach of Contract · JAMS · $2,400,000</div>
+    <div style="font-size:9px;color:#99cc99;line-height:1.5;margin-bottom:6px">Include executed contract, performance timeline, and opposing counsel correspondence from Q1.</div>
+    <button onclick="draftLegalResponse()" style="width:100%;padding:6px;background:var(--r);color:#fff;font-family:inherit;font-size:9px;font-weight:700;border:none;border-radius:3px;cursor:pointer;letter-spacing:1px;margin-bottom:4px">⚡ DRAFT LEGAL RESPONSE</button>
+    <button onclick="draftLitigationPlan()" style="width:100%;padding:6px;background:transparent;border:1px solid var(--g);color:var(--g);font-family:inherit;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px">LITIGATION RECOVERY PLAN ↗</button>
+  </div>
+
+  <hr class="guide-divider">
+
+  <div id="guide-step-label" class="guide-step-lbl">STEP 1 OF 2</div>
+
+  <div id="guide-step-1" class="guide-step active-step">
+    <div id="guide-step-1-text" class="guide-step-body">Review 3 high-risk litigation matters approaching settlement deadline. Identify exposure and recommend resolution strategy.</div>
+    <div class="guide-step-actions">
+      <button class="guide-action-btn btn-explain" onclick="guideAction('explain',1)">Explain Current Tab</button>
+      <button class="guide-action-btn btn-risk"    onclick="guideAction('risk',1)">Find Highest Risk</button>
+      <button class="guide-action-btn btn-talk"    onclick="guideAction('talk',1)">Talk Track</button>
+    </div>
+    <button class="guide-submit-btn" data-tsm-action="runQ" data-tsm-args="'[step1 query]','dash-btn','dash-res'">Submit Step Response</button>
+    <div id="guide-res-1" class="guide-result"></div>
+  </div>
+
+  <div id="guide-step-2" class="guide-step" style="margin-top:8px">
+    <div id="guide-step-2-text" class="guide-step-body">4 payer contracts in review — BlueCross renegotiation window open. Build negotiation framework and rate benchmarks.</div>
+    <div class="guide-step-actions">
+      <button class="guide-action-btn btn-explain" onclick="guideAction('explain',2)">Explain Current Tab</button>
+      <button class="guide-action-btn btn-risk"    onclick="guideAction('risk',2)">Find Highest Risk</button>
+      <button class="guide-action-btn btn-talk"    onclick="guideAction('talk',2)">Talk Track</button>
+    </div>
+    <button class="guide-submit-btn" data-tsm-action="runQ" data-tsm-args="'[step2 query]','dash-btn','dash-res'">Submit Step Response</button>
+    <div id="guide-res-2" class="guide-result"></div>
+  </div>
+
+  <hr class="guide-divider">
+
+  <!-- WHEN TO RUN WHAT -->
+  <div style="margin-bottom:10px">
+    <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:#556655;margin-bottom:6px">◆ WHEN TO RUN WHAT</div>
+    <div style="background:#0a1400;border:1px solid #1e3a00;border-radius:3px;padding:7px 8px;margin-bottom:5px">
+      <div style="color:var(--g);font-size:9px;font-weight:700;margin-bottom:3px">⚡ RUN BNCA FIRST</div>
+      <div style="font-size:9px;color:#556655;line-height:1.5">Always start here. BNCA surfaces the highest-risk legal item — deadline exposure, contract gaps, indemnification conflicts. Run before escalating anything.</div>
+    </div>
+    <div style="background:#00111a;border:1px solid #001e3a;border-radius:3px;padding:7px 8px">
+      <div style="color:var(--b);font-size:9px;font-weight:700;margin-bottom:3px">🔗 RELAY TO STRATEGIST AFTER</div>
+      <div style="font-size:9px;color:#556655;line-height:1.5">Only escalate when BNCA reveals a <span style="color:var(--a)">cross-domain issue</span> — regulatory risk (compliance), payer contract disputes (ops), or systemic litigation patterns needing C-suite visibility.</div>
+    </div>
+  </div>
+
+  <button onclick="Q('Run full BNCA for HC LEGAL COMMAND: top issue, why it matters, best next actions, confidence level','dash-btn','dash-res');switchTab('dash',document.querySelector('.nav-btn'))" style="width:100%;padding:7px;background:#003322;border:1px solid var(--g);color:var(--g);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px;margin-bottom:5px">⚡ RUN NODE BNCA</button>
+
+  <hr class="guide-divider">
+
+  <!-- POST STEP 2 -->
+  <div id="guide-next-actions" style="display:none">
+    <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--g);margin-bottom:6px">◆ STEPS COMPLETE — NEXT ACTIONS</div>
+    <div style="display:flex;flex-direction:column;gap:5px">
+      <button onclick="Q('Run full BNCA for HC LEGAL COMMAND: synthesize both step findings into top risk, owner, resolution timeline, and confidence score','dash-btn','dash-res');switchTab('dash',document.querySelector('.nav-btn'))" style="width:100%;padding:6px;background:#003322;border:1px solid var(--g);color:var(--g);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px">⚡ RE-RUN BNCA WITH FINDINGS</button>
+      <button onclick="window.open('https://hc-strategist.tsmatter.com','_blank')" style="width:100%;padding:6px;background:#001133;border:1px solid var(--b);color:var(--b);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px">🔗 ESCALATE TO STRATEGIST</button>
+      <button onclick="Q('Export legal session summary: both step findings, recommended actions, escalation decision','dash-btn','dash-res');switchTab('dash',document.querySelector('.nav-btn'))" style="width:100%;padding:6px;background:#221100;border:1px solid var(--a);color:var(--a);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px">📋 EXPORT SESSION SUMMARY</button>
+    </div>
   </div>
 </div>
+<!-- ═══════════════ END NODE GUIDE ═══════════════ -->
+
 <div class="cap-layer">
   <div class="cap-lbl">ENTERPRISE CAPABILITY LAYER · LEGAL</div>
   <div class="cap-grid">
@@ -160,167 +259,8 @@ tr:hover td{background:#0f1f0f}
     <button class="cap-btn-secondary" data-tsm-action="fillAndRun" data-tsm-args="'dash-inp','dash-btn','dash-res','Run a full BNCA for HC LEGAL COMMAND: top risks, compliance gaps, priority actions, owner lanes');switchTab('dash',document.querySelector('.nav-btn'))">Run Feature BNCA</button>
   </div>
 </div>
+
 <main>
-  
-<div id="tab-dash" class="tab-panel active">
-<div class="kpi-row">
-  <div class="kpi"><div class="kpi-val green">95.4%</div><div class="kpi-lbl">Legal Compliance</div><div class="kpi-sub green">Above 95% target · OIG watch clear</div></div>
-  <div class="kpi"><div class="kpi-val amber">9</div><div class="kpi-lbl">Auth Pending</div><div class="kpi-sub amber">14 urgent · avg 2.3 days pending</div></div>
-  <div class="kpi"><div class="kpi-val green">174</div><div class="kpi-lbl">Active Patients</div><div class="kpi-sub green">+6% vs prior month · census stable</div></div>
-  <div class="kpi"><div class="kpi-val red">$61K</div><div class="kpi-lbl">Revenue At Risk</div><div class="kpi-sub red">Auth denials + coding gaps flagged</div></div>
-</div>
-
-<!-- TSM CLEAN WIP SNAPSHOT START -->
-<div class="sec wip-snapshot">
-  <div class="sec-hdr">WIP SNAPSHOT · CURRENT OPERATING QUEUE</div>
-  <div class="stat-grid">
-    <div class="stat-box"><div class="stat-val green">9</div><div class="stat-lbl">Open Legal Items</div></div>
-    <div class="stat-box"><div class="stat-val amber">2</div><div class="stat-lbl">Aging > SLA</div></div>
-    <div class="stat-box"><div class="stat-val green">89%</div><div class="stat-lbl">Owner Assigned</div></div>
-    <div class="stat-box"><div class="stat-val red">$61K</div><div class="stat-lbl">Legal Exposure</div></div>
-    <div class="stat-box"><div class="stat-val blue">Tomorrow 10:00 AM</div><div class="stat-lbl">Next Review</div></div>
-  </div>
-  <div style="color:#99cc99;font-size:11px;line-height:1.6;margin-top:10px">
-    Use this snapshot during demos to explain what is open, what is aging, who owns it,
-    what is financially or operationally exposed, and what needs review today.
-  </div>
-</div>
-<!-- TSM CLEAN WIP SNAPSHOT END -->
-
-<div class="sec"><div class="sec-hdr">ACTIVE ALERTS</div>
-  <div class="alert-row"><span class="pri purgent">URGENT</span><div class="alert-txt">14 prior auth requests exceeding 72hr SLA — payer escalation required</div><div class="alert-imp">$62K</div></div>
-  <div class="alert-row"><span class="pri purgent">URGENT</span><div class="alert-txt">CPT 99215 upcoding pattern detected — 23 claims flagged for audit review</div><div class="alert-imp">$18K risk</div></div>
-  <div class="alert-row"><span class="pri pmed">MED</span><div class="alert-txt">ICD-10 specificity gaps on 31 claims — documentation incomplete for Level 4/5</div><div class="alert-imp">Audit risk</div></div>
-  <div class="alert-row"><span class="pri pmed">MED</span><div class="alert-txt">Medicare annual wellness visit billing rate below benchmark by 12%</div><div class="alert-imp">$44K opp</div></div>
-  <div class="alert-row"><span class="pri plow">LOW</span><div class="alert-txt">Modifier -25 overuse on 47 claims — compliance review recommended</div><div class="alert-imp">$8K</div></div>
-  <div class="alert-row"><span class="pri pok">OK</span><div class="alert-txt">Legal compliance at 95.4% — above OIG threshold · documentation current</div><div class="alert-imp">✓ Clear</div></div>
-</div>
-<div class="sec"><div class="sec-hdr">CLINICAL REVENUE SNAPSHOT</div>
-<table><thead><tr><th>SERVICE LINE</th><th>VOLUME</th><th>AVG RVU</th><th>NET REVENUE</th><th>CLEAN RATE</th><th>STATUS</th></tr></thead>
-<tbody>
-  <tr><td>E&amp;M Visits</td><td>842</td><td>2.1</td><td>$187,440</td><td>91%</td><td><span class="badge bg">GOOD</span></td></tr>
-  <tr><td>Procedures</td><td>312</td><td>4.8</td><td>$224,640</td><td>87%</td><td><span class="badge ba">WATCH</span></td></tr>
-  <tr><td>Diagnostics</td><td>1,204</td><td>1.2</td><td>$128,266</td><td>94%</td><td><span class="badge bg">GOOD</span></td></tr>
-  <tr><td>Surgery</td><td>89</td><td>18.4</td><td>$244,944</td><td>82%</td><td><span class="badge ba">WATCH</span></td></tr>
-  <tr><td>ER Visits</td><td>421</td><td>3.6</td><td>$225,174</td><td>76%</td><td><span class="badge br">POOR</span></td></tr>
-</tbody></table></div>
-<div class="ai-box">
-  <div class="ai-hdr">⚡ DASHBOARD AI ANALYSIS</div>
-  <div class="ai-row"><button class="ai-btn" data-tsm-action="fillAndRun" data-tsm-args="'dash-inp','dash-btn','dash-res','Summarize top risks on this dashboard and provide priority actions for the legal lead'">Top Risks</button><button class="ai-btn" data-tsm-action="fillAndRun" data-tsm-args="'dash-inp','dash-btn','dash-res','What revenue is at risk this week and what are the fastest recovery actions?'">Revenue Risk</button><button class="ai-btn" data-tsm-action="fillAndRun" data-tsm-args="'dash-inp','dash-btn','dash-res','Run a full BNCA for HC LEGAL COMMAND: top risks, compliance gaps, priority actions, owner lanes'">Full BNCA</button></div>
-  <div class="ai-row">
-    <input id="dash-inp" class="ai-inp" type="text" placeholder="Dashboard query...">
-    <button class="ask-btn" id="dash-btn" data-tsm-action="runQ" data-tsm-args="document.getElementById('dash-inp').value,'dash-btn','dash-res'">▶ ASK</button>
-  </div>
-  <div id="dash-res" class="ai-res">&gt; AI ready. Ask a question or click a preset above.</div>
-</div></div>
-<div id="tab-matters" class="tab-panel">
-<div class="sec" style="margin-top:16px"><div class="sec-hdr">DEPARTMENT PERFORMANCE</div>
-<div class="stat-grid">
-  <div class="stat-box"><div class="stat-val green">92%</div><div class="stat-lbl">Primary Care</div></div>
-  <div class="stat-box"><div class="stat-val amber">78%</div><div class="stat-lbl">Emergency Dept</div></div>
-  <div class="stat-box"><div class="stat-val green">95%</div><div class="stat-lbl">Surgery</div></div>
-  <div class="stat-box"><div class="stat-val green">88%</div><div class="stat-lbl">Radiology</div></div>
-  <div class="stat-box"><div class="stat-val green">97%</div><div class="stat-lbl">Lab Services</div></div>
-</div>
-<table><thead><tr><th>DEPARTMENT</th><th>PHYSICIANS</th><th>AVG DAILY VISITS</th><th>COMPLIANCE</th><th>RVU/DAY</th><th>STATUS</th></tr></thead>
-<tbody>
-  <tr><td>Primary Care</td><td>12</td><td>284</td><td>92%</td><td>2.4</td><td><span class="badge bg">GOOD</span></td></tr>
-  <tr><td>Emergency Dept</td><td>18</td><td>421</td><td>78%</td><td>3.6</td><td><span class="badge ba">WATCH</span></td></tr>
-  <tr><td>Surgery</td><td>8</td><td>89</td><td>95%</td><td>18.4</td><td><span class="badge bg">GOOD</span></td></tr>
-  <tr><td>Radiology</td><td>6</td><td>312</td><td>88%</td><td>4.8</td><td><span class="badge bg">GOOD</span></td></tr>
-  <tr><td>Lab Services</td><td>4</td><td>1,204</td><td>97%</td><td>1.2</td><td><span class="badge bg">GOOD</span></td></tr>
-</tbody></table></div>
-<div class="sec"><div class="sec-hdr">CLINICAL ALERTS</div>
-  <div class="alert-row"><span class="pri pmed">MED</span><div class="alert-txt">CPT 99215 upcoding pattern detected</div><div class="alert-imp">$12K</div></div>
-  <div class="alert-row"><span class="pri pmed">MED</span><div class="alert-txt">Discharge doc gaps — CMS risk</div><div class="alert-imp">Compliance</div></div>
-  <div class="alert-row"><span class="pri plow">LOW</span><div class="alert-txt">HEDIS gap: diabetic eye exam</div><div class="alert-imp">Quality</div></div>
-  <div class="alert-row"><span class="pri pok">OK</span><div class="alert-txt">Readmit rate 4.1% — below 5% target</div><div class="alert-imp">✓</div></div>
-</div>
-<div class="ai-box">
-  <div class="ai-hdr">⚡ CLINICAL OPS AI ANALYSIS</div>
-  <div class="ai-row"><button class="ai-btn" data-tsm-action="fillAndRun" data-tsm-args="'clinical-inp','clinical-btn','clinical-res','Analyze department performance gaps — identify bottom performers and improvement plan'">Dept Performance</button><button class="ai-btn" data-tsm-action="fillAndRun" data-tsm-args="'clinical-inp','clinical-btn','clinical-res','Review ED 78% compliance score — identify bottlenecks and throughput improvement actions'">ED Throughput</button><button class="ai-btn" data-tsm-action="fillAndRun" data-tsm-args="'clinical-inp','clinical-btn','clinical-res','Build HEDIS gap closure plan for diabetic eye exam — outreach strategy and timeline'">HEDIS Closure</button></div>
-  <div class="ai-row">
-    <input id="clinical-inp" class="ai-inp" type="text" placeholder="CLINICAL OPS query...">
-    <button class="ask-btn" id="clinical-btn" data-tsm-action="runQ" data-tsm-args="document.getElementById('clinical-inp').value,'clinical-btn','clinical-res'">▶ ASK</button>
-  </div>
-  <div id="clinical-res" class="ai-res">&gt; AI ready. Ask a question or click a preset above.</div>
-</div></div>
-<div id="tab-contracts" class="tab-panel">
-<div class="bnca-box" style="margin-top:16px">
-  <div class="bnca-hdr">⚡ BNCA AI SYNTHESIS — BILLING</div>
-  <div class="bnca-body">Denial rate at 18.4% — double target. ENC-8821 appeal window closes in 30 days. Immediate action: file with auth reference. AR aging &gt;$189K requires owner escalation this week.</div>
-  <div class="bnca-actions">
-    <button class="bnca-action-btn" data-tsm-action="fillAndRun" data-tsm-args="'billing-inp','billing-btn','billing-res','Generate full billing narrative: denial rate 18.4%, ENC-8821 appeal, AR aging $189K, CO-197 queue, CPT upcoding risk. Provide owner actions and timeline.'">⚡ Generate Full Narrative</button>
-    <button class="bnca-action-btn outline" data-tsm-action="switchTab" data-tsm-args="'intel',document.querySelectorAll('.nav-btn')[4]">Open Node ↗</button>
-  </div>
-</div>
-<div class="sec"><div class="sec-hdr">BILLING ALERTS</div>
-  <div class="alert-row"><span style="font-size:11px;min-width:24px;text-align:center;color:var(--r);font-weight:700">01</span><div class="alert-txt">Denial rate 18.4% vs 9% target</div><div class="alert-imp red">Critical</div></div>
-  <div class="alert-row"><span style="font-size:11px;min-width:24px;text-align:center;color:var(--a);font-weight:700">02</span><div class="alert-txt">CO-197 appeal queue — 12 pending</div><div class="alert-imp amber">$186K</div></div>
-  <div class="alert-row"><span style="font-size:11px;min-width:24px;text-align:center;color:var(--a);font-weight:700">03</span><div class="alert-txt">AR aging &gt;30d — $189K</div><div class="alert-imp amber">Escalate</div></div>
-  <div class="alert-row"><span style="font-size:11px;min-width:24px;text-align:center;color:var(--b);font-weight:700">04</span><div class="alert-txt">ENC-8821 prior auth missing</div><div class="alert-imp blue">Appeal</div></div>
-</div>
-<div class="sec"><div class="sec-hdr">CPT AUDIT QUEUE</div>
-<table><thead><tr><th>CPT CODE</th><th>DESCRIPTION</th><th>COUNT</th><th>RISK LEVEL</th><th>REVENUE</th><th>ACTION</th></tr></thead>
-<tbody>
-  <tr><td>99215</td><td>E&amp;M Level 5 — upcoding pattern</td><td>23</td><td><span class="badge br">HIGH</span></td><td>$12,040</td><td>Review docs</td></tr>
-  <tr><td>27447</td><td>Total knee replacement</td><td>18</td><td><span class="badge ba">MED</span></td><td>$333,000</td><td>Auth check</td></tr>
-  <tr><td>93454</td><td>Cardiac catheterization</td><td>12</td><td><span class="badge ba">MED</span></td><td>$216,000</td><td>Verify DX</td></tr>
-  <tr><td>70553</td><td>MRI Brain w/ contrast</td><td>41</td><td><span class="badge bg">LOW</span></td><td>$98,400</td><td>Monitor</td></tr>
-  <tr><td>97110</td><td>Therapeutic exercise</td><td>152</td><td><span class="badge bg">LOW</span></td><td>$91,200</td><td>Compliant</td></tr>
-</tbody></table></div>
-<div class="ai-box">
-  <div class="ai-hdr">⚡ BILLING & CPT AI ANALYSIS</div>
-  <div class="ai-row"><button class="ai-btn" data-tsm-action="fillAndRun" data-tsm-args="'billing-inp','billing-btn','billing-res','Analyze CPT 99215 upcoding risk across 23 claims — documentation gaps and remediation steps'">CPT Audit</button><button class="ai-btn" data-tsm-action="fillAndRun" data-tsm-args="'billing-inp','billing-btn','billing-res','Review modifier usage patterns for compliance — identify overcoding risk and corrective actions'">Modifier Review</button><button class="ai-btn" data-tsm-action="fillAndRun" data-tsm-args="'billing-inp','billing-btn','billing-res','Build plan to improve clean claim rate — top rejection reasons and front-end edits needed'">Clean Claim</button></div>
-  <div class="ai-row">
-    <input id="billing-inp" class="ai-inp" type="text" placeholder="BILLING & CPT query...">
-    <button class="ask-btn" id="billing-btn" data-tsm-action="runQ" data-tsm-args="document.getElementById('billing-inp').value,'billing-btn','billing-res'">▶ ASK</button>
-  </div>
-  <div id="billing-res" class="ai-res">&gt; AI ready. Ask a question or click a preset above.</div>
-</div></div>
-<div id="tab-auth" class="tab-panel">
-<div class="sec" style="margin-top:16px"><div class="sec-hdr">PRIOR AUTHORIZATION QUEUE</div>
-<table><thead><tr><th>PROCEDURE</th><th>PAYER</th><th>QTY</th><th>DAYS PENDING</th><th>AMOUNT</th><th>STATUS</th></tr></thead>
-<tbody>
-  <tr><td>Total Knee (27447)</td><td>BlueCross</td><td>18</td><td>12.3</td><td>$333,000</td><td><span class="badge br">URGENT</span></td></tr>
-  <tr><td>Shoulder Scope (29826)</td><td>Aetna</td><td>24</td><td>7.1</td><td>$196,800</td><td><span class="badge ba">PENDING</span></td></tr>
-  <tr><td>MRI Brain (70553)</td><td>Medicare</td><td>41</td><td>4.2</td><td>$98,400</td><td><span class="badge bb">IN REVIEW</span></td></tr>
-  <tr><td>Cardiac Cath (93454)</td><td>UHC</td><td>12</td><td>9.8</td><td>$216,000</td><td><span class="badge br">DELAYED</span></td></tr>
-  <tr><td>PT 12-Visit (97110)</td><td>Medicaid</td><td>152</td><td>3.1</td><td>$91,200</td><td><span class="badge bg">PROCESSING</span></td></tr>
-</tbody></table></div>
-<div class="ai-box">
-  <div class="ai-hdr">⚡ PRIOR AUTH AI ANALYSIS</div>
-  <div class="ai-row"><button class="ai-btn" data-tsm-action="fillAndRun" data-tsm-args="'auth-inp','auth-btn','auth-res','Create prior auth backlog reduction plan for 247 pending auths worth $186K — priority actions by payer'">Auth Backlog</button><button class="ai-btn" data-tsm-action="fillAndRun" data-tsm-args="'auth-inp','auth-btn','auth-res','Analyze payer-specific auth denial patterns for BlueCross and UHC — appeal strategies and timelines'">Payer Strategy</button><button class="ai-btn" data-tsm-action="fillAndRun" data-tsm-args="'auth-inp','auth-btn','auth-res','Identify procedures eligible for auto-authorization to reduce manual queue — criteria and implementation'">Auto-Auth Plan</button></div>
-  <div class="ai-row">
-    <input id="auth-inp" class="ai-inp" type="text" placeholder="PRIOR AUTH query...">
-    <button class="ask-btn" id="auth-btn" data-tsm-action="runQ" data-tsm-args="document.getElementById('auth-inp').value,'auth-btn','auth-res'">▶ ASK</button>
-  </div>
-  <div id="auth-res" class="ai-res">&gt; AI ready. Ask a question or click a preset above.</div>
-</div></div>
-<div id="tab-audit" class="tab-panel">
-<div class="ai-box" style="margin-top:16px">
-  <div class="ai-hdr">🧠 DEEP AI ANALYSIS — AI ANALYSIS</div>
-  <p style="color:#556655;font-size:10px;margin-bottom:12px;line-height:1.6">Run deep analysis across all intel workbench node data. Synthesizes all domains into a unified intelligence brief.</p>
-  <div class="ai-row"><button class="ai-btn" data-tsm-action="fillAndRun" data-tsm-args="'intel-inp','intel-btn','intel-res','Generate AI Summary for HC Legal node: top 3 risks, owner assignments, SLA status, and executive brief'">AI Summary</button><button class="ai-btn" data-tsm-action="fillAndRun" data-tsm-args="'intel-inp','intel-btn','intel-res','Find highest risk item across clinical ops, billing, and prior auth — explain why it matters and who owns it'">Risk + Owner</button><button class="ai-btn" data-tsm-action="fillAndRun" data-tsm-args="'intel-inp','intel-btn','intel-res','Run full BNCA for HC Legal: best next corrective actions across all domains with priority ranking'">BNCA</button><button class="ai-btn" data-tsm-action="fillAndRun" data-tsm-args="'intel-inp','intel-btn','intel-res','Generate a presentation talk track for HC Legal Command — executive-level narrative for office manager demo'">Talk Track</button></div>
-  <div class="ai-row">
-    <input id="intel-inp" class="ai-inp" type="text" placeholder="Enter detailed query...">
-    <button class="ask-btn" id="intel-btn" data-tsm-action="runQ" data-tsm-args="document.getElementById('intel-inp').value,'intel-btn','intel-res'">▶ ASK</button>
-  </div>
-  <div id="intel-res" class="ai-res">&gt; Intel Workbench ready. Select a mode or type a query.</div>
-</div></div>
-<div id="tab-presets" class="tab-panel">
-<div class="sec" style="margin-top:16px">
-  <div class="sec-hdr">PRESET LIBRARY — Click any to run in Intel Workbench</div>
-  <div class="pr-grid"><div class="pr-card" data-tsm-action="runPreset" data-tsm-args="`Analyze prior auth denial patterns across 9 pending requests — identify top payers denying, SLA breach root cause, and 30-day resolution plan`"><div class="pr-card-title">Prior Auth Crisis</div><div class="pr-card-desc">Auth denial + SLA analysis</div></div>
-      <div class="pr-card" data-tsm-action="runPreset" data-tsm-args="`Review CPT 99215 upcoding risk across 23 flagged claims — documentation gaps, audit exposure, and remediation steps`"><div class="pr-card-title">CPT Upcoding Audit</div><div class="pr-card-desc">Level 5 E&M compliance</div></div>
-      <div class="pr-card" data-tsm-action="runPreset" data-tsm-args="`Identify ICD-10 specificity gaps across 31 claims and provide coder education recommendations to reduce documentation deficiencies`"><div class="pr-card-title">ICD-10 Specificity</div><div class="pr-card-desc">Coding accuracy + coder training</div></div>
-      <div class="pr-card" data-tsm-action="runPreset" data-tsm-args="`Analyze Medicare Annual Wellness Visit billing gap — why is rate 12% below benchmark and what is the revenue recovery opportunity`"><div class="pr-card-title">AWV Revenue Gap</div><div class="pr-card-desc">Wellness visit optimization</div></div>
-      <div class="pr-card" data-tsm-action="runPreset" data-tsm-args="`Review Modifier -25 usage pattern across 47 claims — identify overcoding risk and provide compliance guidelines for separate E&M billing`"><div class="pr-card-title">Modifier -25 Review</div><div class="pr-card-desc">Modifier compliance audit</div></div>
-      <div class="pr-card" data-tsm-action="runPreset" data-tsm-args="`Build a 90-day clinical revenue cycle improvement plan covering auth, coding accuracy, denial reduction, and documentation compliance`"><div class="pr-card-title">90-Day RCM Plan</div><div class="pr-card-desc">Revenue cycle improvement</div></div>
-      </div>
-</div></div>
-
-</main>
 
 <!-- ═══════════════ OPERATIONAL FOOTER ═══════════════ -->
 <div class="footer">
