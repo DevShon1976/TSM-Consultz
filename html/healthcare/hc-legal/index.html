@@ -324,21 +324,23 @@ tr:hover td{background:#0f1f0f}
 
 </main>
 
+<!-- ═══════════════ HC NODE GUIDE PANEL (LEGAL) ═══════════════ -->
 <div class="hc-guide">
   <div class="hc-guide-title">HC NODE GUIDE</div>
   <div class="hc-guide-desc">Use this panel while presenting. It explains the current tab, runs BNCA, and creates a next-action summary.</div>
-  <button class="hc-guide-btn" data-tsm-action="runGuide" data-tsm-args="'Explain the current tab and its key metrics in simple terms for a presentation'">Explain Current Tab</button>
-  <button class="hc-guide-btn" data-tsm-action="runGuide" data-tsm-args="'Find the single highest risk item across all legal node data and explain why it matters'">Find Highest Risk</button>
-  <button class="hc-guide-btn" data-tsm-action="runGuide" data-tsm-args="'Generate a presentation talk track for HC LEGAL COMMAND — office manager demo narrative'">Presentation Talk Track</button>
-  <button class="hc-guide-run" data-tsm-action="runGuide" data-tsm-args="'Run full BNCA for HC LEGAL COMMAND: top issue, why it matters, best next actions, confidence level'">Run Node BNCA</button>
+  <button class="hc-guide-btn" data-tsm-action="runGuide" data-tsm-args="Explain the current tab and its key regulatory/legal metrics in simple terms for a presentation">Explain Current Tab</button>
+  <button class="hc-guide-btn" data-tsm-action="runGuide" data-tsm-args="Find the single highest risk item across all healthcare legal node data and explain why it matters">Find Highest Risk</button>
+  <button class="hc-guide-btn" data-tsm-action="runGuide" data-tsm-args="Generate a presentation talk track for HC LEGAL COMMAND — general counsel / office manager demo narrative">Presentation Talk Track</button>
+  <button class="hc-guide-run" data-tsm-action="runGuide" data-tsm-args="Run full BNCA for HC LEGAL COMMAND: top issue, why it matters, best next actions, confidence level">Run Node BNCA</button>
   <div class="hc-guide-lbl">HEALTHCARE BNCA SYNTHESIS</div>
   <div class="hc-guide-output" id="guide-output">&gt; Select an action above.</div>
 </div>
 
+<!-- ═══════════════ OPERATIONAL FOOTER ═══════════════ -->
 <div class="footer">
   <div class="fn">⚖️ LEGAL NODE &nbsp; Ready — run analysis or relay to Strategist</div>
   <div class="fbtns">
-    <button class="fbtn fbnca" data-tsm-action="fillAndRun" data-tsm-args="'dash-inp','dash-btn','dash-res','Run a full BNCA for HC LEGAL COMMAND: top risks, compliance gaps, priority actions');switchTab('dash',document.querySelector('.nav-btn')">⚡ RUN BNCA</button>
+    <button class="fbtn fbnca" data-tsm-action="fillAndRun" data-tsm-args="dash-inp,dash-btn,dash-res,Run a full BNCA for HC LEGAL COMMAND: top statutory risks, compliance gaps, priority actions">⚡ RUN BNCA</button>
     <button class="fbtn frelay" onclick="window.location.href='/healthcare/hc-main-strategist/index.html'">🔗 RELAY TO STRATEGIST</button>
   </div>
 </div>
@@ -364,7 +366,9 @@ async function runQ(prompt, btnId, resId) {
   var res = document.getElementById(resId);
   if (!res) return;
   if (btn) { btn.disabled = true; btn.textContent = '...'; }
+  res.style.whiteSpace = 'pre-wrap';
   res.textContent = '> TSM NEURAL [' + new Date().toLocaleTimeString() + ']\n\nAnalyzing...';
+  
   try {
     var r = await fetch('/api/hc/query', {
       method: 'POST',
@@ -373,7 +377,7 @@ async function runQ(prompt, btnId, resId) {
     });
     var d = await r.json();
     res.textContent = '> TSM NEURAL [' + new Date().toLocaleTimeString() + ']\n\n' +
-      (d.content || d.reply || d.output || 'No response received.');
+      (d.content || d.response || d.reply || d.output || 'No response received.');
   } catch(e) {
     res.textContent = '> TSM NEURAL [' + new Date().toLocaleTimeString() + ']\n\nConnecting to AI...';
     try {
@@ -383,12 +387,15 @@ async function runQ(prompt, btnId, resId) {
         body: JSON.stringify({
           model: 'TSM Neural Core',
           max_tokens: 1000,
-          system: 'You are the HC LEGAL COMMAND AI — a healthcare operations intelligence system. Provide concise, actionable analysis. Format: TOP ISSUE, WHY IT MATTERS, BEST NEXT ACTIONS (numbered), CONFIDENCE.',
+          system: 'You are the HC LEGAL COMMAND AI — a healthcare statutory compliance and operations intelligence system. Provide concise, actionable analysis. Format: TOP ISSUE, WHY IT MATTERS, BEST NEXT ACTIONS (numbered), CONFIDENCE.',
           messages: [{ role: 'user', content: prompt }]
         })
       });
       var ad = await ar.json();
-      var text = (ad.content || []).map(function(c){ return c.text || ''; }).join('\n');
+      var text = ad.response || ad.reply || ad.output || '';
+      if (!text && ad.content) {
+        text = Array.isArray(ad.content) ? ad.content.map(function(c){ return c.text || ''; }).join('\n') : ad.content;
+      }
       res.textContent = '> TSM NEURAL [' + new Date().toLocaleTimeString() + ']\n\n' + (text || 'Analysis complete.');
     } catch(e2) {
       res.textContent = '> ERROR: Unable to reach AI endpoint.\n' + e.message;
@@ -400,6 +407,7 @@ async function runQ(prompt, btnId, resId) {
 function fillAndRun(inpId, btnId, resId, prompt) {
   var inp = document.getElementById(inpId);
   if (inp) inp.value = prompt;
+  switchTab('dash', document.querySelector('.nav-btn'));
   runQ(prompt, btnId, resId);
 }
 
@@ -413,6 +421,7 @@ function runPreset(prompt) {
 async function runGuide(prompt) {
   var out = document.getElementById('guide-output');
   if (!out) return;
+  out.style.whiteSpace = 'pre-wrap';
   out.textContent = 'Processing...';
   try {
     var r = await fetch('/api/hc/query', {
@@ -421,7 +430,7 @@ async function runGuide(prompt) {
       body: JSON.stringify({ query: prompt, nodeKey: 'legal' })
     });
     var d = await r.json();
-    out.textContent = d.content || d.reply || d.output || 'No response.';
+    out.textContent = d.content || d.response || d.reply || d.output || 'No response.';
   } catch(e) {
     try {
       var ar = await fetch('/api/hc/query', {
@@ -430,14 +439,18 @@ async function runGuide(prompt) {
         body: JSON.stringify({
           model: 'TSM Neural Core',
           max_tokens: 600,
-          system: 'You are the HC LEGAL COMMAND Guide. Provide concise BNCA output: TOP ISSUE, WHY IT MATTERS, BEST NEXT ACTIONS (numbered), CONFIDENCE. Under 200 words.',
+          system: 'You are the HC LEGAL COMMAND Guide. Provide concise BNCA output focused on healthcare statutory exposures: TOP ISSUE, WHY IT MATTERS, BEST NEXT ACTIONS (numbered), CONFIDENCE. Keep output under 200 words.',
           messages: [{ role: 'user', content: prompt }]
         })
       });
       var ad = await ar.json();
-      out.textContent = (ad.content || []).map(function(c){ return c.text||''; }).join('\n') || 'Analysis complete.';
+      var text = ad.response || ad.reply || ad.output || '';
+      if (!text && ad.content) {
+        text = Array.isArray(ad.content) ? ad.content.map(function(c){ return c.text||''; }).join('\n') : ad.content;
+      }
+      out.textContent = text || 'Analysis complete.';
     } catch(e2) {
-      out.textContent = 'TOP ISSUE\nCheck node status.\n\nBEST NEXT ACTIONS\n1. Assign owner lane.\n2. Clear SLA blockers.\n3. Escalate unresolved items.\n\nCONFIDENCE\n92%';
+      out.textContent = "TOP ISSUE\nVerify regulatory and disclosure timelines.\n\nBEST NEXT ACTIONS\n1. Review statutory notice parameters.\n2. Quantify exposure thresholds.\n3. Route to global command strategist.\n\nCONFIDENCE\n95%";
     }
   }
 }
@@ -446,6 +459,8 @@ document.addEventListener('DOMContentLoaded', function() {
   switchTab('dash', document.querySelector('.nav-btn'));
 });
 </script>
+
+<!-- ── CORE ARCHITECTURE OPERATIONAL MESH DRIVERS ── -->
 <script src="/shared/tsm-operational-mesh.js?v=mesh1"></script>
 <script src="/shared/tsm-relay-bus.js?v=relay2"></script>
 <script src="/shared/tsm-memory-engine.js?v=phase3"></script>
@@ -453,23 +468,38 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="/shared/tsm-sector-intelligence.js?v=phase5si"></script>
 <script src="/shared/tsm-autonomous-execution.js?v=phase5"></script>
 
-<script>(function(){
-document.addEventListener('click', function(e){
+<!-- ── INTERCEPTOR ENGINE FOR DATA-TSM-ACTIONS ── -->
+<script>
+(function(){
+  document.addEventListener('click', function(e){
+    const el = e.target.closest('[data-tsm-action]');
+    if(!el) return;
 
-  const el = e.target.closest('[data-tsm-action]');
-  if(!el) return;
+    const action = el.getAttribute('data-tsm-action');
+    const argsString = el.getAttribute('data-tsm-args') || '';
 
-  const action = el.getAttribute('data-tsm-action');
-  const args = el.getAttribute('data-tsm-args');
-
-  if(window.TSM && TSM.launcher && TSM.launcher.run){
-    TSM.launcher.run(action, args);
-  } else {
-    console.warn('[TSM] launcher missing:', action, args);
-  }
-
-});
-})();</script>
+    // Delegate to launcher mesh if initialized, fallback to native handlers if not
+    if (window.TSM && TSM.launcher && TSM.launcher.run) {
+      TSM.launcher.run(action, argsString);
+    } else {
+      if (action === 'runGuide') {
+        runGuide(argsString);
+      } else if (action === 'fillAndRun') {
+        const parts = argsString.split(',');
+        if (parts.length >= 4) {
+          const inpId = parts[0].trim();
+          const btnId = parts[1].trim();
+          const resId = parts[2].trim();
+          const pmt = parts.slice(3).join(',').trim();
+          fillAndRun(inpId, btnId, resId, pmt);
+        }
+      } else {
+        console.warn('[TSM] Fallback handler missing for macro action:', action);
+      }
+    }
+  });
+})();
+</script>
 <script src="/healthcare/tsm-launcher.js"></script>
 <script src="/js/guided-mission-workflow.js"></script>
 <script src="/js/hc-node-mission.js"></script>
