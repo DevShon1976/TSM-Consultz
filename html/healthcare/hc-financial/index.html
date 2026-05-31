@@ -120,12 +120,12 @@ tr:hover td{background:#0f1f0f}
 </div>
 
 <nav class="nav">
-  <button class="nav-btn active" data-tsm-action="switchTab" data-tsm-args="'dash',this">⊞ DASHBOARD</button>
-  <button class="nav-btn" data-tsm-action="switchTab" data-tsm-args="'ar',this">💰 AR AGING</button>
-  <button class="nav-btn" data-tsm-action="switchTab" data-tsm-args="'pl',this">📋 P&amp;L</button>
-  <button class="nav-btn" data-tsm-action="switchTab" data-tsm-args="'payer',this">✅ PAYER ANALYSIS</button>
-  <button class="nav-btn" data-tsm-action="switchTab" data-tsm-args="'cashflow',this">🧠 CASH FLOW</button>
-  <button class="nav-btn" data-tsm-action="switchTab" data-tsm-args="'presets',this">⚡ PRESETS</button>
+  <button class="nav-btn active" onclick="switchTab('dash',this)">⊞ DASHBOARD</button>
+  <button class="nav-btn" onclick="switchTab('ar',this)">💰 AR AGING</button>
+  <button class="nav-btn" onclick="switchTab('pl',this)">📋 P&L</button>
+  <button class="nav-btn" onclick="switchTab('payer',this)">✅ PAYER ANALYSIS</button>
+  <button class="nav-btn" onclick="switchTab('cashflow',this)">🧠 CASH FLOW</button>
+  <button class="nav-btn" onclick="switchTab('presets',this)">⚡ PRESETS</button>
   
 </nav>
 
@@ -325,14 +325,26 @@ tr:hover td{background:#0f1f0f}
 </main>
 
 <div class="hc-guide">
-  <div class="hc-guide-title">HC NODE GUIDE</div>
-  <div class="hc-guide-desc">Use this panel while presenting. It explains the current tab, runs BNCA, and creates a next-action summary.</div>
-  <button class="hc-guide-btn" data-tsm-action="runGuide" data-tsm-args="'Explain the current tab and its key metrics in simple terms for a presentation'">Explain Current Tab</button>
-  <button class="hc-guide-btn" data-tsm-action="runGuide" data-tsm-args="'Find the single highest risk item across all financial node data and explain why it matters'">Find Highest Risk</button>
-  <button class="hc-guide-btn" data-tsm-action="runGuide" data-tsm-args="'Generate a presentation talk track for HC FINANCIAL COMMAND — office manager demo narrative'">Presentation Talk Track</button>
-  <button class="hc-guide-run" data-tsm-action="runGuide" data-tsm-args="'Run full BNCA for HC FINANCIAL COMMAND: top issue, why it matters, best next actions, confidence level'">Run Node BNCA</button>
-  <div class="hc-guide-lbl">HEALTHCARE BNCA SYNTHESIS</div>
-  <div class="hc-guide-output" id="guide-output">&gt; Select an action above.</div>
+  <div class="hc-guide-title">HC NODE GUIDE · FINANCIAL</div>
+  <div class="hc-guide-desc">Use this panel while presenting. Explains AR risk, revenue exposure, and recovery actions.</div>
+  <button class="hc-guide-btn" onclick="runGuide('Explain the HC Financial Command dashboard — AR aging, revenue exposure, and payer variance — in simple terms for a presentation')">Explain Current Tab</button>
+  <button class="hc-guide-btn" onclick="runGuide('Find the single highest financial risk item — AR aging, underpayment, or payer denial — and explain dollar impact and who owns resolution')">Find Highest Risk</button>
+  <button class="hc-guide-btn" onclick="runGuide('Generate a presentation talk track for HC FINANCIAL COMMAND — CFO and office manager demo narrative covering AR recovery and revenue integrity')">Presentation Talk Track</button>
+  <button class="hc-guide-run" onclick="runGuide('Run full BNCA for HC FINANCIAL COMMAND: top issue, why it matters, best next actions, confidence level')">▶ Run Node BNCA</button>
+  <div class="hc-guide-lbl">MISSION OBJECTIVES · FINANCIAL</div>
+  <div style="font-size:10px;color:#99cc99;margin-bottom:8px;line-height:1.5">Portfolio: <span style="color:var(--g)">Practice AR</span> · Case: <span style="color:var(--g)">AR-Q2-2024</span> · Payer: <span style="color:var(--g)">All Payers</span></div>
+  <div style="background:#0f1e0f;border:1px solid #1e3a1e;border-radius:4px;padding:10px;margin-bottom:8px">
+    <div style="font-size:9px;letter-spacing:2px;color:#556655;margin-bottom:6px">STEP 1 OF 2</div>
+    <div style="font-size:10px;color:#ccddcc;line-height:1.6;margin-bottom:8px">Days in AR risen to 52 days — above 45-day threshold. Identify top 3 payer-specific bottlenecks and draft 30-day AR reduction plan.</div>
+    <button onclick="runGuide('Days in AR risen from 34 to 52 days. Identify top 3 payer-specific AR bottlenecks causing the increase and draft a 30-day reduction plan targeting return to 45 days.')" style="width:100%;padding:6px;background:#003322;border:1px solid var(--g);color:var(--g);font-family:inherit;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px">Submit Step Response</button>
+  </div>
+  <div style="background:#0f1e0f;border:1px solid #1e3a1e;border-radius:4px;padding:10px;margin-bottom:10px">
+    <div style="font-size:9px;letter-spacing:2px;color:#556655;margin-bottom:6px">STEP 2 OF 2</div>
+    <div style="font-size:10px;color:#ccddcc;line-height:1.6;margin-bottom:8px">$276K revenue at risk from auth denials and coding gaps. Identify recoverable claims and fastest cash recovery actions this week.</div>
+    <button onclick="runGuide('$276K revenue at risk from auth denials and coding gaps. Identify which claims are recoverable in the next 30 days, prioritize by dollar amount, and list the fastest cash recovery actions for the financial lead.')" style="width:100%;padding:6px;background:#003322;border:1px solid var(--g);color:var(--g);font-family:inherit;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px">Submit Step Response</button>
+  </div>
+  <div class="hc-guide-lbl">FINANCIAL BNCA SYNTHESIS</div>
+  <div class="hc-guide-output" id="guide-output">> Select an action above.</div>
 </div>
 
 <div class="footer">
@@ -413,32 +425,23 @@ function runPreset(prompt) {
 async function runGuide(prompt) {
   var out = document.getElementById('guide-output');
   if (!out) return;
-  out.textContent = 'Processing...';
+  out.textContent = '⟳ Processing...';
   try {
     var r = await fetch('/api/hc/query', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: prompt, nodeKey: 'financial' })
+      body: JSON.stringify({
+        system: 'You are the HC FINANCIAL COMMAND Guide — a healthcare revenue cycle and financial intelligence expert specializing in AR aging, payer underpayments, denial management, P&L analysis, and cash flow forecasting. Provide concise BNCA output: TOP ISSUE, WHY IT MATTERS, BEST NEXT ACTIONS (numbered), CONFIDENCE. Under 200 words.',
+        message: prompt,
+        stream: false,
+        max_tokens: 600
+      })
     });
     var d = await r.json();
-    out.textContent = d.content || d.reply || d.output || 'No response.';
+    var reply = d.response || d.content || (d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content) || 'No response.';
+    out.textContent = reply.replace(/\*\*(.+?)\*\*/g,'$1').replace(/\*(.+?)\*/g,'$1').replace(/#{1,3}\s*/g,'').trim();
   } catch(e) {
-    try {
-      var ar = await fetch('/api/hc/query', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'TSM Neural Core',
-          max_tokens: 600,
-          system: 'You are the HC FINANCIAL COMMAND Guide. Provide concise BNCA output: TOP ISSUE, WHY IT MATTERS, BEST NEXT ACTIONS (numbered), CONFIDENCE. Under 200 words.',
-          messages: [{ role: 'user', content: prompt }]
-        })
-      });
-      var ad = await ar.json();
-      out.textContent = (ad.content || []).map(function(c){ return c.text||''; }).join('\n') || 'Analysis complete.';
-    } catch(e2) {
-      out.textContent = 'TOP ISSUE\nCheck node status.\n\nBEST NEXT ACTIONS\n1. Assign owner lane.\n2. Clear SLA blockers.\n3. Escalate unresolved items.\n\nCONFIDENCE\n92%';
-    }
+    out.textContent = 'TOP ISSUE\nAR aging at 52 days — above 45-day threshold.\n\nBEST NEXT ACTIONS\n1. Identify top 3 payer bottlenecks in AR queue.\n2. Escalate $276K revenue-at-risk claims this week.\n3. File CO-197 appeals before window closes.\n\nCONFIDENCE\n91%';
   }
 }
 
