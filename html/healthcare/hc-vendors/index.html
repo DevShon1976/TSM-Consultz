@@ -323,15 +323,138 @@ tr:hover td{background:#0f1f0f}
 
 </main>
 
-<div class="hc-guide">
-  <div class="hc-guide-title">HC NODE GUIDE</div>
-  <div class="hc-guide-desc">Use this panel while presenting. It explains the current tab, runs BNCA, and creates a next-action summary.</div>
-  <button class="hc-guide-btn" data-tsm-action="runGuide" data-tsm-args="'Explain the current tab and its key metrics in simple terms for a presentation'">Explain Current Tab</button>
-  <button class="hc-guide-btn" data-tsm-action="runGuide" data-tsm-args="'Find the single highest risk item across all vendors node data and explain why it matters'">Find Highest Risk</button>
-  <button class="hc-guide-btn" data-tsm-action="runGuide" data-tsm-args="'Generate a presentation talk track for HC VENDORS COMMAND — office manager demo narrative'">Presentation Talk Track</button>
-  <button class="hc-guide-run" data-tsm-action="runGuide" data-tsm-args="'Run full BNCA for HC VENDORS COMMAND: top issue, why it matters, best next actions, confidence level'">Run Node BNCA</button>
-  <div class="hc-guide-lbl">HEALTHCARE BNCA SYNTHESIS</div>
-  <div class="hc-guide-output" id="guide-output">&gt; Select an action above.</div>
+<!-- ═══════════════ HC NODE GUIDE PANEL (VENDORS RE-FORMATTED) ═══════════════ -->
+<div id="hc-node-guide">
+  <div class="guide-hdr">HC NODE GUIDE</div>
+  <div class="guide-desc">Use this panel while presenting. It explains the current tab, runs BNCA, and creates a next-action summary.</div>
+  <hr class="guide-divider">
+
+  <!-- INTAKE FORM -->
+  <div id="guide-intake" style="margin-bottom:10px">
+    <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--a);margin-bottom:6px">◆ SET VENDORS MISSION</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px">
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">VENDOR NAME</div>
+        <input id="vendor-name" class="guide-field" type="text" placeholder="e.g. Premier Staffing Corp">
+      </div>
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">CONTRACT REF</div>
+        <input id="vendor-contract" class="guide-field" type="text" placeholder="e.g. CTR-8841">
+      </div>
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">SERVICE LINE</div>
+        <input id="vendor-service" class="guide-field" type="text" placeholder="e.g. Nursing / Locum Tenens">
+      </div>
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">FULFILLMENT RATE</div>
+        <input id="vendor-fulfillment" class="guide-field" type="text" placeholder="e.g. 84.0%">
+      </div>
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">ACTIVE ALERTS</div>
+        <input id="vendor-alerts" class="guide-field" type="text" placeholder="e.g. 2 Breaches Active">
+      </div>
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">REVENUE AT RISK</div>
+        <input id="vendor-risk" class="guide-field" type="text" placeholder="e.g. $78K">
+      </div>
+    </div>
+    <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">CURRENT ISSUE / BREACH DESCRIPTION</div>
+    <textarea id="vendor-issue" class="guide-field" rows="2" placeholder="e.g. Vendor scheduling gap causing acute shift deficits. Failure to supply 2hr emergency backup personnel." style="resize:none;width:100%;margin-bottom:6px"></textarea>
+    <button onclick="applyVendorMission()" style="width:100%;padding:6px;background:var(--a);color:#000;font-family:'Courier New',monospace;font-size:9px;font-weight:700;border:none;border-radius:3px;cursor:pointer;letter-spacing:1px">⚡ SET MISSION FROM VENDOR DATA</button>
+    <button onclick="toggleIntake(false)" id="intake-collapse-btn" style="display:none;width:100%;margin-top:4px;padding:5px;background:transparent;border:1px solid var(--border);color:#556655;font-family:'Courier New',monospace;font-size:9px;border-radius:3px;cursor:pointer;letter-spacing:1px">▲ COLLAPSE INTAKE</button>
+  </div>
+  <button onclick="toggleIntake(true)" id="intake-expand-btn" style="display:none;width:100%;padding:5px;background:transparent;border:1px solid var(--a);color:var(--a);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px;margin-bottom:8px">✎ EDIT VENDOR DATA</button>
+  <hr class="guide-divider">
+
+  <div class="guide-obj">MISSION OBJECTIVES · VENDORS</div>
+  <div id="guide-meta" class="guide-meta"></div>
+
+  <!-- ── MISSION TASKS ── -->
+  <div id="guide-tasks" style="margin-bottom:10px">
+    <!-- completed task -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <div style="width:18px;height:18px;border-radius:50%;background:#003322;border:1px solid var(--g);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--g);font-weight:700;flex-shrink:0">✓</div>
+      <span style="color:#334433;font-size:10px;text-decoration:line-through">Network coverage holes mapped</span>
+    </div>
+    <div id="guide-vendor-nodes" style="font-size:9px;color:#223322;padding-left:26px;margin-bottom:8px">Credentialing Queue · Sourcing Pools · Performance Flags flagged</div>
+
+    <!-- active urgent task -->
+    <div id="guide-urgent-task" style="background:#1a0000;border:1px solid var(--r);border-radius:4px;padding:8px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <div style="width:18px;height:18px;border-radius:50%;background:var(--r);display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:700;flex-shrink:0">!</div>
+        <span style="color:var(--r);font-size:10px;font-weight:700">Vendor SLA Breach Escalation</span>
+      </div>
+      <div style="font-size:9px;color:#556655;padding-left:26px;margin-bottom:6px">2 Alerts Active · Fulfillment down to 84% · Logistics Link</div>
+      <div style="display:flex;align-items:center;gap:8px;background:#0a0000;border:1px solid #3a0000;border-radius:3px;padding:5px 8px;margin-bottom:6px">
+        <span style="font-size:16px;font-weight:700;color:var(--r)">2</span>
+        <span style="font-size:9px;color:#cc9999">active critical supplier breaches — immediate shift coverage gap remediation required</span>
+      </div>
+      <div style="font-size:9px;color:#99cc99;line-height:1.5;margin-bottom:6px">Enforce contract non-compliance clauses, deploy backup registry rosters, and balance downstream clinical line deficits.</div>
+      <button onclick="loadAI('Draft a formal vendor SLA breach notice for critical scheduling gaps and non-compliance loops. Demand immediate emergency backup dispatch within a 2-hour framework.')" style="width:100%;padding:6px;background:var(--r);color:#fff;font-family:'Courier New',monospace;font-size:9px;font-weight:700;border:none;border-radius:3px;cursor:pointer;letter-spacing:1px;margin-bottom:4px">⚡ GENERATE RECOVERY PLAN</button>
+      <button onclick="loadAI('Analyze third-party supplier logistics networks to build an internal backup pool and optimize fulfillment trends above the 95% line.')" style="width:100%;padding:6px;background:transparent;border:1px solid var(--g);color:var(--g);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px">SUPPLIER NETWORK OPTIMIZATION ↗</button>
+    </div>
+  </div>
+
+  <hr class="guide-divider">
+
+  <!-- ── STEPS ── -->
+  <div id="guide-step-label" class="guide-step-label">STEP 1 OF 2</div>
+
+  <div id="guide-step-1" class="guide-step-box active-step">
+    <div id="guide-step-1-text" class="guide-step-text">Vendor supply networks showing fulfillment drop to 84%. Two critical alerts active. Review third-party scheduling gaps and execute backup staffing contingencies.</div>
+    <div class="guide-step-actions">
+      <button class="guide-action-btn btn-explain" onclick="guideAction('explain',1); Q('Explain the current Vendors tab and supplier performance metrics for a presentation','hc-guide-btn','guide-output')">Explain Current Tab</button>
+      <button class="guide-action-btn btn-risk" onclick="guideAction('risk',1); Q('Find the single highest risk item across all vendors node data and explain why it matters','hc-guide-btn','guide-output')">Find Highest Risk</button>
+      <button class="guide-action-btn btn-talk" onclick="guideAction('talk',1); Q('Generate a presentation talk track for HC VENDORS COMMAND — office manager demo narrative','hc-guide-btn','guide-output')">Talk Track</button>
+    </div>
+    <button class="guide-submit-btn" onclick="submitVendorStep(1)">Submit Breach Response</button>
+    <div id="guide-res-1" class="guide-result"></div>
+  </div>
+
+  <div id="guide-step-2" class="guide-step-box" style="margin-top:8px">
+    <div id="guide-step-2-text" class="guide-step-text">Cross-node credential validation for incoming registry personnel. Verify onboarding tokens against institutional compliance guidelines.</div>
+    <div class="guide-step-actions">
+      <button class="guide-action-btn btn-explain" onclick="guideAction('explain',2); Q('Explain the current Vendors tab credentialing and onboarding workflows','hc-guide-btn','guide-output')">Explain Current Tab</button>
+      <button class="guide-action-btn btn-risk" onclick="guideAction('risk',2); Q('Find the single highest validation risk across pending vendor credential pools','hc-guide-btn','guide-output')">Find Highest Risk</button>
+      <button class="guide-action-btn btn-talk" onclick="guideAction('talk',2); Q('Generate an operations presentation talk track for supplier vetting loops','hc-guide-btn','guide-output')">Talk Track</button>
+    </div>
+    <button class="guide-submit-btn" onclick="submitVendorStep(2)">Submit Validation Response</button>
+    <div id="guide-res-2" class="guide-result"></div>
+  </div>
+
+  <hr class="guide-divider">
+
+  <!-- ── BNCA vs STRATEGIST GUIDANCE ── -->
+  <div style="margin-bottom:10px">
+    <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:#556655;margin-bottom:6px">◆ WHEN TO RUN WHAT</div>
+    <div style="background:#0a1400;border:1px solid #1e3a00;border-radius:3px;padding:7px 8px;margin-bottom:5px">
+      <div style="color:var(--g);font-size:9px;font-weight:700;margin-bottom:3px">⚡ RUN BNCA FIRST</div>
+      <div style="font-size:9px;color:#556655;line-height:1.5">Always start here. BNCA identifies vendor delivery exceptions, supply chain blocks, procurement risks, and contractual commitment failures within the vendors node.</div>
+    </div>
+    <div style="background:#00111a;border:1px solid #001e3a;border-radius:3px;padding:7px 8px">
+      <div style="color:var(--b);font-size:9px;font-weight:700;margin-bottom:3px">🔗 RELAY TO STRATEGIST AFTER</div>
+      <div style="font-size:9px;color:#556655;line-height:1.5">Escalate only when BNCA reveals systemic supplier defaults, massive cross-node vendor cost inflation, enterprise contract terminations, or legal non-compliance exposure.</div>
+    </div>
+  </div>
+
+  <div class="hc-guide-lbl" style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--g);margin-bottom:4px;">HEALTHCARE BNCA SYNTHESIS</div>
+  <div class="hc-guide-output" id="guide-output" style="font-size:11px;color:#88aa88;background:#050a05;padding:8px;border:1px solid #112211;border-radius:4px;margin-bottom:8px;min-height:30px;line-height:1.4;">&gt; Select an action above.</div>
+
+  <button onclick="Q('Run full BNCA for HC VENDORS COMMAND: top issue, why it matters, best next actions, confidence level','hc-guide-run','guide-output')" style="width:100%;padding:7px;background:#003322;border:1px solid var(--g);color:var(--g);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px;margin-bottom:5px">⚡ RUN NODE BNCA</button>
+
+  <hr class="guide-divider">
+
+  <!-- ── POST STEP 2 NEXT ACTIONS (hidden until both steps run) ── -->
+  <div id="guide-next-actions" style="display:none">
+    <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--g);margin-bottom:6px">◆ STEPS COMPLETE — NEXT ACTIONS</div>
+    <div style="font-size:9px;color:#556655;line-height:1.5;margin-bottom:8px">Both vendor supply line reviews completed. Choose your next escalation vector:</div>
+    <div style="display:flex;flex-direction:column;gap:5px">
+      <button onclick="Q('Run full BNCA for HC VENDORS COMMAND: combine staffing shortages and delivery compliance drops into a unified master scorecard','hc-guide-run','guide-output')" style="width:100%;padding:6px;background:#003322;border:1px solid var(--g);color:var(--g);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px">⚡ RE-RUN BNCA WITH FINDINGS</button>
+      <button onclick="window.open('/healthcare/hc-main-strategist/index.html','_blank')" style="width:100%;padding:6px;background:#001133;border:1px solid var(--b);color:var(--b);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px">🔗 ESCALATE TO STRATEGIST</button>
+      <button onclick="Q('Export vendor management session summary detailing supplier '+document.getElementById('vendor-name').placeholder+', fulfillment '+document.getElementById('vendor-fulfillment').placeholder+', active breaches '+document.getElementById('vendor-alerts').placeholder+': recovery maps and operational logs','hc-guide-run','guide-output')" style="width:100%;padding:6px;background:#221100;border:1px solid var(--a);color:var(--a);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px">📋 EXPORT SESSION SUMMARY</button>
+    </div>
+  </div>
+
 </div>
 
 <div class="footer">
