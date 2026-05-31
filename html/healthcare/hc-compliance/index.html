@@ -361,28 +361,132 @@ function guideAction(type, stepNum) {
   runQ(prompt, null, 'guide-res-' + stepNum);
 }
 
-// ── SUBMIT STEP RESPONSE SEQUENCE ───────────────────────────────────────
+<!-- ── FIX FOR COMPLIANCE: SCRIPT STACK ── -->
+<script>
+var currentTab = 'dash';
+var stepsCompleted = {1: false, 2: false};
+
+// Unified Tab Engine
+function switchTab(id, btn) {
+  currentTab = id;
+  document.querySelectorAll('.tab-panel').forEach(function(el) {
+    el.classList.remove('active');
+  });
+  var target = document.getElementById('tab-' + id);
+  if (target) target.classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(function(b) {
+    b.classList.remove('active');
+  });
+  if (btn) btn.classList.add('active');
+}
+
+// Intake Interactions
+function toggleIntake(show) {
+  var intake = document.getElementById('guide-intake');
+  var expBtn = document.getElementById('intake-expand-btn');
+  var colBtn = document.getElementById('intake-collapse-btn');
+  if (intake) intake.style.display = show ? 'block' : 'none';
+  if (expBtn) expBtn.style.display = show ? 'none' : 'block';
+  if (colBtn) colBtn.style.display = show ? 'block' : 'none';
+}
+
+function applyComplianceMission() {
+  var p = document.getElementById('intake-patient').value || 'Maria Santos';
+  var c = document.getElementById('intake-claim').value || '27447';
+  var pyr = document.getElementById('intake-payer').value || 'BlueCross BlueShield';
+  var m = document.getElementById('intake-metric').value || 'Audit Error Rate';
+  var val = document.getElementById('intake-current').value || '14.2%';
+  var risk = document.getElementById('intake-risk').value || '$42,000';
+  var txt = document.getElementById('intake-issue').value || 'Prior Authorization SLA breaches and CPT upcoding pattern.';
+  
+  var meta = document.getElementById('guide-meta');
+  if (meta) meta.innerHTML = 'Patient: <span>' + p + '</span> · Claim: <span>' + c + '</span> · Payer: <span>' + pyr + '</span>';
+  
+  var s1 = document.getElementById('guide-step-1-text');
+  var s2 = document.getElementById('guide-step-2-text');
+  if (s1) s1.textContent = txt + ' Identify the top 3 regulatory gaps, quantify statutory civil penalties, and determine executive oversight ownership.';
+  if (s2) s2.textContent = risk + ' liability exposed via operational omissions. Determine remediation strategy, step-by-step audit response sequence, and self-disclosure logic.';
+  
+  toggleIntake(false);
+}
+
+// Global Query Handler
+async function runQ(prompt, btnId, resId) {
+  if (!prompt || !prompt.trim()) return;
+  var btn = document.getElementById(btnId);
+  var res = document.getElementById(resId);
+  if (!res) return;
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+  res.style.whiteSpace = 'pre-wrap';
+  res.textContent = '> TSM NEURAL [' + new Date().toLocaleTimeString() + ']\n\nAnalyzing framework configurations...';
+  
+  try {
+    var r = await fetch('/api/hc/query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'TSM Neural Core',
+        max_tokens: 1000,
+        system: 'You are the HC COMPLIANCE COMMAND AI. Specializing in HIPAA, CMS, OIG, and structural audits. Format precisely: TOP ISSUE, WHY IT MATTERS, BEST NEXT ACTIONS (numbered), CONFIDENCE.',
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    var d = await r.json();
+    var reply = d.response || d.content || (d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content) || 'Analysis complete.';
+    res.textContent = '> TSM NEURAL [' + new Date().toLocaleTimeString() + ']\n\n' + reply.replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*(.+?)\*/g, '$1').replace(/#{1,3}\s*/g, '').trim();
+  } catch(e) {
+    res.textContent = '> ERROR: Operational connection to API lost.\n' + e.message;
+  }
+  if (btn) { btn.disabled = false; btn.textContent = '▶ ASK'; }
+}
+
+// Action button triggers
+function guideAction(type, stepNum) {
+  var p = document.getElementById('intake-patient').value || 'Maria Santos';
+  var c = document.getElementById('intake-claim').value || '27447';
+  var pyr = document.getElementById('intake-payer').value || 'BlueCross BlueShield';
+  var stepEl = document.getElementById('guide-step-' + stepNum + '-text');
+  var stepText = stepEl ? stepEl.textContent : '';
+  var res = document.getElementById('guide-res-' + stepNum);
+  
+  var prompt = '';
+  if (type === 'explain') prompt = 'Explain this compliance issue in plain language for a presenter: "' + stepText + '". Context: Patient ' + p + ', Case ' + c + ', Regulator ' + pyr + '. What it means, why it matters, and what action is required.';
+  else if (type === 'risk') prompt = 'Identify the highest penalty and compliance risk in: "' + stepText + '". Patient: ' + p + ', Case: ' + c + ', Regulator: ' + pyr + '. Quantify exposure, name the owner, state the deadline.';
+  else if (type === 'talk') prompt = 'Write a 60-second presenter talk track for this compliance scenario: "' + stepText + '". Patient: ' + p + ', Regulator: ' + pyr + '. Plain language, the problem, penalty exposure, and recommended next action.';
+  
+  if (res) { res.classList.add('visible'); res.innerHTML = '<span class="guide-spinner">⟳</span> Querying System Mesh...'; }
+  runQ(prompt, null, 'guide-res-' + stepNum);
+}
+
+// Submit Handlers
 function submitStep(stepNum) {
   var p = document.getElementById('intake-patient').value || 'Maria Santos';
   var c = document.getElementById('intake-claim').value || '27447';
   var pyr = document.getElementById('intake-payer').value || 'BlueCross BlueShield';
-  var stepText = document.getElementById('guide-step-' + stepNum + '-text').textContent;
+  var stepEl = document.getElementById('guide-step-' + stepNum + '-text');
+  var stepText = stepEl ? stepEl.textContent : '';
   var res = document.getElementById('guide-res-' + stepNum);
   
   var prompt = 'For this compliance step: "' + stepText + '" — Patient: ' + p + ', Case: ' + c + ', Regulator: ' + pyr + '. Provide complete resolution: correct standards, documentation requirements, corrective action plan, and submission/remediation instructions.';
   
   if (res) { res.classList.add('visible'); res.innerHTML = '<span class="guide-spinner">⟳</span> Validating Compliance Protocols...'; }
   
-  document.getElementById('guide-step-1').classList.toggle('active-step', stepNum === 2);
-  document.getElementById('guide-step-2').classList.toggle('active-step', stepNum === 1);
-  document.getElementById('guide-step-label').textContent = 'STEP ' + (stepNum === 1 ? '2' : '2') + ' OF 2';
+  var box1 = document.getElementById('guide-step-1');
+  var box2 = document.getElementById('guide-step-2');
+  var lbl = document.getElementById('guide-step-label');
+  
+  if (stepNum === 1) {
+    if (box1) box1.classList.remove('active-step');
+    if (box2) box2.classList.add('active-step');
+    if (lbl) lbl.textContent = 'STEP 2 OF 2';
+  }
   
   stepsCompleted[stepNum] = true;
   
   if (stepsCompleted[1] && stepsCompleted[2]) {
     var na = document.getElementById('guide-next-actions');
     if (na) na.style.display = 'block';
-    document.getElementById('guide-step-label').textContent = 'STEPS 1 & 2 COMPLETE';
+    if (lbl) lbl.textContent = 'STEPS 1 & 2 COMPLETE';
   }
   
   runQ(prompt, null, 'guide-res-' + stepNum);
@@ -407,6 +511,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<!-- ── CORE ARCHITECTURE OPERATIONAL MESH DRIVERS ── -->
 <script src="/shared/tsm-operational-mesh.js?v=mesh1"></script>
 <script src="/shared/tsm-relay-bus.js?v=relay2"></script>
 <script src="/shared/tsm-memory-engine.js?v=phase3"></script>
@@ -419,10 +524,8 @@ document.addEventListener('DOMContentLoaded', function() {
   document.addEventListener('click', function(e){
     const el = e.target.closest('[data-tsm-action]');
     if(!el) return;
-
     const action = el.getAttribute('data-tsm-action');
     const args = el.getAttribute('data-tsm-args');
-
     if(window.TSM && TSM.launcher && TSM.launcher.run){
       TSM.launcher.run(action, args);
     } else {

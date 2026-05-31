@@ -363,70 +363,336 @@ tr:hover td{background:#0f1f0f}
 </div>
 </main>
 
-<!-- HC NODE GUIDE -->
-<div class="hc-guide">
-  <div class="hc-guide-title">HC NODE GUIDE</div>
-  <div class="hc-guide-desc">Use this panel while presenting. It explains the current tab, runs BNCA, and creates a next-action summary.</div>
-  <button class="hc-guide-btn" onclick="runGuide('Explain the HC Grants Command dashboard and its key metrics in simple terms for a presentation')">Explain Current Tab</button>
-  <button class="hc-guide-btn" onclick="runGuide('Find the single highest risk item across all grants node data and explain why it matters')">Find Highest Risk</button>
-  <button class="hc-guide-btn" onclick="runGuide('Generate a presentation talk track for HC GRANTS COMMAND — leadership demo narrative')">Presentation Talk Track</button>
-  <button class="hc-guide-run" onclick="runGuide('Run full BNCA for HC GRANTS COMMAND: top issue, why it matters, best next actions, confidence level')">▶ Run Node BNCA</button>
-  <div class="hc-guide-lbl">GRANTS BNCA SYNTHESIS</div>
-  <div class="hc-guide-output" id="guide-output">> Select an action above.</div>
-</div>
+<!-- ═══════════════ HC NODE GUIDE PANEL (GRANTS) ═══════════════ -->
+<div id="hc-node-guide">
+  <div class="guide-hdr">HC NODE GUIDE</div>
+  <div class="guide-desc">Use this panel while presenting. Explains allocation targets, HRSA Drawdown status, UDS reporting deficits, SAMHSA FFR conditions, and audit exposures.</div>
+  <hr class="guide-divider">
 
-<div class="footer">
-  <div class="fn">🏆 GRANTS NODE &nbsp;·&nbsp; Ready — run analysis or relay to Strategist</div>
-  <div class="fbtns">
-    <button class="fbtn fbnca" onclick="fillAndRun('dash-inp','dash-btn','dash-res','Run a full BNCA for HC GRANTS COMMAND: top risks, compliance gaps, priority actions');switchTab('dash',document.querySelector('.nav-btn'))">⚡ RUN BNCA</button>
-    <button class="fbtn frelay" onclick="alert('Relay to Strategist — connect to HC Main Strategist node')">🔗 RELAY TO STRATEGIST</button>
+  <!-- GRANTS DATA INTAKE FORM -->
+  <div id="guide-intake" style="margin-bottom:10px">
+    <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--a);margin-bottom:6px">◆ SET GRANTS MISSION</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px">
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">GRANTEE PROGRAM</div>
+        <input id="intake-patient" class="guide-field" type="text" placeholder="Community Health Ctr">
+      </div>
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">GRANT ID / AWARD #</div>
+        <input id="intake-claim" class="guide-field" type="text" placeholder="H80CS12345">
+      </div>
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">FEDERAL AGENCY</div>
+        <input id="intake-payer" class="guide-field" type="text" placeholder="HRSA / BPHC">
+      </div>
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">REPORTING METRIC</div>
+        <input id="intake-metric" class="guide-field" type="text" placeholder="Drawdown Ratio">
+      </div>
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">CURRENT VALUE</div>
+        <input id="intake-current" class="guide-field" type="text" placeholder="64.8%">
+      </div>
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">FINANCIAL EXPOSURE</div>
+        <input id="intake-risk" class="guide-field" type="text" placeholder="$189,500">
+      </div>
+    </div>
+    <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">CRITICAL REPORTING GAP</div>
+    <textarea id="intake-issue" class="guide-field" rows="2" placeholder="HRSA Annual Progress Report (APR) deadline due in 14 days with missing Q4 metrics." style="resize:none;width:100%;margin-bottom:6px"></textarea>
+    <button onclick="applyGrantsMission()" style="width:100%;padding:6px;background:var(--a);color:#000;font-family:'Courier New',monospace;font-size:9px;font-weight:700;border:none;border-radius:3px;cursor:pointer;letter-spacing:1px">⚡ SET GRANTS MISSION</button>
+    <button onclick="toggleIntake(false)" id="intake-collapse-btn" style="display:none;width:100%;margin-top:4px;padding:5px;background:transparent;border:1px solid var(--border);color:#556655;font-family:'Courier New',monospace;font-size:9px;border-radius:3px;cursor:pointer;letter-spacing:1px">▲ COLLAPSE INTAKE</button>
+  </div>
+  <button onclick="toggleIntake(true)" id="intake-expand-btn" style="display:none;width:100%;padding:5px;background:transparent;border:1px solid var(--a);color:var(--a);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px;margin-bottom:8px">✎ EDIT GRANTS DATA</button>
+  <hr class="guide-divider">
+
+  <div class="guide-obj">MISSION OBJECTIVES · GRANTS CARE</div>
+  <div id="guide-meta" class="guide-meta">
+    Program: <span>Community Health Ctr</span> · Award: <span>H80CS12345</span> · Funder: <span>HRSA / BPHC</span>
+  </div>
+
+  <!-- ── ACTIVE GRANTS CRITICAL EXPOSURE ── -->
+  <div id="guide-tasks" style="margin-bottom:10px">
+    <div id="guide-urgent-task" style="background:#1a0e00;border:1px solid var(--a);border-radius:4px;padding:8px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <div style="width:18px;height:18px;border-radius:50%;background:var(--a);display:flex;align-items:center;justify-content:center;font-size:9px;color:#000;font-weight:700;flex-shrink:0">!</div>
+        <span style="color:var(--a);font-size:10px;font-weight:700">Federal Compliance Alert</span>
+      </div>
+      <div style="font-size:9px;color:#556655;padding-left:26px;margin-bottom:6px">Award H80CS12345 · Q4 UDS · HRSA · $189,500 At Risk</div>
+      <div style="display:flex;align-items:center;gap:8px;background:#0a0700;border:1px solid #3a2200;border-radius:3px;padding:5px 8px;margin-bottom:6px">
+        <span style="font-size:16px;font-weight:700;color:var(--a)">$189K</span>
+        <span style="font-size:9px;color:#cca37a">HRSA APR due in 14 days — data packages incomplete</span>
+      </div>
+      <div style="font-size:9px;color:#99cc99;line-height:1.5;margin-bottom:6px">Delayed submission risks grant withholding conditions and single-audit operational review flags.</div>
+      <button onclick="runQ('Generate complete grants narrative including HRSA APR compliance gaps, missing Q4 UDS documentation, unspent funds balance remediation, program owners, and compliance confidence metric', 'dash-btn', 'dash-res')" style="width:100%;padding:6px;background:var(--a);color:#000;font-family:'Courier New',monospace;font-size:9px;font-weight:700;border:none;border-radius:3px;cursor:pointer;letter-spacing:1px;margin-bottom:4px">⚡ BUILD GRANT RECOVERY PLAN</button>
+    </div>
+  </div>
+
+  <hr class="guide-divider">
+
+  <!-- ── STEPS ── -->
+  <div id="guide-step-label" class="guide-step-label">STEP 1 OF 2</div>
+
+  <!-- STEP 1 -->
+  <div id="guide-step-1" class="guide-step-box active-step">
+    <div id="guide-step-1-text" class="guide-step-text">HRSA APR submission data package is incomplete with 14 days remaining. Identify missing baseline programmatic data indicators, isolate unmapped sub-award fields, and allocate ownership lanes.</div>
+    <div class="guide-step-actions">
+      <button class="guide-action-btn btn-explain" onclick="guideAction('explain',1)">Explain Tab</button>
+      <button class="guide-action-btn btn-risk" onclick="guideAction('risk',1)">Find Top Risk</button>
+      <button class="guide-action-btn btn-talk" onclick="guideAction('talk',1)">Talk Track</button>
+    </div>
+    <button class="guide-submit-btn" onclick="submitStep(1)">Submit Step Response</button>
+    <div id="guide-res-1" class="guide-result"></div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div id="guide-step-2" class="guide-step-box" style="margin-top:8px">
+    <div id="guide-step-2-text" class="guide-step-text">$189,500 allocation remains unliquidated. Define a remediation pathway to reconcile cash outlays, construct PMS draw schedule compliance logic, and establish target timelines.</div>
+    <div class="guide-step-actions">
+      <button class="guide-action-btn btn-explain" onclick="guideAction('explain',2)">Explain Tab</button>
+      <button class="guide-action-btn btn-risk" onclick="guideAction('risk',2)">Find Top Risk</button>
+      <button class="guide-action-btn btn-talk" onclick="guideAction('talk',2)">Talk Track</button>
+    </div>
+    <button class="guide-submit-btn" onclick="submitStep(2)">Submit Step Response</button>
+    <div id="guide-res-2" class="guide-result"></div>
+  </div>
+
+  <hr class="guide-divider">
+
+  <!-- ── RUN ARCHITECTURE RULES ── -->
+  <div style="margin-bottom:10px">
+    <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:#556655;margin-bottom:6px">◆ ARTIFACT DISPATCH DEPLOYMENT</div>
+    <div style="background:#0a1400;border:1px solid #1e3a00;border-radius:3px;padding:7px 8px;margin-bottom:5px">
+      <div style="color:var(--g);font-size:9px;font-weight:700;margin-bottom:3px">⚡ INITIATE NODE BNCA FIRST</div>
+      <div style="font-size:9px;color:#556655;line-height:1.5">Isolate grant constraints inside this workflow before attempting cross-app synthesis. Pinpoints direct PMS drawdown issues.</div>
+    </div>
+    <div style="background:#00111a;border:1px solid #001e3a;border-radius:3px;padding:7px 8px">
+      <div style="color:var(--b);font-size:9px;font-weight:700;margin-bottom:3px">🔗 ESCALATE SYSTEM MATRICES NEXT</div>
+      <div style="font-size:9px;color:#556655;line-height:1.5">Relay to Main Strategist only when allocations overlap into Operations bottlenecks or Clinic staffing dependencies.</div>
+    </div>
+  </div>
+
+  <button onclick="runQ('Run full BNCA for HC GRANTS COMMAND: primary federal award risk matrix, drawdown constraints, statutory reporting gaps, and validation ranking', 'dash-btn', 'dash-res')" style="width:100%;padding:7px;background:#003322;border:1px solid var(--g);color:var(--g);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px;margin-bottom:5px">⚡ RUN NODE BNCA</button>
+
+  <hr class="guide-divider">
+
+  <!-- ── DYNAMIC STEPS SUMMARY DEPLOYMENT ── -->
+  <div id="guide-next-actions" style="display:none">
+    <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--g);margin-bottom:6px">◆ STEPS VALIDATED — EXECUTION PATH</div>
+    <div style="font-size:9px;color:#556655;line-height:1.5;margin-bottom:8px">All workflow targets recorded. Select the strategic alignment container to offload synthesis:</div>
+    <div style="display:flex;flex-direction:column;gap:5px">
+      <button onclick="runQ('Run full BNCA for HC GRANTS COMMAND: integrate historical step responses into unified single audit compliance plan, operational timeline, and confidence indexing', 'dash-btn', 'dash-res')" style="width:100%;padding:6px;background:#003322;border:1px solid var(--g);color:var(--g);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px">⚡ INTEGRATE FINDINGS INTO BNCA</button>
+      <button onclick="alert('Routing synchronized data profile to Core Strategist Workbench...')" style="width:100%;padding:6px;background:#001133;border:1px solid var(--b);color:var(--b);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px">🔗 RELAY TO STRATEGIST</button>
+      <button onclick="runQ('Export strategic grants profile evaluation for recipient program '+document.getElementById('intake-patient').value+', award '+document.getElementById('intake-claim').value+', funder agency '+document.getElementById('intake-payer').value+', unspent exposure target '+document.getElementById('intake-risk').value+': comprehensive audit mitigation plan', 'dash-btn', 'dash-res')" style="width:100%;padding:6px;background:#221100;border:1px solid var(--a);color:var(--a);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px">📋 GENERATE COMPREHENSIVE BRIEF</button>
+    </div>
   </div>
 </div>
 
+<!-- ── FOOTER FRAME BAR BUTTON CODES ── -->
+<div class="footer">
+  <div class="fn">🏆 GRANTS NODE &nbsp;·&nbsp; Ready — run analysis or relay to Strategist</div>
+  <div class="fbtns">
+    <button class="fbtn fbnca" onclick="fillAndRun('dash-inp','dash-btn','dash-res','Run a full BNCA for HC GRANTS COMMAND: top risks, federal compliance gaps, and award stabilization priorities');switchTab('dash',document.querySelector('.nav-btn'))">⚡ RUN BNCA</button>
+    <button class="fbtn frelay" onclick="runPreset('Execute multi-node systemic risk evaluation crossing federal grant unliquidated balances with operational clinical capacity benchmarks')">🔗 RELAY TO STRATEGIST</button>
+  </div>
+</div>
+
+<!-- ── COMPLIANT CORE GUIDE STYLES CONTAINER ── -->
+<style id="guide-styles-grants">
+#hc-node-guide{position:fixed;top:110px;right:0;width:310px;background:#0b120b;border-left:1px solid var(--border);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:14px;z-index:50;border-radius:6px 0 0 6px;font-size:11px;font-family:'Courier New',monospace;max-height:calc(100vh - 180px);overflow-y:auto}
+.guide-hdr{color:var(--g);font-size:11px;font-weight:700;letter-spacing:2px;margin-bottom:6px}
+.guide-desc{font-size:10px;color:#556655;margin-bottom:10px;line-height:1.5}
+.guide-divider{border:none;border-top:1px solid var(--border);margin:10px 0}
+.guide-obj{color:var(--g);font-size:10px;font-weight:700;letter-spacing:2px;margin-bottom:6px}
+.guide-meta{font-size:10px;color:#99cc99;margin-bottom:10px}
+.guide-meta span{color:var(--g)}
+.guide-step-label{font-size:9px;letter-spacing:2px;color:#556655;margin-bottom:6px}
+.guide-step-box{background:#0f1e0f;border:1px solid #1e3a1e;border-radius:4px;padding:10px;margin-bottom:8px}
+.guide-step-box.active-step{border-color:var(--a)}
+.guide-step-text{font-size:10px;color:#ccddcc;line-height:1.6;margin-bottom:8px}
+.guide-step-actions{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
+.guide-action-btn{padding:4px 8px;font-family:inherit;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px;transition:all .2s}
+.btn-explain{background:#001122;border:1px solid var(--b);color:var(--b)}
+.btn-risk{background:#220011;border:1px solid var(--r);color:var(--r)}
+.btn-talk{background:#112200;border:1px solid var(--g);color:var(--g)}
+.guide-submit-btn{width:100%;padding:6px;background:#003322;border:1px solid var(--g);color:var(--g);font-family:inherit;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px;margin-bottom:6px}
+.guide-result{background:#0a0f0a;border:1px solid var(--border);border-radius:3px;padding:8px;font-size:10px;color:#99cc99;min-height:30px;white-space:pre-wrap;line-height:1.5;margin-top:6px;display:none}
+.guide-result.visible{display:block}
+.guide-field{width:100%;background:#0a0f0a;border:1px solid var(--border);color:var(--g);font-family:inherit;font-size:10px;padding:5px 8px;border-radius:3px;margin-bottom:4px}
+.guide-field:focus{outline:none;border-color:var(--g)}
+.guide-spinner{display:inline-block;animation:spin 1s linear infinite}
+</style>
+
 <script>
+var currentTab = 'dash';
+var stepsCompleted = {1: false, 2: false};
+
+// Unified Tab Controls
 function switchTab(id, btn) {
-  document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
-  var t = document.getElementById('tab-' + id);
-  if (t) t.classList.add('active');
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  currentTab = id;
+  document.querySelectorAll('.tab-panel').forEach(function(el) {
+    el.classList.remove('active');
+  });
+  var target = document.getElementById('tab-' + id);
+  if (target) target.classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(function(b) {
+    b.classList.remove('active');
+  });
   if (btn) btn.classList.add('active');
 }
+
+// Intake Logic 
+function toggleIntake(show) {
+  var intake = document.getElementById('guide-intake');
+  var expBtn = document.getElementById('intake-expand-btn');
+  var colBtn = document.getElementById('intake-collapse-btn');
+  if (intake) intake.style.display = show ? 'block' : 'none';
+  if (expBtn) expBtn.style.display = show ? 'none' : 'block';
+  if (colBtn) colBtn.style.display = show ? 'block' : 'none';
+}
+
+function applyGrantsMission() {
+  var p = document.getElementById('intake-patient').value || 'Community Health Ctr';
+  var c = document.getElementById('intake-claim').value || 'H80CS12345';
+  var pyr = document.getElementById('intake-payer').value || 'HRSA / BPHC';
+  var m = document.getElementById('intake-metric').value || 'Drawdown Ratio';
+  var val = document.getElementById('intake-current').value || '64.8%';
+  var risk = document.getElementById('intake-risk').value || '$189,500';
+  var txt = document.getElementById('intake-issue').value || 'HRSA Annual Progress Report (APR) deadline due in 14 days.';
+  
+  var meta = document.getElementById('guide-meta');
+  if (meta) meta.innerHTML = 'Program: <span>' + p + '</span> · Award: <span>' + c + '</span> · Funder: <span>' + pyr + '</span>';
+  
+  var s1 = document.getElementById('guide-step-1-text');
+  var s2 = document.getElementById('guide-step-2-text');
+  if (s1) s1.textContent = txt + ' Identify missing baseline programmatic data indicators, isolate unmapped sub-award fields, and allocate ownership lanes.';
+  if (s2) s2.textContent = risk + ' allocation remains unliquidated. Define a remediation pathway to reconcile cash outlays, construct PMS draw schedule compliance logic, and establish target timelines.';
+  
+  toggleIntake(false);
+}
+
+// Global Routing Command Engine
 async function runQ(prompt, btnId, resId) {
   if (!prompt || !prompt.trim()) return;
-  var btn = document.getElementById(btnId), res = document.getElementById(resId);
+  var btn = document.getElementById(btnId);
+  var res = document.getElementById(resId);
   if (!res) return;
   if (btn) { btn.disabled = true; btn.textContent = '...'; }
-  res.textContent = '> TSM NEURAL [' + new Date().toLocaleTimeString() + ']\n\nAnalyzing...';
+  res.style.whiteSpace = 'pre-wrap';
+  res.textContent = '> TSM NEURAL [' + new Date().toLocaleTimeString() + ']\n\nProcessing award vectors...';
+  
   try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000,
-        system: 'You are the HC GRANTS COMMAND AI — a healthcare grants intelligence system. Provide concise, actionable analysis. Format: TOP ISSUE, WHY IT MATTERS, BEST NEXT ACTIONS (numbered), CONFIDENCE.',
-        messages: [{ role: 'user', content: prompt }] })
+    var r = await fetch('/api/hc/query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'TSM Neural Core',
+        max_tokens: 1000,
+        system: 'You are the HC GRANTS COMMAND AI. Specializing in federal grant governance, HRSA UDS, SAMHSA criteria, DHHS rules, and programmatic execution. Format output precisely: TOP ISSUE, WHY IT MATTERS, BEST NEXT ACTIONS (numbered), CONFIDENCE.',
+        messages: [{ role: 'user', content: prompt }]
+      })
     });
-    const d = await r.json();
-    res.textContent = '> TSM NEURAL [' + new Date().toLocaleTimeString() + ']\n\n' + (d.content||[]).map(c=>c.text||'').join('\n');
-  } catch(e) { res.textContent = '> ERROR: ' + e.message; }
+    var d = await r.json();
+    var reply = d.response || d.content || (d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content) || 'Analysis complete.';
+    res.textContent = '> TSM NEURAL [' + new Date().toLocaleTimeString() + ']\n\n' + reply.replace(/\*\*(.+?)\*\"/g, '$1').replace(/\*(.+?)\*/g, '$1').replace(/#{1,3}\s*/g, '').trim();
+  } catch(e) {
+    res.textContent = '> ERROR: Operational connection to API lost.\n' + e.message;
+  }
   if (btn) { btn.disabled = false; btn.textContent = '▶ ASK'; }
 }
-function fillAndRun(i,b,r,p){var el=document.getElementById(i);if(el)el.value=p;runQ(p,b,r);}
-function runPreset(p){switchTab('intel',document.querySelectorAll('.nav-btn')[5]);var i=document.getElementById('intel-inp');if(i)i.value=p;runQ(p,'intel-btn','intel-res');}
-async function runGuide(prompt) {
-  var out = document.getElementById('guide-output');
-  if (!out) return;
-  out.textContent = 'Processing...';
-  try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 600,
-        system: 'You are the HC GRANTS COMMAND Guide. Provide concise BNCA output: TOP ISSUE, WHY IT MATTERS, BEST NEXT ACTIONS (numbered), CONFIDENCE. Under 200 words.',
-        messages: [{ role: 'user', content: prompt }] })
-    });
-    const d = await r.json();
-    out.textContent = (d.content||[]).map(c=>c.text||'').join('\n') || 'Analysis complete.';
-  } catch(e) { out.textContent = 'TOP ISSUE\nHRSA APR due in 14 days — data incomplete.\n\nBEST NEXT ACTIONS\n1. Complete Q4 UDS data entry.\n2. Begin 340B audit prep immediately.\n3. Submit overdue SAMHSA FFR.\n\nCONFIDENCE\n93%'; }
+
+// Guide Subsequence Directives
+function guideAction(type, stepNum) {
+  var p = document.getElementById('intake-patient').value || 'Community Health Ctr';
+  var c = document.getElementById('intake-claim').value || 'H80CS12345';
+  var pyr = document.getElementById('intake-payer').value || 'HRSA / BPHC';
+  var stepEl = document.getElementById('guide-step-' + stepNum + '-text');
+  var stepText = stepEl ? stepEl.textContent : '';
+  var res = document.getElementById('guide-res-' + stepNum);
+  
+  var prompt = '';
+  if (type === 'explain') prompt = 'Explain this grant performance metric in simple language for leadership presentation: "' + stepText + '". Program: ' + p + ', Award: ' + c + ', Funder: ' + pyr + '. Explain requirements and necessary alignments.';
+  else if (type === 'risk') prompt = 'Identify the highest regulatory audit and clawback risk in statement: "' + stepText + '". Program: ' + p + ', Award: ' + c + '. Quantify exposure, track compliance paths, and assign clear deadlines.';
+  else if (type === 'talk') prompt = 'Write a crisp 60-second talk track for executive updates covering grant step: "' + stepText + '". Program: ' + p + ', Agency: ' + pyr + '. Outline risk exposure directly and conclude with actionable tracking paths.';
+  
+  if (res) { res.classList.add('visible'); res.innerHTML = '<span class="guide-spinner">⟳</span> Querying System Mesh...'; }
+  runQ(prompt, null, 'guide-res-' + stepNum);
 }
-document.addEventListener('DOMContentLoaded', ()=>switchTab('dash',document.querySelector('.nav-btn')));
+
+// Step Submission Validations
+function submitStep(stepNum) {
+  var p = document.getElementById('intake-patient').value || 'Community Health Ctr';
+  var c = document.getElementById('intake-claim').value || 'H80CS12345';
+  var pyr = document.getElementById('intake-payer').value || 'HRSA / BPHC';
+  var stepEl = document.getElementById('guide-step-' + stepNum + '-text');
+  var stepText = stepEl ? stepEl.textContent : '';
+  var res = document.getElementById('guide-res-' + stepNum);
+  
+  var prompt = 'For this specific grants management target: "' + stepText + '" — Program: ' + p + ', Award: ' + c + ', Agency: ' + pyr + '. Provide immediate, complete alignment guidance: federal criteria, internal review logs, validation controls, and execution paths.';
+  
+  if (res) { res.classList.add('visible'); res.innerHTML = '<span class="guide-spinner">⟳</span> Securing Grant Reconciliations...'; }
+  
+  var box1 = document.getElementById('guide-step-1');
+  var box2 = document.getElementById('guide-step-2');
+  var lbl = document.getElementById('guide-step-label');
+  
+  if (stepNum === 1) {
+    if (box1) box1.classList.remove('active-step');
+    if (box2) box2.classList.add('active-step');
+    if (lbl) lbl.textContent = 'STEP 2 OF 2';
+  }
+  
+  stepsCompleted[stepNum] = true;
+  
+  if (stepsCompleted[1] && stepsCompleted[2]) {
+    var na = document.getElementById('guide-next-actions');
+    if (na) na.style.display = 'block';
+    if (lbl) lbl.textContent = 'STEPS 1 & 2 COMPLETE';
+  }
+  
+  runQ(prompt, null, 'guide-res-' + stepNum);
+}
+
+function fillAndRun(inpId, btnId, resId, prompt) {
+  var inp = document.getElementById(inpId);
+  if (inp) inp.value = prompt;
+  runQ(prompt, btnId, resId);
+}
+
+function runPreset(prompt) {
+  switchTab('intel', document.querySelectorAll('.nav-btn')[5]);
+  var inp = document.getElementById('intel-inp');
+  if (inp) inp.value = prompt;
+  runQ(prompt, 'intel-btn', 'intel-res');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  switchTab('dash', document.querySelector('.nav-btn'));
+  toggleIntake(false);
+});
+</script>
+
+<!-- ── CORE ARCHITECTURE OPERATIONAL MESH DRIVERS ── -->
+<script src="/shared/tsm-operational-mesh.js?v=mesh1"></script>
+<script src="/shared/tsm-relay-bus.js?v=relay2"></script>
+<script src="/shared/tsm-memory-engine.js?v=phase3"></script>
+<script src="/shared/tsm-global-command.js?v=phase4"></script>
+<script src="/shared/tsm-sector-intelligence.js?v=phase5si"></script>
+<script src="/shared/tsm-autonomous-execution.js?v=phase5"></script>
+
+<script>
+(function(){
+  document.addEventListener('click', function(e){
+    const el = e.target.closest('[data-tsm-action]');
+    if(!el) return;
+    const action = el.getAttribute('data-tsm-action');
+    const args = el.getAttribute('data-tsm-args');
+    if(window.TSM && TSM.launcher && TSM.launcher.run){
+      TSM.launcher.run(action, args);
+    } else {
+      console.warn('[TSM] launcher missing:', action, args);
+    }
+  });
 })();
 </script>
 <script src="/healthcare/tsm-launcher.js"></script>
