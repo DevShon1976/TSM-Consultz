@@ -146,6 +146,9 @@ body{background:#060c06;color:#d4f0d4;font-family:'Courier New',monospace;font-s
 .bp{background:#110022;color:var(--p);border:1px solid var(--p);padding:1px 6px;border-radius:8px;font-size:7px;font-weight:700}
 
 .err-box{background:#1a0000;border:1px solid var(--r);border-radius:4px;padding:9px;font-size:9px;color:#ff9999;margin-top:7px;display:none;line-height:1.6}
+/* SAMPLE ANSWER LOAD BUTTON */
+#sa-btn-row button{cursor:pointer;transition:opacity .15s}
+#sa-btn-row button:hover{opacity:.8}
 .divider{border:none;border-top:1px solid var(--border);margin:8px 0}
 .rp-sec{padding:0 12px 8px}
 .rp-sec-lbl{font-size:7px;color:var(--muted);letter-spacing:2px;margin-bottom:5px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
@@ -501,11 +504,41 @@ const ROLES = {
     focus:'KPI trends, variance analysis, root cause, business impact',
     hints:['variance in denial rate identified at CO-4 stage','benchmark gap: 18.4% vs 15% CMS threshold','operational inefficiency in modifier compliance workflow','performance metrics indicate systemic coding failure','workflow disruption in submission pipeline — modifier -25 overuse'],
     questions:[
-      {q:'A hospital sees denial rate jump from 15% to 22.4% this quarter. Walk me through your full analysis.',appLinked:true,appNote:'Mirrors the denial spike scenario in TSM Career OS'},
-      {q:'Days in AR increased from 34 to 52 days. What is your diagnosis and action plan?',appLinked:true,appNote:'Mirrors the AR aging scenario in this simulator'},
+      {q:'A hospital sees denial rate jump from 15% to 22.4% this quarter. Walk me through your full analysis.',
+       appLinked:true,appNote:'Mirrors the denial spike scenario in TSM Career OS',
+       sampleAnswer:`OBSERVE: Denial rate moved from 15% to 22.4% — a 7.4-point increase in one quarter. I pull the trend by week to determine if this is a sudden spike (rule change or system event) or gradual drift (training or workflow issue). In TSM Career OS I built this exact scenario: the spike concentrates in a single week, which tells me it is event-driven, not chronic.
+
+DIAGNOSE: I sort by denial code, payer, and CPT. The top driver is CO-4 modifier conflict — 47 claims with missing or incorrect modifier -25 on same-day E&M plus procedure. Aetna and Medicare account for 78% of new denials, confirming a payer-specific pattern. Secondary: ICD-10 specificity gaps on 14 claims where M54.5 (unspecified) was billed instead of M54.51 (vertebrogenic, specific). Root cause: EHR template auto-applying modifier -25 without a clinical validation trigger.
+
+IMPACT: At 1,256 claims/month with 22.4% denied, approximately 282 claims are non-payment. At $300 average reimbursement, that is $84,600 in monthly revenue at risk. Additionally, 1 claim (CLM-0334) has a CO-29 timely filing deadline in 48 hours — $3,800 write-off if not acted on immediately.
+
+SOLVE: Three-tier response: (1) file CLM-0334 appeal now, (2) batch-correct modifier on all 47 CO-4 claims and resubmit within filing window, (3) build a pre-submission modifier validation edit in the clearinghouse to prevent recurrence.
+
+CONNECT: This is the exact workflow I practice daily in TSM Career OS. I can run this analysis on day one.`},
+      {q:'Days in AR increased from 34 to 52 days. What is your diagnosis and action plan?',
+       appLinked:true,appNote:'Mirrors the AR aging scenario in this simulator',
+       sampleAnswer:`OBSERVE: Days in AR moved from 34 to 52 — an 18-day increase above baseline. I pull the AR aging report and sort by: days outstanding, payer, claim status, and dollar volume. The TSM Career OS AR scenario shows $31K aged greater than 90 days and $18K in ERA posting backlog — both are compounding the AR figure independently.
+
+DIAGNOSE: Two separate drivers. First, payer delay: UHC averaging 47 days to pay vs a 30-day contracted SLA. This is a payer performance issue, not a billing error. Second, ERA posting backlog: 3 days of unposted remittances means $18K appears unpaid in the AR when it has already been adjudicated. These require different responses.
+
+IMPACT: At current trajectory, claims aged greater than 90 days risk write-off. $31K is already at that threshold. The 18-day AR gap delays cash flow, increases administrative burden, and may trigger payer performance review if denial rate is also elevated.
+
+SOLVE: Immediate: clear the ERA posting backlog today — $18K recovers from the AR report without any new payments. Short-term: file a payer performance dispute with UHC citing the 30-day SLA contract language. Structural: build an AR aging alert that flags any claim approaching 60 days for proactive follow-up.
+
+CONNECT: I modeled this exact scenario in TSM Career OS to understand that AR inflation often has multiple root causes that require separate interventions.`},
       {q:'You have 15 minutes before a leadership presentation. Denial rate data just changed. How do you handle it?'},
       {q:'How do you communicate a 3.4pt KPI gap to a non-technical clinic director?'},
-      {q:'You built a simulator to train for healthcare ops roles. How does that demonstrate BA competency?',appLinked:true,appNote:'Direct question about building TSM Career OS'},
+      {q:'You built a simulator to train for healthcare ops roles. How does that demonstrate BA competency?',
+       appLinked:true,appNote:'Direct question about building TSM Career OS',
+       sampleAnswer:`Building TSM Career OS demonstrates Business Analyst competency at three levels.
+
+First, requirements definition. A BA's core skill is translating a business problem into a structured solution. I identified the problem — I had no hands-on RCM experience — and defined the requirements: it needed to simulate real denial scenarios with accurate KPIs, support multiple analyst perspectives, and generate actionable output the way a real analyst would present it to leadership. That is requirements gathering applied to my own skill gap.
+
+Second, data and KPI fluency. The app tracks denial rate, days in AR, clean claim rate, appeal win rate, and claim volume — the exact metrics a BA monitors in a healthcare ops role. I had to understand what each metric measures, what the benchmarks are (15% denial threshold, 34-day AR baseline, 97% clean claim target), and how they interact. You cannot build accurate KPI dashboards without actually understanding the domain.
+
+Third, stakeholder communication. The role-lens system — where the same scenario generates different outputs for a BA, RCM Analyst, or Customer Success Manager — directly mirrors the BA skill of translating the same data for different audiences. The BA lens produces an executive summary. The RCM lens produces a denial code breakdown. That distinction was a deliberate design decision that required understanding what each stakeholder actually needs.
+
+CONNECT: I did not build a demo. I built a training system I use every day. That is the BA mindset: identify the gap, define the solution, build it, and measure whether it works.`},
     ],
     fw:['OBSERVE: Pull denial rate trend, compare to prior 4 quarters, note timing of change','DIAGNOSE: Identify top 3 denial codes. Which payers? Which CPT codes? Common thread?','IMPACT: 22.4% denial on 1,256 claims = ~282 denied. At avg $300 = $84.6K revenue at risk','SOLVE: Prioritize top denial code. Build 30-day reduction plan. Assign owner per code','REPORT: Executive summary with before/after metrics and 90-day recovery forecast']
   },
@@ -515,10 +548,44 @@ const ROLES = {
     focus:'denial codes, claim lifecycle, modifier errors, timely filing, AR recovery',
     hints:['claim lifecycle integrity failure at coding stage','denial pattern: CO-4 modifier conflict — modifier -25 missing on same-day E&M','timely filing exposure: CLM-0334 approaching 90-day limit','payer-specific edit required for Aetna modifier rules','modifier compliance gap — -25 applied without documented separate E&M'],
     questions:[
-      {q:'CO-4 modifier denials increased 40% on Medicare claims this month. Walk through your RCM analysis and recovery plan.',appLinked:true,appNote:'Mirrors TSM Career OS denial spike scenario'},
-      {q:'CLM-0334 has a CO-29 timely filing denial with 48 hours left. What exactly do you do, step by step?',appLinked:true,appNote:'Direct simulation of the timely filing scenario in this app'},
+      {q:'CO-4 modifier denials increased 40% on Medicare claims this month. Walk through your RCM analysis and recovery plan.',
+       appLinked:true,appNote:'Mirrors TSM Career OS denial spike scenario',
+       sampleAnswer:`OBSERVE: CO-4 denials up 40% on Medicare specifically — this is a payer-specific pattern, not a system-wide issue. I pull all CO-4 denials for the month, sort by CPT code, provider, and date of service to find the common thread. In TSM Career OS I built this exact scenario: 47 claims, concentrated in a single week, with modifier -25 usage up 40% — pointing to either a payer rule change or an EHR template update.
+
+DIAGNOSE: CO-4 is a modifier conflict — the billed modifier does not match the procedure code's requirements. Most commonly: same-day E&M plus a procedure billed without modifier -25 to document a separate, distinct evaluation and management service. Medicare requires documented medical necessity for the -25 modifier — it cannot be applied automatically by an EHR template without clinical validation. I check: did Medicare update their modifier policy? Did the EHR push an update that changed default modifier behavior?
+
+IMPACT: CO-4 = 100% non-payment until corrected. At 47 claims with an average reimbursement of $180, that is $8,460 in recoverable revenue — but only if corrected and resubmitted within the timely filing window. Every day of delay shrinks that recovery window.
+
+SOLVE: Pull all open CO-4 claims. Verify modifier documentation for each. Correct and batch-resubmit within filing window. Add a pre-submission edit rule: flag any same-day E&M plus procedure combination that does not have documented -25 justification before it reaches the clearinghouse.
+
+CONNECT: I simulated this exact recovery workflow in TSM Career OS so I can execute it immediately in a real environment.`},
+      {q:'CLM-0334 has a CO-29 timely filing denial with 48 hours left. What exactly do you do, step by step?',
+       appLinked:true,appNote:'Direct simulation of the timely filing scenario in this app',
+       sampleAnswer:`This is a Priority 1 action — $3,800 write-off in 48 hours if I do not move immediately. Here is exactly what I do:
+
+Step 1: Confirm the timely filing window. CLM-0334 was originally submitted 91 days ago. UHC's standard timely filing limit is 90 days from date of service, but I verify the specific contracted limit in the provider agreement — some payers allow up to 180 days. If we are within any extended window, we have more time than the CO-29 suggests.
+
+Step 2: Pull the original submission proof. I locate the clearinghouse transmission report showing the original claim was submitted on time. UHC's appeal portal requires a tracking number and timestamp as proof of timely filing. Without this, the appeal fails regardless of clinical merit.
+
+Step 3: File the CO-29 appeal through the UHC portal. I upload the original submission proof, include the claim number (CLM-0334), CPT code (93454), and dollar amount ($3,800). I document the appeal submission with a screenshot and timestamp.
+
+Step 4: Flag the 5 additional claims approaching the timely filing window in the next 7 days — $7,200 at risk. I set alerts for each and begin the same process proactively.
+
+Step 5: Root cause the why. CO-29 means the original claim either was not submitted or was not tracked. I identify which and add a filing-date alert to every open claim at 60 days.
+
+CONNECT: I built this exact 48-hour scenario into TSM Career OS because timely filing deadlines are the most time-sensitive and irreversible failure in RCM.`},
       {q:'CPT 99215 upcoding pattern flagged across 23 claims. How do you handle this without triggering a compliance crisis?'},
-      {q:'You built a claim lifecycle simulator. How did building it deepen your RCM knowledge?',appLinked:true,appNote:'Direct question about TSM Career OS development'},
+      {q:'You built a claim lifecycle simulator. How did building it deepen your RCM knowledge?',
+       appLinked:true,appNote:'Direct question about TSM Career OS development',
+       sampleAnswer:`Building the claim lifecycle logic in TSM Career OS required me to understand RCM at the execution level, not just the conceptual level.
+
+To build the timely filing scenario, I had to know the exact CO-29 denial code, understand that it fires at 90 days from date of service, understand that the appeal requires proof of original submission — not just a corrected claim — and understand that different payers have different timely filing windows in their provider agreements. I could not fake that. The scenario had to be accurate enough to use for real prep.
+
+To build the modifier conflict scenario, I had to understand why CO-4 fires specifically when modifier -25 is missing on a same-day E&M plus procedure combination, and why that is different from a CO-11 bundling denial. Those are distinct adjudication rules that require knowing both the CPT modifier guidelines and the payer's specific edit logic.
+
+The KPI dashboard forced me to understand the relationships between metrics: why a 94% clean claim rate and an 18.4% denial rate can coexist — because the clearinghouse passes claims the payer still rejects, meaning the pre-submission edit rules are incomplete.
+
+CONNECT: I did not build a simulation with placeholder data. I built one with accurate denial codes, realistic KPI benchmarks, and real payer-specific logic — because that is the only version that actually prepares you for the job.`},
       {q:'AR aging just crossed 60 days. You have 3 staff members. How do you prioritize the work queue?'},
     ],
     fw:['OBSERVE: Pull all CO-4 denials, sort by payer, CPT code, provider, and date range','DIAGNOSE: CO-4 = modifier conflict. Which modifier missing? Same-day E&M + procedure without -25?','IMPACT: Each CO-4 = 100% non-payment until corrected. Calculate total $ exposure across all open claims','SOLVE: Correct modifier on all open claims. Resubmit within timely filing window. Add pre-submission edit','REPORT: Denial root cause report + corrective action plan + resubmission timeline + prevention rule']
@@ -543,10 +610,40 @@ const ROLES = {
     focus:'system setup, requirements, client onboarding, go-live readiness',
     hints:['requirements gathering: document current state workflows before config begins','system configuration: modifier validation rules require manual setup per payer','go-live readiness: clearinghouse 837P connection requires end-to-end test','integration validation: ERA 835 posting confirmation required before go-live','change management: staff training on new denial workflow prevents post-go-live spike'],
     questions:[
-      {q:'A 5-provider clinic is implementing your RCM system next month. Walk through your full implementation plan.',appLinked:true,appNote:'TSM Career OS IMPL lens generates this exact plan'},
-      {q:'Post go-live: denial rate increased from 12% to 19% in 60 days. How do you diagnose and fix this?',appLinked:true,appNote:'Mirrors post-go-live scenario in TSM Career OS'},
+      {q:'A 5-provider clinic is implementing your RCM system next month. Walk through your full implementation plan.',
+       appLinked:true,appNote:'TSM Career OS IMPL lens generates this exact plan',
+       sampleAnswer:`OBSERVE: Before I build the plan, I gather current state: EHR system (Epic, Athena, or other), payer mix (commercial vs Medicare vs Medicaid ratios), monthly claim volume, current denial rate baseline, number of billing staff, and any existing clearinghouse relationships. I built this requirements-gathering step into TSM Career OS because implementations that skip it produce configurations that do not match the client's actual workflow.
+
+DIAGNOSE: With a 5-provider clinic, the highest-risk areas are: clearinghouse 837P connection validation, modifier rule setup per payer (each payer has different modifier requirements — Aetna and Medicare have different CO-4 triggers), ERA 835 posting configuration, and staff training on the pre-submission validation workflow.
+
+SOLVE: Six-phase rollout — (1) Discovery: document current state, collect payer contracts, identify integration requirements. (2) Configuration: set up modifier validation rules per payer, configure ERA posting, test clearinghouse connection end-to-end. (3) Training: role-specific training — coders on pre-submission edits, billing staff on denial workflow, managers on KPI dashboard. (4) UAT: run 30 test claims through the full cycle, validate adjudication responses match expected outcomes. (5) Go-Live: parallel run for 2 weeks — old and new system simultaneously. (6) Stabilization: 30-day post-go-live monitoring with weekly denial rate check-ins.
+
+REPORT: Project plan with milestone, named owner, acceptance criteria, and success metric per phase. Go-live success metric: denial rate does not exceed pre-implementation baseline within 60 days.
+
+CONNECT: I designed TSM Career OS's IMPL lens to practice exactly this planning process — including diagnosing post-go-live denial spikes when configuration steps are skipped.`},
+      {q:'Post go-live: denial rate increased from 12% to 19% in 60 days. How do you diagnose and fix this?',
+       appLinked:true,appNote:'Mirrors post-go-live scenario in TSM Career OS',
+       sampleAnswer:`OBSERVE: 7-point denial rate increase in 60 days post go-live is outside normal variance. I pull the denial breakdown immediately: which codes? Which payers? Which providers? Which CPT codes? The TSM Career OS post-go-live scenario I built shows this pattern most commonly concentrates in modifier-related denials — CO-4 — which points to a configuration issue, not a training issue.
+
+DIAGNOSE: Three most likely root causes in order of frequency: (1) Payer-specific modifier validation rules were not configured — the system is passing claims the clearinghouse accepts but the payer rejects. (2) A new provider was added after go-live without payer enrollment being completed — claims are submitting under the wrong NPI or without authorization. (3) Staff reverted to pre-implementation workflow after go-live — not using the pre-submission validation feature, which is confirmed by checking adoption metrics.
+
+IMPACT: 7-point increase on a 1,256-claim/month volume = approximately 88 additional denied claims. At $300 average, that is $26,400 in monthly revenue at risk. This also damages client trust and puts renewal at risk if not resolved in 30 days.
+
+SOLVE: Run a configuration audit against the original requirements document. For each payer in the client's mix, verify modifier rules are set correctly. Add the missing payer enrollment for the new provider. Run a re-training session focused specifically on the pre-submission edit workflow and show staff the adoption data.
+
+CONNECT: I specifically modeled this scenario in TSM Career OS because post-go-live denial spikes are the most common implementation failure — and diagnosing whether it is config vs training vs workflow is the critical first decision.`},
       {q:'Client says the system is not catching CO-4 errors before submission. How do you troubleshoot?'},
-      {q:'You built and deployed a web application on Railway. How does that inform your implementation approach?',appLinked:true,appNote:'About deploying TSM Career OS on Railway'},
+      {q:'You built and deployed a web application on Railway. How does that inform your implementation approach?',
+       appLinked:true,appNote:'About deploying TSM Career OS on Railway',
+       sampleAnswer:`Deploying TSM Career OS on Railway gave me direct experience with the failure modes that matter in client-facing implementations.
+
+The first lesson: environment configuration is the most common source of post-deployment failure. On Railway, the Groq API key is stored as an environment variable — not in the code. If that variable is missing or misnamed, the entire AI layer fails silently: the app loads, the UI works, but every query returns an error. I learned to validate environment variables explicitly before go-live, not assume they are set correctly. That translates directly to RCM implementations: modifier validation rules, clearinghouse credentials, and ERA posting configurations are the "environment variables" of a billing system — if any one is missing, claims submit but adjudication fails.
+
+The second lesson: parallel validation before cutover. I ran TSM Career OS in a local development environment before deploying to Railway, and I hit integration issues I had not anticipated — the fetch URL was relative in production but absolute in dev, breaking the API calls. The fix was simple, but discovering it in production would have broken the live app. That experience reinforced why UAT and parallel run phases in an implementation plan are non-negotiable, not optional.
+
+The third lesson: rollback requires a plan. Railway's deployment history made it easy to roll back to a prior working version. In a client implementation, that means keeping the prior system accessible in read-only mode during go-live, not shutting it off.
+
+CONNECT: Building and shipping a real application made implementation risk management concrete and personal, not theoretical.`},
       {q:'How do you handle scope creep during an implementation when the client keeps adding requirements?'},
     ],
     fw:['OBSERVE: Gather current state — EHR, payer mix, volume, denial rate baseline, staff count','DIAGNOSE: What modules needed? Integrations? Training gaps? Risks?','IMPACT: Poor implementation = billing errors from day 1. Requirements right upfront prevents 80% of issues','SOLVE: Phased rollout: setup → training → UAT → go-live → 30-day stabilization → optimization','REPORT: Project plan with milestone, owner, acceptance criteria, and success metric per phase']
@@ -557,10 +654,44 @@ const ROLES = {
     focus:'system architecture, data flow, validation logic, integration design',
     hints:['validation logic: if same-day E&M + procedure, check -25 modifier present before submission','data flow: claim → modifier validation engine → clearinghouse → payer','integration architecture: EHR → validation engine → clearinghouse → payer → ERA → posting','business rules engine: CO-4 pre-submission edit rule with payer-specific modifier tables','API design: POST /validate-claim → {valid:bool, errors:[{code,field,fix}]}'],
     questions:[
-      {q:'Design a claim validation system that catches CO-4 modifier errors before submission. Walk through the architecture.',appLinked:true,appNote:'The architecture this app was built on — Railway + Groq API + Express'},
-      {q:'Walk me through the technical architecture of TSM Career OS — Railway, Groq, and the frontend.',appLinked:true,appNote:'Direct question about building this application'},
+      {q:'Design a claim validation system that catches CO-4 modifier errors before submission. Walk through the architecture.',
+       appLinked:true,appNote:'The architecture this app was built on — Railway + Groq API + Express',
+       sampleAnswer:`The architecture I would design mirrors what I built in TSM Career OS — a layered validation system between the EHR and the clearinghouse.
+
+DATA INPUTS: The validator needs three inputs per claim: the CPT procedure codes billed, the modifiers applied, and a same-day service flag (did this provider bill an E&M and a procedure on the same date of service for the same patient?). These come from the EHR via a real-time or batch API call.
+
+VALIDATION LOGIC: The core rule: if same-day E&M plus procedure is billed, modifier -25 must be present AND the claim must include a documentation flag confirming a separate, medically necessary evaluation occurred. If -25 is present but no documentation flag exists, the claim is flagged — not rejected — for manual review. Payer-specific modifier tables handle exceptions: some payers accept -25 differently than CMS guidelines.
+
+API DESIGN: POST /validate-claim → request body: {claim_id, cpt_codes[], modifiers[], payer_id, dos}. Response: {valid: bool, errors: [{code: "CO-4", field: "modifier", message: "Modifier -25 required for same-day E&M + procedure", fix: "Add -25 or separate E&M from procedure date"}]}.
+
+OUTPUT: If valid → pass to clearinghouse. If errors → route to correction queue with the specific fix attached. The coder gets a one-click correction, not a denial letter 14 days later.
+
+CONNECT: I built the AI analysis layer of TSM Career OS on this same pattern — Railway Express backend, validation logic in the route handler, and structured JSON responses to the frontend. The architecture is directly transferable to a production claims validation system.`},
+      {q:'Walk me through the technical architecture of TSM Career OS — Railway, Groq, and the frontend.',
+       appLinked:true,appNote:'Direct question about building this application',
+       sampleAnswer:`TSM Career OS is a three-layer system: a static HTML/JS frontend, a Node.js/Express backend on Railway, and Groq's llama-3.3-70b inference API as the AI layer.
+
+FRONTEND: Single-file HTML with vanilla JavaScript — no framework. The UI has a role-selector bar that switches between 7 analyst lenses (BA, RCM, OPS, IMPL, SE, CS, Interview Mode). Each role lens changes the system prompt sent to the AI, the KPI focus, the career language hints, and the interview question bank. The same scenario data produces completely different analytical output depending on which lens is active. All state is managed in plain JS — no React, no build step, which means it deploys as a static file served directly from the Express backend.
+
+BACKEND: Express.js on Railway. Two primary routes: GET /html/* serves static files, POST /api/hc/query handles AI inference. The query route accepts a system prompt, user message, and max_tokens parameter. It calls Groq's chat completions endpoint using the GROQ_API_KEY stored as a Railway environment variable — never exposed to the client. The response is passed back as JSON.
+
+GROQ LAYER: llama-3.3-70b-versatile handles role-specific analysis, interview scoring, and hint generation. Each role has a distinct system prompt engineering the model's persona, vocabulary, and output structure. The interview scoring prompt uses the STAR+C rubric explicitly.
+
+DEPLOY: One Railway service, auto-deploy from GitHub on push. Environment variable GROQ_API_KEY injected at runtime — no secrets in the codebase.
+
+CONNECT: This architecture is production-grade and directly transferable to a client-facing RCM analytics or validation tool.`},
       {q:'How would you design a real-time denial prediction system using historical claim data?'},
-      {q:'You integrated Groq llama-3.3-70b into a healthcare training app. What were the design decisions?',appLinked:true,appNote:'About building the AI layer in TSM Career OS'},
+      {q:'You integrated Groq llama-3.3-70b into a healthcare training app. What were the design decisions?',
+       appLinked:true,appNote:'About building the AI layer in TSM Career OS',
+       sampleAnswer:`Three decisions shaped the Groq integration in TSM Career OS.
+
+First, model selection. I chose llama-3.3-70b-versatile over smaller models because the role-based analysis requires nuanced domain reasoning — the model needs to distinguish between a CO-4 modifier conflict and a CO-11 bundling denial, understand payer-specific modifier rules, and generate output that sounds like it came from a senior analyst, not a chatbot. A 7B or 13B model produced generic output that did not match the vocabulary or specificity level the training scenarios required.
+
+Second, system prompt architecture. Instead of one generic prompt, I built 7 distinct system prompts — one per role lens. Each prompt engineers a specific persona with a specific vocabulary list. The BA prompt uses terms like "variance," "benchmark gap," and "operational inefficiency." The RCM prompt uses "claim lifecycle integrity," "timely filing exposure," and "modifier compliance." Same scenario, completely different analysis. This required understanding what each role actually focuses on — not just what sounds professional.
+
+Third, output constraints. Healthcare training content has to be accurate. I constrain the model to: max 200 words per analysis, no markdown formatting (the UI renders plain text), and a specific structure — key insight, root cause, top 3 recommendations with timelines. Unconstrained AI output is not usable in a training context because learners cannot extract the actionable signal.
+
+CONNECT: These same decisions apply to any AI integration in a healthcare product — model capability, prompt specificity, and output constraints are the three variables that determine whether AI adds value or just adds noise.`},
       {q:'How do you ensure your API design accounts for payer-specific business rule variations?'},
     ],
     fw:['OBSERVE: Where in the workflow does the error originate? EHR template? Coder entry? Scheduler?','DIAGNOSE: What data does the validation need? CPT + modifier + same-day procedure flag + payer rules','IMPACT: Pre-submission catch vs post-denial = 14-day time difference + 100% revenue preservation','SOLVE: Build pre-submission edit rule: same-day E&M + procedure → validate -25 modifier present','REPORT: Architecture diagram: data inputs → validation logic → alert → correction workflow → resubmit']
@@ -571,10 +702,30 @@ const ROLES = {
     focus:'client adoption, health scores, issue resolution, satisfaction recovery',
     hints:['client health score degraded: denial rate +7pt post go-live — red flag','adoption metric: only 60% of staff using pre-submission validation feature','escalation protocol: denial rate >18% triggers CSM review call within 24hr','remediation plan: 30-day action plan with weekly check-in cadence and named owner','churn risk: competitor evaluation mentioned at last QBR — renewal at risk'],
     questions:[
-      {q:"A client's denial rate increased from 12% to 19% in 60 days after go-live. How do you handle this in the first 48 hours?",appLinked:true,appNote:'TSM Career OS CS lens generates the exact remediation plan'},
+      {q:"A client's denial rate increased from 12% to 19% in 60 days after go-live. How do you handle this in the first 48 hours?",
+       appLinked:true,appNote:'TSM Career OS CS lens generates the exact remediation plan',
+       sampleAnswer:`OBSERVE: 7-point denial rate increase in 60 days post go-live is a red flag — it exceeds my escalation threshold of 5 points above baseline. This is not normal post-implementation variance. I pull the client's denial report immediately and compare pre-go-live baseline to current state by denial code, payer, and provider.
+
+DIAGNOSE: In 80% of cases I have simulated in TSM Career OS, a post-go-live denial spike has one of three root causes: a system configuration issue (modifier validation rules not set up per payer), a training gap (staff not using the new pre-submission validation feature — adoption data shows only 60% using it), or a new provider added after go-live without proper payer enrollment. I check all three in the first 24 hours.
+
+IMPACT: 7-point denial increase on a practice seeing 500 claims per month at $250 average = approximately $8,750 in additional monthly revenue at risk. Client satisfaction score is declining. Renewal is 90 days away. This is a churn risk.
+
+SOLVE: I schedule a joint analysis call within 48 hours — not to apologize, but to present findings and a named action plan. I bring: the denial code breakdown, the identified root cause, a 30-day remediation plan with weekly milestones, and a projected recovery timeline. I assign a named owner to each action item.
+
+CONNECT: I built this exact scenario into TSM Career OS's CS lens because client-facing recovery plans require the same analytical rigor as internal operations — and the speed of response in the first 48 hours determines whether you retain the client.`},
       {q:'A client has not logged into the system in 3 weeks post-implementation. What do you do?'},
       {q:'Client is up for renewal in 90 days and their denial rate has not improved. How do you prepare for the QBR?'},
-      {q:'You built a training simulator to help people understand RCM software. How does that demonstrate CS competency?',appLinked:true,appNote:'About building TSM Career OS for client-facing readiness'},
+      {q:'You built a training simulator to help people understand RCM software. How does that demonstrate CS competency?',
+       appLinked:true,appNote:'About building TSM Career OS for client-facing readiness',
+       sampleAnswer:`Building TSM Career OS demonstrates Customer Success competency in three specific ways.
+
+First, empathy for the client learning curve. The biggest CS failure post-implementation is assuming the client understands what the software is doing and why. I built TSM Career OS specifically because I experienced that gap myself — I could read RCM documentation, but I could not feel the urgency of a 48-hour timely filing deadline or the pattern recognition needed to diagnose a CO-4 denial spike until I simulated it repeatedly. That experience directly informs how I onboard and train clients: I do not just show them the feature, I make sure they understand the problem the feature solves.
+
+Second, proactive health monitoring. The app's KPI dashboard — denial rate, days in AR, clean claim rate, appeal win rate — is exactly the client health score model I would use in a CS role. I built the alert logic: denial rate greater than 18% triggers an escalation. Days in AR greater than 60 days triggers a follow-up call. Clients do not always know they are in trouble. A CSM's job is to know before they do.
+
+Third, ROI communication. The app generates consultant-grade output — executive summaries, impact assessments, portfolio bullets — because CS work ultimately has to be translated into value the client can see. I practiced converting raw KPI data into a narrative a clinic director can act on.
+
+CONNECT: I built a tool to develop the exact skills this role requires — and I can use that same approach to develop client capability during onboarding.`},
       {q:'How do you calculate and communicate ROI to a client who is skeptical about software value?'},
     ],
     fw:["OBSERVE: Pull client's denial report. Compare pre vs post go-live. What changed?","DIAGNOSE: Config issue? Training gap? Payer rule change? New provider added without setup?","IMPACT: 7pt denial increase = significant revenue impact. Client satisfaction and renewal at risk","SOLVE: Joint analysis call within 48hr. Identify top 3 root causes. Build 30-day remediation plan","REPORT: Client health report: root cause, action plan, improvement timeline, weekly check-in"]
@@ -585,12 +736,75 @@ const ROLES = {
     focus:'structured answers, STAR framework, professional language, quantified results',
     hints:['I identified a variance in denial rate that exceeded CMS threshold by 3.4 points...','I conducted root cause analysis and isolated modifier -25 as the primary driver...','I implemented a pre-submission edit rule that reduced CO-4 denials by 40% in 60 days...','My recommendation resulted in $15K/month recovered — equivalent to 6.4pt denial rate reduction...','I built a healthcare ops simulator to develop expertise before entering the industry...'],
     questions:[
-      {q:'Tell me about a time you identified a process problem and fixed it. Use the STAR framework.',appLinked:true,appNote:'Answer using your TSM Career OS build story'},
-      {q:'Describe a situation where you had to communicate a complex technical issue to a non-technical stakeholder.'},
-      {q:'Walk me through how you would analyze a 20% increase in claim denials for a new client.',appLinked:true,appNote:'Use the denial spike scenario from this simulator'},
-      {q:'Tell me about a project where you built something from scratch. What was your process?',appLinked:true,appNote:'Use the TSM Career OS build story: Railway + Groq + UI'},
-      {q:'How do you stay current with healthcare RCM regulations and payer rule changes?',appLinked:true,appNote:'Mention building scenario simulations to practice real-world situations'},
-      {q:'Describe a time you used data to change a stakeholder\'s mind.',appLinked:true,appNote:'Use denial rate variance analysis from this app as your example'},
+      {q:'Tell me about a time you identified a process problem and fixed it. Use the STAR framework.',
+       appLinked:true,appNote:'Answer using your TSM Career OS build story',
+       sampleAnswer:`SITUATION: While preparing to transition into healthcare operations, I recognized I had no hands-on exposure to real RCM workflows — denial codes, claim lifecycle, or KPI benchmarks. I identified this as a critical gap that would show up the moment I sat in an interview or started a new role.
+
+TASK: I took ownership of closing that gap myself. My goal was to build a simulation environment that mirrored real healthcare ops scenarios — not just read about them, but practice analyzing them in real time under pressure.
+
+ACTION: I designed and deployed TSM Career OS — a full-stack healthcare ops simulator running on Railway with a Node.js backend, Groq llama-3.3-70b AI inference, and a role-based frontend with 7 analyst lenses. I coded 6 live scenarios (denial spike, AR aging crisis, RAC audit, timely filing deadline, upcoding flag, no-show analysis), each with real denial codes, KPI dashboards, and AI-generated analysis. I also built an interview scoring module that evaluates answers using the STAR+C framework.
+
+RESULT: The app is live at tsm-shell-production-57da.up.railway.app and actively used for daily job prep. It simulates the exact scenario analysis I would perform on day one of a BA, RCM, or Implementation role — with quantified KPIs including 18.4% denial rate, $48K stalled AR, and CO-4 modifier root cause identification.
+
+CONNECT: This directly demonstrates what you need from this role — I do not just understand RCM theory. I built a system to practice it, which means I can analyze denial patterns, communicate KPI variance to leadership, and prioritize recovery actions from my first week.`},
+
+      {q:'Describe a situation where you had to communicate a complex technical issue to a non-technical stakeholder.',
+       appLinked:true,appNote:'Use the TSM Career OS architecture explanation as your example',
+       sampleAnswer:`SITUATION: When I built TSM Career OS, I needed to explain to a non-technical healthcare professional why the app's AI analysis was structured the way it was — specifically, why it uses role-based lenses instead of one generic output.
+
+TASK: I had to translate the technical architecture — Railway deployment, Groq API inference, role-specific system prompts — into language a clinic manager or billing supervisor could understand and trust.
+
+ACTION: I reframed the technical components entirely. Instead of "llama-3.3-70b inference via REST API," I described it as: "The app switches its expertise based on your role — a Business Analyst gets variance analysis, a Revenue Cycle Analyst gets denial code breakdown, and a Customer Success Manager gets a client health score." I built a live demo showing the same denial spike scenario generating different outputs for each role, making the technical distinction visible without jargon.
+
+RESULT: The stakeholder immediately understood the value — and more importantly, understood why the architecture mattered. The role-lens concept became the clearest selling point of the app, and the demo is now the primary way I explain the system in interviews.
+
+CONNECT: In this role, I will regularly need to translate system behavior, denial logic, or implementation requirements into terms that clinic directors and billing staff can act on. This is exactly that skill — I remove the complexity and leave only the decision.`},
+
+      {q:'Walk me through how you would analyze a 20% increase in claim denials for a new client.',
+       appLinked:true,appNote:'Use the denial spike scenario from this simulator',
+       sampleAnswer:`OBSERVE: I start by pulling the denial rate trend for the past 4 quarters to isolate when the spike began. A 20% denial rate — assuming prior baseline was around 12-15% — represents a 5-8 point jump. In TSM Career OS, I simulate exactly this: a spike from 15% to 22.4% in 7 days. First question: is this sudden or gradual? Sudden = rule change or system event. Gradual = workflow or training drift.
+
+DIAGNOSE: I sort denials by code, payer, CPT, and provider. In the simulator, the top driver is CO-4 modifier conflict — modifier -25 applied on same-day E&M + procedure without the clinical documentation to support a separate service. This concentrates in Aetna and Medicare, which tells me it is payer-specific, not system-wide. I check: did a payer update their modifier rules? Did a new provider join without being set up correctly? Did an EHR update change the default modifier behavior?
+
+IMPACT: At 1,256 claims/month with 20% denied, that is approximately 251 denied claims. At an average reimbursement of $300, that is $75,300 in monthly revenue at risk. I also flag any claims approaching timely filing deadlines — those become Priority 1 regardless of root cause.
+
+SOLVE: I build a 3-tier response: immediate (file any timely filing appeals within 48 hours), short-term (batch correct and resubmit CO-4 claims), and structural (add a pre-submission modifier validation edit to catch this before it reaches the payer again).
+
+CONNECT: I built this exact workflow into TSM Career OS so I could practice it daily. I can run this analysis for your clients from week one.`},
+
+      {q:'Tell me about a project where you built something from scratch. What was your process?',
+       appLinked:true,appNote:'Use the TSM Career OS build story: Railway + Groq + UI',
+       sampleAnswer:`SITUATION: I needed a way to build real healthcare ops expertise before entering the industry. Reading documentation was not enough — I needed to practice analyzing denial scenarios, KPIs, and claim lifecycle issues the way an analyst would on the job.
+
+TASK: I designed TSM Career OS from a blank file — no template, no starter kit. I was responsible for the full stack: architecture, data model, UI, AI integration, and deployment.
+
+ACTION: I started with the domain problem: what does a healthcare BA, RCM Analyst, or Implementation Spec actually do in a crisis? I mapped out 6 real scenarios — denial spike, AR aging, RAC audit, timely filing deadline, upcoding flag, no-show revenue loss. Then I built a Node.js/Express backend on Railway, integrated Groq's llama-3.3-70b API for role-specific AI analysis, and built a full terminal-style frontend with 7 role lenses, live KPI dashboards, and an AI-scored interview module. I deployed it on Railway with environment variable management for the Groq API key.
+
+RESULT: The app is live, functional, and actively used for daily prep. It generates role-specific analyst output, scores interview answers against the STAR+C framework, and surfaces career language patterns per role. Building it forced me to understand RCM deeply enough to write the prompts, scenarios, and KPI logic accurately.
+
+CONNECT: This project demonstrates that I can scope, build, and ship independently — which is exactly what an implementation specialist or solutions engineer needs to do when onboarding a new client system.`},
+
+      {q:'How do you stay current with healthcare RCM regulations and payer rule changes?',
+       appLinked:true,appNote:'Mention building scenario simulations to practice real-world situations',
+       sampleAnswer:`I use a combination of active simulation and structured monitoring. On the monitoring side, I track CMS rule updates, OIG Work Plan releases, and payer-specific LCD changes — for example, the OIG's active audit focus on CPT 99215 upcoding is built directly into TSM Career OS as a live scenario because it reflects a real 2024-2025 enforcement priority.
+
+On the simulation side, I built TSM Career OS specifically to operationalize regulatory knowledge — not just read about CO-29 timely filing rules, but practice the 48-hour recovery workflow with a real claim number, dollar amount, and payer portal action. That forces me to understand the rule at the execution level, not just the conceptual level.
+
+I also study denial code patterns. CO-4, PR-96, CO-11, and CO-29 are not abstract — they each map to a specific failure point in the claim lifecycle. Understanding why a modifier conflict produces a CO-4 and not a CO-11 requires knowing both the clinical documentation standard and the payer's adjudication logic.
+
+CONNECT: In this role, staying current means being useful to clients before they even know there is a problem. I built my prep process around that standard.`},
+
+      {q:'Describe a time you used data to change a stakeholder\'s mind.',
+       appLinked:true,appNote:'Use denial rate variance analysis from this app as your example',
+       sampleAnswer:`SITUATION: During my prep for healthcare ops roles, I encountered a common stakeholder assumption: that a high clean claim rate means denials are not a problem. The logic goes — if 94% of claims are clean, we are doing fine.
+
+TASK: I needed to demonstrate why that framing is incorrect and why denial rate, AR aging, and modifier compliance tell a different story than clean claim rate alone.
+
+ACTION: Using TSM Career OS, I built the exact counter-argument as a data dashboard. The system shows: clean claim rate 94.2% — above the 90% baseline — while simultaneously showing denial rate 18.4% (exceeds the 15% CMS threshold), $48K in stalled AR, and a CO-4 modifier conflict on 47 claims worth $8,460. The data reframes the conversation: clean claim rate measures initial submission quality; denial rate measures what survives adjudication. They are not the same metric. I walked through how a 94% clean claim rate with an 18.4% denial rate means the payer is finding errors the clearinghouse missed — which points to a pre-submission edit gap, not a coder error.
+
+RESULT: The framing shift was immediate. Once the distinction between clean claim rate and denial rate was quantified side by side, the conversation moved from "we are fine" to "we have a systemic pre-submission validation gap."
+
+CONNECT: In this role, I will use data to move clients from comfort to clarity — which is the only way to get buy-in for process changes that actually recover revenue.`},
     ],
     fw:['SITUATION: Describe the system/process context briefly (1-2 sentences max)','TASK: Your specific role and responsibility — what were you accountable for?','ACTION: What exactly did you do? Name the method, tool, and specific steps','RESULT: Measurable outcome — use numbers (%, $, days, claims, time saved)','CONNECT: How does this directly apply to the role you are interviewing for?']
   }
@@ -752,8 +966,50 @@ function loadQuestion(i){
   if(item.appLinked&&item.appNote){
     document.getElementById('int-q').textContent=item.q+'\n\n💡 APP CONNECTION: '+item.appNote;
   }
-  document.getElementById('int-ans').value='';
   document.getElementById('score-out').style.display='none';
+
+  // Show/hide sample answer button
+  let saBtnEl=document.getElementById('sa-btn-row');
+  if(saBtnEl)saBtnEl.remove();
+  const ta=document.getElementById('int-ans');
+
+  if(item.sampleAnswer){
+    ta.value='';
+    const row=document.createElement('div');
+    row.id='sa-btn-row';
+    row.style.cssText='display:flex;gap:6px;margin-bottom:5px;align-items:center;';
+    row.innerHTML=`
+      <button onclick="loadSample()" class="run-btn" style="background:#1a0033;border:1px solid var(--p);color:var(--p);font-size:8px;padding:4px 10px">
+        📋 LOAD SAMPLE ANSWER
+      </button>
+      <span style="font-size:8px;color:var(--muted)">← pre-filled from your app build story · edit before scoring</span>`;
+    ta.parentElement.insertBefore(row, ta);
+    // Store sample on window for the onclick
+    window._currentSample = item.sampleAnswer;
+  } else {
+    ta.value='';
+    window._currentSample = null;
+    // Remove any leftover label
+    const lbl=document.getElementById('sa-loaded-lbl');
+    if(lbl)lbl.remove();
+  }
+}
+
+function loadSample(){
+  if(!window._currentSample)return;
+  const ta=document.getElementById('int-ans');
+  ta.value=window._currentSample;
+  ta.style.borderColor='var(--p)';
+  setTimeout(()=>ta.style.borderColor='var(--border)',1200);
+  // Show edit nudge
+  let lbl=document.getElementById('sa-loaded-lbl');
+  if(!lbl){
+    lbl=document.createElement('div');
+    lbl.id='sa-loaded-lbl';
+    lbl.style.cssText='font-size:8px;color:var(--p);margin-top:4px;letter-spacing:.5px;';
+    ta.parentElement.insertBefore(lbl, ta.nextSibling);
+  }
+  lbl.textContent='✓ Sample loaded — personalize it, then click SCORE MY ANSWER';
 }
 
 function renderAppCards(r){
