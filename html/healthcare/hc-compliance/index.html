@@ -341,27 +341,148 @@ async function runQ(prompt, btnId, resId) {
     res.textContent = '> ERROR: Operational connection to API lost.\n' + e.message;
   }
   if (btn) { btn.disabled = false; btn.textContent = '▶ ASK'; }
-}
+<div id="hc-node-guide">
+  <div class="guide-hdr">HC NODE GUIDE</div>
+  <div class="guide-desc">Use this panel while presenting. Explains compliance exposure, CMS audit risk, HIPAA breaches, OIG exclusions, and corrective actions.</div>
+  <hr class="guide-divider">
 
-// ── GUIDE ACTION BUTTON INTERACTION ─────────────────────────────────────
-function guideAction(type, stepNum) {
-  var p = document.getElementById('intake-patient').value || 'Maria Santos';
-  var c = document.getElementById('intake-claim').value || '27447';
-  var pyr = document.getElementById('intake-payer').value || 'BlueCross BlueShield';
-  var stepText = document.getElementById('guide-step-' + stepNum + '-text').textContent;
-  var res = document.getElementById('guide-res-' + stepNum);
-  
-  var prompt = '';
-  if (type === 'explain') prompt = 'Explain this compliance issue in plain language for a presenter: "' + stepText + '". Context: Patient ' + p + ', Case ' + c + ', Regulator ' + pyr + '. What it means, why it matters, and what action is required.';
-  else if (type === 'risk') prompt = 'Identify the highest penalty and compliance risk in: "' + stepText + '". Patient: ' + p + ', Case: ' + c + ', Regulator: ' + pyr + '. Quantify exposure, name the owner, state the deadline.';
-  else if (type === 'talk') prompt = 'Write a 60-second presenter talk track for this compliance scenario: "' + stepText + '". Patient: ' + p + ', Regulator: ' + pyr + '. Plain language, the problem, penalty exposure, and recommended next action.';
-  
-  if (res) { res.classList.add('visible'); res.innerHTML = '<span class="guide-spinner">⟳</span> Querying System Mesh...'; }
-  
-  runQ(prompt, null, 'guide-res-' + stepNum);
-}
+  <div id="guide-intake" style="margin-bottom:10px">
+    <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--a);margin-bottom:6px">◆ SET COMPLIANCE MISSION</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px">
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">PATIENT NAME</div>
+        <input id="intake-patient" class="guide-field" type="text" placeholder="Maria Santos">
+      </div>
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">CLAIM #</div>
+        <input id="intake-claim" class="guide-field" type="text" placeholder="27447">
+      </div>
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">REGULATOR / PAYER</div>
+        <input id="intake-payer" class="guide-field" type="text" placeholder="BlueCross BlueShield">
+      </div>
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">REGULATORY METRIC</div>
+        <input id="intake-metric" class="guide-field" type="text" placeholder="Audit Error Rate">
+      </div>
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">CURRENT VALUE</div>
+        <input id="intake-current" class="guide-field" type="text" placeholder="14.2%">
+      </div>
+      <div>
+        <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">PENALTY EXPOSURE</div>
+        <input id="intake-risk" class="guide-field" type="text" placeholder="$42,000">
+      </div>
+    </div>
+    <div style="font-size:8px;color:#556655;margin-bottom:2px;letter-spacing:1px">ISSUE / REGULATORY GAP</div>
+    <textarea id="intake-issue" class="guide-field" rows="2" placeholder="Prior Authorization SLA breaches and CPT 99215 upcoding pattern creating audit risk." style="resize:none;width:100%;margin-bottom:6px"></textarea>
+    <button onclick="applyComplianceMission()" style="width:100%;padding:6px;background:var(--a);color:#000;font-family:'Courier New',monospace;font-size:9px;font-weight:700;border:none;border-radius:3px;cursor:pointer;letter-spacing:1px">⚡ SET COMPLIANCE MISSION</button>
+    <button onclick="toggleIntake(false)" id="intake-collapse-btn" style="display:none;width:100%;margin-top:4px;padding:5px;background:transparent;border:1px solid var(--border);color:#556655;font-family:'Courier New',monospace;font-size:9px;border-radius:3px;cursor:pointer;letter-spacing:1px">▲ COLLAPSE INTAKE</button>
+  </div>
+  <button onclick="toggleIntake(true)" id="intake-expand-btn" style="display:none;width:100%;padding:5px;background:transparent;border:1px solid var(--a);color:var(--a);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px;margin-bottom:8px">✎ EDIT COMPLIANCE DATA</button>
+  <hr class="guide-divider">
 
-<!-- ── FIX FOR COMPLIANCE: SCRIPT STACK ── -->
+  <div class="guide-obj">MISSION OBJECTIVES · COMPLIANCE</div>
+  <div id="guide-meta" class="guide-meta">
+    Patient: <span>Maria Santos</span> · Claim: <span>27447</span> · Payer: <span>BlueCross BlueShield</span>
+  </div>
+
+  <div id="guide-tasks" style="margin-bottom:10px">
+    <div id="guide-urgent-task" style="background:#1a0000;border:1px solid var(--r);border-radius:4px;padding:8px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <div style="width:18px;height:18px;border-radius:50%;background:var(--r);display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:700;flex-shrink:0">!</div>
+        <span style="color:var(--r);font-size:10px;font-weight:700">Regulatory Compliance Alert</span>
+      </div>
+      <div style="font-size:9px;color:#556655;padding-left:26px;margin-bottom:6px">Claim 27447 · CPT 99215 · BlueCross · $42,000 Exposure</div>
+      <div style="display:flex;align-items:center;gap:8px;background:#0a0000;border:1px solid #3a0000;border-radius:3px;padding:5px 8px;margin-bottom:6px">
+        <span style="font-size:16px;font-weight:700;color:var(--r)">$42K</span>
+        <span style="font-size:9px;color:#cc9999">prior auth SLA breach and coding gaps flagged for audit</span>
+      </div>
+      <div style="font-size:9px;color:#99cc99;line-height:1.5;margin-bottom:6px">Prior Authorization SLA breaches and CPT audit exposure are creating the largest compliance risk.</div>
+      <button onclick="runQ('Generate executive compliance narrative including HIPAA risk, CPT audit exposure, prior authorization delays, corrective actions, owners, and confidence level', 'dash-btn', 'dash-res')" style="width:100%;padding:6px;background:var(--r);color:#fff;font-family:'Courier New',monospace;font-size:9px;font-weight:700;border:none;border-radius:3px;cursor:pointer;letter-spacing:1px;margin-bottom:4px">⚡ BUILD COMPLIANCE CORRECTIVE PLAN</button>
+    </div>
+  </div>
+
+  <hr class="guide-divider">
+
+  <div id="guide-step-label" class="guide-step-label">STEP 1 OF 2</div>
+
+  <div id="guide-step-1" class="guide-step-box active-step">
+    <div id="guide-step-1-text" class="guide-step-text">Prior Authorization SLA breaches and CPT audit exposure are creating compliance risks. Identify the top 3 regulatory gaps, quantify statutory civil penalties, and determine executive oversight ownership.</div>
+    <div class="guide-step-actions">
+      <button class="guide-action-btn btn-explain" onclick="guideAction('explain',1)">Explain Current Tab</button>
+      <button class="guide-action-btn btn-risk" onclick="guideAction('risk',1)">Find Highest Risk</button>
+      <button class="guide-action-btn btn-talk" onclick="guideAction('talk',1)">Talk Track</button>
+    </div>
+    <button class="guide-submit-btn" onclick="submitStep(1)">Submit Step Response</button>
+    <div id="guide-res-1" class="guide-result"></div>
+  </div>
+
+  <div id="guide-step-2" class="guide-step-box" style="margin-top:8px">
+    <div id="guide-step-2-text" class="guide-step-text">$42K compliance liability exposed via 14 prior auth requests exceeding 72hr SLA and 23 claims flagged for CPT 99215 upcoding pattern. Determine remediation strategy, step-by-step audit response sequence, and self-disclosure logic.</div>
+    <div class="guide-step-actions">
+      <button class="guide-action-btn btn-explain" onclick="guideAction('explain',2)">Explain Current Tab</button>
+      <button class="guide-action-btn btn-risk" onclick="guideAction('risk',2)">Find Highest Risk</button>
+      <button class="guide-action-btn btn-talk" onclick="guideAction('talk',2)">Talk Track</button>
+    </div>
+    <button class="guide-submit-btn" onclick="submitStep(2)">Submit Step Response</button>
+    <div id="guide-res-2" class="guide-result"></div>
+  </div>
+
+  <hr class="guide-divider">
+
+  <div style="margin-bottom:10px">
+    <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:#556655;margin-bottom:6px">◆ WHEN TO RUN WHAT</div>
+    <div style="background:#0a1400;border:1px solid #1e3a00;border-radius:3px;padding:7px 8px;margin-bottom:5px">
+      <div style="color:var(--g);font-size:9px;font-weight:700;margin-bottom:3px">⚡ RUN BNCA FIRST</div>
+      <div style="font-size:9px;color:#556655;line-height:1.5">Always start here. BNCA surfaces the highest-risk billing item within this node — denial codes, modifier errors, timely filing gaps. Run before escalating anything.</div>
+    </div>
+    <div style="background:#00111a;border:1px solid #001e3a;border-radius:3px;padding:7px 8px">
+      <div style="color:var(--b);font-size:9px;font-weight:700;margin-bottom:3px">🔗 RELAY TO STRATEGIST AFTER</div>
+      <div style="font-size:9px;color:#556655;line-height:1.5">Only escalate when BNCA reveals a <span style="color:var(--a)">cross-domain issue</span> — prior auth gaps (clinical), payer contract disputes (ops), or systemic denial patterns needing C-suite visibility. Don't relay single-claim issues.</div>
+    </div>
+  </div>
+
+  <button onclick="runQ('Run full BNCA for HC COMPLIANCE COMMAND: primary risk vector, structural policy exposure, urgent regulatory timelines, and confidence rating', 'dash-btn', 'dash-res')" style="width:100%;padding:7px;background:#003322;border:1px solid var(--g);color:var(--g);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px;margin-bottom:5px">⚡ RUN NODE BNCA</button>
+
+  <hr class="guide-divider">
+
+  <div id="guide-next-actions" style="display:none">
+    <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--g);margin-bottom:6px">◆ STEPS COMPLETE — NEXT ACTIONS</div>
+    <div style="font-size:9px;color:#556655;line-height:1.5;margin-bottom:8px">Both steps responded. Choose your escalation path based on what the analysis revealed:</div>
+    <div style="display:flex;flex-direction:column;gap:5px">
+      <button onclick="runQ('Run full BNCA for HC COMPLIANCE COMMAND: integrate step findings into legal framework, policy owners, defense plan timeline, and validation score', 'dash-btn', 'dash-res')" style="width:100%;padding:6px;background:#003322;border:1px solid var(--g);color:var(--g);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px">⚡ RE-RUN BNCA WITH FINDINGS</button>
+      <button onclick="window.open('https://hc-strategist.tsmatter.com','_blank')" style="width:100%;padding:6px;background:#001133;border:1px solid var(--b);color:var(--b);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px">🔗 ESCALATE TO STRATEGIST</button>
+      <button onclick="runQ('Export compliance session summary for patient '+document.getElementById('intake-patient').value+', claim '+document.getElementById('intake-claim').value+', metric '+document.getElementById('intake-metric').value+', exposure '+document.getElementById('intake-risk').value+': step validations, active corrective actions, and systemic shield plan', 'dash-btn', 'dash-res')" style="width:100%;padding:6px;background:#221100;border:1px solid var(--a);color:var(--a);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px">📋 EXPORT SESSION SUMMARY</button>
+    </div>
+  </div>
+</div>
+
+<style id="guide-styles-compliance">
+#hc-node-guide{position:fixed;top:110px;right:0;width:310px;background:#0b120b;border-left:1px solid var(--border);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:14px;z-index:50;border-radius:6px 0 0 6px;font-size:11px;font-family:'Courier New',monospace;max-height:calc(100vh - 180px);overflow-y:auto}
+.guide-hdr{color:var(--g);font-size:11px;font-weight:700;letter-spacing:2px;margin-bottom:6px}
+.guide-desc{font-size:10px;color:#556655;margin-bottom:10px;line-height:1.5}
+.guide-divider{border:none;border-top:1px solid var(--border);margin:10px 0}
+.guide-obj{color:var(--g);font-size:10px;font-weight:700;letter-spacing:2px;margin-bottom:6px}
+.guide-meta{font-size:10px;color:#99cc99;margin-bottom:10px}
+.guide-meta span{color:var(--g)}
+.guide-step-label{font-size:9px;letter-spacing:2px;color:#556655;margin-bottom:6px}
+.guide-step-box{background:#0f1e0f;border:1px solid #1e3a1e;border-radius:4px;padding:10px;margin-bottom:8px}
+.guide-step-box.active-step{border-color:var(--a)}
+.guide-step-text{font-size:10px;color:#ccddcc;line-height:1.6;margin-bottom:8px}
+.guide-step-actions{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
+.guide-action-btn{padding:4px 8px;font-family:inherit;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px;transition:all .2s}
+.btn-explain{background:#001122;border:1px solid var(--b);color:var(--b)}
+.btn-risk{background:#220011;border:1px solid var(--r);color:var(--r)}
+.btn-talk{background:#112200;border:1px solid var(--g);color:var(--g)}
+.guide-submit-btn{width:100%;padding:6px;background:#003322;border:1px solid var(--g);color:var(--g);font-family:inherit;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px;margin-bottom:6px}
+.guide-result{background:#0a0f0a;border:1px solid var(--border);border-radius:3px;padding:8px;font-size:10px;color:#99cc99;min-height:30px;white-space:pre-wrap;line-height:1.5;margin-top:6px;display:none}
+.guide-result.visible{display:block}
+.guide-field{width:100%;background:#0a0f0a;border:1px solid var(--border);color:var(--g);font-family:inherit;font-size:10px;padding:5px 8px;border-radius:3px;margin-bottom:4px}
+.guide-field:focus{outline:none;border-color:var(--g)}
+.guide-spinner{display:inline-block;animation:spin 1s linear infinite}
+</style>
+
 <script>
 var currentTab = 'dash';
 var stepsCompleted = {1: false, 2: false};
@@ -511,7 +632,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- ── CORE ARCHITECTURE OPERATIONAL MESH DRIVERS ── -->
 <script src="/shared/tsm-operational-mesh.js?v=mesh1"></script>
 <script src="/shared/tsm-relay-bus.js?v=relay2"></script>
 <script src="/shared/tsm-memory-engine.js?v=phase3"></script>
