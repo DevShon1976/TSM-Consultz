@@ -724,7 +724,7 @@ answer is 0-based index. Questions should match official AHIP exam difficulty. C
 // ======================================================
 // END INSURANCE SUITE
 // ======================================================
-app.post('/api/hc/triage', async (req, res) => {
+app.post('/api/hc/triage', express.json(), async (req, res) => {
   try {
     const { client='', taskType='', department='', priority='P3', deadline='', description='', notes='' } = req.body || {};
     if (!description) return res.status(400).json({ ok: false, error: 'Description is required' });
@@ -738,7 +738,7 @@ app.post('/api/hc/triage', async (req, res) => {
   }
 });
 
-app.post('/api/hc/strategist', async (req, res) => {
+app.post('/api/hc/strategist', express.json(), async (req, res) => {
   try {
     const { task={}, aiTriage='', query='' } = req.body || {};
     const sp = `You are the TSM Healthcare BPO Strategist. Produce executive-grade strategy in this EXACT format:\nSTRATEGIC_SUMMARY: [2-3 sentences]\nROOT_CAUSE: [1 sentence]\nIMPACT_LEVEL: [HIGH / MEDIUM / LOW] — [impact in 1 sentence]\nRECOMMENDED_STRATEGY:\n• [Action 1]\n• [Action 2]\n• [Action 3]\nOWNER_LANES: [departments]\nTIMELINE: [Day 1-2: ... / Week 1: ...]\nESCALATE_TO_EXECUTIVE: [YES / NO]\nESCALATE_REASON: [1 sentence, or N/A]\nCONFIDENCE: [percentage]`;
