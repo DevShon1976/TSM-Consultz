@@ -3650,6 +3650,35 @@ app.post('/api/finops/action', (req,res)=>{
   res.json({ok:true, action, count:data.actions.length});
 });
 
+// ── HC NODES TRIAGE ──────────────────────────────────────────────────────────
+app.post('/api/hc/triage', async (req, res) => {
+  try {
+    const { client='', taskType='', department='', priority='P3', deadline='', description='', notes='' } = req.body || {};
+    if (!description) return res.status(400).json({ ok: false, error: 'Description is required' });
+    const sp = `You are an expert Healthcare BPO triage AI for TSM. Respond in this EXACT format:\nPRIORITY: [P1-CRITICAL / P2-HIGH / P3-MEDIUM / P4-LOW]\nDEPARTMENT: [best-fit department]\nROUTE_TO: [Billing & Coding / Clinical Operations / Compliance / Executive / Finance / Provider Relations]\nURGENCY_REASON: [1 sentence max]\nRECOMMENDED_ACTION: [2-4 bullet points starting with •]\nESCALATE_TO_STRATEGIST: [YES / NO]\nESCALATE_REASON: [1 sentence, or N/A]\nESTIMATED_RESOLUTION: [timeframe]`;
+    const um = `Client: ${client}\nTask Type: ${taskType}\nDepartment: ${department}\nPriority: ${priority}\nDeadline: ${deadline}\nDescription: ${description}\nNotes: ${notes}`;
+    const result = await callGroq(sp, um);
+    res.json({ ok: true, content: result });
+  } catch (err) {
+    console.error('[/api/hc/triage]', err.message);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// ── HC STRATEGIST ─────────────────────────────────────────────────────────────
+app.post('/api/hc/strategist', async (req, res) => {
+  try {
+    const { task={}, aiTriage='', query='' } = req.body || {};
+    const sp = `You are the TSM Healthcare BPO Strategist. Produce executive-grade strategy in this EXACT format:\nSTRATEGIC_SUMMARY: [2-3 sentences]\nROOT_CAUSE: [1 sentence]\nIMPACT_LEVEL: [HIGH / MEDIUM / LOW] — [impact in 1 sentence]\nRECOMMENDED_STRATEGY:\n• [Action 1]\n• [Action 2]\n• [Action 3]\nOWNER_LANES: [departments]\nTIMELINE: [Day 1-2: ... / Week 1: ...]\nESCALATE_TO_EXECUTIVE: [YES / NO]\nESCALATE_REASON: [1 sentence, or N/A]\nCONFIDENCE: [percentage]`;
+    const um = `TASK: ${JSON.stringify(task)}\nTRIAGE_OUTPUT: ${aiTriage}\nQUERY: ${query || 'Full strategic assessment'}`;
+    const result = await callGroq(sp, um);
+    res.json({ ok: true, content: result });
+  } catch (err) {
+    console.error('[/api/hc/strategist]', err.message);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 app.listen(process.env.PORT || 8080, '0.0.0.0', () => console.log('TSM Shell listening'));
 
 
