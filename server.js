@@ -739,4 +739,3 @@ answer is 0-based index. Questions should match official AHIP exam difficulty. C
 // END INSURANCE SUITE
 // ======================================================
 
-app.use((req, res) => res.status(404).send(`<pre>404 — Not found: ${req.path}</pre>`));
