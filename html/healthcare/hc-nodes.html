@@ -651,48 +651,24 @@ function clearForm() {
   document.querySelector('[data-p="P3"]').classList.add('selected-p3');
 }
 
-// ── GROQ AI CALL ───────────────────────────────────────
-// Calls your Railway backend proxy at /api/groq
-// Backend should forward to https://api.groq.com/openai/v1/chat/completions
-// using process.env.GROQ_API_KEY (or whatever your env var is named)
+// ── TRIAGE API CALL ────────────────────────────────────
+// Uses /api/hc/triage — handled by callGroq() in server.js
+// Same pattern as /api/hc/query already in your backend
 
-async function callGroq(systemPrompt, userMessage) {
-  const res = await fetch('/api/groq', {
+async function runTriageRequest(fields) {
+  const res = await fetch('/api/hc/triage', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user',   content: userMessage  }
-      ],
-      temperature: 0.4,
-      max_tokens: 600,
-      stream: false
-    })
+    body: JSON.stringify(fields)
   });
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`Groq API error ${res.status}: ${err}`);
+    throw new Error(`Triage API error ${res.status}: ${err}`);
   }
   const data = await res.json();
-  return data.choices?.[0]?.message?.content || '';
+  if (!data.ok) throw new Error(data.error || 'Triage failed');
+  return data.content || '';
 }
-
-// ── TRIAGE SYSTEM PROMPT ───────────────────────────────
-const TRIAGE_SYSTEM = `You are an expert Healthcare BPO triage AI for TSM (The Strategic Mind).
-Your job is to analyze incoming healthcare BPO tasks and return a structured triage assessment.
-
-Respond in this exact format (no markdown, no extra commentary):
-
-PRIORITY: [P1-CRITICAL / P2-HIGH / P3-MEDIUM / P4-LOW]
-DEPARTMENT: [best-fit department]
-ROUTE_TO: [Billing & Coding / Clinical Operations / Compliance / Executive / Finance / Provider Relations]
-URGENCY_REASON: [1 sentence max]
-RECOMMENDED_ACTION: [2-4 concrete bullet points starting with •]
-ESCALATE_TO_STRATEGIST: [YES / NO]
-ESCALATE_REASON: [1 sentence, or "N/A"]
-ESTIMATED_RESOLUTION: [timeframe, e.g. "24-48 hours" or "5-7 business days"]`;
 
 // ── RUN TRIAGE ─────────────────────────────────────────
 async function runTriage() {
@@ -719,25 +695,18 @@ async function runTriage() {
   document.getElementById('route-tags').style.display = 'none';
   document.getElementById('btn-escalate').disabled = true;
 
-  const userMsg = `
-Client: ${client || 'Not specified'}
-Task Type: ${type || 'Not specified'}
-Department: ${dept || 'Not specified'}
-Priority (user-set): ${selectedPriority}
-Deadline: ${deadline || 'Not specified'}
-Description: ${desc}
-Notes: ${notes || 'None'}
-`.trim();
-
   try {
-    const result = await callGroq(TRIAGE_SYSTEM, userMsg);
+    const result = await runTriageRequest({
+      client, taskType: type, department: dept,
+      priority: selectedPriority, deadline, description: desc, notes
+    });
     lastTriageResult = result;
     renderTriageResult(result, { client, type, dept, desc, deadline });
     addToQueue({ client, type, dept, desc, priority: selectedPriority, deadline, aiResult: result });
     updateStats(result);
   } catch(e) {
     outputEl.className = 'ai-result-body';
-    outputEl.innerHTML = `<span style="color:#f85149">⚠ Error: ${e.message}</span><br><br><span style="color:var(--muted);font-size:12px">Make sure your Railway backend exposes <code style="color:var(--teal)">/api/groq</code> and forwards to Groq with your API key.</span>`;
+    outputEl.innerHTML = `<span style="color:#f85149">⚠ Error: ${e.message}</span><br><br><span style="color:var(--muted);font-size:12px">Check that <code style="color:var(--teal)">/api/hc/triage</code> is registered in server.js after your /api/hc/query block.</span>`;
   } finally {
     btn.disabled = false;
     btn.innerHTML = '▶ Run AI Triage';

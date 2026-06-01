@@ -1397,6 +1397,65 @@ Operations · Billing · Insurance
 CONFIDENCE
 65%`
       });
+      
+      // ← end of existing /api/hc/query
+
+// ── HC NODES TRIAGE ──────────────────────────────────────────────────────────
+app.post('/api/hc/triage', async (req, res) => {
+  try {
+    const { client='', taskType='', department='', priority='P3', deadline='', description='', notes='' } = req.body || {};
+    if (!description) return res.status(400).json({ ok: false, error: 'Description is required' });
+
+    const sp = `You are an expert Healthcare BPO triage AI for TSM. Analyze the task and respond in this EXACT format:
+PRIORITY: [P1-CRITICAL / P2-HIGH / P3-MEDIUM / P4-LOW]
+DEPARTMENT: [best-fit department]
+ROUTE_TO: [Billing & Coding / Clinical Operations / Compliance / Executive / Finance / Provider Relations]
+URGENCY_REASON: [1 sentence max]
+RECOMMENDED_ACTION: [2-4 bullet points starting with •]
+ESCALATE_TO_STRATEGIST: [YES / NO]
+ESCALATE_REASON: [1 sentence, or N/A]
+ESTIMATED_RESOLUTION: [timeframe]`;
+
+    const um = `Client: ${client}\nTask Type: ${taskType}\nDepartment: ${department}\nPriority: ${priority}\nDeadline: ${deadline}\nDescription: ${description}\nNotes: ${notes}`;
+
+    const result = await callGroq(sp, um);
+    res.json({ ok: true, content: result });
+  } catch (err) {
+    console.error('[/api/hc/triage]', err.message);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// ── HC STRATEGIST ─────────────────────────────────────────────────────────────
+app.post('/api/hc/strategist', async (req, res) => {
+  try {
+    const { task={}, aiTriage='', query='' } = req.body || {};
+
+    const sp = `You are the TSM Healthcare BPO Strategist. Receive pre-triaged tasks and produce executive-grade strategy in this EXACT format:
+STRATEGIC_SUMMARY: [2-3 sentences]
+ROOT_CAUSE: [1 sentence]
+IMPACT_LEVEL: [HIGH / MEDIUM / LOW] — [impact in 1 sentence]
+RECOMMENDED_STRATEGY:
+- [Action 1 — specific, owner-assigned]
+- [Action 2]
+- [Action 3]
+- [Action 4 if needed]
+OWNER_LANES: [comma-separated departments]
+TIMELINE: [Day 1-2: ... / Week 1: ... / Week 2-4: ...]
+ESCALATE_TO_EXECUTIVE: [YES / NO]
+ESCALATE_REASON: [1 sentence, or N/A]
+CONFIDENCE: [percentage]`;
+
+    const um = `TASK: ${JSON.stringify(task)}\nTRIAGE_OUTPUT: ${aiTriage}\nQUERY: ${query || 'Full strategic assessment'}`;
+
+    const result = await callGroq(sp, um);
+    res.json({ ok: true, content: result });
+  } catch (err) {
+    console.error('[/api/hc/strategist]', err.message);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
     }
 
     const preferredOrder = ['operations','billing','insurance','compliance','medical','financial','pharmacy','legal','grants','vendors','taxprep'];
