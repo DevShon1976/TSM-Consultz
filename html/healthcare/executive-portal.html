@@ -884,6 +884,49 @@ console.log("TSM_UI: Direct Neural Link Established.");
 
   </div>
 
+
+  <!-- ─── CFO FINAL REPORT SECTION ─── -->
+  <div style="margin-top:32px;">
+    <div class="section-label"><span>CFO Final Reports — End of Workflow</span></div>
+
+    <!-- Report Buttons -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">
+      <button class="btn btn-primary" id="btn-strategist" onclick="runFinalReport('strategist')">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1L9 3.5v3L5 9 1 6.5v-3L5 1z" stroke="currentColor" stroke-width="1"/></svg>
+        Main-Strategist Report
+      </button>
+      <button class="btn btn-primary" id="btn-executive" onclick="runFinalReport('executive')" style="border-color:var(--green);color:var(--green);background:var(--green-dim);">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="1" y="1" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1"/><path d="M3 5h4M3 3h4M3 7h2" stroke="currentColor" stroke-width="1"/></svg>
+        Executive Portal Package
+      </button>
+      <button class="btn btn-primary" id="btn-bnca" onclick="runFinalReport('bnca')" style="border-color:var(--amber);color:var(--amber);background:var(--amber-dim);">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" stroke="currentColor" stroke-width="1"/><path d="M5 3v2.5L7 7" stroke="currentColor" stroke-width="1"/></svg>
+        Full BNCA Command
+      </button>
+      <button class="btn btn-ghost" id="btn-copy-final" onclick="copyFinalReport()" style="margin-left:auto;">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="1" y="3" width="6" height="7" rx="1" stroke="currentColor" stroke-width="1"/><rect x="3" y="1" width="6" height="7" rx="1" stroke="currentColor" stroke-width="1"/></svg>
+        Copy Report
+      </button>
+    </div>
+
+    <!-- Report Output Panel -->
+    <div class="panel" id="cfo-report-panel" style="display:none;">
+      <div class="panel-header">
+        <div class="panel-title">
+          <div class="panel-title-dot" style="background:var(--green);"></div>
+          <span id="cfo-report-title">CFO Final Report</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:9px;color:var(--text-faint);letter-spacing:1px;" id="cfo-report-ts"></span>
+          <span class="panel-badge ready" id="cfo-report-badge">Ready</span>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div id="cfo-report-output" style="min-height:200px;"></div>
+      </div>
+    </div>
+  </div>
+
 </main>
 
 <!-- ─── TICKER ─── -->
@@ -977,12 +1020,164 @@ console.log("TSM_UI: Direct Neural Link Established.");
     }
   }
 
+
+  // ─── CFO FINAL REPORTS ───────────────────────────────────────────────────
+  let finalReportText = '';
+
+  async function runFinalReport(type) {
+    const panel = document.getElementById('cfo-report-panel');
+    const output = document.getElementById('cfo-report-output');
+    const badge = document.getElementById('cfo-report-badge');
+    const title = document.getElementById('cfo-report-title');
+    const ts = document.getElementById('cfo-report-ts');
+
+    // Button states
+    ['strategist','executive','bnca'].forEach(t => {
+      const b = document.getElementById('btn-' + t);
+      if (b) b.disabled = false;
+    });
+    const activeBtn = document.getElementById('btn-' + type);
+    if (activeBtn) activeBtn.disabled = true;
+
+    const configs = {
+      strategist: {
+        url: '/api/hc/strategist',
+        body: { query: 'Generate full executive CFO final report for HonorHealth. Denial 18.4% $48K stalled, compliance 94.1% 2 CMS penalties, 11 nodes online, $4.2M revenue +8%, appeal win 68%, 7 priority actions 3 urgent.', task: {}, aiTriage: 'Main-Strategist CFO end-of-workflow package' },
+        title: 'Main-Strategist Report',
+        color: 'var(--cyan)',
+        parse: d => d.content || d.result || JSON.stringify(d, null, 2)
+      },
+      executive: {
+        url: '/api/executive/portal',
+        body: {},
+        title: 'Executive Portal Package',
+        color: 'var(--green)',
+        parse: d => {
+          const r = d.result || d;
+          return [
+            '## DECISION SUMMARY',
+            r.decision_summary || '',
+            '',
+            '## BNCA RECOMMENDATION',
+            r.bnca_recommendation || '',
+            '',
+            '## HITL SCRIPT',
+            r.hitl_script || '',
+            '',
+            '## APPROVAL PATH',
+            (r.approval_path || []).map((s,i) => (i+1) + '. ' + s).join('\n'),
+            '',
+            '## NEXT STEP',
+            r.next_step || '',
+            '',
+            'Confidence: ' + (r.confidence || '--') + '%  ·  Audience: ' + (r.audience || 'CFO')
+          ].join('\n');
+        }
+      },
+      bnca: {
+        url: '/api/hc/bnca',
+        body: { suite: 'healthcare-command' },
+        title: 'Full BNCA Command',
+        color: 'var(--amber)',
+        parse: d => {
+          const r = d.result || d;
+          return [
+            '## TOP ISSUE',
+            r.top_issue || '',
+            '',
+            '## RISK LEVEL  ' + (r.risk_level || ''),
+            '',
+            '## BNCA ASSESSMENT',
+            r.bnca || '',
+            '',
+            '## NODE SUMMARY',
+            (r.node_summary || []).map(n => '• ' + (typeof n === 'string' ? n : JSON.stringify(n))).join('\n'),
+            '',
+            '## OWNER LANES',
+            (r.owner_lanes || []).join(' · '),
+            '',
+            'HITL Review Required: ' + (r.hitl_review_required ? 'YES' : 'NO') + '  ·  Confidence: ' + (r.confidence || '--') + '%'
+          ].join('\n');
+        }
+      }
+    };
+
+    const cfg = configs[type];
+    panel.style.display = 'block';
+    title.textContent = cfg.title;
+    badge.textContent = 'Loading';
+    badge.className = 'panel-badge watch';
+    output.innerHTML = `<div class="loading-state"><div class="spinner"></div><div class="loading-text">Generating ${cfg.title}...</div></div>`;
+
+    try {
+      const res = await fetch(cfg.url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cfg.body)
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+
+      finalReportText = cfg.parse(data);
+      const formatted = finalReportText
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/^## (.+)$/gm, (_, t) => `<span style="display:block;color:${cfg.color};font-size:11px;letter-spacing:2px;text-transform:uppercase;margin:18px 0 6px;border-bottom:1px solid var(--border);padding-bottom:4px;">${t}</span>`)
+        .replace(/^• (.+)$/gm, '<span style="display:block;padding-left:12px;color:var(--text-muted);">· $1</span>');
+
+      output.innerHTML = `<pre style="font-family:var(--mono);font-size:12px;color:var(--text-muted);line-height:1.8;white-space:pre-wrap;word-break:break-word;">${formatted}</pre>`;
+      badge.textContent = 'Ready';
+      badge.className = 'panel-badge ready';
+      ts.textContent = new Date().toLocaleTimeString();
+      panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch(e) {
+      output.innerHTML = `<div class="error-state"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1"/><path d="M7 4v3M7 10v.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg> ${cfg.title} error: ${e.message}</div>`;
+      badge.textContent = 'Error';
+      badge.className = 'panel-badge urgent';
+    } finally {
+      if (activeBtn) activeBtn.disabled = false;
+    }
+  }
+
+  function copyFinalReport() {
+    if (!finalReportText) return;
+    navigator.clipboard.writeText(finalReportText).then(() => {
+      const btn = document.getElementById('btn-copy-final');
+      const orig = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = orig, 1500);
+    });
+  }
+
   function copyReport() {
     if (!reportData) return;
     navigator.clipboard.writeText(String(reportData)).catch(() => {});
   }
 
   // Auto-load on page open
+
+  // ─── PREVIEW MOCK (removed on Railway — real fetch takes over) ───────────
+  (function() {
+    const _realFetch = window.fetch;
+    window.fetch = async function(url, opts) {
+      if (typeof url === 'string' && url.startsWith('/api/')) {
+        await new Promise(r => setTimeout(r, 800)); // simulate latency
+        const path = url.split('?')[0];
+        const mockResponses = {
+          '/api/hc/query': { answer: '## REVENUE AT RISK\n**$2.8M** exposure across denial ($48K stalled), DSO drift, DIR adjustments, and litigation reserve.\n\n## COMPLIANCE POSTURE\n**94.1%** system compliance. 2 CMS penalties active — response required by **Friday**. Remediation in progress across 2 nodes.\n\n## NODE STATUS\n**11/11 nodes online.** Neural sync live. All HC suite active. No downtime events in 72hr window.\n\n## PRIORITY ACTIONS\n**7 total — 3 URGENT:**\n• Billing: Resolve 18.4% denial rate, $48K stalled across 3 payers\n• Compliance: Submit CMS penalty response before Friday deadline\n• Operations: Clear intake handoff bottleneck — cycle 9.2% above baseline\n\n## OPERATIONAL THROUGHPUT\nRevenue **$4.2M +8% MoM**. Appeal win rate **68%**. 31 open intakes in handoff queue. Grants pipeline **$2.9M** — 3 HRSA reports overdue 72hr.' },
+          '/api/hc/strategist': { ok: true, content: 'STRATEGIC_SUMMARY: HonorHealth is operating at 94.1% compliance with $2.8M revenue at risk concentrated in billing denials and CMS penalty exposure. Immediate action required on 3 urgent nodes before Friday deadline.\nROOT_CAUSE: Authorization friction across 3 payers driving 18.4% denial rate and $48K in stalled claims.\nIMPACT_LEVEL: HIGH — $48K immediate + $2.8M total exposure with CMS penalty escalation risk.\nRECOMMENDED_STRATEGY:\n• Submit CMS penalty response by Friday — assign compliance lead today\n• Launch payer auth appeal sprint — target 3 friction payers this week\n• Clear 31-item intake handoff queue — assign ops coordinator\nOWNER_LANES: Billing Manager, Compliance Officer, Office Manager, CFO\nTIMELINE: Day 1-2: CMS response + payer outreach / Week 1: Denial appeal sprint + intake clearance\nESCALATE_TO_EXECUTIVE: YES\nESCALATE_REASON: CMS penalty deadline and $2.8M revenue at risk require CFO sign-off.\nCONFIDENCE: 88%' },
+          '/api/executive/portal': { ok: true, result: { audience: 'CFO / Decision Maker', decision_summary: 'HonorHealth requires immediate CFO action on 3 urgent items: CMS penalty response (Friday), $48K billing denial sprint, and intake cycle correction. System is 94.1% compliant with $4.2M revenue +8% MoM.', bnca_recommendation: 'Approve 30-day denial remediation pilot. Assign compliance lead to CMS response. Authorize operations coordinator for intake queue clearance.', hitl_script: 'CFO review and sign-off needed on CMS penalty response letter, payer escalation authorization, and ops coordinator assignment. Estimated 45-minute decision session.', approval_path: ['Compliance Officer', 'Billing Manager', 'Office Manager', 'CFO Final Approval'], next_step: 'Schedule CFO walkthrough or approve 30-day pilot via digital signature.', confidence: 87 } },
+          '/api/hc/bnca': { ok: true, result: { top_issue: 'Billing denial rate 18.4% with $48K stalled — auth friction across 3 payers requires immediate escalation.', risk_level: 'URGENT', bnca: 'Healthcare command is operating under elevated revenue risk. CMS penalty exposure and billing denial concentration require concurrent remediation. Node compliance at 94.1% — 2 nodes below threshold with active remediation. Grants pipeline at risk due to HRSA reporting backlog.', node_summary: ['Billing: URGENT — 18.4% denial, $48K stalled', 'Compliance: URGENT — 2 CMS penalties, Friday deadline', 'Operations: WATCH — intake delays 9.2% above baseline', 'Grants: WATCH — 3 HRSA reports overdue 72hr', 'Medical: READY — $4.2M revenue +8% MoM', 'Insurance: READY — appeal win rate 68%'], owner_lanes: ['Billing Manager', 'Compliance Officer', 'Office Manager', 'CFO'], hitl_review_required: true, confidence: 86 } }
+        };
+        const mock = mockResponses[path];
+        if (mock) {
+          return { ok: true, status: 200, json: async () => mock };
+        }
+      }
+      return _realFetch.apply(this, arguments);
+    };
+  })();
+  // ─── END PREVIEW MOCK ────────────────────────────────────────────────────
+
   loadReport();
 </script>
 <script src="/tsm-ai-client.js"></script>
