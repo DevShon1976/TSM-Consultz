@@ -253,35 +253,6 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 @keyframes fi{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
 .fi{animation:fi .2s ease both}
 </style>
-<script>
-window.TSM_UI = {
-    runAudit: async (sector, factor) => {
-        const feed = document.querySelector('.intelligence-feed-output') || document.getElementById('intelligence-feed-output');
-        if (feed) feed.innerHTML = '<span style="color: #00ffff;">[STRATEGIST] Internal Link: Processing...</span>';
-        try {
-            const res = await fetch('/api/audit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query: `auditops "${sector}" --factor "${factor}" --logic strategist` })
-            });
-            const data = await res.json();
-            if (feed) feed.innerText = `[STRATEGIST] ${data.output || "Analysis Complete."}`;
-        } catch (e) {
-            if (feed) feed.innerText = "[STRATEGIST] Local API Bridge Failed.";
-        }
-    }
-};
-// Wire the sector cards to the auto-fill search prompt logic
-document.addEventListener('click', (e) => {
-    const card = e.target.closest('.module-card');
-    if (card) {
-        const sector = card.dataset.sector || "Construction";
-        const factor = card.querySelector('h3')?.innerText || "General Audit";
-        TSM_UI.runAudit(sector, factor);
-    }
-});
-console.log("TSM_UI: Direct Neural Link Established.");
-</script>
 </head>
 <body>
 
@@ -746,7 +717,7 @@ function showTab(id){
   });
 }
 
-// ── API CALL ──
+// ── API CALL — routes through Railway server ──
 async function callClaude(userMsg, outEl, thinkEl, errEl){
   if(thinkEl){thinkEl.classList.add('show');}
   if(errEl){errEl.classList.remove('show');}
@@ -767,24 +738,22 @@ async function callClaude(userMsg, outEl, thinkEl, errEl){
   },1800) : null;
 
   try{
-    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+    const resp = await fetch('/api/hc/query',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:1000,
         system: HC_CONTEXT,
-        messages:[{role:'user',content:userMsg}]
+        message: userMsg
       })
     });
     const data = await resp.json();
     if(thinkInterval) clearInterval(thinkInterval);
     if(thinkEl) thinkEl.classList.remove('show');
-    if(data.content && data.content[0]){
-      outEl.textContent = data.content[0].text;
+    if(data.output){
+      outEl.textContent = data.output;
       outEl.classList.add('show','fi');
     } else if(data.error){
-      throw new Error(data.error.message);
+      throw new Error(data.error);
     }
     document.getElementById('sb-status').textContent='READY';
   } catch(e){
@@ -832,7 +801,6 @@ const PACKS = {
 
 async function runPack(packId){
   showTab('exec');
-  const packNames={revenue:'Revenue Pack',variance:'Office Variance Pack',denial:'Denial Recovery Pack',auth:'Auth Friction Pack',compliance:'Compliance Sweep Pack',executive:'Executive Brief Pack'};
   document.querySelector('.pack-btn[onclick="runPack(\''+packId+'\')"]')?.classList.add('running');
   await callClaude(PACKS[packId], document.getElementById('strat-out'), document.getElementById('thinking-bar'), document.getElementById('strat-err'));
   document.querySelectorAll('.pack-btn').forEach(b=>b.classList.remove('running'));
@@ -842,11 +810,23 @@ async function runPack(packId){
 async function loadSignals(){
   const out = document.getElementById('signals-out');
   out.innerHTML='<div style="font-size:9px;color:var(--purple);padding:8px">◈ Refreshing HC signals...</div>';
-  await callClaude(
-    'List the top 4 live strategic signals for HonorHealth right now. For each: signal title, source (which office/node), sub-detail, and urgency level (URGENT/HIGH/MED/INFRA). Focus on revenue cycle, denials, auth, and coding issues only. Return as a simple numbered list.',
-    {classList:{add:()=>{},remove:()=>{}},textContent:'',innerText:''},
-    null, null
-  ).catch(()=>{});
+  const tmpOut = {classList:{add:()=>{},remove:()=>{}},textContent:''};
+  try{
+    const resp = await fetch('/api/hc/query',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        system: HC_CONTEXT,
+        message:'List the top 4 live strategic signals for HonorHealth right now. For each: signal title, source (which office/node), sub-detail, and urgency level (URGENT/HIGH/MED/INFRA). Focus on revenue cycle, denials, auth, and coding issues only. Return as a simple numbered list.'
+      })
+    });
+    const data = await resp.json();
+    if(data.output){
+      out.innerHTML='<pre style="font-size:9px;color:var(--text);white-space:pre-wrap">'+data.output+'</pre>';
+    }
+  } catch(e){
+    out.innerHTML='<div style="font-size:9px;color:var(--red)">Signal refresh failed</div>';
+  }
 }
 
 // ── TAB-SPECIFIC ANALYSES ──
@@ -879,19 +859,17 @@ function clearOut(){
 (async()=>{
   setTimeout(async()=>{
     try{
-      const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      const resp = await fetch('/api/hc/query',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
-          model:'claude-sonnet-4-20250514',
-          max_tokens:60,
           system:'You are HC-Strategist for HonorHealth. Return ONLY a JSON object: {"score":NUMBER,"label":"SHORT_LABEL"} — score 0-100 representing overall revenue cycle health. No other text.',
-          messages:[{role:'user',content:'Current data: denial rate 18.4% (threshold 15%), $48K at risk, clean claim rate 94.2% vs 97% target, 231 denied claims, Mesa 22.1% denial CRITICAL, CLM-0334 48hr deadline. Score the overall revenue cycle health.'}]
+          message:'Current data: denial rate 18.4% (threshold 15%), $48K at risk, clean claim rate 94.2% vs 97% target, 231 denied claims, Mesa 22.1% denial CRITICAL, CLM-0334 48hr deadline. Score the overall revenue cycle health.'
         })
       });
       const data = await resp.json();
-      if(data.content && data.content[0]){
-        const txt = data.content[0].text.replace(/```json|```/g,'').trim();
+      if(data.output){
+        const txt = data.output.replace(/```json|```/g,'').trim();
         const parsed = JSON.parse(txt);
         document.getElementById('strat-score').textContent=parsed.score;
         document.getElementById('strat-score').className='kpi-v '+(parsed.score<60?'vr':parsed.score<75?'va':'vg');
