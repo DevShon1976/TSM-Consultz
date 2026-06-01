@@ -624,7 +624,7 @@ app.post('/api/strategist/query', async function(req, res) {
 // final fallback 404 (single source of truth)
 
 // ======================================================
-// INSURANCE SUITE — SERVER-SIDE AI ENDPOINTS
+// INSURANCE SUITE — SERVER-SIDE AI ENDPOINT
 // All calls stay server-side. GROQ_API_KEY never reaches browser.
 // ======================================================
 
