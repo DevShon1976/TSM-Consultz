@@ -168,7 +168,7 @@ app.post('/api/hc/query', async function (req, res) {
   } catch (e) { 
     return res.status(500).json({ ok: false, error: e.message }); 
   }
-});
+});f
 
 // 2. Core Module Setup & File Path Initializations (Using existing global path module instance)
 // 2. Core Module Setup & File Path Initializations (Safe auto-resolve fallback)
@@ -182,7 +182,7 @@ async function groqChat(systemPrompt, userMessage, maxTokens = 1024) {
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userMessage }
     ],
-    model: 'llama3-8b-8192',
+    model: 'llama3.3-70-B-Versatile',
     max_tokens: maxTokens,
   });
   return completion.choices[0]?.message?.content || '';
@@ -894,9 +894,9 @@ app.post('/api/hc/layer2', express.json(), async function (req, res) {
   } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
 
-const PORT = process.env.PORT || 8080;
-const server = app.listen(PORT, '0.0.0.0', () => {
-    console.log(`TSM Platform Core Engine listening on port ${PORT}`);
+const _PORT = process.env.PORT || 8080;
+const server = app.listen(_PORT, '0.0.0.0', () => {
+    console.log(`TSM Platform Core Engine listening on port ${_PORT}`);
 });
 
 server.on('error', (err) => {
