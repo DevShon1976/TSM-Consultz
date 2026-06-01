@@ -162,8 +162,9 @@ app.post('/api/hc/query', async function (req, res) {
 });
 
 // 2. Core Module Setup & File Path Initializations (Using existing global path module instance)
-const dirPath = path.join(__dirname, 'html');
-
+// 2. Core Module Setup & File Path Initializations (Safe auto-resolve fallback)
+const safePath = typeof path !== 'undefined' ? path : require('path');
+const dirPath = safePath.join(__dirname, 'html');
 // 3. Static File Middleware Allocation
 app.use('/html', express.static(dirPath));
 app.use(express.static(dirPath));
