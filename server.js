@@ -172,6 +172,26 @@ app.post('/api/hc/query', async function (req, res) {
 
 // 2. Core Module Setup & File Path Initializations (Using existing global path module instance)
 // 2. Core Module Setup & File Path Initializations (Safe auto-resolve fallback)
+// Groq AI Setup
+const Groq = require('groq-sdk');
+const groqClient = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+async function groqChat(systemPrompt, userMessage, maxTokens = 1024) {
+  const completion = await groqClient.chat.completions.create({
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userMessage }
+    ],
+    model: 'llama3-8b-8192',
+    max_tokens: maxTokens,
+  });
+  return completion.choices[0]?.message?.content || '';
+}
+
+const SP = {
+  healthcare: 'You are an expert TSM healthcare strategist. Answer clearly and professionally.',
+};
+
 const safePath = typeof path !== 'undefined' ? path : require('path');
 const dirPath = safePath.join(__dirname, 'html');
 // 3. Static File Middleware Allocation
