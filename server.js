@@ -135,10 +135,11 @@ app.use("/construction", express.static(path.join(__dirname, "html/construction-
 
 app.post('/api/hc/query', async function(req, res) {
   var body = req.body || {};
-  console.log('[HC QUERY]', JSON.stringify(body));
-  try { var a = await groqChat(SP.healthcare, body.question||body.query||'', body.maxTokens||1024);
-     return res.json({ ok:true, answer:a, createdAt:new Date().toISOString() }); }
-  catch(e) { return res.status(500).json({ ok:false, error:e.message }); }
+  if (!body.question && !body.query) return res.status(400).json({ ok: false, error: 'Query required' });
+  try {
+    var a = await groqChat(SP.healthcare, body.question || body.query, body.maxTokens || 1024);
+    return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() });
+  } catch(e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
 
 suites.forEach(s => {
@@ -798,5 +799,25 @@ CONFIDENCE: [0-100]%`;
     res.status(500).json({ ok: false, error: err.message });
   }
 });
+app.post('/api/hc/ask', express.json(), async function(req, res) {
+  var body = req.body || {};
+  if (!body.message || !body.message.trim()) return res.status(400).json({ ok: false, error: 'Message required' });
+  try {
+    var a = await groqChat(body.system || SP.healthcare, body.message, 1024);
+    return res.json({ ok: true, content: a });
+  } catch(e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.post('/api/hc/layer2', express.json(), async function(req, res) {
+  var body = req.body || {};
+  var org = body.system || 'TSM Healthcare';
+  var loc = body.location || '';
+  var sp = 'You are a senior Healthcare BPO enterprise strategist for ' + org + (loc ? ' · ' + loc : '') + '. Synthesize findings across ALL nodes: Billing, Insurance, Compliance, Medical, Operations, Financial, Grants, Legal, Pharmacy, TaxPrep, Vendors. Return structured BNCA:\n\nENTERPRISE BNCA SUMMARY\n========================\nTOP RISKS (ranked by revenue impact):\n1. [Risk · Node · $ impact]\n2. [Risk · Node · $ impact]\n3. [Risk · Node · $ impact]\n\nIMMEDIATE ACTIONS (next 48 hours):\n1. [Action · Owner · Outcome]\n2. [Action · Owner · Outcome]\n3. [Action · Owner · Outcome]\n\n30-DAY RECOVERY PLAN:\n[Cross-node plan with milestones]\n\nESCALATE_TO_EXECUTIVE: YES/NO\nESCALATE_REASON: [reason]\nCONFIDENCE: [0-100]%';
+  try {
+    var a = await groqChat(sp, 'Run full enterprise BNCA for ' + org + (loc ? ' at ' + loc : ''), 1500);
+    return res.json({ ok: true, output: a });
+  } catch(e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
 app.listen(process.env.PORT || 8080, '0.0.0.0', () => console.log('TSM Shell listening'));
 
