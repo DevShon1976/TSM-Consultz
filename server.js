@@ -98,6 +98,7 @@ app.get("/api/hc/strategist-rollup", (req, res) => {
 // AUTO-INJECT tsm-launcher.js into every HTML page
 app.use(function(req, res, next) {
   if (!req.path.endsWith('.html') && req.path !== '/') return next();
+if (req.path.includes('hc-strategist')) return next();
   var origSendFile = res.sendFile.bind(res);
   res.sendFile = function(filePath, opts, cb) {
     fs.readFile(filePath, 'utf8', function(err, html) {
