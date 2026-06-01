@@ -3648,7 +3648,7 @@ app.post('/api/finops/action', (req,res)=>{
   res.json({ok:true, action, count:data.actions.length});
 });
 
-// ── HC NODES TRIAGE ──────────────────────────────────────────────────────────
+// ── HC NODE TRIAGE ──────────────────────────────────────────────────────────
 app.post('/api/hc/triage', async (req, res) => {
   try {
     const { client='', taskType='', department='', priority='P3', deadline='', description='', notes='' } = req.body || {};
