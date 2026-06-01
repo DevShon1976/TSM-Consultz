@@ -129,7 +129,7 @@ app.use("/construction", express.static(path.join(__dirname, "html/construction-
 ['hc-medical','hc-billing','hc-vendors','hc-grants', 'hc-insurance','hc-legal','hc-operations','hc-financial','hc-taxprep','hc-compliance', 'hc-pharmacy','hc-strategist'].forEach
 (function(node) {
   var dir = path.join(__dirname, 'html/healthcare', node);
-  app.use('/healthcare/' + node, express.static(dir));
+  app.use('/healthcare/' + node, express.static(dir, { setHeaders: function(res) { res.setHeader('Cache-Control','no-store'); } }));
   app.get('/healthcare/' + node, function(req, res) {
     res.sendFile(path.join(dir, 'index.html'));
   });
