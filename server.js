@@ -112,7 +112,7 @@ if (req.path.includes('hc-strategist')) return next();
 });
 
 // CORE STATIC MOUNTS — single source of truth
-app.use("/html",         express.static(path.join(__dirname, "html")));
+app.use("/html",         express.static(path.join(__dirname, "html"), { setHeaders: function(res) { res.setHeader('Cache-Control','no-store'); } }));
 app.use("/js",           express.static(path.join(__dirname, "html/js")));
 app.use("/bpo",          express.static(path.join(__dirname, "html/bpo")));
 app.use("/shared",       express.static(path.join(__dirname, "html/bpo/shared")));
