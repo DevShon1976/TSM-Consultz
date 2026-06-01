@@ -14,7 +14,7 @@ const GuidedMission = (function () {
       claim: { cpt: '27447', desc: 'Total Knee Replacement', dos: '2025-05-18', amount: '$28,400', denial: 'CO-197', auth: 'WQ2024-8812' },
       objectives: {
         0: { // Confirm patient demographics
-          node: 'billing',
+          node: 'insurance',
           instruction: 'Verify the patient demographics below match what is on file in the billing system. Check DOB and Insurance ID for errors.',
           fields: [
             { label: 'Patient Name', value: 'Maria Santos', editable: false },
@@ -27,7 +27,7 @@ const GuidedMission = (function () {
           learn: 'Always cross-reference the Insurance ID digit-by-digit against the payer portal. Transpositions are the #1 cause of CO-4 rejections.'
         },
         1: { // Verify insurance ID formatting
-          node: 'billing',
+          node: 'insurance',
           instruction: 'The BlueCross ID format requires a specific prefix. Reformat the ID below to match BCBS requirements.',
           fields: [
             { label: 'Raw ID from registration', value: 'BCBS771204X', editable: true, correct: 'BCBS-771-204-X', hint: 'BCBS format: PREFIX-XXX-XXX-X (add hyphens)' },
@@ -38,7 +38,7 @@ const GuidedMission = (function () {
           learn: 'Each payer has a unique ID format. BCBS uses PREFIX-XXX-XXX-X. UHC uses 9-digit numeric. Aetna uses alpha-numeric with no hyphens. Always verify in the payer portal before submitting.'
         },
         2: { // Obtain prior auth
-          node: 'denials',
+          node: 'insurance',
           instruction: 'CPT 27447 (Total Knee Replacement) was denied CO-197 — auth not on file. Auth WQ2024-8812 EXISTS in the payer portal. Select the correct resolution path.',
           fields: [
             { label: 'Denial Code', value: 'CO-197', editable: false },
@@ -55,7 +55,7 @@ const GuidedMission = (function () {
           learn: 'CO-197 = Prior auth not on file. If auth EXISTS, always submit a corrected claim — not an appeal. If auth was NEVER obtained, then you need retro auth or a formal appeal with clinical documentation.'
         },
         3: { // Run eligibility check
-          node: 'coding',
+          node: 'insurance',
           instruction: 'Run a 271 eligibility check for Maria Santos. Review the response fields below and identify any coverage issues.',
           fields: [
             { label: 'Coverage Status', value: 'ACTIVE', editable: false },
@@ -70,7 +70,7 @@ const GuidedMission = (function () {
           learn: '271 eligibility responses tell you coverage status, benefits, and auth requirements. Always run a 271 BEFORE the date of service. A 270/271 transaction takes seconds and prevents $28K denials.'
         },
         4: { // Flag intake errors
-          node: 'payments',
+          node: 'insurance',
           instruction: 'Review the registration intake log below. Flag any errors that need front desk correction.',
           fields: [
             { label: 'Registration Date', value: '2025-05-15', editable: false },
@@ -162,7 +162,7 @@ const GuidedMission = (function () {
       patient: { name: 'James Okafor', dob: '1962-09-03', id: 'UHC-887234109', payer: 'UnitedHealthcare', plan: 'Choice Plus' },
       claim: { cpt: '99213+36415', desc: 'Office Visit + Venipuncture', dos: '2025-05-20', amount: '$185', denial: 'CO-4', auth: 'N/A' },
       objectives: {
-        0: { node: 'billing', instruction: 'Review the claim below. CO-4 (modifier conflict) was received. Identify the missing modifier.', fields: [{ label: 'CPT 1', value: '99213 — Office Visit', editable: false }, { label: 'CPT 2', value: '36415 — Venipuncture', editable: false }, { label: 'Missing Modifier on 99213', value: '', editable: true, correct: '-25', hint: 'E/M on same day as minor procedure requires which modifier?' }], action: { label: 'Apply Modifier & Resubmit', validates: true }, success: 'Modifier -25 applied to 99213. Corrected claim submitted. CO-4 resolved.', learn: 'Modifier -25 is required on an E/M code when billed same-day as a minor procedure (like venipuncture). It certifies the E/M was significant and separately identifiable from the procedure.' }
+        0: { node: 'vendors', instruction: 'Review the claim below. CO-4 (modifier conflict) was received. Identify the missing modifier.', fields: [{ label: 'CPT 1', value: '99213 — Office Visit', editable: false }, { label: 'CPT 2', value: '36415 — Venipuncture', editable: false }, { label: 'Missing Modifier on 99213', value: '', editable: true, correct: '-25', hint: 'E/M on same day as minor procedure requires which modifier?' }], action: { label: 'Apply Modifier & Resubmit', validates: true }, success: 'Modifier -25 applied to 99213. Corrected claim submitted. CO-4 resolved.', learn: 'Modifier -25 is required on an E/M code when billed same-day as a minor procedure (like venipuncture). It certifies the E/M was significant and separately identifiable from the procedure.' }
       }
     }
   };
