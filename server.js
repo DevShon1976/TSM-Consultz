@@ -1,4 +1,13 @@
-const express = require("express");
+const express = require('express');
+
+process.on('uncaughtException', (err) => {
+  console.error('💥 UNCAUGHT EXCEPTION:', err.message, err.stack);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('💥 UNHANDLED REJECTION at:', promise, 'reason:', reason);
+});
+
 const path = require("path");
 const fs = require("fs");
 
@@ -882,6 +891,10 @@ app.post('/api/hc/layer2', express.json(), async function (req, res) {
 });
 
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`TSM Platform Core Engine listening on port ${PORT}`);
+});
+
+server.on('error', (err) => {
+  console.error('💥 SERVER ERROR:', err.message, err.stack);
 });
