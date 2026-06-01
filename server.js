@@ -157,8 +157,10 @@ suites.forEach(s => {
 
   const dirPath = path.join(__dirname, s.dir);
 
-  app.use(s.route, express.static(dirPath));
-
+// Serve files cleanly whether called via /html/ pathing or root directory layouts
+app.use('/html', express.static(__dirname + '/html'));
+app.use(express.static(__dirname + '/html'));
+app.use(express.static(__dirname));
   app.get(s.route, (req, res) => {
     res.sendFile(path.join(dirPath, s.index));
   });
@@ -825,13 +827,22 @@ CONFIDENCE: [0-100]%`;
     res.status(500).json({ ok: false, error: err.message });
   }
 });
-app.post('/api/hc/ask', express.json(), async function (req, res) {
-  var body = req.body || {};
-  if (!body.message || !body.message.trim()) return res.status(400).json({ ok: false, error: 'Message required' });
-  try {
-    var a = await groqChat(body.system || SP.healthcare, body.message, 1024);
-    return res.json({ ok: true, content: a });
-  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+app.post('/api/hc/ask', express.json(), async function (req, res){
+    try {
+        var body = req.body || {};
+        if (!body.message || !body.message.trim()) {
+            return res.status(400).json({ ok: false, error: 'Message input is required.' });
+        }
+
+        // Verify safety fallback logic in case global constants are unassigned
+        const systemPrompt = body.system || (typeof SP !== 'undefined' ? SP.healthcare : 'Default healthcare system prompt.');
+
+        var a = await groqChat(systemPrompt, body.message);
+        return res.json({ ok: true, content: a });
+    } catch (e) {
+        console.error("Critical error handled gracefully inside /api/hc/ask:", e);
+        return res.status(500).json({ ok: false, error: "Internal platform fallback response activated." });
+    }
 });
 
 // Operational fallback function to fulfill system routes
