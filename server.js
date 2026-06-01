@@ -750,5 +750,53 @@ app.post('/api/hc/strategist', express.json(), async (req, res) => {
     res.status(500).json({ ok: false, error: err.message });
   }
 });
+// ── /api/hc/ask ─────────────────────────────────────────────────────────────
+app.post('/api/hc/ask', express.json(), async (req, res) => {
+  try {
+    const { system = 'You are a healthcare BPO strategy expert. Return concise, actionable executive-grade intelligence.', message = '' } = req.body || {};
+    if (!message.trim()) return res.status(400).json({ ok: false, error: 'Message is required' });
+    const result = await groqChat(system, message);
+    res.json({ ok: true, content: result });
+  } catch (err) {
+    console.error('[/api/hc/ask]', err.message);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// ── /api/hc/layer2 ───────────────────────────────────────────────────────────
+app.post('/api/hc/layer2', express.json(), async (req, res) => {
+  try {
+    const { system: org = 'TSM Healthcare', location = '' } = req.body || {};
+    const sp = `You are a senior Healthcare BPO enterprise strategist for ${org}${location ? ' · ' + location : ''}. 
+Synthesize findings across ALL operational nodes: Billing, Insurance, Compliance, Medical, Operations, Financial, Grants, Legal, Pharmacy, TaxPrep, Vendors.
+Return a structured BNCA report in this EXACT format:
+
+ENTERPRISE BNCA SUMMARY
+========================
+TOP RISKS (ranked by revenue impact):
+1. [Risk · Node · $ impact]
+2. [Risk · Node · $ impact]
+3. [Risk · Node · $ impact]
+
+IMMEDIATE ACTIONS (next 48 hours):
+1. [Action · Owner Lane · Expected outcome]
+2. [Action · Owner Lane · Expected outcome]
+3. [Action · Owner Lane · Expected outcome]
+
+30-DAY RECOVERY PLAN:
+[Concise cross-node plan with milestones]
+
+ESCALATE_TO_EXECUTIVE: YES/NO
+ESCALATE_REASON: [reason if YES]
+CONFIDENCE: [0-100]%`;
+
+    const um = `Run full enterprise BNCA for ${org}${location ? ' at ' + location : ''}. Synthesize all node findings, rank by urgency and revenue impact, and produce the structured report.`;
+    const result = await groqChat(sp, um);
+    res.json({ ok: true, output: result });
+  } catch (err) {
+    console.error('[/api/hc/layer2]', err.message);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
 app.listen(process.env.PORT || 8080, '0.0.0.0', () => console.log('TSM Shell listening'));
 
