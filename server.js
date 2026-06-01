@@ -111,6 +111,10 @@ if (req.path.includes('hc-strategist')) return next();
   next();
 });
 
+app.get('/html/hc-strategist', function(req, res) { res.redirect('/healthcare/hc-strategist/'); });
+app.get('/html/hc-strategist/', function(req, res) { res.redirect('/healthcare/hc-strategist/'); });
+app.get('/html/hc-strategist/index.html', function(req, res) { res.redirect('/healthcare/hc-strategist/'); });
+
 // CORE STATIC MOUNTS — single source of truth
 app.use("/html",         express.static(path.join(__dirname, "html"), { setHeaders: function(res) { res.setHeader('Cache-Control','no-store'); } }));
 app.use("/js",           express.static(path.join(__dirname, "html/js")));
