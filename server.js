@@ -10,473 +10,15 @@ process.on('unhandledRejection', (reason, promise) => {
 
 const path = require("path");
 const fs = require("fs");
+const https = require('https');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 const HTML_ROOT = path.join(__dirname, "html");
 
-app.get("/health", (req, res) => res.json({ status: "ok" }));
-app.post("/api/finops/bnca/report", (req, res) => res.json({ ok: true }));
-app.post("/api/chat", (req, res) => res.json({ ok: true }));
-app.post("/api/bpo/query", (req, res) => res.json({ reply: "ok" }));
-app.post("/api/wip/sector-ai", (req, res) => res.json({ content: "ok" }));
+app.use(express.json());
 
-const suites = [
-  { route: "/construction", dir: "html/construction-suite", index: "construction-hub.html" },
-  { route: "/finops", dir: "html/finops-suite", index: "finops-presentation/index.html" },
-  { route: "/healthcare", dir: "html/healthcare", index: "index.html" },
-  { route: "/insurance", dir: "html/tsm-insurance", index: "ins-presentation.html" },
-  { route: "/music", dir: "html/music-command", index: "index.html" },
-];
-
-
-
-
-
-
-
-// =====================================================
-const TSM_MESH = {
-  HEALTHCARE: {
-    owner: "HC Strategist",
-    controller: "Healthcare Command",
-    risks: ["Revenue leakage", "Denial escalation", "Patient throughput degradation", "Compliance exposure"]
-  },
-  CONSTRUCTION: {
-    owner: "Construction Strategist",
-    controller: "Construction Command",
-    risks: ["Permit delays", "Schedule variance", "Cost overrun", "Supply chain disruption"]
-  },
-  FINANCE: {
-    owner: "Financial Strategist",
-    controller: "Financial Command",
-    risks: ["Margin compression", "Payer variance", "Cash flow slowdown", "Revenue forecasting deviation"]
-  }
-};
-
-function buildMeshBNCA(sector, context) {
-  const cfg = TSM_MESH[sector] || TSM_MESH.HEALTHCARE;
-  const riskLines = cfg.risks.map(r => `• ${r}`).join("\n");
-
-  return `${sector} BNCA SYNTHESIS
-
-TOP ISSUE
-${context || "Operational degradation detected"}
-
-WHY IT MATTERS
-This issue impacts executive KPIs, operational throughput, financial performance, compliance posture, and strategist escalation readiness.
-
-BEST NEXT ACTIONS
-1. Assign accountable owner lane.
-2. Resolve blockers inside SLA window.
-3. Relay unresolved escalation to strategist.
-4. Generate executive briefing packet.
-
-OWNER LANE
-${cfg.owner}
-
-CONTROLLER
-${cfg.controller}
-
-ENTERPRISE RISKS
-${riskLines}
-
-HITL DECISION
-Human leadership review required before enterprise escalation.
-
-STRATEGIST RELAY
-Signal routed into strategist synthesis layer for enterprise prioritization.
-
-CONFIDENCE
-94%`;
-}
-
-app.get("/api/hc/strategist-rollup", (req, res) => {
-  res.json({
-    ok: true,
-    controller: "HC STRATEGIST",
-    status: "ROLLUP ACTIVE",
-    nodes_online: 11,
-    executive_escalations: 3,
-    bnca: "Enterprise healthcare synthesis complete",
-    mesh: true,
-    timestamp: new Date().toISOString()
-  });
-});
-
-// AUTO-INJECT tsm-launcher.js into every HTML page
-app.use(function (req, res, next) {
-  if (!req.path.endsWith('.html') && req.path !== '/') return next();
-  if (req.path.includes('hc-strategist')) return next();
-  var origSendFile = res.sendFile.bind(res);
-  res.sendFile = function (filePath, opts, cb) {
-    fs.readFile(filePath, 'utf8', function (err, html) {
-      if (err) return origSendFile(filePath, opts, cb);
-      res.setHeader('Content-Type', 'text/html');
-      res.send(html.replace(/<\/body>/i,
-        '<script src="/js/tsm-launcher.js"></script>\n</body>'));
-    });
-  };
-  next();
-});
-
-app.get('/html/hc-strategist', function (req, res) { res.redirect('/healthcare/hc-strategist/'); });
-app.get('/html/hc-strategist/', function (req, res) { res.redirect('/healthcare/hc-strategist/'); });
-app.get('/html/hc-strategist/index.html', function (req, res) { res.redirect('/healthcare/hc-strategist/'); });
-
-// CORE STATIC MOUNTS — single source of truth
-app.use("/html", express.static(path.join(__dirname, "html"), { setHeaders: function (res) { res.setHeader('Cache-Control', 'no-store'); } }));
-app.use("/js", express.static(path.join(__dirname, "html/js")));
-app.use("/bpo", express.static(path.join(__dirname, "html/bpo")));
-app.use("/shared", express.static(path.join(__dirname, "html/bpo/shared")));
-app.use("/insurance", express.static(path.join(__dirname, "html/tsm-insurance")));
-app.use("/construction", express.static(path.join(__dirname, "html/construction-suite")));
-
-// handled by /html static mount (avoid duplication)
-
-// HC NODE ROUTES
-['hc-medical', 'hc-billing', 'hc-vendors', 'hc-grants', 'hc-insurance', 'hc-legal', 'hc-operations', 'hc-financial', 'hc-taxprep', 'hc-compliance', 'hc-pharmacy', 'hc-strategist'].forEach
-  (function (node) {
-    var dir = path.join(__dirname, 'html/healthcare', node);
-    app.use('/healthcare/' + node, express.static(dir, { setHeaders: function (res) { res.setHeader('Cache-Control', 'no-store'); } }));
-    app.get('/healthcare/' + node, function (req, res) {
-      res.setHeader('Cache-Control', 'no-store,no-cache,must-revalidate');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
-      res.sendFile(path.join(dir, 'index.html'));
-    });
-    app.get('/healthcare/' + node + '/', function (req, res) {
-      res.setHeader('Cache-Control', 'no-store,no-cache,must-revalidate');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
-      res.sendFile(path.join(dir, 'index.html'));
-    });
-  });
-
-// 1. Core API Request Handlers
-app.post('/api/hc/query', async function (req, res) {
-  try {
-    var body = req.body || {};
-    if (!body.question && !body.query) {
-      return res.status(400).json({ ok: false, error: 'Query required' });
-    }
-    
-    var systemPrompt = (typeof SP !== 'undefined' && SP.healthcare) ? SP.healthcare : 'Default healthcare strategist prompt.';
-    var a = await groqChat(systemPrompt, body.question || body.query, body.maxTokens || 1024);
-    
-    return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() });
-  } catch (e) { 
-    return res.status(500).json({ ok: false, error: e.message }); 
-  }
-});f
-
-// 2. Core Module Setup & File Path Initializations (Using existing global path module instance)
-// 2. Core Module Setup & File Path Initializations (Safe auto-resolve fallback)
-// Groq AI Setup
-const Groq = require('groq-sdk');
-const groqClient = new Groq({ apiKey: process.env.GROQ_API_KEY });
-
-async function groqChat(systemPrompt, userMessage, maxTokens = 1024) {
-  const completion = await groqClient.chat.completions.create({
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userMessage }
-    ],
-    model: 'llama3.3-70-B-Versatile',
-    max_tokens: maxTokens,
-  });
-  return completion.choices[0]?.message?.content || '';
-}
-
-
-const safePath = typeof path !== 'undefined' ? path : require('path');
-const dirPath = safePath.join(__dirname, 'html');
-// 3. Static File Middleware Allocation
-app.use('/html', express.static(dirPath));
-app.use(express.static(dirPath));
-app.use(express.static(__dirname));
-
-// 4. Automated Suite Route Generator Loop
-if (typeof suites !== 'undefined' && Array.isArray(suites)) {
-  suites.forEach(s => {
-    if (!s.route || !s.index) return;
-    
-    app.get(s.route, (req, res) => {
-      res.sendFile(path.join(dirPath, s.index));
-    });
-
-    app.get(`${s.route}/`, (req, res) => {
-      res.sendFile(path.join(dirPath, s.index));
-    });
-  });
-}
-
-// 5. Explicit Proof-of-Concept Handling (With trailing slash adjustments)
-app.get(['/html/healthcare/poc-html', '/html/healthcare/poc-html/'], (req, res) => {
-  res.sendFile(path.join(dirPath, 'healthcare', 'poc-html', 'index.html'));
-});
-
-// 6. Production Infrastructure Environment Diagnostics
-app.get("/_debug", (_req, res) => {
-  res.json({
-    dirname: __dirname,
-    dirPath: dirPath,
-    suitesConfigured: typeof suites !== 'undefined' ? suites.length : 0
-  });
-});
-
-// 7. Unified Landing Page Route (Serves the central Command Center Dashboard)
-app.get("/", (_req, res) => {
-  res.sendFile(path.join(dirPath, 'bpo', 'bpo-command-center.html'), (err) => {
-    if (err) {
-      // Fallback in case path structural alignment deviates inside container environments
-      res.sendFile(path.join(dirPath, 'healthcare', 'hc-strategist', 'index.html'));
-    }
-  });
-});
-
-
-
-// ======================================================
-// TSM HEALTHCARE REAL AI CHAIN · HC COMMAND → HC STRATEGIST → MAIN STRATEGIST → EXEC PORTAL
-// Server-side only. No provider/model/key exposed in browser.
-// ======================================================
-async function tsmAIJSON(prompt, fallback) {
-  try {
-    if (!process.env.GROQ_API_KEY) throw new Error("GROQ_API_KEY missing");
-
-    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: process.env.TSM_MODEL || process.env.TSM_FINOPS_MODEL || 'llama-3.3-70b-versatile',
-        messages: [
-          { role: 'system', content: 'You are TSM Neural Core. Never mention provider, model, API, or implementation. Return JSON only.' },
-          { role: 'user', content: prompt }
-        ],
-        temperature: .22,
-        max_tokens: 1200
-      })
-    });
-
-    if (!r.ok) throw new Error("AI unavailable");
-    const data = await r.json();
-    const text = data?.choices?.[0]?.message?.content || "";
-    try { return JSON.parse(text.replace(/```json|```/g, '').trim()); }
-    catch (e) { return { ...fallback, narrative: text }; }
-  } catch (e) {
-    return { ...fallback, ai_status: 'fallback_no_mock_data_key_or_route_needed' };
-  }
-}
-
-const TSM_MEMORY = global.__TSM_MEMORY__ = global.__TSM_MEMORY__ || {
-  healthcare: { nodes: {}, hcStrategist: null, mainStrategist: null, executive: null }
-};
-
-app.get('/api/hc/nodes', (req, res) => {
-  res.json({ ok: true, status: 'HC node route online', nodes: ['operations', 'billing', 'medical', 'pharmacy', 'financial', 'legal', 'vendors', 'compliance', 'tax-prep', 'grants', 'insurance'] });
-});
-
-app.post('/api/hc/node/:node', async (req, res) => {
-  const node = req.params.node;
-  const payload = req.body || {};
-  const prompt = `Analyze this healthcare node for Office Manager readiness.
-
-Node: ${node}
-Payload: ${JSON.stringify(payload).slice(0, 4000)}
-
-Return JSON:
-{
- "node":"${node}",
- "status":"READY|WATCH|RISK",
- "top_issue":"...",
- "findings":["..."],
- "actions":["..."],
- "bnca":"Best Next Course of Action for office manager",
- "owner_lane":"office manager|billing|compliance|medical|financial|vendor|executive",
- "confidence":0-100
-}`;
-
-  const result = await tsmAIJSON(prompt, {
-    node, status: 'WATCH', top_issue: 'Node requires review', findings: [], actions: [], bnca: 'Review node output and assign owner lane.', owner_lane: 'office manager', confidence: 80
-  });
-
-  TSM_MEMORY.healthcare.nodes[node] = result;
-  res.json({ ok: true, node, result, ts: new Date().toISOString() });
-});
-
-app.post('/api/hc/bnca', async (req, res) => {
-  const payload = req.body || {};
-  const prompt = `You are Healthcare Command Center Office Manager Edition.
-
-Use all available HC node context and payload to generate BNCA.
-
-HC node memory:
-${JSON.stringify(TSM_MEMORY.healthcare.nodes).slice(0, 6000)}
-
-Payload:
-${JSON.stringify(payload).slice(0, 4000)}
-
-Return JSON:
-{
- "suite":"healthcare-command",
- "top_issue":"...",
- "risk_level":"READY|WATCH|RISK|URGENT",
- "node_summary":["..."],
- "bnca":"...",
- "owner_lanes":["..."],
- "hitl_review_required":true,
- "confidence":0-100
-}`;
-
-  const result = await tsmAIJSON(prompt, {
-    suite: 'healthcare-command', top_issue: 'Healthcare operations require review', risk_level: 'WATCH', node_summary: [], bnca: 'Prioritize billing/auth/compliance blockers and assign owner lanes.', owner_lanes: ['office manager'], hitl_review_required: true, confidence: 82
-  });
-
-  TSM_MEMORY.healthcare.hcCommand = result;
-  res.json({ ok: true, result, ts: new Date().toISOString() });
-});
-
-app.post('/api/hc-strategist/bnca', async (req, res) => {
-  const payload = req.body || {};
-  const prompt = `You are HC Strategist.
-
-Take Healthcare Command BNCA and node outputs, synthesize strategist recommendation.
-
-Healthcare memory:
-${JSON.stringify(TSM_MEMORY.healthcare).slice(0, 8000)}
-
-Payload:
-${JSON.stringify(payload).slice(0, 4000)}
-
-Return JSON:
-{
- "suite":"hc-strategist",
- "strategic_summary":"...",
- "priority_actions":[{"rank":1,"issue":"...","owner":"...","why_now":"..."}],
- "bnca":"...",
- "relay_to_main_strategist":true,
- "confidence":0-100
-}`;
-
-  const result = await tsmAIJSON(prompt, {
-    suite: 'hc-strategist', strategic_summary: 'HC Strategist review needed.', priority_actions: [], bnca: 'Relay healthcare recommendation to Main Strategist.', relay_to_main_strategist: true, confidence: 82
-  });
-
-  TSM_MEMORY.healthcare.hcStrategist = result;
-  res.json({ ok: true, result, ts: new Date().toISOString() });
-});
-
-app.post('/api/main-strategist/healthcare', async (req, res) => {
-  const payload = req.body || {};
-  const prompt = `You are Main Strategist.
-
-Convert HC Strategist output into executive decision package for CFO / decision makers.
-
-Healthcare memory:
-${JSON.stringify(TSM_MEMORY.healthcare).slice(0, 9000)}
-
-Payload:
-${JSON.stringify(payload).slice(0, 4000)}
-
-Return JSON:
-{
- "suite":"main-strategist",
- "executive_issue":"...",
- "financial_or_operational_impact":"...",
- "recommendation":"...",
- "decision_options":["..."],
- "hitl_relay":"What human should say to CFO/decision maker",
- "send_to_executive_portal":true,
- "confidence":0-100
-}`;
-
-  const result = await tsmAIJSON(prompt, {
-    suite: 'main-strategist', executive_issue: 'Healthcare readiness needs executive review.', financial_or_operational_impact: 'Billing/auth/compliance pressure may affect throughput and revenue.', recommendation: 'Start with office manager workflow pilot.', decision_options: ['30-day pilot', 'technical walkthrough'], hitl_relay: 'Review BNCA and confirm owner lanes.', send_to_executive_portal: true, confidence: 84
-  });
-
-  TSM_MEMORY.healthcare.mainStrategist = result;
-  res.json({ ok: true, result, ts: new Date().toISOString() });
-});
-
-app.post('/api/executive/portal', async (req, res) => {
-  const payload = req.body || {};
-  const prompt = `You are TSM Executive Portal.
-
-Create HITL-ready executive relay for CFOs and decision makers.
-
-Healthcare memory:
-${JSON.stringify(TSM_MEMORY.healthcare).slice(0, 10000)}
-
-Payload:
-${JSON.stringify(payload).slice(0, 4000)}
-
-Return JSON:
-{
- "portal":"executive",
- "audience":"CFO / Decision Maker",
- "decision_summary":"...",
- "bnca_recommendation":"...",
- "hitl_script":"...",
- "approval_path":["..."],
- "next_step":"...",
- "confidence":0-100
-}`;
-
-  const result = await tsmAIJSON(prompt, {
-    portal: 'executive', audience: 'CFO / Decision Maker', decision_summary: 'Healthcare BNCA ready for executive review.', bnca_recommendation: 'Approve pilot workflow focused on billing/auth/compliance throughput.', hitl_script: 'Here is the action-ready recommendation and the owner lanes we need approved.', approval_path: ['Office Manager', 'CFO', 'Operations Lead'], next_step: 'Book walkthrough or approve 30-day pilot.', confidence: 85
-  });
-
-  TSM_MEMORY.healthcare.executive = result;
-  res.json({ ok: true, result, ts: new Date().toISOString() });
-});
-
-app.get('/executive-portal', (req, res) => res.redirect('/html/executive-portal/index.html'));
-app.get('/healthcare/executive-portal', (req, res) => res.redirect('/html/executive-portal/index.html'));
-
-app.post('/api/music/revision/run', express.json(), async (req, res) => {
-  const { lyrics, agent = 'ZAY' } = req.body;
-  const result = await tsmAIJSON(
-    `You are music agent ${agent}. Revise these lyrics for cadence, emotion, structure and imagery. Return JSON: { revised, cadence, emotion, structure, imagery, decision }. Lyrics: ${lyrics}`,
-    { revised: lyrics, cadence: 75, emotion: 75, structure: 75, imagery: 75, decision: 'No change' }
-  );
-  res.json({ ok: true, ...result });
-});
-
-// REMOVED DUPLICATE ROUTE (handled by Groq-based chain version below)
-app.post('/api/music/agent-pass', async function (req, res) {
-  const { lyrics, agent = 'RIYA' } = req.body;
-  const result = await tsmAIJSON(
-    `You are music agent ${agent}. Analyze and score these lyrics. Return JSON: { output, score_delta, decision, ad_libs }. Lyrics: ${lyrics}`,
-    { output: lyrics, score_delta: 0, decision: 'Needs another pass', ad_libs: [] }
-  );
-  res.json({ ok: true, ...result });
-});
-
-app.post('/api/music/guidance', express.json(), async (req, res) => {
-  const { lyrics, step, dna } = req.body;
-  const stepNames = { 1: 'Drop Idea', 2: 'Pick Version', 3: 'Refine', 4: 'Lock Hook', 5: 'Export' };
-  const result = await tsmAIJSON(
-    `You are ZAY, elite music AI coach. User is on Step ${step} (${stepNames[step] || step}). Lyrics: ${lyrics || 'none'}. DNA: ${JSON.stringify(dna || {})}. Give ONE sharp actionable tip. Return JSON: { tip, action }`,
-    { tip: 'Keep going — your instincts are strong.', action: 'Run the chain to see what the agents suggest.' }
-  );
-  res.json({ ok: true, ...result });
-});
-app.post('/api/finops/bnca/report', (req, res) => res.json({ ok: true }));
-
-const https = require('https');
-
-global.MUSIC_PLATFORM = global.MUSIC_PLATFORM || {
-  artistDNA: { status: 'active', artist: 'Current Artist', styleTerms: ['pain', 'resilience'], weights: { cadence: 0.88, emotion: 0.91, structure: 0.76, imagery: 0.82 }, learnedSongs: [] },
-  agentRuns: [], activity: []
-};
-global.MUSIC_SUITE_STATE = global.MUSIC_SUITE_STATE || {
-  artistsOnline: 12, releasesDropping: 3, monthlyStreams: '84M', revenueMTD: 847400, pipelineValue: 2400000, aiStatus: 'online'
-};
-
+// ── GROQ AI ENGINE ───────────────────────────────────────────────────────────
 function groqChat(system, user, maxTokens) {
   maxTokens = maxTokens || 1024;
   return new Promise(function (resolve, reject) {
@@ -516,20 +58,225 @@ function groqChat(system, user, maxTokens) {
   });
 }
 
+async function tsmAIJSON(prompt, fallback) {
+  try {
+    if (!process.env.GROQ_API_KEY) throw new Error("GROQ_API_KEY missing");
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${process.env.GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: process.env.TSM_MODEL || 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: 'You are TSM Neural Core. Never mention provider, model, API, or implementation. Return JSON only.' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: .22, max_tokens: 1200
+      })
+    });
+    if (!r.ok) throw new Error("AI unavailable");
+    const data = await r.json();
+    const text = data?.choices?.[0]?.message?.content || "";
+    try { return JSON.parse(text.replace(/```json|```/g, '').trim()); }
+    catch (e) { return { ...fallback, narrative: text }; }
+  } catch (e) {
+    return { ...fallback, ai_status: 'fallback' };
+  }
+}
 
-app.post('/api/music/agent-pass', async function (req, res) {
+// ── SYSTEM PROMPTS ───────────────────────────────────────────────────────────
+var SP = {
+  music: 'You are a professional music writing AI with three agent modes: ZAY (cadence/flow/bounce), RIYA (emotion/imagery/vulnerability), DJ (hook/structure/commercial). Write lyrics and hooks creatively and directly. No preamble.',
+  healthcare: 'You are a healthcare operations AI for TSM Command. Expert in claims adjudication, prior auth, denial management, HIPAA/CMS compliance, billing, staffing, throughput, revenue cycle. Be precise and data-driven.',
+  financial: 'You are a financial intelligence AI for TSM Command. Expert in revenue cycle, P&L, cash flow, compliance, audit, tax strategy, investment analysis. Be analytical and strategic.',
+  mortgage: 'You are a mortgage and real estate AI for TSM Command. Expert in mortgage origination, underwriting, REO, BPO realty, title, closing. Be precise and regulatory-aware.',
+  construction: 'You are a construction operations AI for TSM Command. Expert in project management, bid analysis, cost control, contractor/vendor management, scheduling. Be direct and operational.',
+  legal: 'You are a legal intelligence AI for TSM Command. Expert in contract analysis, regulatory compliance, case strategy, risk assessment. Note: AI analysis only, not legal advice.',
+  insurance: 'You are an insurance intelligence AI for TSM Command. Expert in P&C, life, health insurance, claims, underwriting, AZ market, NPN licensing. Be precise.',
+  education: 'You are an education operations AI for TSM Command. Expert in school administration, compliance, staffing, student outcomes, budget, grants. Be strategic.',
+  hospitality: 'You are a hospitality operations AI for TSM Command. Expert in hotel ops, concierge, staffing, revenue management, guest experience. Be service-oriented.',
+  enterprise: 'You are a senior business strategist AI for TSM Command. Expert in enterprise strategy, GTM, operations optimization, ROI analysis. Be executive-level and direct.',
+  strategist: 'You are the TSM Sovereign Strategist — the ultimate business consultant AI. Deep expertise across healthcare, financial, legal, real estate, construction, insurance, education, hospitality, enterprise strategy, M&A, GTM. Be bold and transformative.'
+};
+
+// ── GLOBAL STATE ─────────────────────────────────────────────────────────────
+global.MUSIC_PLATFORM = global.MUSIC_PLATFORM || {
+  artistDNA: { status: 'active', artist: 'Current Artist', styleTerms: ['pain', 'resilience'], weights: { cadence: 0.88, emotion: 0.91, structure: 0.76, imagery: 0.82 }, learnedSongs: [] },
+  agentRuns: [], activity: []
+};
+global.MUSIC_SUITE_STATE = global.MUSIC_SUITE_STATE || {
+  artistsOnline: 12, releasesDropping: 3, monthlyStreams: '84M', revenueMTD: 847400, pipelineValue: 2400000, aiStatus: 'online'
+};
+const TSM_MEMORY = global.__TSM_MEMORY__ = global.__TSM_MEMORY__ || {
+  healthcare: { nodes: {}, hcStrategist: null, mainStrategist: null, executive: null }
+};
+const TSM_MESH = {
+  HEALTHCARE: { owner: "HC Strategist", controller: "Healthcare Command", risks: ["Revenue leakage", "Denial escalation", "Patient throughput degradation", "Compliance exposure"] },
+  CONSTRUCTION: { owner: "Construction Strategist", controller: "Construction Command", risks: ["Permit delays", "Schedule variance", "Cost overrun", "Supply chain disruption"] },
+  FINANCE: { owner: "Financial Strategist", controller: "Financial Command", risks: ["Margin compression", "Payer variance", "Cash flow slowdown", "Revenue forecasting deviation"] }
+};
+
+const suites = [
+  { route: "/construction", dir: "html/construction-suite", index: "construction-hub.html" },
+  { route: "/finops", dir: "html/finops-suite", index: "finops-presentation/index.html" },
+  { route: "/healthcare", dir: "html/healthcare", index: "index.html" },
+  { route: "/insurance", dir: "html/tsm-insurance", index: "ins-presentation.html" },
+  { route: "/music", dir: "html/music-command", index: "index.html" },
+];
+
+// ── HEALTH & STUB ROUTES ─────────────────────────────────────────────────────
+app.get("/health", (req, res) => res.json({ status: "ok" }));
+app.post("/api/bpo/query", (req, res) => res.json({ reply: "ok" }));
+app.post("/api/wip/sector-ai", (req, res) => res.json({ content: "ok" }));
+
+app.get("/api/hc/strategist-rollup", (req, res) => {
+  res.json({ ok: true, controller: "HC STRATEGIST", status: "ROLLUP ACTIVE", nodes_online: 11, executive_escalations: 3, bnca: "Enterprise healthcare synthesis complete", mesh: true, timestamp: new Date().toISOString() });
+});
+
+app.get('/api/hc/nodes', (req, res) => {
+  res.json({ ok: true, status: 'HC node route online', nodes: ['operations', 'billing', 'medical', 'pharmacy', 'financial', 'legal', 'vendors', 'compliance', 'tax-prep', 'grants', 'insurance'] });
+});
+
+app.get('/api/music/activity', (_req, res) => res.json({ ok: true, activity: global.MUSIC_PLATFORM.activity || [], platform: global.MUSIC_PLATFORM }));
+app.get('/api/music/platform', (_req, res) => res.json({ ok: true, platform: global.MUSIC_PLATFORM }));
+app.get('/executive-portal', (req, res) => res.redirect('/html/executive-portal/index.html'));
+app.get('/healthcare/executive-portal', (req, res) => res.redirect('/html/executive-portal/index.html'));
+
+// ── STATIC MOUNTS ────────────────────────────────────────────────────────────
+const dirPath = path.join(__dirname, 'html');
+
+app.use("/html", express.static(path.join(__dirname, "html"), { setHeaders: (res) => res.setHeader('Cache-Control', 'no-store') }));
+app.use("/js", express.static(path.join(__dirname, "html/js")));
+app.use("/bpo", express.static(path.join(__dirname, "html/bpo")));
+app.use("/shared", express.static(path.join(__dirname, "html/bpo/shared")));
+app.use("/insurance", express.static(path.join(__dirname, "html/tsm-insurance")));
+app.use("/construction", express.static(path.join(__dirname, "html/construction-suite")));
+app.use(express.static(dirPath));
+app.use(express.static(__dirname));
+
+// ── HC NODE ROUTES ───────────────────────────────────────────────────────────
+app.get('/html/hc-strategist', (req, res) => res.redirect('/healthcare/hc-strategist/'));
+app.get('/html/hc-strategist/', (req, res) => res.redirect('/healthcare/hc-strategist/'));
+app.get('/html/hc-strategist/index.html', (req, res) => res.redirect('/healthcare/hc-strategist/'));
+
+['hc-medical','hc-billing','hc-vendors','hc-grants','hc-insurance','hc-legal','hc-operations','hc-financial','hc-taxprep','hc-compliance','hc-pharmacy','hc-strategist'].forEach(function(node) {
+  var dir = path.join(__dirname, 'html/healthcare', node);
+  app.use('/healthcare/' + node, express.static(dir, { setHeaders: (res) => res.setHeader('Cache-Control', 'no-store') }));
+  app.get('/healthcare/' + node, (req, res) => { res.setHeader('Cache-Control', 'no-store,no-cache,must-revalidate'); res.sendFile(path.join(dir, 'index.html')); });
+  app.get('/healthcare/' + node + '/', (req, res) => { res.setHeader('Cache-Control', 'no-store,no-cache,must-revalidate'); res.sendFile(path.join(dir, 'index.html')); });
+});
+
+// ── SUITE ROUTES ─────────────────────────────────────────────────────────────
+suites.forEach(s => {
+  if (!s.route || !s.index) return;
+  app.get(s.route, (req, res) => res.sendFile(path.join(dirPath, s.index)));
+  app.get(`${s.route}/`, (req, res) => res.sendFile(path.join(dirPath, s.index)));
+});
+
+// ── API ROUTES ───────────────────────────────────────────────────────────────
+app.post('/api/hc/query', async (req, res) => {
+  try {
+    var body = req.body || {};
+    if (!body.question && !body.query) return res.status(400).json({ ok: false, error: 'Query required' });
+    var a = await groqChat(SP.healthcare, body.question || body.query, body.maxTokens || 1024);
+    return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() });
+  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.post('/api/hc/ask', async (req, res) => {
+  try {
+    var body = req.body || {};
+    if (!body.message || !body.message.trim()) return res.status(400).json({ ok: false, error: 'Message is required' });
+    var a = await groqChat(body.system || SP.healthcare, body.message);
+    return res.json({ ok: true, content: a });
+  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.post('/api/hc/triage', async (req, res) => {
+  try {
+    const { client='', taskType='', department='', priority='P3', deadline='', description='', notes='' } = req.body || {};
+    if (!description) return res.status(400).json({ ok: false, error: 'Description is required' });
+    const sp = `You are an expert Healthcare BPO triage AI for TSM. Respond in this EXACT format:\nPRIORITY: [P1-CRITICAL / P2-HIGH / P3-MEDIUM / P4-LOW]\nDEPARTMENT: [best-fit department]\nROUTE_TO: [Billing & Coding / Clinical Operations / Compliance / Executive / Finance / Provider Relations]\nURGENCY_REASON: [1 sentence max]\nRECOMMENDED_ACTION: [2-4 bullet points starting with •]\nESCALATE_TO_STRATEGIST: [YES / NO]\nESCALATE_REASON: [1 sentence, or N/A]\nESTIMATED_RESOLUTION: [timeframe]`;
+    const result = await groqChat(sp, `Client: ${client}\nTask Type: ${taskType}\nDepartment: ${department}\nPriority: ${priority}\nDeadline: ${deadline}\nDescription: ${description}\nNotes: ${notes}`);
+    res.json({ ok: true, content: result });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+app.post('/api/hc/strategist', async (req, res) => {
+  try {
+    const { task={}, aiTriage='', query='' } = req.body || {};
+    const sp = `You are the TSM Healthcare BPO Strategist. Produce executive-grade strategy in this EXACT format:\nSTRATEGIC_SUMMARY: [2-3 sentences]\nROOT_CAUSE: [1 sentence]\nIMPACT_LEVEL: [HIGH / MEDIUM / LOW] — [impact in 1 sentence]\nRECOMMENDED_STRATEGY:\n• [Action 1]\n• [Action 2]\n• [Action 3]\nOWNER_LANES: [departments]\nTIMELINE: [Day 1-2: ... / Week 1: ...]\nESCALATE_TO_EXECUTIVE: [YES / NO]\nESCALATE_REASON: [1 sentence, or N/A]\nCONFIDENCE: [percentage]`;
+    const result = await groqChat(sp, `TASK: ${JSON.stringify(task)}\nTRIAGE_OUTPUT: ${aiTriage}\nQUERY: ${query || 'Full strategic assessment'}`);
+    res.json({ ok: true, content: result });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+app.post('/api/hc/layer2', async (req, res) => {
+  try {
+    const { system: org='TSM Healthcare', location='' } = req.body || {};
+    const sp = `You are a senior Healthcare BPO enterprise strategist for ${org}${location?' · '+location:''}. Synthesize findings across ALL nodes. Return structured BNCA:\n\nENTERPRISE BNCA SUMMARY\n========================\nTOP RISKS (ranked by revenue impact):\n1. [Risk · Node · $ impact]\n2. [Risk · Node · $ impact]\n3. [Risk · Node · $ impact]\n\nIMMEDIATE ACTIONS (next 48 hours):\n1. [Action · Owner Lane · Expected outcome]\n2. [Action · Owner Lane · Expected outcome]\n3. [Action · Owner Lane · Expected outcome]\n\n30-DAY RECOVERY PLAN:\n[Concise cross-node plan with milestones]\n\nESCALATE_TO_EXECUTIVE: YES/NO\nESCALATE_REASON: [reason if YES]\nCONFIDENCE: [0-100]%`;
+    const result = await groqChat(sp, `Run full enterprise BNCA for ${org}${location?' at '+location:''}`, 1500);
+    res.json({ ok: true, output: result });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+app.post('/api/hc/node/:node', async (req, res) => {
+  const node = req.params.node;
+  const payload = req.body || {};
+  const result = await tsmAIJSON(`Analyze healthcare node ${node}. Payload: ${JSON.stringify(payload).slice(0,4000)}. Return JSON: {"node":"${node}","status":"READY|WATCH|RISK","top_issue":"...","findings":[],"actions":[],"bnca":"...","owner_lane":"...","confidence":0}`,
+    { node, status:'WATCH', top_issue:'Node requires review', findings:[], actions:[], bnca:'Review node output.', owner_lane:'office manager', confidence:80 });
+  TSM_MEMORY.healthcare.nodes[node] = result;
+  res.json({ ok: true, node, result, ts: new Date().toISOString() });
+});
+
+app.post('/api/hc/bnca', async (req, res) => {
+  const payload = req.body || {};
+  const result = await tsmAIJSON(`Healthcare Command BNCA. Nodes: ${JSON.stringify(TSM_MEMORY.healthcare.nodes).slice(0,6000)}. Payload: ${JSON.stringify(payload).slice(0,4000)}. Return JSON: {"suite":"healthcare-command","top_issue":"...","risk_level":"READY|WATCH|RISK|URGENT","node_summary":[],"bnca":"...","owner_lanes":[],"hitl_review_required":true,"confidence":0}`,
+    { suite:'healthcare-command', top_issue:'Review needed', risk_level:'WATCH', node_summary:[], bnca:'Prioritize billing/auth/compliance.', owner_lanes:['office manager'], hitl_review_required:true, confidence:82 });
+  TSM_MEMORY.healthcare.hcCommand = result;
+  res.json({ ok: true, result, ts: new Date().toISOString() });
+});
+
+app.post('/api/hc-strategist/bnca', async (req, res) => {
+  const payload = req.body || {};
+  const result = await tsmAIJSON(`HC Strategist synthesis. Memory: ${JSON.stringify(TSM_MEMORY.healthcare).slice(0,8000)}. Payload: ${JSON.stringify(payload).slice(0,4000)}. Return JSON: {"suite":"hc-strategist","strategic_summary":"...","priority_actions":[],"bnca":"...","relay_to_main_strategist":true,"confidence":0}`,
+    { suite:'hc-strategist', strategic_summary:'HC Strategist review needed.', priority_actions:[], bnca:'Relay to Main Strategist.', relay_to_main_strategist:true, confidence:82 });
+  TSM_MEMORY.healthcare.hcStrategist = result;
+  res.json({ ok: true, result, ts: new Date().toISOString() });
+});
+
+app.post('/api/main-strategist/healthcare', async (req, res) => {
+  const payload = req.body || {};
+  const result = await tsmAIJSON(`Main Strategist executive package. Memory: ${JSON.stringify(TSM_MEMORY.healthcare).slice(0,9000)}. Return JSON: {"suite":"main-strategist","executive_issue":"...","financial_or_operational_impact":"...","recommendation":"...","decision_options":[],"hitl_relay":"...","send_to_executive_portal":true,"confidence":0}`,
+    { suite:'main-strategist', executive_issue:'Healthcare readiness needs review.', financial_or_operational_impact:'Billing pressure may affect throughput.', recommendation:'Start office manager workflow pilot.', decision_options:['30-day pilot'], hitl_relay:'Review BNCA and confirm owner lanes.', send_to_executive_portal:true, confidence:84 });
+  TSM_MEMORY.healthcare.mainStrategist = result;
+  res.json({ ok: true, result, ts: new Date().toISOString() });
+});
+
+app.post('/api/executive/portal', async (req, res) => {
+  const payload = req.body || {};
+  const result = await tsmAIJSON(`Executive Portal. Memory: ${JSON.stringify(TSM_MEMORY.healthcare).slice(0,10000)}. Return JSON: {"portal":"executive","audience":"CFO / Decision Maker","decision_summary":"...","bnca_recommendation":"...","hitl_script":"...","approval_path":[],"next_step":"...","confidence":0}`,
+    { portal:'executive', audience:'CFO / Decision Maker', decision_summary:'Healthcare BNCA ready.', bnca_recommendation:'Approve pilot workflow.', hitl_script:'Action-ready recommendation and owner lanes for approval.', approval_path:['Office Manager','CFO'], next_step:'Book walkthrough or approve 30-day pilot.', confidence:85 });
+  TSM_MEMORY.healthcare.executive = result;
+  res.json({ ok: true, result, ts: new Date().toISOString() });
+});
+
+// ── FINOPS ───────────────────────────────────────────────────────────────────
+app.post("/api/finops/bnca/report", (req, res) => res.json({ ok: true }));
+app.post("/api/chat", (req, res) => res.json({ ok: true }));
+
+// ── MUSIC ────────────────────────────────────────────────────────────────────
+app.post('/api/music/agent-pass', async (req, res) => {
   var body = req.body || {};
   var agent = body.agent || 'ZAY';
-  var draft = body.draft || '';
+  var draft = body.draft || body.lyrics || '';
   var request = body.request || 'Refine this draft';
   try {
-    var prompt = 'Agent: ' + agent + '\nRequest: ' + request + '\n\nDraft:\n' + draft + '\n\nProvide your refined version:';
-    var output = await groqChat(SP.music, prompt, 512);
+    var output = await groqChat(SP.music, 'Agent: ' + agent + '\nRequest: ' + request + '\n\nDraft:\n' + draft + '\n\nProvide your refined version:', 512);
     return res.json({ ok: true, agent: agent, output: output, createdAt: new Date().toISOString() });
   } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
 
-app.post('/api/music/chain', async function (req, res) {
+app.post('/api/music/chain', async (req, res) => {
   var body = req.body || {};
   var draft = body.draft || '';
   var request = body.request || 'Sharpen this draft';
@@ -537,366 +284,176 @@ app.post('/api/music/chain', async function (req, res) {
     var zay = await groqChat(SP.music, 'Agent ZAY cadence/flow focus.\nRequest: ' + request + '\nDraft: ' + draft + '\nRefine:', 400);
     var riya = await groqChat(SP.music, 'Agent RIYA emotion/imagery focus.\nRequest: ' + request + '\nDraft: ' + zay + '\nRefine:', 400);
     var dj = await groqChat(SP.music, 'Agent DJ hook/structure focus.\nRequest: ' + request + '\nDraft: ' + riya + '\nFinal version:', 400);
-    var score = { overall: 0.87, cadence: 0.88, emotion: 0.91, structure: 0.84, imagery: 0.86 };
-    if (global.MUSIC_ENGINE) {
-      global.MUSIC_ENGINE.runs.unshift({ mode: 'chain', input: draft, output: dj, score: score, createdAt: new Date().toISOString() });
-      global.MUSIC_ENGINE.runs = global.MUSIC_ENGINE.runs.slice(0, 25);
-    }
-    return res.json({ ok: true, mode: 'chain', input: draft, zay: zay, riya: riya, output: dj, score: score, createdAt: new Date().toISOString() });
+    return res.json({ ok: true, mode: 'chain', input: draft, zay, riya, output: dj, score: { overall: 0.87 }, createdAt: new Date().toISOString() });
   } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
 
-app.post('/api/music/strategy', async function (req, res) {
+app.post('/api/music/strategy', async (req, res) => {
   var body = req.body || {};
-  var draft = body.draft || '';
   try {
-    var answer = await groqChat(SP.music, 'Provide a music release and monetization strategy for this draft:\n' + draft + '\n\nCover: release timing, sync opportunities, hook strength, distribution strategy.', 768);
-    return res.json({ ok: true, title: 'Music Strategy Brief', answer: answer, createdAt: new Date().toISOString() });
+    var answer = await groqChat(SP.music, 'Provide a music release and monetization strategy for this draft:\n' + (body.draft || '') + '\n\nCover: release timing, sync opportunities, hook strength, distribution strategy.', 768);
+    return res.json({ ok: true, title: 'Music Strategy Brief', answer, createdAt: new Date().toISOString() });
   } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
 
-app.post('/api/music/dna/save', async function (req, res) {
-  var body = req.body || {};
-  var dna = global.MUSIC_PLATFORM.artistDNA;
-  dna.artist = body.artist || dna.artist || 'Current Artist';
-  dna.styleTerms = Array.isArray(body.styleTerms) ? body.styleTerms : dna.styleTerms;
-  dna.weights = Object.assign({}, dna.weights, body.weights || {});
-  dna.updatedAt = new Date().toISOString();
-  try {
-    var insight = await groqChat(SP.music, 'Artist: ' + dna.artist + '\nStyle: ' + dna.styleTerms.join(', ') + '\n\nAnalyze this artist DNA and suggest 3 directions to push their sound.', 400);
-    dna.aiInsight = insight;
-  } catch (e) { dna.aiInsight = null; }
-  return res.json({ ok: true, dna: dna });
+app.post('/api/music/revision/run', async (req, res) => {
+  const { lyrics, agent='ZAY' } = req.body;
+  const result = await tsmAIJSON(`You are music agent ${agent}. Revise these lyrics. Return JSON: { revised, cadence, emotion, structure, imagery, decision }. Lyrics: ${lyrics}`,
+    { revised: lyrics, cadence: 75, emotion: 75, structure: 75, imagery: 75, decision: 'No change' });
+  res.json({ ok: true, ...result });
 });
 
-app.post('/api/music/song/learn', async function (req, res) {
-  var body = req.body || {};
-  var song = { id: Date.now(), title: body.title || 'Untitled', lyrics: body.lyrics || body.draft || '', learnedAt: new Date().toISOString() };
-  global.MUSIC_PLATFORM.artistDNA.learnedSongs.unshift(song);
-  global.MUSIC_PLATFORM.artistDNA.learnedSongs = global.MUSIC_PLATFORM.artistDNA.learnedSongs.slice(0, 12);
-  try {
-    var analysis = await groqChat(SP.music, 'Analyze these lyrics for cadence, emotion, structure, imagery. Score each 0-1 and identify the strongest hook:\n\n' + song.lyrics, 400);
-    song.aiAnalysis = analysis;
-  } catch (e) { song.aiAnalysis = null; }
-  return res.json({ ok: true, song: song, dna: global.MUSIC_PLATFORM.artistDNA });
-});
-
-app.get('/api/music/activity', function (_req, res) {
-  return res.json({ ok: true, activity: global.MUSIC_PLATFORM.activity || [], platform: global.MUSIC_PLATFORM });
-});
-
-app.get('/api/music/platform', function (_req, res) {
-  return res.json({ ok: true, platform: global.MUSIC_PLATFORM });
-});
-
-app.post('/api/music/revision/generate', async function (req, res) {
+app.post('/api/music/revision/generate', async (req, res) => {
   var body = req.body || {};
   var draft = body.draft || '';
   var request = body.request || 'Give me 3 revision options';
   try {
     var results = await Promise.all([
-      groqChat(SP.music, 'Flow-first revision. Cadence and bounce.\nRequest: ' + request + '\nDraft: ' + draft + '\nOption A:', 400),
-      groqChat(SP.music, 'Emotion-first revision. Imagery and vulnerability.\nRequest: ' + request + '\nDraft: ' + draft + '\nOption B:', 400),
-      groqChat(SP.music, 'Hook-first revision. Structure and repeatability.\nRequest: ' + request + '\nDraft: ' + draft + '\nOption C:', 400)
+      groqChat(SP.music, 'Flow-first revision.\nRequest: ' + request + '\nDraft: ' + draft + '\nOption A:', 400),
+      groqChat(SP.music, 'Emotion-first revision.\nRequest: ' + request + '\nDraft: ' + draft + '\nOption B:', 400),
+      groqChat(SP.music, 'Hook-first revision.\nRequest: ' + request + '\nDraft: ' + draft + '\nOption C:', 400)
     ]);
     var options = [
-      { id: 'A', title: 'Option A - Flow First', strategy: 'Cadence and bounce', output: results[0] },
-      { id: 'B', title: 'Option B - Emotion First', strategy: 'Imagery and vulnerability', output: results[1] },
-      { id: 'C', title: 'Option C - Hook First', strategy: 'Structure and repeatability', output: results[2] }
+      { id:'A', title:'Option A - Flow First', strategy:'Cadence and bounce', output: results[0] },
+      { id:'B', title:'Option B - Emotion First', strategy:'Imagery and vulnerability', output: results[1] },
+      { id:'C', title:'Option C - Hook First', strategy:'Structure and repeatability', output: results[2] }
     ];
-    var session = { id: Date.now(), request: request, input: draft, options: options, recommended: 'A', createdAt: new Date().toISOString() };
+    var session = { id: Date.now(), request, input: draft, options, recommended:'A', createdAt: new Date().toISOString() };
     if (!global.MUSIC_REVISIONS) global.MUSIC_REVISIONS = { sessions: [], selected: null };
     global.MUSIC_REVISIONS.sessions.unshift(session);
     global.MUSIC_REVISIONS.sessions = global.MUSIC_REVISIONS.sessions.slice(0, 20);
-    return res.json({ ok: true, session: session });
+    return res.json({ ok: true, session });
   } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
 
-app.post('/api/ai/query', async function (req, res) {
+app.post('/api/music/guidance', async (req, res) => {
+  const { lyrics, step, dna } = req.body;
+  const stepNames = { 1:'Drop Idea', 2:'Pick Version', 3:'Refine', 4:'Lock Hook', 5:'Export' };
+  const result = await tsmAIJSON(`You are ZAY. User on Step ${step} (${stepNames[step]||step}). Lyrics: ${lyrics||'none'}. DNA: ${JSON.stringify(dna||{})}. Give ONE sharp tip. Return JSON: { tip, action }`,
+    { tip: 'Keep going — your instincts are strong.', action: 'Run the chain.' });
+  res.json({ ok: true, ...result });
+});
+
+app.post('/api/music/dna/save', async (req, res) => {
+  var body = req.body || {};
+  var dna = global.MUSIC_PLATFORM.artistDNA;
+  dna.artist = body.artist || dna.artist;
+  dna.styleTerms = Array.isArray(body.styleTerms) ? body.styleTerms : dna.styleTerms;
+  dna.weights = Object.assign({}, dna.weights, body.weights || {});
+  dna.updatedAt = new Date().toISOString();
+  try { dna.aiInsight = await groqChat(SP.music, 'Artist: ' + dna.artist + '\nStyle: ' + dna.styleTerms.join(', ') + '\n\nSuggest 3 directions to push their sound.', 400); }
+  catch (e) { dna.aiInsight = null; }
+  return res.json({ ok: true, dna });
+});
+
+app.post('/api/music/song/learn', async (req, res) => {
+  var body = req.body || {};
+  var song = { id: Date.now(), title: body.title || 'Untitled', lyrics: body.lyrics || body.draft || '', learnedAt: new Date().toISOString() };
+  global.MUSIC_PLATFORM.artistDNA.learnedSongs.unshift(song);
+  global.MUSIC_PLATFORM.artistDNA.learnedSongs = global.MUSIC_PLATFORM.artistDNA.learnedSongs.slice(0, 12);
+  try { song.aiAnalysis = await groqChat(SP.music, 'Analyze these lyrics for cadence, emotion, structure, imagery. Score each 0-1:\n\n' + song.lyrics, 400); }
+  catch (e) { song.aiAnalysis = null; }
+  return res.json({ ok: true, song, dna: global.MUSIC_PLATFORM.artistDNA });
+});
+
+// ── AI QUERY ROUTES ──────────────────────────────────────────────────────────
+app.post('/api/ai/query', async (req, res) => {
   var body = req.body || {};
   var appType = body.app || 'enterprise';
   var question = body.question || body.query || body.input || '';
-  var context = body.context || '';
   var system = SP[appType] || SP.enterprise;
   try {
-    var userMsg = context ? 'Context:\n' + context + '\n\nQuestion: ' + question : question;
+    var userMsg = body.context ? 'Context:\n' + body.context + '\n\nQuestion: ' + question : question;
     var answer = await groqChat(system, userMsg, body.maxTokens || 1024);
-    return res.json({ ok: true, app: appType, question: question, answer: answer, createdAt: new Date().toISOString() });
+    return res.json({ ok: true, app: appType, question, answer, createdAt: new Date().toISOString() });
   } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
 
-app.post('/api/financial/query', async function (req, res) {
-  var body = req.body || {};
-  try { var a = await groqChat(SP.financial, body.question || body.query || '', body.maxTokens || 1024); return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() }); }
+app.post('/api/financial/query', async (req, res) => {
+  try { var a = await groqChat(SP.financial, req.body.question || req.body.query || '', req.body.maxTokens || 1024); return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() }); }
   catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
 
-app.post('/api/mortgage/query', async function (req, res) {
-  var body = req.body || {};
-  try { var a = await groqChat(SP.mortgage, body.question || body.query || '', body.maxTokens || 1024); return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() }); }
+app.post('/api/mortgage/query', async (req, res) => {
+  try { var a = await groqChat(SP.mortgage, req.body.question || req.body.query || '', req.body.maxTokens || 1024); return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() }); }
   catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
 
-app.post('/api/legal/query', async function (req, res) {
-  var body = req.body || {};
-  try { var a = await groqChat(SP.legal, body.question || body.query || '', body.maxTokens || 1024); return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() }); }
+app.post('/api/legal/query', async (req, res) => {
+  try { var a = await groqChat(SP.legal, req.body.question || req.body.query || '', req.body.maxTokens || 1024); return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() }); }
   catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
 
-app.post('/api/construction/query', async function (req, res) {
-  var body = req.body || {};
-  try { var a = await groqChat(SP.construction, body.question || body.query || '', body.maxTokens || 1024); return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() }); }
+app.post('/api/construction/query', async (req, res) => {
+  try { var a = await groqChat(SP.construction, req.body.question || req.body.query || '', req.body.maxTokens || 1024); return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() }); }
   catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
 
-app.post('/api/insurance/query', async function (req, res) {
-  var body = req.body || {};
-  try { var a = await groqChat(SP.insurance, body.question || body.query || '', body.maxTokens || 1024); return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() }); }
-  catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+app.post('/api/insurance/query', async (req, res) => {
+  const { system, message, maxTokens, question, query } = req.body || {};
+  const msg = message || question || query || '';
+  if (!msg) return res.status(400).json({ ok: false, error: 'message required' });
+  try { const answer = await groqChat(system || SP.insurance, msg, maxTokens || 1400); res.json({ ok: true, answer }); }
+  catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
-app.post('/api/schools/query', async function (req, res) {
-  var body = req.body || {};
-  try { var a = await groqChat(SP.education, body.question || body.query || '', body.maxTokens || 1024); return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() }); }
-  catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
-});
-
-app.post('/api/strategist/query', async function (req, res) {
-  var body = req.body || {};
-  try { var a = await groqChat(SP.strategist, body.question || body.query || '', body.maxTokens || 2048); return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() }); }
-  catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
-});
-// ===== END GROQ AI ENGINE =====
-// final fallback 404 (single source of truth)
-
-// ======================================================
-// INSURANCE SUITE — SERVER-SIDE AI ENDPOINT
-// All calls stay server-side. GROQ_API_KEY never reaches browser.
-// ======================================================
-
-// General query — study guides, follow-ups, AHIP content, scenarios, regs
-app.post('/api/insurance/query', express.json(), async (req, res) => {
-  const { system, message, maxTokens } = req.body || {};
-  if (!message) return res.status(400).json({ ok: false, error: 'message required' });
-  try {
-    const answer = await groqChat(
-      system || SP.insurance,
-      message,
-      maxTokens || 1400
-    );
-    res.json({ ok: true, answer });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e.message });
-  }
-});
-
-// Quiz — returns JSON array of questions
-app.post('/api/insurance/quiz', express.json(), async (req, res) => {
+app.post('/api/insurance/quiz', async (req, res) => {
   const { topic, state, lob, count } = req.body || {};
-  const prompt = `Generate ${count || 10} exam-level multiple choice questions for "${topic}" on the ${state} ${lob} insurance licensing exam.
-Return ONLY a JSON array — no markdown, no backticks:
-[{"q":"Question?","options":["A text","B text","C text","D text"],"answer":0,"explanation":"Why correct and why others are wrong."}]
-answer is 0-based index. Make questions realistic exam-difficulty.`;
+  const prompt = `Generate ${count||10} exam-level multiple choice questions for "${topic}" on the ${state} ${lob} insurance licensing exam. Return ONLY a JSON array: [{"q":"Question?","options":["A","B","C","D"],"answer":0,"explanation":"..."}]`;
   try {
-    const raw = await groqChat(
-      'You are an insurance licensing exam question writer. Respond ONLY with valid JSON — no markdown, no backticks, no explanation.',
-      prompt,
-      2200
-    );
-    const cleaned = raw.replace(/```json|```/g, '').trim();
-    res.json({ ok: true, questions: JSON.parse(cleaned) });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e.message });
-  }
+    const raw = await groqChat('You are an insurance licensing exam question writer. Respond ONLY with valid JSON — no markdown, no backticks.', prompt, 2200);
+    res.json({ ok: true, questions: JSON.parse(raw.replace(/```json|```/g,'').trim()) });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
-// Flashcards — returns JSON array of term/definition pairs
-app.post('/api/insurance/flashcards', express.json(), async (req, res) => {
+app.post('/api/insurance/flashcards', async (req, res) => {
   const { topic, state, lob } = req.body || {};
-  const prompt = `Create 15 flashcards for "${topic}" on the ${state} ${lob} insurance exam.
-Return ONLY a JSON array — no markdown, no backticks:
-[{"term":"Term","definition":"Clear concise definition for the exam. 1-3 sentences."}]`;
+  const prompt = `Create 15 flashcards for "${topic}" on the ${state} ${lob} insurance exam. Return ONLY JSON: [{"term":"Term","definition":"..."}]`;
   try {
-    const raw = await groqChat(
-      'You are an insurance exam flashcard creator. Respond ONLY with valid JSON — no markdown, no backticks.',
-      prompt,
-      1400
-    );
-    const cleaned = raw.replace(/```json|```/g, '').trim();
-    res.json({ ok: true, cards: JSON.parse(cleaned) });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e.message });
-  }
+    const raw = await groqChat('You are an insurance exam flashcard creator. Respond ONLY with valid JSON.', prompt, 1400);
+    res.json({ ok: true, cards: JSON.parse(raw.replace(/```json|```/g,'').trim()) });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
-// AHIP — module study content
-app.post('/api/insurance/ahip', express.json(), async (req, res) => {
+app.post('/api/insurance/ahip', async (req, res) => {
   const { moduleTitle, moduleId } = req.body || {};
-  const prompt = `Create a comprehensive AHIP certification study guide for the module: "${moduleTitle}".
-Cover: key definitions, CMS rules and regulations, what the exam tests on this topic, compliance requirements, common violations to avoid, and 2-3 exam tips specific to AHIP.
-Format clearly for an insurance agent preparing for AHIP certification.`;
   try {
-    const answer = await groqChat(
-      'You are a Medicare insurance compliance expert and AHIP certification trainer. Format with HTML only (no markdown): use <h3> for headings, <p> for paragraphs, <ul><li> for lists, <span class="kterm">term</span> for key terms, <div class="callout ahip-callout"><div class="callout-title">CMS RULE</div>content</div> for CMS rules.',
-      prompt,
-      1600
-    );
+    const answer = await groqChat('You are a Medicare insurance compliance expert and AHIP certification trainer. Format with HTML only.', `Create a comprehensive AHIP study guide for: "${moduleTitle}".`, 1600);
     res.json({ ok: true, answer, moduleId });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e.message });
-  }
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
-// AHIP Quiz — returns JSON questions in AHIP style
-app.post('/api/insurance/ahip-quiz', express.json(), async (req, res) => {
+app.post('/api/insurance/ahip-quiz', async (req, res) => {
   const { count } = req.body || {};
-  const prompt = `Generate ${count || 25} AHIP-style multiple choice questions covering Medicare Advantage, Part D, CMS marketing rules, enrollment periods, plan benefits, appeals, and fraud/waste/abuse.
-Return ONLY a JSON array — no markdown, no backticks:
-[{"q":"Question?","options":["A text","B text","C text","D text"],"answer":0,"explanation":"CMS rule citation and explanation of why this answer is correct."}]
-answer is 0-based index. Questions should match official AHIP exam difficulty. Cover all 6 major topic areas.`;
+  const prompt = `Generate ${count||25} AHIP-style multiple choice questions. Return ONLY JSON: [{"q":"Question?","options":["A","B","C","D"],"answer":0,"explanation":"..."}]`;
   try {
-    const raw = await groqChat(
-      'You are an AHIP Medicare certification exam question writer. Respond ONLY with valid JSON — no markdown, no backticks, no explanation.',
-      prompt,
-      2800
-    );
-    const cleaned = raw.replace(/```json|```/g, '').trim();
-    res.json({ ok: true, questions: JSON.parse(cleaned) });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e.message });
-  }
+    const raw = await groqChat('You are an AHIP Medicare certification exam question writer. Respond ONLY with valid JSON.', prompt, 2800);
+    res.json({ ok: true, questions: JSON.parse(raw.replace(/```json|```/g,'').trim()) });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
-// ======================================================
-// END INSURANCE SUITE
-// ======================================================
-app.post('/api/hc/triage', express.json(), async (req, res) => {
-  try {
-    const { client = '', taskType = '', department = '', priority = 'P3', deadline = '', description = '', notes = '' } = req.body || {};
-    if (!description) return res.status(400).json({ ok: false, error: 'Description is required' });
-    const sp = `You are an expert Healthcare BPO triage AI for TSM. Respond in this EXACT format:\nPRIORITY: [P1-CRITICAL / P2-HIGH / P3-MEDIUM / P4-LOW]\nDEPARTMENT: [best-fit department]\nROUTE_TO: [Billing & Coding / Clinical Operations / Compliance / Executive / Finance / Provider Relations]\nURGENCY_REASON: [1 sentence max]\nRECOMMENDED_ACTION: [2-4 bullet points starting with •]\nESCALATE_TO_STRATEGIST: [YES / NO]\nESCALATE_REASON: [1 sentence, or N/A]\nESTIMATED_RESOLUTION: [timeframe]`;
-    const um = `Client: ${client}\nTask Type: ${taskType}\nDepartment: ${department}\nPriority: ${priority}\nDeadline: ${deadline}\nDescription: ${description}\nNotes: ${notes}`;
-    const result = await groqChat(sp, um);
-    res.json({ ok: true, content: result });
-  } catch (err) {
-    console.error('[/api/hc/triage]', err.message);
-    res.status(500).json({ ok: false, error: err.message });
-  }
+app.post('/api/schools/query', async (req, res) => {
+  try { var a = await groqChat(SP.education, req.body.question || req.body.query || '', req.body.maxTokens || 1024); return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() }); }
+  catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
 
-app.post('/api/hc/strategist', express.json(), async (req, res) => {
-  try {
-    const { task = {}, aiTriage = '', query = '' } = req.body || {};
-    const sp = `You are the TSM Healthcare BPO Strategist. Produce executive-grade strategy in this EXACT format:\nSTRATEGIC_SUMMARY: [2-3 sentences]\nROOT_CAUSE: [1 sentence]\nIMPACT_LEVEL: [HIGH / MEDIUM / LOW] — [impact in 1 sentence]\nRECOMMENDED_STRATEGY:\n• [Action 1]\n• [Action 2]\n• [Action 3]\nOWNER_LANES: [departments]\nTIMELINE: [Day 1-2: ... / Week 1: ...]\nESCALATE_TO_EXECUTIVE: [YES / NO]\nESCALATE_REASON: [1 sentence, or N/A]\nCONFIDENCE: [percentage]`;
-    const um = `TASK: ${JSON.stringify(task)}\nTRIAGE_OUTPUT: ${aiTriage}\nQUERY: ${query || 'Full strategic assessment'}`;
-    const result = await groqChat(sp, um);
-    res.json({ ok: true, content: result });
-  } catch (err) {
-    console.error('[/api/hc/strategist]', err.message);
-    res.status(500).json({ ok: false, error: err.message });
-  }
-});
-// ── /api/hc/layer2 ──────────────────────────────────────────────────────────
-app.post('/api/hc/layer2', express.json(), async (req, res) => {
-  try {
-    const { system = 'HonorHealth', location = 'Scottsdale - Shea' } = req.body || {};
-    const message = `Run full HC suite BNCA for ${system} at ${location}. Synthesize top risks across operations, medical, billing, compliance, financial, grants, insurance, legal, pharmacy, and vendors. Rank by revenue impact and urgency. Provide top 3 immediate actions with owner lanes and timeline.`;
-    const result = await groqChat(
-      'You are a healthcare BPO enterprise strategist. Return concise executive-grade BNCA with financial impact scores, priority stack rank, owner lanes, and escalation flag.',
-      message
-    );
-    res.json({ ok: true, output: result });
-  } catch (err) {
-    console.error('[/api/hc/layer2]', err.message);
-    res.status(500).json({ ok: false, error: err.message });
-  }
-});
-// ── /api/hc/ask ─────────────────────────────────────────────────────────────
-app.post('/api/hc/ask', express.json(), async (req, res) => {
-  try {
-    const { system = 'You are a healthcare BPO strategy expert. Return concise, actionable executive-grade intelligence.', message = '' } = req.body || {};
-    if (!message.trim()) return res.status(400).json({ ok: false, error: 'Message is required' });
-    const result = await groqChat(system, message);
-    res.json({ ok: true, content: result });
-  } catch (err) {
-    console.error('[/api/hc/ask]', err.message);
-    res.status(500).json({ ok: false, error: err.message });
-  }
+app.post('/api/strategist/query', async (req, res) => {
+  try { var a = await groqChat(SP.strategist, req.body.question || req.body.query || '', req.body.maxTokens || 2048); return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() }); }
+  catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
 
-// ── /api/hc/layer2 ───────────────────────────────────────────────────────────
-app.post('/api/hc/layer2', express.json(), async (req, res) => {
-  try {
-    const { system: org = 'TSM Healthcare', location = '' } = req.body || {};
-    const sp = `You are a senior Healthcare BPO enterprise strategist for ${org}${location ? ' · ' + location : ''}. 
-Synthesize findings across ALL operational nodes: Billing, Insurance, Compliance, Medical, Operations, Financial, Grants, Legal, Pharmacy, TaxPrep, Vendors.
-Return a structured BNCA report in this EXACT format:
-
-ENTERPRISE BNCA SUMMARY
-========================
-TOP RISKS (ranked by revenue impact):
-1. [Risk · Node · $ impact]
-2. [Risk · Node · $ impact]
-3. [Risk · Node · $ impact]
-
-IMMEDIATE ACTIONS (next 48 hours):
-1. [Action · Owner Lane · Expected outcome]
-2. [Action · Owner Lane · Expected outcome]
-3. [Action · Owner Lane · Expected outcome]
-
-30-DAY RECOVERY PLAN:
-[Concise cross-node plan with milestones]
-
-ESCALATE_TO_EXECUTIVE: YES/NO
-ESCALATE_REASON: [reason if YES]
-CONFIDENCE: [0-100]%`;
-
-    const um = `Run full enterprise BNCA for ${org}${location ? ' at ' + location : ''}. Synthesize all node findings, rank by urgency and revenue impact, and produce the structured report.`;
-    const result = await groqChat(sp, um);
-    res.json({ ok: true, output: result });
-  } catch (err) {
-    console.error('[/api/hc/layer2]', err.message);
-    res.status(500).json({ ok: false, error: err.message });
-  }
-});
-app.post('/api/hc/ask', express.json(), async function (req, res){
-    try {
-        var body = req.body || {};
-        if (!body.message || !body.message.trim()) {
-            return res.status(400).json({ ok: false, error: 'Message input is required.' });
-        }
-
-        // Verify safety fallback logic in case global constants are unassigned
-        const systemPrompt = body.system || (typeof SP !== 'undefined' ? SP.healthcare : 'Default healthcare system prompt.');
-
-        var a = await groqChat(systemPrompt, body.message);
-        return res.json({ ok: true, content: a });
-    } catch (e) {
-        console.error("Critical error handled gracefully inside /api/hc/ask:", e);
-        return res.status(500).json({ ok: false, error: "Internal platform fallback response activated." });
-    }
+// ── MISC ROUTES ──────────────────────────────────────────────────────────────
+app.get(['/html/healthcare/poc-html', '/html/healthcare/poc-html/'], (req, res) => res.sendFile(path.join(dirPath, 'healthcare', 'poc-html', 'index.html')));
+app.get("/_debug", (_req, res) => res.json({ dirname: __dirname, dirPath, suitesConfigured: suites.length }));
+app.get("/", (_req, res) => {
+  res.sendFile(path.join(dirPath, 'bpo', 'bpo-command-center.html'), (err) => {
+    if (err) res.sendFile(path.join(dirPath, 'healthcare', 'hc-strategist', 'index.html'));
+  });
 });
 
-// Operational fallback function to fulfill system routes
-async function groqChat(systemPrompt, userPrompt) {
-    console.log(`[Groq Pipeline Executing] System Context length: ${systemPrompt?.length || 0}`);
-    return "TSM Core Engine Analysis Complete: Processing downstream matrix telemetry updates.";
-}
-
-app.post('/api/hc/layer2', express.json(), async function (req, res) {
-  var body = req.body || {};
-  var org = body.system || 'TSM Healthcare';
-  var loc = body.location || '';
-  var sp = 'You are a senior Healthcare BPO enterprise strategist for ' + org + (loc ? ' · ' + loc : '') + '. Synthesize findings across ALL nodes: Billing, Insurance, Compliance, Medical, Operations, Financial, Grants, Legal, Pharmacy, TaxPrep, Vendors. Return structured BNCA:\n\nENTERPRISE BNCA SUMMARY\n========================\nTOP RISKS (ranked by revenue impact):\n1. [Risk · Node · $ impact]\n2. [Risk · Node · $ impact]\n3. [Risk · Node · $ impact]\n\nIMMEDIATE ACTIONS (next 48 hours):\n1. [Action · Owner · Outcome]\n2. [Action · Owner · Outcome]\n3. [Action · Owner · Outcome]\n\n30-DAY RECOVERY PLAN:\n[Cross-node plan with milestones]\n\nESCALATE_TO_EXECUTIVE: YES/NO\nESCALATE_REASON: [reason]\nCONFIDENCE: [0-100]%';
-  try {
-    var a = await groqChat(sp, 'Run full enterprise BNCA for ' + org + (loc ? ' at ' + loc : ''), 1500);
-    return res.json({ ok: true, output: a });
-  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
-});
-
-const _PORT = process.env.PORT || 8080;
-const server = app.listen(_PORT, '0.0.0.0', () => {
-    console.log(`TSM Platform Core Engine listening on port ${_PORT}`);
+// ── START ────────────────────────────────────────────────────────────────────
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`TSM Platform Core Engine listening on port ${PORT}`);
 });
 
 server.on('error', (err) => {
