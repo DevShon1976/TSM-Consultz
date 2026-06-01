@@ -161,8 +161,7 @@ app.post('/api/hc/query', async function (req, res) {
   }
 });
 
-// 2. Core Module Setup & File Path Initializations
-const path = require('path');
+// 2. Core Module Setup & File Path Initializations (Using existing global path module instance)
 const dirPath = path.join(__dirname, 'html');
 
 // 3. Static File Middleware Allocation
