@@ -752,6 +752,21 @@ app.post('/api/hc/strategist', express.json(), async (req, res) => {
     res.status(500).json({ ok: false, error: err.message });
   }
 });
+// ── /api/hc/layer2 ──────────────────────────────────────────────────────────
+app.post('/api/hc/layer2', express.json(), async (req, res) => {
+  try {
+    const { system = 'HonorHealth', location = 'Scottsdale - Shea' } = req.body || {};
+    const message = `Run full HC suite BNCA for ${system} at ${location}. Synthesize top risks across operations, medical, billing, compliance, financial, grants, insurance, legal, pharmacy, and vendors. Rank by revenue impact and urgency. Provide top 3 immediate actions with owner lanes and timeline.`;
+    const result = await groqChat(
+      'You are a healthcare BPO enterprise strategist. Return concise executive-grade BNCA with financial impact scores, priority stack rank, owner lanes, and escalation flag.',
+      message
+    );
+    res.json({ ok: true, output: result });
+  } catch (err) {
+    console.error('[/api/hc/layer2]', err.message);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
 // ── /api/hc/ask ─────────────────────────────────────────────────────────────
 app.post('/api/hc/ask', express.json(), async (req, res) => {
   try {
