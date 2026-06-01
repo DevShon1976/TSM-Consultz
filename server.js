@@ -111,15 +111,7 @@ app.use(function(req, res, next) {
 });
 
 // CORE STATIC MOUNTS — single source of truth
-app.use("/html", express.static(path.join(__dirname, "html"), {
-  etag: false,
-  lastModified: false,
-  setHeaders: function(res, filePath) {
-    if (filePath.endsWith('.html')) {
-      res.setHeader('Cache-Control', 'no-store');
-    }
-  }
-}));
+app.use("/html",         express.static(path.join(__dirname, "html")));
 app.use("/js",           express.static(path.join(__dirname, "html/js")));
 app.use("/bpo",          express.static(path.join(__dirname, "html/bpo")));
 app.use("/shared",       express.static(path.join(__dirname, "html/bpo/shared")));
