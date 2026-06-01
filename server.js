@@ -408,20 +408,6 @@ app.post('/api/music/guidance', express.json(), async (req, res) => {
 });
 app.post('/api/finops/bnca/report', (req, res) => res.json({ok:true}));
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`\n🚀 TSM Shell on http://0.0.0.0:${PORT}`);
-  suites.forEach(s => console.log(`   ${s.route} → ${s.dir}/${s.index}`));
-  console.log();
-}).on('error', (err) => {
-  if (err.code === 'EADDRINUSE') {
-    console.error(`❌ Port ${PORT} already in use. Exiting cleanly.`);
-    process.exit(1);
-  } else {
-    throw err;
-  }
-});
-
-// ===== GROQ AI ENGINE =====
 const https = require('https');
 
 global.MUSIC_PLATFORM = global.MUSIC_PLATFORM || {
@@ -738,4 +724,6 @@ answer is 0-based index. Questions should match official AHIP exam difficulty. C
 // ======================================================
 // END INSURANCE SUITE
 // ======================================================
+
+app.listen(process.env.PORT || 8080, '0.0.0.0', () => console.log('TSM Shell listening'));
 
