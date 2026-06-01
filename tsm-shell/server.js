@@ -1430,8 +1430,6 @@ app.post('/api/hc/strategist', async (req, res) => {
   }
 });
 
-app.listen(process.env.PORT || 8080, '0.0.0.0', () => console.log('TSM Shell listening'));
-
     const sp = `You are the TSM Healthcare BPO Strategist. Receive pre-triaged tasks and produce executive-grade strategy in this EXACT format:
 STRATEGIC_SUMMARY: [2-3 sentences]
 ROOT_CAUSE: [1 sentence]
