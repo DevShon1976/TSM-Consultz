@@ -153,28 +153,34 @@ app.post('/api/hc/query', async function (req, res) {
   } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
 
-suites.forEach(s => {
+// 1. Declare static folder middleware using native path tools
+const path = require('path');
+const dirPath = path.join(__dirname, 'html');
 
-  const dirPath = path.join(__dirname, s.dir);
-
-// Serve files cleanly whether called via /html/ pathing or root directory layouts
-app.use('/html', express.static(__dirname + '/html'));
-app.use(express.static(__dirname + '/html'));
+app.use('/html', express.static(dirPath));
+app.use(express.static(dirPath));
 app.use(express.static(__dirname));
-  app.get(s.route, (req, res) => {
-    res.sendFile(path.join(dirPath, s.index));
+
+// 2. Run your routing loop safely using absolute properties
+if (typeof suites !== 'undefined' && Array.isArray(suites)) {
+  suites.forEach(s => {
+    if (!s.route || !s.index) return;
+    
+    app.get(s.route, (req, res) => {
+      res.sendFile(path.join(dirPath, s.index));
+    });
+
+    app.get(`${s.route}/`, (req, res) => {
+      res.sendFile(path.join(dirPath, s.index));
+    });
   });
+}
 
-  // FIX: allow trailing slash access (prevents Railway weirdness)
-  app.get(`${s.route}/`, (req, res) => {
-    res.sendFile(path.join(dirPath, s.index));
+// 3. Fallback baseline redirect to clean up 503 routing gaps
+app.get('/', (req, res) => {
+  res.sendFile(path.join(dirPath, 'healthcare', 'hc-strategist', 'index.html'), (err) => {
+    if (err) res.status(200).send("TSM Shell Server Core Active.");
   });
-
-});
-
-// Specific route for PoC demo
-app.get('/html/healthcare/poc-html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'html', 'healthcare', 'poc-html', 'index.html'));
 });
 app.get('/html/healthcare/poc-html/', (req, res) => {
   res.sendFile(path.join(__dirname, 'html', 'healthcare', 'poc-html', 'index.html'));
