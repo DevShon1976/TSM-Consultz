@@ -1667,9 +1667,6 @@ app.use('/html/tsm-strategy', express.static(path.join(__dirname, 'html', 'tsm-s
 app.use('/html/main-strategist', express.static(path.join(__dirname, 'html', 'main-strategist')));
 app.use('/', express.static(path.join(__dirname, 'html')));
 
-// catch-all LAST
-
-});
 
 
 app.post('/api/strategist/hc/system-posture', (req, res) => {
