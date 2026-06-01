@@ -122,7 +122,7 @@ app.use("/construction", express.static(path.join(__dirname, "html/construction-
 // handled by /html static mount (avoid duplication)
 
 // HC NODE ROUTES
-['hc-medical','hc-billing','hc-vendors','hc-grants', 'hc-insurance','hc-legal','hc-operations','hc-financial','hc-taxprep','hc-compliance', 'hc-pharmacy'].forEach
+['hc-medical','hc-billing','hc-vendors','hc-grants', 'hc-insurance','hc-legal','hc-operations','hc-financial','hc-taxprep','hc-compliance', 'hc-pharmacy','hc-strategist'].forEach
 (function(node) {
   var dir = path.join(__dirname, 'html/healthcare', node);
   app.use('/healthcare/' + node, express.static(dir));
