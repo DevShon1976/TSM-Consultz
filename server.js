@@ -131,9 +131,15 @@ app.use("/construction", express.static(path.join(__dirname, "html/construction-
   var dir = path.join(__dirname, 'html/healthcare', node);
   app.use('/healthcare/' + node, express.static(dir, { setHeaders: function(res) { res.setHeader('Cache-Control','no-store'); } }));
   app.get('/healthcare/' + node, function(req, res) {
+    res.setHeader('Cache-Control','no-store,no-cache,must-revalidate');
+    res.setHeader('Pragma','no-cache');
+    res.setHeader('Expires','0');
     res.sendFile(path.join(dir, 'index.html'));
   });
   app.get('/healthcare/' + node + '/', function(req, res) {
+    res.setHeader('Cache-Control','no-store,no-cache,must-revalidate');
+    res.setHeader('Pragma','no-cache');
+    res.setHeader('Expires','0');
     res.sendFile(path.join(dir, 'index.html'));
   });
 });
