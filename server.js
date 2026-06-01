@@ -188,9 +188,6 @@ async function groqChat(systemPrompt, userMessage, maxTokens = 1024) {
   return completion.choices[0]?.message?.content || '';
 }
 
-const SP = {
-  healthcare: 'You are an expert TSM healthcare strategist. Answer clearly and professionally.',
-};
 
 const safePath = typeof path !== 'undefined' ? path : require('path');
 const dirPath = safePath.join(__dirname, 'html');
