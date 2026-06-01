@@ -153,15 +153,16 @@ app.post('/api/hc/query', async function (req, res) {
   } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
 
-// 1. Declare static folder middleware using native path tools
+// 1. Core Module Requirements (Fixes the missing path crash)
 const path = require('path');
 const dirPath = path.join(__dirname, 'html');
 
+// 2. Declare static folder middleware globally
 app.use('/html', express.static(dirPath));
 app.use(express.static(dirPath));
 app.use(express.static(__dirname));
 
-// 2. Run your routing loop safely using absolute properties
+// 3. Run your routing loop safely
 if (typeof suites !== 'undefined' && Array.isArray(suites)) {
   suites.forEach(s => {
     if (!s.route || !s.index) return;
@@ -175,6 +176,18 @@ if (typeof suites !== 'undefined' && Array.isArray(suites)) {
     });
   });
 }
+
+// 4. Clean up the manual demo route using the fixed utility path
+app.get('/html/healthcare/poc-html', (req, res) => {
+  res.sendFile(path.join(dirPath, 'healthcare', 'poc-html', 'index.html'));
+});
+
+// 5. Baseline root route mapping so your naked domain doesn't 404
+app.get('/', (req, res) => {
+  res.sendFile(path.join(dirPath, 'healthcare', 'hc-strategist', 'index.html'), (err) => {
+    if (err) res.status(200).send("TSM Shell Server Core Active.");
+  });
+});
 
 // 3. Fallback baseline redirect to clean up 503 routing gaps
 app.get('/', (req, res) => {
