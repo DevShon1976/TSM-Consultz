@@ -3473,15 +3473,6 @@ app.get('/api/finops/report', (req, res) => {
 });
 
 
-app.use((req, res) => {
-  if (req.path.startsWith('/api/')) {
-    return res.status(404).json({ ok: false, error: 'API route not found' });
-  }
-  return res.sendFile(path.join(__dirname, req.path), (err) => {
-    if (err) return res.sendFile(path.join(__dirname, 'html', 'index.html'));
-  });
-});
-
 // ===== MUSIC SUITE API INLINE =====
 global.MUSIC_SUITE_STATE = global.MUSIC_SUITE_STATE || {
   artistsOnline: 12,
