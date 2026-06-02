@@ -25,6 +25,12 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use((req, res, next) => {
+  res.setHeader('Surrogate-Control', 'no-store');
+  res.setHeader('CDN-Cache-Control', 'no-store');
+  next();
+});
+
 // ── GROQ AI ENGINE ───────────────────────────────────────────────────────────
 function groqChat(system, user, maxTokens) {
   maxTokens = maxTokens || 1024;
