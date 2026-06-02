@@ -63,7 +63,6 @@ window.TSM_UI = {
     }
 };
 
-// Wire external module cards to structural runtime logic
 document.addEventListener('click', (e) => {
     const card = e.target.closest('.module-card');
     if (card) {
@@ -100,13 +99,17 @@ document.addEventListener('click', (e) => {
 </div>
 
 <script>
-// Base formatting utility for absolute local vs relative routing
+// Correct fallback layout formatting utility to correctly handle directories vs direct files
 function appUrl(key) {
   if (key.startsWith('http')) return key;
-  return '/html/' + key;
+  let path = '/html/' + key;
+  // If the path doesn't point to a file extensions (.html, .js) and lacks a trailing slash, append it
+  if (!path.includes('.') && !path.endsWith('/')) {
+    path += '/';
+  }
+  return path;
 }
 
-// De-duplicated and intelligently organized applications
 const APP_DATA = [
   // Healthcare Suite
   { sector: 'Healthcare', name: 'HonorHealth Command', key: 'honorhealth/' },
@@ -227,7 +230,6 @@ const APP_DATA = [
   { sector: 'Demo Decks', name: 'Financial Analyst Presentation', url: 'https://clients.tsmatter.com/demo/financial-analyst.html', external: true }
 ];
 
-// Deduce categorical sector definitions across localized records
 const EXTRACTED_SECTORS = [...new Set(APP_DATA.map(a => a.sector))];
 const UNIQUE_SECTORS = ['All', ...EXTRACTED_SECTORS];
 
@@ -323,7 +325,6 @@ function filterApps(q) {
   render();
 }
 
-// Global programmatic UI Actions routing setup
 document.addEventListener('click', function(e){
   const el = e.target.closest('[data-tsm-action]');
   if(!el) return;
@@ -338,11 +339,9 @@ document.addEventListener('click', function(e){
   }
 });
 
-// Auto-initialize layout on boot
 buildSectorTabs();
 render();
 
-// Boot up directly into HonorHealth Command module automatically
 const initialSetup = APP_DATA[0];
 if (initialSetup) {
   currentApp = initialSetup.key;
