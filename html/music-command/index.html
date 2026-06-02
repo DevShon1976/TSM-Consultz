@@ -1920,14 +1920,19 @@ ${bpm} BPM · punch beat 1 and 3 · pause before Rule 1.`);
       };
 
       window.zayHooksClean = function () {
-        write(`CONCEPT HOOKS
-
-1. Grindin' n slavin', still misbehavin' / Fresh n clean even missed on shavin'
-2. Rule one: no fake when the pressure get real / Truth in my chest, that's the pill you can feel
-3. Fresh out the fire, still clean with the cadence / Made for the greatness, no room for the fakeness
-
-ZAY PICK
-Use Hook 1. It keeps your identity and has the strongest bounce.`);
+        write('Generating 10 hooks…');
+        apiCall('/music/hooks/generate10', {
+          genre: DNA.genre, mood: DNA.mood, theme: DNA.theme,
+          artist: DNA.artist, structure: (DNA.structure||'').slice(0,500)
+        }).then(d => {
+          let hooks = d.hooks || d.output || d.response || d.content || d.reply || [];
+          if (typeof hooks === 'string') { hooks = hooks.split('\n').filter(l=>l.trim().length>5).map(l=>l.replace(/^\d+[\.\)]\s*/,'').trim()); }
+          const grid = document.getElementById('hook-grid');
+          if (grid && hooks.length) {
+            grid.innerHTML = hooks.map((h,i) => `<div class="hook-card" onclick="selectHook(${i},this)"><div class="hook-num">#${i+1}</div><div class="hook-text">${h}</div></div>`).join('');
+            goStep(3);
+          } else { write('Hook generation failed — try again.'); }
+        }).catch(e => write('Error: ' + e.message));
       };
 
       window.zayAdlibsClean = function () {
