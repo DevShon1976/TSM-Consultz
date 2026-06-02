@@ -194,6 +194,16 @@ app.post('/api/music/structure', async (req, res) => {
   } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
 
+app.post('/api/music/hooks/generate10', async (req, res) => {
+  try {
+    var body = req.body || {};
+    var sys = 'You are ZAY, a world-class songwriter. Generate exactly 10 distinct, catchy, numbered hook options. Make them memorable and genre-appropriate.';
+    var msg = body.query || `Generate 10 hook options. Genre: ${body.genre||'Hip-Hop'}, Mood: ${body.mood||'Motivational'}, Theme: ${body.theme||'hustle'}, Artist style: ${body.artist||'versatile'}`;
+    var a = await groqChat(sys, msg, 1024);
+    return res.json({ ok: true, output: a, hooks: a });
+  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
 app.post('/api/music/hooks', async (req, res) => {
   try {
     var body = req.body || {};
