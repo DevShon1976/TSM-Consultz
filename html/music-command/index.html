@@ -1089,7 +1089,9 @@ Be specific, creative, and make it feel like a real producer session.`;
 
       try {
         const d = await apiCall('/music/structure', { query: prompt, genre: DNA.genre, mood: DNA.mood });
-        DNA.structure = d.blueprint || d.structure || d.content || d.reply || 'Blueprint unavailable.';
+        console.log('Blueprint API response:', d);
+        const raw = d.blueprint || d.structure || d.content || d.reply || d.result || d.text || d.output || '';
+        DNA.structure = raw || JSON.stringify(d);
         streamOutput('structure-out', DNA.structure);
         markDone(1);
         goStep(2);
@@ -1115,11 +1117,12 @@ Be specific, creative, and make it feel like a real producer session.`;
           genre: DNA.genre, mood: DNA.mood, theme: DNA.theme,
           artist: DNA.artist, structure: DNA.structure.slice(0, 500),
         });
-        let hooks = d.hooks || d.output || d.response || d.content || d.reply || [];
+        console.log('Hooks API response:', d);
+        let hooks = d.hooks || d.output || d.response || d.content || d.reply || d.result || d.text || [];
         if (typeof hooks === 'string') { hooks = hooks.split('\n').filter(l => l.trim().length > 5).map(l => l.replace(/^\d+[\.\)]\s*/, '').trim()); }
         if (!hooks.length) { document.getElementById('hook-grid').innerHTML = '<div style="color:var(--red);font-family:var(--mono);font-size:.6rem">Hook generation failed. Try again.</div>'; return; }
         document.getElementById('hook-grid').innerHTML = hooks.map((h, i) => `
-      <div class="hook-card" id="hc-${i}" data-tsm-action="selectHook" data-tsm-args="${i}, this">
+      <div class="hook-card" id="hc-${i}" onclick="selectHook(${i}, this)">
         <div class="hook-num">#${i + 1}</div>
         <div class="hook-text">${h}</div>
       </div>`).join('');
