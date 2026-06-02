@@ -239,7 +239,7 @@ app.post('/api/music/st', async (req, res) => {
     var body = req.body || {};
     var sys = 'You are ZAY, a world-class music producer. Build a detailed song structure/blueprint.';
     var msg = body.query || body.message || 'Build a song blueprint.';
-await tsmAIJSON(sys + '\n\n' + msg, 'No response.')    return res.json({ ok: true, output: a, structure: a });
+    await tsmAIJSOvar a = await tsmAIJSON(sys + '\n\n' + msg, 'No response.'); return res.json({ ok: true, output: a, structure: a });
   } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
 
