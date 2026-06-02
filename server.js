@@ -17,6 +17,13 @@ const PORT = process.env.PORT || 8080;
 const HTML_ROOT = path.join(__dirname, "html");
 
 app.use(express.json());
+// ── GLOBAL NO-CACHE ──────────────────────────────────────────────────────────
+app.use((req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
 
 // ── GROQ AI ENGINE ───────────────────────────────────────────────────────────
 function groqChat(system, user, maxTokens) {
@@ -516,6 +523,7 @@ app.post('/api/strategist/query', async (req, res) => {
 app.get(['/html/healthcare/poc-html', '/html/healthcare/poc-html/'], (req, res) => res.sendFile(path.join(dirPath, 'healthcare', 'poc-html', 'index.html')));
 app.get("/_debug", (_req, res) => res.json({ dirname: __dirname, dirPath, suitesConfigured: suites.length }));
 app.get("/", (_req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
   res.sendFile(path.join(dirPath, 'bpo', 'bpo-command-center.html'), (err) => {
     if (err) res.sendFile(path.join(dirPath, 'healthcare', 'hc-strategist', 'index.html'));
   });
