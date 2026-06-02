@@ -176,6 +176,67 @@ suites.forEach(s => {
 app.post('/api/hc/query', async (req, res) => {
   try {
     var body = req.body || {};
+    var sys = body.system || SP.healthcare;
+    var msg = body.message || body.question || body.query;
+    if (!msg) return res.status(400).json({ ok: false, error: 'Query required' });
+    var a = await groqChat(sys, msg, body.maxTokens || 1024);
+    return res.json({ ok: true, output: a, answer: a, createdAt: new Date().toISOString() });
+  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.post('/api/music/structure', async (req, res) => {
+  try {
+    var body = req.body || {};
+    var sys = 'You are ZAY, a world-class music producer. Build a detailed song structure/blueprint. Return sections, BPM suggestion, key, mood, and arrangement notes.';
+    var msg = body.query || body.prompt || `Build a song blueprint. Genre: ${body.genre||'Hip-Hop'}, Mood: ${body.mood||'Motivational'}, Theme: ${body.theme||'hustle and perseverance'}, Artist style: ${body.artist||'versatile'}`;
+    var a = await groqChat(sys, msg, 1024);
+    return res.json({ ok: true, output: a, structure: a });
+  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.post('/api/music/hooks', async (req, res) => {
+  try {
+    var body = req.body || {};
+    var sys = 'You are ZAY, a world-class songwriter. Generate 10 distinct, catchy hook options. Number each one. Make them memorable and genre-appropriate.';
+    var msg = body.query || `Generate 10 hook options. Genre: ${body.genre||'Hip-Hop'}, Mood: ${body.mood||'Motivational'}, Theme: ${body.theme||'hustle'}`;
+    var a = await groqChat(sys, msg, 1024);
+    return res.json({ ok: true, output: a, hooks: a });
+  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.post('/api/music/song', async (req, res) => {
+  try {
+    var body = req.body || {};
+    var sys = 'You are ZAY, a world-class songwriter. Write complete, full song lyrics. Include all sections: intro, verse 1, pre-chorus, chorus, verse 2, bridge, outro. Make it professional and authentic.';
+    var msg = body.query || `Write a complete song. Genre: ${body.genre||'Hip-Hop'}, Mood: ${body.mood||'Motivational'}, Hook: ${body.hook||''}, Theme: ${body.theme||'hustle'}`;
+    var a = await groqChat(sys, msg, 2048);
+    return res.json({ ok: true, output: a, lyrics: a });
+  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.post('/api/music/coach', async (req, res) => {
+  try {
+    var body = req.body || {};
+    var sys = 'You are ZAY, a real music producer and artist coach. Keep responses direct, real, and helpful. Under 80 words unless asked for more.';
+    var msg = body.query || body.message || 'How can I improve my song?';
+    var a = await groqChat(sys, msg, 512);
+    return res.json({ ok: true, output: a, content: a, reply: a });
+  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.post('/api/music/st', async (req, res) => {
+  try {
+    var body = req.body || {};
+    var sys = 'You are ZAY, a world-class music producer. Build a detailed song structure/blueprint.';
+    var msg = body.query || body.message || 'Build a song blueprint.';
+    var a = await groqChat(sys, msg, 1024);
+    return res.json({ ok: true, output: a, structure: a });
+  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.post('/api/hc/query', async (req, res) => {
+  try {
+    var body = req.body || {};
     if (!body.question && !body.query) return res.status(400).json({ ok: false, error: 'Query required' });
     var a = await groqChat(SP.healthcare, body.question || body.query, body.maxTokens || 1024);
     return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() });
