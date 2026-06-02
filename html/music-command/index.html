@@ -1248,7 +1248,7 @@
       let i = 0;
       const iv = setInterval(() => {
         el.textContent = text.slice(0, i) + '▌';
-        el.scrollTop = el.scrollHeight;
+        if(el) el.scrollTop = el.scrollHeight;
         i += 8;
         if (i >= text.length) { clearInterval(iv); el.textContent = text; }
       }, 12);
@@ -1311,7 +1311,8 @@ Be specific, creative, and make it feel like a real producer session.`;
           genre: DNA.genre, mood: DNA.mood, theme: DNA.theme,
           artist: DNA.artist, structure: DNA.structure.slice(0, 500),
         });
-        const hooks = d.hooks || [];
+        let hooks = d.hooks || d.output || d.response || d.content || d.reply || [];
+        if (typeof hooks === 'string') { hooks = hooks.split('\n').filter(l => l.trim().length > 5).map(l => l.replace(/^\d+[\.\)]\s*/, '').trim()); }
         if (!hooks.length) { document.getElementById('hook-grid').innerHTML = '<div style="color:var(--red);font-family:var(--mono);font-size:.6rem">Hook generation failed. Try again.</div>'; return; }
         document.getElementById('hook-grid').innerHTML = hooks.map((h, i) => `
       <div class="hook-card" id="hc-${i}" data-tsm-action="selectHook" data-tsm-args="${i}, this">
@@ -2023,19 +2024,22 @@ FX risers`);
 
       function bindButtons() {
         const map = [
-          ["Build Complete Song", window.zayBuildSongClean],
-          ["Concept Hooks", window.zayHooksClean],
-          ["Adlibs + Bridge", window.zayAdlibsClean],
-          ["Producer Notes", window.zayProducerNotesClean],
-          ["DAW Mode", window.zayDAWClean],
-          ["Save Song", window.zaySaveClean],
-          ["Export TXT", window.zayExportClean],
-          ["Tap Tempo", window.zayTapTempo],
-          ["Play Cadence Guide", window.zayPlayCadenceGuide],
-          ["Stop", window.zayStopCadenceGuide],
-          ["Speak Cadence Cues", window.zaySpeakCadenceCues]
+          ["Build Complete Song", "zayBuildSongClean"],
+          ["Concept Hooks", "zayHooksClean"],
+          ["Adlibs + Bridge", "zayAdlibsClean"],
+          ["Producer Notes", "zayProducerNotesClean"],
+          ["DAW Mode", "zayDAWClean"],
+          ["Save Song", "zaySaveClean"],
+          ["Export TXT", "zayExportClean"],
+          ["Tap Tempo", "zayTapTempo"],
+          ["Play Cadence Guide", "zayPlayCadenceGuide"],
+          ["Stop", "zayStopCadenceGuide"],
+          ["Speak Cadence Cues", "zaySpeakCadenceCues"]
         ];
         qa("button").forEach(btn => {
+          const action = btn.dataset.tsmAction;
+          if (action && window[action]) { btn.addEventListener('click', () => window[action]()); }
+        });
           const txt = (btn.innerText || "").trim();
           const hit = map.find(([label]) => txt.includes(label));
           if (hit) {
@@ -2223,9 +2227,8 @@ Double the final hook.`;
 
         if (action === 'togglePill') {
             const group = args.replace(/this,?'?(\w+)'?/,'$1').trim();
-            el.closest('.pill-group, .pills, .genre-pills, .mood-pills, [class*="pill"]')
-              ?.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
-            el.classList.toggle('active');
+            el.closest('.pill-group')?.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+            el.classList.add('active');
             if (window.DNA) window.DNA[group] = el.textContent.trim();
             return;
           }
