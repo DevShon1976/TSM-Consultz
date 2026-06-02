@@ -2212,11 +2212,24 @@ Double the final hook.`;
         const action = el.getAttribute('data-tsm-action');
         const args = el.getAttribute('data-tsm-args');
 
-        if (window.TSM && TSM.launcher && TSM.launcher.run) {
-          TSM.launcher.run(action, args);
-        } else {
-          console.warn('[TSM] launcher missing:', action, args);
-        }
+        if (action === 'togglePill') {
+            const group = args.replace(/this,?'?(\w+)'?/,'$1').trim();
+            el.closest('.pill-group, .pills, .genre-pills, .mood-pills, [class*="pill"]')
+              ?.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+            el.classList.toggle('active');
+            if (window.DNA) window.DNA[group] = el.textContent.trim();
+            return;
+          }
+          if (action === 'goStep' || action === 'runStep1' || action === 'runStep2' || action === 'runStep3' || action === 'runStep4') {
+            const n = parseInt(args) || 1;
+            if (typeof window.goStep === 'function') window.goStep(n);
+            return;
+          }
+          if (window.TSM && TSM.launcher && TSM.launcher.run) {
+            TSM.launcher.run(action, args);
+          } else {
+            console.warn('[TSM] launcher missing:', action, args);
+          }
 
       });
     })();</script>
