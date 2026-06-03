@@ -241,11 +241,17 @@ app.post('/api/music/coach', async (req, res) => {
 app.post('/api/music/structure', async (req, res) => {
   try {
     var body = req.body || {};
-    var sys = 'You are ZAY, a world-class music producer. Build a detailed song structure/blueprint.';
+    var sys = 'You are ZAY, a world-class music producer. Build a detailed song structure/blueprint. Write in plain text, no JSON.';
     var msg = body.query || body.message || 'Build a song blueprint.';
-    var a = await groqChat(sys, msg, 1200);
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${process.env.GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 1200, messages: [{ role: 'system', content: sys }, { role: 'user', content: msg }] })
+    });
+    const data = await r.json();
+    const a = data?.choices?.[0]?.message?.content || 'No content returned.';
     return res.json({ ok: true, output: a, structure: a });
-  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  } catch (e) { return res.status(500).json({ ok: false, error: String(e) }); }
 });
 
 app.post('/api/hc/query', async (req, res) => {
