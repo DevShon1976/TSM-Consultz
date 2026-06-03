@@ -252,7 +252,7 @@ app.post('/api/music/structure', async (req, res) => {
     var body = req.body || {};
     var sys = 'You are ZAY, a world-class music producer. Build a detailed song structure/blueprint.';
     var msg = body.query || body.message || 'Build a song blueprint.';
-    var a = await tsmAIJSON(sys + '\n\n' + msg, 'No response.');
+    var a = await groqChat(sys, msg, 1200);
     return res.json({ ok: true, output: a, structure: a });
   } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
