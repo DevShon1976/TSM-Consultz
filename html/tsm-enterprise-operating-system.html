@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TSM Workforce Intelligence & Operations Command Center</title>
+    <style>
+        :root {
+            --bg-primary: #060b13;
+            --bg-sidebar: #0b1325;
+            --bg-surface: #111c35;
+            --bg-card: #172649;
+            --accent-blue: #0070f3;
+            --accent-cyan: #00dfd8;
+            --accent-green: #00df89;
+            --accent-amber: #f5a623;
+            --text-main: #f4f6fa;
+            --text-muted: #8fa0b7;
+            --border-color: #1e2f55;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* LEFT SIDEBAR: Operational Command Structure Layer */
+        #sidebar {
+            width: 320px;
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: linear-gradient(180deg, rgba(0,112,243,0.1) 0%, rgba(0,0,0,0) 100%);
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: var(--text-main);
+            line-height: 1.3;
+        }
+
+        .sidebar-header p {
+            font-size: 0.75rem;
+            color: var(--accent-cyan);
+            margin-top: 4px;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .functional-tree {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px 10px;
+        }
+
+        .command-section {
+            margin-bottom: 15px;
+            border-radius: 6px;
+            background: rgba(255,255,255,0.01);
+            border: 1px solid rgba(30, 47, 85, 0.3);
+            overflow: hidden;
+        }
+
+        .section-trigger {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(17, 28, 53, 0.4);
+            border: none;
+            color: var(--text-main);
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+        }
+
+        .section-trigger span.num {
+            color: var(--accent-blue);
+            margin-right: 6px;
+            font-family: monospace;
+        }
+
+        .app-links-list {
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .app-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 10px;
+            border-radius: 4px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .app-item:hover {
+            color: var(--text-main);
+            background: rgba(0, 112, 243, 0.15);
+        }
+
+        .app-item.active {
+            color: var(--text-main);
+            background: var(--accent-blue);
+            font-weight: 600;
+        }
+
+        .app-item .status-indicator {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--border-color);
+        }
+
+        .app-item.active .status-indicator, .app-item:hover .status-indicator {
+            background: var(--accent-green);
+            box-shadow: 0 0 6px var(--accent-green);
+        }
+
+        /* RIGHT COMMAND CANVAS PANEL */
+        #command-canvas {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background-color: var(--bg-primary);
+            overflow: hidden;
+        }
+
+        /* Virtual Desktop Simulation Address Bar */
+        .system-bar {
+            background-color: var(--bg-surface);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .virtual-address {
+            flex: 1;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 8px 14px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: var(--accent-cyan);
+        }
+
+        .pilot-badge {
+            background: rgba(245, 166, 35, 0.1);
+            border: 1px solid var(--accent-amber);
+            color: var(--accent-amber);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        /* Main Workspace View Container */
+        .workspace-viewport {
+            flex: 1;
+            overflow-y: auto;
+            padding: 25px;
+        }
+
+        /* Hero Positioning Layer */
+        .hero-banner {
+            background: linear-gradient(135deg, var(--bg-surface) 0%, rgba(17,28,53,0.4) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 25px;
+        }
+
+        .hero-banner h2 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+
+        .hero-banner p.subtitle {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-items: 1.4;
+            max-width: 900px;
+            margin-bottom: 12px;
+        }
+
+        .trust-statement {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 223, 137, 0.08);
+            border: 1px solid rgba(0, 223, 137, 0.2);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: var(--accent-green);
+        }
+
+        /* Grid Framework Layout components */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .dashboard-card {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .card-header-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+
+        .card-header-group h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        /* Interactive Dynamic Report Panel components */
+        .metrics-strip {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .metric-block {
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.03);
+            border-radius: 6px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .metric-block label {
+            display: block;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .metric-block span.val {
+            font-size: 1.4rem;
+            font-weight: 800;
+            font-family: monospace;
+            color: var(--accent-cyan);
+        }
+
+        .metric-block span.val.green { color: var(--accent-green); }
+        .metric-block span.val.amber { color: var(--accent-amber); }
+
+        .analysis-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+        }
+
+        .analysis-table th {
+            text-align: left;
+            color: var(--text-muted);
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+        }
+
+        .analysis-table td {
+            padding: 10px;
+            border-bottom: 1px solid rgba(30, 47, 85, 0.4);
+        }
+
+        .badge-status {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.7rem;
+        }
+
+        .badge-status.ready { background: rgba(0,223,137,0.1); color: var(--accent-green); }
+        .badge-status.coaching { background: rgba(245,166,35,0.1); color: var(--accent-amber); }
+
+        /* Pilot Integration / Scenario Controller Mode Area */
+        .scenario-infobox {
+            background: var(--bg-card);
+            border-radius: 6px;
+            padding: 14px;
+            margin-bottom: 12px;
+            border-left: 3px solid var(--accent-blue);
+        }
+
+        .scenario-infobox h4 {
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+            color: var(--text-main);
+        }
+
+        .scenario-infobox p {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .pipeline-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .pipeline-step {
+            background: rgba(6, 11, 19, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-size: 0.78rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .pipeline-step .step-title {
+            font-weight: 600;
+        }
+
+        .pipeline-step .step-status {
+            color: var(--accent-cyan);
+            font-family: monospace;
+            font-size: 0.7rem;
+        }
+
+        /* Action Buttons and CTA Panel */
+        .cta-group-container {
+            background: linear-gradient(90deg, rgba(17,28,53,0.6) 0%, rgba(23,38,73,0.6) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .cta-text h4 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .cta-text p {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+
+        .action-button-trigger {
+            background-color: var(--accent-blue);
+            color: var(--text-main);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.1s, background-color 0.2s;
+            white-space: nowrap;
+        }
+
+        .action-button-trigger:hover {
+            background-color: #0060d0;
+            transform: translateY(-1px);
+        }
+
+        /* System Metrics Bar Footer */
+        .system-footer-bar {
+            height: 32px;
+            background-color: var(--bg-sidebar);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .footer-status-nodes {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .pulse-dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--accent-green);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px var(--accent-green);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <h1>TSM HUB</h1>
+            <p>Workforce Intelligence OS</p>
+        </div>
+        
+        <div class="functional-tree" id="command-tree-root">
+            </div>
+    </div>
+
+    <div id="command-canvas">
+        <div class="system-bar">
+            <div class="virtual-address" id="simulated-url">/html/tsm-staffing-readiness-demo.html</div>
+            <div class="pilot-badge">RANDSTAD PILOT MODE ACTIVE</div>
+        </div>
+
+        <div class="workspace-viewport">
+            
+            <div class="hero-banner">
+                <h2>Workforce Readiness & Talent Simulation Platform</h2>
+                <p class="subtitle">A workflow-based simulation system that evaluates candidate readiness, identifies skill gaps, and supports placement + retention decisions in real staffing environments.</p>
+                <div class="trust-statement">
+                    <span class="pulse-dot"></span>
+                    <strong>Strategic Trust Architecture:</strong> Designed to strengthen placement success while reinforcing long-term employee development and trust.
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                
+                <div class="dashboard-card">
+                    <div class="card-header-group">
+                        <h3>Candidate Readiness Verification Summary</h3>
+                        <span style="font-size:0.75rem; color:var(--accent-cyan); font-family:monospace;">Updated Live</span>
+                    </div>
+
+                    <div class="metrics-strip">
+                        <div class="metric-block">
+                            <label>Avg Readiness Score</label>
+                            <span class="val">82%</span>
+                        </div>
+                        <div class="metric-block">
+                            <label>Workflow Accuracy</label>
+                            <span class="val green">76%</span>
+                        </div>
+                        <div class="metric-block">
+                            <label>Compliance Index</label>
+                            <span class="val">High</span>
+                        </div>
+                        <div class="metric-block">
+                            <label>Retention Risk Map</label>
+                            <span class="val amber">Low</span>
+                        </div>
+                    </div>
+
+                    <table class="analysis-table">
+                        <thead>
+                            <tr>
+                                <th>Candidate Area Matrix</th>
+                                <th>Target Placement Role</th>
+                                <th>Accuracy Index</th>
+                                <th>Core Gaps Found</th>
+                                <th>Recommendation Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Healthcare Admin Track</strong></td>
+                                <td>Revenue Cycle Analyst</td>
+                                <td style="font-family:monospace; color:var(--accent-green);">88%</td>
+                                <td>Prior Auth Escals</td>
+                                <td><span class="badge-status ready">Placement Ready</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Legal Support Track</strong></td>
+                                <td>Paralegal Coordinator</td>
+                                <td style="font-family:monospace; color:var(--accent-green);">81%</td>
+                                <td>Redaction Audits</td>
+                                <td><span class="badge-status ready">Placement Ready</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Financial Ops Track</strong></td>
+                                <td>Staff Accountant</td>
+                                <td style="font-family:monospace; color:var(--accent-amber);">74%</td>
+                                <td>AP/AR Ledger Crosses</td>
+                                <td><span class="badge-status coaching">Coaching Track</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Insurance Claims Track</strong></td>
+                                <td>Claims Analyst Specialist</td>
+                                <td style="font-family:monospace; color:var(--accent-green);">84%</td>
+                                <td>AZ P&C Code Check</td>
+                                <td><span class="badge-status ready">Placement Ready</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-header-group">
+                        <h3>Randstad Deployment Mode</h3>
+                    </div>
+
+                    <div class="scenario-infobox">
+                        <h4>Division: Healthcare & Administrative</h4>
+                        <p>Use Case: Pre-placement readiness validation and risk-mitigated retention mapping.</p>
+                    </div>
+
+                    <p style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-top:15px; font-weight:700;">
+                        Active Career Mobility Engine Pipeline
+                    </p>
+
+                    <div class="pipeline-flow">
+                        <div class="pipeline-step">
+                            <span class="step-title">1. Candidate Assessment</span>
+                            <span class="step-status">COMPLETED</span>
+                        </div>
+                        <div class="pipeline-step">
+                            <span class="step-title">2. Skill Gap Analysis</span>
+                            <span class="step-status">PROCESSED</span>
+                        </div>
+                        <div class="pipeline-step">
+                            <span class="step-title">3. Simulation Training</span>
+                            <span class="step-status" style="color:var(--accent-amber)">ACTIVE MAPPING</span>
+                        </div>
+                        <div class="pipeline-step">
+                            <span class="step-title">4. Certification Readiness</span>
+                            <span class="step-status" style="color:var(--text-muted)">PENDING</span>
+                        </div>
+                        <div class="pipeline-step">
+                            <span class="step-title">5. Placement Verification</span>
+                            <span class="step-status" style="color:var(--text-muted)">QUEUED</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cta-group-container">
+                <div class="cta-text">
+                    <h4>Review Staffing Deployment Use Cases</h4>
+                    <p>Demonstrate to enterprise partners that you invest directly in candidate verification, operational safety, and multi-tier retention management metrics before placement cycles initialize.</p>
+                </div>
+                <button class="action-button-trigger" onclick="alert('System Notice: Initializing Enterprise Pilot Deployment Request Pipeline Framework Router...')">
+                    Request Pilot Discussion
+                </button>
+            </div>
+
+        </div>
+
+        <div class="system-footer-bar">
+            <div class="footer-status-nodes">
+                <div><span class="pulse-dot"></span> <span id="active-functional-node-label">01. Executive Command Layer Active</span></div>
+            </div>
+            <div>TSM Ecosystem OS v4.1.0 • Railway Mesh Node</div>
+        </div>
+    </div>
+
+    <script>
+        // Matrix Configuration Framework mapping business functionalities directly to target files array indices
+        const BUSINESS_FUNCTIONAL_ARCH = [
+            {
+                id: "01",
+                name: "Executive Command Layer",
+                purpose: "Run the entire TSM ecosystem.",
+                apps: [
+                    { name: "Executive Portal Live", file: "executive-portal-live.html" },
+                    { name: "Strategist Index", file: "strategist-index.html" },
+                    { name: "Suite Builder Matrix", file: "suite-builder.html" },
+                    { name: "Client Access Portal", file: "client-access.html" },
+                    { name: "WIA Workforce Engine", file: "wia.html" },
+                    { name: "WIP Global Dashboard", file: "wip-dashboard.html" },
+                    { name: "Doc1 Intelligence Search", file: "doc1-search.html" }
+                ]
+            },
+            {
+                id: "02",
+                name: "Workforce Intel & Readiness",
+                purpose: "Candidate validation, readiness scoring, and workforce pathways.",
+                apps: [
+                    { name: "Staffing Readiness Control", file: "tsm-staffing-readiness-demo.html" },
+                    { name: "Healthcare Academy", file: "hc-academy.html" },
+                    { name: "Healthcare Practice Sim", file: "crc-hc-practice.html" },
+                    { name: "Insurance Claims Pro Sim", file: "insurance-claims-pro.html" },
+                    { name: "Arizona P&C CE Command", file: "insurance-ce-command.html" },
+                    { name: "FinOps Scenario Matrix", file: "finops-scenarios.html" },
+                    { name: "Legal Flow Engine", file: "legal-demo-flow.html" }
+                ]
+            },
+            {
+                id: "03",
+                name: "Healthcare Operations Command",
+                purpose: "Revenue Cycle Management, Denials, Prior Auth, and BPO operations.",
+                apps: [
+                    { name: "Healthcare WIP Panel", file: "healthcare-wip.html" },
+                    { name: "HC Operational Script", file: "healthcare-demo-script.html" },
+                    { name: "CRCR Critical Scenarios", file: "crcr-scenarios.html" },
+                    { name: "Healthcare Demo Trail", file: "tsm-hc-demo-trail.html" }
+                ]
+            },
+            {
+                id: "04",
+                name: "Insurance Operations Command",
+                purpose: "Claims tracking, benefit setups, licensing pipelines, and CE compliance matrix logs.",
+                apps: [
+                    { name: "Insurance Portal Base", file: "insurance-portal.html" },
+                    { name: "Insurance Central Hub 1", file: "ins-hub1.html" },
+                    { name: "Enterprise Ins Presentation", file: "ins-presentation.html" },
+                    { name: "Insurance Demo Trail", file: "tsm-ins-demo-trail.html" }
+                ]
+            },
+            {
+                id: "05",
+                name: "Financial Operations Command",
+                purpose: "Ledger validation, bookkeeping, AR/AP cross audits, and automated reporting.",
+                apps: [
+                    { name: "FinOps Enterprise Pitch", file: "finops-presentation.html" },
+                    { name: "Accountant Validation Desk", file: "staff-accountant-interview.html" },
+                    { name: "Structural Study Guide", file: "study-guide.html" }
+                ]
+            },
+            {
+                id: "06",
+                name: "Legal Operations Command",
+                purpose: "Document intelligence auditing, contract reviews, and automated compliance frameworks.",
+                apps: [
+                    { name: "Legal Hub Center Base", file: "legal.html" },
+                    { name: "Legal Readiness Tracker", file: "legal-readiness-track" },
+                    { name: "Healthcare Legal Interface", file: "hc-legal/index.html" },
+                    { name: "Legal Scenario Trail", file: "legal-demo-trail.html" }
+                ]
+            },
+            {
+                id: "07",
+                name: "Construction Operations Command",
+                purpose: "Project documentation flows, compliance audits, and administration tracks.",
+                apps: [
+                    { name: "Construction Pitch Module", file: "construct-pitch.html" },
+                    { name: "Document Showcase Hub", file: "document-showcase.html" },
+                    { name: "Construction WIP Framework", file: "construction-wip.html" }
+                ]
+            },
+            {
+                id: "08",
+                name: "BPO Service Delivery Network",
+                purpose: "Client workflow routing matrix, escalation logs, and QA service tracking panels.",
+                apps: [
+                    { name: "Suite Hub Orchestrator", file: "suite-hub.html" },
+                    { name: "BPO Command Engine", file: "bpo-command-center.html" },
+                    { name: "Internal Operations Panel 1", file: "bpo-internal1.html" }
+                ]
+            },
+            {
+                id: "09",
+                name: "AI Intelligence Layer",
+                purpose: "Document parsing, workflow engineering automation, and predictive workforce talent analytics.",
+                apps: [
+                    { name: "Doc Analysis Workbench", file: "doc-analysis-tab.html" },
+                    { name: "WIA Core Engine Logic", file: "wia.html" },
+                    { name: "Enterprise Target Search", file: "doc1-search.html" }
+                ]
+            },
+            {
+                id: "10",
+                name: "Sales, Demos & Growth Track",
+                purpose: "Enterprise configuration scenarios, presentations, and client proof of concept pipelines.",
+                apps: [
+                    { name: "HC Sales Demo Trail", file: "tsm-hc-demo-trail.html" },
+                    { name: "Ins Sales Demo Trail", file: "tsm-ins-demo-trail.html" },
+                    { name: "FinOps Strategy Desk", file: "finops-presentation.html" },
+                    { name: "Construction Suite Pitch", file: "construct-pitch.html" }
+                ]
+            }
+        ];
+
+        /**
+         * Dynamic Interface Hyper-Link Navigation Execution Core Handler Node Controller Router 
+         * Re-routes simulated tracking locations without breaking system layout interface boundaries.
+         */
+        function routeWorkspaceApp(element, targetedFileString, parentSectionNameString) {
+            if (!targetedFileString) return;
+
+            const routeContainerBar = document.getElementById('simulated-url');
+            const footerStatusLabel = document.getElementById('active-functional-node-label');
+
+            // Construct uniform relative resource destination targets cleanly
+            const unifiedPathLocationString = `/html/${targetedFileString}`;
+
+            // Trigger updates across virtual simulated URL paths indicator strings
+            if (routeContainerBar) {
+                routeContainerBar.textContent = unifiedPathLocationString;
+            }
+
+            if (footerStatusLabel) {
+                footerStatusLabel.textContent = `${parentSectionNameString} Active Context -> ${targetedFileString}`;
+            }
+
+            // Sync visual active selection node styling states tracking indicators cleanly across sidebar matrices trees
+            document.querySelectorAll('.app-item').forEach(item => {
+                item.classList.toggle('active', item === element);
+            });
+
+            console.log(`[TSM OS Navigation Engine Router] Routing viewport channel trace path target shifted cleanly context tracking: ${unifiedPathLocationString}`);
+        }
+
+        /**
+         * Interactive Core Business Functional Tree Structure Accordion Sidebar Document Factory Hydrater Component
+         */
+        function initializeFunctionalCommandTreeLayoutEngine() {
+            const rootTreeElementContainerNode = document.getElementById('command-tree-root');
+            if (!rootTreeElementContainerNode) return;
+
+            let structuralTreeHTMLBufferMarkupString = '';
+
+            BUSINESS_FUNCTIONAL_ARCH.forEach(section => {
+                structuralTreeHTMLBufferMarkupString += `
+                    <div class="command-section">
+                        <button class="section-trigger" onclick="toggleSectionDropdownRow(this)">
+                            <div><span class="num">${section.id}.</span>${section.name}</div>
+                            <span style="font-size:0.65rem; color:var(--text-muted);">▼</span>
+                        </button>
+                        <div class="app-links-list">
+                `;
+
+                section.apps.forEach(app => {
+                    structuralTreeHTMLBufferMarkupString += `
+                        <div class="app-item" 
+                             data-file="${app.file}"
+                             onclick="routeWorkspaceApp(this, '${app.file}', '${section.id}. ${section.name}')">
+                            <span>${app.name}</span>
+                            <div class="status-indicator"></div>
+                        </div>
+                    `;
+                });
+
+                structuralTreeHTMLBufferMarkupString += `
+                        </div>
+                    </div>
+                `;
+            });
+
+            rootTreeElementContainerNode.innerHTML = structuralTreeHTMLBufferMarkupString;
+            console.log("[TSM Operational Command Framework Hydrator Matrix] Sidebar interface rows cleanly mapped to business functionality specifications trees.");
+        }
+
+        /**
+         * Visual Helper Subsystem: Basic Toggle Mechanics for Accordion Layout Trees Panel Views
+         */
+        function toggleSectionDropdownRow(triggerButtonElement) {
+            const linksContainerNodeElement = triggerButtonElement.nextElementSibling;
+            if (!linksContainerNodeElement) return;
+
+            const isCollapsed = linksContainerNodeElement.style.display === 'none';
+            linksContainerNodeElement.style.display = isCollapsed ? 'flex' : 'none';
+            triggerButtonElement.querySelector('span:last-child').textContent = isCollapsed ? '▼' : '▲';
+        }
+
+        // Mount initialization logic tasks triggers directly onto document lifecycle completion pipelines hooks framework
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("⚡ TSM Enterprise Operating System Base: Mounting infrastructure architecture frameworks...");
+            
+            // Build elements trees dynamically inside left sidebar wrapper
+            initializeFunctionalCommandTreeLayoutEngine();
+
+            // Bootstrap initial default active highlighted selection parameters right out out of dataset 
+            const defaultStartingAppNodeReference = document.querySelector('.app-item');
+            if (defaultStartingAppNodeReference) {
+                defaultStartingAppNodeReference.classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>
