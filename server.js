@@ -247,7 +247,7 @@ app.post('/api/music/coach', async (req, res) => {
   } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
 
-app.post('/api/music/st', async (req, res) => {
+app.post('/api/music/structure', async (req, res) => {
   try {
     var body = req.body || {};
     var sys = 'You are ZAY, a world-class music producer. Build a detailed song structure/blueprint.';
@@ -261,7 +261,8 @@ app.post('/api/hc/query', async (req, res) => {
   try {
     var body = req.body || {};
     if (!body.question && !body.query) return res.status(400).json({ ok: false, error: 'Query required' });
-    await tsmAIJSON(SP.healthcare + '\n\n' + (body.question || body.query), 'No response.')
+    var a = await tsmAIJSON(SP.healthcare + '\n\n' + (body.question || body.query), 'No response.');
+    return res.json({ ok: true, output: a });
   } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
 
@@ -269,7 +270,7 @@ app.post('/api/hc/ask', async (req, res) => {
   try {
     var body = req.body || {};
     if (!body.message || !body.message.trim()) return res.status(400).json({ ok: false, error: 'Message is required' });
-    await tsmAIJSON((body.system || SP.healthcare) + '\n\n' + body.message, 'No response.')
+    var a = await tsmAIJSON((body.system || SP.healthcare) + '\n\n' + body.message, 'No response.');
     return res.json({ ok: true, content: a });
   } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
