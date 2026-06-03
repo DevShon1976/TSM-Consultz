@@ -227,15 +227,6 @@ app.post('/api/music/hooks', async (req, res) => {
   } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
 
-app.post('/api/music/song', async (req, res) => {
-  try {
-    var body = req.body || {};
-    var sys = 'You are ZAY, a world-class songwriter. Write complete, full song lyrics. Include all sections: intro, verse 1, pre-chorus, chorus, verse 2, bridge, outro. Make it professional and authentic.';
-    var msg = body.query || `Write a complete song. Genre: ${body.genre||'Hip-Hop'}, Mood: ${body.mood||'Motivational'}, Hook: ${body.hook||''}, Theme: ${body.theme||'hustle'}`;
-    var a = await groqChat(sys, msg, 2048);
-    return res.json({ ok: true, output: a, lyrics: a });
-  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
-});
 
 app.post('/api/music/coach', async (req, res) => {
   try {
