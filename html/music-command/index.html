@@ -44,11 +44,13 @@
     .step-desc{font-size:.6rem;color:var(--muted);line-height:1.4}
     .step-item.done .step-name{color:var(--green)}
 
-    .studio{display:flex;flex-direction:column;min-width:0;flex:1;height:100%;overflow:hidden;}
+    /* ── FIX: min-height:0 on studio so flex child can scroll ── */
+    .studio{display:flex;flex-direction:column;min-width:0;flex:1;min-height:0;overflow:hidden;}
     .studio-head{border-bottom:1px solid var(--b1);padding:.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;background:var(--surf2);flex-shrink:0;}
     .sh-title{font-family:var(--head);font-size:1.1rem;font-weight:700;color:var(--white)}
     .sh-sub{font-family:var(--mono);font-size:.45rem;letter-spacing:.1em;color:var(--muted);margin-top:.15rem}
-    .studio-body{flex:1;overflow-y:auto;padding:1.2rem 1.2rem 2rem;height:0;min-height:0;}
+    /* ── FIX: removed height:0 hack — min-height:0 on parent is enough ── */
+    .studio-body{flex:1;overflow-y:auto;padding:1.2rem 1.2rem 2rem;min-height:0;}
 
     .panel{display:none;width:100%}
     .panel.active{display:block;width:100%}
@@ -91,7 +93,7 @@
     .ap-head{background:var(--surf2);border-bottom:1px solid var(--b1);padding:.6rem .8rem;flex-shrink:0;}
     .ap-title{font-family:var(--mono);font-size:.5rem;letter-spacing:.12em;color:var(--purple)}
     .ap-sub{font-family:var(--mono);font-size:.42rem;color:var(--muted);margin-top:.1rem}
-    .chat-feed{flex:1;overflow-y:auto;padding:.6rem .7rem;display:flex;flex-direction:column;gap:.5rem;height:0;}
+    .chat-feed{flex:1;overflow-y:auto;padding:.6rem .7rem;display:flex;flex-direction:column;gap:.5rem;min-height:0;}
     .msg{display:flex;gap:.4rem;align-items:flex-start}
     .msg-avatar{width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.55rem;font-weight:700;font-family:var(--mono);margin-top:1px}
     .msg-zay .msg-avatar{background:linear-gradient(135deg,var(--purple),var(--pink));color:#fff}
@@ -412,7 +414,6 @@
         <div style="margin-top:1.2rem;">
           <div style="font-family:var(--mono);font-size:.42rem;letter-spacing:.15em;color:var(--purple);margin-bottom:.6rem;text-transform:uppercase;">🎚️ ZAY Producer Intelligence</div>
 
-          <!-- ADLIBS + BRIDGE -->
           <div class="intel-card" onclick="toggleIntel('adlibs')">
             <div class="intel-header">
               <div class="intel-icon-title"><span style="font-size:.85rem;">🎤</span><div><div class="intel-name">ADLIBS + BRIDGE</div><div class="intel-sub">When & how to use them</div></div></div>
@@ -433,7 +434,6 @@
             </div>
           </div>
 
-          <!-- DAW SETUP -->
           <div class="intel-card" onclick="toggleIntel('daw')">
             <div class="intel-header">
               <div class="intel-icon-title"><span style="font-size:.85rem;">🎚️</span><div><div class="intel-name">DAW SESSION SETUP</div><div class="intel-sub">Before you open your DAW</div></div></div>
@@ -464,7 +464,6 @@
             </div>
           </div>
 
-          <!-- PRODUCER NOTES BY GENRE -->
           <div class="intel-card" onclick="toggleIntel('notes');updateGenreNotes()">
             <div class="intel-header">
               <div class="intel-icon-title"><span style="font-size:.85rem;">📋</span><div><div class="intel-name">PRODUCER NOTES</div><div class="intel-sub">Craft notes by genre — updates with your selection</div></div></div>
@@ -475,7 +474,6 @@
             </div>
           </div>
 
-          <!-- HOOK FORMULA -->
           <div class="intel-card" onclick="toggleIntel('hook')">
             <div class="intel-header">
               <div class="intel-icon-title"><span style="font-size:.85rem;">🎯</span><div><div class="intel-name">HOOK WRITING FORMULA</div><div class="intel-sub">What makes a hook stick</div></div></div>
@@ -667,7 +665,6 @@
 </div>
 
 <script>
-  // ── STATE ──────────────────────────────────────────────────────
   const DNA = { genre:'Hip-Hop', mood:'Motivational', artist:'', title:'', theme:'', personalLine:'', structure:'', selectedHook:'', lyrics:'', revised:'', strategy:'', guidance:'' };
   let currentStep = 1;
   let taps = [], cadenceTimer = null, audioCtx = null, bpm = 88, beat = 0;
@@ -684,7 +681,6 @@
     7:{title:'Song Package Export',sub:'Your complete song + strategy, ready to use',pct:100},
   };
 
-  // ── NAVIGATION ─────────────────────────────────────────────────
   function goStep(n) {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.step-item').forEach(s => s.classList.remove('active'));
@@ -718,7 +714,6 @@
     updateLiveDNA();
   }
 
-  // ── API ────────────────────────────────────────────────────────
   async function apiCall(endpoint, body) {
     const r = await fetch('/api' + endpoint, { method:'POST', headers:{'Content-Type':'application/json','x-api-key':'TSM_PRO_ALPHA_2026'}, body:JSON.stringify(body) });
     return r.json();
@@ -732,7 +727,6 @@
     const iv = setInterval(() => { el.textContent = text.slice(0, i) + '▌'; i += 8; if (i >= text.length) { clearInterval(iv); el.textContent = text; } }, 12);
   }
 
-  // ── STEPS ──────────────────────────────────────────────────────
   async function runStep1() {
     updateDNA();
     if (!DNA.theme.trim()) { zayMessage("Tell me what the song is about first — give me a theme, story, or emotion."); return; }
@@ -860,7 +854,6 @@ Write COMPLETE SONG: [INTRO] [VERSE 1 - 16 bars] [PRE-HOOK] [HOOK] [VERSE 2 - 16
     goStep(1); zayMessage("Fresh start. What are we making?");
   }
 
-  // ── ZAY CHAT ───────────────────────────────────────────────────
   function zayMessage(text) {
     const feed = document.getElementById('chat-feed');
     const msg = document.createElement('div');
@@ -887,7 +880,6 @@ Write COMPLETE SONG: [INTRO] [VERSE 1 - 16 bars] [PRE-HOOK] [HOOK] [VERSE 2 - 16
     } catch (e) { zayMessage("Connection dropped. Ask me again."); }
   }
 
-  // ── AUDIO ENGINE ───────────────────────────────────────────────
   function beep(freq=880, dur=.055, type='sine') {
     audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
     const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
@@ -927,7 +919,6 @@ Write COMPLETE SONG: [INTRO] [VERSE 1 - 16 bars] [PRE-HOOK] [HOOK] [VERSE 2 - 16
     if ('speechSynthesis' in window) { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.rate = .92; u.pitch = .82; speechSynthesis.speak(u); }
   }
 
-  // ── ZAY TOOLS ─────────────────────────────────────────────────
   function write(txt) {
     const out = document.getElementById('zayRuntimeOutput');
     if (!out) return;
@@ -976,7 +967,6 @@ Write COMPLETE SONG: [INTRO] [VERSE 1 - 16 bars] [PRE-HOOK] [HOOK] [VERSE 2 - 16
     el.innerHTML = bank.map((s,i) => `<div style="padding:6px;border-top:1px solid rgba(255,255,255,.06);cursor:pointer" onclick="(function(){var b=JSON.parse(localStorage.getItem('zay-song-bank')||'[]');write(b[${i}].content);}())"><b>${s.title}</b> · ${s.bpm||88} BPM<br><small style="color:var(--muted);">${new Date(s.ts).toLocaleString()}</small></div>`).join('');
   }
 
-  // ── UI TOGGLES ─────────────────────────────────────────────────
   function toggleSection(bodyId, arrowId) {
     const body = document.getElementById(bodyId);
     const arrow = document.getElementById(arrowId);
@@ -996,7 +986,6 @@ Write COMPLETE SONG: [INTRO] [VERSE 1 - 16 bars] [PRE-HOOK] [HOOK] [VERSE 2 - 16
     if (card) card.style.borderColor = open ? 'rgba(168,85,247,.15)' : 'rgba(168,85,247,.4)';
   }
 
-  // ── LIVE DNA ───────────────────────────────────────────────────
   function updateLiveDNA() {
     const genre = document.querySelector('#genre-pills .pill.active')?.textContent.trim() || 'Hip-Hop';
     const mood = document.querySelector('#mood-pills .pill.active')?.textContent.trim() || 'Motivational';
@@ -1011,7 +1000,6 @@ Write COMPLETE SONG: [INTRO] [VERSE 1 - 16 bars] [PRE-HOOK] [HOOK] [VERSE 2 - 16
     if(g('live-theme')) g('live-theme').textContent = theme.length > 100 ? theme.slice(0,100) + '…' : theme;
   }
 
-  // ── GENRE PRODUCER NOTES ───────────────────────────────────────
   const GENRE_NOTES = {
     'Hip-Hop':{color:'#a855f7',tips:['BPM range: 85–100 classic, 135–145 modern trap-hop','Hi-hats drive energy — use trap rolls before section breaks','808 bass is melodic — tune it to your key signature','Snare on beat 2 and 4, vary velocity for human feel','Sample chop with high-pass filter to cut low-end mud','Keep verse vocal dry — plate reverb on hook only']},
     'Trap':{color:'#ec4899',tips:['BPM: 130–145 (or 65–72 halftime feel)','Hi-hat rolls: 1/8, 1/16, 1/32 — velocity automation for feel','808 slides between notes for emotional impact','Snare clap layered with tight room reverb','Side-chain kick to 808 for punch without muddiness','Pad or atmospheric sample adds depth behind the 808']},
@@ -1030,7 +1018,6 @@ Write COMPLETE SONG: [INTRO] [VERSE 1 - 16 bars] [PRE-HOOK] [HOOK] [VERSE 2 - 16
     el.innerHTML = `<div style="color:${data.color};font-family:var(--mono);font-size:.4rem;margin-bottom:.4rem;">${genre.toUpperCase()} PRODUCTION NOTES</div>${data.tips.map(tip=>`<div style="display:flex;gap:.4rem;margin-bottom:.28rem;"><span style="color:${data.color};flex-shrink:0;">→</span><span>${tip}</span></div>`).join('')}<div class="intel-tip" style="margin-top:.5rem;background:rgba(168,85,247,.06);border-left:2px solid ${data.color};"><span style="font-family:var(--mono);font-size:.4rem;color:${data.color};">ZAY TIP: </span>Click "Producer Notes" in ZAY Tools for a full AI-generated session spec based on your exact concept.</div>`;
   }
 
-  // ── BEAT PLAYER ────────────────────────────────────────────────
   function toggleBeatPanel() {
     beatPanelOpen = !beatPanelOpen;
     const panel = document.getElementById('beat-panel');
@@ -1068,7 +1055,6 @@ Write COMPLETE SONG: [INTRO] [VERSE 1 - 16 bars] [PRE-HOOK] [HOOK] [VERSE 2 - 16
     window.open(searches[genre] || 'https://suno.com', '_blank');
   }
 
-  // ── SUNO / UDIO ────────────────────────────────────────────────
   function setSunoPlatform(platform, btn) {
     activeSunoPlatform = platform;
     ['suno','udio','both'].forEach(p => {
@@ -1110,7 +1096,6 @@ Write COMPLETE SONG: [INTRO] [VERSE 1 - 16 bars] [PRE-HOOK] [HOOK] [VERSE 2 - 16
     });
   }
 
-  // ── INIT ───────────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', () => {
     renderBank();
     updateLiveDNA();
