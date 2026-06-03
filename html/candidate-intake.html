@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>TSM · Candidate Readiness Assessment</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#04080f;--bg2:#070d18;--bg3:#0a1220;--panel:#0c1520;
+  --border:rgba(100,200,255,.08);--border2:rgba(201,168,76,.25);
+  --gold:#c9a84c;--gold2:#e8c87a;--gold3:rgba(201,168,76,.07);
+  --green:#10b981;--green2:rgba(16,185,129,.1);
+  --teal:#14b8a6;--blue:#3b82f6;
+  --red:#ef4444;--amber:#f59e0b;
+  --text:#a8bcd0;--dim:#3a4a5e;--bright:#e8f0f8;
+  --mono:'DM Mono',monospace;--display:'Bebas Neue',sans-serif;
+  --bar:'Barlow',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:100vh;overflow-x:hidden;}
+
+/* Grid noise overlay */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(20,184,166,.015) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(20,184,166,.015) 1px,transparent 1px);
+  background-size:40px 40px;
+  pointer-events:none;z-index:0;
+}
+
+/* ── TOPBAR ── */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;height:48px;
+  background:rgba(4,8,15,.92);
+  border-bottom:0.5px solid var(--border);
+  backdrop-filter:blur(12px);
+}
+.t-logo{font-family:var(--display);font-size:18px;color:var(--gold);letter-spacing:3px;}
+.t-center{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);}
+.t-right{display:flex;align-items:center;gap:6px;font-size:9px;color:var(--dim);}
+.live-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(16,185,129,.4);}50%{opacity:.8;box-shadow:0 0 0 4px rgba(16,185,129,0);}}
+
+/* ── HERO ── */
+.hero{
+  position:relative;z-index:1;
+  padding:56px 28px 40px;
+  max-width:680px;margin:0 auto;
+  text-align:center;
+}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:8px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--gold);padding:5px 14px;
+  border:0.5px solid var(--border2);border-radius:20px;
+  background:var(--gold3);margin-bottom:20px;
+}
+.hero-title{
+  font-family:var(--display);font-size:52px;
+  color:var(--bright);letter-spacing:3px;line-height:1.05;
+  margin-bottom:12px;
+}
+.hero-title span{color:var(--gold);}
+.hero-sub{
+  font-family:var(--bar);font-size:14px;font-weight:400;
+  color:var(--text);line-height:1.8;margin-bottom:8px;
+}
+.hero-trust{
+  font-size:10px;color:var(--dim);line-height:1.7;
+  font-style:italic;margin-top:8px;
+}
+
+/* ── PROGRESS TRACK ── */
+.progress-track{
+  position:sticky;top:48px;z-index:90;
+  background:rgba(4,8,15,.95);
+  border-bottom:0.5px solid var(--border);
+  padding:12px 28px;
+  backdrop-filter:blur(8px);
+}
+.pt-inner{display:flex;align-items:center;justify-content:center;gap:0;max-width:600px;margin:0 auto;}
+.pt-step{display:flex;align-items:center;gap:6px;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);padding:4px 0;}
+.pt-step.active{color:var(--gold);}
+.pt-step.done{color:var(--green);}
+.pt-num{
+  width:20px;height:20px;border-radius:50%;
+  border:0.5px solid currentColor;
+  display:flex;align-items:center;justify-content:center;
+  font-size:8px;font-weight:700;flex-shrink:0;
+}
+.pt-step.done .pt-num{background:var(--green);border-color:var(--green);color:#000;}
+.pt-step.active .pt-num{background:var(--gold3);border-color:var(--gold);}
+.pt-line{flex:1;height:0.5px;background:var(--border);margin:0 8px;min-width:20px;}
+.pt-line.done{background:var(--green);}
+
+/* ── MAIN FORM AREA ── */
+.form-wrap{
+  position:relative;z-index:1;
+  max-width:680px;margin:0 auto;
+  padding:0 28px 80px;
+}
+
+/* ── STEP PANELS ── */
+.step-panel{display:none;animation:stepin .25s ease both;}
+.step-panel.active{display:block;}
+@keyframes stepin{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+.step-hdr{
+  display:flex;align-items:flex-start;gap:14px;
+  padding:20px 22px;
+  background:var(--panel);
+  border:0.5px solid var(--border);
+  border-bottom:0.5px solid rgba(201,168,76,.15);
+  border-radius:10px 10px 0 0;
+  margin-bottom:0;
+}
+.step-num{
+  font-family:var(--display);font-size:32px;
+  color:var(--gold);line-height:1;flex-shrink:0;
+  opacity:.6;
+}
+.step-title{font-family:var(--bar);font-size:18px;font-weight:700;color:var(--bright);margin-bottom:3px;}
+.step-desc{font-size:10px;color:var(--dim);line-height:1.6;}
+
+.step-body{
+  background:var(--panel);
+  border:0.5px solid var(--border);
+  border-top:none;
+  border-radius:0 0 10px 10px;
+  padding:22px;
+  margin-bottom:16px;
+}
+
+/* ── FORM FIELDS ── */
+.field-group{margin-bottom:18px;}
+.field-label{
+  display:block;font-size:9px;letter-spacing:2px;
+  text-transform:uppercase;color:var(--dim);
+  margin-bottom:7px;
+}
+.field-label span{color:var(--gold);margin-left:3px;}
+.field-input{
+  width:100%;background:var(--bg3);
+  border:0.5px solid var(--border);
+  border-radius:5px;padding:10px 13px;
+  font-family:var(--mono);font-size:11px;
+  color:var(--bright);outline:none;
+  transition:border-color .15s;
+}
+.field-input:focus{border-color:var(--gold);}
+.field-input::placeholder{color:var(--dim);}
+select.field-input{cursor:pointer;}
+select.field-input option{background:var(--bg3);color:var(--bright);}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+
+/* ── RADIO / CHECKBOX GRIDS ── */
+.opt-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.opt-card{
+  padding:10px 13px;
+  border:0.5px solid var(--border);
+  border-radius:6px;
+  cursor:pointer;
+  display:flex;align-items:flex-start;gap:9px;
+  transition:all .12s;
+  background:var(--bg3);
+}
+.opt-card:hover{border-color:rgba(201,168,76,.3);background:var(--gold3);}
+.opt-card.selected{border-color:var(--gold);background:var(--gold3);}
+.opt-card input{display:none;}
+.opt-indicator{
+  width:14px;height:14px;border-radius:50%;
+  border:0.5px solid var(--dim);
+  flex-shrink:0;margin-top:1px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:8px;transition:all .12s;
+}
+.opt-card.selected .opt-indicator{background:var(--gold);border-color:var(--gold);color:#000;}
+.opt-text{font-size:10px;color:var(--text);line-height:1.5;}
+.opt-text strong{display:block;font-size:11px;color:var(--bright);font-family:var(--bar);font-weight:600;margin-bottom:1px;}
+
+/* Checkbox variant */
+.chk-grid{display:flex;flex-direction:column;gap:6px;}
+.chk-item{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 12px;border:0.5px solid var(--border);
+  border-radius:5px;cursor:pointer;
+  background:var(--bg3);transition:all .12s;font-size:11px;color:var(--text);
+}
+.chk-item:hover{border-color:rgba(20,184,166,.3);background:rgba(20,184,166,.05);}
+.chk-item.checked{border-color:rgba(16,185,129,.3);background:var(--green2);color:var(--bright);}
+.chk-box{
+  width:16px;height:16px;border-radius:3px;
+  border:0.5px solid var(--dim);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;transition:all .12s;
+}
+.chk-item.checked .chk-box{background:var(--green);border-color:var(--green);color:#000;}
+
+/* Skill rating */
+.skill-row{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 0;border-bottom:0.5px solid var(--border);
+}
+.skill-row:last-child{border-bottom:none;}
+.skill-name{flex:1;font-size:11px;color:var(--text);}
+.skill-dots{display:flex;gap:5px;}
+.skill-dot{
+  width:24px;height:8px;border-radius:2px;
+  border:0.5px solid var(--dim);cursor:pointer;
+  transition:all .12s;background:transparent;
+}
+.skill-dot.lit-1{background:var(--red);border-color:var(--red);}
+.skill-dot.lit-2{background:var(--amber);border-color:var(--amber);}
+.skill-dot.lit-3{background:var(--amber);border-color:var(--amber);}
+.skill-dot.lit-4{background:var(--green);border-color:var(--green);}
+.skill-dot.lit-5{background:var(--green);border-color:var(--green);}
+.skill-label{font-size:9px;color:var(--dim);width:60px;text-align:right;}
+
+/* Scenario simulation */
+.scenario-box{
+  background:var(--bg3);border:0.5px solid var(--border);
+  border-radius:8px;padding:16px 18px;margin-bottom:12px;
+}
+.scenario-prompt{
+  font-size:12px;color:var(--text);line-height:1.8;
+  margin-bottom:14px;padding-bottom:12px;
+  border-bottom:0.5px solid var(--border);
+}
+.scenario-tag{
+  display:inline-block;font-size:8px;letter-spacing:2px;
+  text-transform:uppercase;padding:2px 8px;border-radius:2px;
+  background:rgba(59,130,246,.1);color:var(--blue);
+  border:0.5px solid rgba(59,130,246,.3);margin-bottom:10px;
+}
+.radio-list{display:flex;flex-direction:column;gap:6px;}
+.radio-opt{
+  display:flex;align-items:flex-start;gap:9px;
+  padding:8px 12px;border:0.5px solid var(--border);
+  border-radius:5px;cursor:pointer;font-size:11px;color:var(--text);
+  background:var(--bg);transition:all .12s;
+}
+.radio-opt:hover{border-color:rgba(201,168,76,.3);}
+.radio-opt.selected{border-color:var(--gold);background:var(--gold3);color:var(--bright);}
+.radio-mark{width:14px;height:14px;border-radius:50%;border:0.5px solid var(--dim);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:8px;}
+.radio-opt.selected .radio-mark{background:var(--gold);border-color:var(--gold);color:#000;}
+
+/* ── NAV BUTTONS ── */
+.step-nav{display:flex;justify-content:space-between;align-items:center;margin-top:8px;}
+.btn{
+  padding:10px 22px;border-radius:5px;
+  font-family:var(--mono);font-size:10px;
+  letter-spacing:1px;text-transform:uppercase;
+  cursor:pointer;border:none;transition:all .15s;
+}
+.btn-gold{background:var(--gold);color:#000;font-weight:700;}
+.btn-gold:hover{background:var(--gold2);}
+.btn-outline{background:transparent;color:var(--dim);border:0.5px solid var(--border);}
+.btn-outline:hover{color:var(--text);border-color:rgba(100,200,255,.2);}
+.btn-lg{padding:13px 32px;font-size:11px;letter-spacing:2px;}
+.step-hint{font-size:9px;color:var(--dim);}
+
+/* ── RESULTS PANEL ── */
+#results-panel{display:none;}
+.results-hdr{
+  text-align:center;padding:40px 22px 24px;
+  background:var(--panel);border:0.5px solid var(--border);
+  border-radius:10px 10px 0 0;position:relative;overflow:hidden;
+}
+.results-hdr::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--gold),var(--teal),var(--gold));
+}
+.result-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:9px;letter-spacing:2px;text-transform:uppercase;
+  padding:4px 14px;border-radius:20px;margin-bottom:16px;
+}
+.result-badge.ready{background:var(--green2);color:var(--green);border:0.5px solid rgba(16,185,129,.3);}
+.result-badge.review{background:rgba(245,158,11,.1);color:var(--amber);border:0.5px solid rgba(245,158,11,.3);}
+.results-name{font-family:var(--bar);font-size:28px;font-weight:800;color:var(--bright);margin-bottom:4px;}
+.results-role{font-size:11px;color:var(--dim);}
+.score-circle{
+  width:90px;height:90px;border-radius:50%;
+  border:3px solid var(--gold);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  margin:20px auto 0;
+}
+.score-circle-val{font-family:var(--display);font-size:30px;color:var(--gold);line-height:1;}
+.score-circle-lbl{font-size:8px;color:var(--dim);letter-spacing:1px;margin-top:2px;}
+
+.results-body{
+  background:var(--panel);border:0.5px solid var(--border);
+  border-top:none;border-radius:0 0 10px 10px;
+  padding:22px;margin-bottom:16px;
+}
+.rdim-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+.rdim{background:var(--bg3);border-radius:6px;padding:12px 14px;}
+.rdim-label{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:7px;}
+.rdim-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:5px;}
+.rdim-fill{height:100%;border-radius:3px;transition:width 1s ease;}
+.rdim-val{font-size:11px;color:var(--text);}
+.reco-box{
+  padding:14px 16px;border-radius:6px;
+  border-left:3px solid var(--green);background:var(--green2);
+  margin-bottom:16px;
+}
+.reco-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:5px;}
+.reco-val{font-size:13px;color:var(--green);line-height:1.6;}
+.result-actions{display:flex;gap:8px;flex-wrap:wrap;}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="t-logo">TSM</div>
+  <div class="t-center">Candidate Readiness Assessment · Intake Portal</div>
+  <div class="t-right"><div class="live-dot"></div>Live Simulation Mode</div>
+</div>
+
+<!-- PROGRESS TRACK -->
+<div class="progress-track">
+  <div class="pt-inner">
+    <div class="pt-step active" id="pt-1"><div class="pt-num">1</div><span>Profile</span></div>
+    <div class="pt-line" id="pl-1"></div>
+    <div class="pt-step" id="pt-2"><div class="pt-num">2</div><span>Track</span></div>
+    <div class="pt-line" id="pl-2"></div>
+    <div class="pt-step" id="pt-3"><div class="pt-num">3</div><span>Skills</span></div>
+    <div class="pt-line" id="pl-3"></div>
+    <div class="pt-step" id="pt-4"><div class="pt-num">4</div><span>Scenarios</span></div>
+    <div class="pt-line" id="pl-4"></div>
+    <div class="pt-step" id="pt-5"><div class="pt-num">5</div><span>Results</span></div>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">◈ TSM Workforce Intelligence System</div>
+  <div class="hero-title">Candidate<br><span>Readiness</span><br>Assessment</div>
+  <div class="hero-sub">A workflow-based simulation that evaluates your readiness, identifies skill gaps, and supports placement decisions in real staffing environments.</div>
+  <div class="hero-trust">Designed to strengthen your placement success while reinforcing long-term development and career trust.</div>
+</div>
+
+<!-- FORM AREA -->
+<div class="form-wrap">
+
+  <!-- STEP 1: PROFILE -->
+  <div class="step-panel active" id="step-1">
+    <div class="step-hdr">
+      <div class="step-num">01</div>
+      <div>
+        <div class="step-title">Candidate Profile</div>
+        <div class="step-desc">Basic information to personalize your readiness assessment and match you to the right track.</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">First Name <span>*</span></label>
+          <input class="field-input" id="f-fname" type="text" placeholder="First name">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Last Name <span>*</span></label>
+          <input class="field-input" id="f-lname" type="text" placeholder="Last name">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">Email Address <span>*</span></label>
+          <input class="field-input" id="f-email" type="email" placeholder="your@email.com">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Phone Number</label>
+          <input class="field-input" id="f-phone" type="tel" placeholder="(555) 000-0000">
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Years of Professional Experience <span>*</span></label>
+        <select class="field-input" id="f-exp">
+          <option value="">Select experience level</option>
+          <option value="0">Less than 1 year</option>
+          <option value="1">1–2 years</option>
+          <option value="3">3–5 years</option>
+          <option value="6">6–10 years</option>
+          <option value="11">10+ years</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Highest Education Level</label>
+        <select class="field-input" id="f-edu">
+          <option value="">Select education</option>
+          <option value="hs">High School / GED</option>
+          <option value="some">Some College</option>
+          <option value="aa">Associate Degree</option>
+          <option value="ba">Bachelor's Degree</option>
+          <option value="ms">Master's or Higher</option>
+          <option value="cert">Professional Certification</option>
+        </select>
+      </div>
+    </div>
+    <div class="step-nav">
+      <span class="step-hint">Step 1 of 4 · ~8 minutes total</span>
+      <button class="btn btn-gold" onclick="nextStep(1)">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: TRACK SELECTION -->
+  <div class="step-panel" id="step-2">
+    <div class="step-hdr">
+      <div class="step-num">02</div>
+      <div>
+        <div class="step-title">Role Track Selection</div>
+        <div class="step-desc">Select the career track that best matches your target role. This customizes your simulation scenarios.</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="field-group">
+        <label class="field-label">Select your target role track <span>*</span></label>
+        <div class="opt-grid">
+          <div class="opt-card" onclick="selectOpt(this,'track','healthcare')">
+            <input type="radio" name="track" value="healthcare">
+            <div class="opt-indicator">✓</div>
+            <div class="opt-text"><strong>Healthcare Admin</strong>Medical billing, prior auth, AR recovery, compliance</div>
+          </div>
+          <div class="opt-card" onclick="selectOpt(this,'track','insurance')">
+            <input type="radio" name="track" value="insurance">
+            <div class="opt-indicator">✓</div>
+            <div class="opt-text"><strong>Insurance Operations</strong>Claims, benefits, CE compliance, licensing</div>
+          </div>
+          <div class="opt-card" onclick="selectOpt(this,'track','finops')">
+            <input type="radio" name="track" value="finops">
+            <div class="opt-indicator">✓</div>
+            <div class="opt-text"><strong>Financial Operations</strong>AP/AR, accounting, reporting, audit readiness</div>
+          </div>
+          <div class="opt-card" onclick="selectOpt(this,'track','legal')">
+            <input type="radio" name="track" value="legal">
+            <div class="opt-indicator">✓</div>
+            <div class="opt-text"><strong>Legal & Compliance</strong>Document review, contract analysis, paralegal</div>
+          </div>
+          <div class="opt-card" onclick="selectOpt(this,'track','admin')">
+            <input type="radio" name="track" value="admin">
+            <div class="opt-indicator">✓</div>
+            <div class="opt-text"><strong>Office & Admin Support</strong>Data entry, scheduling, customer communications</div>
+          </div>
+          <div class="opt-card" onclick="selectOpt(this,'track','industrial')">
+            <input type="radio" name="track" value="industrial">
+            <div class="opt-indicator">✓</div>
+            <div class="opt-text"><strong>Light Industrial</strong>Warehouse, logistics, forklift, coordination</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="field-group" style="margin-top:18px;">
+        <label class="field-label">What best describes your job search urgency?</label>
+        <div class="opt-grid" style="grid-template-columns:1fr 1fr 1fr;">
+          <div class="opt-card" onclick="selectOpt(this,'urgency','immediate')">
+            <input type="radio" name="urgency" value="immediate">
+            <div class="opt-indicator">✓</div>
+            <div class="opt-text"><strong>Immediately</strong>Ready now</div>
+          </div>
+          <div class="opt-card" onclick="selectOpt(this,'urgency','weeks')">
+            <input type="radio" name="urgency" value="weeks">
+            <div class="opt-indicator">✓</div>
+            <div class="opt-text"><strong>2–4 Weeks</strong>Actively looking</div>
+          </div>
+          <div class="opt-card" onclick="selectOpt(this,'urgency','months')">
+            <input type="radio" name="urgency" value="months">
+            <div class="opt-indicator">✓</div>
+            <div class="opt-text"><strong>1–3 Months</strong>Exploring options</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="step-nav">
+      <button class="btn btn-outline" onclick="prevStep(2)">← Back</button>
+      <button class="btn btn-gold" onclick="nextStep(2)">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: SKILL SELF-ASSESSMENT -->
+  <div class="step-panel" id="step-3">
+    <div class="step-hdr">
+      <div class="step-num">03</div>
+      <div>
+        <div class="step-title">Skills Self-Assessment</div>
+        <div class="step-desc">Rate your proficiency honestly. This calibrates your readiness score and development plan.</div>
+      </div>
+    </div>
+    <div class="step-body">
+
+      <div class="field-group">
+        <label class="field-label" style="margin-bottom:12px;">Core Competency Ratings <span style="color:var(--dim);font-size:8px;">1 = Beginner · 5 = Expert</span></label>
+        <div id="skill-rows">
+          <!-- injected by JS based on track -->
+        </div>
+      </div>
+
+      <div class="field-group" style="margin-top:18px;">
+        <label class="field-label">Compliance & Documentation</label>
+        <div class="chk-grid">
+          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box">✓</div>Familiar with HIPAA privacy standards</div>
+          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box">✓</div>Experience with electronic document management</div>
+          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box">✓</div>Completed onboarding or compliance training before</div>
+          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box">✓</div>Worked within a regulated industry or environment</div>
+          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box">✓</div>Comfortable with digital forms and data entry workflows</div>
+        </div>
+      </div>
+
+      <div class="field-group" style="margin-top:18px;">
+        <label class="field-label">Communication Style</label>
+        <div class="opt-grid">
+          <div class="opt-card" onclick="selectOpt(this,'comm','written')">
+            <input type="radio" name="comm" value="written">
+            <div class="opt-indicator">✓</div>
+            <div class="opt-text"><strong>Primarily Written</strong>Email, documents, chat</div>
+          </div>
+          <div class="opt-card" onclick="selectOpt(this,'comm','verbal')">
+            <input type="radio" name="comm" value="verbal">
+            <div class="opt-indicator">✓</div>
+            <div class="opt-text"><strong>Primarily Verbal</strong>Phone, in-person, meetings</div>
+          </div>
+          <div class="opt-card" onclick="selectOpt(this,'comm','both')">
+            <input type="radio" name="comm" value="both">
+            <div class="opt-indicator">✓</div>
+            <div class="opt-text"><strong>Both Equally</strong>Comfortable with either</div>
+          </div>
+          <div class="opt-card" onclick="selectOpt(this,'comm','developing')">
+            <input type="radio" name="comm" value="developing">
+            <div class="opt-indicator">✓</div>
+            <div class="opt-text"><strong>Still Developing</strong>Looking to improve</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="step-nav">
+      <button class="btn btn-outline" onclick="prevStep(3)">← Back</button>
+      <button class="btn btn-gold" onclick="nextStep(3)">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: SCENARIO SIMULATION -->
+  <div class="step-panel" id="step-4">
+    <div class="step-hdr">
+      <div class="step-num">04</div>
+      <div>
+        <div class="step-title">Workflow Scenarios</div>
+        <div class="step-desc">Real-world situations from your target field. Choose the best response for each scenario.</div>
+      </div>
+    </div>
+    <div class="step-body" id="scenario-body">
+      <!-- injected by JS -->
+    </div>
+    <div class="step-nav">
+      <button class="btn btn-outline" onclick="prevStep(4)">← Back</button>
+      <button class="btn btn-gold btn-lg" onclick="generateResults()">Generate My Report →</button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results-panel">
+    <div class="results-hdr">
+      <div class="result-badge ready" id="result-badge">● PLACEMENT READY</div>
+      <div class="results-name" id="result-name">—</div>
+      <div class="results-role" id="result-role">—</div>
+      <div class="score-circle">
+        <div class="score-circle-val" id="result-score">—</div>
+        <div class="score-circle-lbl">READINESS</div>
+      </div>
+    </div>
+    <div class="results-body">
+      <div style="font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--dim);margin-bottom:12px;">Readiness Dimensions</div>
+      <div class="rdim-grid">
+        <div class="rdim">
+          <div class="rdim-label">Workflow Accuracy</div>
+          <div class="rdim-bar"><div class="rdim-fill" id="dim-workflow" style="width:0%;background:var(--green);"></div></div>
+          <div class="rdim-val" id="dim-workflow-val">—</div>
+        </div>
+        <div class="rdim">
+          <div class="rdim-label">Compliance Understanding</div>
+          <div class="rdim-bar"><div class="rdim-fill" id="dim-compliance" style="width:0%;background:var(--green);"></div></div>
+          <div class="rdim-val" id="dim-compliance-val">—</div>
+        </div>
+        <div class="rdim">
+          <div class="rdim-label">Communication Skills</div>
+          <div class="rdim-bar"><div class="rdim-fill" id="dim-comm" style="width:0%;background:var(--amber);"></div></div>
+          <div class="rdim-val" id="dim-comm-val">—</div>
+        </div>
+        <div class="rdim">
+          <div class="rdim-label">Adaptability Index</div>
+          <div class="rdim-bar"><div class="rdim-fill" id="dim-adapt" style="width:0%;background:var(--green);"></div></div>
+          <div class="rdim-val" id="dim-adapt-val">—</div>
+        </div>
+      </div>
+
+      <div class="reco-box">
+        <div class="reco-label">Placement Recommendation</div>
+        <div class="reco-val" id="result-reco">—</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+        <div style="background:var(--bg3);border-radius:6px;padding:14px 16px;">
+          <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:10px;">Strengths Identified</div>
+          <div id="result-strengths"></div>
+        </div>
+        <div style="background:var(--bg3);border-radius:6px;padding:14px 16px;">
+          <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:10px;">Development Plan</div>
+          <div id="result-gaps"></div>
+        </div>
+      </div>
+
+      <div style="background:var(--bg3);border-radius:6px;padding:14px 16px;margin-bottom:16px;">
+        <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:10px;">Workforce Development Impact</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          ${['Improves onboarding experience','Demonstrates investment in your growth','Supports internal career mobility','Reduces early-stage attrition risk','Builds long-term workforce trust'].map(s=>`<div style="display:flex;align-items:center;gap:7px;font-size:10px;color:var(--text);padding:4px 0;"><span style="color:var(--green);">✓</span>${s}</div>`).join('')}
+        </div>
+      </div>
+
+      <div style="padding:14px 16px;border:0.5px solid var(--border2);border-radius:6px;background:var(--gold3);font-size:11px;color:var(--text);line-height:1.8;font-style:italic;margin-bottom:16px;">
+        "TSM is designed to support staffing organizations in improving placement outcomes, strengthening client trust, and reinforcing employee confidence by investing in readiness and long-term development."
+      </div>
+
+      <div class="result-actions">
+        <button class="btn btn-gold" onclick="downloadCandidatePDF()">Download My Report</button>
+        <button class="btn btn-outline" onclick="location.reload()">Retake Assessment</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /form-wrap -->
+
+<script>
+/* ══ STATE ══ */
+let currentStep = 1;
+const state = {
+  fname:'', lname:'', email:'', exp:'', edu:'',
+  track:'', urgency:'', comm:'',
+  skills:{}, compliance:0, scenarios:{}
+};
+
+const TRACK_SKILLS = {
+  healthcare: ['Medical Billing (ICD-10/CPT)','Prior Authorization Workflows','EMR Navigation (Cerner/Epic)','Denial Management & Appeals','Patient Communication'],
+  insurance:  ['Claims Processing','Benefits Administration','CE Compliance Knowledge','State Licensing Procedures','Policy Interpretation'],
+  finops:     ['AP/AR Ledger Management','Account Reconciliation','Financial Reporting','Spreadsheet Proficiency','Audit Documentation'],
+  legal:      ['Document Review & Analysis','Contract Interpretation','Legal Research Tools','Case File Management','Compliance Protocols'],
+  admin:      ['Data Entry & Accuracy','Scheduling & Coordination','Customer Communication','Office Software (MS/Google)','Multi-tasking Under Pressure'],
+  industrial: ['Warehouse Safety Protocols','Inventory Management','Forklift / Equipment Operation','Logistics Coordination','Physical Endurance & Safety'],
+};
+
+const TRACK_SCENARIOS = {
+  healthcare:[
+    {
+      tag:'Prior Authorization',
+      prompt:'A patient\'s prior auth request was denied for a scheduled MRI. The patient calls frustrated, saying their doctor says it\'s medically necessary. What is your first step?',
+      options:[
+        {text:'Immediately tell the patient to find a different insurance plan.',correct:false},
+        {text:'Review the denial reason code, gather clinical documentation, and initiate a peer-to-peer review request.',correct:true},
+        {text:'Approve the MRI anyway and process it as an emergency.',correct:false},
+        {text:'Transfer the call to billing and move on.',correct:false},
+      ]
+    },
+    {
+      tag:'Compliance',
+      prompt:'A colleague asks you to share a patient\'s billing record via personal email for a "quick review." What do you do?',
+      options:[
+        {text:'Send it — they\'re a colleague and it\'s just billing data.',correct:false},
+        {text:'Decline. Share only through HIPAA-compliant, encrypted channels per your organization\'s policy.',correct:true},
+        {text:'Send a redacted version.',correct:false},
+        {text:'Ask your manager tomorrow and share in the meantime.',correct:false},
+      ]
+    }
+  ],
+  insurance:[
+    {
+      tag:'Claims Processing',
+      prompt:'A claim comes in with a date-of-service discrepancy — the provider billed for March 15 but the system shows March 12. How do you handle this?',
+      options:[
+        {text:'Process the claim as submitted and let the audit catch it.',correct:false},
+        {text:'Reject the claim immediately without any documentation.',correct:false},
+        {text:'Flag the discrepancy, contact the provider for a corrected claim, and document the interaction.',correct:true},
+        {text:'Change the date yourself and continue.',correct:false},
+      ]
+    },
+    {
+      tag:'CE Compliance',
+      prompt:'Your state license renewal is in 45 days and you need 24 CE credits. You have 18 completed. What is the correct response?',
+      options:[
+        {text:'Wait until the last week and complete all remaining credits at once.',correct:false},
+        {text:'Assess which approved courses cover the remaining 6 credits and schedule them with enough time for processing.',correct:true},
+        {text:'Skip renewal — it auto-renews.',correct:false},
+        {text:'Ask a colleague to share their CE certificate.',correct:false},
+      ]
+    }
+  ],
+  finops:[
+    {
+      tag:'AR Recovery',
+      prompt:'An invoice 90 days overdue has not responded to two email reminders. What is your escalation path?',
+      options:[
+        {text:'Write off the balance immediately.',correct:false},
+        {text:'Send a third email with identical content.',correct:false},
+        {text:'Escalate to phone contact, document attempts, and flag for collections review per AR policy.',correct:true},
+        {text:'Delete the invoice to keep books clean.',correct:false},
+      ]
+    },
+    {
+      tag:'Reconciliation',
+      prompt:'During month-end reconciliation you find a $3,200 variance between the bank statement and the general ledger. What do you do first?',
+      options:[
+        {text:'Adjust the ledger to match the bank statement without investigation.',correct:false},
+        {text:'Identify the date and source of the variance, review transaction entries, and document findings before any adjustment.',correct:true},
+        {text:'Report it as an error and close the books.',correct:false},
+        {text:'Ignore it — variances under $5,000 are normal.',correct:false},
+      ]
+    }
+  ],
+  legal:[
+    {
+      tag:'Document Review',
+      prompt:'You are reviewing a contract and notice an indemnification clause that appears to be overly broad for your client. What is your action?',
+      options:[
+        {text:'Sign it — the client can sort it out later.',correct:false},
+        {text:'Flag the clause with a specific annotation, note the risk, and escalate to supervising counsel for review.',correct:true},
+        {text:'Delete the clause from the document.',correct:false},
+        {text:'Tell the client verbally and take no written action.',correct:false},
+      ]
+    },
+    {
+      tag:'Compliance',
+      prompt:'A client asks you to backdate a signature on a legal document. What do you do?',
+      options:[
+        {text:'Do it — the client is always right.',correct:false},
+        {text:'Do it only if the date is close enough.',correct:false},
+        {text:'Decline clearly, explain the legal and ethical risk, and document the request.',correct:true},
+        {text:'Ask a colleague to handle it.',correct:false},
+      ]
+    }
+  ],
+  admin:[
+    {
+      tag:'Prioritization',
+      prompt:'You arrive Monday morning with 47 unread emails, a 9am meeting, a document due at 10am, and a ringing phone. What is your first action?',
+      options:[
+        {text:'Answer the phone first, no matter what.',correct:false},
+        {text:'Read all 47 emails before doing anything else.',correct:false},
+        {text:'Quickly triage — silence the phone, check for urgent flags in email, confirm meeting time, and start the document.',correct:true},
+        {text:'Work from home.',correct:false},
+      ]
+    },
+    {
+      tag:'Data Accuracy',
+      prompt:'While entering patient/client data you notice the previous entry appears to have a typo in a key field. What do you do?',
+      options:[
+        {text:'Continue — it\'s not your entry.',correct:false},
+        {text:'Flag and correct it with a change note, or escalate if you don\'t have edit access.',correct:true},
+        {text:'Delete the entry.',correct:false},
+        {text:'Overwrite it silently.',correct:false},
+      ]
+    }
+  ],
+  industrial:[
+    {
+      tag:'Safety Protocol',
+      prompt:'You notice a spill on a warehouse floor near a forklift path. What is your immediate action?',
+      options:[
+        {text:'Keep working and report it at end of shift.',correct:false},
+        {text:'Stop operations in the affected area, place safety markers, and report to your supervisor immediately.',correct:true},
+        {text:'Clean it up yourself without telling anyone.',correct:false},
+        {text:'Walk around it.',correct:false},
+      ]
+    },
+    {
+      tag:'Inventory',
+      prompt:'Your pick list shows 20 units of an item but you can only locate 16 in the bin. What do you do?',
+      options:[
+        {text:'Ship 16 and mark the order complete.',correct:false},
+        {text:'Write 20 on the pick sheet anyway.',correct:false},
+        {text:'Document the discrepancy, check adjacent bins and cycle count, then notify your lead before proceeding.',correct:true},
+        {text:'Ask a co-worker to find the missing units while you move on.',correct:false},
+      ]
+    }
+  ],
+};
+
+/* ══ NAVIGATION ══ */
+function nextStep(from){
+  if(from===1){
+    state.fname = document.getElementById('f-fname').value.trim();
+    state.lname = document.getElementById('f-lname').value.trim();
+    state.email = document.getElementById('f-email').value.trim();
+    if(!state.fname||!state.email){alert('Please enter your name and email to continue.');return;}
+  }
+  if(from===2 && !state.track){alert('Please select a role track to continue.');return;}
+  if(from===3) buildScenarios();
+  goToStep(from+1);
+}
+function prevStep(from){goToStep(from-1);}
+
+function goToStep(n){
+  document.getElementById('step-'+currentStep)?.classList.remove('active');
+  document.getElementById('step-'+n)?.classList.add('active');
+  // Update progress
+  for(let i=1;i<=5;i++){
+    const el=document.getElementById('pt-'+i);
+    const line=document.getElementById('pl-'+i);
+    if(!el)continue;
+    el.classList.remove('active','done');
+    if(i<n){el.classList.add('done');if(line)line.classList.add('done');}
+    else if(i===n){el.classList.add('active');if(line)line.classList.remove('done');}
+    else{if(line)line.classList.remove('done');}
+  }
+  currentStep=n;
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(n===3) buildSkills();
+}
+
+/* ══ OPTION SELECTION ══ */
+function selectOpt(el, name, val){
+  document.querySelectorAll(`[onclick*="'${name}'"]`).forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  state[name]=val;
+}
+function toggleChk(el){
+  el.classList.toggle('checked');
+  state.compliance = document.querySelectorAll('.chk-item.checked').length;
+}
+
+/* ══ SKILL ROWS ══ */
+function buildSkills(){
+  const track = state.track || 'admin';
+  const skills = TRACK_SKILLS[track];
+  const container = document.getElementById('skill-rows');
+  if(!container) return;
+  container.innerHTML = skills.map((s,i)=>`
+    <div class="skill-row">
+      <span class="skill-name">${s}</span>
+      <div class="skill-dots" id="sdots-${i}">
+        ${[1,2,3,4,5].map(d=>`<div class="skill-dot" onclick="ratSkill(${i},${d})" id="sd-${i}-${d}"></div>`).join('')}
+      </div>
+      <span class="skill-label" id="slbl-${i}">Not rated</span>
+    </div>`).join('');
+}
+
+function ratSkill(skill, val){
+  state.skills[skill]=val;
+  const labels=['Beginner','Basic','Intermediate','Proficient','Expert'];
+  document.getElementById('slbl-'+skill).textContent=labels[val-1];
+  document.getElementById('slbl-'+skill).style.color=['var(--red)','var(--amber)','var(--amber)','var(--green)','var(--green)'][val-1];
+  for(let d=1;d<=5;d++){
+    const dot=document.getElementById(`sd-${skill}-${d}`);
+    dot.className='skill-dot'+(d<=val?` lit-${d}`:'');
+  }
+}
+
+/* ══ SCENARIOS ══ */
+function buildScenarios(){
+  const track = state.track || 'admin';
+  const scenarios = TRACK_SCENARIOS[track] || TRACK_SCENARIOS.admin;
+  const body = document.getElementById('scenario-body');
+  body.innerHTML = scenarios.map((s,si)=>`
+    <div class="scenario-box">
+      <span class="scenario-tag">${s.tag}</span>
+      <div class="scenario-prompt">${s.prompt}</div>
+      <div class="radio-list">
+        ${s.options.map((o,oi)=>`
+          <div class="radio-opt" id="so-${si}-${oi}" onclick="selectScenario(${si},${oi},${o.correct})">
+            <div class="radio-mark">✓</div>${o.text}
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function selectScenario(si, oi, correct){
+  // Deselect others in this scenario
+  const count = document.querySelectorAll(`[id^="so-${si}-"]`).length;
+  for(let i=0;i<count;i++) document.getElementById(`so-${si}-${i}`)?.classList.remove('selected');
+  document.getElementById(`so-${si}-${oi}`)?.classList.add('selected');
+  state.scenarios[si]=correct;
+}
+
+/* ══ RESULTS ══ */
+function generateResults(){
+  // Score calculation
+  const skillVals = Object.values(state.skills);
+  const avgSkill = skillVals.length ? skillVals.reduce((a,b)=>a+b,0)/skillVals.length : 3;
+  const skillPct = Math.round((avgSkill/5)*100);
+
+  const scenarioCorrect = Object.values(state.scenarios).filter(Boolean).length;
+  const scenarioTotal = Object.keys(state.scenarios).length || 1;
+  const scenarioPct = Math.round((scenarioCorrect/scenarioTotal)*100);
+
+  const compliancePct = Math.min(100, state.compliance * 20);
+  const expBonus = {0:0,1:5,3:10,6:15,11:20}[state.exp]||0;
+
+  const workflow = Math.min(98, Math.round(scenarioPct * 0.6 + skillPct * 0.4 + expBonus*0.3));
+  const compliance = Math.min(98, Math.round(compliancePct * 0.7 + skillPct * 0.3));
+  const commMap = {written:78,verbal:72,both:85,developing:55};
+  const comm = (commMap[state.comm]||70) + Math.round(expBonus*0.4);
+  const adapt = Math.min(95, Math.round((workflow+compliance+comm)/3 + expBonus*0.5));
+  const overall = Math.round((workflow*0.35 + compliance*0.3 + comm*0.2 + adapt*0.15));
+
+  // Populate results
+  document.getElementById('result-name').textContent = `${state.fname} ${state.lname}`;
+  const trackLabels={healthcare:'Medical Billing / Healthcare Admin',insurance:'Insurance Operations',finops:'Financial Operations / AR-AP',legal:'Legal & Compliance',admin:'Office & Administrative Support',industrial:'Light Industrial / Logistics'};
+  document.getElementById('result-role').textContent = `Role Path: ${trackLabels[state.track]||'General Professional'}`;
+  document.getElementById('result-score').textContent = overall+'%';
+
+  setTimeout(()=>{
+    setDim('workflow', workflow);
+    setDim('compliance', compliance);
+    setDim('comm', comm);
+    setDim('adapt', adapt);
+  }, 100);
+
+  const badge = document.getElementById('result-badge');
+  let reco;
+  if(overall>=85){
+    badge.textContent='● PLACEMENT READY'; badge.className='result-badge ready';
+    reco='✓ Placement Ready — strong performance across all dimensions. Recommend immediate submission to open requisitions.';
+  } else if(overall>=70){
+    badge.textContent='◎ REVIEW RECOMMENDED'; badge.className='result-badge review';
+    reco='◎ Placement Likely — 1–2 targeted coaching sessions recommended before client submission to strengthen identified gaps.';
+  } else {
+    badge.textContent='○ DEVELOPMENT TRACK'; badge.className='result-badge review';
+    reco='○ Development Track Recommended — complete 2–3 simulation modules and revisit assessment in 2 weeks.';
+  }
+  document.getElementById('result-reco').textContent = reco;
+
+  // Strengths & gaps
+  const allSkills = TRACK_SKILLS[state.track]||TRACK_SKILLS.admin;
+  const strengths = allSkills.filter((_,i)=>(state.skills[i]||3)>=4).slice(0,4);
+  const gaps = allSkills.filter((_,i)=>(state.skills[i]||3)<=3).slice(0,3);
+
+  document.getElementById('result-strengths').innerHTML =
+    (strengths.length?strengths:allSkills.slice(0,3))
+    .map(s=>`<div style="display:flex;align-items:flex-start;gap:7px;font-size:11px;color:var(--text);padding:4px 0;"><span style="color:var(--green);flex-shrink:0;">✓</span>${s}</div>`).join('');
+
+  document.getElementById('result-gaps').innerHTML =
+    (gaps.length?gaps:['Review module recommended'])
+    .map((g,i)=>`<div style="padding:5px 0;border-bottom:0.5px solid var(--border);"><div style="font-size:11px;color:var(--text);">→ ${g}</div><div style="font-size:9px;color:var(--dim);">Target: ${['1 coaching session','Practice module ×2','Simulation drill'][i]||'Self-study'}</div></div>`).join('');
+
+  // Show results
+  document.getElementById('step-4').classList.remove('active');
+  document.getElementById('results-panel').style.display='block';
+  for(let i=1;i<=5;i++){
+    document.getElementById('pt-'+i)?.classList.remove('active');
+    document.getElementById('pt-'+i)?.classList.add('done');
+    document.getElementById('pl-'+i)?.classList.add('done');
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+
+  // Store for PDF
+  window._resultData = {fname:state.fname,lname:state.lname,track:trackLabels[state.track]||'General',overall,workflow,compliance,comm,adapt,reco,strengths:strengths.length?strengths:allSkills.slice(0,3),gaps:gaps.length?gaps:['Review module recommended']};
+
+  // ── Live sync: write result to localStorage for recruiter dashboard ──
+  try {
+    const existing = JSON.parse(localStorage.getItem('tsm_candidates') || '[]');
+    const entry = {
+      id: 'cand_' + Date.now(),
+      timestamp: new Date().toISOString(),
+      fname: state.fname,
+      lname: state.lname,
+      email: state.email,
+      track: trackLabels[state.track] || 'General',
+      overall, workflow, compliance, comm, adapt,
+      status: overall >= 85 ? 'ready' : overall >= 70 ? 'review' : 'risk',
+      reco,
+      strengths: strengths.length ? strengths : allSkills.slice(0,3),
+      gaps: gaps.length ? gaps : ['Review module recommended'],
+      source: 'candidate-portal',
+      new: true,
+    };
+    existing.unshift(entry);
+    localStorage.setItem('tsm_candidates', JSON.stringify(existing.slice(0, 100)));
+  } catch(e) { console.warn('localStorage sync failed:', e); }
+}
+
+function setDim(id, val){
+  const fill=document.getElementById('dim-'+id);
+  const lbl=document.getElementById('dim-'+id+'-val');
+  if(fill) fill.style.width=val+'%';
+  const color = val>=80?'var(--green)':val>=65?'var(--amber)':'var(--red)';
+  if(fill) fill.style.background=color;
+  const label = val>=80?'High':val>=65?'Medium':'Developing';
+  if(lbl) lbl.textContent=`${val}% — ${label}`;
+  if(lbl) lbl.style.color=color;
+}
+
+/* ══ CANDIDATE PDF DOWNLOAD ══ */
+function downloadCandidatePDF(){
+  const d = window._resultData;
+  if(!d) return;
+  const now = new Date();
+  const css=`body{font-family:'Segoe UI',sans-serif;color:#1a2332;padding:40px;max-width:700px;margin:0 auto;}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #c9a84c;padding-bottom:16px;margin-bottom:24px;}
+.logo{font-size:28px;font-weight:900;letter-spacing:3px;color:#c9a84c;}
+.badge{display:inline-block;padding:4px 12px;border-radius:3px;font-size:11px;font-weight:700;background:#d1fae5;color:#065f46;}
+h2{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#6b7280;margin:20px 0 10px;border-bottom:1px solid #e5e7eb;padding-bottom:5px;}
+.bar-row{display:flex;align-items:center;gap:12px;margin:8px 0;}
+.bar-label{width:180px;font-size:12px;color:#374151;}
+.bar{flex:1;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:4px;}
+.bar-val{width:40px;text-align:right;font-size:12px;font-weight:700;color:#10b981;}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:12px 0;}
+.box{background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:12px 14px;}
+.box h3{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin-bottom:8px;}
+.item{display:flex;gap:7px;font-size:12px;color:#374151;margin-bottom:5px;}
+.check{color:#10b981;font-weight:700;}
+.reco{background:#f0fdf4;border-left:4px solid #10b981;padding:12px 16px;border-radius:0 6px 6px 0;margin:12px 0;font-size:13px;color:#065f46;}
+.trust{background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:12px 16px;font-size:11px;color:#92400e;font-style:italic;line-height:1.7;margin-top:18px;}
+.footer{margin-top:24px;padding-top:12px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;font-size:10px;color:#9ca3af;}`;
+
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>TSM Readiness Report</title><style>${css}</style></head><body>
+<div class="hdr"><div><div class="logo">TSM</div><div style="font-size:10px;color:#6b7280;letter-spacing:2px;margin-top:2px;">WORKFORCE INTELLIGENCE SYSTEM</div><div style="margin-top:8px;"><span class="badge">✓ CANDIDATE READINESS REPORT</span></div></div>
+<div style="text-align:right;font-size:11px;color:#6b7280;"><div style="font-size:16px;font-weight:700;color:#1a2332;margin-bottom:4px;">Workforce Readiness Report</div><div>Generated: ${now.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}</div><div>Report ID: TSM-C-${Math.floor(Math.random()*90000)+10000}</div></div></div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+<div><div style="font-size:22px;font-weight:700;color:#1a2332;">${d.fname} ${d.lname}</div><div style="font-size:12px;color:#6b7280;margin-top:2px;">Role Path: ${d.track}</div></div>
+<div style="text-align:center;width:80px;height:80px;border-radius:50%;border:3px solid #c9a84c;display:flex;flex-direction:column;align-items:center;justify-content:center;"><div style="font-size:24px;font-weight:900;color:#c9a84c;line-height:1;">${d.overall}%</div><div style="font-size:9px;color:#9ca3af;letter-spacing:1px;">READINESS</div></div></div>
+<h2>Readiness Dimensions</h2>
+${[['Workflow Accuracy',d.workflow,'#10b981'],['Compliance Understanding',d.compliance,'#10b981'],['Communication Skills',d.comm,'#f59e0b'],['Adaptability Index',d.adapt,'#10b981']].map(([l,v,c])=>`<div class="bar-row"><div class="bar-label">${l}</div><div class="bar"><div class="bar-fill" style="width:${v}%;background:${c};"></div></div><div class="bar-val" style="color:${c};">${v}%</div></div>`).join('')}
+<h2>Placement Recommendation</h2><div class="reco">${d.reco}</div>
+<div class="two">
+<div class="box"><h3>Strengths</h3>${d.strengths.map(s=>`<div class="item"><span class="check">✓</span>${s}</div>`).join('')}</div>
+<div class="box"><h3>Development Plan</h3>${d.gaps.map((g,i)=>`<div style="margin-bottom:8px;"><div style="font-size:12px;color:#374151;">→ ${g}</div><div style="font-size:10px;color:#9ca3af;">${['Target: 1 coaching session','Practice module ×2','Simulation drill'][i]||'Self-study'}</div></div>`).join('')}</div>
+</div>
+<div class="trust">"TSM is designed to support staffing organizations in improving placement outcomes, strengthening client trust, and reinforcing employee confidence by investing in readiness and long-term development."</div>
+<div class="footer"><div>TSM Workforce Intelligence System</div><div>CONFIDENTIAL — Candidate copy</div></div>
+</body></html>`;
+
+  const blob=new Blob([html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`TSM-Readiness-${d.fname}${d.lname}-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.html`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>

@@ -269,6 +269,33 @@ app.post('/api/executive/portal', async (req, res) => {
   res.json({ ok: true, result, ts: new Date().toISOString() });
 });
 
+// ── TSM Candidate Sync Routes ──
+const candidateStore = []; // swap for DB later
+
+// POST /api/candidate/submit  — called by candidate-intake.html
+app.post('/api/candidate/submit', (req, res) => {
+  const entry = {
+    id: 'cand_' + Date.now(),
+    timestamp: new Date().toISOString(),
+    new: true,
+    ...req.body
+  };
+  candidateStore.unshift(entry);
+  if(candidateStore.length > 500) candidateStore.length = 500;
+  res.json({ ok: true, id: entry.id });
+});
+
+// GET /api/candidate/list  — polled by wia2.html recruiter dashboard
+app.get('/api/candidate/list', (req, res) => {
+  res.json(candidateStore);
+});
+
+// POST /api/candidate/clear-new  — marks all as seen
+app.post('/api/candidate/clear-new', (req, res) => {
+  candidateStore.forEach(c => c.new = false);
+  res.json({ ok: true });
+});
+
 // ── MUSIC API ROUTES ──────────────────────────────────────────────────────────
 app.post('/api/music/structure', async (req, res) => {
   try {
