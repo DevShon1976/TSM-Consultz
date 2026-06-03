@@ -371,6 +371,169 @@ function showView(id){
   const navEl=document.getElementById('nav-'+id);
   if(navEl) navEl.classList.add(tenant==='health'?'active-t':'active');
 
+  /* ══════════════════════════════════════════
+   ECOSYSTEM NAV — drop into wia2.html
+   Paste AFTER existing nav configs + renderSidebar().
+   Does NOT touch STAFFING_NAV, HEALTH_NAV, or any VIEWS.
+══════════════════════════════════════════ */
+
+/* ── Ecosystem layer definitions ── */
+const ECOSYSTEM_NAV = [
+  {
+    id: 'eco-01', num: '01', label: 'Executive Command', color: '#ff6b35',
+    summary: 'Run the entire TSM ecosystem. Executive oversight, cross-suite routing, business intelligence & workforce planning.',
+    apps: ['executive-portal-live.html','strategist-index.html','suite-builder.html','client-access.html','wia.html','wip-dashboard.html','doc1-search.html'],
+    locked: [],
+  },
+  {
+    id: 'eco-02', num: '02', label: 'Workforce Intelligence', color: '#00b4b4',
+    summary: 'Candidate readiness, simulation-based eval, skill gap analysis, placement scoring & career pathways.',
+    apps: ['tsm-staffing-readiness-demo.html','hc-academy.html','insurance-portal.html','finops-scenarios.html','legal-demo-flow.html'],
+    locked: [],
+  },
+  {
+    id: 'eco-03', num: '03', label: 'Healthcare Ops', color: '#22c55e',
+    summary: 'Revenue Cycle Management, Denials, Prior Authorization, Compliance, Patient Financial Services & BPO.',
+    apps: ['healthcare-wip.html','hc-academy.html','crc-hc-practice.html','crcr-scenarios.html','tsm-hc-demo-trail.html'],
+    locked: [],
+  },
+  {
+    id: 'eco-04', num: '04', label: 'Insurance Ops', color: '#3b82f6',
+    summary: 'Claims, Benefits, Enrollment, Licensing, CE Compliance & Carrier Operations.',
+    apps: ['insurance-portal.html','insurance-claims-pro.html','insurance-ce-command.html','ins-hub1.html','ins-presentation.html','tsm-ins-demo-trail.html'],
+    locked: ['insurance-claims-pro.html','insurance-ce-command.html'],
+  },
+  {
+    id: 'eco-05', num: '05', label: 'Financial Ops', color: '#eab308',
+    summary: 'Accounting, Bookkeeping, Financial Analysis, AR/AP, Reporting & Audit Readiness.',
+    apps: ['finops-presentation.html','tsm-presentation.html','finops-scenarios.html','doc-analysis-tab.html','study-guide.html','staff-accountant-interview.html'],
+    locked: [],
+  },
+  {
+    id: 'eco-06', num: '06', label: 'Legal Ops', color: '#a855f7',
+    summary: 'Legal BPO, Document Review, Contract Analysis, Case Preparation & Compliance.',
+    apps: ['legal.html','legal-demo-flow.html','hc-legal/index.html','legal-readiness-track'],
+    locked: ['hc-legal/index.html','legal-readiness-track'],
+  },
+  {
+    id: 'eco-07', num: '07', label: 'Construction Ops', color: '#ef4444',
+    summary: 'Project Documentation, Compliance, Contract Review & Construction Administration.',
+    apps: ['construct-pitch.html','document-showcase.html','construction-wip.html'],
+    locked: ['construction-wip.html'],
+  },
+  {
+    id: 'eco-08', num: '08', label: 'BPO Delivery Network', color: '#6366f1',
+    summary: 'Client Delivery, Workflow Routing, Escalations, Service Monitoring & Quality Assurance.',
+    apps: ['suite-hub.html','bpo-command-center.html','bpo-internal1.html'],
+    locked: ['bpo-command-center.html','bpo-internal1.html'],
+  },
+  {
+    id: 'eco-09', num: '09', label: 'AI Intelligence Layer', color: '#ec4899',
+    summary: 'Document Intelligence, Workflow Automation, Enterprise Search, Knowledge Retrieval & Workforce Analytics.',
+    apps: ['doc1-search.html','doc-analysis-tab.html','wia.html'],
+    locked: [],
+  },
+];
+
+/* ── Render ecosystem section into sidebar ── */
+function renderEcosystemNav() {
+  const sb = document.getElementById('sidebar');
+
+  // Divider + section label
+  const divider = document.createElement('div');
+  divider.innerHTML = `
+    <div style="height:1px;background:#1e2530;margin:10px 0 0;"></div>
+    <div class="snav-label" style="margin-top:10px;">TSM Ecosystem</div>
+  `;
+  sb.appendChild(divider);
+
+  ECOSYSTEM_NAV.forEach(layer => {
+    const c = layer.color;
+    const hex22 = c + '22'; // alpha tint for badge bg
+
+    // Wrapper
+    const wrapper = document.createElement('div');
+    wrapper.className = 'eco-item';
+    wrapper.id = `eco-wrapper-${layer.id}`;
+
+    // Header row
+    const header = document.createElement('div');
+    header.className = 'snav-item eco-header';
+    header.id = `eco-header-${layer.id}`;
+    header.style.cssText = `display:flex;align-items:center;justify-content:space-between;padding:6px 16px;cursor:pointer;`;
+    header.innerHTML = `
+      <div style="display:flex;align-items:center;gap:7px;min-width:0;flex:1;">
+        <span class="snav-dot" style="background:${c};flex-shrink:0;"></span>
+        <span style="font-size:10px;font-weight:600;letter-spacing:.5px;color:#9aa5b4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${layer.label}</span>
+      </div>
+      <span style="font-size:8px;padding:1px 5px;border-radius:2px;background:${hex22};color:${c};font-weight:700;flex-shrink:0;margin-right:4px;">${layer.num}</span>
+      <span class="eco-chevron" id="eco-chev-${layer.id}" style="font-size:9px;color:#3a4252;transition:transform .2s;flex-shrink:0;">›</span>
+    `;
+    header.onclick = () => toggleEco(layer.id);
+
+    // Dropdown panel
+    const drop = document.createElement('div');
+    drop.className = 'eco-drop';
+    drop.id = `eco-drop-${layer.id}`;
+    drop.style.cssText = `display:none;background:#0b0d10;border-left:2px solid ${c};margin:0 4px 4px 16px;padding:8px 0 6px;`;
+
+    // Summary
+    drop.innerHTML += `<div style="font-size:9px;color:#4a5568;padding:0 10px 6px;line-height:1.5;border-bottom:1px solid #1a1f28;">${layer.summary}</div>`;
+
+    // Apps
+    drop.innerHTML += `<div style="font-size:7.5px;letter-spacing:2px;color:#2d3748;padding:5px 10px 3px;text-transform:uppercase;">Apps</div>`;
+    layer.apps.forEach(app => {
+      const isLocked = layer.locked.includes(app);
+      drop.innerHTML += `
+        <div style="display:flex;align-items:center;gap:5px;padding:3px 10px;font-size:9px;
+          color:${isLocked ? '#2d3748' : '#4a5568'};
+          opacity:${isLocked ? '.4' : '1'};
+          cursor:${isLocked ? 'default' : 'pointer'};"
+          class="eco-app${isLocked ? ' eco-locked' : ''}"
+        >
+          <span style="color:#2d3748;font-size:9px;">›</span>
+          ${app}${isLocked ? ' <span style="font-size:8px;color:#2d3748;margin-left:auto;">🔒</span>' : ''}
+        </div>`;
+    });
+
+    wrapper.appendChild(header);
+    wrapper.appendChild(drop);
+    sb.appendChild(wrapper);
+  });
+}
+
+function toggleEco(id) {
+  const drop = document.getElementById(`eco-drop-${id}`);
+  const chev = document.getElementById(`eco-chev-${id}`);
+  const header = document.getElementById(`eco-header-${id}`);
+  const isOpen = drop.style.display !== 'none';
+
+  // Close all eco dropdowns
+  document.querySelectorAll('.eco-drop').forEach(d => d.style.display = 'none');
+  document.querySelectorAll('.eco-chevron').forEach(c => c.style.transform = '');
+  document.querySelectorAll('.eco-header').forEach(h => h.style.background = '');
+
+  if (!isOpen) {
+    drop.style.display = 'block';
+    chev.style.transform = 'rotate(90deg)';
+    header.style.background = '#141820';
+  }
+}
+
+/* ── Call this after your existing renderSidebar() call ── */
+// renderEcosystemNav();   // ← uncomment or call inline below
+
+/* ══════════════════════════════════════════
+   INTEGRATION POINT
+   In your existing init / tenant-switch block,
+   after: renderSidebar(STAFFING_NAV, 'staffing')
+   add:   renderEcosystemNav();
+   
+   If you switch tenants (health ↔ staffing),
+   call renderEcosystemNav() again after renderSidebar()
+   since it appends to whatever sidebar is rendered.
+══════════════════════════════════════════ */
+
   // render
   const content=document.getElementById('content');
   const renderer = VIEWS[id];
