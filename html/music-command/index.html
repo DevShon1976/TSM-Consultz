@@ -53,7 +53,7 @@
     .studio-body{flex:1;overflow-y:auto;padding:1.2rem 1.2rem 2rem;min-height:0;}
 
     .panel{display:none;width:100%}
-    .panel.active{display:block;width:100%}
+    .panel.active{display:block;width:100%;}
 
     .field-label{font-family:var(--mono);font-size:.45rem;letter-spacing:.1em;color:var(--purple);margin-bottom:.4rem;display:block}
     .field-input{width:100%;background:var(--surf2);border:1px solid var(--b2);color:var(--white);font-family:var(--mono);font-size:.7rem;padding:.5rem .7rem;border-radius:4px;outline:none;transition:border-color .2s;margin-bottom:.8rem}
@@ -180,6 +180,20 @@
     .thinking span{animation:thinking 1s infinite}
     .thinking span:nth-child(2){animation-delay:.2s}
     .thinking span:nth-child(3){animation-delay:.4s}
+
+    /* Output panels: only the oc-body grows tall, no height:100% on panel itself */
+    #panel-2 .oc-body,
+    #panel-4 .oc-body,
+    #panel-5 .output-card .oc-body {
+      min-height: calc(100vh - 300px);
+    }
+    #panel-6 .oc-body {
+      min-height: calc(50vh - 120px);
+    }
+    #panel-7 .song-preview {
+      min-height: calc(100vh - 260px);
+      overflow-y: auto;
+    }
   </style>
 </head>
 <body>
@@ -304,25 +318,25 @@
         <!-- GENRE + MOOD -->
         <span class="field-label">GENRE</span>
         <div class="pill-group" id="genre-pills">
-          <div class="pill active" onclick="togglePill(this,'genre')">Hip-Hop</div>
-          <div class="pill" onclick="togglePill(this,'genre')">R&B</div>
-          <div class="pill" onclick="togglePill(this,'genre')">Pop</div>
-          <div class="pill" onclick="togglePill(this,'genre')">Trap</div>
-          <div class="pill" onclick="togglePill(this,'genre')">Afrobeats</div>
-          <div class="pill" onclick="togglePill(this,'genre')">Gospel</div>
-          <div class="pill" onclick="togglePill(this,'genre')">Latin</div>
-          <div class="pill" onclick="togglePill(this,'genre')">Drill</div>
+          <div class="pill active" data-group="genre">Hip-Hop</div>
+          <div class="pill" data-group="genre">R&B</div>
+          <div class="pill" data-group="genre">Pop</div>
+          <div class="pill" data-group="genre">Trap</div>
+          <div class="pill" data-group="genre">Afrobeats</div>
+          <div class="pill" data-group="genre">Gospel</div>
+          <div class="pill" data-group="genre">Latin</div>
+          <div class="pill" data-group="genre">Drill</div>
         </div>
         <span class="field-label">MOOD</span>
         <div class="pill-group" id="mood-pills">
-          <div class="pill active" onclick="togglePill(this,'mood')">Motivational</div>
-          <div class="pill" onclick="togglePill(this,'mood')">Dark</div>
-          <div class="pill" onclick="togglePill(this,'mood')">Romantic</div>
-          <div class="pill" onclick="togglePill(this,'mood')">Aggressive</div>
-          <div class="pill" onclick="togglePill(this,'mood')">Melancholy</div>
-          <div class="pill" onclick="togglePill(this,'mood')">Triumphant</div>
-          <div class="pill" onclick="togglePill(this,'mood')">Chill</div>
-          <div class="pill" onclick="togglePill(this,'mood')">Spiritual</div>
+          <div class="pill active" data-group="mood">Motivational</div>
+          <div class="pill" data-group="mood">Dark</div>
+          <div class="pill" data-group="mood">Romantic</div>
+          <div class="pill" data-group="mood">Aggressive</div>
+          <div class="pill" data-group="mood">Melancholy</div>
+          <div class="pill" data-group="mood">Triumphant</div>
+          <div class="pill" data-group="mood">Chill</div>
+          <div class="pill" data-group="mood">Spiritual</div>
         </div>
         <div class="field-row">
           <div>
@@ -1098,6 +1112,12 @@ Write COMPLETE SONG: [INTRO] [VERSE 1 - 16 bars] [PRE-HOOK] [HOOK] [VERSE 2 - 16
   }
 
   document.addEventListener('DOMContentLoaded', () => {
+    document.querySelector('.studio-body').scrollTop = 0;
+    document.querySelectorAll('.pill[data-group]').forEach(pill => {
+      pill.addEventListener('click', function() {
+        togglePill(this, this.dataset.group);
+      });
+    });
     renderBank();
     updateLiveDNA();
     ['artist-ref','song-title','song-theme','personal-line'].forEach(id => {
