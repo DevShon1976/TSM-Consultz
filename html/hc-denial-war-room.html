@@ -553,8 +553,10 @@ textarea::placeholder{color:var(--faint)}
       </div>
       <div class="eng-footer">
         <button class="foot-btn" onclick="copyOut('out3')">Copy</button>
-        <button class="foot-btn" onclick="relay(3,4)">→ Feed to Recovery</button>
-        <span class="tok-count" id="tok3"></span>
+        <button class="foot-btn" onclick="relayFinancialToRecovery()">
+        → Feed to Recovery
+        </button>
+          <span class="tok-count" id="tok3"></span>
       </div>
     </div>
     <!-- ENGINE 4 -->
@@ -1567,13 +1569,75 @@ async function fireAll(){
 
 // ── RELAY ─────────────────────────────────────────────────────────────────
 async function relay(from, to){
-  const fromText = document.getElementById('out'+from).textContent;
-  if(!fromText) return;
+
+  const fromText =
+    document.getElementById('out' + from)?.textContent;
+
+  if(!fromText){
+    alert(`Engine ${from} has no output to relay.`);
+    return;
+  }
+
   const prompts = getPrompts(currentMode);
   const prev = docText;
-  docText = docText + '\n\nPREVIOUS ENGINE OUTPUT:\n' + fromText.slice(0,1200);
-  await runEngine(to, prompts[to-1]);
-  docText = prev;
+
+  // Visual feedback
+  const badge = document.getElementById('badge' + to);
+  if(badge) badge.textContent = 'UPDATING';
+
+  // Optional: status bar hook
+  const statusBar = document.getElementById('global-prog');
+
+  // Add prior engine output to context
+  docText =
+    prev +
+    '\n\n========================\n' +
+    'PREVIOUS ENGINE OUTPUT\n' +
+    '========================\n' +
+    fromText;
+
+  try {
+
+    await runEngine(to, prompts[to - 1]);
+
+    if(badge){
+      badge.textContent = 'UPDATED';
+      badge.style.background = '#00ff88';
+      badge.style.color = '#000';
+    }
+
+    // 🔥 NEW: status + toast feedback
+    if(statusBar){
+      statusBar.textContent =
+        `✓ Engine ${from} → Engine ${to} complete`;
+    }
+
+    if(typeof showToast === 'function'){
+      showToast(`Engine ${from} → Engine ${to} complete`);
+    }
+
+    console.log(`✓ Engine ${from} output relayed to Engine ${to}`);
+
+  } catch(err){
+
+    console.error(err);
+
+    if(badge){
+      badge.textContent = 'ERROR';
+    }
+
+    if(statusBar){
+      statusBar.textContent =
+        `✗ Relay failed: Engine ${from} → ${to}`;
+    }
+
+    if(typeof showToast === 'function'){
+      showToast(`Error: Engine ${from} → ${to}`);
+    }
+
+  } finally {
+    docText = prev;
+  }
 }
 
 // ── WOW CARD ──────────────────────────────────────────────────────────────
@@ -1607,6 +1671,52 @@ function exportAll(){
   a.href = URL.createObjectURL(blob);
   a.download = `tsm-war-room-v2-${ts}.txt`;
   a.click();
+}
+
+// ─────────────────────────────────────
+// GLOBAL UTILITIES (put toast here)
+// ─────────────────────────────────────
+
+function showToast(message, type = "info"){
+  const t = document.createElement('div');
+  t.textContent = message;
+
+  const colors = {
+    info: "#111",
+    success: "#00aa55",
+    error: "#aa0000"
+  };
+
+  t.style.position = 'fixed';
+  t.style.bottom = '20px';
+  t.style.right = '20px';
+  t.style.padding = '12px 16px';
+  t.style.background = colors[type] || "#111";
+  t.style.color = '#fff';
+  t.style.border = '1px solid #333';
+  t.style.borderRadius = '8px';
+  t.style.zIndex = 9999;
+  t.style.fontSize = '13px';
+  t.style.opacity = '0';
+  t.style.transition = 'opacity 0.2s ease';
+
+  document.body.appendChild(t);
+
+  requestAnimationFrame(() => t.style.opacity = '1');
+
+  setTimeout(() => {
+    t.style.opacity = '0';
+    setTimeout(() => t.remove(), 200);
+  }, 1800);
+}
+
+
+// ─────────────────────────────────────
+// CORE LOGIC (relay, engines, etc.)
+// ─────────────────────────────────────
+
+async function relay(from, to){
+  ...
 }
 
 // INIT
