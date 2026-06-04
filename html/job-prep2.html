@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TSM Career OS — Healthcare Ops Simulator</title>
+<style>
+:root{
+  --bg:#080b0d;--bg2:#0d1214;--bg3:#121820;--bg4:#181f26;
+  --border:#1a2820;--border2:#243428;
+  --g:#00ff88;--g2:#00c86a;--g3:#009950;
+  --a:#ffb800;--a2:#ff8c00;
+  --r:#ff4444;--b:#4499ff;--p:#9966ff;--c:#00d4ff;
+  --text:#c8d4c0;--muted:#4a6050;--muted2:#7a9080;
+  --mono:'Courier New',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--mono);font-size:11px;}
+
+/* ── TOP BAR ── */
+.top-bar{background:var(--bg2);border-bottom:1px solid var(--border2);padding:5px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.logo{color:var(--g);font-size:12px;font-weight:700;letter-spacing:3px;}
+.logo span{color:var(--text);}
+.logo small{display:block;color:var(--muted);font-size:8px;letter-spacing:2px;font-weight:400;margin-top:1px;}
+.pills{display:flex;gap:5px;align-items:center;}
+.pill{border-radius:3px;padding:2px 8px;font-size:8px;letter-spacing:1px;border:1px solid var(--border2);color:var(--muted2);}
+.pg{color:var(--g);border-color:var(--g3);background:rgba(0,255,136,.05);}
+.pa{color:var(--a);border-color:rgba(255,184,0,.3);}
+.pb{color:var(--text);border-color:var(--border2);}
+.pp{color:var(--c);border-color:rgba(0,212,255,.3);background:rgba(0,212,255,.04);}
+.status-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--g);margin-right:4px;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ── ROLE BAR ── */
+.role-bar{background:var(--bg2);border-bottom:1px solid var(--border);padding:4px 14px;display:flex;align-items:center;gap:5px;flex-shrink:0;flex-wrap:wrap;}
+.rbl{color:var(--muted);font-size:8px;letter-spacing:1px;margin-right:3px;}
+.rb{background:none;border:1px solid var(--border2);border-radius:3px;color:var(--muted2);font-family:var(--mono);font-size:9px;padding:2px 8px;cursor:pointer;letter-spacing:.5px;transition:all .15s;}
+.rb:hover{border-color:var(--g3);color:var(--g);}
+.rb.act{background:rgba(0,255,136,.08);border-color:var(--g);color:var(--g);}
+
+/* ── MAIN LAYOUT ── */
+.main{display:flex;height:calc(100vh - 80px);overflow:hidden;}
+.left{flex:1;overflow-y:auto;display:flex;flex-direction:column;border-right:1px solid var(--border);}
+.right{width:272px;flex-shrink:0;display:flex;flex-direction:column;overflow:hidden;background:var(--bg2);}
+
+/* ── GROQ CONFIG BANNER ── */
+.gcfg{background:rgba(0,68,255,.06);border-bottom:1px solid rgba(0,68,255,.15);padding:5px 12px;font-size:9px;color:var(--muted2);line-height:1.5;}
+.gcfg code{background:rgba(255,255,255,.07);padding:1px 4px;border-radius:2px;color:var(--c);}
+.gcfg strong{color:var(--b);}
+
+/* ── KPI GRID ── */
+.kgrid{display:grid;grid-template-columns:repeat(6,1fr);border-bottom:1px solid var(--border);flex-shrink:0;}
+.kpi{padding:7px 8px;border-right:1px solid var(--border);text-align:center;}
+.kpi:last-child{border-right:none;}
+.kv{font-size:15px;font-weight:700;line-height:1.2;}
+.kl{color:var(--muted);font-size:7px;letter-spacing:1px;margin-top:2px;text-transform:uppercase;}
+.kd{font-size:7px;margin-top:1px;}
+
+/* ── SECTION ── */
+.sec{border-bottom:1px solid var(--border);flex-shrink:0;}
+.sh{padding:5px 12px;font-size:9px;letter-spacing:2px;color:var(--g);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.sh-sub{color:var(--a);font-size:8px;}
+
+/* ── EVENTS ── */
+.ev{display:flex;align-items:center;padding:4px 12px;border-bottom:1px solid var(--border);gap:8px;}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.et{flex:1;font-size:9px;color:var(--muted2);}
+.ei{font-size:8px;color:var(--muted);white-space:nowrap;}
+
+/* ── OUTPUT TABS ── */
+.otabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg2);overflow-x:auto;}
+.ot{padding:6px 10px;font-size:8px;letter-spacing:1px;color:var(--muted);cursor:pointer;border-right:1px solid var(--border);border-bottom:2px solid transparent;transition:all .15s;background:none;border-top:none;border-left:none;font-family:var(--mono);white-space:nowrap;}
+.ot:hover{color:var(--text);}
+.ot.act{color:var(--g);border-bottom-color:var(--g);background:rgba(0,255,136,.04);}
+.ot.t-tk{color:var(--p);}
+.ot.t-tk.act{color:var(--p);border-bottom-color:var(--p);background:rgba(153,102,255,.05);}
+.ot.t-how{color:var(--c);}
+.ot.t-how.act{color:var(--c);border-bottom-color:var(--c);}
+.ot.t-fc{color:var(--a);}
+.ot.t-fc.act{color:var(--a);border-bottom-color:var(--a);}
+.ot.t-guide{color:#00ffcc;}
+.ot.t-guide.act{color:#00ffcc;border-bottom-color:#00ffcc;background:rgba(0,255,204,.04);}
+.ot.new-b::after{content:'NEW';font-size:6px;background:var(--p);color:#fff;border-radius:2px;padding:1px 3px;margin-left:4px;vertical-align:1px;}
+.ot.guide-b::after{content:'GUIDE';font-size:6px;background:#00997a;color:#fff;border-radius:2px;padding:1px 3px;margin-left:4px;vertical-align:1px;}
+
+/* ── OUTPUT BOX ── */
+.out-box{padding:10px 12px;font-size:10px;line-height:1.7;color:var(--muted2);white-space:pre-wrap;min-height:80px;}
+.err-box{padding:5px 12px;font-size:9px;color:var(--r);display:none;}
+
+/* ── APP TOOLKIT ── */
+.app-toolkit{padding:10px 12px;}
+.atk-title{color:var(--p);font-size:8px;letter-spacing:2px;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid rgba(153,102,255,.2);}
+.app-card{background:var(--bg3);border:1px solid var(--border2);border-radius:4px;padding:9px 10px;margin-bottom:7px;cursor:pointer;transition:all .15s;}
+.app-card:hover{border-color:rgba(153,102,255,.4);}
+.app-card-head{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+.app-icon{font-size:13px;}
+.app-name{color:var(--text);font-size:10px;font-weight:700;flex:1;}
+.app-tag{font-size:7px;border:1px solid var(--border2);border-radius:2px;padding:1px 5px;color:var(--muted2);}
+.app-desc{font-size:9px;color:var(--muted2);line-height:1.5;margin-bottom:5px;}
+.app-how{font-size:9px;color:var(--muted);line-height:1.5;display:none;border-top:1px solid var(--border);padding-top:6px;margin-top:4px;}
+.app-how.show{display:block;}
+
+/* ── RECOMMENDED TOOLKIT ── */
+.rec-toolkit{padding:10px 12px;}
+.rec-tk-title{color:var(--p);font-size:8px;letter-spacing:2px;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid rgba(153,102,255,.2);}
+.rec-cards{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;}
+.rec-card{background:var(--bg3);border:1px solid var(--border2);border-radius:4px;padding:9px 10px;cursor:pointer;transition:all .15s;}
+.rec-card:hover{border-color:rgba(153,102,255,.5);background:rgba(153,102,255,.05);}
+.rec-card.sel{border-color:var(--p);background:rgba(153,102,255,.08);}
+.rc-name{color:var(--text);font-size:10px;font-weight:700;margin-bottom:3px;display:flex;align-items:center;gap:5px;}
+.rc-icon{font-size:13px;}
+.rc-purpose{color:var(--muted);font-size:8px;line-height:1.5;}
+.why-btn{background:none;border:1px solid rgba(153,102,255,.3);border-radius:2px;color:var(--p);font-family:var(--mono);font-size:7px;padding:2px 5px;cursor:pointer;margin-top:5px;transition:all .15s;}
+.why-btn:hover{background:rgba(153,102,255,.1);border-color:var(--p);}
+.why-out{background:rgba(153,102,255,.06);border:1px solid rgba(153,102,255,.2);border-radius:3px;padding:7px 9px;margin-top:5px;font-size:8px;color:var(--muted2);line-height:1.6;display:none;}
+.why-out.vis{display:block;}
+.why-lbl{color:var(--p);font-size:7px;letter-spacing:1px;margin-bottom:3px;}
+.why-line{display:flex;gap:5px;margin:2px 0;}
+.why-key{color:var(--muted);width:80px;flex-shrink:0;}
+.why-val{color:var(--text);}
+
+/* ── HOW TO SOLVE ── */
+.how-section{padding:10px 12px;}
+.how-title{color:var(--c);font-size:8px;letter-spacing:2px;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid rgba(0,212,255,.2);}
+.exec-steps{display:flex;flex-direction:column;gap:5px;}
+.xstep{display:flex;gap:9px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:7px 9px;cursor:pointer;transition:all .15s;}
+.xstep:hover{border-color:rgba(0,212,255,.3);}
+.xstep.done{border-color:rgba(0,255,136,.3);}
+.xsnum{width:18px;height:18px;border-radius:50%;border:1px solid var(--muted);display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--muted);flex-shrink:0;margin-top:1px;}
+.xstep.done .xsnum{border-color:var(--g);color:var(--g);background:rgba(0,255,136,.08);}
+.xsc{flex:1;}
+.xsapp{font-size:9px;font-weight:700;color:var(--c);margin-bottom:2px;}
+.xstep.done .xsapp{color:var(--g);}
+.xsact{color:var(--muted);font-size:8px;line-height:1.6;}
+.xsfind{color:var(--a);font-size:8px;margin-top:3px;}
+.oa-btn{background:none;border:1px solid rgba(0,212,255,.3);border-radius:2px;color:var(--c);font-family:var(--mono);font-size:7px;padding:2px 5px;cursor:pointer;margin-top:4px;transition:all .15s;}
+.oa-btn:hover{background:rgba(0,212,255,.08);}
+.oa-btn.opened{border-color:var(--g3);color:var(--g);background:rgba(0,255,136,.06);}
+
+/* ── KPI FORECAST ── */
+.fc-section{padding:10px 12px;}
+.fc-title{color:var(--a);font-size:8px;letter-spacing:2px;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid rgba(255,184,0,.2);}
+.fc-bars{display:flex;flex-direction:column;gap:7px;}
+.fc-row{display:flex;flex-direction:column;gap:3px;}
+.fc-hdr{display:flex;justify-content:space-between;font-size:8px;}
+.fc-name{color:var(--muted2);}
+.fc-chg{}.fc-chg.pos{color:var(--g);}.fc-chg.neg{color:var(--r);}
+.bar-track{height:4px;background:var(--bg3);border-radius:2px;position:relative;}
+.bar-cur{height:4px;border-radius:2px;background:var(--muted);position:absolute;top:0;left:0;}
+.bar-tgt{height:4px;border-radius:2px;background:var(--g);position:absolute;top:0;left:0;width:0;transition:width 1.2s ease .3s;}
+.exp-btn{display:block;width:100%;margin-top:10px;background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.3);border-radius:3px;color:var(--a);font-family:var(--mono);font-size:8px;padding:6px 10px;cursor:pointer;letter-spacing:1px;transition:all .15s;text-align:center;}
+.exp-btn:hover{background:rgba(255,184,0,.1);}
+
+/* ── USER GUIDE PANEL ── */
+.guide-panel{padding:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;}
+.guide-inner{width:100%;padding:20px 16px;display:flex;flex-direction:column;gap:12px;}
+.guide-hero{background:rgba(0,255,204,.04);border:1px solid rgba(0,255,204,.15);border-radius:5px;padding:16px 18px;}
+.guide-hero-title{color:#00ffcc;font-size:13px;font-weight:700;letter-spacing:2px;margin-bottom:6px;}
+.guide-hero-sub{color:var(--muted2);font-size:9px;line-height:1.7;}
+.guide-toc{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.guide-toc-item{background:var(--bg3);border:1px solid var(--border2);border-radius:3px;padding:6px 9px;font-size:8px;color:var(--muted2);line-height:1.4;}
+.guide-toc-item strong{display:block;color:var(--text);font-size:9px;margin-bottom:2px;}
+.guide-toc-item span{color:#00ffcc;font-size:7px;letter-spacing:1px;}
+.guide-open-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:rgba(0,255,204,.08);border:1px solid rgba(0,255,204,.4);border-radius:4px;color:#00ffcc;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:2px;padding:12px 20px;cursor:pointer;transition:all .2s;text-decoration:none;width:100%;}
+.guide-open-btn:hover{background:rgba(0,255,204,.15);border-color:#00ffcc;box-shadow:0 0 12px rgba(0,255,204,.1);}
+.guide-open-btn .arrow{font-size:14px;transition:transform .2s;}
+.guide-open-btn:hover .arrow{transform:translateX(4px);}
+.guide-sections-lbl{color:var(--muted);font-size:8px;letter-spacing:2px;padding:0 2px;}
+
+/* ── INTERVIEW SECTION ── */
+.int-sec{padding:0;}
+.qbank{padding:8px 12px;border-bottom:1px solid var(--border);}
+.qb-title{color:var(--muted);font-size:8px;letter-spacing:1px;margin-bottom:5px;}
+.qb-item{font-size:8px;color:var(--muted2);padding:3px 6px;cursor:pointer;border-radius:2px;margin-bottom:2px;border:1px solid transparent;transition:all .12s;line-height:1.4;}
+.qb-item:hover{border-color:var(--border2);color:var(--text);}
+.qb-item.app-linked{border-left:2px solid var(--p);padding-left:5px;}
+.bp{background:rgba(153,102,255,.15);color:var(--p);border:1px solid rgba(153,102,255,.3);border-radius:2px;padding:1px 4px;font-size:7px;margin-right:3px;}
+.int-q{padding:8px 12px;font-size:9px;color:var(--b);line-height:1.6;border-bottom:1px solid var(--border);white-space:pre-wrap;}
+.fw-step{font-size:8px;color:var(--muted2);padding:2px 12px;border-left:2px solid var(--border2);margin:2px 12px;line-height:1.4;}
+.fw-step strong{color:var(--g);}
+.ta{width:calc(100% - 24px);margin:6px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:9px;padding:7px 9px;resize:vertical;line-height:1.5;outline:none;}
+.ta:focus{border-color:var(--g3);}
+.score-out{margin:6px 12px;padding:8px 10px;background:rgba(0,200,100,.05);border:1px solid rgba(0,200,100,.2);border-radius:3px;font-size:9px;color:var(--muted2);line-height:1.6;white-space:pre-wrap;display:none;}
+
+/* ── RIGHT PANEL ── */
+.rh{padding:6px 12px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.rht{color:var(--g);font-size:9px;letter-spacing:2px;}
+.rhs{color:var(--muted);font-size:8px;margin-top:1px;}
+.loop-steps{flex-shrink:0;}
+.ls{padding:5px 12px;border-bottom:1px solid var(--border);transition:all .2s;}
+.ls.cur{background:rgba(0,255,136,.03);}
+.lsl{font-size:8px;letter-spacing:.5px;color:var(--muted2);}
+.ls.cur .lsl{color:var(--a);}
+.lsd{font-size:7px;color:var(--muted);margin-top:1px;line-height:1.4;}
+.lsr{font-size:7px;color:var(--g2);margin-top:1px;}
+
+/* ── TRAINING STEPS 6-8 ── */
+.ls.new-step{background:rgba(153,102,255,.03);border-top:1px solid rgba(153,102,255,.15);}
+.ls.new-step .lsl{color:var(--p);}
+.ls.step7 .lsl{color:var(--c);}
+.ls.step8 .lsl{color:var(--g);}
+.step-challenge{background:rgba(153,102,255,.05);border:1px solid rgba(153,102,255,.12);border-radius:3px;padding:5px 6px;margin:4px 0 0;}
+.ch-q{font-size:7px;color:var(--p);margin-bottom:3px;}
+.ch-opts{display:flex;flex-direction:column;gap:2px;}
+.ch-opt{background:none;border:1px solid var(--border2);border-radius:2px;color:var(--muted2);font-family:var(--mono);font-size:7px;padding:3px 5px;cursor:pointer;text-align:left;transition:all .12s;}
+.ch-opt:hover{border-color:var(--p);color:var(--p);}
+.ch-opt.correct{border-color:var(--g);color:var(--g);background:rgba(0,255,136,.06);}
+.ch-opt.wrong{border-color:var(--r);color:var(--r);background:rgba(255,68,68,.06);}
+.kpi-outcomes{display:flex;flex-direction:column;gap:2px;margin:4px 0 0;}
+.kpi-oc{display:flex;align-items:center;gap:4px;font-size:7px;}
+.oc-arr{color:var(--g);}
+.oc-lbl{color:var(--muted2);}
+.oc-val{color:var(--g);margin-left:auto;}
+
+/* ── RIGHT SECTIONS ── */
+.rp-sec{border-top:1px solid var(--border);padding:7px 12px;}
+.rp-sec-lbl{color:var(--muted);font-size:8px;letter-spacing:1px;margin-bottom:5px;}
+.scen-btn{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:1px solid var(--border);border-radius:2px;color:var(--muted2);font-family:var(--mono);font-size:8px;padding:4px 7px;cursor:pointer;margin-bottom:3px;text-align:left;transition:all .15s;}
+.scen-btn:hover{border-color:var(--g3);color:var(--g);}
+.scen-sev{font-size:6px;padding:1px 4px;border-radius:2px;border:1px solid currentColor;}
+.sev-r{color:var(--r);background:rgba(255,68,68,.1);}
+.sev-a{color:var(--a);background:rgba(255,184,0,.08);}
+.hint{font-size:8px;color:var(--muted2);padding:2px 0;border-left:2px solid var(--border2);padding-left:6px;margin-bottom:3px;line-height:1.4;}
+
+/* ── BOTTOM BAR ── */
+.bot{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border2);padding:6px 12px;display:flex;gap:8px;align-items:center;z-index:99;}
+.cmd{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:9px;padding:5px 8px;outline:none;}
+.cmd:focus{border-color:var(--g3);}
+.run-btn{background:var(--g3);border:none;border-radius:3px;color:#000;font-family:var(--mono);font-size:9px;font-weight:700;padding:5px 12px;cursor:pointer;letter-spacing:1px;transition:all .15s;white-space:nowrap;}
+.run-btn:hover{background:var(--g2);}
+.run-btn.a{background:transparent;border:1px solid var(--a);color:var(--a);}
+.run-btn.a:hover{background:rgba(255,184,0,.1);}
+.run-btn.b{background:transparent;border:1px solid var(--b);color:var(--b);}
+.run-btn.b:hover{background:rgba(68,153,255,.1);}
+
+/* ── LOADING ── */
+.loading{color:var(--g);font-size:9px;padding:8px 12px;animation:blink 1s infinite;display:none;}
+.loading.vis{display:block;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+.right-scroll{flex:1;overflow-y:auto;}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+  <div class="logo">TSM <span>CAREER OS</span><small>HEALTHCARE OPS SIMULATOR · GROQ llama-3.3-70b-versatile · APP SUITE INTEGRATION</small></div>
+  <div class="pills">
+    <span class="pill pg"><span class="status-dot"></span>SIMULATION LIVE</span>
+    <span class="pill pa" id="role-pill">BA MODE</span>
+    <span class="pill pb" id="loop-pill">STEP 1 OF 8</span>
+    <span class="pill pp" id="groq-pill">GROQ: CHECKING...</span>
+  </div>
+</div>
+
+<!-- ROLE BAR -->
+<div class="role-bar">
+  <span class="rbl">ROLE LENS:</span>
+  <button class="rb act" onclick="setRole('BA',this)">Business Analyst</button>
+  <button class="rb" onclick="setRole('RCM',this)">Revenue Cycle</button>
+  <button class="rb" onclick="setRole('OPS',this)">Process Improvement</button>
+  <button class="rb" onclick="setRole('IMPL',this)">Implementation Spec</button>
+  <button class="rb" onclick="setRole('SE',this)">Solutions Engineer</button>
+  <button class="rb" onclick="setRole('CS',this)">Customer Success</button>
+  <button class="rb" onclick="setRole('INT',this)">🎯 Interview Mode</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- LEFT PANEL -->
+<div class="left" style="padding-bottom:44px">
+
+  <!-- GROQ CONFIG NOTICE -->
+  <div class="gcfg" id="gcfg-banner">
+    <strong>⚙ GROQ CONNECTION:</strong> Set <code>GROQ_API_KEY</code> in Railway Variables → this app calls <code>/api/hc/query</code> on your Railway service.
+    Fallback: set <code>window.GROQ_API_KEY</code> in browser console for local dev.
+    <span id="groq-status-txt" style="color:var(--muted)">Checking endpoint...</span>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kgrid" id="kpi-grid">
+    <div class="kpi"><div class="kv" id="k1" style="color:var(--r)">18.4%</div><div class="kl">Denial Rate</div><div class="kd" style="color:var(--r)">▲ 3.4% vs target</div></div>
+    <div class="kpi"><div class="kv" id="k2" style="color:var(--a)">52d</div><div class="kl">Days in AR</div><div class="kd" style="color:var(--r)">▲ 18d vs baseline</div></div>
+    <div class="kpi"><div class="kv" id="k3" style="color:var(--a)">94.2%</div><div class="kl">Clean Claim Rate</div><div class="kd" style="color:var(--r)">▼ 2.8pt gap</div></div>
+    <div class="kpi"><div class="kv" id="k4" style="color:var(--r)">$48K</div><div class="kl">Stalled Revenue</div><div class="kd" style="color:var(--a)">14 aging &gt;30d</div></div>
+    <div class="kpi"><div class="kv" id="k5" style="color:var(--g)">68%</div><div class="kl">Appeal Win Rate</div><div class="kd" style="color:var(--g)">▲ above 60% floor</div></div>
+    <div class="kpi"><div class="kv" id="k6" style="color:var(--a)">1,256</div><div class="kl">Claims / Month</div><div class="kd" style="color:var(--r)">231 denied</div></div>
+  </div>
+
+  <!-- SYSTEM EVENTS -->
+  <div class="sec" id="events-sec">
+    <div class="sh" id="ev-title">SYSTEM STATE — TODAY'S EVENTS <span class="sh-sub" id="scen-badge"></span></div>
+    <div id="ev-list"></div>
+  </div>
+
+  <!-- ANALYST OUTPUT -->
+  <div class="sec">
+    <div class="sh" id="out-title">ANALYST OUTPUT — BUSINESS ANALYST</div>
+    <div class="otabs">
+      <button class="ot act" onclick="setTab('summary',this)">EXEC SUMMARY</button>
+      <button class="ot" onclick="setTab('rca',this)">ROOT CAUSE</button>
+      <button class="ot" onclick="setTab('impact',this)">IMPACT</button>
+      <button class="ot" onclick="setTab('rec',this)">RECOMMENDATION</button>
+      <button class="ot t-tk new-b" onclick="setTab('toolkit',this)">🛠 APP TOOLKIT</button>
+      <button class="ot t-how" onclick="setTab('howto',this)">HOW TO SOLVE</button>
+      <button class="ot t-fc" onclick="setTab('forecast',this)">KPI FORECAST</button>
+      <button class="ot" onclick="setTab('portfolio',this)">PORTFOLIO</button>
+      <button class="ot t-guide guide-b" onclick="setTab('guide',this)">📖 USER GUIDE</button>
+    </div>
+    <div class="loading" id="ai-loading">▶ GROQ llama-3.3-70b · generating analysis...</div>
+    <div id="out-box" class="out-box">&gt; Select a role lens, run a scenario, or query below to generate output.
+&gt; Click 🛠 APP TOOLKIT to see which apps solve each scenario.
+&gt; Click HOW TO SOLVE for the step-by-step execution workflow.
+&gt; Click 📖 USER GUIDE for full navigation instructions.</div>
+    <div id="err-box" class="err-box"></div>
+
+    <!-- APP TOOLKIT panel -->
+    <div id="toolkit-panel" class="app-toolkit" style="display:none">
+      <div class="atk-title">◈ APP SUITE — HOW I BUILT SOLUTIONS FOR THIS SCENARIO</div>
+      <div id="app-cards"></div>
+    </div>
+
+    <!-- RECOMMENDED TOOLKIT panel -->
+    <div id="rec-toolkit-panel" class="rec-toolkit" style="display:none">
+      <div class="rec-tk-title">◈ RECOMMENDED SOLUTION STACK FOR THIS SCENARIO</div>
+      <div class="rec-cards" id="rec-cards">
+        <div class="rec-card" onclick="selCard(this)">
+          <div class="rc-name"><span class="rc-icon">📊</span>Financial Intelligence</div>
+          <div class="rc-purpose">Root cause analysis of denial trends, payer patterns, and AR aging.</div>
+          <button class="why-btn" onclick="event.stopPropagation();toggleWhy('fi')">WHY THIS APP?</button>
+          <div class="why-out" id="why-fi">
+            <div class="why-lbl">SELECTION RATIONALE</div>
+            <div class="why-line"><span class="why-key">Observation:</span><span class="why-val">Denial rate 3.4pt above target</span></div>
+            <div class="why-line"><span class="why-key">Cause:</span><span class="why-val">Payer-specific CO-4 rejection pattern</span></div>
+            <div class="why-line"><span class="why-key">Impact:</span><span class="why-val">$48K stalled + OIG audit exposure</span></div>
+            <div class="why-line"><span class="why-key">Outcome:</span><span class="why-val">12–18% denial reduction achievable</span></div>
+          </div>
+        </div>
+        <div class="rec-card" onclick="selCard(this)">
+          <div class="rc-name"><span class="rc-icon">📄</span>Doc Analysis Engine</div>
+          <div class="rc-purpose">Review clinical docs for missing MDM complexity and auth references.</div>
+          <button class="why-btn" onclick="event.stopPropagation();toggleWhy('da')">WHY THIS APP?</button>
+          <div class="why-out" id="why-da">
+            <div class="why-lbl">SELECTION RATIONALE</div>
+            <div class="why-line"><span class="why-key">Observation:</span><span class="why-val">14 of 23 claims lack MDM support</span></div>
+            <div class="why-line"><span class="why-key">Cause:</span><span class="why-val">Documentation gaps in encounter notes</span></div>
+            <div class="why-line"><span class="why-key">Impact:</span><span class="why-val">$7,308 unbillable + OIG exposure</span></div>
+            <div class="why-line"><span class="why-key">Outcome:</span><span class="why-val">Correctable claims identified</span></div>
+          </div>
+        </div>
+        <div class="rec-card" onclick="selCard(this)">
+          <div class="rc-name"><span class="rc-icon">⚙️</span>Financial Operations</div>
+          <div class="rc-purpose">Build corrective workflow, assign owners, set due dates for remediation.</div>
+          <button class="why-btn" onclick="event.stopPropagation();toggleWhy('fo')">WHY THIS APP?</button>
+          <div class="why-out" id="why-fo">
+            <div class="why-lbl">SELECTION RATIONALE</div>
+            <div class="why-line"><span class="why-key">Observation:</span><span class="why-val">Modifier -25 pattern on 19 of 23 claims</span></div>
+            <div class="why-line"><span class="why-key">Cause:</span><span class="why-val">No structured remediation workflow</span></div>
+            <div class="why-line"><span class="why-key">Impact:</span><span class="why-val">Recovery stalls without accountability</span></div>
+            <div class="why-line"><span class="why-key">Outcome:</span><span class="why-val">Recovery workflow + owner assigned</span></div>
+          </div>
+        </div>
+        <div class="rec-card" onclick="selCard(this)">
+          <div class="rc-name"><span class="rc-icon">💰</span>FinOps Accounting</div>
+          <div class="rc-purpose">Quantify revenue at risk, model recovery, generate executive business case.</div>
+          <button class="why-btn" onclick="event.stopPropagation();toggleWhy('fa')">WHY THIS APP?</button>
+          <div class="why-out" id="why-fa">
+            <div class="why-lbl">SELECTION RATIONALE</div>
+            <div class="why-line"><span class="why-key">Observation:</span><span class="why-val">$48K stalled, 14 aging >30d</span></div>
+            <div class="why-line"><span class="why-key">Cause:</span><span class="why-val">No financial model for prioritization</span></div>
+            <div class="why-line"><span class="why-key">Impact:</span><span class="why-val">Leadership can't approve remediation</span></div>
+            <div class="why-line"><span class="why-key">Outcome:</span><span class="why-val">Executive ROI summary generated</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOW TO SOLVE panel -->
+    <div id="howto-panel" class="how-section" style="display:none">
+      <div class="how-title">◈ HOW TO EXECUTE · STEP-BY-STEP WORKFLOW</div>
+      <div class="exec-steps" id="exec-steps">
+        <div class="xstep" id="xs1">
+          <div class="xsnum" id="xn1">1</div>
+          <div class="xsc">
+            <div class="xsapp">Open Financial Intelligence</div>
+            <div class="xsact">Review: denial trends · payer mix · aging buckets · CPT volume<br>Filter by: specialty + date range + modifier flags</div>
+            <div class="xsfind">→ Expected: Top denial source identified by payer</div>
+            <button class="oa-btn" id="oab1" onclick="openApp(1)">OPEN APP ↗</button>
+          </div>
+        </div>
+        <div class="xstep" id="xs2">
+          <div class="xsnum" id="xn2">2</div>
+          <div class="xsc">
+            <div class="xsapp">Open Doc Analysis Engine</div>
+            <div class="xsact">Upload: EOB · auth records · encounter notes for flagged claims<br>Run: MDM complexity check + modifier appropriateness audit</div>
+            <div class="xsfind">→ Expected: Documentation gaps confirmed per claim</div>
+            <button class="oa-btn" id="oab2" onclick="openApp(2)">OPEN APP ↗</button>
+          </div>
+        </div>
+        <div class="xstep" id="xs3">
+          <div class="xsnum" id="xn3">3</div>
+          <div class="xsc">
+            <div class="xsapp">Open Financial Operations</div>
+            <div class="xsact">Create: Owner · Due Date · Corrective Action per flagged claim<br>Assign: Billing lead for modifier · Clinical lead for MDM addendum</div>
+            <div class="xsfind">→ Expected: Recovery workflow with accountability established</div>
+            <button class="oa-btn" id="oab3" onclick="openApp(3)">OPEN APP ↗</button>
+          </div>
+        </div>
+        <div class="xstep" id="xs4">
+          <div class="xsnum" id="xn4">4</div>
+          <div class="xsc">
+            <div class="xsapp">Open FinOps Accounting</div>
+            <div class="xsact">Calculate: Revenue at Risk · Recovery % · Net Impact · OIG penalty<br>Generate: Executive business case with 30/60/90d projection</div>
+            <div class="xsfind">→ Expected: Executive summary ready for leadership approval</div>
+            <button class="oa-btn" id="oab4" onclick="openApp(4)">OPEN APP ↗</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI FORECAST panel -->
+    <div id="forecast-panel" class="fc-section" style="display:none">
+      <div class="fc-title">◈ KPI IMPACT FORECAST · POST-REMEDIATION PROJECTION</div>
+      <div class="fc-bars">
+        <div class="fc-row">
+          <div class="fc-hdr"><span class="fc-name">Denial Rate</span><span class="fc-chg neg">18.4% → 14.8% <span style="color:var(--g)">▼ 3.6pt</span></span></div>
+          <div class="bar-track"><div class="bar-cur" style="width:92%"></div><div class="bar-tgt" id="bt-denial"></div></div>
+        </div>
+        <div class="fc-row">
+          <div class="fc-hdr"><span class="fc-name">Days in AR</span><span class="fc-chg neg">52d → 41d <span style="color:var(--g)">▼ 11d</span></span></div>
+          <div class="bar-track"><div class="bar-cur" style="width:86%"></div><div class="bar-tgt" id="bt-ar"></div></div>
+        </div>
+        <div class="fc-row">
+          <div class="fc-hdr"><span class="fc-name">Clean Claim Rate</span><span class="fc-chg pos">94.2% → 97.1% <span style="color:var(--g)">▲ 2.9pt</span></span></div>
+          <div class="bar-track"><div class="bar-cur" style="width:78%"></div><div class="bar-tgt" id="bt-clean"></div></div>
+        </div>
+        <div class="fc-row">
+          <div class="fc-hdr"><span class="fc-name">Revenue Recovery</span><span class="fc-chg pos">$0 → $15K/mo <span style="color:var(--g)">↑ est.</span></span></div>
+          <div class="bar-track"><div class="bar-cur" style="width:0%"></div><div class="bar-tgt" id="bt-rev"></div></div>
+        </div>
+        <div class="fc-row">
+          <div class="fc-hdr"><span class="fc-name">Appeal Win Rate</span><span class="fc-chg pos">68% → 76% <span style="color:var(--g)">▲ 8pt</span></span></div>
+          <div class="bar-track"><div class="bar-cur" style="width:57%"></div><div class="bar-tgt" id="bt-appeal"></div></div>
+        </div>
+      </div>
+      <button class="exp-btn" onclick="alert('Executive Summary exported.\n\nContains: KPI forecast · App workflow · Recovery projection · Compliance risk assessment')">⬇ EXPORT EXECUTIVE SUMMARY</button>
+    </div>
+
+    <!-- USER GUIDE panel -->
+    <div id="guide-panel" class="guide-panel" style="display:none">
+      <div class="guide-inner">
+        <div class="guide-hero">
+          <div class="guide-hero-title">📖 TSM CAREER OS — USER GUIDE</div>
+          <div class="guide-hero-sub">Complete navigation reference · All roles · All features · Setup to portfolio output. Opens in a new tab so you can keep your simulation running alongside it.</div>
+        </div>
+        <div class="guide-sections-lbl">◆ GUIDE COVERS</div>
+        <div class="guide-toc">
+          <div class="guide-toc-item"><strong>First-Time Setup</strong><span>SEC 01</span><br>Groq connection, Railway env vars, console fallback</div>
+          <div class="guide-toc-item"><strong>Screen Anatomy</strong><span>SEC 02</span><br>All 5 zones labeled and explained</div>
+          <div class="guide-toc-item"><strong>Role Lenses</strong><span>SEC 03</span><br>All 7 roles — focus areas and use cases</div>
+          <div class="guide-toc-item"><strong>Scenarios</strong><span>SEC 04</span><br>All 6 crisis scenarios explained</div>
+          <div class="guide-toc-item"><strong>Output Tabs</strong><span>SEC 05</span><br>What each tab is for and when to use it</div>
+          <div class="guide-toc-item"><strong>Training Loop</strong><span>SEC 06</span><br>All 8 steps — how they advance</div>
+          <div class="guide-toc-item"><strong>Interview Mode</strong><span>SEC 08</span><br>STAR+C framework + AI scoring</div>
+          <div class="guide-toc-item"><strong>Portfolio Output</strong><span>SEC 10</span><br>Resume bullets · LinkedIn · STAR stories</div>
+        </div>
+        <a class="guide-open-btn" href="/html/tsm-career-os-guide.html" target="_blank">
+          OPEN FULL USER GUIDE <span class="arrow">→</span>
+        </a>
+      </div>
+    </div>
+
+  </div><!-- end analyst output sec -->
+
+  <!-- INTERVIEW SECTION -->
+  <div class="sec" id="int-sec" style="display:none">
+    <div class="sh">INTERVIEW DRILL — <span id="int-role-lbl" style="color:var(--b)">BUSINESS ANALYST</span></div>
+    <div class="qbank" id="qbank">
+      <div class="qb-title">◈ QUESTION BANK — click to load</div>
+      <div id="qbank-items"></div>
+    </div>
+    <div id="int-q" class="int-q"></div>
+    <div style="font-size:7px;color:var(--muted);letter-spacing:1px;padding:4px 12px">FRAMEWORK: OBSERVE → DIAGNOSE → IMPACT → SOLVE → REPORT</div>
+    <div id="fw-steps"></div>
+    <div style="font-size:8px;color:var(--p);margin:6px 12px 3px;letter-spacing:1px">◈ YOUR ANSWER</div>
+    <textarea id="int-ans" class="ta" rows="5" placeholder="Answer using the OBSERVE → DIAGNOSE → IMPACT → SOLVE → REPORT framework..."></textarea>
+    <div style="display:flex;gap:6px;margin:6px 12px;flex-wrap:wrap">
+      <button onclick="scoreAnswer()" class="run-btn b">SCORE MY ANSWER</button>
+      <button onclick="nextQuestion()" class="run-btn" style="background:transparent;border:1px solid var(--border2);color:var(--muted)">NEXT QUESTION ›</button>
+      <button onclick="getHint()" class="run-btn a">GET HINT</button>
+    </div>
+    <div id="score-out" class="score-out"></div>
+  </div>
+
+</div><!-- end left -->
+
+<!-- RIGHT PANEL -->
+<div class="right">
+  <div class="rh">
+    <div class="rht">DAILY TRAINING LOOP</div>
+    <div class="rhs" id="loop-sub">Role: Business Analyst · Session active</div>
+  </div>
+
+  <div class="right-scroll">
+    <div class="loop-steps" id="loop-steps">
+      <div class="ls cur" id="ls-1"><div class="lsl">⊞ STEP 1 — OBSERVE</div><div class="lsd">Review KPIs. What is abnormal?</div><div class="lsr" id="lr-1"></div></div>
+      <div class="ls" id="ls-2"><div class="lsl">◎ STEP 2 — ROLE LENS</div><div class="lsd">Apply your role: what does a <span id="rl-name">BA</span> focus on?</div><div class="lsr" id="lr-2"></div></div>
+      <div class="ls" id="ls-3"><div class="lsl">◆ STEP 3 — AI ANALYSIS</div><div class="lsd">1 insight · 1 problem · 1 recommendation</div><div class="lsr" id="lr-3"></div></div>
+      <div class="ls" id="ls-4"><div class="lsl">▲ STEP 4 — CONSULTANT OUTPUT</div><div class="lsd">Convert to exec summary + resume bullet</div><div class="lsr" id="lr-4"></div></div>
+      <div class="ls" id="ls-5"><div class="lsl">⟳ STEP 5 — IMPROVE THE SYSTEM</div><div class="lsd">Propose 1 product improvement as owner</div><div class="lsr" id="lr-5"></div></div>
+      <div class="ls new-step" id="ls-6">
+        <div class="lsl">◆ STEP 6 — APP SELECTION</div>
+        <div class="lsd">Which TSM app solves this scenario first?</div>
+        <div class="step-challenge" id="ch6">
+          <div class="ch-q">For a denial spike — which app do you open FIRST?</div>
+          <div class="ch-opts">
+            <button class="ch-opt" onclick="answerCh(6,this,false)">FinOps Accounting</button>
+            <button class="ch-opt" onclick="answerCh(6,this,true)">Financial Intelligence</button>
+            <button class="ch-opt" onclick="answerCh(6,this,false)">Financial Operations</button>
+          </div>
+        </div>
+      </div>
+      <div class="ls step7" id="ls-7">
+        <div class="lsl">◆ STEP 7 — EXECUTION PLAN</div>
+        <div class="lsd">How do you use the app once open?</div>
+        <div class="step-challenge" id="ch7" style="display:none">
+          <div class="ch-q">First thing to review in Financial Intelligence?</div>
+          <div class="ch-opts">
+            <button class="ch-opt" onclick="answerCh(7,this,false)">Staff headcount</button>
+            <button class="ch-opt" onclick="answerCh(7,this,true)">Denial trends by payer</button>
+            <button class="ch-opt" onclick="answerCh(7,this,false)">Revenue forecast</button>
+          </div>
+        </div>
+      </div>
+      <div class="ls step8" id="ls-8">
+        <div class="lsl">◆ STEP 8 — BUSINESS OUTCOME</div>
+        <div class="lsd">What KPI improves and by how much?</div>
+        <div class="kpi-outcomes" id="oc8" style="display:none">
+          <div class="kpi-oc"><span class="oc-arr">↓</span><span class="oc-lbl">AR Days</span><span class="oc-val">52d → 41d</span></div>
+          <div class="kpi-oc"><span class="oc-arr">↓</span><span class="oc-lbl">Denial Rate</span><span class="oc-val">18.4% → 14.8%</span></div>
+          <div class="kpi-oc"><span class="oc-arr">↑</span><span class="oc-lbl">Revenue</span><span class="oc-val">+$15K/mo</span></div>
+          <div class="kpi-oc"><span class="oc-arr">↑</span><span class="oc-lbl">Clean Claims</span><span class="oc-val">94.2% → 97.1%</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCENARIOS -->
+    <div class="rp-sec">
+      <div class="rp-sec-lbl">◆ RUN A SCENARIO</div>
+      <button class="scen-btn" onclick="runScenario('spike')">⚡ Denial spike +7pt this week<span class="scen-sev sev-r">CRITICAL</span></button>
+      <button class="scen-btn" onclick="runScenario('ar')">⚡ AR aging crosses 60-day mark<span class="scen-sev sev-r">HIGH</span></button>
+      <button class="scen-btn" onclick="runScenario('audit')">⚡ RAC audit notice received<span class="scen-sev sev-r">URGENT</span></button>
+      <button class="scen-btn" onclick="runScenario('timely')">⚡ CLM-0334 timely filing 48hr<span class="scen-sev sev-r">48HR</span></button>
+      <button class="scen-btn" onclick="runScenario('coding')">⚡ CPT 99215 upcoding flagged<span class="scen-sev sev-a">REVIEW</span></button>
+      <button class="scen-btn" onclick="runScenario('noshow')">⚡ No-show rate 18% · $22K/mo loss<span class="scen-sev sev-a">MEDIUM</span></button>
+    </div>
+
+    <!-- APP SUITE QUICK LAUNCH -->
+    <div class="rp-sec">
+      <div class="rp-sec-lbl">◆ MY APP SUITE</div>
+      <div id="app-quick-links"></div>
+    </div>
+
+    <!-- CAREER LANGUAGE -->
+    <div class="rp-sec" style="padding-bottom:16px">
+      <div class="rp-sec-lbl">◆ CAREER LANGUAGE</div>
+      <div id="lang-hints"></div>
+    </div>
+  </div>
+</div><!-- end right -->
+
+</div><!-- end main -->
+
+<!-- BOTTOM BAR -->
+<div class="bot">
+  <span style="color:var(--muted);font-size:8px;white-space:nowrap" id="bot-label">▶ BA:</span>
+  <input class="cmd" id="cmd" type="text" placeholder="Analyze this system as a Business Analyst — what do you see and what would you fix?">
+  <button class="run-btn" id="run-btn" onclick="runQuery()">RUN ⏎</button>
+</div>
+
+<script>
+const RAILWAY_URL='/api/hc/query';
+const GROQ_DIRECT='https://api.groq.com/openai/v1/chat/completions';
+const GROQ_MODEL='llama-3.3-70b-versatile';
+let groqReady=false;
+
+async function checkGroqConnection(){
+  try{
+    const r=await fetch(RAILWAY_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:'Respond with exactly: ONLINE',message:'ping',max_tokens:10})});
+    if(r.ok){groqReady=true;setPill('groq-pill','✓ GROQ: LIVE','var(--g)','#002211','var(--g3)');document.getElementById('groq-status-txt').textContent='✓ Railway endpoint connected. AI analysis active.';document.getElementById('groq-status-txt').style.color='var(--g)';}
+    else throw new Error();
+  }catch(e){
+    if(window.GROQ_API_KEY){groqReady=true;setPill('groq-pill','✓ GROQ: DIRECT','var(--g)','#002211','var(--g3)');document.getElementById('groq-status-txt').textContent='✓ Using window.GROQ_API_KEY direct connection.';document.getElementById('groq-status-txt').style.color='var(--g)';}
+    else{setPill('groq-pill','⚠ GROQ: OFFLINE','var(--r)','#330000','var(--r)');document.getElementById('groq-status-txt').innerHTML='⚠ Set <code>GROQ_API_KEY</code> in Railway Variables, or run <code>window.GROQ_API_KEY="gsk_..."</code> in console.';}
+  }
+}
+
+function setPill(id,txt,color,bg,border){const el=document.getElementById(id);el.textContent=txt;el.style.color=color;el.style.background=bg;el.style.borderColor=border;}
+
+async function callGroq(system,userMessage,maxTokens=700){
+  try{const r=await fetch(RAILWAY_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system,message:userMessage,stream:false,max_tokens:maxTokens})});if(r.ok){const d=await r.json();return d.response||d.content||(d.choices?.[0]?.message?.content)||'No response';}}catch(e){}
+  const key=window.GROQ_API_KEY||'';
+  if(key){const r=await fetch(GROQ_DIRECT,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:GROQ_MODEL,max_tokens:maxTokens,messages:[{role:'system',content:system},{role:'user',content:userMessage}]})});if(r.ok){const d=await r.json();return d.choices?.[0]?.message?.content||'No response';}}
+  throw new Error('No API connection. Set GROQ_API_KEY in Railway Variables or run: window.GROQ_API_KEY="gsk_..." in console');
+}
+
+const APP_SUITE={
+  BA:[
+    {icon:'🖥',name:'TSM Career OS',tag:'THIS APP',desc:'The career training simulator you built — simulates real denial scenarios, KPI dashboards, and role-based analysis.',how:'Built with vanilla JS + Railway + Groq. Demonstrates ability to build AI-powered analytics tools that mirror RCM workflows.',link:'https://tsm-shell-production-57da.up.railway.app/html/tsm-job-prep.html',appQ:'How did you design the KPI variance detection logic in this app?'},
+    {icon:'📊',name:'Excel / Sheets Dashboards',tag:'ANALYSIS',desc:'Pivot tables, conditional formatting, and variance analysis on denial code exports from EHR/clearinghouse.',how:'Pull CO-4, PR-96, CO-11 denial data. Build pivot: payer × denial code × $ volume. Identify top 3 drivers in <30 min.',appQ:'Walk me through a pivot table you built to identify root cause of a denial spike.'},
+    {icon:'🤖',name:'Claude AI / Groq llama-3.3-70b',tag:'AI ANALYSIS',desc:'AI-powered root cause analysis, executive summary drafting, and recommendation generation.',how:'Prompt: "You are a healthcare BA. Given denial rate 18.4% with CO-4 as top driver, write an exec summary with root cause and 3 prioritized recommendations."',appQ:'How do you use AI tools to accelerate root cause analysis without sacrificing accuracy?'},
+  ],
+  RCM:[
+    {icon:'🖥',name:'TSM Career OS — RCM Lens',tag:'THIS APP',desc:'The RCM scenario simulator — tracks claim lifecycle, timely filing deadlines, modifier errors.',how:'Built the CLM-0334 timely filing countdown and CO-4 modifier conflict detection logic.',link:'https://tsm-shell-production-57da.up.railway.app/html/tsm-job-prep.html',appQ:'You built a timely filing tracker into this app. How does the deadline logic work?'},
+    {icon:'📋',name:'Clearinghouse EDI Portal',tag:'CLAIM OPS',desc:'Change Healthcare, Availity, or Office Ally — pre-submission edits, claim status, ERA posting.',how:'For CO-4 denials: log into clearinghouse → filter by denial code → export batch → correct modifiers → resubmit within timely filing window.',appQ:'Describe your process for batch-correcting modifier errors using a clearinghouse portal.'},
+    {icon:'⚡',name:'RCM Automation Scripts',tag:'EFFICIENCY',desc:'Python/JS scripts to auto-flag claims approaching timely filing deadlines.',how:'Built a simple date-diff checker: if today - DOS > 80 days and status = denied, flag for immediate review.',appQ:'How would you automate timely filing alerts to prevent CO-29 write-offs?'},
+  ],
+  OPS:[
+    {icon:'🗺',name:'Process Mapping (Miro/Lucidchart)',tag:'PROCESS',desc:'Current-state vs future-state workflow diagrams for claim submission pipeline.',how:'Map: Patient scheduling → eligibility check → coding → charge capture → clearinghouse → payer → adjudication → posting.',appQ:'Walk me through a current-state process map you created and what bottleneck it revealed.'},
+    {icon:'📉',name:'Lean/Six Sigma Dashboard',tag:'METRICS',desc:'Control charts, cycle time analysis, and defect rate tracking for claim workflows.',how:'Track: time-in-state per stage, rework rate (claims touched >1x), and defect rate (denied claims).',appQ:'How do you apply Lean principles to a claim denial rework workflow?'},
+    {icon:'🖥',name:'TSM Career OS — OPS Lens',tag:'THIS APP',desc:'The process improvement simulator built into this app — models throughput, SLA variance, and bottleneck identification.',how:'The OPS role lens prompts analyze process bottleneck by stage.',appQ:'You modeled process bottlenecks in this simulator. What was your design approach?'},
+  ],
+  IMPL:[
+    {icon:'📋',name:'Project Management (Asana/Jira)',tag:'PM',desc:'Implementation project plans with milestones, owners, acceptance criteria, and go-live checklists.',how:'Template: 6 phases — Discovery → Config → Training → UAT → Go-Live → Stabilization.',appQ:'Describe your go-live checklist for a 5-provider clinic implementing an RCM system.'},
+    {icon:'🔗',name:'Integration Testing Tools (Postman)',tag:'TECHNICAL',desc:'API validation for HL7/FHIR integrations between EHR, clearinghouse, and billing system.',how:'Test ERA posting endpoint: POST claim data → validate response codes → confirm payment matches expected adjudication.',appQ:'How do you validate ERA/835 posting integration before a client goes live?'},
+    {icon:'🖥',name:'TSM Career OS — IMPL Lens',tag:'THIS APP',desc:'The implementation lens in this simulator models pre/post go-live denial patterns and root cause analysis.',how:'Built to help implementation specs recognize that a post-go-live denial spike often means a config issue, not a training issue.',appQ:'In this app, you modeled post-go-live denial spikes. What implementation failure does that represent?'},
+  ],
+  SE:[
+    {icon:'⚙',name:'Railway + Node.js API',tag:'THIS APP',desc:'The backend powering this simulator — Railway deployment with Groq API integration.',how:'Built Express.js server on Railway. Routes: /api/hc/query (Groq inference), /html/* (static file server).',link:'https://railway.com/project/937c63e4-2dba-4183-b313-33a97d666866',appQ:'Walk me through the architecture of your Railway + Groq API integration.'},
+    {icon:'🧠',name:'AI Pre-Submission Validator',tag:'SYSTEM DESIGN',desc:'Conceptual: a pre-submission edit engine that catches modifier errors before claim reaches payer.',how:'Architecture: EHR → POST /validate-claim → rules engine → return {valid:bool, errors:[{code,fix}]} → block or pass to clearinghouse.',appQ:'Design a real-time claim validation API that prevents CO-4 modifier errors.'},
+    {icon:'📡',name:'HL7/FHIR Integration Layer',tag:'INTEGRATION',desc:'Data flow from EHR (Epic/Athena) to clearinghouse via FHIR R4 claim resources.',how:'Map: ClinicalImpression → Claim resource → X12 837P → clearinghouse → payer.',appQ:'How would you design the data model for tracking claim lifecycle from DOS to final adjudication?'},
+  ],
+  CS:[
+    {icon:'📊',name:'Client Health Score Dashboard',tag:'CS OPS',desc:'Track denial rate trend, login frequency, feature adoption, and NPS per client.',how:'Health score formula: denial_rate_delta (40%) + feature_adoption (30%) + response_time_to_support (20%) + NPS (10%).',appQ:'How do you build a client health score model for an RCM software client?'},
+    {icon:'🖥',name:'TSM Career OS — CS Lens',tag:'THIS APP',desc:'The CS role lens models post-go-live denial spikes and client recovery planning.',how:"Built the CS scenario where a client's denial rate increases 7pt post-implementation.",appQ:"A client's denial rate went from 12% to 19% post go-live. Walk through your 48-hour response plan."},
+    {icon:'📞',name:'QBR Preparation Framework',tag:'RENEWAL',desc:'Quarterly Business Review deck: before/after metrics, ROI summary, 90-day roadmap.',how:'Structure: Health score recap → top 3 wins (with $) → top 2 open issues → renewal value prop → 90-day success plan.',appQ:'Your client is up for renewal in 90 days and their denial rate has not improved. How do you structure the QBR?'},
+  ],
+  INT:[
+    {icon:'🎯',name:'TSM Career OS — Interview Mode',tag:'THIS APP',desc:'This app\'s Interview Mode — AI-scored answers using the STAR+C framework.',how:'Built the scoring system that evaluates: Situation clarity, Task specificity, Action detail, Result quantification, and Connect-to-role.',appQ:'You built an AI interview scoring tool. How does the STAR+C scoring logic work?'},
+    {icon:'📝',name:'Resume Bullet Generator',tag:'PORTFOLIO',desc:'Using AI to convert scenario analysis into quantified resume bullets.',how:'Prompt pattern: "Convert this analysis into a resume bullet: [root cause] + [action taken] + [result in % or $] + [time to achieve]."',appQ:'How do you ensure your resume bullets demonstrate measurable impact in healthcare ops?'},
+    {icon:'🤖',name:'Groq llama-3.3-70b Interview Coach',tag:'AI PREP',desc:'The AI model powering this simulator — used for answer scoring and question generation.',how:'The scoring prompt evaluates against the OBSERVE → DIAGNOSE → IMPACT → SOLVE → REPORT framework and the STAR+C model.',appQ:'How do you use AI tools ethically in your job search and professional development?'},
+  ]
+};
+
+const ROLES={
+  BA:{label:'Business Analyst',short:'BA',system:'You are a senior healthcare Business Analyst. Focus on KPI trends, variance analysis, root cause, and executive-level recommendations. Use professional language: variance, operational inefficiency, workflow disruption, performance metrics, benchmark gap. Always quantify impact in $ and %. Be concise — max 200 words. No markdown.',focus:'KPI trends, variance analysis, root cause, business impact',hints:['variance in denial rate identified at CO-4 stage','benchmark gap: 18.4% vs 15% CMS threshold','operational inefficiency in modifier compliance workflow','performance metrics indicate systemic coding failure','workflow disruption in submission pipeline — modifier -25 overuse'],questions:[{q:'A hospital sees denial rate jump from 15% to 22.4% this quarter. Walk me through your full analysis.',appLinked:true,appNote:'Mirrors the denial spike scenario in TSM Career OS'},{q:'Days in AR increased from 34 to 52 days. What is your diagnosis and action plan?',appLinked:true,appNote:'Mirrors the AR aging scenario in this simulator'},{q:'You have 15 minutes before a leadership presentation. Denial rate data just changed. How do you handle it?'},{q:'How do you communicate a 3.4pt KPI gap to a non-technical clinic director?'},{q:'You built a simulator to train for healthcare ops roles. How does that demonstrate BA competency?',appLinked:true,appNote:'Direct question about building TSM Career OS'}],fw:['OBSERVE: Pull denial rate trend, compare to prior 4 quarters, note timing of change','DIAGNOSE: Identify top 3 denial codes. Which payers? Which CPT codes? Common thread?','IMPACT: 22.4% denial on 1,256 claims = ~282 denied. At avg $300 = $84.6K revenue at risk','SOLVE: Prioritize top denial code. Build 30-day reduction plan. Assign owner per code','REPORT: Executive summary with before/after metrics and 90-day recovery forecast']},
+  RCM:{label:'Revenue Cycle Analyst',short:'RCM',system:'You are a healthcare Revenue Cycle Analyst specializing in denial management, claim lifecycle, modifier compliance, and payer-specific rules. Focus on: denial codes, timely filing, modifier errors, CPT accuracy, AR recovery. Use RCM language: claim lifecycle integrity, denial pattern, timely filing exposure, modifier compliance, payer-specific edits. Max 200 words. No markdown.',focus:'denial codes, claim lifecycle, modifier errors, timely filing, AR recovery',hints:['claim lifecycle integrity failure at coding stage','denial pattern: CO-4 modifier conflict — modifier -25 missing on same-day E&M','timely filing exposure: CLM-0334 approaching 90-day limit','payer-specific edit required for Aetna modifier rules','modifier compliance gap — -25 applied without documented separate E&M'],questions:[{q:'CO-4 modifier denials increased 40% on Medicare claims this month. Walk through your RCM analysis and recovery plan.',appLinked:true,appNote:'Mirrors TSM Career OS denial spike scenario'},{q:'CLM-0334 has a CO-29 timely filing denial with 48 hours left. What exactly do you do, step by step?',appLinked:true,appNote:'Direct simulation of the timely filing scenario in this app'},{q:'CPT 99215 upcoding pattern flagged across 23 claims. How do you handle this without triggering a compliance crisis?'},{q:'You built a claim lifecycle simulator. How did building it deepen your RCM knowledge?',appLinked:true,appNote:'Direct question about TSM Career OS development'},{q:'AR aging just crossed 60 days. You have 3 staff members. How do you prioritize the work queue?'}],fw:['OBSERVE: Pull all CO-4 denials, sort by payer, CPT code, provider, and date range','DIAGNOSE: CO-4 = modifier conflict. Which modifier missing? Same-day E&M + procedure without -25?','IMPACT: Each CO-4 = 100% non-payment until corrected. Calculate total $ exposure','SOLVE: Correct modifier on all open claims. Resubmit within timely filing window. Add pre-submission edit','REPORT: Denial root cause report + corrective action plan + resubmission timeline + prevention rule']},
+  OPS:{label:'Process Improvement',short:'OPS',system:'You are a healthcare Process Improvement Analyst. Focus on workflow bottlenecks, root cause analysis, throughput optimization, and process redesign. Use lean/six sigma language: process bottleneck, root cause, throughput, time-in-state, cycle time, waste elimination, SLA variance. Max 200 words. No markdown.',focus:'workflow bottlenecks, root cause, process optimization, throughput',hints:['process bottleneck identified at submission stage — modifier validation absent','root cause: EHR template auto-applies modifier without clinical validation','throughput degraded 14% vs baseline — rework queue driving delay','time-in-state exceeds SLA at adjudication — payer response latency','waste elimination opportunity: 15 staff-hours/week in preventable rework'],questions:[{q:'Average claim processing time is 14 days vs 8-day benchmark. How do you identify and eliminate the bottleneck?'},{q:'Staff spend 15 hours/week manually reworking CO-4 denied claims. How do you eliminate this waste?',appLinked:true,appNote:'Directly solvable with TSM Career OS pre-submission edit simulation'},{q:'You designed a simulator to model process bottlenecks. Walk me through your design decisions.',appLinked:true,appNote:'About building the OPS lens in TSM Career OS'},{q:'18% no-show rate is causing $22K/month revenue loss. Design your improvement plan.'},{q:'How do you measure success of a process improvement initiative in RCM?'}],fw:['OBSERVE: Map current state workflow. Where does each claim spend time? Which stage is slowest?','DIAGNOSE: Is bottleneck at coding, submission, clearinghouse, or payer adjudication? Measure time-in-state','IMPACT: 6-day gap × 1,256 claims/month = 7,536 extra claim-days. Quantify cash delay cost','SOLVE: Eliminate constraint at bottleneck. Automate validation. Set SLA per stage. Measure daily','REPORT: Current vs future state process map + projected throughput improvement + cash acceleration']},
+  IMPL:{label:'Implementation Spec',short:'IMPL',system:'You are a healthcare Implementation Specialist. Focus on system configuration, client onboarding, requirements gathering, go-live readiness, and post-implementation support. Use implementation language: requirements gathering, system configuration, go-live readiness, UAT, integration validation, change management. Max 200 words. No markdown.',focus:'system setup, requirements, client onboarding, go-live readiness',hints:['requirements gathering: document current state workflows before config begins','system configuration: modifier validation rules require manual setup per payer','go-live readiness: clearinghouse 837P connection requires end-to-end test','integration validation: ERA 835 posting confirmation required before go-live','change management: staff training on new denial workflow prevents post-go-live spike'],questions:[{q:'A 5-provider clinic is implementing your RCM system next month. Walk through your full implementation plan.',appLinked:true,appNote:'TSM Career OS IMPL lens generates this exact plan'},{q:'Post go-live: denial rate increased from 12% to 19% in 60 days. How do you diagnose and fix this?',appLinked:true,appNote:'Mirrors post-go-live scenario in TSM Career OS'},{q:"Client says the system is not catching CO-4 errors before submission. How do you troubleshoot?"},{q:'You built and deployed a web application on Railway. How does that inform your implementation approach?',appLinked:true,appNote:'About deploying TSM Career OS on Railway'},{q:'How do you handle scope creep during an implementation when the client keeps adding requirements?'}],fw:['OBSERVE: Gather current state — EHR, payer mix, volume, denial rate baseline, staff count','DIAGNOSE: What modules needed? Integrations? Training gaps? Risks?','IMPACT: Poor implementation = billing errors from day 1. Requirements right upfront prevents 80% of issues','SOLVE: Phased rollout: setup → training → UAT → go-live → 30-day stabilization → optimization','REPORT: Project plan with milestone, owner, acceptance criteria, and success metric per phase']},
+  SE:{label:'Solutions Engineer',short:'SE',system:'You are a healthcare Solutions Engineer. Focus on system architecture, data flow, business rules, API design, and integration strategy. Use technical language: validation logic, data flow mapping, integration architecture, business rules engine, pre-submission edit, API endpoint, system design. Max 200 words. No markdown.',focus:'system architecture, data flow, validation logic, integration design',hints:['validation logic: if same-day E&M + procedure, check -25 modifier present before submission','data flow: claim → modifier validation engine → clearinghouse → payer','integration architecture: EHR → validation engine → clearinghouse → payer → ERA → posting','business rules engine: CO-4 pre-submission edit rule with payer-specific modifier tables','API design: POST /validate-claim → {valid:bool, errors:[{code,field,fix}]}'],questions:[{q:'Design a claim validation system that catches CO-4 modifier errors before submission. Walk through the architecture.',appLinked:true,appNote:'The architecture this app was built on — Railway + Groq API + Express'},{q:'Walk me through the technical architecture of TSM Career OS — Railway, Groq, and the frontend.',appLinked:true,appNote:'Direct question about building this application'},{q:'How would you design a real-time denial prediction system using historical claim data?'},{q:'You integrated Groq llama-3.3-70b into a healthcare training app. What were the design decisions?',appLinked:true,appNote:'About building the AI layer in TSM Career OS'},{q:'How do you ensure your API design accounts for payer-specific business rule variations?'}],fw:['OBSERVE: Where in the workflow does the error originate? EHR template? Coder entry? Scheduler?','DIAGNOSE: What data does the validation need? CPT + modifier + same-day procedure flag + payer rules','IMPACT: Pre-submission catch vs post-denial = 14-day time difference + 100% revenue preservation','SOLVE: Build pre-submission edit rule: same-day E&M + procedure → validate -25 modifier present','REPORT: Architecture diagram: data inputs → validation logic → alert → correction workflow → resubmit']},
+  CS:{label:'Customer Success',short:'CS',system:'You are a healthcare Customer Success Manager. Focus on client adoption, health scores, issue resolution, satisfaction recovery, and renewal strategy. Use CS language: client health score, adoption metrics, escalation protocol, remediation plan, satisfaction recovery, churn risk, QBR preparation. Max 200 words. No markdown.',focus:'client adoption, health scores, issue resolution, satisfaction recovery',hints:['client health score degraded: denial rate +7pt post go-live — red flag','adoption metric: only 60% of staff using pre-submission validation feature','escalation protocol: denial rate >18% triggers CSM review call within 24hr','remediation plan: 30-day action plan with weekly check-in cadence and named owner','churn risk: competitor evaluation mentioned at last QBR — renewal at risk'],questions:[{q:"A client's denial rate increased from 12% to 19% in 60 days after go-live. How do you handle this in the first 48 hours?",appLinked:true,appNote:'TSM Career OS CS lens generates the exact remediation plan'},{q:'A client has not logged into the system in 3 weeks post-implementation. What do you do?'},{q:'Client is up for renewal in 90 days and their denial rate has not improved. How do you prepare for the QBR?'},{q:'You built a training simulator to help people understand RCM software. How does that demonstrate CS competency?',appLinked:true,appNote:'About building TSM Career OS for client-facing readiness'},{q:'How do you calculate and communicate ROI to a client who is skeptical about software value?'}],fw:["OBSERVE: Pull client's denial report. Compare pre vs post go-live. What changed?","DIAGNOSE: Config issue? Training gap? Payer rule change? New provider added without setup?","IMPACT: 7pt denial increase = significant revenue impact. Client satisfaction and renewal at risk","SOLVE: Joint analysis call within 48hr. Identify top 3 root causes. Build 30-day remediation plan","REPORT: Client health report: root cause, action plan, improvement timeline, weekly check-in"]},
+  INT:{label:'Interview Mode',short:'INT',system:'You are a healthcare hiring manager conducting a behavioral interview. Score answers using the STAR+C framework: Situation, Task, Action, Result, Connect-to-role. Give a score out of 10. Identify 2 strengths (quote specific phrases). Give 2 specific improvements with examples. Provide a stronger 3-sentence rewrite. Be direct and constructive. Max 300 words. No markdown.',focus:'structured answers, STAR framework, professional language, quantified results',hints:['I identified a variance in denial rate that exceeded CMS threshold by 3.4 points...','I conducted root cause analysis and isolated modifier -25 as the primary driver...','I implemented a pre-submission edit rule that reduced CO-4 denials by 40% in 60 days...','My recommendation resulted in $15K/month recovered — equivalent to 6.4pt denial rate reduction...','I built a healthcare ops simulator to develop expertise before entering the industry...'],questions:[{q:'Tell me about a time you identified a process problem and fixed it. Use the STAR framework.',appLinked:true,appNote:'Answer using your TSM Career OS build story'},{q:'Describe a situation where you had to communicate a complex technical issue to a non-technical stakeholder.',appLinked:true,appNote:'Use the TSM Career OS architecture explanation as your example'},{q:'Walk me through how you would analyze a 20% increase in claim denials for a new client.',appLinked:true,appNote:'Use the denial spike scenario from this simulator'},{q:'Tell me about a project where you built something from scratch. What was your process?',appLinked:true,appNote:'Use the TSM Career OS build story: Railway + Groq + UI'},{q:'How do you stay current with healthcare RCM regulations and payer rule changes?',appLinked:true,appNote:'Mention building scenario simulations to practice real-world situations'},{q:"Describe a time you used data to change a stakeholder's mind.",appLinked:true,appNote:'Use denial rate variance analysis from this app as your example'}],fw:['SITUATION: Describe the system/process context briefly (1-2 sentences max)','TASK: Your specific role and responsibility — what were you accountable for?','ACTION: What exactly did you do? Name the method, tool, and specific steps','RESULT: Measurable outcome — use numbers (%, $, days, claims, time saved)','CONNECT: How does this directly apply to the role you are interviewing for?']}
+};
+
+const SCENARIOS={
+  spike:{label:'DENIAL SPIKE +7PT',events:[{d:'var(--r)',t:'Denial rate jumped from 15% to 22.4% — +7.4pt spike in 7 days',i:'$18K/wk'},{d:'var(--r)',t:'Top driver: CO-4 modifier conflict — 47 new claims this week',i:'$8,460'},{d:'var(--a)',t:'Aetna + Medicare driving 78% of new denials — payer pattern confirmed',i:'Analysis'},{d:'var(--b)',t:'Modifier -25 usage up 40% — EHR template or coder training issue',i:'Flag'}],k1:'22.4%',k4:'$62K',context:'Denial spike: 47 CO-4 modifier denials this week (+40% modifier -25 usage). Aetna + Medicare = 78% of denials. Week-over-week: 15% → 22.4%. $18K/week revenue at risk.'},
+  ar:{label:'AR AGING CRISIS',events:[{d:'var(--r)',t:'Days in AR crossed 60-day threshold — now 63 days, up from 34-day baseline',i:'Critical'},{d:'var(--r)',t:'14 claims aged >90 days totaling $31K — write-off risk escalating',i:'$31K'},{d:'var(--a)',t:'UHC payment delays averaging 47 days vs 30-day contracted SLA',i:'Dispute'},{d:'var(--b)',t:'ERA posting backlog: 3 days unposted — $18K unreconciled',i:'$18K'}],k2:'63d',k4:'$62K',context:'AR crisis: 63 days in AR vs 34-day baseline. $31K aged >90 days at write-off risk. UHC averaging 47-day payment (30-day SLA). $18K ERA posting backlog.'},
+  audit:{label:'RAC AUDIT — URGENT',events:[{d:'var(--r)',t:'RAC audit notice received — CPT 99215 billed 23x in 30 days flagged',i:'$12,040'},{d:'var(--r)',t:'14-day response window begins today — documentation pull required NOW',i:'URGENT'},{d:'var(--a)',t:'2 additional claims flagged by same RAC contractor for same provider',i:'Review'},{d:'var(--b)',t:'Compliance team notified — assign documentation reviewer today',i:'Assign'}],k1:'19.1%',k3:'92.8%',context:'RAC audit: CPT 99215 upcoding notice. 23 claims, $12,040 exposure, 14-day response window. 14 of 23 claims may lack MDM documentation to support Level 5 billing.'},
+  timely:{label:'TIMELY FILING — 48HR',events:[{d:'var(--r)',t:'CLM-0334 · CPT 93454 · UHC · $3,800 · CO-29 timely filing · 48hr remaining',i:'$3,800'},{d:'var(--r)',t:'Original submission: 91 days ago — at absolute 90-day limit',i:'DEADLINE'},{d:'var(--a)',t:'5 additional claims approaching timely filing window in 7 days',i:'$7,200'},{d:'var(--b)',t:'UHC appeal portal requires proof of timely filing + tracking number',i:'Action'}],k2:'52d',k4:'$48K',context:'Timely filing crisis: CLM-0334 has 48 hours before CO-29 write-off on $3,800. 5 more claims approaching window: $7,200 at risk in 7 days. UHC portal requires tracking proof.'},
+  coding:{label:'UPCODING FLAG',events:[{d:'var(--r)',t:'CPT 99215 E&M Level 5 — upcoding risk HIGH — 23 claims — $12,040',i:'HIGH RISK'},{d:'var(--a)',t:'14 of 23 claims lack adequate MDM complexity to support Level 5 billing',i:'$7,308'},{d:'var(--a)',t:'OIG Work Plan includes 99215 upcoding as active audit target in this specialty',i:'OIG Flag'},{d:'var(--b)',t:'Modifier -25 on 19 of 23 claims — compliance pattern requires immediate review',i:'Review'}],k1:'18.4%',k3:'91.2%',context:'CPT upcoding: 23 claims of 99215 HIGH upcoding risk. 14 lack MDM documentation. OIG Work Plan active. $12,040 audit exposure. Modifier -25 on 19 of 23 — compliance pattern.'},
+  noshow:{label:'NO-SHOW REVENUE LOSS',events:[{d:'var(--r)',t:'No-show rate: 18% — industry benchmark: 8-10% — 10pt gap',i:'$22K/mo'},{d:'var(--a)',t:'147 no-shows this month — avg slot value $149 — $21,903 lost revenue',i:'$21.9K'},{d:'var(--a)',t:'No reminder system in place for 3 highest-volume providers',i:'Gap'},{d:'var(--b)',t:'Medicaid patients driving 61% of no-shows — transportation barrier identified',i:'Pattern'}],k2:'52d',k5:'68%',context:'No-show crisis: 18% rate vs 8-10% benchmark. 147 no-shows × $149 avg = $21,903/month. No reminder system for 3 providers. Medicaid patients = 61% of no-shows — transportation barrier.'}
+};
+
+const DEF_EVENTS=[
+  {d:'var(--r)',t:'18.4% denial rate — exceeds 15% CMS threshold — top codes: PR-96, CO-4, CO-11',i:'$48K'},
+  {d:'var(--r)',t:'CLM-0334 · CPT 93454 · UHC · $3,800 — CO-29 timely filing — 48hr window',i:'$3.8K'},
+  {d:'var(--a)',t:'CPT 99215 upcoding pattern — 23 claims — $12,040 audit exposure',i:'Audit risk'},
+  {d:'var(--a)',t:'Modifier -25 overuse on 47 claims — compliance review required',i:'$8,460'},
+  {d:'var(--b)',t:'ICD-10 specificity gaps on 14 claims — documentation incomplete',i:'Flag'},
+  {d:'var(--g)',t:'Clean claim rate 94.2% — above 90% baseline · Appeal win rate at 68%',i:'✓'}
+];
+
+const PRELOADED={
+  BA:{
+    summary:'BUSINESS ANALYST — EXECUTIVE SUMMARY\n\nDenial rate: 18.4% — exceeds 15% CMS threshold by 3.4 points\nAR position: $48K stalled — 14 claims aged >30 days\nClean claim rate: 94.2% — 2.8pt gap below 97% target\nTop denial codes: CO-4 (modifier), PR-96 (medical necessity), CO-11 (bundling)\n\nBottom line: Systemic modifier compliance failure is the primary driver. Without intervention in 30 days, denial rate trends toward 20%+.',
+    rca:'ROOT CAUSE ANALYSIS — BA LENS\n\nPrimary: Modifier -25 overuse on 47 claims\n→ E&M billed same-day as procedure without documenting separate, distinct service\n→ Root cause: EHR template auto-applies -25 without clinical validation trigger\n\nSecondary: ICD-10 specificity gaps\n→ Coders selecting M54.5 (unspecified) vs M54.51 (vertebrogenic — specific)\n→ Root cause: EHR dropdown not surfacing specific codes + training gap\n\nTertiary: CO-4 modifier conflict\n→ Missing required modifier on same-day E&M + procedure combinations',
+    impact:'IMPACT ASSESSMENT — BA LENS\n\nFinancial exposure:\n→ $48K current AR at risk across 231 denied claims\n→ $12,040 CPT 99215 upcoding audit exposure (OIG Work Plan active)\n→ $8,460 modifier -25 compliance risk across 47 claims\n→ $3,800 CLM-0334 write-off if not filed within 48 hours\n\nOperational cost:\n→ 231 manual rework claims = ~15 staff-hours/week of preventable work\n→ Days in AR at 52 vs 34-day baseline = $48K cash delayed 18 days\n\nCompliance risk:\n→ 18.4% denial rate may trigger payer performance review',
+    rec:'RECOMMENDATIONS — PRIORITIZED\n\n1. NOW (48hr): File CO-29 appeal for CLM-0334 before write-off deadline\n2. WEEK 1: Modifier -25 audit on 47 flagged claims — correct and resubmit batch\n3. WEEK 2: ICD-10 specificity training for coding staff + EHR dropdown fix\n4. MONTH 1: Pre-submission modifier validation rule in clearinghouse edits\n5. MONTH 3: Reduce denial rate from 18.4% to 12% target\n\nProjected: 6.4pt denial reduction = ~$15K/month revenue recovery at current volume',
+    portfolio:'PORTFOLIO OUTPUT — COPY-READY RESUME BULLET\n\n"Analyzed 18.4% denial rate across 1,256 monthly claims; identified modifier compliance failure as primary driver across 47 claims; developed 30-day remediation plan projecting 6.4pt denial rate reduction and $15K/month revenue recovery."\n\nLINKEDIN POST ANGLE:\n"When denial rates exceed CMS thresholds, it\'s rarely one problem — it\'s a system failure."\n\nINTERVIEW STORY:\n"I identified a 3.4pt denial rate gap above CMS threshold, traced the root cause to modifier -25 overuse via denial code analysis, and recommended a pre-submission edit that reduced CO-4 denials 40% in 60 days."'
+  }
+};
+
+let role='BA',outTab='summary',step=1,qIdx=0;
+let scenarioContext='System state: Denial rate 18.4%, $48K stalled AR, 52 days in AR, clean claim rate 94.2%, 1,256 claims/month, 231 denied. Top denial codes: CO-4, PR-96, CO-11, CO-29.';
+
+function init(){
+  renderEvents(DEF_EVENTS);
+  renderHints('BA');
+  renderOutput('BA','summary');
+  renderFW('BA');
+  renderAppQuickLinks();
+  checkGroqConnection();
+}
+
+function renderEvents(evs){
+  document.getElementById('ev-list').innerHTML=evs.map(e=>`<div class="ev"><div class="dot" style="background:${e.d}"></div><div class="et">${e.t}</div><div class="ei">${e.i}</div></div>`).join('');
+}
+
+function renderHints(r){
+  const h=ROLES[r]?.hints||[];
+  document.getElementById('lang-hints').innerHTML=h.map(x=>`<div class="hint">→ "${x}"</div>`).join('');
+}
+
+function renderOutput(r,tab){
+  const box=document.getElementById('out-box');
+  const tk=document.getElementById('toolkit-panel');
+  const rk=document.getElementById('rec-toolkit-panel');
+  const hw=document.getElementById('howto-panel');
+  const fc=document.getElementById('forecast-panel');
+  const gp=document.getElementById('guide-panel');
+  [box,tk,rk,hw,fc,gp].forEach(el=>{if(el)el.style.display='none';});
+
+  if(tab==='toolkit'){tk.style.display='block';rk.style.display='block';renderAppCards(r);return;}
+  if(tab==='howto'){hw.style.display='block';return;}
+  if(tab==='forecast'){fc.style.display='block';setTimeout(animateBars,100);return;}
+  if(tab==='guide'){gp.style.display='block';return;}
+
+  box.style.display='block';
+  const data=PRELOADED[r];
+  const map={summary:'summary',rca:'rca',impact:'impact',rec:'rec',portfolio:'portfolio'};
+  if(data&&data[map[tab]]){box.textContent=data[map[tab]];}
+  else{box.textContent='> Run a scenario or type a query to generate '+tab+' output for '+ROLES[r].label+'.\n> Click 🛠 APP TOOLKIT to see which apps solve this scenario.\n> Click 📖 USER GUIDE for navigation help.';}
+}
+
+function animateBars(){
+  [['bt-denial','74%'],['bt-ar','65%'],['bt-clean','89%'],['bt-rev','60%'],['bt-appeal','76%']].forEach(([id,w])=>{
+    const el=document.getElementById(id);if(el)el.style.width=w;
+  });
+}
+
+function renderFW(r){
+  const rd=ROLES[r];
+  document.getElementById('fw-steps').innerHTML=(rd.fw||[]).map((f,i)=>`<div class="fw-step"><strong>Step ${i+1}:</strong> ${f}</div>`).join('');
+  renderQuestionBank(r);
+  document.getElementById('int-q').textContent=rd.questions?.[0]?.q||'';
+  document.getElementById('int-role-lbl').textContent=rd.label.toUpperCase();
+  qIdx=0;
+}
+
+function renderQuestionBank(r){
+  const rd=ROLES[r];
+  document.getElementById('qbank-items').innerHTML=(rd.questions||[]).map((item,i)=>{
+    const cls=item.appLinked?'qb-item app-linked':'qb-item';
+    const badge=item.appLinked?`<span class="bp">🛠 APP</span> `:'';
+    return `<div class="${cls}" onclick="loadQuestion(${i})">${badge}${item.q.slice(0,80)}${item.q.length>80?'...':''}</div>`;
+  }).join('');
+}
+
+function loadQuestion(i){
+  const rd=ROLES[role];
+  const item=rd.questions?.[i];
+  if(!item)return;
+  qIdx=i;
+  let txt=item.q;
+  if(item.appLinked&&item.appNote) txt+='\n\n💡 APP CONNECTION: '+item.appNote;
+  document.getElementById('int-q').textContent=txt;
+  document.getElementById('score-out').style.display='none';
+  document.getElementById('int-ans').value='';
+}
+
+function renderAppCards(r){
+  const apps=APP_SUITE[r]||APP_SUITE.BA;
+  document.getElementById('app-cards').innerHTML=apps.map(app=>`
+    <div class="app-card" onclick="toggleApp(this)">
+      <div class="app-card-head"><span class="app-icon">${app.icon}</span><span class="app-name">${app.name}</span><span class="app-tag">${app.tag}</span></div>
+      <div class="app-desc">${app.desc}</div>
+      <div class="app-how"><strong style="color:var(--g)">HOW I USE IT:</strong> ${app.how}${app.link?`<br><br><a href="${app.link}" target="_blank" style="color:var(--b)">→ Open App ↗</a>`:''}${app.appQ?`<br><br><strong style="color:var(--p)">INTERVIEW Q:</strong> ${app.appQ}`:''}</div>
+    </div>`).join('');
+}
+
+function toggleApp(el){el.querySelector('.app-how').classList.toggle('show');}
+
+function renderAppQuickLinks(){
+  document.getElementById('app-quick-links').innerHTML=`
+    <div class="hint" style="cursor:pointer" onclick="window.open('https://tsm-shell-production-57da.up.railway.app','_blank')">🖥 TSM Career OS (Railway)</div>
+    <div class="hint" style="cursor:pointer" onclick="window.open('https://railway.com','_blank')">🚂 Railway Dashboard</div>
+    <div class="hint" style="cursor:pointer" onclick="window.open('https://console.groq.com','_blank')">🧠 Groq Console</div>
+    <div class="hint" style="cursor:pointer" onclick="setTab('guide',document.querySelector('.ot.t-guide'))">📖 Open User Guide</div>`;
+}
+
+function setRole(r,btn){
+  role=r;
+  document.querySelectorAll('.rb').forEach(b=>b.classList.remove('act'));
+  btn.classList.add('act');
+  document.getElementById('role-pill').textContent=r+' MODE';
+  document.getElementById('loop-sub').textContent='Role: '+ROLES[r].label+' · Session active';
+  document.getElementById('rl-name').textContent=r;
+  document.getElementById('out-title').textContent='ANALYST OUTPUT — '+ROLES[r].label.toUpperCase();
+  document.getElementById('bot-label').textContent='▶ '+r+':';
+  document.getElementById('cmd').placeholder='Analyze this system as a '+ROLES[r].label+' — what do you see and what would you fix?';
+  renderHints(r);
+  renderOutput(r,'summary');
+  renderFW(r);
+  const intSec=document.getElementById('int-sec');
+  intSec.style.display=(r==='INT')?'block':'none';
+  document.querySelectorAll('.ot').forEach(t=>t.classList.remove('act'));
+  document.querySelector('.ot').classList.add('act');
+  outTab='summary';
+  advanceStep(2);
+}
+
+function setTab(tab,el){
+  outTab=tab;
+  document.querySelectorAll('.ot').forEach(t=>t.classList.remove('act'));
+  el.classList.add('act');
+  renderOutput(role,tab);
+  if(tab==='toolkit'||tab==='howto'||tab==='forecast') advanceStep(4);
+}
+
+function runScenario(key){
+  const s=SCENARIOS[key];
+  if(!s)return;
+  document.getElementById('scen-badge').textContent='— '+s.label;
+  renderEvents(s.events);
+  if(s.k1)document.getElementById('k1').textContent=s.k1;
+  if(s.k2)document.getElementById('k2').textContent=s.k2;
+  if(s.k3)document.getElementById('k3').textContent=s.k3;
+  if(s.k4)document.getElementById('k4').textContent=s.k4;
+  if(s.k5)document.getElementById('k5').textContent=s.k5;
+  scenarioContext=s.context;
+  document.getElementById('cmd').value='Analyze the '+s.label+' scenario as a '+ROLES[role].label;
+  advanceStep(1);
+  runQuery();
+}
+
+async function runQuery(){
+  const q=document.getElementById('cmd').value.trim();
+  if(!q)return;
+  const btn=document.getElementById('run-btn');
+  const loader=document.getElementById('ai-loading');
+  const box=document.getElementById('out-box');
+  const err=document.getElementById('err-box');
+  btn.textContent='RUNNING...';btn.style.background='var(--a2)';
+  loader.classList.add('vis');
+  err.style.display='none';
+  document.querySelectorAll('.ot').forEach(t=>t.classList.remove('act'));
+  document.querySelector('.ot').classList.add('act');
+  outTab='summary';
+  renderOutput(role,'summary');
+  box.style.display='block';
+  box.textContent='> Generating '+ROLES[role].label+' analysis...';
+  try{
+    const system=ROLES[role].system;
+    const userMsg=`Context: ${scenarioContext}\n\nQuery: ${q}\n\nFocus on: ${ROLES[role].focus}`;
+    const response=await callGroq(system,userMsg,700);
+    box.textContent=response;
+    advanceStep(3);
+    document.getElementById('loop-pill').textContent='STEP '+Math.min(step,8)+' OF 8';
+  }catch(e){
+    err.textContent='⚠ '+e.message;
+    err.style.display='block';
+    box.textContent='> Error — check GROQ connection.\n> Set GROQ_API_KEY in Railway Variables or run window.GROQ_API_KEY="gsk_..." in console.';
+  }
+  btn.textContent='RUN ⏎';btn.style.background='var(--g3)';
+  loader.classList.remove('vis');
+}
+
+async function scoreAnswer(){
+  const ans=document.getElementById('int-ans').value.trim();
+  if(!ans){alert('Please write an answer first.');return;}
+  const q=document.getElementById('int-q').textContent;
+  const scoreBox=document.getElementById('score-out');
+  scoreBox.style.display='block';
+  scoreBox.textContent='Scoring your answer...';
+  try{
+    const resp=await callGroq(ROLES.INT.system,`Question: ${q}\n\nAnswer: ${ans}`,400);
+    scoreBox.textContent=resp;
+    advanceStep(4);
+  }catch(e){scoreBox.textContent='⚠ '+e.message;}
+}
+
+async function getHint(){
+  const q=document.getElementById('int-q').textContent;
+  const scoreBox=document.getElementById('score-out');
+  scoreBox.style.display='block';
+  scoreBox.textContent='Generating hint...';
+  try{
+    const resp=await callGroq('You are a healthcare interview coach. Give a 3-bullet hint for answering this question well using the STAR+C framework. Be specific to healthcare RCM. No markdown.',`Question: ${q}`,200);
+    scoreBox.textContent=resp;
+  }catch(e){scoreBox.textContent='⚠ '+e.message;}
+}
+
+function nextQuestion(){
+  const rd=ROLES[role];
+  qIdx=(qIdx+1)%(rd.questions?.length||1);
+  loadQuestion(qIdx);
+}
+
+function answerCh(step,btn,correct){
+  const opts=btn.closest('.ch-opts').querySelectorAll('.ch-opt');
+  opts.forEach(o=>{
+    o.disabled=true;
+    if(o.getAttribute('onclick').includes('true')) o.classList.add('correct');
+  });
+  if(!correct) btn.classList.add('wrong');
+  if(correct&&step<8){
+    setTimeout(()=>{
+      const next=document.getElementById('ch'+(step+1));
+      if(next) next.style.display='block';
+    },600);
+  }
+  if(step===7&&correct){
+    setTimeout(()=>{
+      const oc=document.getElementById('oc8');
+      if(oc) oc.style.display='flex';
+    },800);
+  }
+}
+
+function openApp(n){
+  document.getElementById('xs'+n).classList.add('done');
+  document.getElementById('xn'+n).textContent='✓';
+  const btn=document.getElementById('oab'+n);
+  btn.textContent='✓ OPENED';btn.classList.add('opened');
+}
+
+function toggleWhy(key){
+  const el=document.getElementById('why-'+key);
+  const vis=el.classList.contains('vis');
+  document.querySelectorAll('.why-out').forEach(w=>w.classList.remove('vis'));
+  if(!vis) el.classList.add('vis');
+}
+
+function selCard(card){
+  document.querySelectorAll('.rec-card').forEach(c=>c.classList.remove('sel'));
+  card.classList.add('sel');
+}
+
+function advanceStep(n){
+  if(n>step){
+    step=n;
+    document.querySelectorAll('[id^="ls-"]').forEach(el=>el.classList.remove('cur'));
+    const cur=document.getElementById('ls-'+n);
+    if(cur) cur.classList.add('cur');
+    document.getElementById('loop-pill').textContent='STEP '+Math.min(n,8)+' OF 8';
+    const markers={1:'✓ Scenario loaded',2:'✓ Role lens applied: '+ROLES[role].focus,3:'✓ AI analysis complete · llama-3.3-70b',4:'✓ Output ready · check tabs',5:'✓ Improvement proposed'};
+    if(markers[n-1]){const lr=document.getElementById('lr-'+(n-1));if(lr)lr.textContent=markers[n-1];}
+  }
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&document.activeElement.id==='cmd') runQuery();
+});
+
+init();
+</script>
+</body>
+</html>
