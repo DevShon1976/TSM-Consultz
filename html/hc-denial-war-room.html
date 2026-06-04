@@ -570,7 +570,7 @@ textarea::placeholder{color:var(--faint)}
       </div>
       <div class="eng-body">
         <div class="idle-state" id="idle4"><div class="idle-icon">◈</div><div class="idle-txt">Awaiting Document</div></div>
-        <div class="eng-out" id="out4" style="display:none"></div>
+        <div class="eng-out" document.getElementById('out4').parentElement.outerHTML.slice(0,300) style="display:none"></div>
       </div>
       <div class="eng-footer">
         <button class="foot-btn" onclick="copyOut('out4')">Copy Appeal</button>
@@ -1315,12 +1315,11 @@ function relay() {
   pipelineRunning = true;
 
   const engines = [
-    { id: 'engine-01', name: 'DOCUMENT INTEL', targetColor: 'var(--cyan)' },
-    { id: 'engine-02', name: 'ROOT CAUSE', targetColor: 'var(--amber)' },
-    { id: 'engine-03', name: 'FINANCIAL IMPACT', targetColor: 'var(--green)' },
-    { id: 'engine-04', name: 'RECOVERY PLAN', targetColor: 'var(--purple)' },
-    { id: 'engine-05', name: 'RECOVERY NAVIGATOR', targetColor: 'var(--cyan)' },
-    { id: 'engine-06', name: 'BNCA DISPATCH', targetColor: '#ec4899' }
+    { id: 'pn1', name: 'DOCUMENT INTEL', targetColor: 'var(--cyan)', arrow: 'pa1' },
+    { id: 'pn2', name: 'ROOT CAUSE', targetColor: 'var(--amber)', arrow: 'pa2' },
+    { id: 'pn3', name: 'FINANCIAL IMPACT', targetColor: 'var(--green)', arrow: 'pa3' },
+    { id: 'pn4', name: 'RECOVERY PLAN', targetColor: 'var(--purple)', arrow: 'pa4' },
+    { id: 'pn5', name: 'RECOVERY NAVIGATOR', targetColor: 'var(--cyan)', arrow: null },
   ];
 
   // Dynamic injection of Engine 6 tracking node if missing from DOM markup
@@ -1370,7 +1369,10 @@ function relay() {
       el.style.border = `1px solid ${current.targetColor}`;
       el.style.boxShadow = `0 0 20px ${current.targetColor}`;
       el.style.transform = 'scale(1.05)';
-      
+      if (current.arrow) {
+        const arrowEl = document.getElementById(current.arrow);
+        if (arrowEl) { arrowEl.style.background = current.targetColor; arrowEl.style.boxShadow = `0 0 8px ${current.targetColor}`; }
+      }
       const statusText = el.querySelector('.status');
       if (statusText) {
         statusText.innerHTML = `<span style="color: ${current.targetColor}; font-weight: bold;">PROCESSING...</span>`;
@@ -1404,7 +1406,7 @@ async function runPipeline() {
     { outId: 'out2', badgeId: 'ps2', tokId: 'tok2', idleId: 'idle2', sys: 'You are a denial root cause analyst. Identify the exact denial reason, payer policy violated, documentation gap, and coding error. Be specific and concise.', label: 'ROOT CAUSE' },
     { outId: 'out3', badgeId: 'ps3', tokId: 'tok3', idleId: 'idle3', sys: 'You are a healthcare financial impact analyst. Calculate revenue at risk, days in AR, timely filing risk, and total financial exposure. Output dollar amounts and timelines.', label: 'FINANCIAL IMPACT' },
     { outId: 'out4', badgeId: 'ps4', tokId: 'tok4', idleId: 'idle4', sys: 'You are a denial recovery specialist. Write a step-by-step appeal plan: what to submit, clinical documentation needed, appeal letter talking points, and deadline.', label: 'RECOVERY PLAN' },
-    { outId: 'out5', badgeId: 'ps5', tokId: 'tok5', idleId: 'idle5', sys: 'You are a healthcare recovery navigator. List the exact next steps, responsible staff roles, payer appeal portal links if known, and escalation path. Be actionable.', label: 'RECOVERY NAVIGATOR' },
+    { outId: 'out4', badgeId: 'ps5', tokId: 'tok5', idleId: 'idle5', sys: 'You are a healthcare recovery navigator. List the exact next steps, responsible staff roles, payer appeal portal links if known, and escalation path. Be actionable.', label: 'RECOVERY NAVIGATOR' },
   ];
 
   completedCount = 0;
