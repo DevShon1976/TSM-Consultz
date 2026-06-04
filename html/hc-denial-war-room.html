@@ -15,12 +15,11 @@
 --amber:#ffb300;--amber2:rgba(255,179,0,0.10);
 --red:#ff3d57;--red2:rgba(255,61,87,0.10);
 --purple:#b060ff;--purple2:rgba(176,96,255,0.10);
---gold:#ffd700;
+--gold:#ffd700;--gold2:rgba(255,215,0,0.08);
+--teal:#00ffd5;--teal2:rgba(0,255,213,0.08);
 --mono:'Courier New',monospace;
 }
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;overflow-x:hidden}
-
-/* scanline overlay */
 body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);pointer-events:none;z-index:1000}
 body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,229,255,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,0.015) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
 
@@ -40,6 +39,7 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
 .pill-red{color:var(--red);border-color:var(--red);background:var(--red2)}
 .pill-green{color:var(--green);border-color:var(--green);background:var(--green2)}
 .pill-amber{color:var(--amber);border-color:var(--amber);background:var(--amber2)}
+.pill-teal{color:var(--teal);border-color:var(--teal);background:var(--teal2)}
 .clock{font-size:9px;color:var(--muted);letter-spacing:1px}
 
 /* MAIN */
@@ -59,6 +59,8 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
 .sec::before{content:'';width:6px;height:6px;background:var(--red);transform:rotate(45deg);flex-shrink:0}
 .sec span{font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:var(--red)}
 .sec::after{content:'';flex:1;height:1px;background:var(--border)}
+.sec.teal-sec::before{background:var(--teal)}
+.sec.teal-sec span{color:var(--teal)}
 
 /* INPUT ZONE */
 .input-zone{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
@@ -98,20 +100,21 @@ textarea::placeholder{color:var(--faint)}
 
 /* PIPELINE FLOW */
 .pipeline{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:20px;padding:14px 0;border:1px solid var(--border);background:var(--bg2);overflow-x:auto}
-.pipe-node{display:flex;flex-direction:column;align-items:center;gap:6px;padding:0 14px;flex-shrink:0}
-.pipe-box{width:148px;padding:10px 12px;border:1px solid;text-align:center}
+.pipe-node{display:flex;flex-direction:column;align-items:center;gap:6px;padding:0 10px;flex-shrink:0}
+.pipe-box{width:130px;padding:10px 12px;border:1px solid;text-align:center}
 .pipe-num{font-size:7px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px;opacity:0.7}
 .pipe-name{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
 .pipe-tag{font-size:7px;letter-spacing:0.5px;margin-top:2px;opacity:0.65}
 .pipe-status{font-size:7px;letter-spacing:1px;margin-top:4px;text-transform:uppercase}
 .pipe-arrow{display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0}
-.pipe-line{width:36px;height:1px;background:var(--border2);position:relative}
+.pipe-line{width:28px;height:1px;background:var(--border2);position:relative}
 .pipe-line::after{content:'▶';position:absolute;right:-7px;top:-6px;font-size:9px;color:var(--faint)}
 .pipe-arrow-label{font-size:6px;letter-spacing:1px;text-transform:uppercase;color:var(--faint);white-space:nowrap}
 .e1 .pipe-box{border-color:var(--cyan);color:var(--cyan);background:var(--cyan2)}
 .e2 .pipe-box{border-color:var(--amber);color:var(--amber);background:var(--amber2)}
 .e3 .pipe-box{border-color:var(--green);color:var(--green);background:var(--green2)}
 .e4 .pipe-box{border-color:var(--purple);color:var(--purple);background:var(--purple2)}
+.e5 .pipe-box{border-color:var(--teal);color:var(--teal);background:var(--teal2)}
 .pipe-line.live{background:var(--red);animation:pulse-line 0.7s linear infinite}
 .pipe-line.live::after{color:var(--red)}
 @keyframes pulse-line{0%,100%{opacity:0.4}50%{opacity:1}}
@@ -163,6 +166,145 @@ textarea::placeholder{color:var(--faint)}
 .e4 .eng-out .sh{color:var(--purple)}
 .e4 .spin{border-top-color:var(--purple)}
 .e4 .loading-row{color:var(--purple)}
+.e5 .eng-num{color:var(--teal);border-color:var(--teal)}
+.e5 .eng-name{color:var(--teal)}
+.e5 .eng-badge{color:var(--teal);border-color:var(--teal);background:var(--teal2)}
+.e5 .eng-out .sh{color:var(--teal)}
+.e5 .spin{border-top-color:var(--teal)}
+.e5 .loading-row{color:var(--teal)}
+
+/* ══════════════════════════════════════════
+   ENGINE 05 — RECOVERY NAVIGATOR
+══════════════════════════════════════════ */
+.e5-full{grid-column:1 / -1;min-height:auto}
+.nav-panel{display:none;padding:0}
+.nav-panel.visible{display:block}
+
+/* PHASE TRACKER */
+.phase-tracker{display:flex;align-items:stretch;border-bottom:1px solid var(--border);overflow-x:auto}
+.phase-tab{flex:1;min-width:120px;padding:10px 14px;border-right:1px solid var(--border);cursor:pointer;transition:all 0.15s;position:relative}
+.phase-tab:last-child{border-right:none}
+.phase-tab:hover{background:var(--bg3)}
+.phase-tab.active{background:rgba(0,255,213,0.05);border-bottom:2px solid var(--teal)}
+.phase-num{font-size:7px;letter-spacing:1.5px;text-transform:uppercase;color:var(--faint);margin-bottom:3px}
+.phase-name{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.phase-tab.active .phase-name{color:var(--teal)}
+.phase-tab.done .phase-name{color:var(--green)}
+.phase-tab.done::after{content:'✓';position:absolute;top:8px;right:10px;font-size:10px;color:var(--green)}
+.phase-window{font-size:7px;color:var(--faint);letter-spacing:1px;margin-top:3px}
+.phase-tab.active .phase-window{color:var(--amber)}
+.phase-urgency{display:inline-block;font-size:6px;letter-spacing:1px;text-transform:uppercase;padding:1px 5px;border:1px solid;margin-top:4px}
+.ph-critical{color:var(--red);border-color:var(--red)}
+.ph-high{color:var(--amber);border-color:var(--amber)}
+.ph-medium{color:var(--cyan);border-color:var(--cyan)}
+.ph-low{color:var(--green);border-color:var(--green)}
+
+/* PHASE CONTENT */
+.phase-content{padding:20px}
+
+/* STEP PROGRESSION */
+.step-list{display:flex;flex-direction:column;gap:0}
+.step-item{display:flex;gap:0;position:relative}
+.step-item:not(:last-child) .step-line{position:absolute;left:19px;top:38px;bottom:-1px;width:1px;background:var(--border);z-index:0}
+.step-item.done .step-line{background:var(--green)}
+.step-left{display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:40px;padding-top:8px;position:relative;z-index:1}
+.step-circle{width:24px;height:24px;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;letter-spacing:0;background:var(--bg2);flex-shrink:0;transition:all 0.3s}
+.step-item.done .step-circle{background:var(--green);border-color:var(--green);color:#000}
+.step-item.active .step-circle{border-color:var(--teal);color:var(--teal);box-shadow:0 0 8px rgba(0,255,213,0.3)}
+.step-item.blocked .step-circle{border-color:var(--red);color:var(--red)}
+.step-right{flex:1;padding:8px 0 20px 14px}
+.step-hdr{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.step-title{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--text)}
+.step-item.done .step-title{color:var(--green)}
+.step-item.active .step-title{color:var(--teal)}
+.step-tag{font-size:7px;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border:1px solid}
+.step-tag-owner{color:var(--amber);border-color:var(--amber);background:var(--amber2)}
+.step-tag-deadline{color:var(--red);border-color:var(--red);background:var(--red2)}
+.step-tag-tool{color:var(--cyan);border-color:var(--cyan);background:var(--cyan2)}
+.step-tag-done{color:var(--green);border-color:var(--green);background:var(--green2)}
+.step-body{font-size:9px;line-height:1.7;color:var(--muted);margin-bottom:10px}
+.step-actions{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.step-checklist{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.step-check{display:flex;align-items:flex-start;gap:8px;font-size:9px;color:var(--muted);line-height:1.5}
+.check-box{width:12px;height:12px;border:1px solid var(--border2);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.15s}
+.check-box:hover{border-color:var(--teal)}
+.check-box.checked{background:var(--teal);border-color:var(--teal)}
+.check-box.checked::after{content:'✓';font-size:8px;color:#000;font-weight:700}
+
+/* APP RECOMMENDATION CARDS */
+.app-rec-section{margin-top:12px}
+.app-rec-label{font-size:7px;letter-spacing:2px;text-transform:uppercase;color:var(--teal);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.app-rec-label::before{content:'▶';font-size:6px}
+.app-cards{display:flex;flex-wrap:wrap;gap:8px}
+.app-card{border:1px solid var(--border2);background:var(--bg);padding:10px 14px;cursor:pointer;transition:all 0.2s;text-decoration:none;display:flex;align-items:center;gap:10px;min-width:200px;flex:1;max-width:320px}
+.app-card:hover{border-color:var(--teal);background:var(--teal2);transform:translateY(-1px)}
+.app-card.primary{border-color:var(--teal);background:var(--teal2)}
+.app-card-icon{font-size:16px;flex-shrink:0}
+.app-card-body{flex:1;min-width:0}
+.app-card-name{font-size:9px;font-weight:700;letter-spacing:1px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app-card:hover .app-card-name{color:var(--teal)}
+.app-card.primary .app-card-name{color:var(--teal)}
+.app-card-why{font-size:7px;color:var(--muted);letter-spacing:0.5px;margin-top:2px;line-height:1.4}
+.app-card-badge{font-size:6px;letter-spacing:1px;text-transform:uppercase;padding:2px 6px;border:1px solid var(--teal);color:var(--teal);margin-top:4px;display:inline-block}
+.app-card-arrow{font-size:10px;color:var(--faint);flex-shrink:0}
+.app-card:hover .app-card-arrow{color:var(--teal)}
+
+/* BNCA (Best Next Course of Action) ALERT */
+.bnca-alert{border:1px solid var(--teal);background:linear-gradient(135deg,rgba(0,255,213,0.06) 0%,var(--bg2) 100%);padding:16px 20px;margin-bottom:16px;animation:bnca-in 0.4s ease-out}
+@keyframes bnca-in{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.bnca-hdr{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.bnca-icon{font-size:18px}
+.bnca-label{font-size:7px;letter-spacing:2px;text-transform:uppercase;color:var(--teal)}
+.bnca-title{font-size:12px;font-weight:700;letter-spacing:1.5px;color:var(--text)}
+.bnca-body{font-size:10px;line-height:1.7;color:var(--muted);margin-bottom:12px}
+.bnca-priority-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.bnca-priority{padding:5px 12px;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;border:1px solid;cursor:pointer;transition:all 0.15s;font-family:var(--mono)}
+.bnca-p1{color:var(--red);border-color:var(--red);background:var(--red2)}
+.bnca-p2{color:var(--amber);border-color:var(--amber);background:var(--amber2)}
+.bnca-p3{color:var(--cyan);border-color:var(--cyan);background:var(--cyan2)}
+.bnca-p1:hover{background:rgba(255,61,87,0.2)}
+.bnca-p2:hover{background:rgba(255,179,0,0.2)}
+.bnca-p3:hover{background:rgba(0,229,255,0.2)}
+
+/* TIMELINE RULER */
+.timeline-ruler{display:flex;border:1px solid var(--border);background:var(--bg);margin:16px 0;overflow:hidden}
+.tl-seg{flex:1;padding:10px 12px;border-right:1px solid var(--border);position:relative}
+.tl-seg:last-child{border-right:none}
+.tl-seg.tl-critical{background:rgba(255,61,87,0.05)}
+.tl-seg.tl-high{background:rgba(255,179,0,0.04)}
+.tl-seg.tl-medium{background:rgba(0,229,255,0.03)}
+.tl-label{font-size:7px;letter-spacing:1.5px;text-transform:uppercase;color:var(--faint);margin-bottom:5px}
+.tl-window{font-size:10px;font-weight:700;letter-spacing:1px}
+.tl-critical .tl-window{color:var(--red)}
+.tl-high .tl-window{color:var(--amber)}
+.tl-medium .tl-window{color:var(--cyan)}
+.tl-items{font-size:8px;color:var(--muted);line-height:1.7;margin-top:4px}
+
+/* ESCALATION PATH */
+.escalation-path{display:flex;align-items:center;gap:0;margin:12px 0;overflow-x:auto;padding:2px 0}
+.esc-node{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 16px;border:1px solid var(--border2);background:var(--bg);flex-shrink:0}
+.esc-node.active-esc{border-color:var(--teal);background:var(--teal2)}
+.esc-node.escalated{border-color:var(--amber);background:var(--amber2)}
+.esc-role{font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.esc-node.active-esc .esc-role{color:var(--teal)}
+.esc-node.escalated .esc-role{color:var(--amber)}
+.esc-action{font-size:7px;color:var(--faint);letter-spacing:0.5px;text-align:center;max-width:100px}
+.esc-arrow{font-size:10px;color:var(--faint);padding:0 4px;flex-shrink:0}
+
+/* DOCUMENT CHECKLIST PANEL */
+.doc-checklist{border:1px solid var(--border2);background:var(--bg);margin:12px 0}
+.dc-hdr{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:1px solid var(--border)}
+.dc-title{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--amber)}
+.dc-count{font-size:8px;color:var(--faint)}
+.dc-body{padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.dc-item{display:flex;align-items:center;gap:10px;font-size:9px;color:var(--muted)}
+.dc-status{width:18px;height:18px;border:1px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px}
+.dc-status.have{color:var(--green);border-color:var(--green);background:var(--green2)}
+.dc-status.missing{color:var(--red);border-color:var(--red);background:var(--red2)}
+.dc-status.obtain{color:var(--amber);border-color:var(--amber);background:var(--amber2)}
+.dc-doc-name{flex:1;font-weight:700;color:var(--text)}
+.dc-doc-why{font-size:8px;color:var(--faint)}
+.dc-source{font-size:7px;letter-spacing:1px;text-transform:uppercase;color:var(--cyan)}
 
 /* WOW CARD */
 .wow-card{display:none;border:1px solid var(--gold);background:linear-gradient(135deg,rgba(255,215,0,0.06) 0%,rgba(0,230,118,0.04) 100%);padding:0;margin-top:16px;animation:wowIn 0.5s ease-out}
@@ -195,6 +337,11 @@ textarea::placeholder{color:var(--faint)}
 ::-webkit-scrollbar{width:3px;height:3px}
 ::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--faint)}
+
+/* PHASE CONTENT PANE */
+.phase-pane{display:none}
+.phase-pane.active{display:block;animation:fadeIn 0.2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
@@ -207,7 +354,7 @@ textarea::placeholder{color:var(--faint)}
       <div class="logo-hex"><div class="logo-hex-inner"></div></div>
       <div class="hdr-text">
         <div class="t1">TSM · DENIAL RECOVERY WAR ROOM</div>
-        <div class="t2">One Denied Claim · Four Engines · Five Minutes</div>
+        <div class="t2">One Denied Claim · Five Engines · Five Minutes</div>
       </div>
     </div>
     <div class="hdr-mode">
@@ -217,7 +364,8 @@ textarea::placeholder{color:var(--faint)}
   </div>
   <div class="hdr-right">
     <div class="pill pill-red" id="scenario-pill">DENIAL RECOVERY</div>
-    <div class="pill pill-green">4 ENGINES LIVE</div>
+    <div class="pill pill-green">5 ENGINES LIVE</div>
+    <div class="pill pill-teal">NAVIGATOR ACTIVE</div>
     <div class="clock" id="clock">--:--:--</div>
   </div>
 </div>
@@ -270,22 +418,16 @@ textarea::placeholder{color:var(--faint)}
     </div>
     <div class="paste-panel">
       <div class="paste-label">Or Paste Denial / Document Text</div>
-      <textarea id="doc-text" placeholder="Paste claim denial letter, EOB, prior auth record, clinical notes, or compliance report here...
-
-Example:
-Claim #HC-2026-8821 denied.
-CPT 99213. Reason: Medical necessity not established.
-Payer: BCBS AZ. Amount: $4,850. DOS: 04/14/2026.
-Denial code: CO-50. Appeal deadline: 60 days..."></textarea>
+      <textarea id="doc-text" placeholder="Paste claim denial letter, EOB, prior auth record, clinical notes, or compliance report here..."></textarea>
       <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
-        <button class="btn btn-fire" id="fire-btn" onclick="fireAll()" disabled>⚡ FIRE ALL 4 ENGINES</button>
+        <button class="btn btn-fire" id="fire-btn" onclick="fireAll()" disabled>⚡ FIRE ALL 5 ENGINES</button>
         <div class="process-info" id="process-info">Load a document to begin</div>
       </div>
     </div>
   </div>
 
   <!-- PIPELINE -->
-  <div class="sec"><span>Four-Engine Revenue Recovery Pipeline</span></div>
+  <div class="sec"><span>Five-Engine Revenue Recovery Pipeline</span></div>
   <div class="pipeline">
     <div class="pipe-node e1" id="pn1">
       <div class="pipe-box">
@@ -329,6 +471,18 @@ Denial code: CO-50. Appeal deadline: 60 days..."></textarea>
         <div class="pipe-name">Recovery Plan</div>
         <div class="pipe-tag">Appeal · Letter · Roadmap</div>
         <div class="pipe-status" id="ps4">STANDBY</div>
+      </div>
+    </div>
+    <div class="pipe-arrow">
+      <div class="pipe-line" id="pa4"></div>
+      <div class="pipe-arrow-label">Navigator Feed</div>
+    </div>
+    <div class="pipe-node e5" id="pn5">
+      <div class="pipe-box">
+        <div class="pipe-num">Engine 05</div>
+        <div class="pipe-name">Recovery Navigator</div>
+        <div class="pipe-tag">Steps · Apps · BNCA</div>
+        <div class="pipe-status" id="ps5">STANDBY</div>
       </div>
     </div>
   </div>
@@ -414,6 +568,30 @@ Denial code: CO-50. Appeal deadline: 60 days..."></textarea>
     </div>
   </div>
 
+  <!-- ENGINE 5 — FULL WIDTH RECOVERY NAVIGATOR -->
+  <div class="sec teal-sec"><span>Step 3 · Engine 05 — Intelligent Recovery Navigator</span></div>
+  <div class="results-grid">
+    <div class="eng-panel e5 e5-full" id="e5-panel" style="grid-column:1/-1;min-height:600px">
+      <div class="eng-hdr">
+        <div class="eng-title">
+          <span class="eng-num">05</span>
+          <span class="eng-name">Recovery Navigator · Step-by-Step Progression + Best Next Course of Action</span>
+        </div>
+        <span class="eng-badge" id="badge5">STANDBY</span>
+      </div>
+      <div class="eng-body" style="max-height:none;overflow:visible;padding:0">
+        <div class="idle-state" id="idle5" style="min-height:200px"><div class="idle-icon">◈</div><div class="idle-txt">Awaiting Engines 1–4 Completion</div></div>
+        <div id="nav-container" style="display:none"></div>
+      </div>
+      <div class="eng-footer">
+        <button class="foot-btn" onclick="copyNavText()">Copy Navigator Report</button>
+        <button class="foot-btn" onclick="exportAll()">⬇ Export Full Report</button>
+        <span id="nav-progress" style="font-size:8px;color:var(--teal);letter-spacing:1px;margin-left:10px"></span>
+        <span class="tok-count" id="tok5"></span>
+      </div>
+    </div>
+  </div>
+
   <!-- WOW CARD -->
   <div class="wow-card" id="wow-card">
     <div class="wow-hdr">
@@ -421,7 +599,7 @@ Denial code: CO-50. Appeal deadline: 60 days..."></textarea>
         <div class="wow-star">⭐</div>
         <div>
           <div class="wow-title">EXECUTIVE RECOVERY SUMMARY</div>
-          <div class="wow-sub">Generated by TSM Denial Recovery War Room · All 4 Engines Complete</div>
+          <div class="wow-sub">Generated by TSM Denial Recovery War Room · All 5 Engines Complete</div>
         </div>
       </div>
       <button class="foot-btn" onclick="exportAll()" style="font-size:8px;padding:5px 14px">⬇ Export Report</button>
@@ -464,9 +642,9 @@ Denial code: CO-50. Appeal deadline: 60 days..."></textarea>
 <!-- STATUS BAR -->
 <div class="status-bar">
   <div class="s-dot" id="sys-dot"></div>
-  <span>TSM DENIAL RECOVERY WAR ROOM</span>
+  <span>TSM DENIAL RECOVERY WAR ROOM v2</span>
   <span style="color:var(--border2)">·</span>
-  <span id="active-txt">0 / 4 Engines Active</span>
+  <span id="active-txt">0 / 5 Engines Active</span>
   <span style="color:var(--border2)">·</span>
   <span id="doc-status">No document loaded</span>
   <span style="color:var(--border2)">·</span>
@@ -484,6 +662,7 @@ let GROQ_MODEL = 'llama-3.3-70b-versatile';
 let docText = '';
 let currentMode = 'denial';
 let completedCount = 0;
+let navRawText = '';
 
 if(GROQ_KEY){
   document.getElementById('api-key').value = GROQ_KEY;
@@ -601,9 +780,7 @@ FINANCIAL IMPACT:
 Revenue delayed by auth friction: $187,000
 Claims at risk of timely filing denial: $43,000 (>120 days)
 Staff hours lost to auth phone calls: 312 hrs/month
-Estimated labor cost: $9,360/month
-
-RECOMMENDED ACTIONS: Implement real-time auth check at scheduling. Escalate UHC relationship — 31hr avg is above contract SLA. Implement documentation checklist for high-denial CPT codes.`,
+Estimated labor cost: $9,360/month`,
 
   compliance:`COMPLIANCE AUDIT FINDING — INTERNAL MEMO
 
@@ -623,9 +800,7 @@ Finding 3 (Moderate): HIPAA Notice of Privacy Practices not consistently provide
 Affects approximately 340 patient encounters over last 90 days.
 
 OIG Watchlist: 2 vendor relationships flagged for self-referral review under Stark Law.
-HRSA Reporting: 3 grant reports overdue. $2.9M in HRSA funding at risk. 72-hour window to submit.
-
-Immediate actions required to avoid escalation to formal CMS Survey.`
+HRSA Reporting: 3 grant reports overdue. $2.9M in HRSA funding at risk. 72-hour window to submit.`
 };
 
 function loadSample(type){
@@ -641,22 +816,26 @@ function clearAll(){
   document.getElementById('doc-text').value='';
   document.getElementById('doc-preview').textContent='';
   completedCount=0;
-  for(let i=1;i<=4;i++){
-    document.getElementById('out'+i).textContent='';
-    document.getElementById('out'+i).style.display='none';
-    document.getElementById('idle'+i).innerHTML='<div class="idle-icon">◈</div><div class="idle-txt">Awaiting Document</div>';
-    document.getElementById('idle'+i).style.display='flex';
-    document.getElementById('badge'+i).textContent='STANDBY';
-    document.getElementById('ps'+i).textContent='STANDBY';
-    document.getElementById('ps'+i).style.color='';
-    document.getElementById('tok'+i).textContent='';
+  navRawText='';
+  for(let i=1;i<=5;i++){
+    const out=document.getElementById('out'+i);
+    if(out){out.textContent='';out.style.display='none';}
+    const idle=document.getElementById('idle'+i);
+    if(idle){idle.innerHTML='<div class="idle-icon">◈</div><div class="idle-txt">Awaiting Document</div>';idle.style.display='flex';}
+    const badge=document.getElementById('badge'+i);
+    if(badge){badge.textContent='STANDBY';}
+    const ps=document.getElementById('ps'+i);
+    if(ps){ps.textContent='STANDBY';ps.style.color='';}
+    const tok=document.getElementById('tok'+i);
+    if(tok){tok.textContent='';}
   }
-  document.getElementById('pa1').classList.remove('live');
-  document.getElementById('pa2').classList.remove('live');
-  document.getElementById('pa3').classList.remove('live');
-  document.getElementById('active-txt').textContent='0 / 4 Engines Active';
+  const nc=document.getElementById('nav-container');
+  if(nc){nc.style.display='none';nc.innerHTML='';}
+  ['pa1','pa2','pa3','pa4'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('live');});
+  document.getElementById('active-txt').textContent='0 / 5 Engines Active';
   document.getElementById('global-prog').textContent='';
   document.getElementById('wow-card').classList.remove('visible');
+  document.getElementById('nav-progress').textContent='';
   updateStatus();
 }
 
@@ -719,7 +898,6 @@ function getPrompts(mode){
     {
       name:'Document Intelligence',
       system:`You are Engine 01 — Document Intelligence. Extract and classify all critical data from the provided healthcare document.
-
 Output using EXACTLY these headers:
 DOCUMENT TYPE:
 CLAIM / AUTH ID:
@@ -736,14 +914,12 @@ PRIOR AUTH STATUS:
 DOCUMENT COMPLETENESS SCORE: [1-10]
 MISSING ELEMENTS:
 URGENCY FLAG: [CRITICAL/HIGH/MEDIUM/LOW]
-
 Be precise. Extract exact values. Flag missing data. Max 200 words.`,
       user:(d)=>`Extract all claim and document data:\n${d}`
     },
     {
       name:'Root Cause Analysis',
-      system:`You are Engine 02 — Root Cause Analysis. Identify exactly why this claim was denied or authorization was delayed and what documentation gaps exist.
-
+      system:`You are Engine 02 — Root Cause Analysis. Identify exactly why this claim was denied or authorization was delayed.
 Output using EXACTLY these headers:
 PRIMARY DENIAL CAUSE:
 SECONDARY FACTORS:
@@ -756,14 +932,12 @@ WORKFLOW FAILURE POINT:
 ROOT CAUSE CATEGORY: [Documentation/Coding/Authorization/Medical Necessity/Administrative]
 RECURRENCE RISK: [HIGH/MEDIUM/LOW]
 SYSTEMIC FLAG: [YES — affects multiple claims / NO — isolated incident]
-
 Be clinical and specific. Max 200 words.`,
       user:(d)=>`Perform root cause analysis:\n${d}`
     },
     {
       name:'Financial Impact',
-      system:`You are Engine 03 — Financial Impact. Quantify the revenue risk and financial exposure from this denial or auth delay.
-
+      system:`You are Engine 03 — Financial Impact. Quantify the revenue risk and financial exposure.
 Output using EXACTLY these headers:
 CLAIM VALUE AT RISK:
 DAYS AGING:
@@ -775,14 +949,12 @@ LABOR COST (manual review estimate):
 RECOVERY PROBABILITY: [HIGH/MEDIUM/LOW — with %]
 FINANCIAL RISK LEVEL: [CRITICAL/HIGH/MEDIUM/LOW]
 EXECUTIVE ALERT: [one-line CFO summary]
-
 Use dollar figures. Be specific. Max 180 words.`,
       user:(d)=>`Calculate full financial impact:\n${d}`
     },
     {
       name:'Recovery Plan + Appeal Letter',
-      system:`You are Engine 04 — Recovery Plan and Appeal Letter Generator. Produce the complete recovery action plan AND the formal appeal letter.
-
+      system:`You are Engine 04 — Recovery Plan and Appeal Letter Generator.
 Output using EXACTLY these headers:
 RECOVERY ACTION PLAN:
 STEP 1 — IMMEDIATE (24hrs):
@@ -792,30 +964,141 @@ ESCALATION OWNER:
 MISSING DOCUMENTS NEEDED:
 • [doc 1]
 • [doc 2]
-
 ---BEGIN APPEAL LETTER---
 [Date]
 [Payer Name and Address]
 Re: [Claim ID / CPT / Denial Code]
-
 Dear Appeals Department,
-
-[Full professional appeal letter body — cite medical necessity, relevant CPT guidelines, and request for reconsideration. Reference specific denial code. Firm, clear, clinically grounded.]
-
+[Full professional appeal letter body — cite medical necessity, relevant CPT guidelines, and request for reconsideration.]
 Sincerely,
 [Provider Name]
-[Organization]
-[Contact]
 ---END APPEAL LETTER---
-
 Max 350 words total.`,
       user:(d)=>`Generate recovery plan and appeal letter:\n${d}`
     }
   ];
 }
 
+// ── ENGINE 05 PROMPT ─────────────────────────────────────
+function getNavigatorPrompt(mode, allEngineText){
+  const isMedDenial = mode === 'denial';
+  return {
+    name:'Recovery Navigator',
+    system:`You are Engine 05 — Intelligent Recovery Navigator for the TSM Healthcare SaaS Platform. You receive the synthesized outputs from Engines 01–04 and produce a structured, actionable, step-by-step recovery progression plan with phase gates, document checklists, escalation paths, timeline windows, and recommended TSM app assignments.
+
+You MUST output using EXACTLY the following JSON structure (no markdown, no preamble, pure JSON):
+
+{
+  "scenario_title": "...",
+  "urgency": "CRITICAL|HIGH|MEDIUM|LOW",
+  "bnca_headline": "...",
+  "bnca_detail": "...",
+  "bnca_priorities": [
+    {"label":"...", "action":"...", "urgency":"critical|high|medium"},
+    {"label":"...", "action":"...", "urgency":"critical|high|medium"},
+    {"label":"...", "action":"...", "urgency":"critical|high|medium"}
+  ],
+  "timeline": [
+    {"window":"0–24 HRS","urgency":"critical","label":"Immediate Response","items":["item1","item2"]},
+    {"window":"24–72 HRS","urgency":"high","label":"Documentation Sprint","items":["item1","item2"]},
+    {"window":"Week 1","urgency":"medium","label":"Submission & Follow-Up","items":["item1","item2"]},
+    {"window":"Days 30–60","urgency":"low","label":"Resolution & Prevention","items":["item1","item2"]}
+  ],
+  "escalation_path": [
+    {"role":"Biller/Coder","action":"Initial review & triage","status":"active"},
+    {"role":"AR Supervisor","action":"Authorize appeal","status":"next"},
+    {"role":"Compliance Officer","action":"Documentation audit","status":"waiting"},
+    {"role":"CFO","action":"Revenue risk briefing","status":"waiting"},
+    {"role":"Payer Relations","action":"Escalation call if unresolved","status":"waiting"}
+  ],
+  "document_checklist": [
+    {"name":"...", "status":"have|missing|obtain", "why":"...", "source":"..."},
+    {"name":"...", "status":"have|missing|obtain", "why":"...", "source":"..."},
+    {"name":"...", "status":"have|missing|obtain", "why":"...", "source":"..."},
+    {"name":"...", "status":"have|missing|obtain", "why":"...", "source":"..."},
+    {"name":"...", "status":"have|missing|obtain", "why":"...", "source":"..."}
+  ],
+  "phases": [
+    {
+      "num": "01",
+      "name": "Triage & Classify",
+      "window": "0–2 hours",
+      "urgency": "critical",
+      "steps": [
+        {
+          "num": 1,
+          "title": "...",
+          "status": "active",
+          "owner": "...",
+          "deadline": "...",
+          "tool": "...",
+          "body": "...",
+          "checks": ["check1","check2","check3"],
+          "app_recs": [
+            {"name":"Healthcare Workbench","url":"/html/healthcare/healthcare-wip.html","icon":"🏥","why":"...","badge":"PRIMARY","primary":true},
+            {"name":"CRCR Scenario Simulator","url":"/html/healthcare/crcr-scenarios.html","icon":"⚡","why":"...","badge":"SUPPORT","primary":false}
+          ]
+        }
+      ]
+    },
+    {
+      "num": "02",
+      "name": "Documentation Assembly",
+      "window": "2–24 hours",
+      "urgency": "high",
+      "steps": [
+        {
+          "num": 2,
+          "title": "...",
+          "status": "pending",
+          "owner": "...",
+          "deadline": "...",
+          "tool": "...",
+          "body": "...",
+          "checks": ["check1","check2"],
+          "app_recs": [
+            {"name":"Healthcare Academy","url":"/html/healthcare/hc-academy.html","icon":"📚","why":"...","badge":"REFERENCE","primary":false}
+          ]
+        }
+      ]
+    },
+    {
+      "num": "03",
+      "name": "Appeal Construction",
+      "window": "24–72 hours",
+      "urgency": "high",
+      "steps": []
+    },
+    {
+      "num": "04",
+      "name": "Submission & Tracking",
+      "window": "Week 1",
+      "urgency": "medium",
+      "steps": []
+    },
+    {
+      "num": "05",
+      "name": "Resolution & Prevention",
+      "window": "30–60 Days",
+      "urgency": "low",
+      "steps": []
+    }
+  ]
+}
+
+IMPORTANT RULES:
+- Always recommend REAL TSM app URLs from: /html/healthcare/healthcare-wip.html, /html/healthcare/hc-academy.html, /html/healthcare/tsm_healthcare_academy.html, /html/healthcare/crc-hc-practice.html, /html/healthcare/crcr-scenarios.html, /html/healthcare/tsm-hc-demo-trail.html, /html/finops-suite/doc-analysis-tab.html, /html/bpo/bpo-command-center.html, /html/wia.html, /html/doc1-search.html, /html/executive-portal-live.html
+- Match app recommendations to the specific denial type and step context
+- Each phase must have 1–3 steps with detailed checks and app_recs
+- Make checks actionable and specific to the actual denial document
+- Urgency drives color: critical=red, high=amber, medium=cyan, low=green
+- Return ONLY valid JSON — no markdown, no preamble, no explanation`,
+    user: `Here is the synthesized output from all 4 prior engines. Analyze it and generate the complete Recovery Navigator JSON:\n\n${allEngineText.slice(0, 5000)}\n\nOriginal document summary:\n${docText.slice(0,800)}`
+  };
+}
+
 // ── COLORS ──────────────────────────────────────────────
-const ENG_COLORS=['var(--cyan)','var(--amber)','var(--green)','var(--purple)'];
+const ENG_COLORS=['var(--cyan)','var(--amber)','var(--green)','var(--purple)','var(--teal)'];
 
 function formatOut(text,num){
   const c=ENG_COLORS[num-1];
@@ -832,14 +1115,13 @@ function formatOut(text,num){
     .replace(/^•\s/gm,`<span style="color:${c}">• </span>`);
 }
 
-// ── SET PIPELINE STATUS ──────────────────────────────────
 function setPipeStatus(n,status){
   const el=document.getElementById('ps'+n);if(!el)return;
   el.textContent=status;
   el.style.color=status==='DONE'?'var(--green)':status==='ACTIVE'?'var(--amber)':status==='ERROR'?'var(--red)':'';
 }
 
-// ── RUN ONE ENGINE ───────────────────────────────────────
+// ── RUN ONE ENGINE (1-4) ──────────────────────────────
 async function runEngine(num,prompt){
   const outEl=document.getElementById('out'+num);
   const idleEl=document.getElementById('idle'+num);
@@ -861,8 +1143,7 @@ async function runEngine(num,prompt){
       badgeEl.textContent='COMPLETE';setPipeStatus(num,'DONE');
       tokEl.textContent=Math.round(toks/4)+' tokens';
       completedCount++;
-      document.getElementById('active-txt').textContent=completedCount+' / 4 Engines Complete';
-      if(completedCount===4) showWow(text);
+      document.getElementById('active-txt').textContent=completedCount+' / 5 Engines Complete';
     },
     (err)=>{
       idleEl.innerHTML=`<div style="color:var(--red);font-size:9px;text-align:center;padding:10px">⚠ ${err}</div>`;
@@ -870,7 +1151,223 @@ async function runEngine(num,prompt){
     },
     num===4?950:num===3?750:600
   );
+  return text;
 }
+
+// ── RUN ENGINE 5 — NAVIGATOR ───────────────────────────
+async function runNavigator(allText){
+  const idleEl = document.getElementById('idle5');
+  const navCon = document.getElementById('nav-container');
+  const badgeEl = document.getElementById('badge5');
+  const tokEl = document.getElementById('tok5');
+  const navProg = document.getElementById('nav-progress');
+
+  idleEl.innerHTML=`<div class="loading-row" style="color:var(--teal);padding:24px"><div class="spin" style="border-top-color:var(--teal)"></div>Navigator synthesizing all 4 engines — building recovery roadmap...</div>`;
+  badgeEl.textContent='SYNTHESIZING';setPipeStatus(5,'ACTIVE');
+  navProg.textContent='Analyzing engines 1–4...';
+
+  const prompt = getNavigatorPrompt(currentMode, allText);
+  let raw = '';
+
+  await groqStream(
+    prompt.system, prompt.user,
+    (chunk)=>{ raw+=chunk; },
+    (toks)=>{
+      tokEl.textContent=Math.round(toks/4)+' tokens';
+      navProg.textContent='Rendering navigator...';
+      idleEl.style.display='none';
+      navCon.style.display='block';
+      navRawText = raw;
+      try{
+        const clean = raw.replace(/```json|```/g,'').trim();
+        const data = JSON.parse(clean);
+        renderNavigator(data);
+        badgeEl.textContent='COMPLETE';setPipeStatus(5,'DONE');
+        completedCount++;
+        document.getElementById('active-txt').textContent=completedCount+' / 5 Engines Complete';
+        navProg.textContent='✓ Navigator complete — '+data.phases.length+' phases';
+      } catch(e){
+        navCon.innerHTML=`<div style="color:var(--amber);font-size:9px;padding:20px;line-height:1.7">Navigator parse note: Displaying raw output.<br><br><pre style="white-space:pre-wrap;color:var(--muted);font-size:8px">${raw.slice(0,3000)}</pre></div>`;
+        badgeEl.textContent='COMPLETE';setPipeStatus(5,'DONE');
+        navProg.textContent='✓ Raw navigator output ready';
+      }
+    },
+    (err)=>{
+      idleEl.innerHTML=`<div style="color:var(--red);font-size:9px;text-align:center;padding:20px">⚠ Navigator error: ${err}</div>`;
+      badgeEl.textContent='ERROR';setPipeStatus(5,'ERROR');
+    },
+    1400
+  );
+}
+
+// ── RENDER NAVIGATOR ────────────────────────────────────
+function renderNavigator(data){
+  const nc = document.getElementById('nav-container');
+  const urgColor = {critical:'var(--red)',high:'var(--amber)',medium:'var(--cyan)',low:'var(--green)',CRITICAL:'var(--red)',HIGH:'var(--amber)',MEDIUM:'var(--cyan)',LOW:'var(--green)'};
+  const urgClass = {critical:'ph-critical',high:'ph-high',medium:'ph-medium',low:'ph-low',CRITICAL:'ph-critical',HIGH:'ph-high',MEDIUM:'ph-medium',LOW:'ph-low'};
+
+  // BNCA Alert
+  let bncaHTML = `<div class="bnca-alert">
+    <div class="bnca-hdr">
+      <div class="bnca-icon">🎯</div>
+      <div>
+        <div class="bnca-label">Best Next Course of Action — AI Navigator</div>
+        <div class="bnca-title">${data.bnca_headline||'Recovery Action Required'}</div>
+      </div>
+      <div style="margin-left:auto;font-size:8px;letter-spacing:1px;padding:4px 12px;border:1px solid ${urgColor[data.urgency]||'var(--red)'};color:${urgColor[data.urgency]||'var(--red)'}">${data.urgency||'HIGH'}</div>
+    </div>
+    <div class="bnca-body">${data.bnca_detail||''}</div>
+    <div class="bnca-priority-row">`;
+  (data.bnca_priorities||[]).forEach((p,i)=>{
+    const cls = i===0?'bnca-p1':i===1?'bnca-p2':'bnca-p3';
+    bncaHTML+=`<div class="bnca-priority ${cls}" title="${p.action||''}">${p.label||''}</div>`;
+  });
+  bncaHTML+=`</div></div>`;
+
+  // Timeline Ruler
+  let tlHTML = `<div class="timeline-ruler">`;
+  (data.timeline||[]).forEach(t=>{
+    const uc = t.urgency||'medium';
+    tlHTML+=`<div class="tl-seg tl-${uc}">
+      <div class="tl-label">${t.label||''}</div>
+      <div class="tl-window">${t.window||''}</div>
+      <div class="tl-items">${(t.items||[]).map(i=>`• ${i}`).join('<br>')}</div>
+    </div>`;
+  });
+  tlHTML+=`</div>`;
+
+  // Escalation Path
+  let escHTML = `<div style="font-size:7px;letter-spacing:2px;text-transform:uppercase;color:var(--faint);margin-bottom:8px">Escalation Path</div>
+  <div class="escalation-path">`;
+  (data.escalation_path||[]).forEach((e,i)=>{
+    const cls = e.status==='active'?'active-esc':e.status==='next'?'escalated':'';
+    escHTML+=`<div class="esc-node ${cls}">
+      <div class="esc-role">${e.role||''}</div>
+      <div class="esc-action">${e.action||''}</div>
+    </div>`;
+    if(i<(data.escalation_path.length-1)) escHTML+=`<div class="esc-arrow">→</div>`;
+  });
+  escHTML+=`</div>`;
+
+  // Document Checklist
+  const statusIcon = {have:'✓',missing:'✗',obtain:'?'};
+  let dcHTML = `<div class="doc-checklist">
+    <div class="dc-hdr">
+      <div class="dc-title">Document & Evidence Checklist</div>
+      <div class="dc-count">${(data.document_checklist||[]).length} items</div>
+    </div>
+    <div class="dc-body">`;
+  (data.document_checklist||[]).forEach(d=>{
+    dcHTML+=`<div class="dc-item">
+      <div class="dc-status ${d.status||'obtain'}">${statusIcon[d.status]||'?'}</div>
+      <div class="dc-doc-name">${d.name||''}</div>
+      <div class="dc-doc-why">${d.why||''}</div>
+      <div class="dc-source">${d.source||''}</div>
+    </div>`;
+  });
+  dcHTML+=`</div></div>`;
+
+  // Phase Tabs
+  const phases = data.phases||[];
+  let phTabsHTML = `<div class="phase-tracker">`;
+  phases.forEach((ph,i)=>{
+    phTabsHTML+=`<div class="phase-tab ${i===0?'active':''}" id="ptab-${i}" onclick="switchPhase(${i})">
+      <div class="phase-num">Phase ${ph.num||String(i+1).padStart(2,'0')}</div>
+      <div class="phase-name">${ph.name||'Phase '+(i+1)}</div>
+      <div class="phase-window">${ph.window||''}</div>
+      <div class="phase-urgency ${urgClass[ph.urgency||'medium']}">${(ph.urgency||'medium').toUpperCase()}</div>
+    </div>`;
+  });
+  phTabsHTML+=`</div>`;
+
+  // Phase Panes
+  let phPanesHTML = `<div id="phase-panes" style="padding:20px">`;
+  phases.forEach((ph,phIdx)=>{
+    phPanesHTML+=`<div class="phase-pane ${phIdx===0?'active':''}" id="ppane-${phIdx}">`;
+    const steps = ph.steps||[];
+    if(steps.length===0){
+      phPanesHTML+=`<div style="color:var(--faint);font-size:9px;padding:20px;text-align:center">Steps for this phase will be generated based on appeal outcome.</div>`;
+    } else {
+      phPanesHTML+=`<div class="step-list">`;
+      steps.forEach((st,si)=>{
+        const statusCls = st.status==='done'?'done':st.status==='active'?'active':st.status==='blocked'?'blocked':'';
+        phPanesHTML+=`<div class="step-item ${statusCls}">
+          <div class="step-line"></div>
+          <div class="step-left"><div class="step-circle">${st.num||si+1}</div></div>
+          <div class="step-right">
+            <div class="step-hdr">
+              <div class="step-title">${st.title||'Step '+(si+1)}</div>
+              <span class="step-tag step-tag-owner">${st.owner||'RCM Team'}</span>
+              ${st.deadline?`<span class="step-tag step-tag-deadline">${st.deadline}</span>`:''}
+              ${st.tool?`<span class="step-tag step-tag-tool">${st.tool}</span>`:''}
+              ${st.status==='done'?`<span class="step-tag step-tag-done">✓ DONE</span>`:''}
+            </div>
+            <div class="step-body">${st.body||''}</div>`;
+
+        // Checklist items
+        if((st.checks||[]).length>0){
+          phPanesHTML+=`<div class="step-checklist">`;
+          (st.checks||[]).forEach((ck,ci)=>{
+            phPanesHTML+=`<div class="step-check">
+              <div class="check-box" id="chk-${phIdx}-${si}-${ci}" onclick="toggleCheck(this)"></div>
+              <span>${ck}</span>
+            </div>`;
+          });
+          phPanesHTML+=`</div>`;
+        }
+
+        // App Recommendations
+        if((st.app_recs||[]).length>0){
+          phPanesHTML+=`<div class="app-rec-section">
+            <div class="app-rec-label">Recommended TSM Apps for This Step</div>
+            <div class="app-cards">`;
+          (st.app_recs||[]).forEach(ap=>{
+            phPanesHTML+=`<a class="app-card ${ap.primary?'primary':''}" href="${ap.url||'#'}" target="_blank">
+              <div class="app-card-icon">${ap.icon||'▶'}</div>
+              <div class="app-card-body">
+                <div class="app-card-name">${ap.name||''}</div>
+                <div class="app-card-why">${ap.why||''}</div>
+                <div class="app-card-badge">${ap.badge||'USE'}</div>
+              </div>
+              <div class="app-card-arrow">→</div>
+            </a>`;
+          });
+          phPanesHTML+=`</div></div>`;
+        }
+
+        phPanesHTML+=`</div></div>`;
+      });
+      phPanesHTML+=`</div>`;
+    }
+    phPanesHTML+=`</div>`;
+  });
+  phPanesHTML+=`</div>`;
+
+  // Assemble everything
+  nc.innerHTML = `
+    <div style="padding:20px 20px 0">
+      ${bncaHTML}
+      ${tlHTML}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0">
+        <div>${escHTML}</div>
+        <div>${dcHTML}</div>
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--border);margin-top:4px">
+      <div style="padding:12px 20px 0;font-size:7px;letter-spacing:2px;text-transform:uppercase;color:var(--teal)">▶ Step-by-Step Recovery Phases</div>
+      ${phTabsHTML}
+      ${phPanesHTML}
+    </div>`;
+}
+
+// ── PHASE SWITCH ──────────────────────────────────────
+function switchPhase(idx){
+  document.querySelectorAll('.phase-tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
+  document.querySelectorAll('.phase-pane').forEach((p,i)=>p.classList.toggle('active',i===idx));
+}
+
+// ── CHECK TOGGLE ──────────────────────────────────────
+function toggleCheck(el){el.classList.toggle('checked');}
 
 // ── FIRE ALL ─────────────────────────────────────────────
 async function fireAll(){
@@ -879,14 +1376,30 @@ async function fireAll(){
   const saved=docText; clearAll(); docText=saved;
   document.getElementById('doc-text').value=docText;
   completedCount=0;
-  document.getElementById('global-prog').textContent='Firing all 4 engines...';
+  document.getElementById('global-prog').textContent='Firing all 5 engines...';
   document.getElementById('sys-dot').className='s-dot red';
-  ['pa1','pa2','pa3'].forEach(id=>document.getElementById(id).classList.add('live'));
+  ['pa1','pa2','pa3','pa4'].forEach(id=>document.getElementById(id).classList.add('live'));
+
   const prompts=getPrompts(currentMode);
-  await Promise.all([runEngine(1,prompts[0]),runEngine(2,prompts[1]),runEngine(3,prompts[2]),runEngine(4,prompts[3])]);
-  ['pa1','pa2','pa3'].forEach(id=>document.getElementById(id).classList.remove('live'));
-  document.getElementById('global-prog').textContent='✓ All 4 engines complete';
+  // Run engines 1–4 in parallel, collect all text
+  const results = await Promise.all([
+    runEngine(1,prompts[0]),
+    runEngine(2,prompts[1]),
+    runEngine(3,prompts[2]),
+    runEngine(4,prompts[3])
+  ]);
+
+  ['pa1','pa2','pa3','pa4'].forEach(id=>document.getElementById(id).classList.remove('live'));
+
+  // Synthesize all engine outputs for E5
+  const allEngineText = results.map((r,i)=>`=== ENGINE ${i+1} OUTPUT ===\n${r}\n`).join('\n');
+
+  // Run Navigator
+  await runNavigator(allEngineText);
+
+  document.getElementById('global-prog').textContent='✓ All 5 engines complete';
   document.getElementById('sys-dot').className='s-dot';
+  showWow();
 }
 
 // ── RELAY ────────────────────────────────────────────────
@@ -901,36 +1414,34 @@ async function relay(from,to){
 }
 
 // ── WOW CARD ─────────────────────────────────────────────
-function showWow(lastEngineText){
-  // Parse values from engine outputs for the wow card
+function showWow(){
   const e1=document.getElementById('out1').textContent;
   const e2=document.getElementById('out2').textContent;
   const e3=document.getElementById('out3').textContent;
-
   const claimMatch=e3.match(/\$([\d,]+)/);
   const probMatch=e3.match(/RECOVERY PROBABILITY[^:]*:\s*([^\n]+)/i);
   const causeMatch=e2.match(/PRIMARY DENIAL CAUSE[^:]*:\s*([^\n]+)/i);
   const deadlineMatch=e1.match(/APPEAL DEADLINE[^:]*:\s*([^\n]+)/i);
-
   document.getElementById('ws-claim').textContent=claimMatch?'$'+claimMatch[1]:'See Report';
   document.getElementById('ws-prob').textContent=probMatch?probMatch[1].trim().slice(0,20):'HIGH';
   document.getElementById('ws-cause').textContent=causeMatch?causeMatch[1].trim().slice(0,25):'See Engine 02';
   document.getElementById('ws-action').textContent='Submit Appeal + Missing Docs';
   document.getElementById('ws-deadline').textContent=deadlineMatch?deadlineMatch[1].trim().slice(0,15):'60 Days';
-
   document.getElementById('wow-card').classList.add('visible');
   document.getElementById('wow-card').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
 // ── COPY / EXPORT ────────────────────────────────────────
 function copyOut(id){const t=document.getElementById(id).textContent;if(t)navigator.clipboard.writeText(t).catch(()=>{});}
+function copyNavText(){if(navRawText)navigator.clipboard.writeText(navRawText).catch(()=>{});}
 
 function exportAll(){
   const ts=new Date().toISOString().slice(0,16).replace('T','_').replace(':','');
-  const names=['Document Intelligence','Root Cause Analysis','Financial Impact','Recovery Plan + Appeal Letter'];
-  const parts=[1,2,3,4].map(n=>`${'='.repeat(60)}\nENGINE ${n}: ${names[n-1]}\n${'='.repeat(60)}\n${document.getElementById('out'+n).textContent||'[No output]'}\n`);
-  const blob=new Blob([`TSM DENIAL RECOVERY WAR ROOM — EXPORT\n${new Date().toLocaleString()}\nMode: ${currentMode.toUpperCase()}\n\nDOCUMENT:\n${docText.slice(0,600)}...\n\n`,...parts],{type:'text/plain'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`tsm-war-room-${ts}.txt`;a.click();
+  const names=['Document Intelligence','Root Cause Analysis','Financial Impact','Recovery Plan + Appeal Letter','Recovery Navigator'];
+  const parts=[1,2,3,4].map(n=>`${'='.repeat(60)}\nENGINE ${n}: ${names[n-1]}\n${'='.repeat(60)}\n${document.getElementById('out'+n)?.textContent||'[No output]'}\n`);
+  const nav=`${'='.repeat(60)}\nENGINE 5: Recovery Navigator\n${'='.repeat(60)}\n${navRawText||'[No output]'}\n`;
+  const blob=new Blob([`TSM DENIAL RECOVERY WAR ROOM v2 — EXPORT\n${new Date().toLocaleString()}\nMode: ${currentMode.toUpperCase()}\n\nDOCUMENT:\n${docText.slice(0,600)}...\n\n`,...parts,nav],{type:'text/plain'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`tsm-war-room-v2-${ts}.txt`;a.click();
 }
 
 // LOAD DENIAL SAMPLE ON INIT
