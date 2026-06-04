@@ -1151,6 +1151,36 @@ function advanceStep(n){
   }
 }
 
+// ─── TAB NAVIGATION BRIDGE ────────────────────────────────────
+function setTab(el, tabKey) {
+  if (!el) return;
+  // Strip active styling from all sub-tab header items
+  document.querySelectorAll('.ot').forEach(t => t.classList.remove('act'));
+  
+  // Handle case where element is passed directly or looked up by string name
+  if (typeof el === 'string') {
+    tabKey = el;
+    const targetTab = Array.from(document.querySelectorAll('.ot')).find(t => 
+      t.getAttribute('onclick')?.includes(`'${tabKey}'`) || t.textContent.toLowerCase().includes(tabKey)
+    );
+    if (targetTab) targetTab.classList.add('act');
+  } else {
+    el.classList.add('act');
+  }
+  
+  outTab = tabKey;
+  
+  const activeRole = typeof role !== 'undefined' ? role : 'BA';
+  
+  // Hydrate viewport canvas using cached records if available
+  const box = document.getElementById('out-box');
+  if (box && typeof PRELOADED !== 'undefined' && PRELOADED[activeRole] && PRELOADED[activeRole][tabKey]) {
+    box.innerHTML = PRELOADED[activeRole][tabKey];
+  } else if (typeof renderOutput === 'function') {
+    renderOutput(activeRole, tabKey);
+  }
+}
+
 // ─── KEYBOARD ─────────────────────────────────────────────────
 document.addEventListener('keydown',e=>{
   if(e.key==='Enter'&&document.activeElement.id==='cmd') runQuery();
