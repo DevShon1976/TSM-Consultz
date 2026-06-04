@@ -184,6 +184,30 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:1
 ::-webkit-scrollbar{width:4px;}
 ::-webkit-scrollbar-track{background:var(--bg);}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+/* == SAVED SUITES SIDEBAR == */
+.saved-suites-panel{margin-top:18px;border-top:0.5px solid var(--border);padding-top:11px;}
+.saved-suite-item{background:#0d1117;border:0.5px solid var(--border2);border-radius:4px;margin-bottom:6px;overflow:hidden;}
+.saved-suite-hdr{display:flex;align-items:center;justify-content:space-between;padding:7px 9px;cursor:pointer;gap:6px;}
+.saved-suite-hdr:hover{background:#141820;}
+.saved-suite-name{font-size:10px;color:var(--gold);font-weight:600;letter-spacing:.3px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.saved-suite-meta{font-size:8px;color:var(--dim);flex-shrink:0;}
+.saved-suite-chev{font-size:9px;color:var(--dim);transition:transform .15s;flex-shrink:0;}
+.saved-suite-body{display:none;padding:8px 9px 9px;border-top:0.5px solid var(--border);}
+.saved-suite-body.open{display:block;}
+.saved-suite-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:0.5px solid #1a1f28;}
+.saved-suite-row:last-child{border-bottom:none;}
+.saved-suite-label{font-size:9px;color:var(--dim);}
+.saved-suite-val{font-size:9px;color:var(--text);text-align:right;}
+.saved-suite-apps{margin-top:6px;}
+.saved-suite-app-item{display:flex;align-items:center;gap:5px;padding:3px 0;}
+.saved-suite-dot{width:4px;height:4px;border-radius:50%;background:var(--green);flex-shrink:0;}
+.saved-suite-app-name{font-size:9px;color:var(--text);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.saved-suite-load{font-size:8px;color:var(--gold);cursor:pointer;border:0.5px solid rgba(201,168,76,.3);padding:1px 6px;border-radius:2px;margin-top:6px;display:inline-block;}
+.saved-suite-load:hover{background:rgba(201,168,76,.08);}
+.saved-suite-del{font-size:9px;color:var(--dim);cursor:pointer;padding:2px 5px;}
+.saved-suite-del:hover{color:var(--red);}
+.no-suites-msg{font-size:10px;color:var(--dim);padding:8px 0;text-align:center;}
 </style>
 </head>
 <body>
@@ -215,6 +239,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:1
     <div style="margin-top:18px;border-top:0.5px solid var(--border);padding-top:11px;">
       <div class="slabel">Selected <span style="color:var(--gold)" id="pill-count">0</span></div>
       <div id="pills-sidebar" class="pills"></div>
+    </div>
+    <div class="saved-suites-panel">
+      <div class="slabel" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>Saved Suites <span style="color:var(--gold)" id="saved-count">0</span></span>
+      </div>
+      <div id="saved-suites-list" style="margin-top:8px;">
+        <div class="no-suites-msg" id="no-suites-msg">No suites saved yet</div>
+      </div>
     </div>
   </div>
 
@@ -493,6 +525,7 @@ let generatedPlaybooks = {};
 let generatedCount = 0;
 let openCards = new Set();
 let currentTone = 'executive';
+let savedSuites = [];
 
 /* ══════════════════════════════════════════════
    HELPERS
@@ -832,6 +865,7 @@ async function generateAllPlaybooks(){
   btn.disabled=false; btn.textContent='Regenerate All';
   sub.textContent='All playbooks generated — ready to deploy';
   setStatus('All playbooks generated');
+  saveSuite('generate');
   setTimeout(()=>{ pfill.style.width='0%'; ppct.textContent='0%'; pwrap.style.display='none'; },3000);
 }
 
@@ -890,7 +924,79 @@ function buildDeployPanel(){
 
 function copySuiteUrl(){ navigator.clipboard.writeText(document.getElementById('suite-url-box').textContent).catch(()=>{}); }
 function openFirst(){ const first=Array.from(selected)[0]; if(first) window.open(first,'_blank'); }
-function deployToServer(){ alert('Deploy feature: configure your server endpoint to enable live suite deployment.'); }
+function deployToServer(){ saveSuite('deploy'); alert('Deploy feature: configure your server endpoint to enable live suite deployment.'); }
+
+function saveSuite(trigger){
+  var name = document.getElementById('suite-name')?.value.trim() || ('Suite ' + (savedSuites.length + 1));
+  var audience = document.getElementById('audience')?.value || 'General';
+  var tone = currentTone || 'executive';
+  var apps = Array.from(selected).map(url => findApp(url)).filter(Boolean);
+  if(!apps.length) return;
+  var ts = new Date();
+  var timeStr = ts.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  var dateStr = ts.toLocaleDateString([], {month:'short',day:'numeric'});
+  savedSuites.unshift({ id: Date.now(), name, audience, tone, apps, timeStr, dateStr, trigger });
+  renderSavedSuites();
+}
+
+function renderSavedSuites(){
+  var list = document.getElementById('saved-suites-list');
+  var countEl = document.getElementById('saved-count');
+  var noMsg = document.getElementById('no-suites-msg');
+  if(!list) return;
+  countEl.textContent = savedSuites.length;
+  list.querySelectorAll('.saved-suite-item').forEach(function(el){ el.remove(); });
+  if(!savedSuites.length){ noMsg.style.display='block'; return; }
+  noMsg.style.display='none';
+  savedSuites.forEach(function(suite){
+    var item = document.createElement('div');
+    item.className = 'saved-suite-item';
+    var toneLabel = suite.tone.charAt(0).toUpperCase() + suite.tone.slice(1);
+    item.innerHTML = '<div class="saved-suite-hdr" onclick="toggleSavedSuite('+suite.id+')">'
+      + '<span class="saved-suite-name">'+suite.name+'</span>'
+      + '<span class="saved-suite-meta">'+suite.apps.length+' apps · '+suite.dateStr+'</span>'
+      + '<span class="saved-suite-chev" id="sschev-'+suite.id+'">›</span>'
+      + '</div>'
+      + '<div class="saved-suite-body" id="ssbody-'+suite.id+'">'
+      + '<div class="saved-suite-row"><span class="saved-suite-label">Audience</span><span class="saved-suite-val">'+suite.audience+'</span></div>'
+      + '<div class="saved-suite-row"><span class="saved-suite-label">Tone</span><span class="saved-suite-val">'+toneLabel+'</span></div>'
+      + '<div class="saved-suite-row"><span class="saved-suite-label">Saved at</span><span class="saved-suite-val">'+suite.timeStr+'</span></div>'
+      + '<div class="saved-suite-apps">'
+      + suite.apps.map(function(a){ return '<div class="saved-suite-app-item"><div class="saved-suite-dot"></div><span class="saved-suite-app-name">'+a.name+'</span></div>'; }).join('')
+      + '</div>'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:7px;">'
+      + '<span class="saved-suite-load" onclick="loadSuite('+suite.id+')">↺ Reload</span>'
+      + '<span class="saved-suite-del" onclick="deleteSuite('+suite.id+')" title="Remove">✕</span>'
+      + '</div>'
+      + '</div>';
+    list.appendChild(item);
+  });
+}
+
+function toggleSavedSuite(id){
+  var body = document.getElementById('ssbody-'+id);
+  var chev = document.getElementById('sschev-'+id);
+  var isOpen = body.classList.contains('open');
+  document.querySelectorAll('.saved-suite-body').forEach(function(b){ b.classList.remove('open'); });
+  document.querySelectorAll('.saved-suite-chev').forEach(function(c){ c.style.transform=''; });
+  if(!isOpen){ body.classList.add('open'); chev.style.transform='rotate(90deg)'; }
+}
+
+function loadSuite(id){
+  var suite = savedSuites.find(function(s){ return s.id===id; });
+  if(!suite) return;
+  selected.clear();
+  suite.apps.forEach(function(a){ selected.add(a.url); });
+  if(document.getElementById('suite-name')) document.getElementById('suite-name').value = suite.name;
+  if(document.getElementById('audience')) document.getElementById('audience').value = suite.audience;
+  renderGrid(); updateCount(); renderPills();
+  switchTab('select', document.querySelectorAll('.tab-btn')[0]);
+}
+
+function deleteSuite(id){
+  savedSuites = savedSuites.filter(function(s){ return s.id!==id; });
+  renderSavedSuites();
+}
 
 async function generateCoachScript(){
   const name=document.getElementById('suite-name')?.value||'this TSM demo';
