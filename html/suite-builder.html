@@ -297,6 +297,45 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:1
 
     <!-- ══ TAB 3: DEPLOY ══ -->
     <div id="panel-deploy" class="panel">
+
+      <!-- ENTERPRISE PITCH GENERATOR -->
+      <div style="margin-bottom:20px;">
+        <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--dim);margin-bottom:12px;">Enterprise Pitch Generator</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+
+          <!-- RANDSTAD CARD -->
+          <div style="border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:16px 18px;background:var(--gold3);cursor:pointer;transition:all .15s;" onmouseenter="this.style.background='rgba(201,168,76,.15)'" onmouseleave="this.style.background='var(--gold3)'">
+            <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:6px;">Staffing Partner</div>
+            <div style="font-family:var(--display);font-size:20px;color:var(--bright);letter-spacing:1px;margin-bottom:6px;">Randstad Package</div>
+            <div style="font-size:10px;color:var(--dim);line-height:1.7;margin-bottom:14px;">Workforce Readiness & Career Development Platform. Candidate validation, simulation-based assessment, upskilling tracks, internal mobility, retention outcomes.</div>
+            <button class="gen-btn" style="width:100%;" onclick="generatePackage('randstad')">Generate Randstad Workforce Package ↗</button>
+          </div>
+
+          <!-- HONORHEALTH CARD -->
+          <div style="border:0.5px solid rgba(20,184,166,.3);border-radius:var(--radius-lg);padding:16px 18px;background:rgba(20,184,166,.06);cursor:pointer;transition:all .15s;" onmouseenter="this.style.background='rgba(20,184,166,.12)'" onmouseleave="this.style.background='rgba(20,184,166,.06)'">
+            <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--teal);margin-bottom:6px;">Healthcare Enterprise</div>
+            <div style="font-family:var(--display);font-size:20px;color:var(--bright);letter-spacing:1px;margin-bottom:6px;">HonorHealth Package</div>
+            <div style="font-size:10px;color:var(--dim);line-height:1.7;margin-bottom:14px;">Healthcare Workforce Development & Revenue Cycle Readiness Platform. RCM training, CRCR prep, staff development, compliance education, workflow simulation.</div>
+            <button class="gen-btn" style="width:100%;background:var(--teal);border-color:var(--teal);" onclick="generatePackage('honorhealth')">Generate HonorHealth Workforce Package ↗</button>
+          </div>
+        </div>
+
+        <!-- PACKAGE OUTPUT -->
+        <div id="pkg-output" style="display:none;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--dim);" id="pkg-output-label">Package Output</div>
+            <div style="display:flex;gap:6px;">
+              <button class="btn" onclick="copyPackage()">Copy Text</button>
+              <button class="btn btn-g" onclick="exportPackagePDF()">Export PDF ↗</button>
+            </div>
+          </div>
+          <div id="pkg-body" style="background:var(--panel);border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;"></div>
+        </div>
+      </div>
+
+      <div style="height:0.5px;background:var(--border);margin:4px 0 20px;"></div>
+
+      <!-- STANDARD DEPLOY STEPS -->
       <div class="dstep"><div class="dsnum">1</div><div class="dsc"><div class="dst">Shareable suite link</div><div class="surlbox" id="suite-url-box">—</div><div style="display:flex;gap:7px;"><button class="btn btn-g" onclick="copySuiteUrl()">Copy link</button><button class="btn" onclick="openFirst()">Open first app →</button></div></div></div>
       <div class="dstep"><div class="dsnum">2</div><div class="dsc"><div class="dst">Demo sequence</div><div id="deploy-list"></div></div></div>
       <div class="dstep"><div class="dsnum">3</div><div class="dsc"><div class="dst">AI coaching script</div><button class="bbtn coachl" onclick="generateCoachScript()">Generate my full presentation coaching script ↗</button><div id="coach-output" class="aiout" style="display:none;margin-top:9px;"></div></div></div>
@@ -913,6 +952,270 @@ function renderPills(){
 function removePill(url){ selected.delete(url); document.querySelectorAll('.acard').forEach(c=>{if(c.querySelector('.aurl')?.textContent===url) c.classList.remove('sel');}); updateCount();renderPills(); }
 function clearAll(){ selected.clear();renderGrid();updateCount();renderPills(); }
 function selectSector(){ if(activeFilter==='All') return; const s=SECTORS.find(x=>x.label===activeFilter); if(s){s.apps.forEach(a=>selected.add(a.url));renderGrid();updateCount();renderPills();} }
+
+/* ══════════════════════════════════════════════
+   ENTERPRISE PITCH PACKAGES
+══════════════════════════════════════════════ */
+const PACKAGES = {
+  randstad: {
+    label: 'Randstad Workforce Package',
+    color: 'var(--gold)',
+    border: 'var(--border2)',
+    bg: 'var(--gold3)',
+    accentBg: 'rgba(201,168,76,.15)',
+    tag: 'Staffing Partner · Workforce Development',
+    title: 'TSM Workforce Readiness &amp; Career Development Platform',
+    subtitle: 'A simulation-based workforce validation system designed to improve placement quality, reduce candidate drop-off, and support long-term employee development.',
+    trustLine: 'TSM is designed to support staffing organizations in improving placement outcomes, strengthening client trust, and reinforcing employee confidence by investing in readiness and long-term development.',
+    sections: [
+      {
+        label: 'Executive Summary',
+        body: `Staffing organizations lose margin on two predictable failure points: candidates who ghost before placement and placed workers who churn in the first 90 days. TSM addresses both by inserting a structured readiness validation layer between application and client submission — producing measurable improvements in placement quality, recruiter efficiency, and worker retention.`
+      },
+      {
+        label: 'Workforce Readiness Challenge',
+        body: `Traditional hiring funnels rely on resumes and interviews to judge candidate fit — tools that measure presentation, not performance. Branch recruiters spend 15–20 hours per week on manual follow-up, document chasing, and candidate status calls. Ghost rates in high-volume roles average 30–40% before the first interview. The result is a costly cycle of refill, rescreen, and resubmit that erodes margin and client confidence.`
+      },
+      {
+        label: 'TSM Solution',
+        body: `TSM provides a simulation-based readiness engine that moves candidates through role-specific workflow tasks before any recruiter time is invested. The platform generates a structured Readiness Score across five dimensions — workflow accuracy, compliance understanding, communication, adaptability, and task speed — and delivers a placement recommendation automatically. Recruiters receive a daily shortlist of interview-ready candidates, not a raw applicant pool.`
+      },
+      {
+        label: 'Candidate Readiness Scoring',
+        items: [
+          'Readiness Score: Composite index (0–100) derived from simulation performance across all dimensions',
+          'Workflow Accuracy: Task completion rate under realistic role conditions',
+          'Compliance Understanding: Protocol adherence and documentation accuracy',
+          'Communication Skills: Written response quality and engagement responsiveness',
+          'Ghost Risk Index: Predictive flag for candidates silent beyond 12-hour threshold'
+        ]
+      },
+      {
+        label: 'Career Mobility Engine',
+        body: `Beyond placement, TSM identifies upskilling pathways for candidates who score high in core competencies but fall short in role-specific skills. This positions Randstad not as a transactional staffing vendor but as an active workforce development partner — a differentiation that strengthens client retention and worker loyalty. Internal career mobility tracking allows placed workers to progress across role categories over time.`
+      },
+      {
+        label: 'Upskilling Tracks Available',
+        items: [
+          'Healthcare Administration — Prior auth, medical billing, revenue cycle, HIPAA compliance',
+          'Legal & Administrative Support — Document workflows, case management, client communications',
+          'Insurance Compliance — CE validation, state licensing, AHIP preparation, P&C code fluency',
+          'Finance & Accounting — AP/AR ledger validation, reconciliation, interview simulation',
+          'Light Industrial & Logistics — Safety protocols, task sequencing, forklift certification prep'
+        ]
+      },
+      {
+        label: 'Proposed Pilot Program',
+        body: `Phase 1 (Days 1–14, No Cost): Deploy TSM against one high-volume job order — typically a healthcare admin or light industrial role with known candidate drop-off issues. Deliver a daily shortlist of simulation-validated candidates.\n\nPhase 2 (Days 15–45, $1,500): Expand to all active job orders for the branch. Embed platform into daily recruiter workflows across 3–5 team members.\n\nPhase 3 (Day 46+, $2,500/month): Standard operational license. By this point, hard data on recruiter hours saved and ghost-off reduction is available to justify the ongoing investment.`
+      },
+      {
+        label: 'Expected Outcomes',
+        items: [
+          '35% reduction in average time-to-submit for high-volume roles',
+          '15–20 recruiter hours saved per week through automated candidate pre-screening',
+          'Measurable reduction in candidate ghost rate before first client interview',
+          'Improved placement quality through performance-based candidate validation',
+          'Stronger client satisfaction through consistent delivery of interview-ready candidates'
+        ]
+      },
+      {
+        label: 'Next Steps',
+        body: `I am not reaching out to sell staffing services. I am looking for feedback from professionals in workforce development, talent strategy, and staffing operations on a platform built to address a real operational gap.\n\nI would welcome a 15-minute conversation or live demo walkthrough at your convenience.\n\nLatorrey Whitehead — TSM Workforce Readiness Platform\nlatorreyw99@gmail.com`
+      }
+    ]
+  },
+
+  honorhealth: {
+    label: 'HonorHealth Workforce Package',
+    color: 'var(--teal)',
+    border: 'rgba(20,184,166,.4)',
+    bg: 'rgba(20,184,166,.06)',
+    accentBg: 'rgba(20,184,166,.12)',
+    tag: 'Healthcare Enterprise · Workforce Development',
+    title: 'TSM Healthcare Workforce Development &amp; Revenue Cycle Readiness Platform',
+    subtitle: 'Simulation-based healthcare training and workflow tools designed to accelerate staff readiness, improve revenue cycle performance, and reduce time-to-floor for clinical and non-clinical personnel.',
+    trustLine: 'TSM is designed to help healthcare organizations develop stronger operations staff — not just fill positions — by building measurable competency before a worker reaches the floor.',
+    sections: [
+      {
+        label: 'Executive Summary',
+        body: `Healthcare systems face a compounding challenge: the administrative drag of primary source verification, credential processing, and unit-specific orientation adds days to every new staff deployment — while patient census demands cannot wait. TSM provides a structured onboarding bridge that runs verification tracking, competency validation, and floor-specific orientation in parallel, measurably reducing time-to-floor for clinical and non-clinical staff.`
+      },
+      {
+        label: 'Healthcare Workforce Challenges',
+        body: `Revenue cycle accuracy depends on staff who understand payer-specific workflows, denial management protocols, and documentation standards before they touch a live account. Unit orientation for floating and contract staff is frequently inconsistent — creating compliance exposure and quality variance across facilities. Primary source verification delays add days to every new deployment, keeping critical units understaffed during high-census periods.`
+      },
+      {
+        label: 'Revenue Cycle Readiness',
+        body: `TSM includes structured simulation tracks covering the full revenue cycle workflow: patient access, prior authorization, medical coding, billing, denial management, and AR recovery. Staff practice against realistic payer scenarios — including Anthem, UnitedHealth, and Medicare — before handling live accounts. Performance is scored and logged, providing supervisors with objective readiness data rather than subjective self-assessment.`
+      },
+      {
+        label: 'Workflow Simulation Training Modules',
+        items: [
+          'CRC Practice Lab — Revenue cycle analyst simulation with real denial escalation scenarios',
+          'CRCR Scenario Simulator — Certified Revenue Cycle Representative exam-aligned case studies',
+          'Healthcare Academy — Foundational and advanced clinical operations education modules',
+          'Prior Authorization Workflows — Payer-specific PA submission and appeal simulation',
+          'Medical Billing & Coding — ICD-10, CPT, and HCPCS application under realistic conditions',
+          'Patient Access & Scheduling — Registration workflows, eligibility verification, coordination of benefits'
+        ]
+      },
+      {
+        label: 'Compliance & Operational Education',
+        body: `All training modules are aligned to Joint Commission documentation standards. Completion records are logged with timestamps, staff identity, and performance scores — creating an unalterable digital audit trail suitable for facility quality audits. HIPAA compliance attestation, infection control protocols, and facility-specific policy acknowledgment are integrated into the orientation workflow.`
+      },
+      {
+        label: 'Primary Source Verification Bridge',
+        items: [
+          'Real-time tracking of state license verification status by staff member and unit',
+          'OIG exclusion check logging with flag escalation for immediate review',
+          'Background clearance status integrated into floor-readiness score',
+          'Credential expiry alerts with automated renewal reminder triggers',
+          'Joint Commission audit export — timestamped, actor-attributed, immutable log'
+        ]
+      },
+      {
+        label: 'Staff Development Pathways',
+        body: `TSM identifies staff with high competency scores in core areas and surfaces structured development pathways — from entry-level patient access roles through billing coordination, coding specialization, and revenue cycle management. This supports internal mobility and reduces turnover by demonstrating organizational investment in staff career progression.`
+      },
+      {
+        label: 'Pilot Program Concept',
+        body: `I am proposing a localized validation pilot matched to HonorHealth's specific internal onboarding requirements. The pilot would focus on a defined staff cohort — clinical or non-clinical — within one facility or unit, running TSM's verification tracking and orientation modules in parallel with your existing workflow.\n\nThe goal is not to replace existing systems. The goal is to demonstrate measurable reduction in time-to-floor and improvement in first-week performance metrics for the pilot cohort.`
+      },
+      {
+        label: 'Next Steps',
+        body: `I built simulation-based healthcare training and workflow tools, not a generic software platform. I would value the perspective of a workforce development, learning & development, or revenue cycle operations leader at HonorHealth on whether these tools address real operational needs.\n\nI am looking for a 10-minute conversation — not a purchasing decision.\n\nLatorrey Whitehead — TSM Healthcare Workforce Development Platform\nlatorreyw99@gmail.com`
+      }
+    ]
+  }
+};
+
+let currentPackageType = null;
+
+function generatePackage(type){
+  currentPackageType = type;
+  const pkg = PACKAGES[type];
+  const out = document.getElementById('pkg-output');
+  const body = document.getElementById('pkg-body');
+  const label = document.getElementById('pkg-output-label');
+
+  label.textContent = pkg.label;
+  label.style.color = pkg.color;
+  out.style.display = 'block';
+  out.scrollIntoView({behavior:'smooth', block:'start'});
+
+  // Build selected app list
+  const selectedApps = Array.from(selected).map(url => findApp(url));
+  const demoAssets = selectedApps.length
+    ? selectedApps.map(a => `<div style="display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:0.5px solid var(--border);"><span style="width:5px;height:5px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0;"></span><span style="font-size:11px;color:var(--text);flex:1;">${a.name}</span><a href="${a.url}" target="_blank" style="font-size:9px;color:${pkg.color};border:0.5px solid ${pkg.border};padding:2px 7px;border-radius:3px;text-decoration:none;">Open ↗</a></div>`).join('')
+    : '<div style="color:var(--dim);font-size:11px;">No apps selected — go to Select Apps tab to add demo assets.</div>';
+
+  let html = `
+    <div style="padding:22px 24px;border-bottom:0.5px solid var(--border);background:${pkg.accentBg};">
+      <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:${pkg.color};margin-bottom:8px;">${pkg.tag}</div>
+      <div style="font-family:var(--display);font-size:26px;color:var(--bright);letter-spacing:1px;margin-bottom:8px;">${pkg.title}</div>
+      <div style="font-size:12px;color:var(--text);line-height:1.8;max-width:680px;">${pkg.subtitle}</div>
+    </div>
+    <div style="padding:18px 24px;">
+  `;
+
+  pkg.sections.forEach((sec, i) => {
+    html += `
+      <div style="margin-bottom:20px;">
+        <div style="font-size:8px;letter-spacing:3px;text-transform:uppercase;color:${pkg.color};margin-bottom:8px;padding-bottom:5px;border-bottom:0.5px solid ${pkg.border};">${String(i+1).padStart(2,'0')} · ${sec.label}</div>
+    `;
+    if(sec.body){
+      // Handle multi-paragraph (split on \n\n)
+      sec.body.split('\n\n').forEach(para => {
+        html += `<div style="font-size:11px;color:var(--text);line-height:1.8;margin-bottom:8px;">${para}</div>`;
+      });
+    }
+    if(sec.items){
+      html += `<div style="display:flex;flex-direction:column;gap:5px;margin-top:6px;">`;
+      sec.items.forEach(item => {
+        html += `<div style="display:flex;gap:8px;font-size:11px;color:var(--text);line-height:1.6;"><span style="color:${pkg.color};flex-shrink:0;">→</span>${item}</div>`;
+      });
+      html += `</div>`;
+    }
+    html += `</div>`;
+  });
+
+  // Demo assets section
+  html += `
+    <div style="margin-bottom:20px;">
+      <div style="font-size:8px;letter-spacing:3px;text-transform:uppercase;color:${pkg.color};margin-bottom:8px;padding-bottom:5px;border-bottom:0.5px solid ${pkg.border};">DEMO ASSETS · Selected Suite</div>
+      ${demoAssets}
+    </div>
+  `;
+
+  // Trust statement
+  html += `
+    <div style="padding:14px 16px;border:0.5px solid ${pkg.border};border-radius:var(--radius);background:${pkg.bg};margin-bottom:16px;">
+      <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:${pkg.color};margin-bottom:6px;">Platform Positioning</div>
+      <div style="font-size:12px;color:var(--text);line-height:1.8;font-style:italic;">${pkg.trustLine}</div>
+    </div>
+    </div>
+  `;
+
+  body.innerHTML = html;
+}
+
+function copyPackage(){
+  const body = document.getElementById('pkg-body');
+  if(!body) return;
+  // Strip HTML for plain text copy
+  const tmp = document.createElement('div');
+  tmp.innerHTML = body.innerHTML;
+  navigator.clipboard.writeText(tmp.textContent.replace(/\s{3,}/g,'\n\n').trim()).catch(()=>{});
+}
+
+function exportPackagePDF(){
+  const pkg = currentPackageType ? PACKAGES[currentPackageType] : null;
+  if(!pkg){ alert('Generate a package first.'); return; }
+
+  const printWin = window.open('','_blank','width=900,height=700');
+  const bodyEl = document.getElementById('pkg-body');
+  if(!bodyEl){ return; }
+
+  const selectedApps = Array.from(selected).map(url => findApp(url));
+  const appsText = selectedApps.map(a => `• ${a.name} — ${window.location.origin}${a.url}`).join('\n');
+
+  const cleanTitle = pkg.title.replace(/&amp;/g,'&');
+
+  printWin.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>${cleanTitle}</title>
+  <style>
+    body{font-family:'Barlow',system-ui,sans-serif;font-size:12px;line-height:1.7;color:#1a2030;background:#fff;padding:48px 56px;max-width:720px;margin:0 auto;}
+    h1{font-size:22px;font-weight:700;color:#0a1018;margin-bottom:6px;line-height:1.3;}
+    .tag{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#c9a84c;margin-bottom:10px;}
+    .subtitle{font-size:13px;color:#4a5a70;margin-bottom:28px;line-height:1.7;}
+    .section{margin-bottom:22px;page-break-inside:avoid;}
+    .section-label{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:#c9a84c;padding-bottom:5px;border-bottom:1px solid #e8d5a0;margin-bottom:10px;}
+    .section-body{font-size:11px;color:#1a2030;line-height:1.8;}
+    .item{display:flex;gap:8px;margin-bottom:4px;font-size:11px;}
+    .arrow{color:#c9a84c;flex-shrink:0;}
+    .trust{padding:12px 16px;border-left:3px solid #c9a84c;background:#fdf8ec;font-size:11px;font-style:italic;color:#3a4a60;margin-top:20px;line-height:1.8;}
+    .footer{margin-top:32px;font-size:10px;color:#9aaabb;border-top:1px solid #e0e8f0;padding-top:12px;}
+    @media print{body{padding:24px;}}
+  </style></head><body>
+  <div class="tag">${pkg.tag.replace(/&amp;/g,'&')}</div>
+  <h1>${cleanTitle}</h1>
+  <div class="subtitle">${pkg.subtitle.replace(/&amp;/g,'&')}</div>
+  ${pkg.sections.map((sec,i)=>`
+    <div class="section">
+      <div class="section-label">${String(i+1).padStart(2,'0')} · ${sec.label}</div>
+      ${sec.body ? sec.body.split('\n\n').map(p=>`<div class="section-body" style="margin-bottom:8px;">${p}</div>`).join('') : ''}
+      ${sec.items ? sec.items.map(item=>`<div class="item"><span class="arrow">→</span><span>${item}</span></div>`).join('') : ''}
+    </div>`).join('')}
+  <div class="section">
+    <div class="section-label">Demo Assets</div>
+    <div class="section-body" style="white-space:pre-line;">${appsText||'No apps selected.'}</div>
+  </div>
+  <div class="trust">${pkg.trustLine}</div>
+  <div class="footer">Generated by TSM Suite Builder · ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})} · TSM Workforce Intelligence Platform</div>
+  </body></html>`);
+  printWin.document.close();
+  setTimeout(()=>printWin.print(), 600);
+}
 
 /* ══════════════════════════════════════════════
    INIT
