@@ -586,7 +586,17 @@ document.addEventListener('click', function(e){
   const action = el.getAttribute('data-tsm-action');
   const args = el.getAttribute('data-tsm-args');
 
-  if(window.TSM && TSM.launcher && TSM.launcher.run){
+  const fnMap = {
+    selectEntity: (a) => selectEntity(parseInt(a)),
+    runNarrative: () => runNarrative(),
+    runWIPAI: (a) => runWIPAI(a || ''),
+    runStrategistRollup: () => runStrategistRollup(),
+    exportBrief: () => exportBrief(),
+    runAction: (a) => runAction((a||'').replace(/^'|'$/g,'')),
+  };
+  const fn = fnMap[action];
+  if(fn){ try{ fn(args); } catch(e){ console.error('[TSM]',action,e); } }
+  else if(window.TSM && TSM.launcher && TSM.launcher.run){
     TSM.launcher.run(action, args);
   } else {
     console.warn('[TSM] launcher missing:', action, args);
