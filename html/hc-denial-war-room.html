@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TSM · Denial Recovery War Room</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#03050b;--bg2:#070a12;--bg3:#0b1019;--bg4:#0f1522;
+--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);
+--text:#cdd5e0;--muted:#5e6e85;--faint:#2e3a4a;
+--cyan:#00e5ff;--cyan2:rgba(0,229,255,0.08);--cyan3:rgba(0,229,255,0.18);
+--green:#00e676;--green2:rgba(0,230,118,0.08);
+--amber:#ffb300;--amber2:rgba(255,179,0,0.10);
+--red:#ff3d57;--red2:rgba(255,61,87,0.10);
+--purple:#b060ff;--purple2:rgba(176,96,255,0.10);
+--gold:#ffd700;
+--mono:'Courier New',monospace;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;overflow-x:hidden}
+
+/* scanline overlay */
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);pointer-events:none;z-index:1000}
+body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,229,255,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,0.015) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
+
+/* HEADER */
+.hdr{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:12px 28px;border-bottom:1px solid var(--border2);background:linear-gradient(180deg,rgba(0,229,255,0.05) 0%,transparent 100%)}
+.hdr-left{display:flex;align-items:center;gap:14px}
+.hdr-logo{display:flex;align-items:center;gap:8px}
+.logo-hex{width:28px;height:28px;border:1px solid var(--red);display:flex;align-items:center;justify-content:center;transform:rotate(45deg)}
+.logo-hex-inner{width:10px;height:10px;background:var(--red);transform:rotate(-45deg)}
+.hdr-text .t1{font-size:14px;font-weight:700;letter-spacing:3px;color:var(--red)}
+.hdr-text .t2{font-size:8px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-top:2px}
+.hdr-mode{display:flex;gap:8px;margin-left:20px}
+.mode-btn{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;padding:4px 14px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;font-family:var(--mono);transition:all 0.15s}
+.mode-btn.active{color:var(--red);border-color:var(--red);background:var(--red2)}
+.hdr-right{display:flex;align-items:center;gap:10px}
+.pill{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;padding:4px 12px;border:1px solid}
+.pill-red{color:var(--red);border-color:var(--red);background:var(--red2)}
+.pill-green{color:var(--green);border-color:var(--green);background:var(--green2)}
+.pill-amber{color:var(--amber);border-color:var(--amber);background:var(--amber2)}
+.clock{font-size:9px;color:var(--muted);letter-spacing:1px}
+
+/* MAIN */
+.main{position:relative;z-index:10;padding:20px 28px 100px;max-width:1640px;margin:0 auto}
+
+/* SCENARIO BANNER */
+.scenario-banner{border:1px solid var(--red);background:linear-gradient(135deg,rgba(255,61,87,0.06) 0%,var(--bg2) 100%);padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.sb-left{display:flex;align-items:center;gap:14px}
+.sb-icon{font-size:22px}
+.sb-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:3px}
+.sb-title{font-size:14px;font-weight:700;letter-spacing:2px;color:var(--text)}
+.sb-sub{font-size:9px;color:var(--muted);margin-top:2px}
+.sb-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+
+/* SECTION HEADER */
+.sec{display:flex;align-items:center;gap:10px;margin-bottom:14px;margin-top:20px}
+.sec::before{content:'';width:6px;height:6px;background:var(--red);transform:rotate(45deg);flex-shrink:0}
+.sec span{font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:var(--red)}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* INPUT ZONE */
+.input-zone{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.drop-panel{border:1px solid var(--border2);background:var(--bg2);padding:20px;display:flex;flex-direction:column;gap:10px}
+.drop-area{border:1px dashed var(--border2);padding:24px;text-align:center;cursor:pointer;transition:all 0.2s;position:relative;background:var(--bg)}
+.drop-area:hover{border-color:var(--red);background:var(--red2)}
+.drop-area input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.drop-icon{font-size:22px;color:var(--faint);margin-bottom:8px}
+.drop-title{font-size:10px;color:var(--muted);letter-spacing:1px}
+.drop-sub{font-size:8px;color:var(--faint);margin-top:3px}
+.doc-preview{font-size:9px;color:var(--green);margin-top:6px}
+.paste-panel{border:1px solid var(--border2);background:var(--bg2);padding:20px;display:flex;flex-direction:column;gap:8px}
+.paste-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--faint)}
+textarea{flex:1;min-height:130px;background:var(--bg);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:10px;padding:10px;resize:vertical;outline:none;line-height:1.6}
+textarea:focus{border-color:var(--red)}
+textarea::placeholder{color:var(--faint)}
+
+/* SAMPLE BUTTONS */
+.sample-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.btn{padding:8px 18px;font-size:8px;letter-spacing:2px;text-transform:uppercase;border:1px solid;cursor:pointer;font-family:var(--mono);transition:all 0.15s;background:transparent;white-space:nowrap}
+.btn-fire{color:#fff;border-color:var(--red);background:var(--red);font-size:10px;padding:10px 28px;letter-spacing:2px}
+.btn-fire:hover{background:#d42040}
+.btn-fire:disabled{opacity:0.35;cursor:not-allowed}
+.btn-sample{color:var(--amber);border-color:var(--amber);background:var(--amber2);font-size:8px;padding:6px 12px}
+.btn-sample:hover{background:rgba(255,179,0,0.2)}
+.btn-ghost{color:var(--muted);border-color:var(--border2);font-size:8px;padding:6px 12px}
+.btn-ghost:hover{color:var(--text);background:var(--bg3)}
+.process-info{font-size:9px;color:var(--faint);letter-spacing:1px;margin-left:auto}
+
+/* KEY ROW */
+.key-row{display:flex;align-items:center;gap:8px;margin-top:10px;padding:10px 12px;border:1px solid var(--border);background:var(--bg)}
+.key-dot{width:6px;height:6px;border-radius:50%;background:var(--faint);flex-shrink:0;transition:all 0.3s}
+.key-dot.ok{background:var(--green);box-shadow:0 0 6px var(--green)}
+.key-label{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--faint);white-space:nowrap}
+.key-input{flex:1;background:transparent;border:none;color:var(--text);font-family:var(--mono);font-size:10px;padding:2px 6px;outline:none}
+.key-status{font-size:8px;color:var(--faint);letter-spacing:1px}
+
+/* PIPELINE FLOW */
+.pipeline{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:20px;padding:14px 0;border:1px solid var(--border);background:var(--bg2);overflow-x:auto}
+.pipe-node{display:flex;flex-direction:column;align-items:center;gap:6px;padding:0 14px;flex-shrink:0}
+.pipe-box{width:148px;padding:10px 12px;border:1px solid;text-align:center}
+.pipe-num{font-size:7px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px;opacity:0.7}
+.pipe-name{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.pipe-tag{font-size:7px;letter-spacing:0.5px;margin-top:2px;opacity:0.65}
+.pipe-status{font-size:7px;letter-spacing:1px;margin-top:4px;text-transform:uppercase}
+.pipe-arrow{display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0}
+.pipe-line{width:36px;height:1px;background:var(--border2);position:relative}
+.pipe-line::after{content:'▶';position:absolute;right:-7px;top:-6px;font-size:9px;color:var(--faint)}
+.pipe-arrow-label{font-size:6px;letter-spacing:1px;text-transform:uppercase;color:var(--faint);white-space:nowrap}
+.e1 .pipe-box{border-color:var(--cyan);color:var(--cyan);background:var(--cyan2)}
+.e2 .pipe-box{border-color:var(--amber);color:var(--amber);background:var(--amber2)}
+.e3 .pipe-box{border-color:var(--green);color:var(--green);background:var(--green2)}
+.e4 .pipe-box{border-color:var(--purple);color:var(--purple);background:var(--purple2)}
+.pipe-line.live{background:var(--red);animation:pulse-line 0.7s linear infinite}
+.pipe-line.live::after{color:var(--red)}
+@keyframes pulse-line{0%,100%{opacity:0.4}50%{opacity:1}}
+
+/* RESULTS GRID */
+.results-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.eng-panel{border:1px solid var(--border);background:var(--bg2);display:flex;flex-direction:column;min-height:340px}
+.eng-hdr{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--border)}
+.eng-title{display:flex;align-items:center;gap:8px}
+.eng-num{font-size:8px;letter-spacing:1px;padding:2px 7px;border:1px solid;flex-shrink:0}
+.eng-name{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
+.eng-badge{font-size:7px;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border:1px solid}
+.eng-body{flex:1;padding:12px 14px;overflow-y:auto;max-height:340px}
+.eng-out{font-size:10px;line-height:1.75;color:var(--muted);white-space:pre-wrap;word-break:break-word}
+.eng-out .sh{display:block;font-size:7px;letter-spacing:2px;text-transform:uppercase;margin:10px 0 3px;font-weight:700}
+.idle-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px;color:var(--faint)}
+.idle-icon{font-size:22px;opacity:0.35}
+.idle-txt{font-size:8px;letter-spacing:1.5px;text-transform:uppercase}
+.loading-row{display:flex;align-items:center;gap:8px;font-size:9px}
+.spin{width:11px;height:11px;border:1px solid var(--faint);border-top-color:currentColor;border-radius:50%;animation:spin 0.6s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.eng-footer{display:flex;align-items:center;gap:6px;padding:7px 14px;border-top:1px solid var(--border);background:var(--bg)}
+.foot-btn{padding:3px 10px;font-size:7px;letter-spacing:1.5px;text-transform:uppercase;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;font-family:var(--mono);transition:all 0.12s}
+.foot-btn:hover{color:var(--text);background:var(--bg3)}
+.tok-count{margin-left:auto;font-size:7px;color:var(--faint);letter-spacing:1px}
+
+/* ENGINE COLOR THEMING */
+.e1 .eng-num{color:var(--cyan);border-color:var(--cyan)}
+.e1 .eng-name{color:var(--cyan)}
+.e1 .eng-badge{color:var(--cyan);border-color:var(--cyan);background:var(--cyan2)}
+.e1 .eng-out .sh{color:var(--cyan)}
+.e1 .spin{border-top-color:var(--cyan)}
+.e1 .loading-row{color:var(--cyan)}
+.e2 .eng-num{color:var(--amber);border-color:var(--amber)}
+.e2 .eng-name{color:var(--amber)}
+.e2 .eng-badge{color:var(--amber);border-color:var(--amber);background:var(--amber2)}
+.e2 .eng-out .sh{color:var(--amber)}
+.e2 .spin{border-top-color:var(--amber)}
+.e2 .loading-row{color:var(--amber)}
+.e3 .eng-num{color:var(--green);border-color:var(--green)}
+.e3 .eng-name{color:var(--green)}
+.e3 .eng-badge{color:var(--green);border-color:var(--green);background:var(--green2)}
+.e3 .eng-out .sh{color:var(--green)}
+.e3 .spin{border-top-color:var(--green)}
+.e3 .loading-row{color:var(--green)}
+.e4 .eng-num{color:var(--purple);border-color:var(--purple)}
+.e4 .eng-name{color:var(--purple)}
+.e4 .eng-badge{color:var(--purple);border-color:var(--purple);background:var(--purple2)}
+.e4 .eng-out .sh{color:var(--purple)}
+.e4 .spin{border-top-color:var(--purple)}
+.e4 .loading-row{color:var(--purple)}
+
+/* WOW CARD */
+.wow-card{display:none;border:1px solid var(--gold);background:linear-gradient(135deg,rgba(255,215,0,0.06) 0%,rgba(0,230,118,0.04) 100%);padding:0;margin-top:16px;animation:wowIn 0.5s ease-out}
+@keyframes wowIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.wow-card.visible{display:block}
+.wow-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid rgba(255,215,0,0.2)}
+.wow-hdr-left{display:flex;align-items:center;gap:10px}
+.wow-star{font-size:18px}
+.wow-title{font-size:11px;font-weight:700;letter-spacing:2px;color:var(--gold)}
+.wow-sub{font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:2px}
+.wow-body{display:grid;grid-template-columns:repeat(5,1fr);gap:0}
+.wow-stat{padding:16px 18px;border-right:1px solid rgba(255,215,0,0.1);text-align:center}
+.wow-stat:last-child{border-right:none}
+.wow-stat-val{font-size:18px;font-weight:700;letter-spacing:1px;margin-bottom:4px}
+.wow-stat-label{font-size:7px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.wow-stat-sub{font-size:8px;color:var(--faint);margin-top:3px}
+.wow-action{padding:12px 20px;border-top:1px solid rgba(255,215,0,0.2);display:flex;align-items:center;justify-content:space-between}
+.wow-action-txt{font-size:9px;color:var(--text);letter-spacing:0.5px}
+.wow-action-txt strong{color:var(--gold)}
+
+/* STATUS BAR */
+.status-bar{position:fixed;bottom:0;left:0;right:0;border-top:1px solid var(--border);background:rgba(3,5,11,0.97);backdrop-filter:blur(8px);padding:8px 28px;display:flex;align-items:center;gap:16px;z-index:50;font-size:8px;letter-spacing:1px;color:var(--faint)}
+.s-dot{width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 4px var(--green);flex-shrink:0}
+.s-dot.red{background:var(--red);box-shadow:0 0 4px var(--red)}
+.s-dot.amber{background:var(--amber);box-shadow:0 0 4px var(--amber)}
+.s-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+#global-prog{color:var(--amber);letter-spacing:1px}
+.cursor{animation:blink 0.8s step-end infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--faint)}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-left">
+    <div class="hdr-logo">
+      <div class="logo-hex"><div class="logo-hex-inner"></div></div>
+      <div class="hdr-text">
+        <div class="t1">TSM · DENIAL RECOVERY WAR ROOM</div>
+        <div class="t2">One Denied Claim · Four Engines · Five Minutes</div>
+      </div>
+    </div>
+    <div class="hdr-mode">
+      <button class="mode-btn active" id="mode-denial" onclick="setMode('denial')">⚡ Denial Recovery</button>
+      <button class="mode-btn" id="mode-prior" onclick="setMode('prior')">🔒 Prior Auth Rescue</button>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div class="pill pill-red" id="scenario-pill">DENIAL RECOVERY</div>
+    <div class="pill pill-green">4 ENGINES LIVE</div>
+    <div class="clock" id="clock">--:--:--</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- SCENARIO BANNER -->
+  <div class="scenario-banner" id="scenario-banner">
+    <div class="sb-left">
+      <div class="sb-icon">⚠</div>
+      <div>
+        <div class="sb-label" id="banner-label">Active Scenario</div>
+        <div class="sb-title" id="banner-title">DENIAL RECOVERY WAR ROOM</div>
+        <div class="sb-sub" id="banner-sub">Load a denied claim packet · EOB · clinical notes · prior auth records · or use a sample scenario below</div>
+      </div>
+    </div>
+    <div class="sb-right">
+      <div style="text-align:right">
+        <div style="font-size:8px;color:var(--muted);letter-spacing:1px">DEMO PITCH LINE</div>
+        <div style="font-size:10px;color:var(--text);margin-top:3px" id="pitch-line">"Watch me recover revenue faster than your current process."</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 1: INPUT -->
+  <div class="sec"><span>Step 1 · Load Denial Packet</span></div>
+  <div class="input-zone">
+    <div class="drop-panel">
+      <div class="drop-area" ondragover="onDrag(event)" ondragleave="offDrag()" ondrop="onDrop(event)">
+        <input type="file" id="file-input" accept=".txt,.pdf,.doc,.docx,.csv,.md" onchange="onFileSelect(event)">
+        <div class="drop-icon">⬆</div>
+        <div class="drop-title">Drop Document Here</div>
+        <div class="drop-sub">EOB · Denial Letter · Clinical Notes · Prior Auth · TXT · PDF</div>
+        <div class="doc-preview" id="doc-preview"></div>
+      </div>
+      <div class="sample-row">
+        <button class="btn btn-sample" onclick="loadSample('denial')">⚡ Denial Sample</button>
+        <button class="btn btn-sample" onclick="loadSample('prior')">🔒 Prior Auth Sample</button>
+        <button class="btn btn-sample" onclick="loadSample('compliance')">📋 Compliance Sample</button>
+        <button class="btn btn-ghost" onclick="clearAll()">Clear</button>
+      </div>
+      <div class="key-row">
+        <div class="key-dot" id="key-dot"></div>
+        <div class="key-label">Groq API Key</div>
+        <input class="key-input" id="api-key" type="password" placeholder="gsk_..." oninput="onKeyInput(this.value)">
+        <button class="btn-ghost btn" style="padding:3px 10px;font-size:7px" onclick="testKey()">Test</button>
+        <span class="key-status" id="key-status"></span>
+      </div>
+    </div>
+    <div class="paste-panel">
+      <div class="paste-label">Or Paste Denial / Document Text</div>
+      <textarea id="doc-text" placeholder="Paste claim denial letter, EOB, prior auth record, clinical notes, or compliance report here...
+
+Example:
+Claim #HC-2026-8821 denied.
+CPT 99213. Reason: Medical necessity not established.
+Payer: BCBS AZ. Amount: $4,850. DOS: 04/14/2026.
+Denial code: CO-50. Appeal deadline: 60 days..."></textarea>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+        <button class="btn btn-fire" id="fire-btn" onclick="fireAll()" disabled>⚡ FIRE ALL 4 ENGINES</button>
+        <div class="process-info" id="process-info">Load a document to begin</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PIPELINE -->
+  <div class="sec"><span>Four-Engine Revenue Recovery Pipeline</span></div>
+  <div class="pipeline">
+    <div class="pipe-node e1" id="pn1">
+      <div class="pipe-box">
+        <div class="pipe-num">Engine 01</div>
+        <div class="pipe-name">Document Intel</div>
+        <div class="pipe-tag">Extract · Parse · Classify</div>
+        <div class="pipe-status" id="ps1">STANDBY</div>
+      </div>
+    </div>
+    <div class="pipe-arrow">
+      <div class="pipe-line" id="pa1"></div>
+      <div class="pipe-arrow-label">Claim Data</div>
+    </div>
+    <div class="pipe-node e2" id="pn2">
+      <div class="pipe-box">
+        <div class="pipe-num">Engine 02</div>
+        <div class="pipe-name">Root Cause</div>
+        <div class="pipe-tag">Denial · Gap · Risk</div>
+        <div class="pipe-status" id="ps2">STANDBY</div>
+      </div>
+    </div>
+    <div class="pipe-arrow">
+      <div class="pipe-line" id="pa2"></div>
+      <div class="pipe-arrow-label">Risk Signal</div>
+    </div>
+    <div class="pipe-node e3" id="pn3">
+      <div class="pipe-box">
+        <div class="pipe-num">Engine 03</div>
+        <div class="pipe-name">Financial Impact</div>
+        <div class="pipe-tag">Revenue · Aging · Deadline</div>
+        <div class="pipe-status" id="ps3">STANDBY</div>
+      </div>
+    </div>
+    <div class="pipe-arrow">
+      <div class="pipe-line" id="pa3"></div>
+      <div class="pipe-arrow-label">CFO Feed</div>
+    </div>
+    <div class="pipe-node e4" id="pn4">
+      <div class="pipe-box">
+        <div class="pipe-num">Engine 04</div>
+        <div class="pipe-name">Recovery Plan</div>
+        <div class="pipe-tag">Appeal · Letter · Roadmap</div>
+        <div class="pipe-status" id="ps4">STANDBY</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: RESULTS -->
+  <div class="sec"><span>Step 2 · Live Engine Output</span></div>
+  <div class="results-grid">
+    <!-- ENGINE 1 -->
+    <div class="eng-panel e1">
+      <div class="eng-hdr">
+        <div class="eng-title">
+          <span class="eng-num">01</span>
+          <span class="eng-name">Document Intelligence</span>
+        </div>
+        <span class="eng-badge" id="badge1">STANDBY</span>
+      </div>
+      <div class="eng-body">
+        <div class="idle-state" id="idle1"><div class="idle-icon">◈</div><div class="idle-txt">Awaiting Document</div></div>
+        <div class="eng-out" id="out1" style="display:none"></div>
+      </div>
+      <div class="eng-footer">
+        <button class="foot-btn" onclick="copyOut('out1')">Copy</button>
+        <button class="foot-btn" onclick="relay(1,2)">→ Feed to Root Cause</button>
+        <span class="tok-count" id="tok1"></span>
+      </div>
+    </div>
+    <!-- ENGINE 2 -->
+    <div class="eng-panel e2">
+      <div class="eng-hdr">
+        <div class="eng-title">
+          <span class="eng-num">02</span>
+          <span class="eng-name">Root Cause Analysis</span>
+        </div>
+        <span class="eng-badge" id="badge2">STANDBY</span>
+      </div>
+      <div class="eng-body">
+        <div class="idle-state" id="idle2"><div class="idle-icon">◈</div><div class="idle-txt">Awaiting Document</div></div>
+        <div class="eng-out" id="out2" style="display:none"></div>
+      </div>
+      <div class="eng-footer">
+        <button class="foot-btn" onclick="copyOut('out2')">Copy</button>
+        <button class="foot-btn" onclick="relay(2,3)">→ Feed to Financial</button>
+        <span class="tok-count" id="tok2"></span>
+      </div>
+    </div>
+    <!-- ENGINE 3 -->
+    <div class="eng-panel e3">
+      <div class="eng-hdr">
+        <div class="eng-title">
+          <span class="eng-num">03</span>
+          <span class="eng-name">Financial Impact</span>
+        </div>
+        <span class="eng-badge" id="badge3">STANDBY</span>
+      </div>
+      <div class="eng-body">
+        <div class="idle-state" id="idle3"><div class="idle-icon">◈</div><div class="idle-txt">Awaiting Document</div></div>
+        <div class="eng-out" id="out3" style="display:none"></div>
+      </div>
+      <div class="eng-footer">
+        <button class="foot-btn" onclick="copyOut('out3')">Copy</button>
+        <button class="foot-btn" onclick="relay(3,4)">→ Feed to Recovery</button>
+        <span class="tok-count" id="tok3"></span>
+      </div>
+    </div>
+    <!-- ENGINE 4 -->
+    <div class="eng-panel e4">
+      <div class="eng-hdr">
+        <div class="eng-title">
+          <span class="eng-num">04</span>
+          <span class="eng-name">Recovery Plan + Appeal</span>
+        </div>
+        <span class="eng-badge" id="badge4">STANDBY</span>
+      </div>
+      <div class="eng-body">
+        <div class="idle-state" id="idle4"><div class="idle-icon">◈</div><div class="idle-txt">Awaiting Document</div></div>
+        <div class="eng-out" id="out4" style="display:none"></div>
+      </div>
+      <div class="eng-footer">
+        <button class="foot-btn" onclick="copyOut('out4')">Copy Appeal</button>
+        <button class="foot-btn" onclick="exportAll()">⬇ Export All</button>
+        <span class="tok-count" id="tok4"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- WOW CARD -->
+  <div class="wow-card" id="wow-card">
+    <div class="wow-hdr">
+      <div class="wow-hdr-left">
+        <div class="wow-star">⭐</div>
+        <div>
+          <div class="wow-title">EXECUTIVE RECOVERY SUMMARY</div>
+          <div class="wow-sub">Generated by TSM Denial Recovery War Room · All 4 Engines Complete</div>
+        </div>
+      </div>
+      <button class="foot-btn" onclick="exportAll()" style="font-size:8px;padding:5px 14px">⬇ Export Report</button>
+    </div>
+    <div class="wow-body">
+      <div class="wow-stat">
+        <div class="wow-stat-val" id="ws-claim" style="color:var(--red)">—</div>
+        <div class="wow-stat-label">Claim Value</div>
+        <div class="wow-stat-sub">Revenue at risk</div>
+      </div>
+      <div class="wow-stat">
+        <div class="wow-stat-val" id="ws-cause" style="color:var(--amber);font-size:11px">—</div>
+        <div class="wow-stat-label">Denial Cause</div>
+        <div class="wow-stat-sub">Root trigger</div>
+      </div>
+      <div class="wow-stat">
+        <div class="wow-stat-val" id="ws-prob" style="color:var(--green)">—</div>
+        <div class="wow-stat-label">Recovery Likelihood</div>
+        <div class="wow-stat-sub">Appeal probability</div>
+      </div>
+      <div class="wow-stat">
+        <div class="wow-stat-val" id="ws-action" style="color:var(--cyan);font-size:10px">—</div>
+        <div class="wow-stat-label">Recommended Action</div>
+        <div class="wow-stat-sub">Next step</div>
+      </div>
+      <div class="wow-stat">
+        <div class="wow-stat-val" id="ws-deadline" style="color:var(--purple)">—</div>
+        <div class="wow-stat-label">Appeal Deadline</div>
+        <div class="wow-stat-sub">Days remaining</div>
+      </div>
+    </div>
+    <div class="wow-action">
+      <div class="wow-action-txt" id="wow-pitch">TSM recovered this claim analysis in <strong>under 5 minutes</strong>. Traditional analyst time: <strong>2–5 days</strong>.</div>
+      <button class="btn btn-fire" style="padding:7px 20px;font-size:8px" onclick="fireAll()">⚡ Run New Scenario</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <div class="s-dot" id="sys-dot"></div>
+  <span>TSM DENIAL RECOVERY WAR ROOM</span>
+  <span style="color:var(--border2)">·</span>
+  <span id="active-txt">0 / 4 Engines Active</span>
+  <span style="color:var(--border2)">·</span>
+  <span id="doc-status">No document loaded</span>
+  <span style="color:var(--border2)">·</span>
+  <span id="model-txt" style="color:var(--amber)">Groq: not connected</span>
+  <div class="s-right">
+    <span id="global-prog"></span>
+    <button class="btn" style="font-size:7px;padding:3px 12px;color:var(--red);border-color:var(--red);background:var(--red2)" onclick="fireAll()">⚡ FIRE ALL</button>
+  </div>
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────
+let GROQ_KEY = localStorage.getItem('groq_key') || '';
+let GROQ_MODEL = 'llama-3.3-70b-versatile';
+let docText = '';
+let currentMode = 'denial';
+let completedCount = 0;
+
+if(GROQ_KEY){
+  document.getElementById('api-key').value = GROQ_KEY;
+  document.getElementById('key-dot').classList.add('ok');
+  document.getElementById('model-txt').textContent = 'Groq: ' + GROQ_MODEL;
+  document.getElementById('model-txt').style.color = 'var(--green)';
+}
+
+setInterval(()=>{ document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-US',{hour12:false}); },1000);
+document.getElementById('doc-text').addEventListener('input',function(){ docText=this.value.trim(); updateStatus(); });
+
+function updateStatus(){
+  const ok = docText.length > 20;
+  document.getElementById('fire-btn').disabled = !ok || !GROQ_KEY;
+  document.getElementById('doc-status').textContent = ok ? docText.length+' chars loaded' : 'No document loaded';
+  document.getElementById('process-info').textContent = ok ? '✓ Ready · '+docText.split(/\s+/).length+' words' : 'Load a document to begin';
+}
+
+// ── MODE SWITCH ─────────────────────────────────────────
+function setMode(mode){
+  currentMode = mode;
+  document.getElementById('mode-denial').classList.toggle('active', mode==='denial');
+  document.getElementById('mode-prior').classList.toggle('active', mode==='prior');
+  if(mode==='denial'){
+    document.getElementById('scenario-pill').textContent='DENIAL RECOVERY';
+    document.getElementById('banner-title').textContent='DENIAL RECOVERY WAR ROOM';
+    document.getElementById('banner-sub').textContent='Load a denied claim packet · EOB · clinical notes · or use the Denial Sample below';
+    document.getElementById('pitch-line').textContent='"Watch me recover revenue faster than your current process."';
+    document.getElementById('banner-label').textContent='Active Scenario — Denial Recovery';
+  } else {
+    document.getElementById('scenario-pill').textContent='PRIOR AUTH RESCUE';
+    document.getElementById('banner-title').textContent='PRIOR AUTH RESCUE MISSION';
+    document.getElementById('banner-sub').textContent='Load a prior auth denial · payer friction log · or use the Prior Auth Sample below';
+    document.getElementById('pitch-line').textContent='"What if every auth delay was caught before it cost you revenue?"';
+    document.getElementById('banner-label').textContent='Active Scenario — Prior Auth Rescue';
+  }
+}
+
+// ── FILE HANDLING ───────────────────────────────────────
+function onDrag(e){e.preventDefault();}
+function offDrag(){}
+function onDrop(e){e.preventDefault();const f=e.dataTransfer.files[0];if(f)readFile(f);}
+function onFileSelect(e){if(e.target.files[0])readFile(e.target.files[0]);}
+
+async function readFile(file){
+  const prev = document.getElementById('doc-preview');
+  prev.textContent = 'Reading '+file.name+'...';
+  if(file.type==='application/pdf'||file.name.endsWith('.pdf')){
+    prev.textContent = 'Extracting PDF (client-side)...';
+    try{
+      const ab = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({data:ab}).promise;
+      let text='';
+      for(let i=1;i<=pdf.numPages;i++){
+        const p=await pdf.getPage(i);
+        const c=await p.getTextContent();
+        text+=c.items.map(s=>s.str).join(' ')+'\n';
+      }
+      docText=text.trim();
+      document.getElementById('doc-text').value=docText;
+      prev.textContent='✓ '+file.name+' ('+pdf.numPages+' pages)';
+      updateStatus();
+    }catch(err){prev.textContent='✗ PDF error: '+err.message;}
+  } else {
+    const r=new FileReader();
+    r.onload=ev=>{docText=ev.target.result;document.getElementById('doc-text').value=docText;prev.textContent='✓ '+file.name;updateStatus();};
+    r.readAsText(file);
+  }
+}
+
+// ── SAMPLES ─────────────────────────────────────────────
+const SAMPLES = {
+  denial:`EXPLANATION OF BENEFITS — CLAIM DENIAL NOTICE
+
+Claim ID: AZ-BCBS-2026-88214
+Date of Service: April 14, 2026
+Provider: Desert Ridge Medical Group
+Patient: [Patient Name]
+CPT Code: 99213 (Office Visit, Established Patient, Moderate Complexity)
+Billed Amount: $4,850.00
+Payer Allowed: $0.00
+Patient Responsibility: $0.00
+Payer: Blue Cross Blue Shield of Arizona
+
+DENIAL REASON: Medical necessity not established. Documentation submitted does not support the level of service billed. Modifier 25 not accepted without separate E&M documentation. Physician attestation missing from submitted records.
+
+DENIAL CODE: CO-50 / CO-4
+APPEAL DEADLINE: 60 days from date of this notice (June 13, 2026)
+PRIOR AUTH STATUS: Not required for CPT 99213 per plan agreement.
+
+Additional context: This is the 3rd denial on this account. Total denials this billing cycle: 47 claims. Average denial rate this quarter: 18.4%. Total revenue at risk: $187,000 across 3 payers (BCBS AZ, Aetna, UHC). Staff hours lost to manual review: 312 hrs/month.`,
+
+  prior:`PRIOR AUTHORIZATION FRICTION LOG — OPERATIONS REPORT
+
+Period: April 1–30, 2026
+Prepared by: Revenue Cycle Management Team
+
+PRIOR AUTH QUEUE STATUS:
+Total auths pending: 89
+Average hold time: 24.3 hours (target: 4 hours)
+Auth denial rate: 22% (target: <8%)
+
+Top denial reasons:
+1. Missing clinical notes — 38%
+2. Non-preferred procedure — 31%
+3. Out-of-network — 19%
+4. Insufficient medical necessity documentation — 12%
+
+PAYER BREAKDOWN:
+- UnitedHealth Group: 34 pending, avg 31hr hold, 28% denial rate
+- Aetna: 27 pending, avg 18hr hold, 19% denial rate
+- BCBS AZ: 28 pending, avg 24hr hold, 20% denial rate
+
+FINANCIAL IMPACT:
+Revenue delayed by auth friction: $187,000
+Claims at risk of timely filing denial: $43,000 (>120 days)
+Staff hours lost to auth phone calls: 312 hrs/month
+Estimated labor cost: $9,360/month
+
+RECOMMENDED ACTIONS: Implement real-time auth check at scheduling. Escalate UHC relationship — 31hr avg is above contract SLA. Implement documentation checklist for high-denial CPT codes.`,
+
+  compliance:`COMPLIANCE AUDIT FINDING — INTERNAL MEMO
+
+Date: April 30, 2026
+From: Compliance Department
+To: Executive Leadership
+
+SUBJECT: CMS Condition of Participation Deficiency — Immediate Response Required
+
+Finding 1 (Critical — §482.13): Patient Rights documentation incomplete in 14% of sampled records.
+CMS penalty exposure: $24,000. Response deadline: May 7, 2026.
+
+Finding 2 (Moderate — §482.24): Medical record completion rate below 90% threshold.
+Current rate: 84.1%. Documentation gaps in ER and Outpatient Surgery.
+
+Finding 3 (Moderate): HIPAA Notice of Privacy Practices not consistently provided at intake.
+Affects approximately 340 patient encounters over last 90 days.
+
+OIG Watchlist: 2 vendor relationships flagged for self-referral review under Stark Law.
+HRSA Reporting: 3 grant reports overdue. $2.9M in HRSA funding at risk. 72-hour window to submit.
+
+Immediate actions required to avoid escalation to formal CMS Survey.`
+};
+
+function loadSample(type){
+  docText = SAMPLES[type] || SAMPLES.denial;
+  document.getElementById('doc-text').value = docText;
+  document.getElementById('doc-preview').textContent = '✓ Sample loaded';
+  if(type==='prior') setMode('prior'); else setMode('denial');
+  updateStatus();
+}
+
+function clearAll(){
+  docText='';
+  document.getElementById('doc-text').value='';
+  document.getElementById('doc-preview').textContent='';
+  completedCount=0;
+  for(let i=1;i<=4;i++){
+    document.getElementById('out'+i).textContent='';
+    document.getElementById('out'+i).style.display='none';
+    document.getElementById('idle'+i).innerHTML='<div class="idle-icon">◈</div><div class="idle-txt">Awaiting Document</div>';
+    document.getElementById('idle'+i).style.display='flex';
+    document.getElementById('badge'+i).textContent='STANDBY';
+    document.getElementById('ps'+i).textContent='STANDBY';
+    document.getElementById('ps'+i).style.color='';
+    document.getElementById('tok'+i).textContent='';
+  }
+  document.getElementById('pa1').classList.remove('live');
+  document.getElementById('pa2').classList.remove('live');
+  document.getElementById('pa3').classList.remove('live');
+  document.getElementById('active-txt').textContent='0 / 4 Engines Active';
+  document.getElementById('global-prog').textContent='';
+  document.getElementById('wow-card').classList.remove('visible');
+  updateStatus();
+}
+
+// ── KEY ─────────────────────────────────────────────────
+function onKeyInput(v){
+  GROQ_KEY=v.trim();
+  localStorage.setItem('groq_key',GROQ_KEY);
+  document.getElementById('key-dot').className='key-dot'+(GROQ_KEY.startsWith('gsk_')?' ok':'');
+  document.getElementById('fire-btn').disabled=!GROQ_KEY||docText.length<20;
+}
+
+async function testKey(){
+  const key=document.getElementById('api-key').value.trim();
+  document.getElementById('key-status').textContent='testing...';
+  document.getElementById('key-status').style.color='var(--amber)';
+  try{
+    const r=await fetch('https://api.groq.com/openai/v1/models',{headers:{'Authorization':'Bearer '+key}});
+    const d=await r.json();
+    if(d.data){
+      GROQ_KEY=key;localStorage.setItem('groq_key',key);
+      document.getElementById('key-dot').classList.add('ok');
+      document.getElementById('key-status').textContent='✓ connected';
+      document.getElementById('key-status').style.color='var(--green)';
+      document.getElementById('model-txt').textContent='Groq: '+GROQ_MODEL;
+      document.getElementById('model-txt').style.color='var(--green)';
+      document.getElementById('fire-btn').disabled=docText.length<20;
+    } else {
+      document.getElementById('key-status').textContent='✗ '+(d.error?.message||'invalid');
+      document.getElementById('key-status').style.color='var(--red)';
+    }
+  }catch(e){document.getElementById('key-status').textContent='✗ network error';document.getElementById('key-status').style.color='var(--red)';}
+}
+
+// ── GROQ STREAM ─────────────────────────────────────────
+async function groqStream(sys,user,onChunk,onDone,onError,maxTok=700){
+  if(!GROQ_KEY){onError('No API key configured.');return;}
+  try{
+    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
+      body:JSON.stringify({model:GROQ_MODEL,stream:true,max_tokens:maxTok,messages:[{role:'system',content:sys},{role:'user',content:user}]})
+    });
+    if(!res.ok){const e=await res.json();onError(e.error?.message||'Groq error '+res.status);return;}
+    const reader=res.body.getReader();const dec=new TextDecoder();let buf='',total=0;
+    while(true){
+      const{done,value}=await reader.read();if(done){onDone(total);break;}
+      buf+=dec.decode(value,{stream:true});const lines=buf.split('\n');buf=lines.pop();
+      for(const line of lines){
+        const data=line.replace(/^data: /,'').trim();if(data==='[DONE]'){onDone(total);return;}
+        if(!data||data[0]===':')continue;
+        try{const j=JSON.parse(data);const tok=j.choices?.[0]?.delta?.content;if(tok){total+=tok.length;onChunk(tok);}}catch{}
+      }
+    }
+  }catch(e){onError(e.message);}
+}
+
+// ── ENGINE PROMPTS ──────────────────────────────────────
+function getPrompts(mode){
+  const isDenial = mode==='denial';
+  return [
+    {
+      name:'Document Intelligence',
+      system:`You are Engine 01 — Document Intelligence. Extract and classify all critical data from the provided healthcare document.
+
+Output using EXACTLY these headers:
+DOCUMENT TYPE:
+CLAIM / AUTH ID:
+DATE OF SERVICE:
+PATIENT INFO:
+CPT CODE(S):
+ICD-10 CODE(S):
+PAYER:
+BILLED AMOUNT:
+DENIAL CODE:
+DENIAL REASON:
+APPEAL DEADLINE:
+PRIOR AUTH STATUS:
+DOCUMENT COMPLETENESS SCORE: [1-10]
+MISSING ELEMENTS:
+URGENCY FLAG: [CRITICAL/HIGH/MEDIUM/LOW]
+
+Be precise. Extract exact values. Flag missing data. Max 200 words.`,
+      user:(d)=>`Extract all claim and document data:\n${d}`
+    },
+    {
+      name:'Root Cause Analysis',
+      system:`You are Engine 02 — Root Cause Analysis. Identify exactly why this claim was denied or authorization was delayed and what documentation gaps exist.
+
+Output using EXACTLY these headers:
+PRIMARY DENIAL CAUSE:
+SECONDARY FACTORS:
+DOCUMENTATION GAPS:
+• [gap 1]
+• [gap 2]
+PAYER PATTERN ANALYSIS:
+CODING ISSUES:
+WORKFLOW FAILURE POINT:
+ROOT CAUSE CATEGORY: [Documentation/Coding/Authorization/Medical Necessity/Administrative]
+RECURRENCE RISK: [HIGH/MEDIUM/LOW]
+SYSTEMIC FLAG: [YES — affects multiple claims / NO — isolated incident]
+
+Be clinical and specific. Max 200 words.`,
+      user:(d)=>`Perform root cause analysis:\n${d}`
+    },
+    {
+      name:'Financial Impact',
+      system:`You are Engine 03 — Financial Impact. Quantify the revenue risk and financial exposure from this denial or auth delay.
+
+Output using EXACTLY these headers:
+CLAIM VALUE AT RISK:
+DAYS AGING:
+APPEAL DEADLINE:
+30-DAY REVENUE PROJECTION:
+90-DAY PROJECTION IF UNRESOLVED:
+TOTAL PORTFOLIO EXPOSURE:
+LABOR COST (manual review estimate):
+RECOVERY PROBABILITY: [HIGH/MEDIUM/LOW — with %]
+FINANCIAL RISK LEVEL: [CRITICAL/HIGH/MEDIUM/LOW]
+EXECUTIVE ALERT: [one-line CFO summary]
+
+Use dollar figures. Be specific. Max 180 words.`,
+      user:(d)=>`Calculate full financial impact:\n${d}`
+    },
+    {
+      name:'Recovery Plan + Appeal Letter',
+      system:`You are Engine 04 — Recovery Plan and Appeal Letter Generator. Produce the complete recovery action plan AND the formal appeal letter.
+
+Output using EXACTLY these headers:
+RECOVERY ACTION PLAN:
+STEP 1 — IMMEDIATE (24hrs):
+STEP 2 — DOCUMENTATION (48hrs):
+STEP 3 — SUBMISSION:
+ESCALATION OWNER:
+MISSING DOCUMENTS NEEDED:
+• [doc 1]
+• [doc 2]
+
+---BEGIN APPEAL LETTER---
+[Date]
+[Payer Name and Address]
+Re: [Claim ID / CPT / Denial Code]
+
+Dear Appeals Department,
+
+[Full professional appeal letter body — cite medical necessity, relevant CPT guidelines, and request for reconsideration. Reference specific denial code. Firm, clear, clinically grounded.]
+
+Sincerely,
+[Provider Name]
+[Organization]
+[Contact]
+---END APPEAL LETTER---
+
+Max 350 words total.`,
+      user:(d)=>`Generate recovery plan and appeal letter:\n${d}`
+    }
+  ];
+}
+
+// ── COLORS ──────────────────────────────────────────────
+const ENG_COLORS=['var(--cyan)','var(--amber)','var(--green)','var(--purple)'];
+
+function formatOut(text,num){
+  const c=ENG_COLORS[num-1];
+  const headers=['DOCUMENT TYPE','CLAIM / AUTH ID','DATE OF SERVICE','PATIENT INFO','CPT CODE','ICD-10','PAYER','BILLED AMOUNT','DENIAL CODE','DENIAL REASON','APPEAL DEADLINE','PRIOR AUTH STATUS','DOCUMENT COMPLETENESS','MISSING ELEMENTS','URGENCY FLAG','PRIMARY DENIAL CAUSE','SECONDARY FACTORS','DOCUMENTATION GAPS','PAYER PATTERN','CODING ISSUES','WORKFLOW FAILURE','ROOT CAUSE CATEGORY','RECURRENCE RISK','SYSTEMIC FLAG','CLAIM VALUE AT RISK','DAYS AGING','30-DAY','90-DAY','TOTAL PORTFOLIO','LABOR COST','RECOVERY PROBABILITY','FINANCIAL RISK LEVEL','EXECUTIVE ALERT','RECOVERY ACTION PLAN','STEP 1','STEP 2','STEP 3','ESCALATION OWNER','MISSING DOCUMENTS','---BEGIN APPEAL LETTER---','---END APPEAL LETTER---'];
+  let out=text;
+  headers.forEach(h=>{
+    out=out.replace(new RegExp('^('+h+'[^:]*):','gmi'),`<span class="sh" style="color:${c}">$1:</span>`);
+  });
+  return out
+    .replace(/\$([\d,\.]+[KMB]?)/g,`<span style="color:var(--green);font-weight:700">$$$1</span>`)
+    .replace(/\b(CRITICAL|URGENT)\b/g,`<span style="color:var(--red);font-weight:700">$&</span>`)
+    .replace(/\bHIGH\b/g,`<span style="color:var(--amber);font-weight:700">HIGH</span>`)
+    .replace(/\b(MEDIUM|LOW|OK)\b/g,`<span style="color:var(--muted)">$&</span>`)
+    .replace(/^•\s/gm,`<span style="color:${c}">• </span>`);
+}
+
+// ── SET PIPELINE STATUS ──────────────────────────────────
+function setPipeStatus(n,status){
+  const el=document.getElementById('ps'+n);if(!el)return;
+  el.textContent=status;
+  el.style.color=status==='DONE'?'var(--green)':status==='ACTIVE'?'var(--amber)':status==='ERROR'?'var(--red)':'';
+}
+
+// ── RUN ONE ENGINE ───────────────────────────────────────
+async function runEngine(num,prompt){
+  const outEl=document.getElementById('out'+num);
+  const idleEl=document.getElementById('idle'+num);
+  const badgeEl=document.getElementById('badge'+num);
+  const tokEl=document.getElementById('tok'+num);
+  idleEl.innerHTML=`<div class="loading-row" style="color:${ENG_COLORS[num-1]}"><div class="spin"></div>Engine ${num} processing...</div>`;
+  badgeEl.textContent='PROCESSING';setPipeStatus(num,'ACTIVE');
+  let text='';
+  await groqStream(
+    prompt.system, prompt.user(docText.slice(0,3500)),
+    (chunk)=>{
+      text+=chunk;
+      idleEl.style.display='none';outEl.style.display='block';
+      outEl.innerHTML=formatOut(text,num)+'<span class="cursor">▌</span>';
+      outEl.parentElement.scrollTop=outEl.parentElement.scrollHeight;
+    },
+    (toks)=>{
+      outEl.innerHTML=formatOut(text,num);
+      badgeEl.textContent='COMPLETE';setPipeStatus(num,'DONE');
+      tokEl.textContent=Math.round(toks/4)+' tokens';
+      completedCount++;
+      document.getElementById('active-txt').textContent=completedCount+' / 4 Engines Complete';
+      if(completedCount===4) showWow(text);
+    },
+    (err)=>{
+      idleEl.innerHTML=`<div style="color:var(--red);font-size:9px;text-align:center;padding:10px">⚠ ${err}</div>`;
+      badgeEl.textContent='ERROR';setPipeStatus(num,'ERROR');
+    },
+    num===4?950:num===3?750:600
+  );
+}
+
+// ── FIRE ALL ─────────────────────────────────────────────
+async function fireAll(){
+  if(!GROQ_KEY){alert('Enter your Groq API key first.');return;}
+  if(!docText||docText.length<20){alert('Load or paste a document first.');return;}
+  const saved=docText; clearAll(); docText=saved;
+  document.getElementById('doc-text').value=docText;
+  completedCount=0;
+  document.getElementById('global-prog').textContent='Firing all 4 engines...';
+  document.getElementById('sys-dot').className='s-dot red';
+  ['pa1','pa2','pa3'].forEach(id=>document.getElementById(id).classList.add('live'));
+  const prompts=getPrompts(currentMode);
+  await Promise.all([runEngine(1,prompts[0]),runEngine(2,prompts[1]),runEngine(3,prompts[2]),runEngine(4,prompts[3])]);
+  ['pa1','pa2','pa3'].forEach(id=>document.getElementById(id).classList.remove('live'));
+  document.getElementById('global-prog').textContent='✓ All 4 engines complete';
+  document.getElementById('sys-dot').className='s-dot';
+}
+
+// ── RELAY ────────────────────────────────────────────────
+async function relay(from,to){
+  const fromText=document.getElementById('out'+from).textContent;
+  if(!fromText)return;
+  const prompts=getPrompts(currentMode);
+  const prev=docText;
+  docText=docText+'\n\nPREVIOUS ENGINE OUTPUT:\n'+fromText.slice(0,1200);
+  await runEngine(to,prompts[to-1]);
+  docText=prev;
+}
+
+// ── WOW CARD ─────────────────────────────────────────────
+function showWow(lastEngineText){
+  // Parse values from engine outputs for the wow card
+  const e1=document.getElementById('out1').textContent;
+  const e2=document.getElementById('out2').textContent;
+  const e3=document.getElementById('out3').textContent;
+
+  const claimMatch=e3.match(/\$([\d,]+)/);
+  const probMatch=e3.match(/RECOVERY PROBABILITY[^:]*:\s*([^\n]+)/i);
+  const causeMatch=e2.match(/PRIMARY DENIAL CAUSE[^:]*:\s*([^\n]+)/i);
+  const deadlineMatch=e1.match(/APPEAL DEADLINE[^:]*:\s*([^\n]+)/i);
+
+  document.getElementById('ws-claim').textContent=claimMatch?'$'+claimMatch[1]:'See Report';
+  document.getElementById('ws-prob').textContent=probMatch?probMatch[1].trim().slice(0,20):'HIGH';
+  document.getElementById('ws-cause').textContent=causeMatch?causeMatch[1].trim().slice(0,25):'See Engine 02';
+  document.getElementById('ws-action').textContent='Submit Appeal + Missing Docs';
+  document.getElementById('ws-deadline').textContent=deadlineMatch?deadlineMatch[1].trim().slice(0,15):'60 Days';
+
+  document.getElementById('wow-card').classList.add('visible');
+  document.getElementById('wow-card').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+// ── COPY / EXPORT ────────────────────────────────────────
+function copyOut(id){const t=document.getElementById(id).textContent;if(t)navigator.clipboard.writeText(t).catch(()=>{});}
+
+function exportAll(){
+  const ts=new Date().toISOString().slice(0,16).replace('T','_').replace(':','');
+  const names=['Document Intelligence','Root Cause Analysis','Financial Impact','Recovery Plan + Appeal Letter'];
+  const parts=[1,2,3,4].map(n=>`${'='.repeat(60)}\nENGINE ${n}: ${names[n-1]}\n${'='.repeat(60)}\n${document.getElementById('out'+n).textContent||'[No output]'}\n`);
+  const blob=new Blob([`TSM DENIAL RECOVERY WAR ROOM — EXPORT\n${new Date().toLocaleString()}\nMode: ${currentMode.toUpperCase()}\n\nDOCUMENT:\n${docText.slice(0,600)}...\n\n`,...parts],{type:'text/plain'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`tsm-war-room-${ts}.txt`;a.click();
+}
+
+// LOAD DENIAL SAMPLE ON INIT
+loadSample('denial');
+</script>
+</body>
+</html>
