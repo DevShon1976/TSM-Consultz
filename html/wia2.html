@@ -216,6 +216,45 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:1
 .view.active{animation:fadein .2s ease;}
 .gate-card{animation:fadein .3s ease both;}
 .gate-card:nth-child(2){animation-delay:.08s;}
+
+/* == GUIDE OVERLAY == */
+#guide-overlay{position:fixed;inset:0;z-index:9999;background:rgba(5,7,10,.97);display:none;flex-direction:row;}
+#guide-overlay.open{display:flex;}
+.guide-close{position:absolute;top:14px;right:18px;background:none;border:0.5px solid var(--border);color:var(--dim);font-size:13px;cursor:pointer;padding:4px 8px;border-radius:var(--radius);}
+.guide-close:hover{color:var(--bright);border-color:var(--dim);}
+.guide-sidebar{width:230px;flex-shrink:0;border-right:0.5px solid var(--border);padding:20px 0;overflow-y:auto;background:#08090c;}
+.guide-main{flex:1;overflow-y:auto;padding:28px 36px;}
+.guide-nav-label{font-size:7px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;padding:10px 16px 4px;}
+.guide-nav-item{font-size:10px;color:#4a5568;padding:5px 16px;cursor:pointer;letter-spacing:.3px;}
+.guide-nav-item:hover{color:var(--text);}
+.guide-nav-item.g-active{color:var(--gold);border-left:2px solid var(--gold);padding-left:14px;}
+.guide-nav-item.g-active-t{color:var(--teal);border-left:2px solid var(--teal);padding-left:14px;}
+.guide-section{display:none;max-width:760px;}
+.guide-section.active{display:block;}
+.guide-tag{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:6px;}
+.guide-tag-t{color:var(--teal);}
+.guide-h1{font-family:var(--display);font-size:22px;color:var(--bright);letter-spacing:1px;margin-bottom:8px;}
+.guide-h2{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin:18px 0 8px;}
+.guide-desc{font-size:11px;color:var(--text);line-height:1.8;margin-bottom:4px;}
+.guide-step{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start;}
+.guide-step-num{width:20px;height:20px;border-radius:50%;background:var(--border);color:var(--dim);font-size:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.guide-step-title{font-size:11px;color:var(--bright);margin-bottom:3px;}
+.guide-step-text{font-size:10px;color:var(--text);line-height:1.7;}
+.guide-tip{display:flex;gap:10px;padding:10px 14px;border:0.5px solid rgba(201,168,76,.3);border-radius:var(--radius);background:var(--gold3);margin-top:16px;}
+.guide-tip-icon{color:var(--gold);font-size:12px;flex-shrink:0;}
+.guide-tip-icon-t{color:var(--teal);}
+.guide-feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px;}
+.guide-feature{background:var(--panel);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px 14px;}
+.guide-feature-title{font-size:10px;color:var(--bright);margin-bottom:4px;font-weight:600;}
+.guide-feature-text{font-size:10px;color:var(--text);line-height:1.7;}
+.kbd{display:inline-block;padding:1px 5px;background:var(--border);border-radius:3px;font-size:9px;color:var(--text);font-family:var(--mono);}
+.badge-demo{display:inline-block;padding:2px 7px;border-radius:2px;font-size:9px;font-weight:700;letter-spacing:.5px;}
+.bd-ready{background:rgba(16,185,129,.15);color:var(--green);border:0.5px solid rgba(16,185,129,.3);}
+.bd-review{background:rgba(245,158,11,.12);color:var(--amber);border:0.5px solid rgba(245,158,11,.3);}
+.bd-risk{background:rgba(239,68,68,.12);color:var(--red);border:0.5px solid rgba(239,68,68,.3);}
+.bd-pending{background:rgba(148,163,184,.1);color:#94a3b8;border:0.5px solid rgba(148,163,184,.2);}
+.bd-clear{background:rgba(16,185,129,.1);color:var(--green);border:0.5px solid rgba(16,185,129,.2);}
+.bd-flagged{background:rgba(239,68,68,.15);color:var(--red);border:0.5px solid rgba(239,68,68,.4);}
 </style>
 </head>
 <body>
@@ -263,6 +302,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:1
         <button class="ts-btn" id="ts-staffing" onclick="setTenant('staffing')">◈ Staffing</button>
         <button class="ts-btn" id="ts-health" onclick="setTenant('health')">◉ Healthcare</button>
       </div>
+      <button class="rbtn rbtn-dim" style="font-size:8px;padding:4px 10px;letter-spacing:1px;" onclick="openGuide()">? How-To Guide</button>
       <div class="status-pill"><div class="sdot"></div><span id="status-text">Live</span></div>
     </div>
   </div>
@@ -1330,5 +1370,277 @@ async function tsmAsk(){
   }
 }
 </script>
+<!-- ══ HOW-TO GUIDE OVERLAY ══ -->
+<div id="guide-overlay">
+  <button class="guide-close" onclick="closeGuide()">✕</button>
+  <div class="guide-sidebar">
+    <div style="font-family:var(--display);font-size:18px;color:var(--gold);letter-spacing:2px;margin-bottom:4px;padding:0 16px;">WIA GUIDE</div>
+    <div style="font-size:8px;color:var(--dim);letter-spacing:1px;margin-bottom:16px;padding:0 16px;">Workforce Intelligence Platform</div>
+    <div class="guide-nav-label">Getting Started</div>
+    <div class="guide-nav-item g-active" onclick="showGuide('g-start',this)">◈ Platform Overview</div>
+    <div class="guide-nav-item" onclick="showGuide('g-gate',this)">◈ Tenant Selection</div>
+    <div class="guide-nav-item" onclick="showGuide('g-nav',this)">◈ Navigation & Layout</div>
+    <div class="guide-nav-label">Staffing Mode</div>
+    <div class="guide-nav-item" onclick="showGuide('g-s-overview',this)">◈ Branch Overview</div>
+    <div class="guide-nav-item" onclick="showGuide('g-s-roster',this)">◈ Ready-to-Submit Roster</div>
+    <div class="guide-nav-item" onclick="showGuide('g-s-ghost',this)">◈ Ghost Risk Tracker</div>
+    <div class="guide-nav-item" onclick="showGuide('g-s-pipeline',this)">◈ Candidate Pipeline</div>
+    <div class="guide-nav-item" onclick="showGuide('g-s-fasttracks',this)">◈ Fast Track Roles</div>
+    <div class="guide-nav-item" onclick="showGuide('g-s-report',this)">◈ Readiness Reports</div>
+    <div class="guide-nav-item" onclick="showGuide('g-s-pilot',this)">◈ Randstad Pilot Mode</div>
+    <div class="guide-nav-item" onclick="showGuide('g-s-analytics',this)">◈ Branch Analytics</div>
+    <div class="guide-nav-label">Healthcare Mode</div>
+    <div class="guide-nav-item" onclick="showGuide('g-h-overview',this)">◉ System Overview</div>
+    <div class="guide-nav-item" onclick="showGuide('g-h-psv',this)">◉ PSV Tracker</div>
+    <div class="guide-nav-item" onclick="showGuide('g-h-compliance',this)">◉ Compliance Audit Log</div>
+    <div class="guide-nav-item" onclick="showGuide('g-h-units',this)">◉ Unit Orientation</div>
+    <div class="guide-nav-item" onclick="showGuide('g-h-staff',this)">◉ Staff Readiness</div>
+    <div class="guide-nav-item" onclick="showGuide('g-h-competency',this)">◉ Competency Blueprints</div>
+    <div class="guide-nav-item" onclick="showGuide('g-h-facilities',this)">◉ Multi-Facility RBAC</div>
+    <div class="guide-nav-label">Tips & Reference</div>
+    <div class="guide-nav-item" onclick="showGuide('g-badges',this)">◈ Badge Reference</div>
+    <div class="guide-nav-item" onclick="showGuide('g-tips',this)">◈ Power User Tips</div>
+  </div>
+  <div class="guide-main">
+
+    <div class="guide-section active" id="g-start">
+      <div class="guide-tag">Getting Started</div>
+      <div class="guide-h1">WIA Platform Overview</div>
+      <div class="guide-desc">WIA — Workforce Intelligence &amp; Automation — is a unified operational platform with two deployment modes: <strong style="color:var(--gold)">The Placement Academy</strong> for staffing agencies and <strong style="color:var(--teal)">The Shift-Ready Bridge</strong> for healthcare enterprises.</div>
+      <div class="guide-h2">What This Platform Does</div>
+      <div class="guide-feature-grid">
+        <div class="guide-feature"><div class="guide-feature-title" style="color:var(--gold);">◈ Staffing Mode</div><div class="guide-feature-text">Moves candidates from raw applicant to interview-ready in under 72 hours. Tracks readiness scores, flags ghost risk, maintains a filtered ready-to-submit roster, and generates placement reports.</div></div>
+        <div class="guide-feature"><div class="guide-feature-title" style="color:var(--teal);">◉ Healthcare Mode</div><div class="guide-feature-text">Bridges the gap between credentialing approval and floor deployment. Tracks primary source verification, OIG flags, unit orientation checklists, and Joint Commission compliance logs.</div></div>
+        <div class="guide-feature"><div class="guide-feature-title">Tenant Switching</div><div class="guide-feature-text">Switch between modes using the toggle in the top-right corner. All views, sidebar items, and data update instantly.</div></div>
+        <div class="guide-feature"><div class="guide-feature-title">TSM AI Widget</div><div class="guide-feature-text">The teal bar at the bottom-right is always available. Click it to open the AI command panel and ask any question about your workforce data or workflows.</div></div>
+      </div>
+      <div class="guide-tip"><div class="guide-tip-icon">◈</div><div>Use the left navigation to jump directly to any section. Each section explains what the view shows, how to use it, and what actions you can take.</div></div>
+    </div>
+
+    <div class="guide-section" id="g-gate">
+      <div class="guide-tag">Getting Started</div>
+      <div class="guide-h1">Tenant Selection</div>
+      <div class="guide-desc">When you first open WIA, you land on the Tenant Gate — a selection screen asking which mode you need.</div>
+      <div class="guide-h2">How to Select Your Tenant</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Read the two cards</div><div class="guide-step-text"><strong style="color:var(--gold)">The Placement Academy</strong> is for staffing agency branch operations. <strong style="color:var(--teal)">The Shift-Ready Bridge</strong> is for healthcare enterprise onboarding.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Click your mode</div><div class="guide-step-text">Click the card that matches your role. The platform loads with the correct sidebar, views, and data.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div><div class="guide-step-title">Switch modes any time</div><div class="guide-step-text">The <span class="kbd">◈ Staffing</span> / <span class="kbd">◉ Healthcare</span> toggle in the top-right lets you switch modes without returning to the gate.</div></div></div>
+      <div class="guide-tip"><div class="guide-tip-icon">◈</div><div>Force a specific mode on load by adding <span class="kbd">?tenant=staffing</span> or <span class="kbd">?tenant=health</span> to the URL.</div></div>
+    </div>
+
+    <div class="guide-section" id="g-nav">
+      <div class="guide-tag">Getting Started</div>
+      <div class="guide-h1">Navigation &amp; Layout</div>
+      <div class="guide-desc">WIA has a consistent three-zone layout: the top bar, left sidebar, and main content area.</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Top Bar</div><div class="guide-step-text">Shows the current mode name on the left. Right side has the tenant switcher, live status pill, and this How-To Guide button.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Left Sidebar</div><div class="guide-step-text">All views for the current mode, grouped by category. Active item highlighted in gold (staffing) or teal (healthcare). Red badge numbers indicate items requiring attention.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div><div class="guide-step-title">Main Content Area</div><div class="guide-step-text">Stat cards at the top give headline numbers. Tables, cards, and charts give the detail. Scrolls independently of the sidebar.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">4</div><div><div class="guide-step-title">TSM AI Widget</div><div class="guide-step-text">Fixed to the bottom-right corner. Click the teal bar to expand. Type any question and press <span class="kbd">Enter</span> or click <span class="kbd">SEND</span>.</div></div></div>
+    </div>
+
+    <div class="guide-section" id="g-s-overview">
+      <div class="guide-tag">Staffing Mode</div>
+      <div class="guide-h1">Branch Overview</div>
+      <div class="guide-desc">Your daily command center. Opens by default when you enter Staffing mode. Shows real-time pipeline health and surfaces urgent items requiring recruiter attention.</div>
+      <div class="guide-h2">Stat Cards</div>
+      <div class="guide-feature-grid">
+        <div class="guide-feature"><div class="guide-feature-title">Active Applicants</div><div class="guide-feature-text">Total candidates in your pipeline across all stages. Delta shows change since last week.</div></div>
+        <div class="guide-feature"><div class="guide-feature-title">Ready to Submit</div><div class="guide-feature-text">Candidates who passed every onboarding metric and are cleared for client submission. Your daily deliverable number.</div></div>
+        <div class="guide-feature"><div class="guide-feature-title">Ghost Risk</div><div class="guide-feature-text">Candidates flagged as unresponsive past the 12-hour threshold. Red = urgent intervention needed.</div></div>
+        <div class="guide-feature"><div class="guide-feature-title">Avg Readiness Score</div><div class="guide-feature-text">Composite readiness index across your active pipeline. Trend delta shows improvement vs last cycle.</div></div>
+      </div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Branch Pulse Table</div><div class="guide-step-text">Shows the 5 most recent candidates with track, readiness score bar, last-active timestamp, and status badge. Green = strong, amber = borderline, red = at risk.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Lower Panels</div><div class="guide-step-text">Ghost Risk Summary shows top unresponsive candidates with silence duration. Time-to-Submit Trend shows avg days from intake to submission per track.</div></div></div>
+    </div>
+
+    <div class="guide-section" id="g-s-roster">
+      <div class="guide-tag">Staffing Mode</div>
+      <div class="guide-h1">Ready-to-Submit Roster</div>
+      <div class="guide-desc">Shows only candidates who have cleared every metric. Your daily submission queue — no filtering required.</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Review the roster</div><div class="guide-step-text">Every candidate shown has passed readiness scoring, workflow accuracy, and compliance thresholds. Green border confirms this is a filtered, cleared list.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Check scores</div><div class="guide-step-text">Readiness % as a number. Workflow and Compliance as score bars. Rank candidates based on client requirements.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div><div class="guide-step-title">Submit to client</div><div class="guide-step-text">Click <span class="kbd">Submit ↗</span> on any row. Use <span class="kbd">Export Roster CSV</span> to download, or <span class="kbd">Send to Requisition Board</span> to push all ready candidates.</div></div></div>
+      <div class="guide-tip"><div class="guide-tip-icon">◈</div><div>Morning routine: Open Roster → review count → submit to open reqs. Under 5 minutes.</div></div>
+    </div>
+
+    <div class="guide-section" id="g-s-ghost">
+      <div class="guide-tag">Staffing Mode</div>
+      <div class="guide-h1">Ghost Risk Tracker</div>
+      <div class="guide-desc">Predictive drop-off monitor. Flags candidates who have gone silent past defined time thresholds.</div>
+      <div class="guide-feature-grid">
+        <div class="guide-feature"><div class="guide-feature-title" style="color:var(--red);">High Risk (12h+)</div><div class="guide-feature-text">Red border. Immediate SMS outreach recommended. Pipeline loss likely without intervention within 2 hours.</div></div>
+        <div class="guide-feature"><div class="guide-feature-title" style="color:var(--amber);">Medium Risk (6–12h)</div><div class="guide-feature-text">Amber border. Proactive ping now prevents escalation. Usually a stage-stall rather than true disengagement.</div></div>
+      </div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">SMS Ping (individual)</div><div class="guide-step-text">Click <span class="kbd">SMS Ping</span> on any row to trigger an automated text to that candidate.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Trigger SMS Blast</div><div class="guide-step-text">The red <span class="kbd">Trigger SMS Blast</span> button sends a re-engagement message to all high-risk candidates simultaneously.</div></div></div>
+    </div>
+
+    <div class="guide-section" id="g-s-pipeline">
+      <div class="guide-tag">Staffing Mode</div>
+      <div class="guide-h1">Active Applicants Pipeline</div>
+      <div class="guide-desc">The full unfiltered view of every active candidate across all tracks and stages.</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Column structure</div><div class="guide-step-text">Each row: candidate number, name + role, track, readiness % (color-coded), workflow bar, compliance bar, communication bar, last-active timestamp, status badge.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Score bars</div><div class="guide-step-text">Green (85%+) = strong. Amber (65–84%) = adequate. Red (&lt;65%) = needs improvement before submission.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div><div class="guide-step-title">Status badges</div><div class="guide-step-text"><span class="badge-demo bd-ready">READY</span> = cleared. <span class="badge-demo bd-review">REVIEW</span> = borderline. <span class="badge-demo bd-risk">GHOST RISK</span> = unresponsive. Use Filter to narrow by status.</div></div></div>
+    </div>
+
+    <div class="guide-section" id="g-s-fasttracks">
+      <div class="guide-tag">Staffing Mode</div>
+      <div class="guide-h1">Fast Track Roles</div>
+      <div class="guide-desc">Pre-configured role-specific workflows that run only the assessments and compliance checks relevant to that role category.</div>
+      <div class="guide-feature-grid">
+        <div class="guide-feature"><div class="guide-feature-title">Healthcare Admin</div><div class="guide-feature-text">Prior auth, medical billing, revenue cycle, HIPAA. 48-hour compliance-first sprint.</div></div>
+        <div class="guide-feature"><div class="guide-feature-title">Light Industrial / Logistics</div><div class="guide-feature-text">Forklift cert, warehouse safety, task sequencing. Speed-to-floor priority.</div></div>
+        <div class="guide-feature"><div class="guide-feature-title">FinOps / Accounting</div><div class="guide-feature-text">AP/AR ledger validation, reconciliation workflows, interview simulation.</div></div>
+        <div class="guide-feature"><div class="guide-feature-title">Insurance Compliance</div><div class="guide-feature-text">CE validation, state licensing, AHIP preparation, P&amp;C code fluency.</div></div>
+      </div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Click a track card</div><div class="guide-step-text">Highlights it (gold border) and filters the candidate pipeline to that track. The candidate count on each card is live.</div></div></div>
+    </div>
+
+    <div class="guide-section" id="g-s-report">
+      <div class="guide-tag">Staffing Mode</div>
+      <div class="guide-h1">Readiness Reports</div>
+      <div class="guide-desc">Individual candidate report cards — a structured, data-backed document justifying every placement recommendation.</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Header</div><div class="guide-step-text">Candidate name, role path, and status badges. The circle score is the composite Readiness Score.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Dimension Scores</div><div class="guide-step-text">Four scored dimensions: Workflow Accuracy, Compliance Understanding, Communication Skills, Adaptability Index — each with % and plain-language rating.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div><div class="guide-step-title">Strengths &amp; Gaps</div><div class="guide-step-text">Left panel lists validated competencies. Right panel lists identified gaps with a specific development plan for each.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">4</div><div><div class="guide-step-title">Actions</div><div class="guide-step-text"><span class="kbd">Download PDF Report</span> exports a formatted document. <span class="kbd">Submit to Requisition</span> flags for placement. <span class="kbd">Add to Roster</span> adds to ready list.</div></div></div>
+    </div>
+
+    <div class="guide-section" id="g-s-pilot">
+      <div class="guide-tag">Staffing Mode</div>
+      <div class="guide-h1">Randstad Pilot Scenario</div>
+      <div class="guide-desc">Enterprise demonstration mode showing a structured deployment scenario configured for Randstad Workforce Solutions.</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">5-Step Deployment Flow</div><div class="guide-step-text">Intake → Simulation Tasks → Readiness Scoring → Recruiter Review → Submit to Client. Active step highlighted in gold.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Phase Rollout Plan</div><div class="guide-step-text">Three-phase rollout: 14-Day Proof (free), Pilot Month ($1,500), Standard Rate ($2,500/mo). Track where a prospect is in the sales process.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div><div class="guide-step-title">ROI Snapshot</div><div class="guide-step-text">Candidates processed, interview-ready delivered, recruiter hours saved, ghost-offs prevented, projected margin lift.</div></div></div>
+    </div>
+
+    <div class="guide-section" id="g-s-analytics">
+      <div class="guide-tag">Staffing Mode</div>
+      <div class="guide-h1">Branch Analytics</div>
+      <div class="guide-desc">Performance summary for the current branch cycle. Use for weekly reviews and identifying underperforming tracks or stages.</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Time-to-Submit Reduction</div><div class="guide-step-text">% improvement vs your manual baseline. Your headline ROI metric for every client or manager conversation.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Placement Funnel</div><div class="guide-step-text">Conversion at each stage: Entered → Intake → Assessment → Ready → Submitted. The biggest drop between two stages identifies your primary bottleneck.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div><div class="guide-step-title">Track Performance</div><div class="guide-step-text">Each track shows avg readiness score. Green (85%+) = performing well. Red (&lt;65%) = investigate intake quality or candidate sourcing.</div></div></div>
+    </div>
+
+    <div class="guide-section" id="g-h-overview">
+      <div class="guide-tag guide-tag-t">Healthcare Mode</div>
+      <div class="guide-h1">System Overview</div>
+      <div class="guide-desc">The healthcare operations command center. Real-time snapshot of staff pipeline health, verification status, compliance scores, and unit orientation progress.</div>
+      <div class="guide-feature-grid">
+        <div class="guide-feature"><div class="guide-feature-title">Staff in Pipeline</div><div class="guide-feature-text">Total clinical and non-clinical staff in the onboarding and verification process across all facilities.</div></div>
+        <div class="guide-feature"><div class="guide-feature-title">PSV Verified</div><div class="guide-feature-text">Staff who completed Primary Source Verification — license confirmed, OIG cleared, background complete. Your deployable pool.</div></div>
+        <div class="guide-feature"><div class="guide-feature-title">OIG Flags</div><div class="guide-feature-text">Staff with active OIG exclusion flags. No flagged staff can be scheduled until resolved.</div></div>
+        <div class="guide-feature"><div class="guide-feature-title">Avg Time to Floor</div><div class="guide-feature-text">Average days from credential submission to floor-ready status. Negative delta shows improvement vs standard hospital onboarding.</div></div>
+      </div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Staff Readiness Table</div><div class="guide-step-text">Each row: name, unit, license, OIG badge, background badge, PSV badge. Any non-green badge requires action before scheduling.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Lower Panels</div><div class="guide-step-text">Facility Compliance Summary shows score per facility. Unit Orientation Status shows fraction of staff completed per unit.</div></div></div>
+    </div>
+
+    <div class="guide-section" id="g-h-psv">
+      <div class="guide-tag guide-tag-t">Healthcare Mode</div>
+      <div class="guide-h1">PSV Tracker</div>
+      <div class="guide-desc">Primary Source Verification tracking table. The most compliance-critical view in the platform.</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">State License</div><div class="guide-step-text">Verification via the issuing state licensing board — not self-reported. Shows <span class="badge-demo bd-clear">CLEAR</span> when verified.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">OIG Check</div><div class="guide-step-text"><span class="badge-demo bd-flagged">FLAGGED</span> = individual is on the OIG exclusion list. Cannot be employed in any federally-funded healthcare program until resolved. Immediate scheduling hold.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div><div class="guide-step-title">PSV Status</div><div class="guide-step-text"><span class="badge-demo bd-ready">READY</span> = all checks clear. <span class="badge-demo bd-review">REVIEW</span> = checks in progress. <span class="badge-demo bd-risk">HOLD</span> = OIG flag — cannot proceed.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">4</div><div><div class="guide-step-title">Run Batch Verify</div><div class="guide-step-text">Initiates a batch re-check of all pending PSV items simultaneously. Use at the start of each shift or after a bulk onboarding event.</div></div></div>
+      <div class="guide-tip" style="border-color:rgba(20,184,166,.3);background:var(--teal2);"><div class="guide-tip-icon guide-tip-icon-t">◉</div><div>Any OIG flag automatically sets PSV to "Hold" — non-overridable. Resolve the OIG issue before any other steps.</div></div>
+    </div>
+
+    <div class="guide-section" id="g-h-compliance">
+      <div class="guide-tag guide-tag-t">Healthcare Mode</div>
+      <div class="guide-h1">Compliance Audit Log</div>
+      <div class="guide-desc">An unalterable, timestamped record of every credentialing, verification, and training event. Built to Joint Commission documentation standards.</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Columns</div><div class="guide-step-text">Time, Event description, Actor (System or Admin name), and Date. System events are automated; Admin events are human-initiated.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Export Audit PDF</div><div class="guide-step-text">Generates a formatted, dated compliance report suitable for Joint Commission or CMS surveyors. All entries included with full actor attribution and timestamps.</div></div></div>
+      <div class="guide-tip" style="border-color:rgba(20,184,166,.3);background:var(--teal2);"><div class="guide-tip-icon guide-tip-icon-t">◉</div><div>Log entries cannot be edited or deleted — by design for regulatory compliance. Export before audit visits for a static record at that point in time.</div></div>
+    </div>
+
+    <div class="guide-section" id="g-h-units">
+      <div class="guide-tag guide-tag-t">Healthcare Mode</div>
+      <div class="guide-h1">Unit Orientation</div>
+      <div class="guide-desc">Floor-specific onboarding checklists by unit (ICU, Med-Surg, ER, etc.). Ensures staff complete unit-specific protocols before their first scheduled shift.</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Unit cards</div><div class="guide-step-text">Each unit shows name, assigned staff, and completion percentage. Below the header is the checklist of orientation items specific to that unit.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Checklist items</div><div class="guide-step-text">Green checkmark + strikethrough = completed. Empty checkbox = outstanding. Outstanding items block floor-ready status for that staff member in that unit.</div></div></div>
+      <div class="guide-tip" style="border-color:rgba(20,184,166,.3);background:var(--teal2);"><div class="guide-tip-icon guide-tip-icon-t">◉</div><div>Staff floating between units must complete the orientation checklist for each unit independently. Completion does not transfer between units.</div></div>
+    </div>
+
+    <div class="guide-section" id="g-h-staff">
+      <div class="guide-tag guide-tag-t">Healthcare Mode</div>
+      <div class="guide-h1">Staff Readiness</div>
+      <div class="guide-desc">Full clinical and non-clinical staff readiness table. Combines competency score, orientation progress, and PSV status into a single floor-ready determination.</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Competency Score</div><div class="guide-step-text">Performance across competency blueprints for that staff member's system (Cerner, AppCentral, etc.).</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Orientation %</div><div class="guide-step-text">Percentage of unit-specific orientation items completed. Must reach 100% for full floor clearance in most facilities.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div><div class="guide-step-title">Floor Ready</div><div class="guide-step-text"><span class="badge-demo bd-ready">READY</span> requires: competency ≥80%, orientation ≥80%, PSV = Verified. Any shortfall shows <span class="badge-demo bd-review">REVIEW</span> or <span class="badge-demo bd-risk">HOLD</span>. Schedulers use this column to confirm eligibility before assigning a shift.</div></div></div>
+    </div>
+
+    <div class="guide-section" id="g-h-competency">
+      <div class="guide-tag guide-tag-t">Healthcare Mode</div>
+      <div class="guide-h1">Competency Blueprints</div>
+      <div class="guide-desc">System-specific training modules tailored to the EMR and workflow systems used by each facility.</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Banner Health — Oracle Cerner</div><div class="guide-step-text">PowerChart navigation, order entry and medication reconciliation, patient ADT workflow, clinical documentation standards, imaging and results review.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">HonorHealth — AppCentral</div><div class="guide-step-text">Credential entry and validation, HonorHealth policy attestation, unit float pool orientation, incident reporting walkthrough, patient satisfaction protocol.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div><div class="guide-step-title">Completion rates</div><div class="guide-step-text">Each module shows "X/Y staff" completion. Low completion identifies a targeted training gap — schedule that session before the next deployment wave.</div></div></div>
+    </div>
+
+    <div class="guide-section" id="g-h-facilities">
+      <div class="guide-tag guide-tag-t">Healthcare Mode</div>
+      <div class="guide-h1">Multi-Facility RBAC</div>
+      <div class="guide-desc">Role-Based Access Control management. Controls which administrators can see data for which facilities.</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Role hierarchy</div><div class="guide-step-text">Regional Admin = sees all facilities in region. Facility Admin = assigned facility only. Credential Manager = PSV and compliance data only. Unit Coordinator = orientation and scheduling data only.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Manage button</div><div class="guide-step-text">Click <span class="kbd">Manage ↗</span> on any facility to open access control settings — add or remove admins, adjust role assignments, audit recent access events.</div></div></div>
+    </div>
+
+    <div class="guide-section" id="g-badges">
+      <div class="guide-tag">Reference</div>
+      <div class="guide-h1">Badge Reference</div>
+      <div class="guide-desc">Every status badge in WIA follows a consistent color and meaning system.</div>
+      <div style="display:flex;flex-direction:column;gap:0;margin-top:8px;">
+        <div style="display:flex;align-items:flex-start;gap:14px;padding:10px 0;border-bottom:0.5px solid var(--border);"><span class="badge-demo bd-ready" style="flex-shrink:0;margin-top:2px;">READY</span><span style="font-size:11px;color:var(--text);line-height:1.7;">All required checks complete. Safe to proceed — submit, schedule, or deploy.</span></div>
+        <div style="display:flex;align-items:flex-start;gap:14px;padding:10px 0;border-bottom:0.5px solid var(--border);"><span class="badge-demo bd-review" style="flex-shrink:0;margin-top:2px;">REVIEW</span><span style="font-size:11px;color:var(--text);line-height:1.7;">Borderline or incomplete. Requires human judgment before next action.</span></div>
+        <div style="display:flex;align-items:flex-start;gap:14px;padding:10px 0;border-bottom:0.5px solid var(--border);"><span class="badge-demo bd-risk" style="flex-shrink:0;margin-top:2px;">GHOST RISK</span><span style="font-size:11px;color:var(--text);line-height:1.7;">Staffing: candidate unresponsive 12h+. Healthcare: OIG flag or hold status.</span></div>
+        <div style="display:flex;align-items:flex-start;gap:14px;padding:10px 0;border-bottom:0.5px solid var(--border);"><span class="badge-demo bd-pending" style="flex-shrink:0;margin-top:2px;">PENDING</span><span style="font-size:11px;color:var(--text);line-height:1.7;">Check initiated but not yet returned. Monitor — no action required yet.</span></div>
+        <div style="display:flex;align-items:flex-start;gap:14px;padding:10px 0;border-bottom:0.5px solid var(--border);"><span class="badge-demo bd-clear" style="flex-shrink:0;margin-top:2px;">CLEAR</span><span style="font-size:11px;color:var(--text);line-height:1.7;">Specific check (OIG, background) passed cleanly. Component-level confirmation.</span></div>
+        <div style="display:flex;align-items:flex-start;gap:14px;padding:10px 0;"><span class="badge-demo bd-flagged" style="flex-shrink:0;margin-top:2px;">FLAGGED</span><span style="font-size:11px;color:var(--text);line-height:1.7;">Specific check failed or returned a disqualifying result. Immediate review required.</span></div>
+      </div>
+    </div>
+
+    <div class="guide-section" id="g-tips">
+      <div class="guide-tag">Reference</div>
+      <div class="guide-h1">Power User Tips</div>
+      <div class="guide-h2">Staffing Mode</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Daily recruiter routine (5 min)</div><div class="guide-step-text">Branch Overview → note Ready count → Ghost Risk → SMS Ping high-risk → Ready Roster → submit to open reqs. Done without manual candidate calls.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Force a mode via URL</div><div class="guide-step-text">Bookmark <span class="kbd">wia2.html?tenant=staffing</span> or <span class="kbd">wia2.html?tenant=health</span> to skip the gate every time.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div><div class="guide-step-title">Read the funnel weekly</div><div class="guide-step-text">Branch Analytics every Monday morning. The biggest stage drop tells you exactly where to focus training or sourcing changes for the week.</div></div></div>
+      <div class="guide-h2">Healthcare Mode</div>
+      <div class="guide-step"><div class="guide-step-num">4</div><div><div class="guide-step-title">Pre-audit checklist</div><div class="guide-step-text">Compliance Log → Export Audit PDF. PSV Tracker → confirm zero HOLD statuses. Unit Orientation → confirm all units at 100%. These three cover the majority of surveyor documentation requests.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">5</div><div><div class="guide-step-title">OIG flag protocol</div><div class="guide-step-text">1) Do not schedule. 2) Confirm flag is timestamped in Compliance Log. 3) Contact staff for documentation. 4) Re-run batch verify. 5) Confirm PSV updates to READY before any scheduling.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">6</div><div><div class="guide-step-title">Ask the AI</div><div class="guide-step-text">The TSM AI widget knows the platform. Ask: "Which staff are at risk of missing their floor date?" or "Walk me through the Ghost Risk tracker."</div></div></div>
+      <div class="guide-tip"><div class="guide-tip-icon">◈</div><div>This guide is always one click away — the <span class="kbd">? How-To Guide</span> button in the top-right corner opens it from any view in either mode.</div></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function openGuide(){ document.getElementById('guide-overlay').classList.add('open'); }
+function closeGuide(){ document.getElementById('guide-overlay').classList.remove('open'); }
+function showGuide(id, el){
+  document.querySelectorAll('.guide-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.guide-nav-item').forEach(n => n.classList.remove('g-active','g-active-t'));
+  var sec = document.getElementById(id);
+  if(sec) sec.classList.add('active');
+  if(el){
+    var isHealth = id.indexOf('g-h') === 0;
+    el.classList.add(isHealth ? 'g-active-t' : 'g-active');
+  }
+  document.querySelector('.guide-main').scrollTop = 0;
+}
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeGuide(); });
+</script>
+
 </body>
 </html>
