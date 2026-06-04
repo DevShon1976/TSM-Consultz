@@ -1674,7 +1674,7 @@ function exportAll(){
 }
 
 // ─────────────────────────────────────
-// GLOBAL UTILITIES (put toast here)
+// GLOBAL UTILITIES (Colorized Toast)
 // ─────────────────────────────────────
 
 function showToast(message, type = "info"){
@@ -1710,16 +1710,81 @@ function showToast(message, type = "info"){
   }, 1800);
 }
 
-
 // ─────────────────────────────────────
-// CORE LOGIC (relay, engines, etc.)
+// CORE LOGIC (Fully Implemented Relay)
 // ─────────────────────────────────────
 
 async function relay(from, to){
-  ...
+  const fromText = document.getElementById('out' + from)?.textContent;
+
+  if(!fromText){
+    if(typeof showToast === 'function'){
+      showToast(`Engine ${from} has no output to relay.`, "error");
+    } else {
+      alert(`Engine ${from} has no output to relay.`);
+    }
+    return;
+  }
+
+  const prompts = getPrompts(currentMode);
+  const prev = docText;
+
+  // Visual feedback
+  const badge = document.getElementById('badge' + to);
+  if(badge) badge.textContent = 'UPDATING';
+
+  const statusBar = document.getElementById('global-prog');
+
+  // Add prior engine output to context
+  docText =
+    prev +
+    '\n\n========================\n' +
+    'PREVIOUS ENGINE OUTPUT\n' +
+    '========================\n' +
+    fromText;
+
+  try {
+    await runEngine(to, prompts[to - 1]);
+
+    if(badge){
+      badge.textContent = 'UPDATED';
+      badge.style.background = '#00ff88';
+      badge.style.color = '#000';
+    }
+
+    if(statusBar){
+      statusBar.textContent = `✓ Engine ${from} → Engine ${to} complete`;
+    }
+
+    // Leveraging your new success token color state!
+    if(typeof showToast === 'function'){
+      showToast(`Engine ${from} → Engine ${to} complete`, "success");
+    }
+
+    console.log(`✓ Engine ${from} output relayed to Engine ${to}`);
+
+  } catch(err){
+    console.error(err);
+
+    if(badge){
+      badge.textContent = 'ERROR';
+    }
+
+    if(statusBar){
+      statusBar.textContent = `✗ Relay failed: Engine ${from} → ${to}`;
+    }
+
+    // Leveraging your new error token color state!
+    if(typeof showToast === 'function'){
+      showToast(`Error: Engine ${from} → ${to}`, "error");
+    }
+
+  } finally {
+    docText = prev;
+  }
 }
 
-// INIT
+// ── INIT ─────────────────────────────────────────────────────────────────
 loadSample('denial');
 </script>
 </body>
