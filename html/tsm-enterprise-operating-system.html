@@ -467,13 +467,22 @@
 
         <div id="command-canvas">
         <div class="system-bar">
-            <div class="virtual-address" id="simulated-url">/html/suite-builder.html</div>
-            <div class="pilot-badge">RANDSTAD PILOT MODE ACTIVE</div>
+            <div class="virtual-address" id="simulated-url">/suite-builder.html</div>
+            <div class="pilot-badge" id="pilot-badge">RANDSTAD PILOT MODE ACTIVE</div>
         </div>
 
-        <div class="workspace-viewport" style="flex: 1; position: relative; width: 100%; height: calc(100vh - 120px); background-color: var(--bg-primary); padding: 0; overflow: hidden;">
-            <iframe id="workspace-frame" src="/html/suite-builder.html" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; background-color: var(--bg-primary); color-scheme: dark;"></iframe>
+        <div class="workspace-viewport" style="flex: 1; position: relative; width: 100%; height: calc(100vh - 120px); background: #0b0f19;">
+            <iframe id="workspace-frame" src="/suite-builder.html" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; background: transparent;"></iframe>
         </div>
+
+        <div class="system-footer-bar">
+            <div class="footer-status-nodes">
+                <span class="pulse-dot"></span>
+                <span id="active-functional-node-label">01. Executive Command Layer Active Context -> suite-builder.html</span>
+            </div>
+            <div>TSM Ecosystem OS v4.1.0 • Railway Mesh Node</div>
+        </div>
+    </div>
 
         <div class="system-footer-bar">
             <div class="footer-status-nodes">
@@ -617,8 +626,11 @@
             const footerStatusLabel = document.getElementById('active-functional-node-label');
             const workspaceFrame = document.getElementById('workspace-frame');
 
-            // The data attribute now contains the exact full path from your APP_CTX mapping matrix directly
-            const unifiedPathLocationString = targetedFileString;
+            // Sanitize paths: Ensure an absolute slash at the root, strip redundant /html prefixes if files are root-level
+            let unifiedPathLocationString = targetedFileString;
+            if (!unifiedPathLocationString.startsWith('/')) {
+                unifiedPathLocationString = '/' + unifiedPathLocationString;
+            }
 
             // Trigger updates across virtual simulated URL paths indicator strings
             if (routeContainerBar) {
@@ -631,6 +643,7 @@
 
             // FORCE NEW CONTENT RESOURCE LOAD INSIDE VIEWPORT CONTAINER FRAME
             if (workspaceFrame) {
+                // Combine safe base origin and validated path location
                 workspaceFrame.src = window.location.origin + unifiedPathLocationString;
             }
 
@@ -648,6 +661,12 @@
         function initializeFunctionalCommandTreeLayoutEngine() {
             const rootTreeElementContainerNode = document.getElementById('command-tree-root');
             if (!rootTreeElementContainerNode) return;
+
+            // Ensure our global dataset architectural structure is defined safely to prevent crashing
+            if (typeof BUSINESS_FUNCTIONAL_ARCH === 'undefined') {
+                console.error("[TSM Hydrator Error] BUSINESS_FUNCTIONAL_ARCH array dataset is missing or undefined.");
+                return;
+            }
 
             let structuralTreeHTMLBufferMarkupString = '';
 
@@ -668,7 +687,7 @@
                              onclick="routeWorkspaceApp(this, '${app.path}', '${section.id}. ${section.name}')"
                              style="padding: 8px 12px; color: #cbd5e1; font-size: 0.8rem; cursor: pointer; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
                             <span>${app.name}</span>
-                            <div class="status-indicator"></div>
+                            <div class="status-indicator" style="width: 6px; height: 6px; border-radius: 50%; background: transparent;"></div>
                         </div>
                     `;
                 });
@@ -702,10 +721,11 @@
             // Build elements trees dynamically inside left sidebar wrapper
             initializeFunctionalCommandTreeLayoutEngine();
 
-            // Bootstrap initial default active highlighted selection parameters right out out of dataset 
+            // Bootstrap initial default active highlighted selection parameters right out of dataset 
             const defaultStartingAppNodeReference = document.querySelector('.app-item');
             if (defaultStartingAppNodeReference) {
-                defaultStartingAppNodeReference.classList.add('active');
+                // Instead of just adding a class, click it programmatically to execute a clean initial view bootstrap
+                defaultStartingAppNodeReference.click();
             }
         });
     </script>
