@@ -899,9 +899,12 @@ function runScenario(key){
   
   scenarioContext = s.context;
   
+  // Safely look up active role fallback parameters from window scope or DOM attributes
+  const activeRole = typeof role !== 'undefined' ? role : (document.body.getAttribute('data-active-role') || 'BA');
+  
   const cmdInput = document.getElementById('cmd');
-  if (cmdInput && typeof ROLES !== 'undefined' && ROLES[role]) {
-    cmdInput.value = 'Analyze the ' + s.label + ' scenario as a ' + ROLES[role].label;
+  if (cmdInput && typeof ROLES !== 'undefined' && ROLES[activeRole]) {
+    cmdInput.value = 'Analyze the ' + s.label + ' scenario as a ' + ROLES[activeRole].label;
   }
   
   advanceStep(1);
@@ -920,6 +923,9 @@ async function runQuery(){
   const box = document.getElementById('out-box');
   const err = document.getElementById('err-box');
   const toolkitPanel = document.getElementById('toolkit-panel');
+  
+  // Safely grab the active framework lens to guard against early script initialization issues
+  const activeRole = typeof role !== 'undefined' ? role : (document.body.getAttribute('data-active-role') || 'BA');
   
   if (btn) {
     btn.textContent = 'RUNNING...'; 
@@ -942,15 +948,19 @@ async function runQuery(){
   outTab = 'summary';
   
   if (typeof renderOutput === 'function') {
-    renderOutput(role, 'summary');
+    renderOutput(activeRole, 'summary');
   }
 
   try {
     if (typeof callGroq === 'undefined') throw new Error("TSM Core Proxy API Infrastructure Offline");
+    if (typeof ROLES === 'undefined' || !ROLES[activeRole]) throw new Error("Target framework analyst role context uninstantiated");
     
-    const system = ROLES[role].system;
-    const userMsg = `Context: ${scenarioContext}\n\nQuery: ${q}\n\nFocus on: ${ROLES[role].focus}`;
-    const response = await callGroq(system, userMsg, 700);
+    const systemPrompt = ROLES[activeRole].system || "You are an expert healthcare operations analyst.";
+    const focusMetric = ROLES[activeRole].focus || "General optimization parameters.";
+    const localContext = typeof scenarioContext !== 'undefined' ? scenarioContext : "No context provided.";
+    
+    const userMsg = `Context: ${localContext}\n\nQuery: ${q}\n\nFocus on: ${focusMetric}`;
+    const response = await callGroq(systemPrompt, userMsg, 700);
     
     // Assert check to catch empty, corrupt, or uninstantiated string models
     if (!response || response.trim() === '' || response.trim().toLowerCase() === 'no response') {
@@ -968,11 +978,11 @@ async function runQuery(){
     
     // Hydrate all cached fields to protect alternative sub-tab selections
     if (typeof PRELOADED !== 'undefined') {
-      if (!PRELOADED[role]) PRELOADED[role] = {};
-      PRELOADED[role].summary = cleanText;
-      PRELOADED[role].root_cause = cleanText;
-      PRELOADED[role].impact = cleanText;
-      PRELOADED[role].recommendation = cleanText;
+      if (!PRELOADED[activeRole]) PRELOADED[activeRole] = {};
+      PRELOADED[activeRole].summary = cleanText;
+      PRELOADED[activeRole].root_cause = cleanText;
+      PRELOADED[activeRole].impact = cleanText;
+      PRELOADED[activeRole].recommendation = cleanText;
     }
     
     advanceStep(3);
@@ -988,21 +998,40 @@ async function runQuery(){
     
     // Fire analytical layout engine to pop structural analytics into viewport
     if (box) {
+      let fallBackHtml = '';
+      const fallbackKey = typeof currentScenarioKey !== 'undefined' && currentScenarioKey ? currentScenarioKey : 'RAC_AUDIT';
+      
+      // Attempt to pull a high-fidelity mock asset response safely
       if (typeof generateEnterpriseFallbackResponse === 'function') {
-        const fallBackHtml = generateEnterpriseFallbackResponse(currentScenarioKey || 'RAC_AUDIT');
-        box.innerHTML = fallBackHtml;
-        
-        // Cache stripped plain-text variants to prevent crashes if clicking sibling headers
-        if (typeof PRELOADED !== 'undefined') {
-          if (!PRELOADED[role]) PRELOADED[role] = {};
-          const flatText = fallBackHtml.replace(/<[^>]*>/g, '');
-          PRELOADED[role].summary = flatText;
-          PRELOADED[role].root_cause = flatText;
-          PRELOADED[role].impact = flatText;
-          PRELOADED[role].recommendation = flatText;
-        }
-      } else {
-        box.textContent = `> TSM OPERATIONAL COMPLIANCE NODE ONLINE\n\nScenario context array hydrated for [${currentScenarioKey || 'ACTIVE_SCENARIO'}]. Use alternative analyst lens selectors above to view metrics.`;
+        fallBackHtml = generateEnterpriseFallbackResponse(fallbackKey);
+      }
+      
+      // If the engine returns blank because the scenario key isn't fully wired, build a high-fidelity layout fallback manually
+      if (!fallBackHtml || fallBackHtml.trim() === '') {
+        const cmdVal = document.getElementById('cmd') ? document.getElementById('cmd').value : 'Active Analysis Pipeline';
+        fallBackHtml = `
+          <div class="enterprise-fallback-node" style="padding: 15px; font-family: monospace; line-height: 1.6; color: var(--g1);">
+            <div style="color: var(--a1); font-weight: bold; border-bottom: 1px solid var(--a2); padding-bottom: 6px; margin-bottom: 12px;">
+              &gt; TSM CORE OPERATIONAL COMPLIANCE MATRIX // DEPLOYED IN COMPATIBILITY MODE
+            </div>
+            <p><strong>[SYSTEM NODE KEY]</strong> ${fallbackKey.toUpperCase()}</p>
+            <p><strong>[ANALYST INSTRUCTION]</strong> ${cmdVal}</p>
+            <hr style="border-color: #333; margin: 15px 0;">
+            <p style="color: #bbb;">The live API stream returned an empty payload, but your scenario data array has successfully hydrated into the UI engine. Use the top level alternate metrics lens headers (Root Cause, Impact, Recommendation) to manually flag compliance overrides.</p>
+          </div>
+        `;
+      }
+      
+      box.innerHTML = fallBackHtml;
+      
+      // Cache stripped plain-text variants to prevent crashes if clicking sibling headers
+      if (typeof PRELOADED !== 'undefined') {
+        if (!PRELOADED[activeRole]) PRELOADED[activeRole] = {};
+        const flatText = fallBackHtml.replace(/<[^>]*>/g, '').trim();
+        PRELOADED[activeRole].summary = flatText;
+        PRELOADED[activeRole].root_cause = flatText;
+        PRELOADED[activeRole].impact = flatText;
+        PRELOADED[activeRole].recommendation = flatText;
       }
     }
     advanceStep(3);
@@ -1047,7 +1076,8 @@ async function getHint(){
 }
 
 function nextQuestion(){
-  const rd=ROLES[role];
+  const activeRole = typeof role !== 'undefined' ? role : 'BA';
+  const rd=ROLES[activeRole];
   qIdx=(qIdx+1)%(rd.questions?.length||1);
   loadQuestion(qIdx);
 }
@@ -1103,7 +1133,17 @@ function advanceStep(n){
     const cur=document.getElementById('ls-'+n);
     if(cur) cur.classList.add('cur');
     document.getElementById('loop-pill').textContent='STEP '+Math.min(n,8)+' OF 8';
-    const markers={1:'✓ Scenario loaded',2:'✓ Role lens applied: '+ROLES[role].focus,3:'✓ AI analysis complete · llama-3.3-70b',4:'✓ Output ready · check tabs',5:'✓ Improvement proposed'};
+    
+    const activeRole = typeof role !== 'undefined' ? role : 'BA';
+    const focusLabel = (typeof ROLES !== 'undefined' && ROLES[activeRole]) ? ROLES[activeRole].focus : 'Operational Metrics';
+    
+    const markers={
+      1:'✓ Scenario loaded',
+      2:'✓ Role lens applied: '+focusLabel,
+      3:'✓ AI analysis complete · llama-3.3-70b',
+      4:'✓ Output ready · check tabs',
+      5:'✓ Improvement proposed'
+    };
     if(markers[n-1]){
       const lr=document.getElementById('lr-'+(n-1));
       if(lr) lr.textContent=markers[n-1];
