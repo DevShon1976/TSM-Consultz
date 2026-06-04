@@ -911,7 +911,7 @@ function runScenario(key){
   runQuery();
 }
 
-// ─── QUERY ENGINE ─────────────────────────────────────────────
+/// ─── QUERY ENGINE ─────────────────────────────────────────────
 async function runQuery(){
   const cmdInput = document.getElementById('cmd');
   if (!cmdInput) return;
@@ -924,7 +924,6 @@ async function runQuery(){
   const err = document.getElementById('err-box');
   const toolkitPanel = document.getElementById('toolkit-panel');
   
-  // Safely look up active role parameters from window scope or fallback elements
   const activeRole = typeof role !== 'undefined' ? role : (document.body.getAttribute('data-active-role') || 'BA');
   
   if (btn) {
@@ -936,7 +935,6 @@ async function runQuery(){
   if (err) err.style.display = 'none';
   if (toolkitPanel) toolkitPanel.style.display = 'none';
   
-  // Cleanly switch back to the main layout output text canvas
   if (box) {
     box.style.display = 'block';
     box.textContent = '> Initializing TSM Core AI Pipeline... Processing network variables...';
@@ -962,12 +960,10 @@ async function runQuery(){
     const userMsg = `Context: ${localContext}\n\nQuery: ${q}\n\nFocus on: ${focusMetric}`;
     const response = await callGroq(systemPrompt, userMsg, 700);
     
-    // Assert check to catch empty, corrupt, or uninstantiated string models
     if (!response || response.trim() === '' || response.trim().toLowerCase() === 'no response') {
       throw new Error("Invalid text block structure returned from API execution layer");
     }
     
-    // Clean markdown characters without stripping matching target vocabulary
     const cleanText = response
       .replace(/\*\*/g, '')
       .replace(/\*/g, '')
@@ -976,7 +972,6 @@ async function runQuery(){
     
     if (box) box.textContent = cleanText;
     
-    // Hydrate all cached fields to protect alternative sub-tab selections
     if (typeof PRELOADED !== 'undefined') {
       if (!PRELOADED[activeRole]) PRELOADED[activeRole] = {};
       PRELOADED[activeRole].summary = cleanText;
@@ -992,17 +987,14 @@ async function runQuery(){
   } catch(e) {
     console.warn("[TSM Engine] Re-routing to local contextual data matrix.", e);
     
-    // Render the custom compatibility interface canvas layout
     if (box) {
       let fallBackHtml = '';
       const fallbackKey = typeof currentScenarioKey !== 'undefined' && currentScenarioKey ? currentScenarioKey : 'RAC_AUDIT';
       
-      // Attempt to pull a high-fidelity mock asset response safely
       if (typeof generateEnterpriseFallbackResponse === 'function') {
         fallBackHtml = generateEnterpriseFallbackResponse(fallbackKey);
       }
       
-      // Build high-fidelity layout fallback manually if key mapping returns blank
       if (!fallBackHtml || fallBackHtml.trim() === '') {
         const cmdVal = document.getElementById('cmd') ? document.getElementById('cmd').value : 'Active Analysis Pipeline';
         fallBackHtml = `
@@ -1020,13 +1012,11 @@ async function runQuery(){
       
       box.innerHTML = fallBackHtml;
       
-      // SUCCESSFUL HANDLE: Clear out the visible alert since layout fallback caught it gracefully
       if (err) {
         err.style.display = 'none';
         err.textContent = '';
       }
       
-      // Cache text variants to prevent downstream crashes if checking sibling sub-tabs
       if (typeof PRELOADED !== 'undefined') {
         if (!PRELOADED[activeRole]) PRELOADED[activeRole] = {};
         const flatText = fallBackHtml.replace(/<[^>]*>/g, '').trim();
@@ -1036,59 +1026,9 @@ async function runQuery(){
         PRELOADED[activeRole].recommendation = flatText;
       }
     } else {
-      // Fallback display mechanism if output box is missing from viewport structure
       if (err) {
         err.textContent = '⚠ Network Gateway Notice: ' + e.message;
         err.style.display = 'block';
-      }
-    }
-    advanceStep(3);
-  }
-  
-  if (btn) {
-    btn.textContent = 'RUN ⏎'; 
-    btn.style.background = 'var(--g3)';
-    btn.disabled = false;
-  }
-  if (loader) loader.classList.remove('vis');
-}
-    
-    // Fire analytical layout engine to pop structural analytics into viewport
-    if (box) {
-      let fallBackHtml = '';
-      const fallbackKey = typeof currentScenarioKey !== 'undefined' && currentScenarioKey ? currentScenarioKey : 'RAC_AUDIT';
-      
-      // Attempt to pull a high-fidelity mock asset response safely
-      if (typeof generateEnterpriseFallbackResponse === 'function') {
-        fallBackHtml = generateEnterpriseFallbackResponse(fallbackKey);
-      }
-      
-      // If the engine returns blank because the scenario key isn't fully wired, build a high-fidelity layout fallback manually
-      if (!fallBackHtml || fallBackHtml.trim() === '') {
-        const cmdVal = document.getElementById('cmd') ? document.getElementById('cmd').value : 'Active Analysis Pipeline';
-        fallBackHtml = `
-          <div class="enterprise-fallback-node" style="padding: 15px; font-family: monospace; line-height: 1.6; color: var(--g1);">
-            <div style="color: var(--a1); font-weight: bold; border-bottom: 1px solid var(--a2); padding-bottom: 6px; margin-bottom: 12px;">
-              &gt; TSM CORE OPERATIONAL COMPLIANCE MATRIX // DEPLOYED IN COMPATIBILITY MODE
-            </div>
-            <p><strong>[SYSTEM NODE KEY]</strong> ${fallbackKey.toUpperCase()}</p>
-            <p><strong>[ANALYST INSTRUCTION]</strong> ${cmdVal}</p>
-            <hr style="border-color: #333; margin: 15px 0;">
-            <p style="color: #bbb;">The live API stream returned an empty payload, but your scenario data array has successfully hydrated into the UI engine. Use the top level alternate metrics lens headers (Root Cause, Impact, Recommendation) to manually flag compliance overrides.</p>
-          </div>
-        `;
-      }
-      
-      box.innerHTML = fallBackHtml;
-      
-      // Cache stripped plain-text variants to prevent crashes if clicking sibling headers
-      if (typeof PRELOADED !== 'undefined') {
-        if (!PRELOADED[activeRole]) PRELOADED[activeRole] = {};
-        const flatText = fallBackHtml.replace(/<[^>]*>/g, '').trim();
-        PRELOADED[activeRole].summary = flatText;
-        PRELOADED[activeRole].root_cause = flatText;
-        PRELOADED[activeRole].impact = flatText;
-        PRELOADED[activeRole].recommendation = flatText;
       }
     }
     advanceStep(3);
@@ -1211,10 +1151,8 @@ function advanceStep(n){
 // ─── TAB NAVIGATION BRIDGE ────────────────────────────────────
 function setTab(el, tabKey) {
   if (!el) return;
-  // Strip active styling from all sub-tab header items
   document.querySelectorAll('.ot').forEach(t => t.classList.remove('act'));
   
-  // Handle case where element is passed directly or looked up by string name
   if (typeof el === 'string') {
     tabKey = el;
     const targetTab = Array.from(document.querySelectorAll('.ot')).find(t => 
@@ -1226,10 +1164,8 @@ function setTab(el, tabKey) {
   }
   
   outTab = tabKey;
-  
   const activeRole = typeof role !== 'undefined' ? role : 'BA';
   
-  // Hydrate viewport canvas using cached records if available
   const box = document.getElementById('out-box');
   if (box && typeof PRELOADED !== 'undefined' && PRELOADED[activeRole] && PRELOADED[activeRole][tabKey]) {
     box.innerHTML = PRELOADED[activeRole][tabKey];
