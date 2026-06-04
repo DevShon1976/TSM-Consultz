@@ -1,609 +1,686 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>TSM · Healthcare RCM WIP Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#050b12;--surf:#07131d;--surf2:#0a1a28;--b1:#0f2535;--b2:#1a3a52;
-  --a:#00ffc6;--red:#ff4455;--amber:#ffb300;--gold:#ffc400;--purple:#b56cff;
-  --text:#c8dde8;--muted:#547080;--white:#eaffff;--mono:'DM Mono',monospace;
-  --head:'Syne',sans-serif;--s-color:#00ffc6;
+  --bg:#020810;--surf:#060f1a;--surf2:#091525;--b1:#0d2035;--b2:#163050;
+  --cyan:#00f5ff;--cyan2:#00b8c4;--green:#00ff88;--red:#ff3355;
+  --amber:#ffaa00;--purple:#a855f7;--pink:#ec4899;--white:#e8f4ff;
+  --muted:#3a6070;--text:#7fb8cc;
+  --mono:'Space Mono',monospace;--head:'Orbitron',sans-serif;--body:'Rajdhani',sans-serif;
+  --glow-cyan:0 0 20px rgba(0,245,255,.25);
+  --glow-red:0 0 20px rgba(255,51,85,.25);
+  --glow-green:0 0 20px rgba(0,255,136,.2);
 }
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;800&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;min-height:100vh;padding-bottom:100px}
-body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,255,198,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,198,.02) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:var(--body);min-height:100vh;
+  padding-bottom:120px;font-size:14px;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%,rgba(0,245,255,.04),transparent),
+    linear-gradient(rgba(0,245,255,.015) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,245,255,.015) 1px,transparent 1px);
+  background-size:auto,48px 48px,48px 48px;
+}
+
+/* SCANLINE OVERLAY */
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:999;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);
+}
 
 /* TOPBAR */
-.topbar{position:sticky;top:0;background:rgba(5,11,18,.92);border-bottom:1px solid var(--b2);padding:12px 24px;z-index:50;backdrop-filter:blur(12px);display:flex;justify-content:space-between;align-items:center}
-.tb-left{display:flex;flex-direction:column;gap:2px}
-.tb-brand{font-family:var(--mono);font-size:.5rem;letter-spacing:.15em;color:var(--muted)}
-.tb-title{font-family:var(--head);font-size:1.1rem;font-weight:800;color:var(--a)}
-.tb-sub{font-size:.65rem;color:var(--muted);max-width:600px;margin-top:2px}
-.tb-right{display:flex;align-items:center;gap:8px}
-.tb-status{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.5rem;letter-spacing:.1em;color:var(--a)}
-.tb-dot{width:6px;height:6px;border-radius:50%;background:var(--a);animation:pulse 2s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(2,8,16,.92);
+  border-bottom:1px solid rgba(0,245,255,.15);
+  backdrop-filter:blur(20px);
+  padding:0 24px;
+  display:flex;align-items:center;justify-content:space-between;
+  height:56px;
+}
+.tb-brand{font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:var(--muted)}
+.tb-title{font-family:var(--head);font-size:13px;font-weight:800;color:var(--cyan);letter-spacing:.05em}
+.tb-status{display:flex;align-items:center;gap:24px}
+.tb-stat{font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--muted);text-align:right}
+.tb-stat strong{display:block;color:var(--cyan);font-size:11px;margin-bottom:1px}
+.pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s ease-in-out infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
 
-/* HERO */
-.hero{max-width:1280px;margin:0 auto;padding:1.5rem 1.5rem .5rem;position:relative;z-index:1}
-.hero-eye{font-family:var(--mono);font-size:.5rem;letter-spacing:.15em;color:var(--muted);margin-bottom:.4rem}
-.hero-title{font-family:var(--head);font-size:clamp(1.6rem,4vw,2.8rem);font-weight:800;color:var(--white);line-height:1;margin-bottom:.5rem}
-.hero-title em{color:var(--a);font-style:normal}
-.hero-desc{font-size:.8rem;color:var(--text);max-width:640px;line-height:1.6;margin-bottom:1.2rem}
+/* MAIN LAYOUT */
+.shell{max-width:1400px;margin:0 auto;padding:20px 20px 0;display:grid;grid-template-columns:1fr 320px;gap:16px}
+@media(max-width:1000px){.shell{grid-template-columns:1fr}}
 
-/* MAIN GRID */
-.main{max-width:1280px;margin:0 auto;padding:0 1.5rem 1.5rem;display:grid;grid-template-columns:1fr 340px;gap:16px;position:relative;z-index:1}
-@media(max-width:960px){.main{grid-template-columns:1fr}}
+/* SECTION HEADER */
+.sec-hdr{
+  font-family:var(--mono);font-size:9px;letter-spacing:.2em;
+  color:var(--cyan2);padding:6px 0 10px;
+  display:flex;align-items:center;gap:10px;
+}
+.sec-hdr::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(0,245,255,.2),transparent)}
 
-/* KPI CARDS */
-.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+/* KPI GRID */
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
 @media(max-width:700px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
-.wc{background:var(--surf);border:1px solid var(--b1);border-radius:8px;padding:14px 16px;position:relative;overflow:hidden}
-.wc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--a);opacity:.4}
-.wc-label{font-family:var(--mono);font-size:.45rem;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:.4rem}
-.wc-value{font-family:var(--head);font-size:1.5rem;font-weight:800;color:var(--white)}
-.wc-sub{font-size:.65rem;color:var(--muted);margin-top:.2rem}
-.wc-delta{font-family:var(--mono);font-size:.55rem;margin-top:.4rem;padding:2px 6px;border-radius:3px;display:inline-block}
-.delta-up{background:rgba(0,255,136,.1);color:#00ff88}.delta-down{background:rgba(255,68,85,.1);color:#ff4455}
-.delta-warn{background:rgba(255,179,0,.1);color:#ffb300}.delta-bad{background:rgba(255,68,85,.15);color:#ff4455}
+
+.kpi{
+  background:var(--surf);border:1px solid var(--b1);border-radius:8px;
+  padding:14px 16px;position:relative;overflow:hidden;cursor:default;
+  transition:border-color .2s,box-shadow .2s;
+}
+.kpi:hover{border-color:rgba(0,245,255,.3);box-shadow:var(--glow-cyan)}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:var(--cyan);opacity:.3}
+.kpi-label{font-family:var(--mono);font-size:8px;letter-spacing:.15em;color:var(--muted);margin-bottom:6px}
+.kpi-value{font-family:var(--head);font-size:22px;font-weight:800;color:var(--white);line-height:1}
+.kpi-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.kpi-delta{font-family:var(--mono);font-size:9px;margin-top:8px;padding:3px 8px;border-radius:3px;display:inline-block;letter-spacing:.05em}
+.d-good{background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.2)}
+.d-warn{background:rgba(255,170,0,.1);color:var(--amber);border:1px solid rgba(255,170,0,.2)}
+.d-bad{background:rgba(255,51,85,.1);color:var(--red);border:1px solid rgba(255,51,85,.2)}
 
 /* WIP MATRIX */
-.wip-matrix{background:var(--surf);border:1px solid var(--b1);border-radius:8px;overflow:hidden;margin-bottom:14px}
-.wm-head{display:flex;align-items:center;justify-content:space-between;padding:.6rem 1rem;border-bottom:1px solid var(--b1);background:var(--surf2)}
-.wm-title{font-family:var(--mono);font-size:.5rem;letter-spacing:.12em;color:var(--a)}
-.wm-badge{font-family:var(--mono);font-size:.45rem;letter-spacing:.08em;padding:.2rem .6rem;border-radius:3px;border:1px solid;color:var(--amber);border-color:var(--amber)}
-.wip-table{width:100%;border-collapse:collapse}
-.wip-table th{font-family:var(--mono);font-size:.42rem;letter-spacing:.1em;color:var(--muted);padding:.5rem .8rem;border-bottom:1px solid var(--b1);text-align:left;font-weight:400;text-transform:uppercase;background:var(--surf2)}
-.wip-table td{padding:.55rem .8rem;border-bottom:1px solid var(--b1);font-size:.72rem}
-.wip-table tr:last-child td{border-bottom:none}
-.wip-table tr:hover td{background:var(--surf2)}
-.cell-label{font-weight:500;color:var(--white)}
-.cell-value{font-family:var(--mono);font-size:.65rem}
-.cell-good{color:#00ff88}.cell-warn{color:var(--amber)}.cell-bad{color:var(--red)}
-.cell-pct{font-family:var(--mono);font-size:.55rem;font-weight:700;margin-right:6px}
-.cell-bar-wrap{display:inline-block;width:60px;height:4px;background:var(--b2);border-radius:2px;vertical-align:middle}
-.cell-bar{display:inline-block;height:4px;border-radius:2px}
-.bar-good{background:#00ff88}.bar-warn{background:var(--amber)}.bar-bad{background:var(--red)}
+.matrix{background:var(--surf);border:1px solid var(--b1);border-radius:8px;overflow:hidden;margin-bottom:16px}
+.matrix-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;background:var(--surf2);
+  border-bottom:1px solid var(--b1);
+}
+.matrix-title{font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--cyan)}
+.flag-badge{
+  font-family:var(--mono);font-size:9px;letter-spacing:.08em;
+  padding:3px 10px;border-radius:3px;
+  border:1px solid var(--amber);color:var(--amber);
+  background:rgba(255,170,0,.05);
+}
+table.wip{width:100%;border-collapse:collapse}
+table.wip th{
+  font-family:var(--mono);font-size:8px;letter-spacing:.12em;color:var(--muted);
+  padding:8px 14px;border-bottom:1px solid var(--b1);
+  background:var(--surf2);text-align:left;font-weight:400;
+}
+table.wip td{
+  padding:10px 14px;border-bottom:1px solid rgba(13,32,53,.8);
+  font-family:var(--body);font-size:13px;transition:background .1s;
+}
+table.wip tr:last-child td{border-bottom:none}
+table.wip tbody tr{cursor:pointer}
+table.wip tbody tr:hover td{background:var(--surf2)}
+table.wip tbody tr.enc-selected td{background:rgba(0,245,255,.04);border-bottom-color:rgba(0,245,255,.1)}
+.enc-name{font-weight:600;color:var(--white)}
+.pct-wrap{display:flex;align-items:center;gap:8px}
+.pct-num{font-family:var(--mono);font-size:11px;font-weight:700;min-width:32px}
+.bar-track{flex:1;height:4px;background:var(--b2);border-radius:2px;overflow:hidden}
+.bar-fill{height:4px;border-radius:2px;transition:width .6s ease}
+.bar-g{background:var(--green)}.bar-w{background:var(--amber)}.bar-r{background:var(--red)}
+.c-good{color:var(--green)}.c-warn{color:var(--amber)}.c-bad{color:var(--red)}
+.c-mono{font-family:var(--mono);font-size:11px}
+.sts-badge{font-family:var(--mono);font-size:8px;letter-spacing:.1em;padding:2px 8px;border-radius:2px}
+.sts-good{background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.2)}
+.sts-warn{background:rgba(255,170,0,.1);color:var(--amber);border:1px solid rgba(255,170,0,.2)}
+.sts-bad{background:rgba(255,51,85,.1);color:var(--red);border:1px solid rgba(255,51,85,.2)}
 
-/* ALERT FEED */
-.alert-feed{background:var(--surf);border:1px solid var(--b1);border-radius:8px;overflow:hidden;margin-bottom:14px}
-.af-head{font-family:var(--mono);font-size:.5rem;letter-spacing:.12em;color:var(--a);padding:.6rem 1rem;border-bottom:1px solid var(--b1);background:var(--surf2)}
-.af-item{display:flex;align-items:flex-start;gap:10px;padding:.6rem 1rem;border-bottom:1px solid var(--b1);font-size:.72rem;line-height:1.5}
-.af-item:last-child{border-bottom:none}
-.af-sev{font-family:var(--mono);font-size:.45rem;letter-spacing:.08em;padding:.2rem .4rem;border-radius:2px;flex-shrink:0;margin-top:2px}
-.sev-crit{background:rgba(255,68,85,.2);color:#ff4455;border:1px solid rgba(255,68,85,.4)}
-.sev-high{background:rgba(255,179,0,.15);color:#ffb300;border:1px solid rgba(255,179,0,.3)}
-.sev-med{background:rgba(168,85,247,.15);color:#c084fc;border:1px solid rgba(168,85,247,.3)}
+/* ALERTS */
+.alerts{background:var(--surf);border:1px solid var(--b1);border-radius:8px;overflow:hidden;margin-bottom:16px}
+.alerts-hdr{font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--cyan);padding:10px 16px;border-bottom:1px solid var(--b1);background:var(--surf2)}
+.alert-item{display:flex;align-items:flex-start;gap:12px;padding:10px 16px;border-bottom:1px solid rgba(13,32,53,.8);line-height:1.55}
+.alert-item:last-child{border-bottom:none}
+.sev{font-family:var(--mono);font-size:8px;letter-spacing:.08em;padding:3px 7px;border-radius:2px;flex-shrink:0;margin-top:2px}
+.sev-crit{background:rgba(255,51,85,.15);color:var(--red);border:1px solid rgba(255,51,85,.3)}
+.sev-high{background:rgba(255,170,0,.12);color:var(--amber);border:1px solid rgba(255,170,0,.25)}
+.sev-med{background:rgba(168,85,247,.12);color:#c084fc;border:1px solid rgba(168,85,247,.25)}
 
 /* AI PANEL */
-.ai-panel{background:var(--surf);border:1px solid var(--b1);border-radius:8px;overflow:hidden;margin-bottom:14px}
-.ap-head{display:flex;align-items:center;justify-content:space-between;padding:.6rem 1rem;border-bottom:1px solid var(--b1);background:var(--surf2)}
-.ap-title{font-family:var(--mono);font-size:.5rem;letter-spacing:.12em;color:var(--a)}
-.ap-run{background:var(--a);color:#001;border:0;border-radius:4px;padding:.3rem .8rem;font-family:var(--mono);font-size:.5rem;letter-spacing:.08em;font-weight:700;cursor:pointer}
-.ap-run:hover{opacity:.85}
-.ap-body{padding:1rem;font-size:.75rem;line-height:1.7;color:var(--text);min-height:120px;white-space:pre-wrap}
-.ap-placeholder{color:var(--muted);font-style:italic}
-
-/* SCHEMA PANEL */
-.schema-panel{background:var(--surf);border:1px solid var(--b1);border-radius:8px;overflow:hidden;margin-bottom:14px}
-.sp-head{font-family:var(--mono);font-size:.5rem;letter-spacing:.12em;color:var(--a);padding:.6rem 1rem;border-bottom:1px solid var(--b1);background:var(--surf2)}
-.sp-body{padding:.8rem 1rem;font-family:var(--mono);font-size:.6rem;line-height:1.8;color:var(--text)}
-.sp-field{display:flex;justify-content:space-between;border-bottom:1px solid var(--b1);padding:.3rem 0}
-.sp-field:last-child{border-bottom:none}
-.sp-key{color:var(--muted)}.sp-val{color:var(--white);font-weight:500}
-
-/* ENTITY LIST */
-.entity-list{padding:.4rem}
-.entity{background:var(--surf2);border:1px solid var(--b1);border-radius:6px;padding:.6rem .8rem;margin-bottom:.4rem;cursor:pointer;transition:border-color .15s,background .15s}
-.entity:hover{border-color:var(--b2);background:var(--b1)}
-.entity.selected{border-color:var(--a);background:rgba(0,255,198,.05)}
-.entity-id{font-family:var(--mono);font-size:.5rem;letter-spacing:.1em;color:var(--muted)}
-.entity-name{font-size:.75rem;font-weight:600;color:var(--white);margin:.15rem 0}
-.entity-meta{font-size:.6rem;color:var(--muted)}
-
-/* ACTION RAIL */
-.action-rail{background:var(--surf);border:1px solid var(--b1);border-radius:8px;overflow:hidden;margin-bottom:14px}
-.ar-head{font-family:var(--mono);font-size:.5rem;letter-spacing:.12em;color:var(--a);padding:.6rem 1rem;border-bottom:1px solid var(--b1);background:var(--surf2)}
-.ar-btn{display:block;width:100%;text-align:left;background:transparent;border:0;border-bottom:1px solid var(--b1);padding:.6rem 1rem;font-size:.7rem;color:var(--text);cursor:pointer;transition:background .12s,color .12s}
-.ar-btn:last-child{border-bottom:none}
-.ar-btn:hover{background:var(--surf2);color:var(--a)}
-.ar-btn::before{content:'→ ';color:var(--a);font-family:var(--mono)}
+.ai-panel{background:var(--surf);border:1px solid var(--b1);border-radius:8px;overflow:hidden;margin-bottom:16px}
+.ai-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;background:var(--surf2);border-bottom:1px solid var(--b1);
+}
+.ai-title{font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--cyan)}
+.ai-btn{
+  background:var(--cyan);color:#001;border:0;border-radius:5px;
+  padding:5px 14px;font-family:var(--mono);font-size:9px;font-weight:700;
+  letter-spacing:.1em;cursor:pointer;transition:opacity .15s,transform .1s;
+}
+.ai-btn:hover{opacity:.85;transform:scale(.98)}
+.ai-btn:disabled{opacity:.4;cursor:not-allowed}
+.ai-body{
+  padding:16px;font-size:13px;line-height:1.7;color:var(--text);
+  min-height:140px;white-space:pre-wrap;font-family:var(--body);
+}
+.ai-placeholder{color:var(--muted);font-style:italic}
+.ai-streaming{border-left:2px solid var(--cyan);padding-left:12px;animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
 
 /* HITL */
-.hitl-panel{background:var(--surf);border:1px solid rgba(255,179,0,.3);border-radius:8px;padding:14px 16px;margin-bottom:14px}
-.hitl-label{font-family:var(--mono);font-size:.45rem;letter-spacing:.12em;color:var(--amber);margin-bottom:.5rem}
-.hitl-text{font-size:.7rem;color:var(--text);line-height:1.6}
+.hitl{
+  background:rgba(255,170,0,.04);border:1px solid rgba(255,170,0,.2);
+  border-radius:8px;padding:14px 16px;margin-bottom:16px;
+}
+.hitl-label{font-family:var(--mono);font-size:8px;letter-spacing:.15em;color:var(--amber);margin-bottom:6px}
+.hitl-text{font-size:12px;color:var(--muted);line-height:1.6}
 
-/* FEATURE BADGES */
-.feature-strip{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem}
-.feat{font-family:var(--mono);font-size:.45rem;letter-spacing:.08em;padding:.2rem .6rem;border-radius:3px;border:1px solid var(--b2);color:var(--muted)}
-.feat.on{border-color:rgba(0,255,198,.4);color:var(--a);background:rgba(0,255,198,.05)}
+/* RIGHT PANEL */
+.entity-panel{background:var(--surf);border:1px solid var(--b1);border-radius:8px;overflow:hidden;margin-bottom:14px}
+.ep-hdr{font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--cyan);padding:10px 14px;border-bottom:1px solid var(--b1);background:var(--surf2)}
+.entity-list{padding:8px}
+.entity{
+  background:var(--surf2);border:1px solid var(--b1);border-radius:6px;
+  padding:10px 12px;margin-bottom:6px;cursor:pointer;
+  transition:border-color .15s,background .15s,box-shadow .15s;
+}
+.entity:last-child{margin-bottom:0}
+.entity:hover{border-color:var(--b2);background:var(--b1)}
+.entity.selected{border-color:var(--cyan);background:rgba(0,245,255,.04);box-shadow:0 0 12px rgba(0,245,255,.08)}
+.ent-id{font-family:var(--mono);font-size:8px;letter-spacing:.12em;color:var(--muted);margin-bottom:3px}
+.ent-name{font-size:13px;font-weight:700;color:var(--white);margin-bottom:3px}
+.ent-meta{font-size:11px;color:var(--muted)}
+.ent-risk{float:right;font-family:var(--mono);font-size:13px;font-weight:700}
+
+/* ACTIONS */
+.action-panel{background:var(--surf);border:1px solid var(--b1);border-radius:8px;overflow:hidden;margin-bottom:14px}
+.ap-hdr{font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--cyan);padding:10px 14px;border-bottom:1px solid var(--b1);background:var(--surf2)}
+.act-btn{
+  display:block;width:100%;text-align:left;background:transparent;
+  border:0;border-bottom:1px solid var(--b1);padding:9px 14px;
+  font-family:var(--body);font-size:12px;color:var(--text);
+  cursor:pointer;transition:background .12s,color .12s;
+}
+.act-btn:last-child{border-bottom:none}
+.act-btn:hover{background:var(--surf2);color:var(--cyan)}
+.act-btn::before{content:'→ ';color:var(--cyan);font-family:var(--mono)}
+
+/* SCHEMA */
+.schema-panel{background:var(--surf);border:1px solid var(--b1);border-radius:8px;overflow:hidden}
+.schema-hdr{font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--cyan);padding:10px 14px;border-bottom:1px solid var(--b1);background:var(--surf2)}
+.schema-body{padding:10px 14px;font-family:var(--mono);font-size:10px;line-height:1.9;max-height:300px;overflow-y:auto}
+.schema-field{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid rgba(13,32,53,.6);padding:3px 0}
+.schema-field:last-child{border-bottom:none}
+.s-key{color:var(--muted)}.s-val{color:var(--white);font-weight:700;text-align:right}
+
+/* GROQ KEY BAR */
+.key-bar{
+  background:var(--surf2);border:1px solid var(--b1);border-radius:8px;
+  padding:10px 14px;margin-bottom:14px;
+  display:flex;align-items:center;gap:10px;
+}
+.key-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);transition:background .3s,box-shadow .3s;flex-shrink:0}
+.key-dot.ok{background:var(--green);box-shadow:0 0 8px var(--green)}
+.key-label{font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--muted);white-space:nowrap}
+.key-input{
+  flex:1;background:var(--bg);border:1px solid var(--b2);border-radius:4px;
+  padding:5px 10px;font-family:var(--mono);font-size:10px;color:var(--white);
+  outline:none;
+}
+.key-input:focus{border-color:var(--cyan)}
+.key-test{
+  background:transparent;border:1px solid var(--b2);color:var(--muted);
+  border-radius:4px;padding:4px 10px;font-family:var(--mono);font-size:9px;
+  cursor:pointer;white-space:nowrap;transition:border-color .15s,color .15s;
+}
+.key-test:hover{border-color:var(--cyan);color:var(--cyan)}
+.key-status{font-family:var(--mono);font-size:9px;white-space:nowrap}
 
 /* ACTION BAR */
-.actionbar{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:99;background:#06111b;border:1px solid rgba(0,255,198,.3);border-radius:14px;padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;box-shadow:0 4px 32px rgba(0,0,0,.6)}
-button.primary{border:0;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer;background:var(--a);color:#001;font-size:.7rem;letter-spacing:.04em}
-button.gold{background:var(--gold);color:#111}button.purple{background:var(--purple);color:#fff}
-button.dark{background:#102030;color:#8fb1c5;border:1px solid var(--b2)}
-button.primary:hover{opacity:.85}button.gold:hover{opacity:.85}
+.actionbar{
+  position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:200;
+  background:rgba(4,12,22,.95);border:1px solid rgba(0,245,255,.2);
+  border-radius:16px;padding:10px 16px;
+  display:flex;gap:8px;flex-wrap:wrap;align-items:center;
+  box-shadow:0 8px 40px rgba(0,0,0,.8),0 0 0 1px rgba(0,245,255,.05);
+  backdrop-filter:blur(20px);
+}
+.ab-btn{
+  border:0;border-radius:8px;padding:9px 16px;
+  font-family:var(--mono);font-size:9px;font-weight:700;
+  letter-spacing:.08em;cursor:pointer;transition:opacity .15s,transform .1s;
+}
+.ab-btn:hover{opacity:.85;transform:scale(.97)}
+.ab-primary{background:var(--cyan);color:#001}
+.ab-gold{background:#ffaa00;color:#111}
+.ab-purple{background:var(--purple);color:#fff}
+.ab-dark{background:var(--surf2);color:var(--text);border:1px solid var(--b2)}
+.ab-dark:hover{color:var(--cyan);border-color:var(--cyan)}
 
-@media(max-width:900px){.actionbar{left:12px;right:12px;transform:none;justify-content:center}}
+/* BNCA OUTPUT */
+.bnca-output{
+  background:rgba(0,245,255,.03);border:1px solid rgba(0,245,255,.15);
+  border-radius:8px;margin:16px;padding:16px;
+  font-family:var(--mono);font-size:11px;line-height:1.8;
+  color:var(--text);white-space:pre-wrap;display:none;
+}
+.bnca-output.visible{display:block;animation:fadeIn .3s}
+
+/* FEATURE TAGS */
+.feat-strip{display:flex;flex-wrap:wrap;gap:6px;padding:0 20px 14px;max-width:1400px;margin:0 auto}
+.feat{font-family:var(--mono);font-size:8px;letter-spacing:.1em;padding:3px 10px;border-radius:3px;border:1px solid var(--b2);color:var(--muted)}
+.feat.on{border-color:rgba(0,245,255,.3);color:var(--cyan);background:rgba(0,245,255,.04)}
+
+/* HERO */
+.hero{max-width:1400px;margin:0 auto;padding:20px 20px 12px}
+.hero-eye{font-family:var(--mono);font-size:8px;letter-spacing:.2em;color:var(--muted);margin-bottom:8px}
+.hero-title{font-family:var(--head);font-size:clamp(1.4rem,3vw,2.2rem);font-weight:800;color:var(--white);line-height:1.1;margin-bottom:8px}
+.hero-title em{color:var(--cyan);font-style:normal}
+.hero-desc{font-size:13px;color:var(--text);max-width:680px;line-height:1.6}
 </style>
 </head>
 <body>
 
+<!-- TOPBAR -->
 <div class="topbar">
-  <div class="tb-left">
+  <div>
     <div class="tb-brand">TSM · SOVEREIGN MESH · AUDITOPS PRO · HEALTHCARE RCM</div>
     <div class="tb-title">Healthcare RCM WIP Intelligence</div>
-    <div class="tb-sub">Prior auth denials · Claim scrubbing · UPCODE-DETECT-V2 · AR aging · Payer adjudication · Denial management · RCM strategist relay</div>
   </div>
-  <div class="tb-right">
-    <div class="tb-status"><div class="tb-dot"></div>SOVEREIGN MESH ONLINE</div>
+  <div class="tb-status">
+    <div class="tb-stat"><strong id="clock">--:--:--</strong>SYSTEM TIME</div>
+    <div class="tb-stat"><strong style="color:var(--red)">$189K</strong>AT RISK</div>
+    <div class="tb-stat"><strong style="color:var(--amber)">14</strong>UPCODE FLAGS</div>
+    <div class="tb-stat"><strong style="color:var(--red)">52d</strong>DAYS IN AR</div>
+    <div class="pulse-dot"></div>
   </div>
 </div>
 
+<!-- HERO -->
 <div class="hero">
   <div class="hero-eye">// UNIVERSAL WIP INTELLIGENCE · HEALTHCARE RCM · AUDITOPS ENGINE V2</div>
-  <h1 class="hero-title">Healthcare <em>RCM WIP</em><br>Intelligence Dashboard</h1>
-  <p class="hero-desc">Real-time percent-complete analysis across the full RCM lifecycle — from coding to collection. UPCODE-DETECT-V2 flags, denial gap analysis, AR aging alerts, and CFO-ready narratives powered by the TSM Sovereign Mesh.</p>
-  <div class="feature-strip">
-    <span class="feat on">UPCODE-DETECT-V2</span>
-    <span class="feat on">Prior Auth Tracking</span>
-    <span class="feat on">Denial Management</span>
-    <span class="feat on">AR Aging Analysis</span>
-    <span class="feat on">Payer Strategy</span>
-    <span class="feat on">CFO Narratives</span>
-    <span class="feat on">HITL Decision Layer</span>
-    <span class="feat on">Strategist Relay</span>
-    <span class="feat">Collections Escalation</span>
-    <span class="feat">Appeal Window Tracker</span>
-  </div>
+  <h1 class="hero-title">Healthcare <em>RCM WIP</em> Intelligence</h1>
+  <p class="hero-desc">Real-time percent-complete analysis across the full RCM lifecycle. UPCODE-DETECT-V2 flags, denial gap analysis, AR aging alerts, and CFO-ready AI narratives powered by TSM Sovereign Mesh.</p>
 </div>
 
-<div class="main">
+<!-- FEATURE STRIP -->
+<div class="feat-strip">
+  <span class="feat on">UPCODE-DETECT-V2</span>
+  <span class="feat on">Prior Auth Tracking</span>
+  <span class="feat on">Denial Management</span>
+  <span class="feat on">AR Aging Analysis</span>
+  <span class="feat on">Payer Strategy</span>
+  <span class="feat on">CFO Narratives</span>
+  <span class="feat on">HITL Decision Layer</span>
+  <span class="feat on">Groq AI Engine</span>
+  <span class="feat">Collections Escalation</span>
+  <span class="feat">Appeal Window Tracker</span>
+</div>
+
+<!-- MAIN SHELL -->
+<div class="shell">
   <!-- LEFT -->
   <div>
-    <!-- KPI CARDS -->
+    <!-- GROQ KEY -->
+    <div class="key-bar">
+      <div class="key-dot" id="key-dot"></div>
+      <div class="key-label">GROQ API KEY</div>
+      <input class="key-input" id="api-key" type="password" placeholder="gsk_..." oninput="onKey(this.value)">
+      <button class="key-test" onclick="testKey()">TEST</button>
+      <span class="key-status" id="key-status"></span>
+    </div>
+
+    <!-- KPI GRID -->
+    <div class="sec-hdr">KPI OVERVIEW · APRIL BILLING CYCLE</div>
     <div class="kpi-grid" id="kpi-grid"></div>
 
     <!-- WIP MATRIX -->
-    <div class="wip-matrix">
-      <div class="wm-head">
-        <span class="wm-title">RCM WORK IN PROGRESS MATRIX · PERCENT-COMPLETE</span>
-        <span class="wm-badge">5 ACTIVE FLAGS</span>
+    <div class="sec-hdr">RCM WORK IN PROGRESS MATRIX</div>
+    <div class="matrix">
+      <div class="matrix-hdr">
+        <span class="matrix-title">PERCENT-COMPLETE · ENCOUNTER TRACKING</span>
+        <span class="flag-badge">5 ACTIVE FLAGS</span>
       </div>
-      <table class="wip-table" id="wip-table"></table>
+      <table class="wip"><thead id="wip-head"></thead><tbody id="wip-body"></tbody></table>
     </div>
 
-    <!-- ALERT FEED -->
-    <div class="alert-feed">
-      <div class="af-head">ACTIVE INTELLIGENCE FLAGS · UPCODE-DETECT + DENIAL ENGINE</div>
+    <!-- ALERTS -->
+    <div class="sec-hdr">ACTIVE INTELLIGENCE FLAGS</div>
+    <div class="alerts">
+      <div class="alerts-hdr">UPCODE-DETECT + DENIAL ENGINE · LIVE FLAGS</div>
       <div id="alert-items"></div>
     </div>
 
     <!-- AI NARRATIVE -->
+    <div class="sec-hdr">STRATEGIST AI NARRATIVE</div>
     <div class="ai-panel">
-      <div class="ap-head">
-        <span class="ap-title">STRATEGIST AUTO-NARRATIVE · CFO-READY OUTPUT</span>
-        <button class="ap-run" id="ap-run-btn" data-tsm-action="runNarrative" data-tsm-args="">⚡ GENERATE</button>
+      <div class="ai-hdr">
+        <span class="ai-title">CFO-READY OUTPUT · GROQ DIRECT STREAM</span>
+        <button class="ai-btn" id="gen-btn" onclick="runNarrative()">⚡ GENERATE</button>
       </div>
-      <div class="ap-body" id="ap-body"><span class="ap-placeholder">Select an entity from the right panel and click GENERATE to produce a CFO-ready AI narrative covering RCM position, denial risk, UPCODE-DETECT findings, and payer strategy.</span></div>
+      <div class="ai-body" id="ai-body"><span class="ai-placeholder">Select an encounter from the right panel → click GENERATE for a CFO-ready AI narrative covering RCM position, denial risk, UPCODE findings, and payer strategy.</span></div>
     </div>
 
+    <!-- BNCA OUTPUT -->
+    <div class="bnca-output" id="bnca-out"></div>
+
     <!-- HITL -->
-    <div class="hitl-panel">
+    <div class="hitl">
       <div class="hitl-label">⚠ HITL DECISION LAYER · HUMAN-IN-THE-LOOP</div>
-      <div class="hitl-text">This dashboard does not auto-escalate claims. All AI narratives and BNCA outputs are staged for human review before pushing to the main HC Strategist. Owner lane, executive summary, and appeal packets require explicit approval. Zero autonomous claim actions.</div>
+      <div class="hitl-text">This dashboard does not auto-escalate claims. All AI narratives and BNCA outputs are staged for human review before pushing to HC Strategist. Owner lane, executive summary, and appeal packets require explicit approval. Zero autonomous claim actions.</div>
     </div>
   </div>
 
   <!-- RIGHT -->
   <div>
     <!-- ENTITY LIST -->
-    <div class="alert-feed" style="margin-bottom:14px">
-      <div class="af-head">ACTIVE ENCOUNTERS · SELECT FOR AI NARRATIVE</div>
+    <div class="entity-panel">
+      <div class="ep-hdr">ACTIVE ENCOUNTERS · SELECT FOR AI NARRATIVE</div>
       <div class="entity-list" id="entity-list"></div>
     </div>
 
-    <!-- ACTION RAIL -->
-    <div class="action-rail">
-      <div class="ar-head">QUICK ACTIONS · RCM COMMAND</div>
+    <!-- ACTIONS -->
+    <div class="action-panel">
+      <div class="ap-hdr">QUICK ACTIONS · RCM COMMAND</div>
       <div id="action-btns"></div>
     </div>
 
     <!-- SCHEMA -->
     <div class="schema-panel">
-      <div class="sp-head">UNIFIED WIP SCHEMA · ACTIVE ENTITY</div>
-      <div class="sp-body" id="schema-body"><span style="color:var(--muted)">Select an entity to view live schema fields.</span></div>
+      <div class="schema-hdr">UNIFIED WIP SCHEMA · ACTIVE ENTITY</div>
+      <div class="schema-body" id="schema-body"><span style="color:var(--muted)">Select an entity to view live schema.</span></div>
     </div>
   </div>
 </div>
 
+<!-- ACTION BAR -->
 <div class="actionbar">
-  <button class="primary" data-tsm-action="runWIPAI" data-tsm-args="">⚡ Run Sector BNCA</button>
-  <button class="gold" data-tsm-action="runStrategistRollup" data-tsm-args="">Push to HC Strategist</button>
-  <button class="purple" data-tsm-action="exportBrief" data-tsm-args="">Export Brief</button>
-  <button class="dark" onclick="location.href='/wip-dashboard.html'">Universal WIP</button>
-  <button class="dark" onclick="location.href='/'">Home</button>
+  <button class="ab-btn ab-primary" onclick="runBNCA()">⚡ Run Sector BNCA</button>
+  <button class="ab-btn ab-gold" onclick="runStrategist()">Push to HC Strategist</button>
+  <button class="ab-btn ab-purple" onclick="exportBrief()">Export Brief</button>
+  <button class="ab-btn ab-dark" onclick="location.href='/wip-dashboard.html'">Universal WIP</button>
+  <button class="ab-btn ab-dark" onclick="location.href='/'">Home</button>
 </div>
 
 <script>
-const SECTOR = "HEALTHCARE";
-const API = "/api/hc/query";
+// ── STATE ──────────────────────────────────────────────────────────────────
+let GROQ_KEY = localStorage.getItem('groq_key') || '';
+let GROQ_MODEL = 'llama-3.3-70b-versatile';
+let selectedEntity = null;
 
+// ── CLOCK ──────────────────────────────────────────────────────────────────
+setInterval(() => {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-US', {hour12:false});
+}, 1000);
+
+// ── KEY ────────────────────────────────────────────────────────────────────
+function onKey(v) {
+  GROQ_KEY = v.trim();
+  localStorage.setItem('groq_key', GROQ_KEY);
+  const dot = document.getElementById('key-dot');
+  if(dot) dot.className = 'key-dot' + (GROQ_KEY.startsWith('gsk_') ? ' ok' : '');
+}
+
+async function testKey() {
+  const st = document.getElementById('key-status');
+  st.textContent = 'testing...'; st.style.color = 'var(--amber)';
+  try {
+    const r = await fetch('https://api.groq.com/openai/v1/models', {
+      headers: { 'Authorization': 'Bearer ' + GROQ_KEY }
+    });
+    const d = await r.json();
+    if (d.data) {
+      st.textContent = '✓ connected'; st.style.color = 'var(--green)';
+      document.getElementById('key-dot').classList.add('ok');
+    } else {
+      st.textContent = '✗ invalid'; st.style.color = 'var(--red)';
+    }
+  } catch(e) { st.textContent = '✗ error'; st.style.color = 'var(--red)'; }
+}
+
+// ── DATA ───────────────────────────────────────────────────────────────────
 const DATA = {
   kpis: [
-    { label:'TOTAL EXPECTED REIMBURSEMENT', value:'$2.8M', sub:'active encounters', delta:'April billing cycle', cls:'delta-up' },
-    { label:'CLAIMS SUBMITTED', value:'$2.1M', sub:'75% of expected', delta:'$700K pending submission', cls:'delta-warn' },
-    { label:'PAYER PAYMENTS RECEIVED', value:'$1.65M', sub:'collected to date', delta:'78.6% collection rate', cls:'delta-up' },
-    { label:'DENIAL / AR AGING GAP', value:'$189K', sub:'at-risk revenue', delta:'⚠ Correct before submission', cls:'delta-bad' },
-    { label:'UPCODE-DETECT FLAGS', value:'14', sub:"99214 → 99213 corrections", delta:'-$4.2K/mo if uncorrected', cls:'delta-down' },
-    { label:'DAYS IN AR', value:'52', sub:'target: 35 days', delta:'↑ 17 days over target', cls:'delta-down' },
+    { label:'TOTAL EXPECTED REIMBURSEMENT', value:'$2.8M', sub:'active encounters', delta:'April billing cycle', cls:'d-good' },
+    { label:'CLAIMS SUBMITTED', value:'$2.1M', sub:'75% of expected', delta:'$700K pending submission', cls:'d-warn' },
+    { label:'PAYER PAYMENTS RECEIVED', value:'$1.65M', sub:'collected to date', delta:'78.6% collection rate', cls:'d-good' },
+    { label:'DENIAL / AR AGING GAP', value:'$189K', sub:'at-risk revenue', delta:'⚠ Correct before submission', cls:'d-bad' },
+    { label:'UPCODE-DETECT FLAGS', value:'14', sub:'99214 → 99213 corrections', delta:'-$4.2K/mo if uncorrected', cls:'d-bad' },
+    { label:'DAYS IN AR', value:'52', sub:'target: 35 days', delta:'↑ 17 days over target', cls:'d-bad' },
   ],
   tableHeaders: ['ENCOUNTER / CLAIM', '% STAGE', 'EXPECTED', 'COLLECTED', 'DENIAL GAP', 'STATUS'],
   tableRows: [
-    ['ENC-8821 · Prior Auth Denial', 85, '$4,200', '$0', '-$4,200', 'bad'],
-    ['ENC-8834 · Coding Review', 60, '$1,850', '$1,480', '-$370', 'warn'],
-    ['ENC-8756 · Payer Adjudication', 90, '$6,100', '$5,490', '-$610', 'warn'],
-    ['ENC-8801 · Payment Posted', 100, '$3,300', '$3,300', '$0', 'good'],
-    ['ENC-8912 · Claim Scrubbing', 30, '$2,750', '$0', '-$2,750', 'bad'],
+    { enc:'ENC-8821', label:'Prior Auth Denial', pct:85, exp:'$4,200', col:'$0', gap:'-$4,200', sts:'bad' },
+    { enc:'ENC-8834', label:'Coding Review', pct:60, exp:'$1,850', col:'$1,480', gap:'-$370', sts:'warn' },
+    { enc:'ENC-8756', label:'Payer Adjudication', pct:90, exp:'$6,100', col:'$5,490', gap:'-$610', sts:'warn' },
+    { enc:'ENC-8801', label:'Payment Posted', pct:100, exp:'$3,300', col:'$3,300', gap:'$0', sts:'good' },
+    { enc:'ENC-8912', label:'Claim Scrubbing', pct:30, exp:'$2,750', col:'$0', gap:'-$2,750', sts:'bad' },
   ],
   alerts: [
-    { sev:'CRIT', cls:'sev-crit', text:"<strong>UPCODE-DETECT-V2 Alert:</strong> 14 instances of '99214' flagged — should be coded '99213'. Est. revenue loss: $4,200/month if uncorrected. Correct all coding before next submission batch." },
-    { sev:'HIGH', cls:'sev-high', text:'<strong>Prior Auth Denial — ENC-8821:</strong> $4,200 claim denied. Missing prior authorization documentation. File appeal with auth reference within 30-day window.' },
-    { sev:'HIGH', cls:'sev-high', text:'<strong>AR Aging Critical — DSO 52d:</strong> 3 claims over 90 days. Westside Payer $18.4K — escalate to collections. Target is 35-day DSO.' },
+    { sev:'CRIT', cls:'sev-crit', text:'<strong>UPCODE-DETECT-V2:</strong> 14 instances of 99214 flagged — correct to 99213. Est. revenue loss: $4,200/month if uncorrected. Fix before next submission batch.' },
+    { sev:'HIGH', cls:'sev-high', text:'<strong>Prior Auth Denial — ENC-8821:</strong> $4,200 denied. Missing prior auth documentation. File appeal with auth reference within 30-day window.' },
+    { sev:'HIGH', cls:'sev-high', text:'<strong>AR Aging Critical — DSO 52d:</strong> 3 claims over 90 days. Westside Payer $18.4K — escalate to collections. Target: 35-day DSO.' },
     { sev:'MED', cls:'sev-med', text:'<strong>ENC-8912 Scrubbing Hold:</strong> Claim held — missing modifier. Correct and resubmit within 48 hours to avoid timely filing denial.' },
   ],
   entities: [
-    { id:'ENC-8821', name:'Prior Auth Denial', meta:'85% stage · $4,200 expected · Risk: CRIT', risk:'95', riskCls:'cell-bad',
-      schema:{ industry:'Healthcare', item_id:'ENC-8821', phase:'Appeal Window', percent_complete:'85%', costs_to_date:'$0 collected', revenue_earned:'$4,200 expected', billed_or_paid:'$0', over_under:'UNDER -$4,200', days_in_stage:'14', ai_risk_score:'95/100', cpt_drg:'99214', payer:'Westside Health', denial_reason:'Missing prior auth' } },
-    { id:'ENC-8912', name:'Claim Scrubbing Hold', meta:'30% stage · $2,750 expected · Risk: HIGH', risk:'78', riskCls:'cell-bad',
-      schema:{ industry:'Healthcare', item_id:'ENC-8912', phase:'Scrubbing Queue', percent_complete:'30%', costs_to_date:'$0 collected', revenue_earned:'$2,750 expected', billed_or_paid:'$0', over_under:'UNDER -$2,750', days_in_stage:'6', ai_risk_score:'78/100', cpt_drg:'99213', payer:'Banner Health Plan', denial_reason:'Missing modifier' } },
-    { id:'ENC-8834', name:'Coding Review Queue', meta:'60% stage · $1,850 expected · Risk: MED', risk:'42', riskCls:'cell-warn',
-      schema:{ industry:'Healthcare', item_id:'ENC-8834', phase:'Coding Review', percent_complete:'60%', costs_to_date:'$1,480 collected', revenue_earned:'$1,850 expected', billed_or_paid:'$1,480', over_under:'-$370', days_in_stage:'9', ai_risk_score:'42/100', cpt_drg:'99214→99213', payer:'BCBS Arizona', denial_reason:'UPCODE-DETECT flag' } },
-    { id:'ENC-8756', name:'Payer Adjudication', meta:'90% stage · $6,100 expected · Risk: LOW', risk:'22', riskCls:'cell-warn',
-      schema:{ industry:'Healthcare', item_id:'ENC-8756', phase:'Adjudication', percent_complete:'90%', costs_to_date:'$5,490 collected', revenue_earned:'$6,100 expected', billed_or_paid:'$5,490', over_under:'-$610', days_in_stage:'3', ai_risk_score:'22/100', cpt_drg:'DRG-470', payer:'Aetna', denial_reason:'None' } },
-    { id:'ENC-8801', name:'Payment Posted — Closed', meta:'100% · $3,300 collected · Risk: NONE', risk:'0', riskCls:'cell-good',
-      schema:{ industry:'Healthcare', item_id:'ENC-8801', phase:'Closed', percent_complete:'100%', costs_to_date:'$3,300 collected', revenue_earned:'$3,300', billed_or_paid:'$3,300', over_under:'$0', days_in_stage:'0', ai_risk_score:'0/100', cpt_drg:'99213', payer:'Medicare', denial_reason:'None' } },
+    { id:'ENC-8821', name:'Prior Auth Denial', meta:'85% stage · $4,200 expected · Risk: CRIT', risk:'95', riskCls:'c-bad',
+      schema:{ industry:'Healthcare', item_id:'ENC-8821', phase:'Appeal Window', pct_complete:'85%', collected:'$0', expected:'$4,200', gap:'-$4,200', days_in_stage:'14', risk_score:'95/100', cpt_drg:'99214', payer:'Westside Health', denial_reason:'Missing prior auth' } },
+    { id:'ENC-8912', name:'Claim Scrubbing Hold', meta:'30% stage · $2,750 expected · Risk: HIGH', risk:'78', riskCls:'c-bad',
+      schema:{ industry:'Healthcare', item_id:'ENC-8912', phase:'Scrubbing Queue', pct_complete:'30%', collected:'$0', expected:'$2,750', gap:'-$2,750', days_in_stage:'6', risk_score:'78/100', cpt_drg:'99213', payer:'Banner Health Plan', denial_reason:'Missing modifier' } },
+    { id:'ENC-8834', name:'Coding Review Queue', meta:'60% stage · $1,850 expected · Risk: MED', risk:'42', riskCls:'c-warn',
+      schema:{ industry:'Healthcare', item_id:'ENC-8834', phase:'Coding Review', pct_complete:'60%', collected:'$1,480', expected:'$1,850', gap:'-$370', days_in_stage:'9', risk_score:'42/100', cpt_drg:'99214→99213', payer:'BCBS Arizona', denial_reason:'UPCODE-DETECT flag' } },
+    { id:'ENC-8756', name:'Payer Adjudication', meta:'90% stage · $6,100 expected · Risk: LOW', risk:'22', riskCls:'c-warn',
+      schema:{ industry:'Healthcare', item_id:'ENC-8756', phase:'Adjudication', pct_complete:'90%', collected:'$5,490', expected:'$6,100', gap:'-$610', days_in_stage:'3', risk_score:'22/100', cpt_drg:'DRG-470', payer:'Aetna', denial_reason:'None' } },
+    { id:'ENC-8801', name:'Payment Posted — Closed', meta:'100% · $3,300 collected · Risk: NONE', risk:'0', riskCls:'c-good',
+      schema:{ industry:'Healthcare', item_id:'ENC-8801', phase:'Closed', pct_complete:'100%', collected:'$3,300', expected:'$3,300', gap:'$0', days_in_stage:'0', risk_score:'0/100', cpt_drg:'99213', payer:'Medicare', denial_reason:'None' } },
   ],
-  actions: ['Push Corrected Codes to RCM System','File Prior Auth Appeal — ENC-8821','Run UPCODE-DETECT-V2 Full Scan','Escalate 90+ Day Claims to Collections','Generate Denial Management Report','Export AR Aging to Controller'],
+  actions: [
+    'Push Corrected Codes to RCM System',
+    'File Prior Auth Appeal — ENC-8821',
+    'Run UPCODE-DETECT-V2 Full Scan',
+    'Escalate 90+ Day Claims to Collections',
+    'Generate Denial Management Report',
+    'Export AR Aging to Controller',
+  ],
 };
 
-let selectedEntity = null;
+// ── GROQ STREAM ────────────────────────────────────────────────────────────
+async function groqStream(sys, user, onChunk, onDone, onError, maxTok=800) {
+  if (!GROQ_KEY) { onError('No Groq API key — enter key above.'); return; }
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
+      body: JSON.stringify({
+        model: GROQ_MODEL, stream:true, max_tokens: maxTok,
+        messages:[{role:'system',content:sys},{role:'user',content:user}]
+      })
+    });
+    if (!res.ok) { const e = await res.json(); onError(e.error?.message||'Groq error '+res.status); return; }
+    const reader = res.body.getReader(); const dec = new TextDecoder(); let buf='', total=0;
+    while(true){
+      const {done,value} = await reader.read(); if(done){onDone(total);break;}
+      buf+=dec.decode(value,{stream:true}); const lines=buf.split('\n'); buf=lines.pop();
+      for(const line of lines){
+        const data=line.replace(/^data: /,'').trim(); if(data==='[DONE]'){onDone(total);return;}
+        if(!data||data[0]===':') continue;
+        try{const j=JSON.parse(data);const tok=j.choices?.[0]?.delta?.content;if(tok){total+=tok.length;onChunk(tok);}}catch{}
+      }
+    }
+  } catch(e){onError(e.message);}
+}
 
+// ── INIT ───────────────────────────────────────────────────────────────────
 function init() {
+  if (GROQ_KEY) {
+    document.getElementById('api-key').value = GROQ_KEY;
+    document.getElementById('key-dot').classList.add('ok');
+    document.getElementById('key-status').textContent = '✓ loaded';
+    document.getElementById('key-status').style.color = 'var(--green)';
+  }
+
   // KPIs
   document.getElementById('kpi-grid').innerHTML = DATA.kpis.map(k => `
-    <div class="wc">
-      <div class="wc-label">${k.label}</div>
-      <div class="wc-value">${k.value}</div>
-      <div class="wc-sub">${k.sub}</div>
-      <div class="wc-delta ${k.cls}">${k.delta}</div>
+    <div class="kpi">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-sub">${k.sub}</div>
+      <div class="kpi-delta ${k.cls}">${k.delta}</div>
     </div>`).join('');
 
   // Table
-  const th = DATA.tableHeaders.map(h => `<th>${h}</th>`).join('');
-  const rows = DATA.tableRows.map(r => {
-    const pct = r[1];
-    const barCls = pct >= 80 ? 'bar-good' : pct >= 50 ? 'bar-warn' : 'bar-bad';
-    const pctCls = pct >= 80 ? 'cell-good' : pct >= 50 ? 'cell-warn' : 'cell-bad';
-    const varCls = r[4].startsWith('-') ? 'cell-bad' : r[4] === '$0' ? 'cell-good' : 'cell-warn';
-    const stsCls = r[5] === 'good' ? 'cell-good' : r[5] === 'warn' ? 'cell-warn' : 'cell-bad';
-    return `<tr>
-      <td class="cell-label">${r[0]}</td>
-      <td><span class="cell-pct ${pctCls}">${pct}%</span><span class="cell-bar-wrap"><span class="cell-bar ${barCls}" style="width:${pct}%"></span></span></td>
-      <td class="cell-value">${r[2]}</td>
-      <td class="cell-value">${r[3]}</td>
-      <td class="${varCls}" style="font-family:var(--mono);font-size:.62rem">${r[4]}</td>
-      <td><span class="${stsCls}" style="font-family:var(--mono);font-size:.48rem;letter-spacing:.06em">${r[5].toUpperCase()}</span></td>
+  document.getElementById('wip-head').innerHTML = '<tr>' + DATA.tableHeaders.map(h=>`<th>${h}</th>`).join('') + '</tr>';
+  document.getElementById('wip-body').innerHTML = DATA.tableRows.map((r,i) => {
+    const bc = r.pct>=80?'bar-g':r.pct>=50?'bar-w':'bar-r';
+    const pc = r.pct>=80?'c-good':r.pct>=50?'c-warn':'c-bad';
+    const gc = r.gap.startsWith('-')?'c-bad':r.gap==='$0'?'c-good':'c-warn';
+    const sc = 'sts-'+(r.sts==='good'?'good':r.sts==='warn'?'warn':'bad');
+    return `<tr onclick="selectRow(${i})" id="row-${i}">
+      <td><span class="enc-name">${r.enc} · ${r.label}</span></td>
+      <td><div class="pct-wrap"><span class="pct-num ${pc}">${r.pct}%</span><div class="bar-track"><div class="bar-fill ${bc}" style="width:${r.pct}%"></div></div></div></td>
+      <td class="c-mono">${r.exp}</td>
+      <td class="c-mono">${r.col}</td>
+      <td class="c-mono ${gc}">${r.gap}</td>
+      <td><span class="sts-badge ${sc}">${r.sts.toUpperCase()}</span></td>
     </tr>`;
   }).join('');
-  document.getElementById('wip-table').innerHTML = `<thead><tr>${th}</tr></thead><tbody>${rows}</tbody>`;
 
   // Alerts
-  document.getElementById('alert-items').innerHTML = DATA.alerts.map(a => `
-    <div class="af-item"><span class="af-sev ${a.cls}">${a.sev}</span><span class="af-text">${a.text}</span></div>`).join('');
+  document.getElementById('alert-items').innerHTML = DATA.alerts.map(a =>
+    `<div class="alert-item"><span class="sev ${a.cls}">${a.sev}</span><span>${a.text}</span></div>`
+  ).join('');
 
   // Entities
-  document.getElementById('entity-list').innerHTML = DATA.entities.map((e, i) => `
-    <div class="entity" id="ent-${i}" data-tsm-action="selectEntity" data-tsm-args="${i}">
-      <span class="${e.riskCls}" style="float:right;font-family:var(--mono);font-size:.6rem;font-weight:700">${e.risk}</span>
-      <div class="entity-id">${e.id}</div>
-      <div class="entity-name">${e.name}</div>
-      <div class="entity-meta">${e.meta}</div>
+  document.getElementById('entity-list').innerHTML = DATA.entities.map((e,i) => `
+    <div class="entity" id="ent-${i}" onclick="selectEntity(${i})">
+      <span class="ent-risk ${e.riskCls}">${e.risk}</span>
+      <div class="ent-id">${e.id}</div>
+      <div class="ent-name">${e.name}</div>
+      <div class="ent-meta">${e.meta}</div>
     </div>`).join('');
 
   // Actions
-  document.getElementById('action-btns').innerHTML = DATA.actions.map(a => `
-    <button class="ar-btn" data-tsm-action="runAction" data-tsm-args="'${a}'">${a}</button>`).join('');
+  document.getElementById('action-btns').innerHTML = DATA.actions.map(a =>
+    `<button class="act-btn" onclick="runAction('${a}')">${a}</button>`
+  ).join('');
 }
 
+// ── SELECT ─────────────────────────────────────────────────────────────────
 function selectEntity(i) {
   selectedEntity = DATA.entities[i];
-  document.querySelectorAll('.entity').forEach((el, idx) => {
-    el.className = 'entity' + (idx === i ? ' selected' : '');
+  document.querySelectorAll('.entity').forEach((el,idx) => {
+    el.className = 'entity' + (idx===i?' selected':'');
   });
   const s = selectedEntity.schema;
-  document.getElementById('schema-body').innerHTML = Object.entries(s).map(([k, v]) =>
-    `<div class="sp-field"><span class="sp-key">${k}</span><span class="sp-val">${v}</span></div>`).join('');
-  document.getElementById('ap-body').innerHTML = `<span class="ap-placeholder">Entity selected: <strong style="color:var(--a)">${selectedEntity.name}</strong> — click GENERATE for CFO narrative.</span>`;
+  document.getElementById('schema-body').innerHTML = Object.entries(s).map(([k,v]) =>
+    `<div class="schema-field"><span class="s-key">${k}</span><span class="s-val">${v}</span></div>`
+  ).join('');
+  document.getElementById('ai-body').innerHTML = `<span class="ai-placeholder">Entity selected: <strong style="color:var(--cyan)">${selectedEntity.name}</strong> — click GENERATE for CFO narrative.</span>`;
 }
 
+function selectRow(i) {
+  const enc = DATA.tableRows[i].enc;
+  const entIdx = DATA.entities.findIndex(e => e.id === enc);
+  if (entIdx >= 0) selectEntity(entIdx);
+  document.querySelectorAll('table.wip tbody tr').forEach((tr,idx) => {
+    tr.className = idx===i ? 'enc-selected' : '';
+  });
+}
+
+// ── AI NARRATIVE ───────────────────────────────────────────────────────────
 async function runNarrative() {
-  if (!selectedEntity) { alert('Select an entity first.'); return; }
-  const btn = document.getElementById('ap-run-btn');
-  btn.textContent = '⏳ GENERATING...';
-  btn.disabled = true;
-  const prompt = `You are the TSM Healthcare RCM WIP Strategist. Analyze this encounter: ${selectedEntity.name} (${selectedEntity.id}). Status: ${selectedEntity.meta}. Produce a CFO-ready executive narrative covering: (1) RCM position and denial risk, (2) UPCODE-DETECT findings if applicable, (3) 3 immediate revenue recovery actions with dollar amounts, (4) payer strategy and appeal window status. Be specific. Under 250 words.`;
-  try {
-    const r = await fetch(API, { method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ payload:{ sector:SECTOR, node:'RCM WIP', source:'WIP_DASHBOARD', context:prompt, hitl:true, executive:true } }) });
-    const d = await r.json();
-    document.getElementById('ap-body').textContent = d.reply || d.content || JSON.stringify(d);
-  } catch(e) {
-    document.getElementById('ap-body').textContent = 'Strategist relay unavailable. Check API connection.';
-  }
-  btn.textContent = '⚡ GENERATE'; btn.disabled = false;
+  if (!selectedEntity) { alert('Select an encounter first.'); return; }
+  const btn = document.getElementById('gen-btn');
+  const body = document.getElementById('ai-body');
+  btn.textContent = '⏳'; btn.disabled = true;
+  body.innerHTML = '<span class="ai-streaming"></span>';
+  const out = body.querySelector('.ai-streaming');
+
+  const sys = `You are the TSM Healthcare RCM Strategist. Produce a CFO-ready executive narrative. Be specific with dollar amounts, denial codes, and actionable steps. Under 220 words.`;
+  const user = `Analyze encounter ${selectedEntity.id} — ${selectedEntity.name}.
+Status: ${selectedEntity.meta}
+Schema: ${JSON.stringify(selectedEntity.schema)}
+
+Cover: (1) RCM position and denial risk, (2) UPCODE-DETECT findings if applicable, (3) 3 immediate revenue recovery actions with dollar amounts, (4) payer strategy and appeal window status.`;
+
+  groqStream(sys, user,
+    chunk => { out.textContent += chunk; },
+    () => { btn.textContent = '⚡ GENERATE'; btn.disabled = false; },
+    err => { out.textContent = '[Error: '+err+']'; btn.textContent = '⚡ GENERATE'; btn.disabled = false; }
+  );
 }
 
-async function runWIPAI(ctx) {
-  const out = document.getElementById('ap-body');
-  out.textContent = 'Running Healthcare RCM WIP BNCA relay...';
-  try {
-    const r = await fetch(API, { method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ payload:{ sector:SECTOR, node:'HEALTHCARE WIP', source:'SECTOR_WIP_PAGE',
-        context: ctx || 'Prior auth denials, UPCODE-DETECT flags, claim scrubbing holds, AR aging, payer adjudication status. Generate prioritized BNCA action plan.',
-        hitl:true, relay_to_strategist:true, executive:true } }) });
-    const d = await r.json();
-    out.textContent = d.reply || d.content || JSON.stringify(d, null, 2);
-    localStorage.setItem('tsm_healthcare_wip_latest', out.textContent);
-  } catch(e) { out.textContent = 'Strategist relay unavailable.'; }
+// ── BNCA ───────────────────────────────────────────────────────────────────
+async function runBNCA() {
+  const out = document.getElementById('bnca-out');
+  out.classList.add('visible');
+  out.textContent = '⟳ Running Healthcare RCM BNCA...\n';
+
+  const ctx = selectedEntity
+    ? `Selected: ${selectedEntity.id} — ${selectedEntity.name}. ${selectedEntity.meta}.`
+    : 'Full healthcare RCM queue: Prior auth denials, UPCODE-DETECT flags, claim scrubbing holds, AR aging, payer adjudication status.';
+
+  const sys = `You are the TSM Healthcare RCM BNCA engine. Generate a prioritized Best Next Course of Action plan for the healthcare revenue cycle team. Be specific, actionable, with timelines and dollar impacts.`;
+  const user = `${ctx}
+
+KPIs: $2.8M expected, $1.65M collected, $189K at-risk, 14 UPCODE flags, 52-day DSO (target 35).
+Active denials: ENC-8821 ($4,200 prior auth), ENC-8912 ($2,750 scrubbing hold).
+
+Generate: (1) Immediate actions (24-48hr), (2) This-week actions, (3) Escalation path, (4) Revenue recovery forecast.`;
+
+  groqStream(sys, user,
+    chunk => { out.textContent += chunk; },
+    () => {},
+    err => { out.textContent += '\n[Error: '+err+']'; },
+    1000
+  );
 }
 
-async function runStrategistRollup() {
-  await runWIPAI('Push current Healthcare RCM WIP queue to main HC Strategist for HITL prioritization, denial management actions, and controller review.');
+// ── STRATEGIST ─────────────────────────────────────────────────────────────
+async function runStrategist() {
+  const out = document.getElementById('bnca-out');
+  out.classList.add('visible');
+  out.textContent = '⟳ Pushing to HC Strategist...\n';
+
+  const sys = `You are the TSM HC Strategist. Receive the Healthcare RCM WIP queue and produce a HITL-staged prioritization report for executive review.`;
+  const user = `Push current Healthcare RCM WIP queue to main HC Strategist for HITL prioritization.
+Queue: ENC-8821 (Prior Auth Denial, $4,200, CRIT), ENC-8912 (Scrubbing Hold, $2,750, HIGH), ENC-8834 (Coding Review, $370 gap, MED).
+Provide: prioritized action list, owner assignments, appeal deadlines, revenue recovery forecast.`;
+
+  groqStream(sys, user,
+    chunk => { out.textContent += chunk; },
+    () => {},
+    err => { out.textContent += '\n[Error: '+err+']'; },
+    900
+  );
 }
 
+// ── QUICK ACTIONS ──────────────────────────────────────────────────────────
 async function runAction(action) {
-  await runWIPAI(`Action requested: ${action}. Provide specific steps, dollar impact, and timeline.`);
+  const out = document.getElementById('bnca-out');
+  out.classList.add('visible');
+  out.textContent = `⟳ ${action}...\n`;
+
+  const sys = `You are the TSM Healthcare RCM operations engine. Execute the requested RCM action with specific steps, dollar impact, and timeline.`;
+  const user = `Action: ${action}
+Context: Healthcare RCM WIP — $189K at risk, 14 UPCODE flags, 52-day DSO, 5 active encounters.
+Provide: step-by-step execution plan, responsible roles, expected dollar recovery, completion timeline.`;
+
+  groqStream(sys, user,
+    chunk => { out.textContent += chunk; },
+    () => {},
+    err => { out.textContent += '\n[Error: '+err+']'; },
+    800
+  );
 }
 
+// ── EXPORT ─────────────────────────────────────────────────────────────────
 function exportBrief() {
-  const txt = document.getElementById('ap-body').textContent;
-  const blob = new Blob([`TSM HEALTHCARE RCM WIP BRIEF\n${'='.repeat(40)}\n${new Date().toISOString()}\n\n${txt}`], { type:'text/plain' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = 'tsm-healthcare-rcm-wip-brief.txt'; a.click();
+  const narrative = document.getElementById('ai-body').textContent;
+  const bnca = document.getElementById('bnca-out').textContent;
+  const blob = new Blob([
+    `TSM HEALTHCARE RCM WIP BRIEF\n${'='.repeat(50)}\n${new Date().toISOString()}\n\n` +
+    `AI NARRATIVE:\n${narrative}\n\n` +
+    `BNCA OUTPUT:\n${bnca}`
+  ], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'tsm-hc-rcm-brief.txt';
+  a.click();
 }
 
 init();
 </script>
-<script id="tsm-hc-clean-tabs-v1">
-(function(){
-  if(window.__TSM_HC_CLEAN_TABS_V1__) return;
-  window.__TSM_HC_CLEAN_TABS_V1__ = true;
-
-  const NODE = (() => {
-    const path = location.pathname.toLowerCase();
-    if(path.includes("billing")) return "Billing";
-    if(path.includes("compliance")) return "Compliance";
-    if(path.includes("insurance")) return "Insurance";
-    if(path.includes("pharmacy")) return "Pharmacy";
-    if(path.includes("vendors")) return "Vendors";
-    if(path.includes("financial")) return "Financial";
-    if(path.includes("legal")) return "Legal";
-    if(path.includes("medical")) return "Medical";
-    if(path.includes("operations")) return "Operations";
-    if(path.includes("taxprep")) return "Tax Prep";
-    if(path.includes("grants")) return "Grants";
-    return "Healthcare";
-  })();
-
-  const TABS = {
-    "DASHBOARD": ["Node Status","Queue Snapshot","SLA Watch","BNCA Ready"],
-    "CLINICAL OPS": ["Patient Flow","Provider Queue","Care Gap Watch","Clinical Throughput"],
-    "BILLING & CPT": ["CPT Gaps","Coding Review","Claim Scrub","Revenue Exposure"],
-    "PRIOR AUTH": ["Auth Aging","Payer Rules","Missing Evidence","Escalation Path"],
-    "AI ANALYSIS": ["AI Summary","Risk + Owner","BNCA","Talk Track"],
-    "PRESETS": ["Office Manager Script","Prior Auth Review","Billing Review","Compliance Review"]
-  };
-
-  function clean(x){
-    return (x||"").replace(/[^\w\s&/+.-]/g," ").replace(/\s+/g," ").trim().toUpperCase();
-  }
-
-  function matchTab(label){
-    const c = clean(label);
-    if(c.includes("INTEL") || c.includes("WORKBENCH") || c.includes("AI")) return "AI ANALYSIS";
-    return Object.keys(TABS).find(k => c.includes(k) || k.includes(c)) || null;
-  }
-
-  function findContentRoot(){
-    return document.querySelector("main")
-      || document.querySelector(".main")
-      || document.querySelector(".content")
-      || document.querySelector(".node-body")
-      || document.querySelector(".panel")
-      || document.body;
-  }
-
-  function ensurePanel(){
-    let panel = document.getElementById("hc-clean-tab-panel");
-    if(panel) return panel;
-
-    panel = document.createElement("section");
-    panel.id = "hc-clean-tab-panel";
-    panel.style.cssText = `
-      margin:16px;
-      padding:18px;
-      border:1px solid rgba(0,255,198,.28);
-      border-radius:14px;
-      background:rgba(2,18,12,.96);
-      color:#eafff7;
-      position:relative;
-      z-index:5;
-    `;
-
-    const root = findContentRoot();
-    root.appendChild(panel);
-    return panel;
-  }
-
-  function render(tab){
-    const items = TABS[tab] || TABS["DASHBOARD"];
-    const panel = ensurePanel();
-
-    panel.innerHTML = `
-      <div style="color:#00ffc6;letter-spacing:.22em;font-size:11px;text-transform:uppercase">
-        ACTIVE ${NODE.toUpperCase()} NODE TAB
-      </div>
-      <h1 style="margin:8px 0 10px;color:#fff;font-size:34px">${tab}</h1>
-      <p style="color:#9fb8c8;line-height:1.55;max-width:920px">
-        Clean baseline mode. This tab shows the core operating content only: queue status,
-        ownership, evidence gaps, SLA pressure, and next-action readiness.
-      </p>
-
-      <div style="display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:12px;margin:16px 0">
-        ${items.map(x=>`
-          <div style="background:#061711;border:1px solid rgba(0,255,198,.18);border-radius:10px;padding:14px;min-height:105px">
-            <b style="color:#00ffc6">${x}</b>
-            <p style="color:#8aa6b7;font-size:13px;line-height:1.45">
-              Status, owner lane, SLA risk, evidence, and next action.
-            </p>
-          </div>
-        `).join("")}
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-        <div style="background:#020a08;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:14px">
-          <b style="color:#ffc857">WORKFLOW INTAKE</b>
-          <textarea id="hc-clean-context" style="width:100%;min-height:110px;margin-top:10px;background:#010705;color:#eafff7;border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:12px" placeholder="Paste healthcare queue, auth, billing, clinical, or compliance context..."></textarea>
-          <button onclick="window.HC_CLEAN_RUN && window.HC_CLEAN_RUN('${tab}')" style="margin-top:10px;background:#00ffc6;color:#001;border:0;border-radius:9px;padding:11px 14px;font-weight:900">⚡ RUN ${tab} BNCA</button>
-          <pre id="hc-clean-output" style="display:none;white-space:pre-wrap;background:#010705;color:#eafff7;border-left:3px solid #00ffc6;border-radius:10px;padding:14px;margin-top:12px"></pre>
-        </div>
-
-        <div style="background:#020a08;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:14px">
-          <b style="color:#00ffc6">STRATEGIST OUTPUT</b>
-          <pre style="white-space:pre-wrap;color:#eafff7;line-height:1.55">TOP ISSUE
-${NODE} ${tab} requires operating review.
-
-BEST NEXT ACTIONS
-1. Assign accountable owner.
-2. Validate supporting evidence.
-3. Clear blockers older than current SLA.
-4. Relay unresolved risk to Strategist.
-
-CONFIDENCE
-92%</pre>
-        </div>
-      </div>
-    `;
-  }
-
-  window.HC_CLEAN_RUN = async function(tab){
-    const out = document.getElementById("hc-clean-output");
-    const ctx = document.getElementById("hc-clean-context")?.value || `Run ${NODE} ${tab} BNCA.`;
-    if(!out) return;
-
-    out.style.display = "block";
-    out.textContent = "TSM Neural Core running...";
-
-    try{
-      const r = await fetch("/api/bpo/query",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({
-          payload:{
-            sector:"Healthcare " + NODE,
-            lane:tab,
-            context:ctx,
-            priority:"HIGH"
-          }
-        })
-      });
-      const d = await r.json();
-      out.textContent = d.reply || d.content || "No response.";
-    }catch(e){
-      out.textContent = `TOP ISSUE
-${NODE} ${tab} requires operating review.
-
-RISK LEVEL
-MEDIUM
-
-BEST NEXT ACTIONS
-1. Assign owner lane.
-2. Validate evidence.
-3. Clear SLA blockers.
-4. Escalate unresolved issue.
-
-CONFIDENCE
-92%`;
-    }
-  };
-
-  function wire(){
-    document.querySelectorAll("button,a,.tab,.nav-btn,[data-tab],[data-section],[role='tab']").forEach(el=>{
-      const href = el.getAttribute("href") || "";
-      if(el.tagName === "A" && href && !href.startsWith("#")) return;
-
-      const tab = matchTab(el.dataset.tab || el.dataset.section || el.textContent);
-      if(!tab || el.dataset.hcCleanWired) return;
-
-      el.dataset.hcCleanWired = "true";
-      el.style.cursor = "pointer";
-
-      el.addEventListener("click", ev=>{
-        ev.preventDefault();
-        ev.stopPropagation();
-
-        document.querySelectorAll(".active").forEach(x=>{
-          if(x.matches("button,a,.tab,.nav-btn,[role='tab']")) x.classList.remove("active");
-        });
-
-        el.classList.add("active");
-        render(tab);
-      }, true);
-    });
-  }
-
-  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", wire);
-  else wire();
-
-  setTimeout(wire,300);
-  setTimeout(wire,900);
-})();
-</script>
-
-
-<script>(function(){
-document.addEventListener('click', function(e){
-
-  const el = e.target.closest('[data-tsm-action]');
-  if(!el) return;
-
-  const action = el.getAttribute('data-tsm-action');
-  const args = el.getAttribute('data-tsm-args');
-
-  const fnMap = {
-    selectEntity: (a) => selectEntity(parseInt(a)),
-    runNarrative: () => runNarrative(),
-    runWIPAI: (a) => runWIPAI(a || ''),
-    runStrategistRollup: () => runStrategistRollup(),
-    exportBrief: () => exportBrief(),
-    runAction: (a) => runAction((a||'').replace(/^'|'$/g,'')),
-  };
-  const fn = fnMap[action];
-  if(fn){ try{ fn(args); } catch(e){ console.error('[TSM]',action,e); } }
-  else if(window.TSM && TSM.launcher && TSM.launcher.run){
-    TSM.launcher.run(action, args);
-  } else {
-    console.warn('[TSM] launcher missing:', action, args);
-  }
-
-});
-})();</script>
 </body>
 </html>
-
