@@ -1395,8 +1395,61 @@ function relay() {
   dispatchPacket(0);
 }
 
+async function runPipeline() {
+  if (!docText || docText.length < 20) { alert('Load a document first.'); return; }
+  if (!GROQ_KEY) { alert('Enter your Groq API key first.'); return; }
+
+  const engines = [
+    { outId: 'out1', badgeId: 'ps1', tokId: 'tok1', idleId: 'idle1', sys: 'You are a healthcare document intelligence engine. Extract and classify key data: claim ID, CPT codes, denial codes, dates, provider, payer, amounts, patient info. Output structured plain text.', label: 'DOCUMENT INTEL' },
+    { outId: 'out2', badgeId: 'ps2', tokId: 'tok2', idleId: 'idle2', sys: 'You are a denial root cause analyst. Identify the exact denial reason, payer policy violated, documentation gap, and coding error. Be specific and concise.', label: 'ROOT CAUSE' },
+    { outId: 'out3', badgeId: 'ps3', tokId: 'tok3', idleId: 'idle3', sys: 'You are a healthcare financial impact analyst. Calculate revenue at risk, days in AR, timely filing risk, and total financial exposure. Output dollar amounts and timelines.', label: 'FINANCIAL IMPACT' },
+    { outId: 'out4', badgeId: 'ps4', tokId: 'tok4', idleId: 'idle4', sys: 'You are a denial recovery specialist. Write a step-by-step appeal plan: what to submit, clinical documentation needed, appeal letter talking points, and deadline.', label: 'RECOVERY PLAN' },
+    { outId: 'out5', badgeId: 'ps5', tokId: 'tok5', idleId: 'idle5', sys: 'You are a healthcare recovery navigator. List the exact next steps, responsible staff roles, payer appeal portal links if known, and escalation path. Be actionable.', label: 'RECOVERY NAVIGATOR' },
+  ];
+
+  completedCount = 0;
+  const actTxt = document.getElementById('active-txt');
+
+  for (let i = 0; i < engines.length; i++) {
+    const eng = engines[i];
+    const outEl = document.getElementById(eng.outId);
+    const idleEl = document.getElementById(eng.idleId);
+    const psEl = document.getElementById(eng.badgeId);
+    const tokEl = document.getElementById(eng.tokId);
+
+    if (outEl) { outEl.textContent = ''; outEl.style.display = 'block'; }
+    if (idleEl) idleEl.style.display = 'none';
+    if (psEl) { psEl.textContent = 'PROCESSING'; psEl.style.color = 'var(--amber)'; }
+    if (actTxt) actTxt.textContent = (i + 1) + ' / 5 Engines Active';
+
+    await new Promise((resolve) => {
+      groqStream(
+        eng.sys,
+        'DOCUMENT:\n' + docText,
+        (chunk) => { if (outEl) outEl.textContent += chunk; },
+        (total) => {
+          if (psEl) { psEl.textContent = 'COMPLETE ✓'; psEl.style.color = 'var(--green)'; }
+          if (tokEl) tokEl.textContent = total + ' chars';
+          completedCount++;
+          resolve();
+        },
+        (err) => {
+          if (outEl) outEl.textContent = '[Error: ' + err + ']';
+          if (psEl) { psEl.textContent = 'ERROR'; psEl.style.color = 'var(--red)'; }
+          resolve();
+        },
+        900
+      );
+    });
+  }
+
+  if (actTxt) actTxt.textContent = '5 / 5 Engines Complete';
+  relay();
+  injectPriorAuthGeneratorWidget();
+}
+
 function fireAllEngines() {
-  ingestStart();
+  runPipeline();
 }
 const fireAll = fireAllEngines;
 
