@@ -301,22 +301,38 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:1
       <!-- ENTERPRISE PITCH GENERATOR -->
       <div style="margin-bottom:20px;">
         <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--dim);margin-bottom:12px;">Enterprise Pitch Generator</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
 
-          <!-- RANDSTAD CARD -->
-          <div style="border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:16px 18px;background:var(--gold3);cursor:pointer;transition:all .15s;" onmouseenter="this.style.background='rgba(201,168,76,.15)'" onmouseleave="this.style.background='var(--gold3)'">
-            <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:6px;">Staffing Partner</div>
-            <div style="font-family:var(--display);font-size:20px;color:var(--bright);letter-spacing:1px;margin-bottom:6px;">Randstad Package</div>
-            <div style="font-size:10px;color:var(--dim);line-height:1.7;margin-bottom:14px;">Workforce Readiness & Career Development Platform. Candidate validation, simulation-based assessment, upskilling tracks, internal mobility, retention outcomes.</div>
-            <button class="gen-btn" style="width:100%;" onclick="generatePackage('randstad')">Generate Randstad Workforce Package ↗</button>
+        <!-- TYPE SELECTOR + COMPANY INPUTS -->
+        <div style="background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;margin-bottom:10px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
+            <div class="fg">
+              <label>Company Name</label>
+              <input id="pkg-company" placeholder="e.g. Randstad, Banner Health..." oninput="updatePkgButtons()"/>
+            </div>
+            <div class="fg">
+              <label>Division / Department</label>
+              <input id="pkg-division" placeholder="e.g. Healthcare Staffing, Revenue Cycle..."/>
+            </div>
+            <div class="fg">
+              <label>Contact Name (optional)</label>
+              <input id="pkg-contact" placeholder="e.g. Director of Workforce Dev..."/>
+            </div>
           </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
 
-          <!-- HONORHEALTH CARD -->
-          <div style="border:0.5px solid rgba(20,184,166,.3);border-radius:var(--radius-lg);padding:16px 18px;background:rgba(20,184,166,.06);cursor:pointer;transition:all .15s;" onmouseenter="this.style.background='rgba(20,184,166,.12)'" onmouseleave="this.style.background='rgba(20,184,166,.06)'">
-            <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--teal);margin-bottom:6px;">Healthcare Enterprise</div>
-            <div style="font-family:var(--display);font-size:20px;color:var(--bright);letter-spacing:1px;margin-bottom:6px;">HonorHealth Package</div>
-            <div style="font-size:10px;color:var(--dim);line-height:1.7;margin-bottom:14px;">Healthcare Workforce Development & Revenue Cycle Readiness Platform. RCM training, CRCR prep, staff development, compliance education, workflow simulation.</div>
-            <button class="gen-btn" style="width:100%;background:var(--teal);border-color:var(--teal);" onclick="generatePackage('honorhealth')">Generate HonorHealth Workforce Package ↗</button>
+            <!-- STAFFING CARD -->
+            <div style="border:0.5px solid var(--border2);border-radius:var(--radius);padding:14px 16px;background:var(--gold3);">
+              <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:5px;">Staffing / Workforce Partner</div>
+              <div style="font-size:10px;color:var(--dim);line-height:1.6;margin-bottom:10px;">Candidate validation, readiness scoring, simulation-based assessment, upskilling tracks, internal mobility, retention outcomes.</div>
+              <button class="gen-btn" style="width:100%;" id="btn-staffing" onclick="generatePackage('randstad')">Generate Staffing Package ↗</button>
+            </div>
+
+            <!-- HEALTHCARE CARD -->
+            <div style="border:0.5px solid rgba(20,184,166,.3);border-radius:var(--radius);padding:14px 16px;background:rgba(20,184,166,.06);">
+              <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--teal);margin-bottom:5px;">Healthcare Enterprise</div>
+              <div style="font-size:10px;color:var(--dim);line-height:1.6;margin-bottom:10px;">RCM training, CRCR prep, PSV tracking, staff development, compliance education, unit orientation, workflow simulation.</div>
+              <button class="gen-btn" style="width:100%;background:var(--teal);border-color:var(--teal);" id="btn-health" onclick="generatePackage('honorhealth')">Generate Healthcare Package ↗</button>
+            </div>
           </div>
         </div>
 
@@ -336,10 +352,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:1
       <div style="height:0.5px;background:var(--border);margin:4px 0 20px;"></div>
 
       <!-- STANDARD DEPLOY STEPS -->
-      <div class="dstep"><div class="dsnum">1</div><div class="dsc"><div class="dst">Shareable suite link</div><div class="surlbox" id="suite-url-box">—</div><div style="display:flex;gap:7px;"><button class="btn btn-g" onclick="copySuiteUrl()">Copy link</button><button class="btn" onclick="openFirst()">Open first app →</button></div></div></div>
-      <div class="dstep"><div class="dsnum">2</div><div class="dsc"><div class="dst">Demo sequence</div><div id="deploy-list"></div></div></div>
-      <div class="dstep"><div class="dsnum">3</div><div class="dsc"><div class="dst">AI coaching script</div><button class="bbtn coachl" onclick="generateCoachScript()">Generate my full presentation coaching script ↗</button><div id="coach-output" class="aiout" style="display:none;margin-top:9px;"></div></div></div>
-      <div class="dstep"><div class="dsnum">4</div><div class="dsc"><div class="dst">Deploy to server</div><button class="bbtn" onclick="deployToServer()">Build live suite page ↗</button></div></div>
+      <div class="dstep"><div class="dsnum">1</div><div class="dsc"><div class="dst">Build &amp; deploy live suite page</div><button class="bbtn" onclick="deployToServer()" style="margin-bottom:7px;">Build live suite page ↗</button><div style="font-size:9px;color:var(--dim);">Generates a shareable hosted suite page from your selected apps.</div></div></div>
+      <div class="dstep"><div class="dsnum">2</div><div class="dsc"><div class="dst">Shareable suite link</div><div class="surlbox" id="suite-url-box">—</div><div style="display:flex;gap:7px;"><button class="btn btn-g" onclick="copySuiteUrl()">Copy link</button><button class="btn" onclick="openFirst()">Open first app →</button></div></div></div>
+      <div class="dstep"><div class="dsnum">3</div><div class="dsc"><div class="dst">Demo sequence</div><div id="deploy-list"></div></div></div>
+      <div class="dstep"><div class="dsnum">4</div><div class="dsc"><div class="dst">AI coaching script</div><button class="bbtn coachl" onclick="generateCoachScript()">Generate my full presentation coaching script ↗</button><div id="coach-output" class="aiout" style="display:none;margin-top:9px;"></div></div></div>
     </div>
 
   </div>
@@ -939,7 +955,28 @@ function renderGrid(){
   });
 }
 
-function updateCount(){ document.getElementById('sel-count').textContent=selected.size; document.getElementById('pill-count').textContent=selected.size; setStatus(selected.size+' selected · '+allApps().length+' apps'); }
+function updatePkgButtons(){
+  const company = document.getElementById('pkg-company').value.trim();
+  const bS = document.getElementById('btn-staffing');
+  const bH = document.getElementById('btn-health');
+  if(company){
+    bS.textContent = `Generate ${company} Staffing Package ↗`;
+    bH.textContent = `Generate ${company} Healthcare Package ↗`;
+  } else {
+    bS.textContent = 'Generate Staffing Package ↗';
+    bH.textContent = 'Generate Healthcare Package ↗';
+  }
+}
+
+function getPkgCompany(defaultName){
+  return document.getElementById('pkg-company')?.value.trim() || defaultName;
+}
+function getPkgDivision(defaultDiv){
+  return document.getElementById('pkg-division')?.value.trim() || defaultDiv;
+}
+function getPkgContact(){
+  return document.getElementById('pkg-contact')?.value.trim() || '';
+}
 function renderPills(){
   const p=document.getElementById('pills-sidebar'); p.innerHTML='';
   selected.forEach(url=>{
@@ -1093,7 +1130,34 @@ let currentPackageType = null;
 
 function generatePackage(type){
   currentPackageType = type;
-  const pkg = PACKAGES[type];
+  const pkgTemplate = PACKAGES[type];
+
+  // Resolve dynamic names
+  const defaultCompany = type==='randstad' ? 'Randstad' : 'HonorHealth';
+  const defaultDiv = type==='randstad' ? 'Healthcare & Administrative Staffing' : 'Revenue Cycle & Workforce Development';
+  const company = getPkgCompany(defaultCompany);
+  const division = getPkgDivision(defaultDiv);
+  const contact = getPkgContact();
+
+  // Build a runtime pkg object with company name injected
+  const pkg = JSON.parse(JSON.stringify(pkgTemplate)); // deep clone
+  pkg.label = `${company} ${type==='randstad'?'Workforce':'Healthcare'} Package`;
+  pkg.title = type==='randstad'
+    ? `TSM Workforce Readiness &amp; Career Development Platform`
+    : `TSM Healthcare Workforce Development &amp; Revenue Cycle Readiness Platform`;
+  // Inject company name into next steps contact section
+  pkg.sections = pkg.sections.map(sec => {
+    if(sec.label === 'Next Steps'){
+      sec.body = sec.body
+        .replace(/Randstad|HonorHealth/g, company)
+        + (contact ? `\n\nAttn: ${contact} — ${division}` : `\n\nDivision: ${division}`);
+    }
+    // Replace generic org references in body
+    if(sec.body) sec.body = sec.body.replace(/\[Organization\]/g, company);
+    return sec;
+  });
+  pkg.tag = `${type==='randstad'?'Staffing Partner':'Healthcare Enterprise'} · ${division}`;
+
   const out = document.getElementById('pkg-output');
   const body = document.getElementById('pkg-body');
   const label = document.getElementById('pkg-output-label');
@@ -1124,7 +1188,6 @@ function generatePackage(type){
         <div style="font-size:8px;letter-spacing:3px;text-transform:uppercase;color:${pkg.color};margin-bottom:8px;padding-bottom:5px;border-bottom:0.5px solid ${pkg.border};">${String(i+1).padStart(2,'0')} · ${sec.label}</div>
     `;
     if(sec.body){
-      // Handle multi-paragraph (split on \n\n)
       sec.body.split('\n\n').forEach(para => {
         html += `<div style="font-size:11px;color:var(--text);line-height:1.8;margin-bottom:8px;">${para}</div>`;
       });
@@ -1139,16 +1202,11 @@ function generatePackage(type){
     html += `</div>`;
   });
 
-  // Demo assets section
   html += `
     <div style="margin-bottom:20px;">
       <div style="font-size:8px;letter-spacing:3px;text-transform:uppercase;color:${pkg.color};margin-bottom:8px;padding-bottom:5px;border-bottom:0.5px solid ${pkg.border};">DEMO ASSETS · Selected Suite</div>
       ${demoAssets}
     </div>
-  `;
-
-  // Trust statement
-  html += `
     <div style="padding:14px 16px;border:0.5px solid ${pkg.border};border-radius:var(--radius);background:${pkg.bg};margin-bottom:16px;">
       <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:${pkg.color};margin-bottom:6px;">Platform Positioning</div>
       <div style="font-size:12px;color:var(--text);line-height:1.8;font-style:italic;">${pkg.trustLine}</div>
@@ -1157,6 +1215,12 @@ function generatePackage(type){
   `;
 
   body.innerHTML = html;
+  // store for PDF
+  window._activePkg = pkg;
+  window._activePkgCompany = company;
+  window._activePkgDivision = division;
+  window._activePkgContact = contact;
+  window._activePkgApps = selectedApps;
 }
 
 function copyPackage(){
@@ -1169,23 +1233,23 @@ function copyPackage(){
 }
 
 function exportPackagePDF(){
-  const pkg = currentPackageType ? PACKAGES[currentPackageType] : null;
+  const pkg = window._activePkg;
   if(!pkg){ alert('Generate a package first.'); return; }
 
-  const printWin = window.open('','_blank','width=900,height=700');
-  const bodyEl = document.getElementById('pkg-body');
-  if(!bodyEl){ return; }
-
-  const selectedApps = Array.from(selected).map(url => findApp(url));
+  const company = window._activePkgCompany || 'Company';
+  const division = window._activePkgDivision || '';
+  const contact = window._activePkgContact || '';
+  const selectedApps = window._activePkgApps || [];
   const appsText = selectedApps.map(a => `• ${a.name} — ${window.location.origin}${a.url}`).join('\n');
-
   const cleanTitle = pkg.title.replace(/&amp;/g,'&');
 
+  const printWin = window.open('','_blank','width=900,height=700');
   printWin.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
-  <title>${cleanTitle}</title>
+  <title>${cleanTitle} — ${company}</title>
   <style>
     body{font-family:'Barlow',system-ui,sans-serif;font-size:12px;line-height:1.7;color:#1a2030;background:#fff;padding:48px 56px;max-width:720px;margin:0 auto;}
     h1{font-size:22px;font-weight:700;color:#0a1018;margin-bottom:6px;line-height:1.3;}
+    .company{font-size:14px;font-weight:600;color:#3a4a60;margin-bottom:4px;}
     .tag{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#c9a84c;margin-bottom:10px;}
     .subtitle{font-size:13px;color:#4a5a70;margin-bottom:28px;line-height:1.7;}
     .section{margin-bottom:22px;page-break-inside:avoid;}
@@ -1198,6 +1262,8 @@ function exportPackagePDF(){
     @media print{body{padding:24px;}}
   </style></head><body>
   <div class="tag">${pkg.tag.replace(/&amp;/g,'&')}</div>
+  <div class="company">Prepared for: ${company}${division?' · '+division:''}</div>
+  ${contact?`<div style="font-size:11px;color:#6a7a8a;margin-bottom:8px;">Attn: ${contact}</div>`:''}
   <h1>${cleanTitle}</h1>
   <div class="subtitle">${pkg.subtitle.replace(/&amp;/g,'&')}</div>
   ${pkg.sections.map((sec,i)=>`
@@ -1211,7 +1277,7 @@ function exportPackagePDF(){
     <div class="section-body" style="white-space:pre-line;">${appsText||'No apps selected.'}</div>
   </div>
   <div class="trust">${pkg.trustLine}</div>
-  <div class="footer">Generated by TSM Suite Builder · ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})} · TSM Workforce Intelligence Platform</div>
+  <div class="footer">Prepared for ${company} · Generated by TSM Suite Builder · ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})} · TSM Workforce Intelligence Platform · latorreyw99@gmail.com</div>
   </body></html>`);
   printWin.document.close();
   setTimeout(()=>printWin.print(), 600);
