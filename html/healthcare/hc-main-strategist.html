@@ -670,6 +670,25 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 </div>
 
 <script>
+// ── WAR ROOM PAYLOAD READER ──
+function readWarRoomBrief() {
+  const key = 'TSM_WAR_ROOM_BRIEF';
+  try {
+    const stored = sessionStorage.getItem(key);
+    if (stored) {
+      const payload = JSON.parse(stored);
+      const age = Date.now() - new Date(payload.timestamp).getTime();
+      if (age < 7200000) return payload;
+    }
+  } catch (e) {}
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const b64 = params.get('tsm_brief');
+    if (b64) return JSON.parse(decodeURIComponent(escape(atob(b64))));
+  } catch (e) {}
+  return null;
+}
+
 // ── CLOCK ──
 function tick(){document.getElementById('clk').textContent=new Date().toLocaleTimeString('en-US',{hour12:false})}
 tick(); setInterval(tick,1000);
