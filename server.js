@@ -40,7 +40,7 @@ async function groqChat(system, user, maxTokens) {
   const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Authorization': 'Bearer ' + process.env.GROQ_API_KEY,
+      'Authorization': 'Bearer ' + groqKey,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
@@ -208,14 +208,15 @@ app.post('/api/hc/stream', async (req, res) => {
     return res.status(429).json({ error: 'Daily analysis limit reached. Contact TSM to upgrade.' });
   }
 
-  if (!process.env.GROQ_KEY) return res.status(500).json({ error: 'GROQ_KEY not configured on server.' });
+  const groqKey = process.env.GROQ_KEY || process.env.GROQ_API_KEY;
+if (!groqKey) return res.status(500).json({ error: 'GROQ_KEY not configured on server.' });
 
   try {
     const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + process.env.GROQ_KEY
+        'Authorization': 'Bearer ' + (process.env.GROQ_KEY || process.env.GROQ_API_KEY)
       },
       body: JSON.stringify({
         model: model || 'llama-3.3-70b-versatile',
