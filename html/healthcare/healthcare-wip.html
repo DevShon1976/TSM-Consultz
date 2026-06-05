@@ -388,6 +388,7 @@ table.wip tbody tr.enc-selected td{background:rgba(0,245,255,.04);border-bottom-
 <div class="actionbar">
   <button class="ab-btn ab-primary" onclick="runBNCA()">⚡ Run Sector BNCA</button>
   <button class="ab-btn ab-gold" onclick="runStrategist()">Push to HC Strategist</button>
+  <button class="ab-btn ab-dark" onclick="goToMainStrategist()" style="border-color:var(--purple);color:var(--purple)">→ HC Main Strategist</button>
   <button class="ab-btn ab-purple" onclick="exportBrief()">Export Brief</button>
   <button class="ab-btn ab-dark" onclick="location.href='/wip-dashboard.html'">Universal WIP</button>
   <button class="ab-btn ab-dark" onclick="location.href='/'">Home</button>
@@ -601,11 +602,47 @@ Cover: (1) RCM position and denial risk, (2) UPCODE-DETECT findings if applicabl
   );
 }
 
+function buildBNCARoutes(entity) {
+  const id = entity?.id || '';
+  const schema = entity?.schema || {};
+  const routes = [];
+
+  if (id === 'ENC-8821' || schema.denial_reason?.includes('auth')) {
+    routes.push({ name:'HC Prior Auth Node', url:'/html/healthcare/hc-prior-auth.html', reason:'File prior auth appeal — missing documentation', color:'#00f5ff' });
+    routes.push({ name:'CRC Practice Lab', url:'/html/healthcare/crc-hc-practice.html', reason:'Practice prior auth workflows', color:'#00ff88' });
+  }
+  if (id === 'ENC-8912' || schema.denial_reason?.includes('modifier')) {
+    routes.push({ name:'HC Claims Node', url:'/html/healthcare/hc-claims.html', reason:'Fix missing modifier — resubmit claim', color:'#00ff88' });
+    routes.push({ name:'HC Billing Node', url:'/html/healthcare/hc-billing.html', reason:'Billing correction workflow', color:'#ffaa00' });
+  }
+  if (id === 'ENC-8834' || schema.denial_reason?.includes('UPCODE')) {
+    routes.push({ name:'HC Billing Node', url:'/html/healthcare/hc-billing.html', reason:'Correct 99214→99213 UPCODE flags', color:'#ffaa00' });
+    routes.push({ name:'HC Coding Node', url:'/html/healthcare/hc-coding.html', reason:'CPT coding review and correction', color:'#a855f7' });
+  }
+  if (schema.phase === 'Adjudication' || schema.denial_reason === 'None') {
+    routes.push({ name:'HC AR Node', url:'/html/healthcare/hc-ar.html', reason:'Track adjudication and collections', color:'#a855f7' });
+  }
+
+  routes.push({ name:'HC Main Strategist', url:'/html/healthcare/hc-main-strategist.html', reason:'Escalate full queue for executive review', color:'#ec4899' });
+  routes.push({ name:'Executive Portal', url:'/html/executive-portal-live.html', reason:'CFO-level dashboard and approval', color:'#00f5ff' });
+
+  return routes.slice(0, 5).map(r => `
+    <a href="${r.url}" target="_blank" style="display:block;padding:9px 12px;background:rgba(0,0,0,.3);border:1px solid ${r.color}33;border-radius:5px;text-decoration:none;margin-bottom:6px;font-family:monospace;transition:border-color .2s"
+       onmouseover="this.style.borderColor='${r.color}'" onmouseout="this.style.borderColor='${r.color}33'">
+      <span style="font-size:10px;font-weight:bold;color:${r.color}">${r.name} →</span>
+      <span style="font-size:10px;color:#666;display:block;margin-top:2px">${r.reason}</span>
+    </a>`).join('');
+}
+
 // ── BNCA ───────────────────────────────────────────────────────────────────
 async function runBNCA() {
   const out = document.getElementById('bnca-out');
   out.classList.add('visible');
   out.textContent = '⟳ Running Healthcare RCM BNCA...\n';
+  const ctx = selectedEntity
+    ? `Selected: ${selectedEntity.id} — ${selectedEntity.name}. ${selectedEntity.meta}.`
+    : 'Full healthcare RCM queue.';
+  const appRoutes = buildBNCARoutes(selectedEntity);
 
   const ctx = selectedEntity
     ? `Selected: ${selectedEntity.id} — ${selectedEntity.name}. ${selectedEntity.meta}.`
@@ -621,17 +658,26 @@ Generate: (1) Immediate actions (24-48hr), (2) This-week actions, (3) Escalation
 
   groqStream(sys, user,
     chunk => { out.textContent += chunk; },
-    () => {},
+    () => {
+      out.textContent += '\n\n─── RECOMMENDED APPS TO RESOLVE THIS ISSUE ───\n';
+      const div = document.createElement('div');
+      div.style.cssText = 'padding:12px 0';
+      div.innerHTML = appRoutes;
+      out.parentElement.appendChild(div);
+    },
     err => { out.textContent += '\n[Error: '+err+']'; },
     1000
   );
 }
 
 // ── STRATEGIST ─────────────────────────────────────────────────────────────
+function goToMainStrategist() {
+  window.location.href = '/html/healthcare/hc-main-strategist.html';
+}
 async function runStrategist() {
   const out = document.getElementById('bnca-out');
   out.classList.add('visible');
-  out.textContent = '⟳ Pushing to HC Strategist...\n';
+  out.textContent = '⟳ Pushing to HC Main Strategist...\n';
 
   const sys = `You are the TSM HC Strategist. Receive the Healthcare RCM WIP queue and produce a HITL-staged prioritization report for executive review.`;
   const user = `Push current Healthcare RCM WIP queue to main HC Strategist for HITL prioritization.
