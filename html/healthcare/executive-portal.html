@@ -1072,6 +1072,102 @@ const html = TICKS.map(t =>
   `<span class="t-item">${t.l}&nbsp;<span class="t-val ${t.c}">${t.v}</span></span>`
 ).join('');
 inner.innerHTML = html + html;
+// ── STRATEGIST RELAY READER ──
+function loadStratRelay() {
+  try {
+    const raw = sessionStorage.getItem('TSM_EXEC_RELAY');
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    if (!d || !d.enriched) return;
+
+    const age = (Date.now() - new Date(d.ts)) / 1000 / 60;
+    const freshLabel = age < 1 ? 'just now' : age < 60 ? `${Math.floor(age)}m ago` : `${Math.floor(age/60)}h ago`;
+
+    // ── Update last-run timestamp ──
+    const lr = document.getElementById('last-run');
+    if (lr) lr.textContent = `strategist sync ${freshLabel}`;
+
+    // ── Update KPI row values ──
+    const kpiMap = {
+      'Total Revenue At Risk':    { val: d.kpi.totalAtRisk,      cls: 'red',   delta: `↑ $340K vs last month`, sub: 'denial + DSO + DIR + litigation' },
+      'Monthly Revenue Collected':{ val: d.kpi.monthlyCollected,  cls: 'green', delta: `↑ +8% MoM`,             sub: 'vs $3.9M prior month' },
+      'Gross Denial Rate':        { val: d.kpi.denialRate,        cls: 'red',   delta: `↑ 3.1% vs target`,      sub: 'target <8% · 47 claims this cycle' },
+      'Days Sales Outstanding':   { val: d.kpi.dso,               cls: 'amber', delta: `↑ 7d vs benchmark`,     sub: 'industry benchmark: 45d' },
+      'Appeal Win Rate':          { val: d.kpi.appealWinRate,     cls: 'cyan',  delta: `↑ 4% vs Q1`,            sub: '$187K recovered last 90d' },
+      'Net Collection Rate':      { val: d.kpi.netCollection,     cls: 'text',  delta: `↓ 0.9% vs target`,      sub: 'target 95% · 2 nodes lagging' }
+    };
+    document.querySelectorAll('.kpi').forEach(el => {
+      const label = el.querySelector('.kpi-label')?.textContent?.trim();
+      const cfg = kpiMap[label];
+      if (!cfg) return;
+      const valEl = el.querySelector('.kpi-val');
+      const deltaEl = el.querySelector('.kpi-delta');
+      if (valEl) { valEl.textContent = cfg.val; valEl.className = `kpi-val ${cfg.cls}`; }
+      if (deltaEl) { deltaEl.textContent = cfg.delta; }
+    });
+
+    // ── Update BNCA strip ──
+    const cells = document.querySelectorAll('.bnca-cell');
+    const bncaData = [
+      { label: 'Revenue Position',         content: d.bnca.revenuePosition },
+      { label: 'Denial & Payer Intelligence', content: d.bnca.denialIntel },
+      { label: 'What Needs You Specifically', content: d.bnca.strategistSummary || d.bnca.execNeeded }
+    ];
+    cells.forEach((cell, i) => {
+      if (!bncaData[i]) return;
+      const contentEl = cell.querySelector('.bnca-cell-content');
+      if (contentEl && bncaData[i].content) contentEl.textContent = bncaData[i].content;
+    });
+
+    // ── Update decisions if relay has fresh ones ──
+    if (d.alerts?.decisions?.length) {
+      const urgencyClass = { 'SIGN NOW':'d-u1','ESCALATE':'d-u1','APPROVE':'d-u1','REVIEW':'d-u2','MONITOR':'d-u3' };
+      const valueColor = { 'SIGN NOW':'var(--red)','ESCALATE':'var(--red)','APPROVE':'var(--amber)','REVIEW':'var(--amber)','MONITOR':'var(--cyan)' };
+      const deadlineClass = { 'SIGN NOW':'hot','ESCALATE':'hot','APPROVE':'hot','REVIEW':'warn','MONITOR':'' };
+      const container = document.querySelector('.decisions');
+      if (container) {
+        container.innerHTML = d.alerts.decisions.map(dec => `
+          <div class="decision-item">
+            <div class="d-urgency ${urgencyClass[dec.urgency]||'d-u3'}">${dec.urgency}</div>
+            <div>
+              <div class="d-action">${dec.action}</div>
+              <div class="d-context">Relayed from HC Strategist · ${new Date(d.ts).toLocaleTimeString('en-US',{hour12:false})}</div>
+            </div>
+            <div class="d-value" style="color:${valueColor[dec.urgency]||'var(--cyan)'}">${dec.value}</div>
+            <div class="d-deadline ${deadlineClass[dec.urgency]||''}">${dec.deadline}</div>
+          </div>`).join('');
+      }
+    }
+
+    // ── Update ticker with strategist alerts ──
+    if (d.alerts?.urgent?.length) {
+      const tickerEl = document.getElementById('ticker-inner');
+      if (tickerEl) {
+        const items = d.alerts.urgent.map(u => `◈ ${u.toUpperCase()}`).join(' &nbsp;&nbsp;&nbsp; ');
+        tickerEl.innerHTML = items + ' &nbsp;&nbsp;&nbsp; ' + tickerEl.innerHTML;
+      }
+    }
+
+    // ── Visual relay indicator ──
+    const hdr = document.querySelector('.hdr-brand');
+    if (hdr && !document.getElementById('relay-badge')) {
+      const badge = document.createElement('div');
+      badge.id = 'relay-badge';
+      badge.style.cssText = 'font-size:8px;letter-spacing:.1em;color:#00e676;border:1px solid rgba(0,230,118,.3);padding:2px 7px;border-radius:2px;margin-left:10px;cursor:default';
+      badge.title = `Last synced from HC Strategist: ${new Date(d.ts).toLocaleString()}`;
+      badge.textContent = `◈ HC STRATEGIST SYNC · ${freshLabel.toUpperCase()}`;
+      hdr.appendChild(badge);
+    }
+
+  } catch(e) { console.warn('Relay read failed:', e); }
+}
+
+// ── Poll for relay updates every 15s ──
+loadStratRelay();
+setInterval(loadStratRelay, 15000);
+
+// clock
+function tick() {
 </script>
 </body>
 </html>

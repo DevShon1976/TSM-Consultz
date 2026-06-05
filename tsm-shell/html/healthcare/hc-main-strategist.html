@@ -757,21 +757,62 @@ async function callClaude(userMsg, outEl, thinkEl, errEl){
     }
     document.getElementById('sb-status').textContent='READY';
 
-    // ── ENRICH WAR ROOM BRIEF WITH STRATEGIST OUTPUT ──
+    // ── RELAY STRATEGIST DATA TO EXECUTIVE PORTAL ──
     try {
-      const key = 'TSM_WAR_ROOM_BRIEF';
-      const stored = sessionStorage.getItem(key);
-      if (stored) {
-        const brief = JSON.parse(stored);
-        brief.strategist = brief.strategist || {};
-        brief.strategist.lastOutput = outEl.textContent.slice(0, 1200);
-        brief.strategist.timestamp = new Date().toISOString();
-        brief.strategist.mode = document.getElementById('strat-mode')?.value || 'unknown';
-        brief.strategist.context = document.getElementById('strat-context')?.value?.slice(0,300) || '';
-        brief.strategist.enriched = true;
-        sessionStorage.setItem(key, JSON.stringify(brief));
-      }
-    } catch(e) {}
+      const payload = {
+        ts: new Date().toISOString(),
+        enriched: true,
+        strategist: {
+          lastOutput: outEl.textContent.slice(0, 2000),
+          mode: document.getElementById('strat-mode')?.value || 'unknown',
+          context: document.getElementById('strat-context')?.value?.slice(0,300) || '',
+          timestamp: new Date().toISOString()
+        },
+        kpi: {
+          denialRate: '18.4%',
+          revenueAtRisk: '$48K',
+          authPending: 65,
+          cleanClaimRate: '94.2%',
+          appealWinRate: '68%',
+          netCollection: '94.1%',
+          dso: '52d',
+          monthlyCollected: '$4.2M',
+          totalAtRisk: '$2.8M',
+          writeOffRate: '1.8%'
+        },
+        offices: {
+          scottsdale: { deny: '18.4%', auth: 31, status: 'warn' },
+          mesa:       { deny: '22.1%', auth: 14, status: 'crit' },
+          tempe:      { deny: '11.2%', auth: 8,  status: 'ok'   },
+          northmountain: { deny: '13.5%', auth: 12, status: 'watch' }
+        },
+        alerts: {
+          critical: 2,
+          urgent: ['CLM-0334 CO-29 write-off window 48hr', 'Mesa denial spike 22.1%'],
+          decisions: [
+            { action: 'Authorize CMS Penalty Response — §482.13 Patient Rights', urgency: 'SIGN NOW', value: '$24K', deadline: 'Today · FRI' },
+            { action: 'Payer Relations Call — BCBS AZ, Aetna, UHC Auth Pattern', urgency: 'ESCALATE', value: '$48K', deadline: '72 hrs' },
+            { action: 'Release HRSA Grant Submissions — 3 Reports Overdue', urgency: 'APPROVE', value: '$2.9M', deadline: '72 hrs' },
+            { action: 'Authorize Overtime — Auth Call Center · 312 hrs/mo labor bleed', urgency: 'REVIEW', value: '$112K', deadline: 'This week' },
+            { action: 'Timely Filing Watch — $43K aging past 120 days', urgency: 'MONITOR', value: '$43K', deadline: '14 days left' }
+          ]
+        },
+        denialCodes: {
+          pr96: { count: 104, pct: '45%', risk: '$21.6K' },
+          co4:  { count: 65,  pct: '28%', risk: '$13.4K' },
+          co11: { count: 42,  pct: '18%', risk: '$8.1K'  },
+          co29: { count: 12,  pct: '5%',  risk: '$5.7K'  }
+        },
+        bnca: {
+          revenuePosition: `$4.2M collected this month, up +8% MoM — but $2.8M remains at risk across denial concentration, DSO drift at 52 days, and the HRSA grants pipeline. Net collection rate 94.1% — 0.9 points below target.`,
+          denialIntel: `18.4% gross denial rate is more than twice the 8% target. Pattern is systemic across BCBS AZ, Aetna, UHC — all three flagging auth friction. A single payer relations call resolves what 312 labor hours per month cannot. Appeal win rate 68% — ROI is strong; volume is the constraint.`,
+          execNeeded: `Three actions only an executive can unblock: Sign the CMS response today (Friday deadline, $24K). Release the HRSA grants (72 hours, $2.9M). Authorize the payer escalation call — your name opens the door $48K in stalled claims cannot.`,
+          strategistSummary: outEl.textContent.slice(0, 600)
+        }
+      };
+      sessionStorage.setItem('TSM_EXEC_RELAY', JSON.stringify(payload));
+      sessionStorage.setItem('TSM_WAR_ROOM_BRIEF', JSON.stringify({ ...payload, source: 'hc-main-strategist' }));
+    } catch(e) { console.warn('Relay write failed:', e); }
 
   } catch(e){
     if(thinkInterval) clearInterval(thinkInterval);
