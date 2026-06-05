@@ -855,6 +855,80 @@ function clearOut(){
   document.getElementById('thinking-bar').classList.remove('show');
 }
 
+// ── WAR ROOM BRIEF RECEIVER ──
+(function(){
+  const brief = readWarRoomBrief();
+  if (!brief) return;
+  const banner = document.createElement('div');
+  banner.id = 'tsm-war-room-banner';
+  banner.style.cssText = 'background:rgba(10,14,22,0.97);border:1px solid #ec4899;border-radius:4px;font-family:monospace;margin:10px 14px;box-shadow:0 0 20px rgba(236,72,153,0.1);overflow:hidden;flex-shrink:0;';
+  const topFindings = Object.entries(brief.engineOutputs||{}).slice(0,3).map(([label,text])=>`
+    <div style="margin-bottom:8px;">
+      <div style="font-size:9px;color:#ec4899;letter-spacing:1px;margin-bottom:3px;">${label.toUpperCase()}</div>
+      <div style="font-size:11px;color:#aaa;line-height:1.6;">${text.slice(0,180)}...</div>
+    </div>`).join('');
+  const recList = (brief.engine06?.recommendations||[]).slice(0,3).map(r=>`
+    <span style="display:inline-flex;align-items:center;background:rgba(236,72,153,0.1);border:1px solid rgba(236,72,153,0.3);color:#ec4899;font-size:10px;padding:3px 8px;border-radius:2px;margin:3px;">
+      #${Number(r.rank)+1} ${r.appName}
+    </span>`).join('');
+  banner.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:rgba(236,72,153,0.08);border-bottom:1px solid #2a1a2a;cursor:pointer;"
+      onclick="const b=this.nextElementSibling;const c=document.getElementById('hcs-banner-chevron');b.style.display=b.style.display==='none'?'block':'none';c.textContent=b.style.display==='none'?'▶':'▼';">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="background:#ec4899;color:#000;font-size:9px;font-weight:bold;padding:2px 7px;border-radius:2px;letter-spacing:1px;">WAR ROOM BRIEF</span>
+        <span style="color:#888;font-size:10px;">Session ${brief.sessionId} · ${new Date(brief.timestamp).toLocaleTimeString()}</span>
+        <span style="background:rgba(168,85,247,0.15);border:1px solid rgba(168,85,247,0.3);color:#a855f7;font-size:9px;padding:2px 8px;border-radius:2px;letter-spacing:1px;">ESCALATED TO HC STRATEGIST</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="color:#555;font-size:10px;">${brief.documentMeta?.ingestType||'DOCUMENT'} · ${brief.documentMeta?.charCount||0} chars</span>
+        <span id="hcs-banner-chevron" style="color:#ec4899;font-size:11px;">▼</span>
+      </div>
+    </div>
+    <div style="padding:14px 16px;">
+      <div style="margin-bottom:12px;">
+        <div style="font-size:9px;color:#666;letter-spacing:1px;margin-bottom:6px;">DISPATCH NARRATIVE</div>
+        <div style="font-size:12px;color:#ccc;line-height:1.7;border-left:2px solid #ec4899;padding-left:10px;">${brief.engine06?.narrative||'No narrative captured.'}</div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:9px;color:#666;letter-spacing:1px;margin-bottom:6px;">ENGINE FINDINGS SUMMARY</div>
+        ${topFindings}
+      </div>
+      ${recList?`<div style="margin-bottom:12px;"><div style="font-size:9px;color:#666;letter-spacing:1px;margin-bottom:6px;">ENGINE 06 RECOMMENDED APPS</div><div>${recList}</div></div>`:''}
+      <div style="padding-top:10px;border-top:1px solid #1a1a2a;display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="injectWarRoomContext()" style="padding:7px 14px;background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.35);color:#a855f7;font-family:monospace;font-size:10px;cursor:pointer;border-radius:3px;letter-spacing:0.5px;"
+          onmouseover="this.style.background='rgba(168,85,247,0.25)'" onmouseout="this.style.background='rgba(168,85,247,0.12)'">
+          ◈ INJECT INTO STRATEGIST CONTEXT
+        </button>
+        <button onclick="runWarRoomDenialPack()" style="padding:7px 14px;background:rgba(236,72,153,0.12);border:1px solid #ec4899;color:#ec4899;font-family:monospace;font-size:10px;cursor:pointer;border-radius:3px;letter-spacing:0.5px;"
+          onmouseover="this.style.background='#ec4899';this.style.color='#000'" onmouseout="this.style.background='rgba(236,72,153,0.12)';this.style.color='#ec4899'">
+          ⚡ RUN DENIAL PACK ON WAR ROOM DATA
+        </button>
+      </div>
+    </div>`;
+  // Insert into content area below the pack-row
+  const content = document.querySelector('.content');
+  const packRow = document.querySelector('.pack-row');
+  if (content && packRow) packRow.insertAdjacentElement('afterend', banner);
+  else if (content) content.insertBefore(banner, content.firstChild);
+
+  // Inject War Room context into strategist textarea + HC_CONTEXT
+  window.injectWarRoomContext = function() {
+    const warRoomSummary = Object.entries(brief.engineOutputs||{}).map(([k,v])=>`${k}: ${v.slice(0,300)}`).join('\n');
+    const ctxEl = document.getElementById('strat-context');
+    if (ctxEl) ctxEl.value = `[WAR ROOM BRIEF — Session ${brief.sessionId}]\n${brief.engine06?.narrative||''}\n\nKEY FINDINGS:\n${warRoomSummary.slice(0,800)}`;
+    banner.style.borderColor = '#a855f7';
+    document.getElementById('hcs-banner-chevron').textContent = '▼';
+  };
+
+  // Run a full denial pack pre-loaded with War Room data
+  window.runWarRoomDenialPack = function() {
+    const warRoomData = Object.entries(brief.engineOutputs||{}).map(([k,v])=>`${k}:\n${v.slice(0,400)}`).join('\n\n');
+    showTab('exec');
+    const prompt = `[WAR ROOM ESCALATION — Session ${brief.sessionId}]\n\nThe following denial case was escalated from the TSM Denial Recovery War Room:\n\n${warRoomData.slice(0,2000)}\n\nEngine 06 Dispatch: ${brief.engine06?.narrative||''}\n\nAs HC Strategist for HonorHealth: cross-reference this escalated case against current HonorHealth denial patterns (PR-96, CO-4, CO-11, CO-29). Identify if this case matches any active denial pattern, calculate additional revenue at risk, and generate a priority action plan with payer-specific appeal strategy.`;
+    callClaude(prompt, document.getElementById('strat-out'), document.getElementById('thinking-bar'), document.getElementById('strat-err'));
+  };
+})();
+
 // ── INIT: auto-load score ──
 (async()=>{
   setTimeout(async()=>{
