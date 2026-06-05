@@ -191,6 +191,54 @@ app.post('/api/hc/query', async (req, res) => {
   } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
 
+const clientUsage = {};
+
+app.post('/api/hc/stream', async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  const { model, sys, user, maxTok } = req.body;
+  if (!sys || !user) return res.status(400).json({ error: 'Missing sys or user' });
+
+  const clientId = req.ip;
+  const today = new Date().toDateString();
+  const key = clientId + '_' + today;
+  clientUsage[key] = (clientUsage[key] || 0) + 1;
+  if (clientUsage[key] > 20) {
+    return res.status(429).json({ error: 'Daily analysis limit reached. Contact TSM to upgrade.' });
+  }
+
+  if (!process.env.GROQ_KEY) return res.status(500).json({ error: 'GROQ_KEY not configured on server.' });
+
+  try {
+    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + process.env.GROQ_KEY
+      },
+      body: JSON.stringify({
+        model: model || 'llama-3.3-70b-versatile',
+        stream: true,
+        max_tokens: maxTok || 500,
+        messages: [{ role: 'system', content: sys }, { role: 'user', content: user }]
+      })
+    });
+
+    if (!groqRes.ok) {
+      const err = await groqRes.json();
+      return res.status(502).json({ error: err.error?.message || 'Groq error' });
+    }
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    groqRes.body.pipe(res);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.post('/api/hc/ask', async (req, res) => {
   try {
     var body = req.body || {};

@@ -1399,27 +1399,27 @@ function relay() {
 
 async function runPipeline() {
   if (!docText || docText.length < 20) { alert('Load a document first.'); return; }
-  if (!GROQ_KEY) { alert('Enter your Groq API key first.'); return; }
 
+  const outputs = ['','','','',''];
   const SMALL = 'llama-3.1-8b-instant';
   const LARGE = 'llama-3.3-70b-versatile';
 
   const engines = [
     { outId: 'out1', badgeId: 'ps1', tokId: 'tok1', idleId: 'idle1', model: SMALL, maxTok: 400,
       sys: 'You are a healthcare document extraction engine. Extract ONLY: claim ID, CPT codes, denial codes, dates, provider, payer, billed amount, denial reason. Bullet points only. Under 300 words.',
-      userFn: () => 'DOCUMENT:\n' + docText.slice(0, 2000), label: 'DOCUMENT INTEL' },
+      getUserMsg: () => 'DOCUMENT:\n' + docText.slice(0, 2000), label: 'DOCUMENT INTEL' },
     { outId: 'out2', badgeId: 'ps2', tokId: 'tok2', idleId: 'idle2', model: SMALL, maxTok: 350,
       sys: 'You are a denial root cause analyst. From the extraction below, identify: denial reason, payer policy violated, documentation gap, coding error. Under 250 words.',
-      userFn: (e1) => 'EXTRACTED DATA:\n' + e1.slice(0, 800), label: 'ROOT CAUSE' },
+      getUserMsg: () => 'EXTRACTED DATA:\n' + outputs[0].slice(0, 800), label: 'ROOT CAUSE' },
     { outId: 'out3', badgeId: 'ps3', tokId: 'tok3', idleId: 'idle3', model: LARGE, maxTok: 450,
       sys: 'You are a healthcare financial analyst. Calculate: revenue at risk, timely filing risk, total financial exposure. Use dollar amounts and deadlines. Under 300 words.',
-      userFn: (e1, e2) => 'KEY FINDINGS:\n' + e1.slice(0, 400) + '\nDENIAL CAUSE:\n' + e2.slice(0, 400), label: 'FINANCIAL IMPACT' },
+      getUserMsg: () => 'KEY FINDINGS:\n' + outputs[0].slice(0, 400) + '\nDENIAL CAUSE:\n' + outputs[1].slice(0, 400), label: 'FINANCIAL IMPACT' },
     { outId: 'out4', badgeId: 'ps4', tokId: 'tok4', idleId: 'idle4', model: LARGE, maxTok: 500,
       sys: 'You are a denial recovery specialist. Write a step-by-step appeal plan: documents needed, appeal letter points, deadline, payer portal. Under 350 words.',
-      userFn: (e1, e2, e3) => 'DENIAL:\n' + e2.slice(0, 300) + '\nFINANCIAL:\n' + e3.slice(0, 300), label: 'RECOVERY PLAN' },
+      getUserMsg: () => 'DENIAL:\n' + outputs[1].slice(0, 300) + '\nFINANCIAL:\n' + outputs[2].slice(0, 300), label: 'RECOVERY PLAN' },
     { outId: 'nav-container', badgeId: 'ps5', tokId: 'tok5', idleId: 'idle5', model: SMALL, maxTok: 350,
       sys: 'You are a recovery navigator. List: immediate next steps, staff roles, escalation path. Be brief and actionable. Under 250 words.',
-      userFn: (e1, e2, e3, e4) => 'SUMMARY:\nDenial: ' + e2.slice(0, 200) + '\nRecovery: ' + e4.slice(0, 200), label: 'RECOVERY NAVIGATOR' },
+      getUserMsg: () => 'SUMMARY:\nDenial: ' + outputs[1].slice(0, 200) + '\nRecovery: ' + outputs[3].slice(0, 200), label: 'RECOVERY NAVIGATOR' },
   ];
 
   completedCount = 0;
