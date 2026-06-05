@@ -756,6 +756,23 @@ async function callClaude(userMsg, outEl, thinkEl, errEl){
       throw new Error(data.error);
     }
     document.getElementById('sb-status').textContent='READY';
+
+    // ── ENRICH WAR ROOM BRIEF WITH STRATEGIST OUTPUT ──
+    try {
+      const key = 'TSM_WAR_ROOM_BRIEF';
+      const stored = sessionStorage.getItem(key);
+      if (stored) {
+        const brief = JSON.parse(stored);
+        brief.strategist = brief.strategist || {};
+        brief.strategist.lastOutput = outEl.textContent.slice(0, 1200);
+        brief.strategist.timestamp = new Date().toISOString();
+        brief.strategist.mode = document.getElementById('strat-mode')?.value || 'unknown';
+        brief.strategist.context = document.getElementById('strat-context')?.value?.slice(0,300) || '';
+        brief.strategist.enriched = true;
+        sessionStorage.setItem(key, JSON.stringify(brief));
+      }
+    } catch(e) {}
+
   } catch(e){
     if(thinkInterval) clearInterval(thinkInterval);
     if(thinkEl) thinkEl.classList.remove('show');
