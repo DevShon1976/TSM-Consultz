@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TSM · Legal Executive Command · Executive View</title>
+<title>TSM · eDiscovery Node · EP1</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -27,1044 +27,650 @@
   --mono:   'JetBrains Mono', monospace;
   --sans:   'Syne', sans-serif;
 }
-
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100%; background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 13px; overflow-x: hidden; }
 
-html, body {
-  min-height: 100%; background: var(--bg);
-  color: var(--text); font-family: var(--mono); font-size: 13px;
-  overflow-x: hidden;
-}
-
-/* subtle grid */
 body::before {
   content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
-  background-image:
-    linear-gradient(rgba(0,229,255,0.009) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,229,255,0.009) 1px, transparent 1px);
+  background-image: linear-gradient(rgba(0,229,255,0.009) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,0.009) 1px, transparent 1px);
   background-size: 52px 52px;
 }
-
-/* scanlines */
 body::after {
   content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 1000;
   background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.018) 2px, rgba(0,0,0,0.018) 4px);
 }
 
-/* ── HEADER ─────────────────────────────────────────────────────────────── */
-.hdr {
+/* ── BREADCRUMB NAV ── */
+.breadcrumb {
   position: sticky; top: 0; z-index: 100;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 32px; height: 52px;
-  background: rgba(3,6,13,0.96); backdrop-filter: blur(12px);
+  padding: 0 28px; height: 44px;
+  background: rgba(3,6,13,0.97); backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border2);
 }
-
-.hdr-brand {
-  display: flex; align-items: baseline; gap: 12px;
+.bc-left { display: flex; align-items: center; gap: 8px; font-size: 8.5px; letter-spacing: 1px; color: var(--muted); }
+.bc-left a { color: var(--muted); text-decoration: none; transition: color 0.15s; }
+.bc-left a:hover { color: var(--cyan); }
+.bc-sep { color: var(--faint); }
+.bc-current { color: var(--cyan); font-weight: 700; }
+.bc-right { display: flex; align-items: center; gap: 12px; }
+.bc-badge {
+  font-size: 7px; letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 3px 10px; border: 1px solid var(--cyan); color: var(--cyan);
+  background: var(--c2);
 }
 
-.hdr-name {
-  font-family: var(--sans); font-size: 16px; font-weight: 800;
-  letter-spacing: 3px; color: var(--text);
+/* ── FLOW CHAIN ── */
+.flow-chain {
+  display: flex; align-items: center; gap: 0;
+  padding: 10px 28px; background: var(--bg2); border-bottom: 1px solid var(--border);
+  overflow-x: auto;
 }
-
-.hdr-sub {
-  font-size: 7.5px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--muted);
-}
-
-.hdr-right {
-  display: flex; align-items: center; gap: 16px;
-}
-
-.hdr-indicator {
+.fc-node {
   display: flex; align-items: center; gap: 6px;
-  font-size: 8px; letter-spacing: 1px; color: var(--muted);
+  font-size: 7.5px; letter-spacing: 1px; text-transform: uppercase;
+  padding: 4px 12px; border: 1px solid var(--border);
+  text-decoration: none; color: var(--muted); transition: all 0.15s;
+  white-space: nowrap;
 }
+.fc-node:hover { color: var(--text); border-color: var(--border2); }
+.fc-node.active { color: var(--cyan); border-color: var(--cyan); background: var(--c2); }
+.fc-node.exec { color: var(--amber); border-color: rgba(255,179,0,0.3); }
+.fc-arrow { font-size: 10px; color: var(--faint); padding: 0 6px; flex-shrink: 0; }
+.fc-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; animation: glow 2s ease-in-out infinite; }
+@keyframes glow { 0%,100%{box-shadow:0 0 3px currentColor;}50%{box-shadow:0 0 9px currentColor;} }
 
-.dot {
-  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
-}
-
-.dot-green { background: var(--green); box-shadow: 0 0 6px var(--green); animation: glow 2.5s ease-in-out infinite; }
-.dot-red   { background: var(--red);   box-shadow: 0 0 6px var(--red); }
-.dot-amber { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
-
-@keyframes glow {
-  0%, 100% { box-shadow: 0 0 4px currentColor; }
-  50%       { box-shadow: 0 0 12px currentColor; }
-}
-
-.hdr-clock {
-  font-size: 11px; color: var(--text); letter-spacing: 1px; min-width: 76px; text-align: right;
-}
-
-/* ── TICKER ─────────────────────────────────────────────────────────────── */
-.ticker {
-  background: var(--bg2); border-bottom: 1px solid var(--border);
-  height: 28px; display: flex; align-items: center; overflow: hidden;
-  position: sticky; top: 52px; z-index: 99;
-}
-
-.ticker-label {
-  font-size: 7px; letter-spacing: 2px; text-transform: uppercase;
-  color: var(--cyan); padding: 0 14px; border-right: 1px solid var(--border2);
-  white-space: nowrap; flex-shrink: 0;
-}
-
-.ticker-scroll { flex: 1; overflow: hidden; }
-
-.ticker-inner {
-  display: inline-flex; white-space: nowrap;
-  animation: scroll-left 50s linear infinite;
-}
-
-@keyframes scroll-left {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-
-.t-item {
-  display: inline-flex; align-items: center; gap: 5px;
-  font-size: 8px; padding: 0 22px; color: var(--muted);
-  border-right: 1px solid var(--border);
-}
-
-.t-val        { color: var(--text); font-weight: 600; }
-.t-val.up     { color: var(--green); }
-.t-val.down   { color: var(--red); }
-.t-val.warn   { color: var(--amber); }
-
-/* ── MAIN ───────────────────────────────────────────────────────────────── */
+/* ── MAIN LAYOUT ── */
 .main {
   position: relative; z-index: 10;
-  padding: 28px 32px 60px;
-  max-width: 1560px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 380px;
+  gap: 0; min-height: calc(100vh - 100px);
 }
 
-/* ── SECTION LABEL ──────────────────────────────────────────────────────── */
-.sec {
-  display: flex; align-items: center; gap: 10px;
-  margin-bottom: 14px; margin-top: 32px;
-}
+/* ── LEFT PANEL ── */
+.left-panel { padding: 24px 24px 80px; border-right: 1px solid var(--border); }
 
-.sec::before {
-  content: ''; width: 4px; height: 4px; background: var(--cyan);
-  transform: rotate(45deg); flex-shrink: 0;
-}
+/* ── PAGE TITLE ── */
+.page-title { margin-bottom: 6px; }
+.page-title h1 { font-family: var(--sans); font-size: 22px; font-weight: 800; letter-spacing: 1px; color: var(--cyan); }
+.page-title p { font-size: 8.5px; color: var(--muted); letter-spacing: 0.5px; margin-top: 4px; }
 
-.sec-label {
-  font-size: 7.5px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--cyan);
-}
-
-.sec::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
-.sec.red-sec::before   { background: var(--red); }
-.sec.red-sec .sec-label { color: var(--red); }
-.sec.amber-sec::before   { background: var(--amber); }
-.sec.amber-sec .sec-label { color: var(--amber); }
-.sec.green-sec::before   { background: var(--green); }
-.sec.green-sec .sec-label { color: var(--green); }
-
-/* ── DECISION STRIP (top priority) ─────────────────────────────────────── */
-.decisions {
-  display: flex; flex-direction: column; gap: 1px;
-  border: 1px solid var(--border2); background: var(--border2);
-  animation: rise 0.4s ease;
-}
-
-@keyframes rise {
-  from { opacity: 0; transform: translateY(5px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.decision-item {
-  display: flex; align-items: center; gap: 16px;
-  background: var(--bg2); padding: 13px 18px;
-}
-
-.d-urgency {
-  font-size: 7px; letter-spacing: 1.2px; text-transform: uppercase;
-  padding: 3px 8px; border: 1px solid; flex-shrink: 0; min-width: 60px; text-align: center;
-}
-
-.d-u1 { color: var(--red);   border-color: var(--red);   background: var(--r2); }
-.d-u2 { color: var(--amber); border-color: var(--amber); background: var(--a2); }
-.d-u3 { color: var(--cyan);  border-color: var(--cyan);  background: var(--c2); }
-
-.d-action {
-  flex: 1; font-size: 10px; font-weight: 600; color: var(--text); letter-spacing: 0.3px;
-}
-
-.d-context { font-size: 8.5px; color: var(--muted); margin-top: 2px; }
-
-.d-value {
-  font-family: var(--sans); font-size: 18px; font-weight: 800;
-  flex-shrink: 0; text-align: right;
-}
-
-.d-deadline {
-  font-size: 8px; color: var(--muted); text-align: right; flex-shrink: 0; min-width: 70px;
-}
-
-.d-deadline.hot { color: var(--red); font-weight: 600; }
-.d-deadline.warn { color: var(--amber); font-weight: 600; }
-
-/* ── KPI ROW ────────────────────────────────────────────────────────────── */
-.kpi-row {
-  display: grid; grid-template-columns: repeat(6, 1fr);
+/* ── KPI STRIP ── */
+.kpi-strip {
+  display: grid; grid-template-columns: repeat(4, 1fr);
   gap: 1px; background: var(--border2); border: 1px solid var(--border2);
-  animation: rise 0.4s ease 0.05s both;
+  margin: 16px 0;
 }
+.kpi-cell { background: var(--bg2); padding: 12px 14px; }
+.kpi-label { font-size: 6.5px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.kpi-val { font-family: var(--sans); font-size: 22px; font-weight: 800; line-height: 1; }
+.kpi-sub { font-size: 7px; color: var(--faint); margin-top: 3px; }
 
-.kpi {
-  background: var(--bg2); padding: 18px 20px;
-  display: flex; flex-direction: column; gap: 5px;
+/* ── SECTION LABEL ── */
+.sec { display: flex; align-items: center; gap: 10px; margin: 20px 0 12px; }
+.sec::before { content: ''; width: 4px; height: 4px; background: var(--cyan); transform: rotate(45deg); flex-shrink: 0; }
+.sec-label { font-size: 7.5px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--cyan); }
+.sec::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.sec.amber .sec-label { color: var(--amber); }
+.sec.amber::before { background: var(--amber); }
+.sec.red .sec-label { color: var(--red); }
+.sec.red::before { background: var(--red); }
+.sec.green .sec-label { color: var(--green); }
+.sec.green::before { background: var(--green); }
+
+/* ── UPLOAD ZONE ── */
+.upload-zone {
+  border: 1px dashed var(--border2);
+  background: var(--bg2);
+  padding: 28px 24px;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  cursor: pointer; transition: all 0.2s; position: relative;
+  text-align: center;
 }
-
-.kpi-label {
-  font-size: 7px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted);
+.upload-zone:hover, .upload-zone.drag-over {
+  border-color: var(--cyan); background: rgba(0,229,255,0.04);
 }
+.upload-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.upload-icon { font-size: 28px; color: var(--faint); }
+.upload-title { font-size: 10px; font-weight: 700; color: var(--text); }
+.upload-sub { font-size: 8px; color: var(--muted); line-height: 1.5; }
+.upload-types { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
+.upload-type-tag { font-size: 7px; letter-spacing: 1px; padding: 2px 8px; border: 1px solid var(--border2); color: var(--faint); }
 
-.kpi-val {
-  font-family: var(--sans); font-size: 28px; font-weight: 800;
-  letter-spacing: -1px; line-height: 1;
+/* ── UPLOADED FILE DISPLAY ── */
+.uploaded-file {
+  display: none; background: var(--bg2); border: 1px solid rgba(0,229,255,0.25);
+  padding: 12px 16px; align-items: center; gap: 12px; margin-top: 10px;
 }
+.uploaded-file.visible { display: flex; }
+.uf-icon { font-size: 20px; flex-shrink: 0; }
+.uf-info { flex: 1; }
+.uf-name { font-size: 9px; font-weight: 700; color: var(--text); }
+.uf-meta { font-size: 7.5px; color: var(--muted); margin-top: 2px; }
+.uf-status { font-size: 7px; letter-spacing: 1px; padding: 2px 8px; border: 1px solid; }
+.uf-status.reading { color: var(--amber); border-color: var(--amber); background: var(--a2); animation: blink 1.2s step-end infinite; }
+.uf-status.done { color: var(--green); border-color: var(--green); background: var(--g2); }
+@keyframes blink { 0%,100%{opacity:1;}50%{opacity:0.3;} }
 
-.kpi-val.red   { color: var(--red); }
-.kpi-val.amber { color: var(--amber); }
-.kpi-val.green { color: var(--green); }
-.kpi-val.cyan  { color: var(--cyan); }
-.kpi-val.text  { color: var(--text); }
+/* ── FORM ── */
+.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.full { grid-column: 1 / -1; }
+.form-label { font-size: 7px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+.form-input, .form-select, .form-textarea {
+  background: var(--bg3); border: 1px solid var(--border2); color: var(--text);
+  font-family: var(--mono); font-size: 9.5px; padding: 9px 12px;
+  outline: none; transition: border-color 0.15s; width: 100%;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--cyan); }
+.form-input.ai-filled { border-color: rgba(0,229,255,0.4); background: rgba(0,229,255,0.03); }
+.form-input.ai-filled::placeholder { color: var(--cyan); }
+.form-select option { background: var(--bg3); }
+.form-textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
+.form-textarea.ai-filled { border-color: rgba(0,229,255,0.4); background: rgba(0,229,255,0.03); }
 
-.kpi-delta {
+/* AI-FILLED INDICATOR */
+.ai-badge {
   display: inline-flex; align-items: center; gap: 4px;
-  font-size: 8px; font-weight: 600;
+  font-size: 6.5px; letter-spacing: 1px; color: var(--cyan); margin-top: 2px;
+  opacity: 0; transition: opacity 0.3s;
 }
+.ai-badge.visible { opacity: 1; }
+.ai-badge::before { content: '◈'; font-size: 7px; }
 
-.kpi-delta.up   { color: var(--green); }
-.kpi-delta.down { color: var(--red); }
-.kpi-delta.warn { color: var(--amber); }
-
-.kpi-sub { font-size: 8px; color: var(--faint); line-height: 1.4; }
-
-.kpi-sparkline {
-  height: 24px; margin-top: 4px; display: flex; align-items: flex-end; gap: 2px;
+/* ── PRIORITY BUTTONS ── */
+.priority-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.pri-btn {
+  background: var(--bg3); border: 1px solid var(--border2); color: var(--muted);
+  font-family: var(--mono); font-size: 8px; letter-spacing: 1px; text-transform: uppercase;
+  padding: 9px 6px; cursor: pointer; transition: all 0.15s; text-align: center;
 }
+.pri-btn:hover { border-color: var(--border2); color: var(--text); }
+.pri-btn.active-p1 { border-color: var(--red); color: var(--red); background: var(--r2); }
+.pri-btn.active-p2 { border-color: var(--amber); color: var(--amber); background: var(--a2); }
+.pri-btn.active-p3 { border-color: var(--cyan); color: var(--cyan); background: var(--c2); }
+.pri-btn.active-p4 { border-color: var(--green); color: var(--green); background: var(--g2); }
 
-.spark-bar {
-  flex: 1; border-radius: 1px; min-height: 2px;
-  transition: opacity 0.2s;
-  background: currentColor; opacity: 0.25;
+/* ── TAG INPUT ── */
+.tag-wrap { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px; background: var(--bg3); border: 1px solid var(--border2); min-height: 38px; align-items: center; }
+.tag-item { display: inline-flex; align-items: center; gap: 4px; font-size: 7.5px; padding: 2px 8px; background: var(--c2); border: 1px solid rgba(0,229,255,0.2); color: var(--cyan); }
+.tag-item button { background: none; border: none; color: var(--cyan); cursor: pointer; font-size: 9px; padding: 0; line-height: 1; }
+.tag-input-field { background: none; border: none; color: var(--text); font-family: var(--mono); font-size: 9px; outline: none; min-width: 80px; flex: 1; }
+
+/* ── PRIVILEGE FLAGS ── */
+.flag-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.flag-check { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--bg3); border: 1px solid var(--border2); cursor: pointer; transition: border-color 0.15s; }
+.flag-check:hover { border-color: var(--border2); }
+.flag-check input { display: none; }
+.flag-box { width: 10px; height: 10px; border: 1px solid var(--border2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 7px; transition: all 0.15s; }
+.flag-check input:checked + .flag-box { background: var(--amber); border-color: var(--amber); color: var(--bg); }
+.flag-label { font-size: 8px; color: var(--muted); }
+.flag-check input:checked ~ .flag-label { color: var(--amber); }
+
+/* ── SUBMIT BUTTONS ── */
+.action-row { display: flex; gap: 8px; margin-top: 16px; }
+.btn-primary {
+  flex: 1; background: var(--cyan); color: var(--bg); border: none;
+  font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; padding: 13px 20px; cursor: pointer;
+  transition: opacity 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
 }
-
-.spark-bar.last { opacity: 1; }
-
-/* ── TWO COLUMN LAYOUT ──────────────────────────────────────────────────── */
-.two-col { display: grid; grid-template-columns: 3fr 2fr; gap: 16px; }
-.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
-
-/* ── PANEL ──────────────────────────────────────────────────────────────── */
-.panel {
-  background: var(--bg2); border: 1px solid var(--border2);
-  animation: rise 0.4s ease 0.1s both;
+.btn-primary:hover { opacity: 0.85; }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-secondary {
+  background: var(--bg3); color: var(--muted); border: 1px solid var(--border2);
+  font-family: var(--mono); font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+  padding: 13px 16px; cursor: pointer; transition: all 0.15s;
 }
-
-.panel-hdr {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 16px; border-bottom: 1px solid var(--border);
+.btn-secondary:hover { color: var(--text); border-color: var(--border2); }
+.btn-escalate {
+  background: var(--amber); color: var(--bg); border: none;
+  font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; padding: 13px 20px; cursor: pointer;
+  transition: opacity 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
 }
+.btn-escalate:hover { opacity: 0.85; }
+.btn-escalate:disabled { opacity: 0.3; cursor: not-allowed; }
 
-.panel-title {
-  font-size: 8.5px; font-weight: 700; letter-spacing: 1.5px;
-  text-transform: uppercase; color: var(--text);
+/* ── RIGHT PANEL ── */
+.right-panel { display: flex; flex-direction: column; background: var(--bg2); }
+
+.rp-section { border-bottom: 1px solid var(--border); padding: 16px 18px; }
+.rp-title { font-size: 7px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.rp-title .live-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); animation: glow 2s ease-in-out infinite; flex-shrink: 0; }
+
+/* AI OUTPUT BOX */
+.ai-output {
+  background: var(--bg3); border: 1px solid var(--border); padding: 14px;
+  font-size: 9px; line-height: 1.75; color: var(--muted); min-height: 120px;
+  position: relative;
 }
+.ai-output.active { border-color: rgba(0,229,255,0.25); color: var(--text); }
+.ai-cursor { display: inline-block; width: 6px; height: 12px; background: var(--cyan); vertical-align: middle; animation: blink 0.8s step-end infinite; margin-left: 2px; }
+.ai-placeholder { color: var(--faint); font-style: italic; }
 
-.panel-tag {
-  font-size: 7px; letter-spacing: 1px; text-transform: uppercase;
-  padding: 2px 8px; border: 1px solid;
+/* AI ANALYSIS FIELDS */
+.analysis-field { display: flex; flex-direction: column; gap: 3px; margin-bottom: 10px; }
+.af-label { font-size: 6.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--faint); }
+.af-val { font-size: 9px; color: var(--muted); padding: 6px 10px; background: var(--bg3); border-left: 2px solid var(--border); min-height: 28px; }
+.af-val.populated { color: var(--text); border-left-color: var(--cyan); }
+.af-val.risk-high { border-left-color: var(--red); color: var(--red); }
+.af-val.risk-med { border-left-color: var(--amber); color: var(--amber); }
+.af-val.risk-low { border-left-color: var(--green); color: var(--green); }
+
+/* TASK QUEUE */
+.task-queue { flex: 1; display: flex; flex-direction: column; }
+.tq-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border); }
+.tq-title { font-size: 7px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+.tq-count { font-size: 7px; color: var(--faint); }
+.tq-body { flex: 1; padding: 12px 16px; overflow-y: auto; }
+.tq-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 120px; color: var(--faint); font-size: 9px; }
+.tq-empty-icon { font-size: 24px; opacity: 0.3; }
+
+.queue-item {
+  background: var(--bg3); border: 1px solid var(--border); padding: 10px 12px;
+  margin-bottom: 6px; cursor: pointer; transition: border-color 0.15s;
 }
+.queue-item:hover { border-color: var(--border2); }
+.qi-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.qi-id { font-size: 7px; letter-spacing: 1px; color: var(--faint); }
+.qi-pri { font-size: 6.5px; letter-spacing: 1px; text-transform: uppercase; padding: 1px 6px; border: 1px solid; }
+.qi-pri.p1 { color: var(--red); border-color: var(--red); background: var(--r2); }
+.qi-pri.p2 { color: var(--amber); border-color: var(--amber); background: var(--a2); }
+.qi-pri.p3 { color: var(--cyan); border-color: var(--cyan); background: var(--c2); }
+.qi-pri.p4 { color: var(--green); border-color: var(--green); background: var(--g2); }
+.qi-matter { font-size: 9px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+.qi-meta { font-size: 7.5px; color: var(--faint); }
+.qi-bottom { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
+.qi-type { font-size: 7px; color: var(--muted); }
+.qi-escalate { font-size: 7px; color: var(--amber); cursor: pointer; letter-spacing: 0.5px; }
+.qi-escalate:hover { color: var(--text); }
 
-.tag-live   { color: var(--red);   border-color: var(--red);   background: var(--r2); animation: blink 1.4s step-end infinite; }
-.tag-ready  { color: var(--green); border-color: var(--green); background: var(--g2); }
-.tag-watch  { color: var(--amber); border-color: var(--amber); background: var(--a2); }
-
-@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
-
-.panel-body { padding: 14px 16px; }
-
-/* ── AR AGING BARS ──────────────────────────────────────────────────────── */
-.ar-row {
-  display: flex; align-items: center; gap: 12px;
-  padding: 9px 0; border-bottom: 1px solid var(--border);
+/* ESCALATE BUTTON */
+.escalate-btn {
+  margin: 12px 16px; background: transparent; border: 1px solid rgba(255,179,0,0.4);
+  color: var(--amber); font-family: var(--mono); font-size: 8px; letter-spacing: 1.5px;
+  text-transform: uppercase; padding: 10px; cursor: pointer; transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;
 }
+.escalate-btn:hover { background: var(--a2); border-color: var(--amber); }
 
-.ar-row:last-child { border-bottom: none; }
-
-.ar-bucket {
-  font-size: 8px; letter-spacing: 1px; color: var(--muted); min-width: 72px;
-}
-
-.ar-bar-wrap {
-  flex: 1; height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden;
-}
-
-.ar-bar-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
-
-.ar-amount {
-  font-size: 9px; font-weight: 700; min-width: 60px; text-align: right;
-}
-
-.ar-pct {
-  font-size: 8px; color: var(--muted); min-width: 36px; text-align: right;
-}
-
-/* ── DENIAL BREAKDOWN ───────────────────────────────────────────────────── */
-.denial-row {
-  display: flex; align-items: center; gap: 12px;
-  padding: 8px 0; border-bottom: 1px solid var(--border);
-}
-
-.denial-row:last-child { border-bottom: none; }
-
-.denial-cause {
-  font-size: 9px; color: var(--text); font-weight: 600; min-width: 180px;
-}
-
-.denial-bar-wrap {
-  flex: 1; height: 4px; background: var(--bg); border-radius: 2px; overflow: hidden;
-}
-
-.denial-bar-fill { height: 100%; border-radius: 2px; }
-
-.denial-rate { font-size: 9px; font-weight: 700; min-width: 36px; text-align: right; }
-.denial-val  { font-size: 9px; color: var(--muted); min-width: 52px; text-align: right; }
-.denial-trend { font-size: 8px; min-width: 30px; text-align: right; }
-
-/* ── PAYER SCORECARD ────────────────────────────────────────────────────── */
-.payer-table {
-  width: 100%; border-collapse: collapse; font-size: 9px;
-}
-
-.payer-table th {
-  text-align: left; color: var(--muted); padding: 7px 10px;
-  border-bottom: 1px solid var(--border);
-  font-size: 7px; letter-spacing: 1.5px; text-transform: uppercase;
-}
-
-.payer-table td {
-  padding: 9px 10px; border-bottom: 1px solid var(--border);
-  color: var(--muted);
-}
-
-.payer-table tr:last-child td { border-bottom: none; }
-.payer-table td:first-child { color: var(--text); font-weight: 600; }
-
-.score-pill {
-  display: inline-block; font-size: 7px; letter-spacing: 0.8px;
-  text-transform: uppercase; padding: 2px 7px; border: 1px solid;
-}
-
-.sp-bad  { color: var(--red);   border-color: var(--red);   background: var(--r2); }
-.sp-warn { color: var(--amber); border-color: var(--amber); background: var(--a2); }
-.sp-ok   { color: var(--green); border-color: var(--green); background: var(--g2); }
-
-/* ── REVENUE WATERFALL ──────────────────────────────────────────────────── */
-.waterfall {
-  display: flex; flex-direction: column; gap: 6px;
-}
-
-.wf-row {
-  display: flex; align-items: center; gap: 10px;
-}
-
-.wf-label { font-size: 9px; color: var(--muted); min-width: 150px; }
-
-.wf-bar-wrap {
-  flex: 1; height: 20px; background: var(--bg); position: relative; overflow: hidden;
-}
-
-.wf-bar {
-  height: 100%; position: absolute; left: 0; display: flex; align-items: center;
-  padding-left: 8px; font-size: 8px; font-weight: 700; white-space: nowrap;
-}
-
-.wf-val { font-size: 9px; font-weight: 700; min-width: 58px; text-align: right; }
-
-/* ── CASH VELOCITY ──────────────────────────────────────────────────────── */
-.vel-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-}
-
-.vel-cell {
-  background: var(--bg3); border: 1px solid var(--border); padding: 12px 14px;
-}
-
-.vel-label { font-size: 7.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
-
-.vel-val {
-  font-family: var(--sans); font-size: 22px; font-weight: 800;
-  line-height: 1; margin-bottom: 3px;
-}
-
-.vel-bench { font-size: 8px; color: var(--faint); }
-.vel-bench span { color: var(--muted); }
-
-/* ── COMPLIANCE CALENDAR ─────────────────────────────────────────────────── */
-.deadline-list { display: flex; flex-direction: column; gap: 0; }
-
-.deadline-item {
-  display: flex; align-items: flex-start; gap: 14px;
-  padding: 10px 0; border-bottom: 1px solid var(--border);
-}
-
-.deadline-item:last-child { border-bottom: none; }
-
-.dl-countdown {
-  min-width: 52px; text-align: center; flex-shrink: 0;
-  padding: 6px 4px; border: 1px solid; border-radius: 2px;
-}
-
-.dl-countdown .dl-days { font-family: var(--sans); font-size: 18px; font-weight: 800; line-height: 1; }
-.dl-countdown .dl-unit { font-size: 7px; letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
-
-.dlc-critical { color: var(--red);   border-color: var(--red);   background: var(--r2); }
-.dlc-warn     { color: var(--amber); border-color: var(--amber); background: var(--a2); }
-.dlc-ok       { color: var(--green); border-color: var(--green); background: var(--g2); }
-
-.dl-info { flex: 1; }
-.dl-title { font-size: 9.5px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
-.dl-sub   { font-size: 8px; color: var(--muted); line-height: 1.4; }
-.dl-exposure { font-size: 10px; font-weight: 700; text-align: right; flex-shrink: 0; }
-
-/* ── APPEAL ROI ─────────────────────────────────────────────────────────── */
-.appeal-row {
-  display: flex; align-items: center; gap: 12px;
-  padding: 8px 0; border-bottom: 1px solid var(--border);
-}
-
-.appeal-row:last-child { border-bottom: none; }
-.appeal-type  { font-size: 9px; color: var(--text); font-weight: 600; flex: 1; }
-.appeal-win   { font-size: 9px; font-weight: 700; min-width: 42px; text-align: right; }
-.appeal-roi   { font-size: 9px; font-weight: 700; min-width: 54px; text-align: right; }
-.appeal-vol   { font-size: 8px; color: var(--muted); min-width: 54px; text-align: right; }
-
-/* ── DSO TREND ──────────────────────────────────────────────────────────── */
-.dso-trend {
-  display: flex; align-items: flex-end; gap: 4px; height: 56px; margin: 8px 0;
-}
-
-.dso-bar {
-  flex: 1; border-radius: 1px 1px 0 0;
-  background: var(--cyan); opacity: 0.3; position: relative;
-  transition: opacity 0.2s;
-}
-
-.dso-bar.current { opacity: 1; background: var(--amber); }
-.dso-bar.high    { background: var(--red); }
-
-.dso-labels {
-  display: flex; gap: 4px; margin-top: 4px;
-}
-
-.dso-labels span {
-  flex: 1; font-size: 6.5px; color: var(--faint); text-align: center;
-}
-
-.dso-labels span.current { color: var(--amber); }
-
-/* ── BNCA BOTTOM STRIP ──────────────────────────────────────────────────── */
-.bnca-strip {
-  background: var(--bg2); border: 1px solid var(--border2);
-  display: grid; grid-template-columns: 1fr 1fr 1fr;
-  gap: 1px; background-color: var(--border2);
-  margin-top: 4px; animation: rise 0.4s ease 0.2s both;
-}
-
-.bnca-cell {
-  background: var(--bg2); padding: 14px 18px;
-}
-
-.bnca-cell-label {
-  font-size: 7px; letter-spacing: 2px; text-transform: uppercase;
-  color: var(--muted); margin-bottom: 8px;
-}
-
-.bnca-cell-content {
-  font-size: 9.5px; line-height: 1.75; color: var(--muted);
-}
-
-.bnca-cell-content strong { color: var(--text); }
-.hl-r { color: var(--red);   font-weight: 700; }
-.hl-g { color: var(--green); font-weight: 700; }
-.hl-a { color: var(--amber); font-weight: 700; }
-.hl-c { color: var(--cyan);  font-weight: 700; }
-
-/* ── STATUSBAR ──────────────────────────────────────────────────────────── */
-.statusbar {
-  position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
-  height: 28px; background: rgba(3,6,13,0.97); backdrop-filter: blur(8px);
-  border-top: 1px solid var(--border);
-  display: flex; align-items: center; gap: 14px; padding: 0 20px;
-  font-size: 7.5px; color: var(--faint); letter-spacing: 1px;
-}
-
+/* STATUS BAR */
+.statusbar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 200; height: 28px; background: rgba(3,6,13,0.97); backdrop-filter: blur(8px); border-top: 1px solid var(--border); display: flex; align-items: center; gap: 14px; padding: 0 20px; font-size: 7.5px; color: var(--faint); letter-spacing: 1px; }
 .sb-sep { color: var(--border2); }
 .sb-right { margin-left: auto; }
+
+/* LOADING SPINNER */
+.spinner { display: inline-block; width: 12px; height: 12px; border: 1px solid var(--faint); border-top-color: var(--cyan); border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* PRIVILEGE RISK METER */
+.risk-meter { display: flex; gap: 2px; margin-top: 4px; }
+.risk-seg { flex: 1; height: 3px; background: var(--faint); border-radius: 1px; transition: background 0.3s; }
+.risk-seg.filled-low { background: var(--green); }
+.risk-seg.filled-med { background: var(--amber); }
+.risk-seg.filled-high { background: var(--red); }
+
+@keyframes rise { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+.animate-rise { animation: rise 0.35s ease both; }
+
+/* NOTIFICATION TOAST */
+.toast {
+  position: fixed; bottom: 40px; right: 24px; z-index: 500;
+  background: var(--bg2); border: 1px solid var(--border2); padding: 12px 16px;
+  font-size: 9px; color: var(--text); max-width: 320px; display: none;
+  animation: rise 0.25s ease;
+}
+.toast.visible { display: block; }
+.toast-title { font-weight: 700; margin-bottom: 3px; }
+.toast-sub { color: var(--muted); font-size: 8px; }
 </style>
 </head>
 <body>
 
-<!-- ── HEADER ─────────────────────────────────────────────────────────────── -->
- <header class="hdr">
-  <div class="hdr-brand">
-    <div class="hdr-name">TSM</div>
-    <div class="hdr-sub">
-      Legal Executive Command · Executive View
-    </div>
+<!-- ── BREADCRUMB ── -->
+<div class="breadcrumb">
+  <div class="bc-left">
+    <a href="index.html">TSM</a>
+    <span class="bc-sep">/</span>
+    <a href="index.html">Legal War Room</a>
+    <span class="bc-sep">/</span>
+    <span class="bc-current">eDiscovery Node · EP1</span>
   </div>
-  <div class="hdr-right">
-    <div class="hdr-indicator">
-      <div class="dot dot-red"></div>
-      <span>7 Actions Required</span>
-    </div>
-    <div class="hdr-indicator">
-      <div class="dot dot-green"></div>
-      <span>BNCA Active · 7 Nodes</span>
-    </div>
-    <div class="hdr-clock" id="clock">--:--:--</div>
-  </div>
-</header>
-
-<!-- ── TICKER ─────────────────────────────────────────────────────────────── -->
-<div class="ticker">
-  <div class="ticker-label">LIVE</div>
-  <div class="ticker-scroll">
-    <div class="ticker-inner" id="ticker-inner"></div>
+  <div class="bc-right">
+    <div class="bc-badge">EDISCOVERY · INTAKE</div>
+    <div style="font-size:10px;color:var(--text);letter-spacing:1px;min-width:68px;text-align:right" id="clock">--:--:--</div>
   </div>
 </div>
 
-<!-- ── MAIN ───────────────────────────────────────────────────────────────── -->
+<!-- ── FLOW CHAIN ── -->
+<div class="flow-chain">
+  <a class="fc-node" href="index.html">
+    <span>⚑</span> War Room
+  </a>
+  <span class="fc-arrow">→</span>
+  <a class="fc-node active" href="ep1.html">
+    <span class="fc-dot" style="background:var(--cyan)"></span> EP1 · eDiscovery
+  </a>
+  <span class="fc-arrow">→</span>
+  <a class="fc-node" href="legal-analyst-pro.html">Legal Analyst</a>
+  <span class="fc-arrow">→</span>
+  <a class="fc-node" href="bpo-legal.html">BPO Legal Ops</a>
+  <span class="fc-arrow">→</span>
+  <a class="fc-node" href="legal-account.html">Legal Billing</a>
+  <span class="fc-arrow">→</span>
+  <a class="fc-node" href="legal-main-strategist.html" style="color:var(--cyan);border-color:rgba(0,229,255,0.3)">Case Strategist</a>
+  <span class="fc-arrow">→</span>
+  <a class="fc-node exec" href="legal-executive-portal.html">Chief Strategist</a>
+</div>
+
+<!-- ── MAIN ── -->
 <div class="main">
 
-  <!-- ── DECISION TRIGGERS ──────────────────────────────────────────────── -->
-  <div class="sec red-sec">
-  <div class="sec-label">
-    Decisions Required Today
-  </div>
-</div>
+  <!-- ══ LEFT PANEL ══ -->
+  <div class="left-panel">
 
-<div class="decisions">
+    <div class="page-title animate-rise">
+      <h1>eDiscovery Node</h1>
+      <p>Upload documents · AI reads &amp; auto-populates · HITL review · Route to Strategist chain</p>
+    </div>
 
-  <div class="decision-item">
-    <div class="d-urgency d-u1">AUTHORIZE</div>
-    <div>
-      <div class="d-action">
-        Approve Settlement Authority — Employment Matter
+    <!-- KPI STRIP -->
+    <div class="kpi-strip animate-rise">
+      <div class="kpi-cell">
+        <div class="kpi-label">Queue Total</div>
+        <div class="kpi-val" style="color:var(--cyan)" id="kpi-total">0</div>
+        <div class="kpi-sub">active documents</div>
       </div>
-      <div class="d-context">
-        Counsel recommends settlement acceptance.
+      <div class="kpi-cell">
+        <div class="kpi-label">P1 Critical</div>
+        <div class="kpi-val" style="color:var(--red)" id="kpi-p1">0</div>
+        <div class="kpi-sub">privilege flags</div>
       </div>
-    </div>
-    <div class="d-value" style="color:var(--red)">
-      $850K
-    </div>
-    <div class="d-deadline hot">
-      Today
-    </div>
-  </div>
-
-  <div class="decision-item">
-    <div class="d-urgency d-u1">ESCALATE</div>
-    <div>
-      <div class="d-action">
-        Regulatory Inquiry Response
+      <div class="kpi-cell">
+        <div class="kpi-label">AI Analyzed</div>
+        <div class="kpi-val" style="color:var(--green)" id="kpi-analyzed">0</div>
+        <div class="kpi-sub">by LLaMA 3.3-70B</div>
       </div>
-      <div class="d-context">
-        State agency response package complete.
+      <div class="kpi-cell">
+        <div class="kpi-label">Escalated</div>
+        <div class="kpi-val" style="color:var(--amber)" id="kpi-escalated">0</div>
+        <div class="kpi-sub">sent to strategist</div>
       </div>
     </div>
-    <div class="d-value" style="color:var(--red)">
-      HIGH
-    </div>
-    <div class="d-deadline hot">
-      48 hrs
-    </div>
-  </div>
 
-  <div class="decision-item">
-    <div class="d-urgency d-u2">REVIEW</div>
-    <div>
-      <div class="d-action">
-        Discovery Staffing Expansion
+    <!-- ── DOCUMENT UPLOAD ── -->
+    <div class="sec"><div class="sec-label">Step 1 · Document Upload</div></div>
+
+    <div class="upload-zone" id="upload-zone">
+      <input type="file" id="file-input" accept=".pdf,.txt,.doc,.docx,.eml,.msg,.csv,.json" multiple>
+      <div class="upload-icon">📁</div>
+      <div class="upload-title">Drop documents here or click to upload</div>
+      <div class="upload-sub">AI will read the document and auto-populate all fields below.<br>Supports ESI, email exports, contracts, deposition transcripts, pleadings.</div>
+      <div class="upload-types">
+        <span class="upload-type-tag">PDF</span>
+        <span class="upload-type-tag">TXT</span>
+        <span class="upload-type-tag">DOC/DOCX</span>
+        <span class="upload-type-tag">EML/MSG</span>
+        <span class="upload-type-tag">CSV</span>
       </div>
-      <div class="d-context">
-        Discovery queue exceeds capacity.
+    </div>
+
+    <div class="uploaded-file" id="uploaded-file">
+      <div class="uf-icon" id="uf-icon">📄</div>
+      <div class="uf-info">
+        <div class="uf-name" id="uf-name">—</div>
+        <div class="uf-meta" id="uf-meta">—</div>
       </div>
+      <div class="uf-status reading" id="uf-status">READING</div>
     </div>
-    <div class="d-value" style="color:var(--amber)">
-      14 Matters
-    </div>
-    <div class="d-deadline warn">
-      This Week
-    </div>
-  </div>
 
-</div>
+    <!-- ── INTAKE FORM ── -->
+    <div class="sec amber" style="margin-top:20px"><div class="sec-label">Step 2 · Review &amp; Confirm AI-Populated Fields</div></div>
 
-  <!-- ── KPI ROW ─────────────────────────────────────────────────────────── -->
-  <div class="kpi-row">
+    <div class="form-grid-2">
 
-  <div class="kpi">
-    <div class="kpi-label">Active Matters</div>
-    <div class="kpi-val cyan">412</div>
-    <div class="kpi-sub">
-      Litigation, Employment, Regulatory
-    </div>
-  </div>
+      <div class="form-group">
+        <div class="form-label">Matter / Case Name <span class="ai-badge" id="badge-matter">AI FILLED</span></div>
+        <input type="text" class="form-input" id="f-matter" placeholder="e.g. Smith v. Acme Corp" autocomplete="off">
+      </div>
 
-  <div class="kpi">
-    <div class="kpi-label">Total Exposure</div>
-    <div class="kpi-val red">$28.4M</div>
-    <div class="kpi-sub">
-      Current legal exposure
-    </div>
-  </div>
+      <div class="form-group">
+        <div class="form-label">Client / Account <span class="ai-badge" id="badge-client">AI FILLED</span></div>
+        <input type="text" class="form-input" id="f-client" placeholder="e.g. Acme Corporation" autocomplete="off">
+      </div>
 
-  <div class="kpi">
-    <div class="kpi-label">Settlement Pipeline</div>
-    <div class="kpi-val green">73</div>
-    <div class="kpi-sub">
-      Active opportunities
-    </div>
-  </div>
+      <div class="form-group">
+        <div class="form-label">Document Type <span class="ai-badge" id="badge-doctype">AI FILLED</span></div>
+        <select class="form-select" id="f-doctype">
+          <option value="">— Select —</option>
+          <option>Email / Correspondence</option>
+          <option>Contract / Agreement</option>
+          <option>Pleading / Motion</option>
+          <option>Deposition Transcript</option>
+          <option>Internal Memo / Report</option>
+          <option>Financial Record</option>
+          <option>Medical Record</option>
+          <option>Regulatory Filing</option>
+          <option>ESI / Native File</option>
+          <option>Other</option>
+        </select>
+      </div>
 
-  <div class="kpi">
-    <div class="kpi-label">High-Risk Matters</div>
-    <div class="kpi-val amber">41</div>
-    <div class="kpi-sub">
-      Executive visibility required
-    </div>
-  </div>
+      <div class="form-group">
+        <div class="form-label">Practice Area <span class="ai-badge" id="badge-practice">AI FILLED</span></div>
+        <select class="form-select" id="f-practice">
+          <option value="">— Select —</option>
+          <option>Employment / Labor</option>
+          <option>Commercial Litigation</option>
+          <option>Regulatory / Compliance</option>
+          <option>Contract Disputes</option>
+          <option>Intellectual Property</option>
+          <option>Healthcare Law</option>
+          <option>Corporate / M&amp;A</option>
+          <option>Criminal Defense</option>
+        </select>
+      </div>
 
-  <div class="kpi">
-    <div class="kpi-label">Success Probability</div>
-    <div class="kpi-val green">78%</div>
-    <div class="kpi-sub">
-      Portfolio weighted average
-    </div>
-  </div>
+      <div class="form-group">
+        <div class="form-label">Document Date Range <span class="ai-badge" id="badge-dates">AI FILLED</span></div>
+        <input type="text" class="form-input" id="f-dates" placeholder="e.g. Jan 2023 – Mar 2024" autocomplete="off">
+      </div>
 
-  <div class="kpi">
-    <div class="kpi-label">Regulatory Cases</div>
-    <div class="kpi-val red">16</div>
-    <div class="kpi-sub">
-      Active investigations
-    </div>
-  </div>
+      <div class="form-group">
+        <div class="form-label">Producing Party <span class="ai-badge" id="badge-party">AI FILLED</span></div>
+        <input type="text" class="form-input" id="f-party" placeholder="e.g. Defendant / Plaintiff" autocomplete="off">
+      </div>
 
-</div>
-
-  <!-- ── AR AGING + DENIAL BREAKDOWN ────────────────────────────────────── -->
-  <div class="panel">
-  <div class="panel-hdr">
-    <div class="panel-title">
-      Matter Portfolio
-    </div>
-    <div class="panel-tag tag-watch">
-      412 OPEN
-    </div>
-  </div>
-
-  <div class="panel-body">
-
-    <div class="ar-row">
-      <div class="ar-bucket">Employment</div>
-      <div class="ar-bar-wrap">
-        <div class="ar-bar-fill"
-             style="width:85%;background:var(--red)">
+      <div class="form-group full">
+        <div class="form-label">Custodians / Key Parties <span class="ai-badge" id="badge-custodians">AI FILLED</span></div>
+        <div class="tag-wrap" id="custodian-tags">
+          <input type="text" class="tag-input-field" id="custodian-input" placeholder="Type name + Enter to add...">
         </div>
       </div>
-      <div class="ar-amount">87</div>
+
+      <div class="form-group full">
+        <div class="form-label">AI Document Summary <span class="ai-badge" id="badge-summary">AI FILLED</span></div>
+        <textarea class="form-textarea" id="f-summary" placeholder="AI will summarize key content, issues, and relevance..." rows="4"></textarea>
+      </div>
+
+      <div class="form-group full">
+        <div class="form-label">Hold Notice Reference / Litigation Hold ID</div>
+        <input type="text" class="form-input" id="f-hold" placeholder="e.g. LH-2024-0042 or N/A" autocomplete="off">
+      </div>
+
     </div>
 
-    <div class="ar-row">
-      <div class="ar-bucket">Contracts</div>
-      <div class="ar-bar-wrap">
-        <div class="ar-bar-fill"
-             style="width:70%;background:var(--amber)">
-        </div>
-      </div>
-      <div class="ar-amount">122</div>
+    <!-- PRIVILEGE FLAGS -->
+    <div class="sec red" style="margin-top:4px"><div class="sec-label">Step 3 · Privilege &amp; Risk Flags <span class="ai-badge visible" id="badge-flags" style="margin-left:8px">AI SCREENED</span></div></div>
+
+    <div class="flag-grid" id="privilege-flags">
+      <label class="flag-check">
+        <input type="checkbox" id="flag-ac" onchange="updateFlags()">
+        <span class="flag-box">✓</span>
+        <span class="flag-label">Attorney–Client Privilege</span>
+      </label>
+      <label class="flag-check">
+        <input type="checkbox" id="flag-wp" onchange="updateFlags()">
+        <span class="flag-box">✓</span>
+        <span class="flag-label">Work Product Doctrine</span>
+      </label>
+      <label class="flag-check">
+        <input type="checkbox" id="flag-conf" onchange="updateFlags()">
+        <span class="flag-box">✓</span>
+        <span class="flag-label">Highly Confidential</span>
+      </label>
+      <label class="flag-check">
+        <input type="checkbox" id="flag-pii" onchange="updateFlags()">
+        <span class="flag-box">✓</span>
+        <span class="flag-label">PII / PHI Present</span>
+      </label>
+      <label class="flag-check">
+        <input type="checkbox" id="flag-trade" onchange="updateFlags()">
+        <span class="flag-box">✓</span>
+        <span class="flag-label">Trade Secret</span>
+      </label>
+      <label class="flag-check">
+        <input type="checkbox" id="flag-hold" onchange="updateFlags()">
+        <span class="flag-box">✓</span>
+        <span class="flag-label">Subject to Litigation Hold</span>
+      </label>
+      <label class="flag-check">
+        <input type="checkbox" id="flag-redact" onchange="updateFlags()">
+        <span class="flag-box">✓</span>
+        <span class="flag-label">Redaction Required</span>
+      </label>
+      <label class="flag-check">
+        <input type="checkbox" id="flag-foreign" onchange="updateFlags()">
+        <span class="flag-box">✓</span>
+        <span class="flag-label">Foreign Language / Translation</span>
+      </label>
     </div>
 
-    <div class="ar-row">
-      <div class="ar-bucket">Regulatory</div>
-      <div class="ar-bar-wrap">
-        <div class="ar-bar-fill"
-             style="width:40%;background:var(--cyan)">
-        </div>
-      </div>
-      <div class="ar-amount">16</div>
+    <!-- PRIORITY -->
+    <div class="sec" style="margin-top:16px"><div class="sec-label">Step 4 · Triage Priority</div></div>
+    <div class="priority-row" id="priority-row">
+      <button class="pri-btn" onclick="setPriority('P1')">P1 · CRITICAL</button>
+      <button class="pri-btn" onclick="setPriority('P2')">P2 · HIGH</button>
+      <button class="pri-btn active-p3" onclick="setPriority('P3')">P3 · MEDIUM</button>
+      <button class="pri-btn" onclick="setPriority('P4')">P4 · LOW</button>
     </div>
 
-    <div class="ar-row">
-      <div class="ar-bucket">Compliance</div>
-      <div class="ar-bar-wrap">
-        <div class="ar-bar-fill"
-             style="width:55%;background:var(--green)">
-        </div>
-      </div>
-      <div class="ar-amount">61</div>
+    <!-- NOTES -->
+    <div class="sec" style="margin-top:16px"><div class="sec-label">Step 5 · Additional Notes</div></div>
+    <div class="form-group">
+      <textarea class="form-textarea" id="f-notes" placeholder="Bates range, production set, opposing counsel notes, chain of custody, prior processing attempts..." rows="3"></textarea>
     </div>
 
-  </div>
-</div>
-
-        <!-- DSO TREND -->
-        <div style="margin-top:18px">
-          <div style="font-size:7.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">DSO Trend — Last 8 Months</div>
-          <div class="dso-trend">
-            <div class="dso-bar" style="height:42%;background:var(--cyan)"></div>
-            <div class="dso-bar" style="height:38%;background:var(--cyan)"></div>
-            <div class="dso-bar" style="height:44%;background:var(--cyan)"></div>
-            <div class="dso-bar" style="height:40%;background:var(--cyan)"></div>
-            <div class="dso-bar" style="height:36%;background:var(--cyan)"></div>
-            <div class="dso-bar" style="height:46%;background:var(--cyan)"></div>
-            <div class="dso-bar" style="height:50%;background:var(--amber);opacity:0.5"></div>
-            <div class="dso-bar current" style="height:76%"></div>
-          </div>
-          <div class="dso-labels">
-            <span>Oct</span><span>Nov</span><span>Dec</span><span>Jan</span>
-            <span>Feb</span><span>Mar</span><span>Apr</span><span class="current">NOW 52d</span>
-          </div>
-        </div>
-
-      </div>
+    <!-- ACTION ROW -->
+    <div class="action-row">
+      <button class="btn-primary" id="btn-analyze" onclick="runAITriage()" disabled>
+        <span class="spinner" id="analyze-spinner" style="display:none"></span>
+        ▶ Run AI Triage
+      </button>
+      <button class="btn-secondary" onclick="clearForm()">Clear</button>
+      <button class="btn-escalate" id="btn-escalate" onclick="escalateToStrategist()" disabled>
+        → Escalate to Case Strategist
+      </button>
     </div>
 
-    <!-- DENIAL ROOT CAUSES -->
-    <div class="panel">
-      <div class="panel-hdr">
-        <div class="panel-title">Denial Root Cause Breakdown</div>
-        <div class="panel-tag tag-live">47 CLAIMS</div>
-      </div>
-      <div class="panel-body">
-        <div class="denial-row">
-          <div class="denial-cause">Medical Necessity / Documentation</div>
-          <div class="denial-bar-wrap">
-            <div class="denial-bar-fill" style="width:82%;background:var(--red)"></div>
-          </div>
-          <div class="denial-rate" style="color:var(--red)">38%</div>
-          <div class="denial-val">$71K</div>
-          <div class="denial-trend" style="color:var(--red)">↑</div>
-        </div>
-        <div class="denial-row">
-          <div class="denial-cause">Prior Auth / Missing Modifier</div>
-          <div class="denial-bar-wrap">
-            <div class="denial-bar-fill" style="width:65%;background:var(--amber)"></div>
-          </div>
-          <div class="denial-rate" style="color:var(--amber)">31%</div>
-          <div class="denial-val">$58K</div>
-          <div class="denial-trend" style="color:var(--amber)">→</div>
-        </div>
-        <div class="denial-row">
-          <div class="denial-cause">Coding Error (CPT/ICD-10)</div>
-          <div class="denial-bar-wrap">
-            <div class="denial-bar-fill" style="width:42%;background:var(--amber)"></div>
-          </div>
-          <div class="denial-rate" style="color:var(--amber)">19%</div>
-          <div class="denial-val">$36K</div>
-          <div class="denial-trend" style="color:var(--green)">↓</div>
-        </div>
-        <div class="denial-row">
-          <div class="denial-cause">Eligibility / Demographic</div>
-          <div class="denial-bar-wrap">
-            <div class="denial-bar-fill" style="width:18%;background:var(--cyan)"></div>
-          </div>
-          <div class="denial-rate" style="color:var(--cyan)">8%</div>
-          <div class="denial-val">$15K</div>
-          <div class="denial-trend" style="color:var(--green)">↓</div>
-        </div>
-        <div class="denial-row">
-          <div class="denial-cause">Timely Filing</div>
-          <div class="denial-bar-wrap">
-            <div class="denial-bar-fill" style="width:8%;background:var(--muted)"></div>
-          </div>
-          <div class="denial-rate" style="color:var(--muted)">4%</div>
-          <div class="denial-val">$7K</div>
-          <div class="denial-trend" style="color:var(--muted)">→</div>
-        </div>
+  </div><!-- /left-panel -->
 
-        <!-- APPEAL ROI by type -->
-        <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px">
-          <div style="font-size:7.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">
-            Appeal ROI by Denial Type
-          </div>
-          <div style="display:flex;gap:8px;font-size:7px;letter-spacing:1px;color:var(--faint);margin-bottom:6px;padding:0 0 4px;border-bottom:1px solid var(--border)">
-            <span style="flex:1">Type</span>
-            <span style="min-width:42px;text-align:right">Win %</span>
-            <span style="min-width:54px;text-align:right">ROI / Claim</span>
-            <span style="min-width:44px;text-align:right">Volume</span>
-          </div>
-          <div class="appeal-row">
-            <div class="appeal-type">Medical Necessity</div>
-            <div class="appeal-win" style="color:var(--green)">74%</div>
-            <div class="appeal-roi" style="color:var(--green)">$1,870</div>
-            <div class="appeal-vol">18 open</div>
-          </div>
-          <div class="appeal-row">
-            <div class="appeal-type">Prior Auth / Modifier</div>
-            <div class="appeal-win" style="color:var(--amber)">61%</div>
-            <div class="appeal-roi" style="color:var(--amber)">$1,240</div>
-            <div class="appeal-vol">15 open</div>
-          </div>
-          <div class="appeal-row">
-            <div class="appeal-type">Coding Error</div>
-            <div class="appeal-win" style="color:var(--cyan)">68%</div>
-            <div class="appeal-roi" style="color:var(--cyan)">$960</div>
-            <div class="appeal-vol">9 open</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- ══ RIGHT PANEL ══ -->
+  <div class="right-panel">
 
-  <!-- ── PAYER SCORECARD + CASH VELOCITY + COMPLIANCE ───────────────────── -->
-  <div class="sec amber-sec">
-    <div class="sec-label">Payer Intelligence · Cash Velocity · Compliance Deadlines</div>
-  </div>
-  <div class="three-col">
-
-    <!-- PAYER SCORECARD -->
-    <div class="panel">
-      <div class="panel-hdr">
-        <div class="panel-title">Payer Scorecard</div>
-        <div class="panel-tag tag-watch">3 PAYERS FLAGGED</div>
+    <!-- AI TRIAGE OUTPUT -->
+    <div class="rp-section">
+      <div class="rp-title">
+        <span class="live-dot" id="ai-dot" style="background:var(--faint);box-shadow:none;animation:none"></span>
+        AI TRIAGE OUTPUT · LLaMA 3.3-70B · Groq
       </div>
-      <div class="panel-body" style="padding:0">
-        <table class="payer-table">
-          <thead>
-            <tr>
-              <th>Payer</th>
-              <th>Denial %</th>
-              <th>Avg Hold</th>
-              <th>Score</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>UnitedHealth</td>
-              <td style="color:var(--red)">28%</td>
-              <td style="color:var(--red)">31hrs</td>
-              <td><span class="score-pill sp-bad">POOR</span></td>
-            </tr>
-            <tr>
-              <td>BCBS Arizona</td>
-              <td style="color:var(--amber)">20%</td>
-              <td style="color:var(--amber)">24hrs</td>
-              <td><span class="score-pill sp-warn">WATCH</span></td>
-            </tr>
-            <tr>
-              <td>Aetna</td>
-              <td style="color:var(--amber)">19%</td>
-              <td style="color:var(--amber)">18hrs</td>
-              <td><span class="score-pill sp-warn">WATCH</span></td>
-            </tr>
-            <tr>
-              <td>Medicare</td>
-              <td style="color:var(--green)">4.2%</td>
-              <td style="color:var(--green)">6hrs</td>
-              <td><span class="score-pill sp-ok">GOOD</span></td>
-            </tr>
-            <tr>
-              <td>Medicaid AZ</td>
-              <td style="color:var(--green)">6.1%</td>
-              <td>9hrs</td>
-              <td><span class="score-pill sp-ok">GOOD</span></td>
-            </tr>
-          </tbody>
-        </table>
-        <div style="padding:10px 10px 8px;border-top:1px solid var(--border)">
-          <div style="font-size:8px;color:var(--muted);line-height:1.6">
-            Auth call volume: <span style="color:var(--amber);font-weight:600">312 hrs/mo</span> · Est. automation savings: <span style="color:var(--green);font-weight:600">$9.4K/mo</span>
-          </div>
-        </div>
+      <div class="ai-output" id="ai-output">
+        <span class="ai-placeholder">Upload a document to run AI analysis. LLaMA 3.3-70B will read the content, assess privilege risk, identify key parties, and auto-populate all intake fields.</span>
       </div>
     </div>
 
-    <!-- CASH VELOCITY -->
-    <div class="panel">
-      <div class="panel-hdr">
-        <div class="panel-title">Cash Collection Velocity</div>
-        <div class="panel-tag tag-ready">TRENDING UP</div>
+    <!-- AI ANALYSIS FIELDS -->
+    <div class="rp-section">
+      <div class="rp-title">AI EXTRACTED INTELLIGENCE</div>
+
+      <div class="analysis-field">
+        <div class="af-label">Privilege Risk Assessment</div>
+        <div class="af-val" id="af-privilege">—</div>
+        <div class="risk-meter" id="risk-meter">
+          <div class="risk-seg" id="rs1"></div><div class="risk-seg" id="rs2"></div>
+          <div class="risk-seg" id="rs3"></div><div class="risk-seg" id="rs4"></div>
+          <div class="risk-seg" id="rs5"></div>
+        </div>
       </div>
-      <div class="panel-body">
-        <div class="vel-grid">
-          <div class="vel-cell">
-            <div class="vel-label">Days to First Payment</div>
-            <div class="vel-val" style="color:var(--amber)">18d</div>
-            <div class="vel-bench">target: <span>12d</span></div>
-          </div>
-          <div class="vel-cell">
-            <div class="vel-label">Clean Claim Rate</div>
-            <div class="vel-val" style="color:var(--green)">81.6%</div>
-            <div class="vel-bench">target: <span>90%+</span></div>
-          </div>
-          <div class="vel-cell">
-            <div class="vel-label">Avg Reimbursement</div>
-            <div class="vel-val" style="color:var(--cyan)">$892</div>
-            <div class="vel-bench">vs: <span>$847 Q1</span></div>
-          </div>
-          <div class="vel-cell">
-            <div class="vel-label">Write-Off Rate</div>
-            <div class="vel-val" style="color:var(--green)">1.8%</div>
-            <div class="vel-bench">target: <span>&lt;2%</span></div>
-          </div>
-        </div>
-        <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
-          <div style="font-size:7.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Revenue Recovery Waterfall</div>
-          <div class="waterfall">
-            <div class="wf-row">
-              <div class="wf-label">Billed (Gross Charges)</div>
-              <div class="wf-bar-wrap">
-                <div class="wf-bar" style="width:100%;background:rgba(0,229,255,0.15);color:var(--cyan)">$5.1M</div>
-              </div>
-            </div>
-            <div class="wf-row">
-              <div class="wf-label">Contractual Adjustments</div>
-              <div class="wf-bar-wrap">
-                <div class="wf-bar" style="width:82%;background:rgba(90,111,144,0.15);color:var(--muted)">–$0.9M</div>
-              </div>
-            </div>
-            <div class="wf-row">
-              <div class="wf-label">Denied / Adjusted</div>
-              <div class="wf-bar-wrap">
-                <div class="wf-bar" style="width:60%;background:rgba(255,61,87,0.12);color:var(--red)">–$0.19M</div>
-              </div>
-            </div>
-            <div class="wf-row">
-              <div class="wf-label">Net Collected</div>
-              <div class="wf-bar-wrap">
-                <div class="wf-bar" style="width:82%;background:rgba(0,230,118,0.12);color:var(--green)">$4.2M</div>
-              </div>
-            </div>
-          </div>
-        </div>
+
+      <div class="analysis-field">
+        <div class="af-label">Relevance to Active Matters</div>
+        <div class="af-val" id="af-relevance">—</div>
+      </div>
+
+      <div class="analysis-field">
+        <div class="af-label">Recommended Action</div>
+        <div class="af-val" id="af-action">—</div>
+      </div>
+
+      <div class="analysis-field">
+        <div class="af-label">Suggested Routing Node</div>
+        <div class="af-val" id="af-routing">—</div>
       </div>
     </div>
 
-    <!-- COMPLIANCE DEADLINES -->
-    <div class="panel">
-      <div class="panel-hdr">
-        <div class="panel-title">Compliance &amp; Deadline Calendar</div>
-        <div class="panel-tag tag-live">2 CRITICAL</div>
+    <!-- TASK QUEUE -->
+    <div class="task-queue">
+      <div class="tq-header">
+        <div class="tq-title">Document Queue</div>
+        <div class="tq-count" id="tq-count">0 documents</div>
       </div>
-      <div class="panel-body" style="padding:10px 14px">
-        <div class="deadline-list">
-          <div class="deadline-item">
-            <div class="dl-countdown dlc-critical">
-              <div class="dl-days">1</div>
-              <div class="dl-unit">day</div>
-            </div>
-            <div class="dl-info">
-              <div class="dl-title">CMS §482.13 — Patient Rights Response</div>
-              <div class="dl-sub">Exec signature required · compliance package ready</div>
-            </div>
-            <div class="dl-exposure" style="color:var(--red)">$24K</div>
-          </div>
-          <div class="deadline-item">
-            <div class="dl-countdown dlc-critical">
-              <div class="dl-days">3</div>
-              <div class="dl-unit">days</div>
-            </div>
-            <div class="dl-info">
-              <div class="dl-title">HRSA Grant Reports (×3) — $2.9M at risk</div>
-              <div class="dl-sub">All drafts complete · pending exec release</div>
-            </div>
-            <div class="dl-exposure" style="color:var(--amber)">$2.9M</div>
-          </div>
-          <div class="deadline-item">
-            <div class="dl-countdown dlc-warn">
-              <div class="dl-days">14</div>
-              <div class="dl-unit">days</div>
-            </div>
-            <div class="dl-info">
-              <div class="dl-title">Timely Filing Cutoff — $43K aging claims</div>
-              <div class="dl-sub">BCBS AZ + Aetna · 120-day hard limit approaching</div>
-            </div>
-            <div class="dl-exposure" style="color:var(--amber)">$43K</div>
-          </div>
-          <div class="deadline-item">
-            <div class="dl-countdown dlc-warn">
-              <div class="dl-days">30</div>
-              <div class="dl-unit">days</div>
-            </div>
-            <div class="dl-info">
-              <div class="dl-title">CMS §482.24 — Medical Record Completion</div>
-              <div class="dl-sub">84.1% rate · target 90% · ER + Outpatient Surgery</div>
-            </div>
-            <div class="dl-exposure" style="color:var(--muted)">CaP Risk</div>
-          </div>
-          <div class="deadline-item">
-            <div class="dl-countdown dlc-ok">
-              <div class="dl-days">45</div>
-              <div class="dl-unit">days</div>
-            </div>
-            <div class="dl-info">
-              <div class="dl-title">Stark Law Vendor Review — OIG Watchlist</div>
-              <div class="dl-sub">2 vendors flagged · legal review in progress</div>
-            </div>
-            <div class="dl-exposure" style="color:var(--muted)">Ongoing</div>
-          </div>
+      <div class="tq-body" id="tq-body">
+        <div class="tq-empty" id="tq-empty">
+          <div class="tq-empty-icon">📂</div>
+          <span>No documents in queue</span>
         </div>
       </div>
+      <a class="escalate-btn" href="legal-main-strategist.html">
+        → Escalate Queue to Case Strategist
+      </a>
     </div>
 
-  </div>
-
-  <!-- ── BNCA INTELLIGENCE STRIP ─────────────────────────────────────────── -->
-  <div class="sec green-sec">
-    <div class="sec-label">BNCA Intelligence Assessment · <span style="font-weight:400;color:var(--muted)">Auto-generated · Last run <span id="last-run">just now</span></span></div>
-  </div>
-  <div class="bnca-strip">
-    <div class="bnca-cell">
-      <div class="bnca-cell-label">Revenue Position</div>
-      <div class="bnca-cell-content">
-        <span class="hl-g">$4.2M collected</span> this month, up <strong>+8% MoM</strong> — but <span class="hl-r">$2.8M remains at risk</span> across denial concentration, DSO drift at <span class="hl-a">52 days</span>, and the HRSA grants pipeline. Net collection rate <span class="hl-a">94.1%</span> — 0.9 points below target. One BNCA action this week would close that gap.
-      </div>
-    </div>
-    <div class="bnca-cell">
-      <div class="bnca-cell-label">Denial & Payer Intelligence</div>
-      <div class="bnca-cell-content">
-        <span class="hl-r">18.4% gross denial rate</span> is more than twice the 8% target. The pattern is systemic across <strong>BCBS AZ, Aetna, UHC</strong> — all three flagging auth friction. A single payer relations call resolves what 312 labor hours per month cannot. <span class="hl-g">Appeal win rate 68%</span> — ROI is strong; volume is the constraint.
-      </div>
-    </div>
-    <div class="bnca-cell">
-      <div class="bnca-cell-label">What Needs You Specifically</div>
-      <div class="bnca-cell-content">
-        Three actions only a CFO or executive can unblock: <span class="hl-r">Sign the CMS response today</span> (Friday hard deadline, $24K penalty). <span class="hl-a">Release the HRSA grants</span> (72 hours, $2.9M). <span class="hl-a">Authorize the payer escalation call</span> — your name opens the door $48K in stalled claims cannot. Everything else is below your altitude.
-      </div>
-    </div>
-  </div>
+  </div><!-- /right-panel -->
 
 </div><!-- /main -->
 
-<!-- ── STATUSBAR ──────────────────────────────────────────────────────────── -->
+<!-- STATUS BAR -->
 <div class="statusbar">
-  <div class="dot dot-green" style="width:5px;height:5px"></div>
-  <span>TSM · RCM Executive Command</span>
+  <div style="width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:glow 2s infinite"></div>
+  <span>TSM · eDiscovery Node EP1</span>
   <span class="sb-sep">·</span>
-  <span>11/11 Nodes Online</span>
+  <span>Legal War Room · Active</span>
   <span class="sb-sep">·</span>
   <span id="status-date">—</span>
   <span class="sb-sep">·</span>
-  <span>BNCA Engine Active · Neural Sync Live</span>
+  <span>Groq · LLaMA 3.3-70B · Document Intelligence Active</span>
   <div class="sb-right">TSM OS v4.1 · Railway</div>
 </div>
 
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-title" id="toast-title">—</div>
+  <div class="toast-sub" id="toast-sub">—</div>
+</div>
+
 <script>
-// clock
+// ── STATE ────────────────────────────────────────────────────────────────
+let currentPriority = 'P3';
+let docQueue = [];
+let docIdCounter = 1;
+let currentFileText = '';
+let currentFileName = '';
+let custodians = [];
+let analysisComplete = false;
+
+// ── CLOCK ────────────────────────────────────────────────────────────────
 function tick() {
   const now = new Date();
   document.getElementById('clock').textContent = now.toLocaleTimeString('en-US', { hour12: false });
@@ -1072,129 +678,452 @@ function tick() {
 }
 setInterval(tick, 1000); tick();
 
-// BNCA last-run timestamp
-document.getElementById('last-run').textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
-
-// Ticker
-const TICKS = [
-  { l:'Revenue Collected', v:'$4.2M', c:'up' },
-  { l:'Denial Rate', v:'18.4%', c:'down' },
-  { l:'DSO', v:'52 days', c:'warn' },
-  { l:'Appeal Win Rate', v:'68%', c:'up' },
-  { l:'Clean Claim Rate', v:'81.6%', c:'' },
-  { l:'Net Collection', v:'94.1%', c:'warn' },
-  { l:'AR >120d', v:'$43K', c:'warn' },
-  { l:'Grants At Risk', v:'$2.9M', c:'warn' },
-  { l:'CMS Exposure', v:'$24K', c:'down' },
-  { l:'Auth Labor Cost', v:'$9.4K/mo', c:'warn' },
-  { l:'Write-Off Rate', v:'1.8%', c:'up' },
-  { l:'UHC Denial Rate', v:'28%', c:'down' },
-  { l:'Revenue at Risk', v:'$2.8M', c:'down' },
-  { l:'Avg Reimbursement', v:'$892', c:'up' },
-  { l:'BNCA Confidence', v:'86%', c:'up' },
-];
-
-const inner = document.getElementById('ticker-inner');
-const html = TICKS.map(t =>
-  `<span class="t-item">${t.l}&nbsp;<span class="t-val ${t.c}">${t.v}</span></span>`
-).join('');
-inner.innerHTML = html + html;
-// ── STRATEGIST RELAY READER ──
-function loadStratRelay() {
-  try {
-    const raw = sessionStorage.getItem('TSM_EXEC_RELAY');
-    if (!raw) return;
-    const d = JSON.parse(raw);
-    if (!d || !d.enriched) return;
-
-    const age = (Date.now() - new Date(d.ts)) / 1000 / 60;
-    const freshLabel = age < 1 ? 'just now' : age < 60 ? `${Math.floor(age)}m ago` : `${Math.floor(age/60)}h ago`;
-
-    // ── Update last-run timestamp ──
-    const lr = document.getElementById('last-run');
-    if (lr) lr.textContent = `strategist sync ${freshLabel}`;
-
-    // ── Update KPI row values ──
-    const kpiMap = {
-      'Total Revenue At Risk':    { val: d.kpi.totalAtRisk,      cls: 'red',   delta: `↑ $340K vs last month`, sub: 'denial + DSO + DIR + litigation' },
-      'Monthly Revenue Collected':{ val: d.kpi.monthlyCollected,  cls: 'green', delta: `↑ +8% MoM`,             sub: 'vs $3.9M prior month' },
-      'Gross Denial Rate':        { val: d.kpi.denialRate,        cls: 'red',   delta: `↑ 3.1% vs target`,      sub: 'target <8% · 47 claims this cycle' },
-      'Days Sales Outstanding':   { val: d.kpi.dso,               cls: 'amber', delta: `↑ 7d vs benchmark`,     sub: 'industry benchmark: 45d' },
-      'Appeal Win Rate':          { val: d.kpi.appealWinRate,     cls: 'cyan',  delta: `↑ 4% vs Q1`,            sub: '$187K recovered last 90d' },
-      'Net Collection Rate':      { val: d.kpi.netCollection,     cls: 'text',  delta: `↓ 0.9% vs target`,      sub: 'target 95% · 2 nodes lagging' }
-    };
-    document.querySelectorAll('.kpi').forEach(el => {
-      const label = el.querySelector('.kpi-label')?.textContent?.trim();
-      const cfg = kpiMap[label];
-      if (!cfg) return;
-      const valEl = el.querySelector('.kpi-val');
-      const deltaEl = el.querySelector('.kpi-delta');
-      if (valEl) { valEl.textContent = cfg.val; valEl.className = `kpi-val ${cfg.cls}`; }
-      if (deltaEl) { deltaEl.textContent = cfg.delta; }
-    });
-
-    // ── Update BNCA strip ──
-    const cells = document.querySelectorAll('.bnca-cell');
-    const bncaData = [
-      { label: 'Revenue Position',         content: d.bnca.revenuePosition },
-      { label: 'Denial & Payer Intelligence', content: d.bnca.denialIntel },
-      { label: 'What Needs You Specifically', content: d.bnca.strategistSummary || d.bnca.execNeeded }
-    ];
-    cells.forEach((cell, i) => {
-      if (!bncaData[i]) return;
-      const contentEl = cell.querySelector('.bnca-cell-content');
-      if (contentEl && bncaData[i].content) contentEl.textContent = bncaData[i].content;
-    });
-
-    // ── Update decisions if relay has fresh ones ──
-    if (d.alerts?.decisions?.length) {
-      const urgencyClass = { 'SIGN NOW':'d-u1','ESCALATE':'d-u1','APPROVE':'d-u1','REVIEW':'d-u2','MONITOR':'d-u3' };
-      const valueColor = { 'SIGN NOW':'var(--red)','ESCALATE':'var(--red)','APPROVE':'var(--amber)','REVIEW':'var(--amber)','MONITOR':'var(--cyan)' };
-      const deadlineClass = { 'SIGN NOW':'hot','ESCALATE':'hot','APPROVE':'hot','REVIEW':'warn','MONITOR':'' };
-      const container = document.querySelector('.decisions');
-      if (container) {
-        container.innerHTML = d.alerts.decisions.map(dec => `
-          <div class="decision-item">
-            <div class="d-urgency ${urgencyClass[dec.urgency]||'d-u3'}">${dec.urgency}</div>
-            <div>
-              <div class="d-action">${dec.action}</div>
-              <div class="d-context">Relayed from HC Strategist · ${new Date(d.ts).toLocaleTimeString('en-US',{hour12:false})}</div>
-            </div>
-            <div class="d-value" style="color:${valueColor[dec.urgency]||'var(--cyan)'}">${dec.value}</div>
-            <div class="d-deadline ${deadlineClass[dec.urgency]||''}">${dec.deadline}</div>
-          </div>`).join('');
-      }
-    }
-
-    // ── Update ticker with strategist alerts ──
-    if (d.alerts?.urgent?.length) {
-      const tickerEl = document.getElementById('ticker-inner');
-      if (tickerEl) {
-        const items = d.alerts.urgent.map(u => `◈ ${u.toUpperCase()}`).join(' &nbsp;&nbsp;&nbsp; ');
-        tickerEl.innerHTML = items + ' &nbsp;&nbsp;&nbsp; ' + tickerEl.innerHTML;
-      }
-    }
-
-    // ── Visual relay indicator ──
-    const hdr = document.querySelector('.hdr-brand');
-    if (hdr && !document.getElementById('relay-badge')) {
-      const badge = document.createElement('div');
-      badge.id = 'relay-badge';
-      badge.style.cssText = 'font-size:8px;letter-spacing:.1em;color:#00e676;border:1px solid rgba(0,230,118,.3);padding:2px 7px;border-radius:2px;margin-left:10px;cursor:default';
-      badge.title = `Last synced from HC Strategist: ${new Date(d.ts).toLocaleString()}`;
-      badge.textContent = `◈ HC STRATEGIST SYNC · ${freshLabel.toUpperCase()}`;
-      hdr.appendChild(badge);
-    }
-
-  } catch(e) { console.warn('Relay read failed:', e); }
+// ── TOAST ────────────────────────────────────────────────────────────────
+function showToast(title, sub, duration = 3500) {
+  document.getElementById('toast-title').textContent = title;
+  document.getElementById('toast-sub').textContent = sub;
+  const t = document.getElementById('toast');
+  t.classList.add('visible');
+  setTimeout(() => t.classList.remove('visible'), duration);
 }
 
-// ── Poll for relay updates every 15s ──
-loadStratRelay();
-setInterval(loadStratRelay, 15000);
+// ── PRIORITY ─────────────────────────────────────────────────────────────
+function setPriority(p) {
+  currentPriority = p;
+  document.querySelectorAll('.pri-btn').forEach((b, i) => {
+    b.className = 'pri-btn';
+    if (i === 0 && p === 'P1') b.classList.add('active-p1');
+    if (i === 1 && p === 'P2') b.classList.add('active-p2');
+    if (i === 2 && p === 'P3') b.classList.add('active-p3');
+    if (i === 3 && p === 'P4') b.classList.add('active-p4');
+  });
+}
 
-// clock
-function tick() {
+// ── FLAGS ─────────────────────────────────────────────────────────────────
+function updateFlags() {
+  const checked = document.querySelectorAll('.flag-check input:checked').length;
+  if (checked >= 2) setPriority('P1');
+  else if (checked === 1) setPriority('P2');
+}
+
+// ── CUSTODIAN TAGS ────────────────────────────────────────────────────────
+document.getElementById('custodian-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && this.value.trim()) {
+    addCustodian(this.value.trim());
+    this.value = '';
+  }
+});
+
+function addCustodian(name) {
+  if (custodians.includes(name)) return;
+  custodians.push(name);
+  renderCustodians();
+}
+
+function removeCustodian(name) {
+  custodians = custodians.filter(c => c !== name);
+  renderCustodians();
+}
+
+function renderCustodians() {
+  const wrap = document.getElementById('custodian-tags');
+  const input = document.getElementById('custodian-input');
+  wrap.innerHTML = '';
+  custodians.forEach(c => {
+    const span = document.createElement('span');
+    span.className = 'tag-item';
+    span.innerHTML = `${c} <button onclick="removeCustodian('${c}')">×</button>`;
+    wrap.appendChild(span);
+  });
+  wrap.appendChild(input);
+}
+
+// ── FILE UPLOAD ───────────────────────────────────────────────────────────
+const uploadZone = document.getElementById('upload-zone');
+const fileInput  = document.getElementById('file-input');
+
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('drag-over');
+  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e => { if (e.target.files.length) handleFile(e.target.files[0]); });
+
+function handleFile(file) {
+  currentFileName = file.name;
+  const sizeKB = (file.size / 1024).toFixed(1);
+  const ext = file.name.split('.').pop().toUpperCase();
+
+  // Show uploaded file row
+  const uf = document.getElementById('uploaded-file');
+  document.getElementById('uf-name').textContent = file.name;
+  document.getElementById('uf-meta').textContent = `${sizeKB} KB · ${ext} · ${new Date().toLocaleTimeString()}`;
+  document.getElementById('uf-icon').textContent = ext === 'PDF' ? '📕' : ext === 'EML' || ext === 'MSG' ? '📧' : '📄';
+  document.getElementById('uf-status').textContent = 'READING';
+  document.getElementById('uf-status').className = 'uf-status reading';
+  uf.classList.add('visible');
+
+  // Update AI dot
+  document.getElementById('ai-dot').style.cssText = 'background:var(--amber);box-shadow:0 0 6px var(--amber);animation:glow 1s ease-in-out infinite';
+
+  // Read file
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    currentFileText = e.target.result;
+    if (currentFileText.length > 12000) currentFileText = currentFileText.slice(0, 12000) + '\n[...truncated for analysis...]';
+
+    document.getElementById('uf-status').textContent = 'READY';
+    document.getElementById('uf-status').className = 'uf-status done';
+    document.getElementById('btn-analyze').disabled = false;
+
+    showToast('Document loaded', `${file.name} ready for AI triage`);
+    runAITriage(); // auto-run
+  };
+  reader.onerror = () => {
+    document.getElementById('uf-status').textContent = 'ERROR';
+    showToast('Read error', 'Could not read file. Try a .txt or .csv export.');
+  };
+
+  if (file.type === 'application/pdf') {
+    // For PDFs we can only get limited text; read as text anyway
+    reader.readAsText(file);
+  } else {
+    reader.readAsText(file);
+  }
+}
+
+// ── GROQ AI TRIAGE ────────────────────────────────────────────────────────
+async function runAITriage() {
+  if (!currentFileText && !document.getElementById('f-matter').value) {
+    showToast('No document', 'Please upload a document first.');
+    return;
+  }
+
+  const btn = document.getElementById('btn-analyze');
+  const spinner = document.getElementById('analyze-spinner');
+  btn.disabled = true;
+  spinner.style.display = 'inline-block';
+
+  const aiOutput = document.getElementById('ai-output');
+  aiOutput.innerHTML = '<span class="spinner"></span>&nbsp; LLaMA 3.3-70B analyzing document...';
+  aiOutput.classList.add('active');
+  document.getElementById('ai-dot').style.cssText = 'background:var(--cyan);box-shadow:0 0 8px var(--cyan);animation:glow 0.8s ease-in-out infinite';
+
+  const prompt = `You are a senior eDiscovery paralegal and legal AI analyst. Analyze the following document and return a JSON object ONLY — no markdown, no explanation, just the raw JSON.
+
+Document filename: ${currentFileName}
+Document content:
+---
+${currentFileText || '[No document content — user will fill fields manually. Generate plausible placeholder analysis for a legal intake form demo.]'}
+---
+
+Return this exact JSON structure:
+{
+  "matter": "Matter or case name identified or inferred",
+  "client": "Client or organization name",
+  "docType": "One of: Email / Correspondence, Contract / Agreement, Pleading / Motion, Deposition Transcript, Internal Memo / Report, Financial Record, Medical Record, Regulatory Filing, ESI / Native File, Other",
+  "practice": "One of: Employment / Labor, Commercial Litigation, Regulatory / Compliance, Contract Disputes, Intellectual Property, Healthcare Law, Corporate / M&A, Criminal Defense",
+  "dateRange": "Date range of document (e.g. Jan 2023 – Mar 2024)",
+  "producingParty": "Defendant or Plaintiff or organization",
+  "custodians": ["Name1", "Name2", "Name3"],
+  "summary": "2–3 sentence summary of document content, key legal issues, and relevance to potential litigation.",
+  "privilegeRisk": "HIGH or MEDIUM or LOW",
+  "privilegeFlags": {
+    "attorneyClient": true or false,
+    "workProduct": true or false,
+    "highlyConfidential": true or false,
+    "pii": true or false,
+    "tradSecret": false,
+    "litigationHold": true or false,
+    "redactionRequired": false,
+    "foreignLanguage": false
+  },
+  "relevance": "One sentence on relevance to active litigation matters.",
+  "recommendedAction": "Specific recommended next step (e.g. 'Flag for privilege review before production', 'Produce with redactions', 'Add to litigation hold set')",
+  "routing": "One of: Legal Analyst, BPO Legal Ops, Case Strategist, Chief Strategist",
+  "priority": "P1 or P2 or P3 or P4",
+  "aiSummary": "2–3 sentence narrative triage assessment for the war room — what this document means strategically, what risk it carries, and what the attorney must do next."
+}`;
+
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getGroqKey()}`
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.3,
+        max_tokens: 1200
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error?.message || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    const raw = data.choices?.[0]?.message?.content || '';
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+    populateFields(parsed);
+
+  } catch (err) {
+    // Fallback demo mode if no API key or network error
+    console.warn('Groq error:', err.message);
+    if (err.message.includes('API key') || err.message.includes('401') || err.message.includes('403') || err.message.includes('No GROQ')) {
+      useDemoData();
+    } else {
+      aiOutput.innerHTML = `<span style="color:var(--red)">⚠ Analysis failed: ${err.message}</span><br><br><span style="color:var(--faint)">Check that GROQ_API_KEY is configured in your environment. Fields can be filled manually.</span>`;
+      btn.disabled = false;
+      spinner.style.display = 'none';
+    }
+  }
+}
+
+function getGroqKey() {
+  // In Railway/production this is served via your backend proxy
+  // For standalone use, reads from meta tag or window var
+  return window.GROQ_API_KEY
+    || document.querySelector('meta[name="groq-key"]')?.content
+    || (() => { throw new Error('No GROQ key — switching to demo mode'); })();
+}
+
+function useDemoData() {
+  // Rich demo data so the UI shows full capability without a live key
+  const demo = {
+    matter: currentFileName ? currentFileName.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ') : 'Smith v. Acme Corp — Wage & Hour Class Action',
+    client: 'Acme Corporation',
+    docType: 'Email / Correspondence',
+    practice: 'Employment / Labor',
+    dateRange: 'Mar 2023 – Nov 2023',
+    producingParty: 'Defendant',
+    custodians: ['James R. Smith', 'Karen L. Mendoza', 'HR Director — D. Tran'],
+    summary: 'Internal email chain between HR director and outside counsel discussing overtime classification policy changes. Document contains legal advice regarding FLSA compliance strategy and references potential class exposure. Key passage acknowledges awareness of misclassification risk as early as Q1 2023.',
+    privilegeRisk: 'HIGH',
+    privilegeFlags: { attorneyClient: true, workProduct: true, highlyConfidential: true, pii: false, tradSecret: false, litigationHold: true, redactionRequired: true, foreignLanguage: false },
+    relevance: 'Directly relevant to plaintiff\'s central theory that defendant had prior knowledge of wage-and-hour violations before the class period.',
+    recommendedAction: 'Withhold from production — log on privilege log. Escalate to senior litigation partner immediately. Do not share with HR or business team.',
+    routing: 'Case Strategist',
+    priority: 'P1',
+    aiSummary: 'CRITICAL privilege document identified. This email chain constitutes attorney-client privileged communication and work product. If inadvertently produced, immediate clawback action required under FRE 502. Exposure to class is materially elevated by content — escalate to Case Strategist and Chief Strategist today.'
+  };
+  populateFields(demo);
+}
+
+function populateFields(d) {
+  // Form fields
+  setAI('f-matter', d.matter, 'badge-matter');
+  setAI('f-client', d.client, 'badge-client');
+  setAISelect('f-doctype', d.docType, 'badge-doctype');
+  setAISelect('f-practice', d.practice, 'badge-practice');
+  setAI('f-dates', d.dateRange, 'badge-dates');
+  setAI('f-party', d.producingParty, 'badge-party');
+  setAI('f-summary', d.summary, 'badge-summary');
+
+  // Custodians
+  custodians = [];
+  (d.custodians || []).forEach(c => addCustodian(c));
+  document.getElementById('badge-custodians').classList.add('visible');
+
+  // Privilege flags
+  setFlag('flag-ac',     d.privilegeFlags?.attorneyClient);
+  setFlag('flag-wp',     d.privilegeFlags?.workProduct);
+  setFlag('flag-conf',   d.privilegeFlags?.highlyConfidential);
+  setFlag('flag-pii',    d.privilegeFlags?.pii);
+  setFlag('flag-trade',  d.privilegeFlags?.tradSecret);
+  setFlag('flag-hold',   d.privilegeFlags?.litigationHold);
+  setFlag('flag-redact', d.privilegeFlags?.redactionRequired);
+  setFlag('flag-foreign',d.privilegeFlags?.foreignLanguage);
+
+  // Priority
+  setPriority(d.priority || 'P2');
+
+  // Right panel analysis
+  setRiskMeter(d.privilegeRisk);
+  setAnalysisField('af-privilege', d.privilegeRisk, d.privilegeRisk === 'HIGH' ? 'risk-high' : d.privilegeRisk === 'MEDIUM' ? 'risk-med' : 'risk-low');
+  setAnalysisField('af-relevance', d.relevance, 'populated');
+  setAnalysisField('af-action', d.recommendedAction, 'populated');
+  setAnalysisField('af-routing', `→ ${d.routing}`, 'populated');
+
+  // AI output narrative
+  const aiOutput = document.getElementById('ai-output');
+  aiOutput.innerHTML = '';
+  typewriter(aiOutput, d.aiSummary, () => {
+    document.getElementById('btn-analyze').disabled = false;
+    document.getElementById('analyze-spinner').style.display = 'none';
+    document.getElementById('btn-escalate').disabled = false;
+    document.getElementById('ai-dot').style.cssText = 'background:var(--green);box-shadow:0 0 6px var(--green);animation:glow 2s ease-in-out infinite';
+    analysisComplete = true;
+    showToast('AI Analysis Complete', `${currentFileName || 'Document'} · ${d.privilegeRisk} privilege risk · Route: ${d.routing}`);
+    updateKPIs(d.priority, d.privilegeRisk);
+  });
+}
+
+function setAI(id, val, badgeId) {
+  if (!val) return;
+  const el = document.getElementById(id);
+  el.value = val;
+  el.classList.add('ai-filled');
+  document.getElementById(badgeId)?.classList.add('visible');
+}
+
+function setAISelect(id, val, badgeId) {
+  const el = document.getElementById(id);
+  for (let opt of el.options) {
+    if (opt.text === val || opt.value === val) { el.value = opt.value; break; }
+  }
+  el.classList.add('ai-filled');
+  document.getElementById(badgeId)?.classList.add('visible');
+}
+
+function setFlag(id, checked) {
+  document.getElementById(id).checked = !!checked;
+}
+
+function setRiskMeter(level) {
+  const segs = [document.getElementById('rs1'), document.getElementById('rs2'), document.getElementById('rs3'), document.getElementById('rs4'), document.getElementById('rs5')];
+  const cls = level === 'HIGH' ? 'filled-high' : level === 'MEDIUM' ? 'filled-med' : 'filled-low';
+  const fill = level === 'HIGH' ? 5 : level === 'MEDIUM' ? 3 : 1;
+  segs.forEach((s, i) => { s.className = 'risk-seg'; if (i < fill) s.classList.add(cls); });
+}
+
+function setAnalysisField(id, val, cls) {
+  const el = document.getElementById(id);
+  el.textContent = val || '—';
+  el.className = `af-val ${cls || ''}`;
+}
+
+// ── TYPEWRITER ────────────────────────────────────────────────────────────
+function typewriter(el, text, onDone) {
+  let i = 0;
+  const cursor = document.createElement('span');
+  cursor.className = 'ai-cursor';
+  el.appendChild(cursor);
+
+  const interval = setInterval(() => {
+    if (i < text.length) {
+      cursor.before(text[i]);
+      i++;
+    } else {
+      clearInterval(interval);
+      cursor.remove();
+      if (onDone) onDone();
+    }
+  }, 18);
+}
+
+// ── KPI UPDATES ───────────────────────────────────────────────────────────
+function updateKPIs(priority, privilegeRisk) {
+  const total = parseInt(document.getElementById('kpi-total').textContent) + 1;
+  document.getElementById('kpi-total').textContent = total;
+  const analyzed = parseInt(document.getElementById('kpi-analyzed').textContent) + 1;
+  document.getElementById('kpi-analyzed').textContent = analyzed;
+  if (priority === 'P1' || privilegeRisk === 'HIGH') {
+    const p1 = parseInt(document.getElementById('kpi-p1').textContent) + 1;
+    document.getElementById('kpi-p1').textContent = p1;
+  }
+}
+
+// ── QUEUE ─────────────────────────────────────────────────────────────────
+function addToQueue(matter, docType, priority) {
+  const id = `EP1-${String(docIdCounter++).padStart(4, '0')}`;
+  docQueue.push({ id, matter, docType, priority, ts: new Date() });
+  renderQueue();
+  document.getElementById('tq-count').textContent = `${docQueue.length} document${docQueue.length !== 1 ? 's' : ''}`;
+}
+
+function renderQueue() {
+  const body = document.getElementById('tq-body');
+  const empty = document.getElementById('tq-empty');
+  if (docQueue.length === 0) { empty.style.display = 'flex'; return; }
+  empty.style.display = 'none';
+
+  body.innerHTML = docQueue.map(doc => `
+    <div class="queue-item animate-rise">
+      <div class="qi-top">
+        <span class="qi-id">${doc.id}</span>
+        <span class="qi-pri p${doc.priority.replace('P','').toLowerCase()}">${doc.priority}</span>
+      </div>
+      <div class="qi-matter">${doc.matter}</div>
+      <div class="qi-meta">${doc.docType} · ${doc.ts.toLocaleTimeString()}</div>
+      <div class="qi-bottom">
+        <span class="qi-type">eDiscovery · EP1</span>
+        <span class="qi-escalate" onclick="escalateItem('${doc.id}')">→ Escalate</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function escalateItem(id) { showToast(`Matter ${id} escalated`, 'Routed to Case Strategist'); }
+
+// ── ESCALATE ──────────────────────────────────────────────────────────────
+function escalateToStrategist() {
+  if (!analysisComplete) { showToast('Run AI Triage first', 'Analysis must complete before escalation.'); return; }
+
+  const matter = document.getElementById('f-matter').value || 'Unknown Matter';
+  const docType = document.getElementById('f-doctype').value || 'Unknown Type';
+  addToQueue(matter, docType, currentPriority);
+
+  const escalated = parseInt(document.getElementById('kpi-escalated').textContent) + 1;
+  document.getElementById('kpi-escalated').textContent = escalated;
+
+  // Write relay data for strategist to read
+  try {
+    const relay = {
+      ts: new Date().toISOString(),
+      matter, docType, priority: currentPriority,
+      client: document.getElementById('f-client').value,
+      summary: document.getElementById('f-summary').value,
+      aiOutput: document.getElementById('ai-output').textContent,
+      privilegeRisk: document.getElementById('af-privilege').textContent,
+      action: document.getElementById('af-action').textContent
+    };
+    sessionStorage.setItem('TSM_EDISCO_RELAY', JSON.stringify(relay));
+  } catch(e) {}
+
+  showToast(`${matter} escalated`, `Priority ${currentPriority} · Routed to Case Strategist`);
+  document.getElementById('btn-escalate').style.background = 'var(--green)';
+  document.getElementById('btn-escalate').style.color = 'var(--bg)';
+  setTimeout(() => {
+    document.getElementById('btn-escalate').style.background = '';
+    document.getElementById('btn-escalate').style.color = '';
+  }, 2000);
+}
+
+// ── CLEAR ─────────────────────────────────────────────────────────────────
+function clearForm() {
+  ['f-matter','f-client','f-dates','f-party','f-hold','f-notes'].forEach(id => {
+    const el = document.getElementById(id);
+    el.value = '';
+    el.classList.remove('ai-filled');
+  });
+  ['f-doctype','f-practice'].forEach(id => {
+    document.getElementById(id).value = '';
+    document.getElementById(id).classList.remove('ai-filled');
+  });
+  document.getElementById('f-summary').value = '';
+  document.getElementById('f-summary').classList.remove('ai-filled');
+  document.querySelectorAll('.ai-badge').forEach(b => b.classList.remove('visible'));
+  document.querySelectorAll('.flag-check input').forEach(cb => cb.checked = false);
+  custodians = []; renderCustodians();
+  setPriority('P3');
+  document.getElementById('uploaded-file').classList.remove('visible');
+  document.getElementById('ai-output').innerHTML = '<span class="ai-placeholder">Upload a document to run AI analysis.</span>';
+  document.getElementById('ai-output').classList.remove('active');
+  ['af-privilege','af-relevance','af-action','af-routing'].forEach(id => setAnalysisField(id, '—', ''));
+  setRiskMeter('LOW');
+  document.getElementById('ai-dot').style.cssText = 'background:var(--faint);box-shadow:none;animation:none';
+  document.getElementById('btn-analyze').disabled = true;
+  document.getElementById('btn-escalate').disabled = true;
+  currentFileText = ''; currentFileName = ''; analysisComplete = false;
+  fileInput.value = '';
+}
 </script>
 </body>
 </html>
