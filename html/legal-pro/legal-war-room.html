@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TSM · Legal War Room · Command Index</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #03060d;
+  --bg2:    #06091a;
+  --bg3:    #0a0f22;
+  --bg4:    #0e1530;
+  --border: rgba(255,255,255,0.055);
+  --border2:rgba(255,255,255,0.10);
+  --text:   #dde5f4;
+  --muted:  #5a6f90;
+  --faint:  #1e2d48;
+  --cyan:   #00e5ff;
+  --c2:     rgba(0,229,255,0.07);
+  --green:  #00e676;
+  --g2:     rgba(0,230,118,0.07);
+  --amber:  #ffb300;
+  --a2:     rgba(255,179,0,0.07);
+  --red:    #ff3d57;
+  --r2:     rgba(255,61,87,0.07);
+  --mono:   'JetBrains Mono', monospace;
+  --sans:   'Syne', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100%; background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 13px; overflow-x: hidden; }
+body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: linear-gradient(rgba(0,229,255,0.009) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,0.009) 1px, transparent 1px);
+  background-size: 52px 52px;
+}
+body::after {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 1000;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.018) 2px, rgba(0,0,0,0.018) 4px);
+}
+.hdr {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 32px; height: 52px;
+  background: rgba(3,6,13,0.96); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border2);
+}
+.hdr-brand { display: flex; align-items: baseline; gap: 12px; }
+.hdr-name { font-family: var(--sans); font-size: 16px; font-weight: 800; letter-spacing: 3px; color: var(--text); }
+.hdr-sub { font-size: 7.5px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--muted); }
+.hdr-right { display: flex; align-items: center; gap: 16px; }
+.hdr-indicator { display: flex; align-items: center; gap: 6px; font-size: 8px; letter-spacing: 1px; color: var(--muted); }
+.dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.dot-green { background: var(--green); box-shadow: 0 0 6px var(--green); animation: glow 2.5s ease-in-out infinite; }
+.dot-red   { background: var(--red);   box-shadow: 0 0 6px var(--red); }
+.dot-amber { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+@keyframes glow { 0%, 100% { box-shadow: 0 0 4px currentColor; } 50% { box-shadow: 0 0 12px currentColor; } }
+.hdr-clock { font-size: 11px; color: var(--text); letter-spacing: 1px; min-width: 76px; text-align: right; }
+
+/* TICKER */
+.ticker { background: var(--bg2); border-bottom: 1px solid var(--border); height: 28px; display: flex; align-items: center; overflow: hidden; position: sticky; top: 52px; z-index: 99; }
+.ticker-label { font-size: 7px; letter-spacing: 2px; text-transform: uppercase; color: var(--cyan); padding: 0 14px; border-right: 1px solid var(--border2); white-space: nowrap; flex-shrink: 0; }
+.ticker-scroll { flex: 1; overflow: hidden; }
+.ticker-inner { display: inline-flex; white-space: nowrap; animation: scroll-left 55s linear infinite; }
+@keyframes scroll-left { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+.t-item { display: inline-flex; align-items: center; gap: 5px; font-size: 8px; padding: 0 22px; color: var(--muted); border-right: 1px solid var(--border); }
+.t-val { color: var(--text); font-weight: 600; }
+.t-val.up { color: var(--green); }
+.t-val.down { color: var(--red); }
+.t-val.warn { color: var(--amber); }
+
+.main { position: relative; z-index: 10; padding: 28px 32px 60px; max-width: 1560px; margin: 0 auto; }
+
+.sec { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; margin-top: 32px; }
+.sec::before { content: ''; width: 4px; height: 4px; background: var(--cyan); transform: rotate(45deg); flex-shrink: 0; }
+.sec-label { font-size: 7.5px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--cyan); }
+.sec::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.sec.red-sec::before { background: var(--red); }
+.sec.red-sec .sec-label { color: var(--red); }
+.sec.amber-sec::before { background: var(--amber); }
+.sec.amber-sec .sec-label { color: var(--amber); }
+.sec.green-sec::before { background: var(--green); }
+.sec.green-sec .sec-label { color: var(--green); }
+
+/* WAR ROOM HERO */
+.war-room-hero {
+  display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1px;
+  background: var(--border2); border: 1px solid var(--border2);
+  margin-bottom: 4px; animation: rise 0.4s ease;
+}
+@keyframes rise { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+.hero-cell { background: var(--bg2); padding: 22px 24px; display: flex; flex-direction: column; gap: 6px; position: relative; overflow: hidden; cursor: pointer; transition: background 0.2s; }
+.hero-cell:hover { background: var(--bg3); }
+.hero-cell::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: currentColor; opacity: 0.15; }
+.hero-cell.red-accent { color: var(--red); }
+.hero-cell.amber-accent { color: var(--amber); }
+.hero-cell.green-accent { color: var(--green); }
+.hero-cell.cyan-accent { color: var(--cyan); }
+.hero-cell::after { background: currentColor; }
+.hero-label { font-size: 7px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+.hero-val { font-family: var(--sans); font-size: 36px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
+.hero-sub { font-size: 8.5px; color: var(--muted); }
+.hero-delta { font-size: 8px; font-weight: 700; }
+
+/* SCENARIO CARDS */
+.scenario-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+.scenario-card {
+  background: var(--bg2); border: 1px solid var(--border2);
+  padding: 0; cursor: pointer; transition: border-color 0.2s, background 0.2s;
+  animation: rise 0.4s ease 0.08s both; text-decoration: none;
+  display: flex; flex-direction: column;
+}
+.scenario-card:hover { border-color: var(--cyan); background: var(--bg3); }
+.scenario-card:hover .sc-arrow { color: var(--cyan); }
+.sc-hdr { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.sc-type { font-size: 7px; letter-spacing: 2px; text-transform: uppercase; padding: 3px 8px; border: 1px solid; }
+.sc-type.lit  { color: var(--red);   border-color: var(--red);   background: var(--r2); }
+.sc-type.reg  { color: var(--amber); border-color: var(--amber); background: var(--a2); }
+.sc-type.emp  { color: var(--cyan);  border-color: var(--cyan);  background: var(--c2); }
+.sc-type.con  { color: var(--green); border-color: var(--green); background: var(--g2); }
+.sc-type.comp { color: var(--muted); border-color: var(--muted); background: rgba(90,111,144,0.07); }
+.sc-arrow { font-size: 14px; color: var(--faint); transition: color 0.2s; }
+.sc-body { padding: 14px 16px; flex: 1; }
+.sc-title { font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 5px; letter-spacing: 0.2px; }
+.sc-desc { font-size: 8.5px; color: var(--muted); line-height: 1.6; margin-bottom: 10px; }
+.sc-meta { display: flex; gap: 14px; }
+.sc-meta-item { display: flex; flex-direction: column; gap: 2px; }
+.sc-meta-label { font-size: 6.5px; letter-spacing: 1px; text-transform: uppercase; color: var(--faint); }
+.sc-meta-val { font-size: 9px; font-weight: 700; }
+.sc-footer { padding: 10px 16px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+.sc-node { font-size: 7px; letter-spacing: 1px; color: var(--faint); padding: 2px 6px; border: 1px solid var(--border); }
+.sc-node.active { color: var(--green); border-color: rgba(0,230,118,0.3); }
+
+/* NODE DIRECTORY */
+.node-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 1px; background: var(--border2); border: 1px solid var(--border2); animation: rise 0.4s ease 0.12s both; }
+.node-cell { background: var(--bg2); padding: 14px 12px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; transition: background 0.2s; text-decoration: none; }
+.node-cell:hover { background: var(--bg3); }
+.node-cell:hover .node-name { color: var(--cyan); }
+.node-icon { font-size: 16px; margin-bottom: 2px; }
+.node-name { font-size: 8px; font-weight: 700; letter-spacing: 0.5px; color: var(--text); transition: color 0.2s; }
+.node-desc { font-size: 7px; color: var(--faint); line-height: 1.4; }
+.node-status { display: flex; align-items: center; gap: 4px; font-size: 6.5px; color: var(--muted); margin-top: 2px; }
+.node-count { font-size: 9px; font-weight: 700; }
+
+/* FLOW DIAGRAM */
+.flow-strip {
+  display: flex; align-items: center; justify-content: center; gap: 0;
+  background: var(--bg2); border: 1px solid var(--border2); padding: 16px 24px;
+  animation: rise 0.4s ease 0.16s both; overflow-x: auto;
+}
+.flow-node { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 18px; border: 1px solid var(--border2); background: var(--bg3); cursor: pointer; transition: border-color 0.2s; text-decoration: none; min-width: 100px; }
+.flow-node:hover { border-color: var(--cyan); }
+.flow-node-label { font-size: 6.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+.flow-node-name { font-size: 9px; font-weight: 700; color: var(--text); text-align: center; }
+.flow-arrow { font-size: 18px; color: var(--faint); padding: 0 8px; flex-shrink: 0; }
+.flow-arrow.live { color: var(--green); animation: pulse-arr 2s infinite; }
+@keyframes pulse-arr { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+/* ACTIVE MATTERS TABLE */
+.matters-table { width: 100%; border-collapse: collapse; font-size: 9px; }
+.matters-table th { text-align: left; color: var(--muted); padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 7px; letter-spacing: 1.5px; text-transform: uppercase; }
+.matters-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--muted); }
+.matters-table tr:last-child td { border-bottom: none; }
+.matters-table td:first-child { color: var(--text); font-weight: 600; }
+.matters-table tr { transition: background 0.15s; cursor: pointer; }
+.matters-table tr:hover td { background: var(--bg3); }
+.risk-pill { display: inline-block; font-size: 7px; letter-spacing: 0.8px; text-transform: uppercase; padding: 2px 7px; border: 1px solid; }
+.rp-critical { color: var(--red);   border-color: var(--red);   background: var(--r2); }
+.rp-high     { color: var(--amber); border-color: var(--amber); background: var(--a2); }
+.rp-medium   { color: var(--cyan);  border-color: var(--cyan);  background: var(--c2); }
+.rp-low      { color: var(--green); border-color: var(--green); background: var(--g2); }
+.phase-bar { display: inline-block; width: 60px; height: 4px; background: var(--bg); border-radius: 2px; vertical-align: middle; position: relative; overflow: hidden; }
+.phase-fill { height: 100%; border-radius: 2px; position: absolute; left: 0; }
+
+/* BNCA STRIP */
+.bnca-strip { background: var(--bg2); border: 1px solid var(--border2); display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background-color: var(--border2); animation: rise 0.4s ease 0.2s both; }
+.bnca-cell { background: var(--bg2); padding: 14px 18px; }
+.bnca-cell-label { font-size: 7px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.bnca-cell-content { font-size: 9.5px; line-height: 1.75; color: var(--muted); }
+.bnca-cell-content strong { color: var(--text); }
+.hl-r { color: var(--red); font-weight: 700; }
+.hl-g { color: var(--green); font-weight: 700; }
+.hl-a { color: var(--amber); font-weight: 700; }
+.hl-c { color: var(--cyan); font-weight: 700; }
+
+/* DECISIONS */
+.decisions { display: flex; flex-direction: column; gap: 1px; border: 1px solid var(--border2); background: var(--border2); animation: rise 0.4s ease; }
+.decision-item { display: flex; align-items: center; gap: 16px; background: var(--bg2); padding: 13px 18px; }
+.d-urgency { font-size: 7px; letter-spacing: 1.2px; text-transform: uppercase; padding: 3px 8px; border: 1px solid; flex-shrink: 0; min-width: 60px; text-align: center; }
+.d-u1 { color: var(--red);   border-color: var(--red);   background: var(--r2); }
+.d-u2 { color: var(--amber); border-color: var(--amber); background: var(--a2); }
+.d-u3 { color: var(--cyan);  border-color: var(--cyan);  background: var(--c2); }
+.d-action { flex: 1; font-size: 10px; font-weight: 600; color: var(--text); letter-spacing: 0.3px; }
+.d-context { font-size: 8.5px; color: var(--muted); margin-top: 2px; }
+.d-value { font-family: var(--sans); font-size: 18px; font-weight: 800; flex-shrink: 0; text-align: right; }
+.d-deadline { font-size: 8px; color: var(--muted); text-align: right; flex-shrink: 0; min-width: 70px; }
+.d-deadline.hot { color: var(--red); font-weight: 600; }
+.d-deadline.warn { color: var(--amber); font-weight: 600; }
+
+.statusbar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 200; height: 28px; background: rgba(3,6,13,0.97); backdrop-filter: blur(8px); border-top: 1px solid var(--border); display: flex; align-items: center; gap: 14px; padding: 0 20px; font-size: 7.5px; color: var(--faint); letter-spacing: 1px; }
+.sb-sep { color: var(--border2); }
+.sb-right { margin-left: auto; }
+
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+.tag-live { animation: blink 1.4s step-end infinite; }
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-brand">
+    <div class="hdr-name">TSM</div>
+    <div class="hdr-sub">Legal War Room · Command Index</div>
+  </div>
+  <div class="hdr-right">
+    <div class="hdr-indicator"><div class="dot dot-red"></div><span>7 Actions Required</span></div>
+    <div class="hdr-indicator"><div class="dot dot-green"></div><span>9/9 Legal Nodes Online</span></div>
+    <div class="hdr-clock" id="clock">--:--:--</div>
+  </div>
+</header>
+
+<div class="ticker">
+  <div class="ticker-label">WAR ROOM</div>
+  <div class="ticker-scroll"><div class="ticker-inner" id="ticker-inner"></div></div>
+</div>
+
+<div class="main">
+
+  <!-- HERO METRICS -->
+  <div class="war-room-hero">
+    <div class="hero-cell red-accent">
+      <div class="hero-label">Total Legal Exposure</div>
+      <div class="hero-val">$28.4M</div>
+      <div class="hero-delta" style="color:var(--red)">↑ $2.1M vs last quarter</div>
+      <div class="hero-sub">412 active matters</div>
+    </div>
+    <div class="hero-cell amber-accent">
+      <div class="hero-label">High-Risk Matters</div>
+      <div class="hero-val">41</div>
+      <div class="hero-delta" style="color:var(--amber)">↑ 8 new this month</div>
+      <div class="hero-sub">Executive visibility required</div>
+    </div>
+    <div class="hero-cell green-accent">
+      <div class="hero-label">Case Success Rate</div>
+      <div class="hero-val">78%</div>
+      <div class="hero-delta" style="color:var(--green)">↑ 4% vs Q1 avg</div>
+      <div class="hero-sub">Portfolio weighted average</div>
+    </div>
+    <div class="hero-cell cyan-accent">
+      <div class="hero-label">Settlement Pipeline</div>
+      <div class="hero-val">73</div>
+      <div class="hero-delta" style="color:var(--cyan)">$12.4M in negotiation</div>
+      <div class="hero-sub">Active settlement opportunities</div>
+    </div>
+  </div>
+
+  <!-- COMMAND FLOW -->
+  <div class="sec">
+    <div class="sec-label">Command Architecture · Data Flow</div>
+  </div>
+  <div class="flow-strip">
+    <a class="flow-node" href="index.html">
+      <div class="flow-node-label">Entry</div>
+      <div class="flow-node-name">Legal War Room</div>
+    </a>
+    <div class="flow-arrow live">→</div>
+    <a class="flow-node" href="legal-analyst-pro.html">
+      <div class="flow-node-label">Analysis</div>
+      <div class="flow-node-name">Legal Analyst</div>
+    </a>
+    <div class="flow-arrow live">→</div>
+    <a class="flow-node" href="bpo-legal.html">
+      <div class="flow-node-label">Operations</div>
+      <div class="flow-node-name">BPO Legal Ops</div>
+    </a>
+    <div class="flow-arrow live">→</div>
+    <a class="flow-node" href="legal-account.html">
+      <div class="flow-node-label">Billing</div>
+      <div class="flow-node-name">Legal Accounting</div>
+    </a>
+    <div class="flow-arrow live">→</div>
+    <a class="flow-node" href="ep1.html">
+      <div class="flow-node-label">Discovery</div>
+      <div class="flow-node-name">eDiscovery Node</div>
+    </a>
+    <div class="flow-arrow live">→</div>
+    <a class="flow-node" href="legal-main-strategist.html" style="border-color:var(--cyan)">
+      <div class="flow-node-label" style="color:var(--cyan)">Strategist</div>
+      <div class="flow-node-name" style="color:var(--cyan)">Case Strategist</div>
+    </a>
+    <div class="flow-arrow live">→</div>
+    <a class="flow-node" href="legal-executive-portal.html" style="border-color:var(--amber)">
+      <div class="flow-node-label" style="color:var(--amber)">Command</div>
+      <div class="flow-node-name" style="color:var(--amber)">Chief Strategist</div>
+    </a>
+  </div>
+
+  <!-- ACTIVE SCENARIOS -->
+  <div class="sec red-sec" style="margin-top:24px">
+    <div class="sec-label">Active War Room Scenarios · Live Engagement</div>
+  </div>
+  <div class="scenario-grid">
+
+    <a class="scenario-card" href="ep1.html">
+      <div class="sc-hdr">
+        <span class="sc-type lit">LITIGATION</span>
+        <span class="sc-arrow">→</span>
+      </div>
+      <div class="sc-body">
+        <div class="sc-title">Employment Class Action Defense</div>
+        <div class="sc-desc">Multi-plaintiff wage and hour claims. Discovery phase active. Outside counsel engaged. Settlement authority pending executive approval.</div>
+        <div class="sc-meta">
+          <div class="sc-meta-item"><div class="sc-meta-label">Exposure</div><div class="sc-meta-val" style="color:var(--red)">$8.4M</div></div>
+          <div class="sc-meta-item"><div class="sc-meta-label">Phase</div><div class="sc-meta-val" style="color:var(--amber)">Discovery</div></div>
+          <div class="sc-meta-item"><div class="sc-meta-label">Deadline</div><div class="sc-meta-val" style="color:var(--red)">12 days</div></div>
+        </div>
+      </div>
+      <div class="sc-footer">
+        <span class="sc-node active">EP1</span>
+        <span class="sc-node active">ANALYST</span>
+        <span class="sc-node active">STRATEGIST</span>
+      </div>
+    </a>
+
+    <a class="scenario-card" href="bpo-legal.html">
+      <div class="sc-hdr">
+        <span class="sc-type reg">REGULATORY</span>
+        <span class="sc-arrow">→</span>
+      </div>
+      <div class="sc-body">
+        <div class="sc-title">State Agency Regulatory Inquiry</div>
+        <div class="sc-desc">Coordinated response to multi-agency inquiry. Response package complete and staged. Requires executive signature within 48 hours of formal submission.</div>
+        <div class="sc-meta">
+          <div class="sc-meta-item"><div class="sc-meta-label">Exposure</div><div class="sc-meta-val" style="color:var(--amber)">$5.2M</div></div>
+          <div class="sc-meta-item"><div class="sc-meta-label">Phase</div><div class="sc-meta-val" style="color:var(--red)">Response</div></div>
+          <div class="sc-meta-item"><div class="sc-meta-label">Deadline</div><div class="sc-meta-val" style="color:var(--red)">48 hrs</div></div>
+        </div>
+      </div>
+      <div class="sc-footer">
+        <span class="sc-node active">BPO-LEGAL</span>
+        <span class="sc-node active">COMPLIANCE</span>
+        <span class="sc-node active">STRATEGIST</span>
+      </div>
+    </a>
+
+    <a class="scenario-card" href="legal-analyst-pro.html">
+      <div class="sc-hdr">
+        <span class="sc-type con">CONTRACTS</span>
+        <span class="sc-arrow">→</span>
+      </div>
+      <div class="sc-body">
+        <div class="sc-title">Vendor Contract Dispute — $6.1M Liability</div>
+        <div class="sc-desc">Breach of contract claim filed by primary vendor. Counterclaim prepared. Mediation scheduled. Early resolution pathway identified by strategist.</div>
+        <div class="sc-meta">
+          <div class="sc-meta-item"><div class="sc-meta-label">Exposure</div><div class="sc-meta-val" style="color:var(--amber)">$6.1M</div></div>
+          <div class="sc-meta-item"><div class="sc-meta-label">Phase</div><div class="sc-meta-val">Mediation</div></div>
+          <div class="sc-meta-item"><div class="sc-meta-label">Conf.</div><div class="sc-meta-val" style="color:var(--green)">18 days</div></div>
+        </div>
+      </div>
+      <div class="sc-footer">
+        <span class="sc-node active">ANALYST</span>
+        <span class="sc-node active">ACCOUNTING</span>
+        <span class="sc-node">EXEC</span>
+      </div>
+    </a>
+
+    <a class="scenario-card" href="legal-account.html">
+      <div class="sc-hdr">
+        <span class="sc-type emp">EMPLOYMENT</span>
+        <span class="sc-arrow">→</span>
+      </div>
+      <div class="sc-body">
+        <div class="sc-title">Executive Termination Dispute — EEOC Filing</div>
+        <div class="sc-desc">Wrongful termination and discrimination charges filed by former director. EEOC mediation phase. Settlement authority requested at $850K vs estimated $2.1M litigation cost.</div>
+        <div class="sc-meta">
+          <div class="sc-meta-item"><div class="sc-meta-label">Exposure</div><div class="sc-meta-val" style="color:var(--red)">$2.1M</div></div>
+          <div class="sc-meta-item"><div class="sc-meta-label">Settle</div><div class="sc-meta-val" style="color:var(--green)">$850K</div></div>
+          <div class="sc-meta-item"><div class="sc-meta-label">Deadline</div><div class="sc-meta-val" style="color:var(--red)">Today</div></div>
+        </div>
+      </div>
+      <div class="sc-footer">
+        <span class="sc-node active">ACCOUNTING</span>
+        <span class="sc-node active">HR-NODE</span>
+        <span class="sc-node active">EXEC</span>
+      </div>
+    </a>
+
+    <a class="scenario-card" href="finops-accounting.html">
+      <div class="sc-hdr">
+        <span class="sc-type comp">COMPLIANCE</span>
+        <span class="sc-arrow">→</span>
+      </div>
+      <div class="sc-body">
+        <div class="sc-title">Stark Law Vendor Compliance Review</div>
+        <div class="sc-desc">Two vendors flagged on OIG watchlist during annual review. Legal analysis in progress. Self-disclosure pathway being evaluated vs proactive remediation approach.</div>
+        <div class="sc-meta">
+          <div class="sc-meta-item"><div class="sc-meta-label">Risk</div><div class="sc-meta-val" style="color:var(--amber)">$2.0M</div></div>
+          <div class="sc-meta-item"><div class="sc-meta-label">Phase</div><div class="sc-meta-val">Analysis</div></div>
+          <div class="sc-meta-item"><div class="sc-meta-label">Deadline</div><div class="sc-meta-val">45 days</div></div>
+        </div>
+      </div>
+      <div class="sc-footer">
+        <span class="sc-node active">FINOPS</span>
+        <span class="sc-node active">COMPLIANCE</span>
+        <span class="sc-node">STRATEGIST</span>
+      </div>
+    </a>
+
+    <a class="scenario-card" href="ep1.html">
+      <div class="sc-hdr">
+        <span class="sc-type lit">LITIGATION</span>
+        <span class="sc-arrow">→</span>
+      </div>
+      <div class="sc-body">
+        <div class="sc-title">Federal Motion Filing — Discovery Overflow</div>
+        <div class="sc-desc">14 active discovery matters exceeding internal review capacity. Motion for extension pending. Outside counsel cost authorization needed. Staffing expansion under review.</div>
+        <div class="sc-meta">
+          <div class="sc-meta-item"><div class="sc-meta-label">Matters</div><div class="sc-meta-val" style="color:var(--amber)">14</div></div>
+          <div class="sc-meta-item"><div class="sc-meta-label">Motion</div><div class="sc-meta-val">5 days</div></div>
+          <div class="sc-meta-item"><div class="sc-meta-label">Cutoff</div><div class="sc-meta-val" style="color:var(--red)">12 days</div></div>
+        </div>
+      </div>
+      <div class="sc-footer">
+        <span class="sc-node active">EP1</span>
+        <span class="sc-node active">ANALYST</span>
+        <span class="sc-node active">OC-NODE</span>
+      </div>
+    </a>
+
+  </div>
+
+  <!-- NODE DIRECTORY -->
+  <div class="sec amber-sec">
+    <div class="sec-label">Legal Node Directory · 9/9 Online</div>
+  </div>
+  <div class="node-grid">
+    <a class="node-cell" href="ep1.html">
+      <div class="node-icon">⚖</div>
+      <div class="node-name">eDiscovery</div>
+      <div class="node-desc">Document review, ESI, hold notices</div>
+      <div class="node-status"><div class="dot dot-green" style="width:5px;height:5px"></div>ONLINE</div>
+      <div class="node-count" style="color:var(--cyan)">14</div>
+    </a>
+    <a class="node-cell" href="legal-analyst-pro.html">
+      <div class="node-icon">🔍</div>
+      <div class="node-name">Legal Analyst</div>
+      <div class="node-desc">Research, brief drafting, case law</div>
+      <div class="node-status"><div class="dot dot-green" style="width:5px;height:5px"></div>ONLINE</div>
+      <div class="node-count" style="color:var(--green)">87</div>
+    </a>
+    <a class="node-cell" href="bpo-legal.html">
+      <div class="node-icon">🏢</div>
+      <div class="node-name">BPO Legal Ops</div>
+      <div class="node-desc">Intake, triage, workflow routing</div>
+      <div class="node-status"><div class="dot dot-green" style="width:5px;height:5px"></div>ONLINE</div>
+      <div class="node-count" style="color:var(--text)">122</div>
+    </a>
+    <a class="node-cell" href="legal-account.html">
+      <div class="node-icon">💼</div>
+      <div class="node-name">Legal Billing</div>
+      <div class="node-desc">Matter billing, outside counsel spend</div>
+      <div class="node-status"><div class="dot dot-green" style="width:5px;height:5px"></div>ONLINE</div>
+      <div class="node-count" style="color:var(--amber)">$1.8M</div>
+    </a>
+    <a class="node-cell" href="finops-accounting.html">
+      <div class="node-icon">📊</div>
+      <div class="node-name">FinOps</div>
+      <div class="node-desc">Budget tracking, exposure modeling</div>
+      <div class="node-status"><div class="dot dot-green" style="width:5px;height:5px"></div>ONLINE</div>
+      <div class="node-count" style="color:var(--red)">$28.4M</div>
+    </a>
+    <a class="node-cell" href="#">
+      <div class="node-icon">📋</div>
+      <div class="node-name">Compliance</div>
+      <div class="node-desc">Regulatory tracking, CMS, HIPAA</div>
+      <div class="node-status"><div class="dot dot-green" style="width:5px;height:5px"></div>ONLINE</div>
+      <div class="node-count" style="color:var(--amber)">16</div>
+    </a>
+    <a class="node-cell" href="#">
+      <div class="node-icon">🤝</div>
+      <div class="node-name">Settlement</div>
+      <div class="node-desc">Negotiation tracking, authority queue</div>
+      <div class="node-status"><div class="dot dot-green" style="width:5px;height:5px"></div>ONLINE</div>
+      <div class="node-count" style="color:var(--green)">73</div>
+    </a>
+    <a class="node-cell" href="legal-main-strategist.html" style="border-bottom:1px solid rgba(0,229,255,0.2)">
+      <div class="node-icon">🧠</div>
+      <div class="node-name">Case Strategist</div>
+      <div class="node-desc">AI synthesis, portfolio intel</div>
+      <div class="node-status"><div class="dot dot-green" style="width:5px;height:5px"></div>ONLINE</div>
+      <div class="node-count" style="color:var(--cyan)">LIVE</div>
+    </a>
+    <a class="node-cell" href="legal-executive-portal.html" style="border-bottom:1px solid rgba(255,179,0,0.2)">
+      <div class="node-icon">⭐</div>
+      <div class="node-name">Chief Strategist</div>
+      <div class="node-desc">Executive command, HITL decisions</div>
+      <div class="node-status"><div class="dot dot-amber" style="width:5px;height:5px;background:var(--amber);box-shadow:0 0 6px var(--amber)"></div>EXEC</div>
+      <div class="node-count" style="color:var(--amber)">7 REQ</div>
+    </a>
+  </div>
+
+  <!-- PRIORITY ACTIONS -->
+  <div class="sec red-sec" style="margin-top:24px">
+    <div class="sec-label">Priority Actions — Escalated to War Room</div>
+  </div>
+  <div class="decisions">
+    <div class="decision-item">
+      <div class="d-urgency d-u1">AUTHORIZE</div>
+      <div>
+        <div class="d-action">Settlement Authority — Employment Matter (EEOC)</div>
+        <div class="d-context">Counsel recommends $850K settlement vs $2.1M trial risk · Authority request staged</div>
+      </div>
+      <div class="d-value" style="color:var(--red)">$850K</div>
+      <div class="d-deadline hot">Today</div>
+    </div>
+    <div class="decision-item">
+      <div class="d-urgency d-u1">ESCALATE</div>
+      <div>
+        <div class="d-action">Regulatory Inquiry Response Package — State Agency</div>
+        <div class="d-context">Response package complete · Executive signature required · Hard 48-hour window</div>
+      </div>
+      <div class="d-value" style="color:var(--red)">HIGH</div>
+      <div class="d-deadline hot">48 hrs</div>
+    </div>
+    <div class="decision-item">
+      <div class="d-urgency d-u2">REVIEW</div>
+      <div>
+        <div class="d-action">Discovery Staffing Expansion — 14 Matters Backlogged</div>
+        <div class="d-context">Outside counsel authorization or headcount expansion needed · Motion filing in 5 days</div>
+      </div>
+      <div class="d-value" style="color:var(--amber)">14 Matters</div>
+      <div class="d-deadline warn">This Week</div>
+    </div>
+    <div class="decision-item">
+      <div class="d-urgency d-u2">APPROVE</div>
+      <div>
+        <div class="d-action">Outside Counsel Spend Authorization Q2</div>
+        <div class="d-context">Current spend $1.8M · Projected $2.4M · Budget variance requires exec sign-off</div>
+      </div>
+      <div class="d-value" style="color:var(--amber)">$2.4M</div>
+      <div class="d-deadline warn">30 days</div>
+    </div>
+  </div>
+
+  <!-- ACTIVE MATTERS TABLE -->
+  <div class="sec amber-sec" style="margin-top:24px">
+    <div class="sec-label">Active Matter Register · Top 8 by Exposure</div>
+  </div>
+  <div class="panel" style="background:var(--bg2);border:1px solid var(--border2);animation:rise 0.4s ease 0.1s both">
+    <div style="padding:0">
+      <table class="matters-table">
+        <thead>
+          <tr>
+            <th>Matter</th>
+            <th>Type</th>
+            <th>Practice Group</th>
+            <th>Exposure</th>
+            <th>Phase</th>
+            <th>Progress</th>
+            <th>Risk</th>
+            <th>Next Deadline</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr onclick="window.location='ep1.html'">
+            <td>Employment Class Action</td>
+            <td style="color:var(--muted)">Litigation</td>
+            <td>Employment</td>
+            <td style="color:var(--red);font-weight:700">$8.4M</td>
+            <td>Discovery</td>
+            <td><div class="phase-bar"><div class="phase-fill" style="width:45%;background:var(--amber)"></div></div></td>
+            <td><span class="risk-pill rp-critical">CRITICAL</span></td>
+            <td style="color:var(--red)">12 days</td>
+          </tr>
+          <tr onclick="window.location='legal-analyst-pro.html'">
+            <td>Vendor Contract Dispute</td>
+            <td style="color:var(--muted)">Commercial</td>
+            <td>Contracts</td>
+            <td style="color:var(--amber);font-weight:700">$6.1M</td>
+            <td>Mediation</td>
+            <td><div class="phase-bar"><div class="phase-fill" style="width:60%;background:var(--cyan)"></div></div></td>
+            <td><span class="risk-pill rp-high">HIGH</span></td>
+            <td style="color:var(--amber)">18 days</td>
+          </tr>
+          <tr onclick="window.location='bpo-legal.html'">
+            <td>State Regulatory Inquiry</td>
+            <td style="color:var(--muted)">Regulatory</td>
+            <td>Regulatory</td>
+            <td style="color:var(--amber);font-weight:700">$5.2M</td>
+            <td>Response</td>
+            <td><div class="phase-bar"><div class="phase-fill" style="width:85%;background:var(--red)"></div></div></td>
+            <td><span class="risk-pill rp-critical">CRITICAL</span></td>
+            <td style="color:var(--red)">48 hrs</td>
+          </tr>
+          <tr>
+            <td>EEOC Director Dispute</td>
+            <td style="color:var(--muted)">Employment</td>
+            <td>Employment</td>
+            <td style="color:var(--red);font-weight:700">$2.1M</td>
+            <td>Settlement</td>
+            <td><div class="phase-bar"><div class="phase-fill" style="width:90%;background:var(--green)"></div></div></td>
+            <td><span class="risk-pill rp-high">HIGH</span></td>
+            <td style="color:var(--red)">Today</td>
+          </tr>
+          <tr>
+            <td>Compliance Risk Assessment</td>
+            <td style="color:var(--muted)">Compliance</td>
+            <td>Compliance</td>
+            <td style="color:var(--amber);font-weight:700">$2.0M</td>
+            <td>Analysis</td>
+            <td><div class="phase-bar"><div class="phase-fill" style="width:30%;background:var(--cyan)"></div></div></td>
+            <td><span class="risk-pill rp-medium">MEDIUM</span></td>
+            <td>45 days</td>
+          </tr>
+          <tr>
+            <td>Federal Motion — Discovery</td>
+            <td style="color:var(--muted)">Litigation</td>
+            <td>Employment</td>
+            <td style="color:var(--muted);font-weight:700">$1.1M</td>
+            <td>Pre-Trial</td>
+            <td><div class="phase-bar"><div class="phase-fill" style="width:20%;background:var(--amber)"></div></div></td>
+            <td><span class="risk-pill rp-medium">MEDIUM</span></td>
+            <td style="color:var(--amber)">5 days</td>
+          </tr>
+          <tr>
+            <td>IP License Dispute</td>
+            <td style="color:var(--muted)">IP</td>
+            <td>Contracts</td>
+            <td style="color:var(--muted);font-weight:700">$840K</td>
+            <td>Negotiation</td>
+            <td><div class="phase-bar"><div class="phase-fill" style="width:50%;background:var(--cyan)"></div></div></td>
+            <td><span class="risk-pill rp-low">LOW</span></td>
+            <td>60 days</td>
+          </tr>
+          <tr>
+            <td>Subcontractor Lien Release</td>
+            <td style="color:var(--muted)">Construction</td>
+            <td>Contracts</td>
+            <td style="color:var(--muted);font-weight:700">$320K</td>
+            <td>Resolution</td>
+            <td><div class="phase-bar"><div class="phase-fill" style="width:75%;background:var(--green)"></div></div></td>
+            <td><span class="risk-pill rp-low">LOW</span></td>
+            <td>21 days</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- BNCA STRIP -->
+  <div class="sec green-sec" style="margin-top:24px">
+    <div class="sec-label">BNCA War Room Intelligence · <span style="font-weight:400;color:var(--muted)">Auto-generated · Last run <span id="last-run">just now</span></span></div>
+  </div>
+  <div class="bnca-strip">
+    <div class="bnca-cell">
+      <div class="bnca-cell-label">Portfolio Position</div>
+      <div class="bnca-cell-content">
+        <span class="hl-r">$28.4M total exposure</span> across 412 active matters. Employment litigation leads at <strong>38%</strong> of portfolio risk. <span class="hl-a">41 high-risk matters</span> require active executive oversight. Settlement pipeline at <span class="hl-g">$12.4M</span> represents the fastest path to exposure reduction this quarter.
+      </div>
+    </div>
+    <div class="bnca-cell">
+      <div class="bnca-cell-label">Legal Intelligence</div>
+      <div class="bnca-cell-content">
+        Employment claims up <span class="hl-r">18%</span> YTD — systemic pattern across HR function suggests process gap, not isolated incidents. Regulatory inquiry volume elevated across all verticals. <span class="hl-a">Discovery workloads growing</span> faster than internal capacity. Early settlement continues to show <span class="hl-g">highest ROI</span> at 3.2× litigation cost avoidance.
+      </div>
+    </div>
+    <div class="bnca-cell">
+      <div class="bnca-cell-label">War Room Priorities</div>
+      <div class="bnca-cell-content">
+        <span class="hl-r">Authorize EEOC settlement today</span> — $850K now vs $2.1M trial risk. <span class="hl-a">Sign regulatory response</span> within 48 hours or trigger contempt exposure. <span class="hl-a">Expand discovery staffing</span> before motion deadline in 5 days. Strategist and Chief Strategist nodes standing by for deeper analysis.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="statusbar">
+  <div class="dot dot-green" style="width:5px;height:5px"></div>
+  <span>TSM · Legal War Room</span>
+  <span class="sb-sep">·</span>
+  <span>9/9 Legal Nodes Online</span>
+  <span class="sb-sep">·</span>
+  <span id="status-date">—</span>
+  <span class="sb-sep">·</span>
+  <span>Legal Intelligence Engine Active · BNCA Sync Live</span>
+  <div class="sb-right">TSM OS v4.1 · Railway</div>
+</div>
+
+<script>
+function tick() {
+  const now = new Date();
+  document.getElementById('clock').textContent = now.toLocaleTimeString('en-US', { hour12: false });
+  document.getElementById('status-date').textContent = now.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric' });
+}
+setInterval(tick, 1000); tick();
+document.getElementById('last-run').textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
+
+const TICKS = [
+  { l:'Total Exposure', v:'$28.4M', c:'down' },
+  { l:'Active Matters', v:'412', c:'' },
+  { l:'High-Risk Matters', v:'41', c:'warn' },
+  { l:'Case Success Rate', v:'78%', c:'up' },
+  { l:'Settlement Pipeline', v:'73', c:'up' },
+  { l:'Outside Counsel Spend', v:'$1.8M', c:'warn' },
+  { l:'Employment Exposure', v:'$8.4M', c:'down' },
+  { l:'Discovery Backlog', v:'14 matters', c:'warn' },
+  { l:'Avg Resolution', v:'74 days', c:'warn' },
+  { l:'Settlement Conversion', v:'42%', c:'warn' },
+  { l:'Regulatory Cases', v:'16 active', c:'down' },
+  { l:'Compliance Risk', v:'$2.0M', c:'warn' },
+  { l:'BNCA Confidence', v:'88%', c:'up' },
+  { l:'Nodes Online', v:'9/9', c:'up' },
+];
+const inner = document.getElementById('ticker-inner');
+const html = TICKS.map(t => `<span class="t-item">${t.l}&nbsp;<span class="t-val ${t.c}">${t.v}</span></span>`).join('');
+inner.innerHTML = html + html;
+</script>
+</body>
+</html>
