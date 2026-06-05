@@ -63,11 +63,12 @@ async function groqChat(system, user, maxTokens) {
 // JSON-returning variant for structured routes
 async function tsmAIJSON(prompt, fallback) {
   try {
-    if (!process.env.GROQ_API_KEY) throw new Error('GROQ_API_KEY missing');
+    const groqKey = process.env.GROQ_KEY || process.env.GROQ_API_KEY;
+  if (!groqKey) return res.status(500).json({ error: 'GROQ_KEY not configured on server.' });
     const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer ' + process.env.GROQ_API_KEY,
+        'Authorization': 'Bearer ' + groqKey,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
