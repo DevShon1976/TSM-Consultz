@@ -235,7 +235,8 @@ if (!groqKey) return res.status(500).json({ error: 'GROQ_KEY not configured on s
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
-    groqRes.body.pipe(res);
+    const { Readable } = require('stream');
+    Readable.fromWeb(groqRes.body).pipe(res);
   } catch(e) {
     res.status(500).json({ error: e.message });
   }
