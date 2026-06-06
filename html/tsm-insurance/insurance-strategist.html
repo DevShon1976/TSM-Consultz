@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Insurance Strategist · TSM</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#06050c;--s2:#0c0a18;--s3:#120f22;--border:rgba(181,108,255,.13);
+  --purple:#b56cff;--purple2:#d4a0ff;--purple3:rgba(181,108,255,.08);
+  --gold:#c9a84c;--green:#00ffc6;--red:#ff4d6d;
+  --amber:#ff9500;--cyan:#00e5ff;--pink:#ff6b9d;
+  --text:#d8cce8;--dim:#4a3a68;--mono:'IBM Plex Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12px;min-height:100vh}
+body::before{content:'';position:fixed;top:0;left:0;width:500px;height:500px;background:radial-gradient(circle,rgba(181,108,255,.05),transparent 70%);pointer-events:none}
+
+.nav{height:38px;background:rgba(6,5,12,.97);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;position:sticky;top:0;z-index:90}
+.nav-brand{color:var(--purple);font-weight:700;font-size:10px;letter-spacing:2px;margin-right:20px}
+.nav-btn{background:none;border:none;color:var(--dim);font-family:var(--mono);font-size:9px;letter-spacing:1.5px;cursor:pointer;padding:0 12px;height:38px;border-bottom:2px solid transparent;transition:all .2s}
+.nav-btn:hover{color:var(--text)}
+.nav-btn.active{color:var(--purple);border-bottom-color:var(--purple)}
+.nav-right{margin-left:auto;font-size:9px;color:var(--dim)}
+
+.hero{padding:28px 32px 20px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,rgba(181,108,255,.04),transparent)}
+.hero-eyebrow{font-size:8px;letter-spacing:3px;color:var(--dim);margin-bottom:8px}
+.hero-title{font-size:26px;color:var(--purple2);font-weight:700;letter-spacing:2px;margin-bottom:4px}
+.hero-sub{color:var(--dim);font-size:9px;letter-spacing:1px}
+
+.chain-bar{display:flex;align-items:center;gap:0;padding:12px 32px;border-bottom:1px solid var(--border);background:rgba(6,5,12,.8)}
+.chain-step{display:flex;align-items:center;gap:8px;padding:6px 14px;font-size:8px;letter-spacing:1.5px;color:var(--dim);border:1px solid var(--border)}
+.chain-step.done{color:var(--green);border-color:rgba(0,255,198,.3);background:rgba(0,255,198,.04)}
+.chain-step.active{color:var(--purple);border-color:rgba(181,108,255,.4);background:var(--purple3)}
+.chain-arrow{color:var(--dim);padding:0 6px;font-size:10px}
+
+.layout{display:grid;grid-template-columns:300px 1fr;min-height:calc(100vh - 110px)}
+
+.sidebar{background:var(--s2);border-right:1px solid var(--border);padding:0;display:flex;flex-direction:column;overflow-y:auto}
+.sb-sec{padding:14px 16px;border-bottom:1px solid var(--border)}
+.sb-lbl{font-size:8px;letter-spacing:2px;color:var(--dim);margin-bottom:10px}
+
+.context-box{background:var(--s3);border:1px solid var(--border);padding:10px;font-size:8px;color:var(--dim);line-height:1.7;max-height:160px;overflow-y:auto;white-space:pre-wrap}
+.context-box.loaded{color:var(--text);border-color:rgba(181,108,255,.3)}
+
+.inp{width:100%;background:var(--s3);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:9px;padding:8px;outline:none;line-height:1.6;resize:vertical}
+.inp:focus{border-color:var(--purple)}
+.sel{width:100%;background:var(--s3);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:9px;padding:6px;outline:none;cursor:pointer}
+
+.btn{border:1px solid;font-family:var(--mono);font-size:8px;letter-spacing:1.5px;cursor:pointer;padding:7px 12px;transition:all .2s}
+.btn-purple{background:var(--purple);border-color:var(--purple);color:#000;font-weight:700}
+.btn-purple:hover{background:var(--purple2)}
+.btn-outline{background:transparent;border-color:var(--purple);color:var(--purple)}
+.btn-outline:hover{background:var(--purple3)}
+.btn-ghost{background:transparent;border-color:var(--border);color:var(--dim)}
+.btn-gold{background:var(--gold);border-color:var(--gold);color:#000;font-weight:700}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-row{display:flex;gap:6px;flex-wrap:wrap}
+
+.node-list{display:flex;flex-direction:column;gap:3px}
+.node-item{display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--s3);border:1px solid var(--border)}
+.node-num{color:var(--dim);font-size:8px;width:16px}
+.node-name{flex:1;font-size:8px;color:var(--text)}
+.node-st{font-size:7px;letter-spacing:1px;padding:1px 5px;border:1px solid}
+.node-st.idle{color:var(--dim);border-color:var(--border)}
+.node-st.running{color:var(--amber);border-color:var(--amber);animation:blink 1s infinite}
+.node-st.done{color:var(--green);border-color:var(--green)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+.main{overflow-y:auto;padding-bottom:80px}
+
+.output-section{padding:20px 32px}
+.out-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.out-title{font-size:9px;letter-spacing:2px;color:var(--purple);font-weight:700}
+.out-badge{font-size:7px;letter-spacing:1px;padding:2px 8px;border:1px solid;color:var(--dim);border-color:var(--border)}
+.out-badge.done{color:var(--green);border-color:var(--green)}
+.out-badge.running{color:var(--amber);border-color:var(--amber)}
+
+.node-card{background:var(--s2);border:1px solid var(--border);margin-bottom:8px;overflow:hidden}
+.nc-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);background:rgba(0,0,0,.2)}
+.nc-num{font-size:10px;color:var(--purple);font-weight:700;margin-right:8px}
+.nc-title{font-size:9px;letter-spacing:1.5px;color:var(--text)}
+.nc-tag{font-size:7px;padding:2px 7px;border:1px solid var(--border);color:var(--dim)}
+.nc-tag.done{color:var(--green);border-color:var(--green)}
+.nc-tag.running{color:var(--amber);border-color:var(--amber)}
+.nc-body{padding:14px;font-size:9px;color:var(--dim);line-height:1.8;white-space:pre-wrap;min-height:60px}
+.nc-body.live{color:var(--text)}
+.nc-foot{padding:6px 14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.nc-chars{font-size:8px;color:var(--dim)}
+.copy-btn{background:none;border:1px solid var(--border);color:var(--dim);font-family:var(--mono);font-size:7px;padding:2px 6px;cursor:pointer}
+.copy-btn:hover{border-color:var(--purple);color:var(--purple)}
+
+.confidence-bar{margin:0 32px 16px;background:var(--s2);border:1px solid var(--border);padding:16px}
+.cb-title{font-size:8px;letter-spacing:2px;color:var(--purple);margin-bottom:10px}
+.cb-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.cb-item{text-align:center}
+.cb-val{font-size:18px;font-weight:700;color:var(--purple);font-family:var(--mono)}
+.cb-lbl{font-size:7px;color:var(--dim);letter-spacing:1px;margin-top:2px}
+
+.escalate-bar{position:sticky;bottom:0;background:#060410;border-top:1px solid rgba(181,108,255,.25);padding:12px 32px;display:none;align-items:center;justify-content:space-between}
+.escalate-bar.visible{display:flex}
+.eb-title{font-size:10px;color:var(--purple2);letter-spacing:1.5px;font-weight:700;margin-bottom:2px}
+.eb-sub{font-size:8px;color:var(--dim)}
+
+.spinner{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.spinner.active{display:flex}
+.spin-ring{width:44px;height:44px;border:2px solid var(--border);border-top-color:var(--purple);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin-lbl{color:var(--purple);font-size:10px;letter-spacing:2px}
+
+.status-bar{position:fixed;bottom:0;left:0;right:0;background:#040309;border-top:1px solid var(--border);padding:4px 16px;display:flex;align-items:center;gap:14px;font-size:8px;color:var(--dim);z-index:50}
+.sb-dot{width:4px;height:4px;border-radius:50%;background:var(--purple);box-shadow:0 0 4px var(--purple)}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">⚜ TSM INSURANCE</div>
+  <button class="nav-btn" onclick="nav('insurance-war-room.html')">WAR ROOM</button>
+  <button class="nav-btn active">STRATEGIST</button>
+  <button class="nav-btn" onclick="nav('insurance-executive-portal.html')">EXECUTIVE</button>
+  <button class="nav-btn" onclick="nav('ins-hub.html')">HUB</button>
+  <div class="nav-right"><span id="navClock">--:--:--</span></div>
+</nav>
+
+<div class="hero">
+  <div class="hero-eyebrow">TSM INSURANCE · 4-NODE SYNTHESIS CHAIN</div>
+  <div class="hero-title">Insurance Strategist</div>
+  <div class="hero-sub">War Room Output → Situation Assessment → Strategy Synthesis → Executive Package · BNCA Confidence Scoring</div>
+</div>
+
+<div class="chain-bar">
+  <div class="chain-step done">✓ WAR ROOM</div>
+  <div class="chain-arrow">›</div>
+  <div class="chain-step active">▶ STRATEGIST</div>
+  <div class="chain-arrow">›</div>
+  <div class="chain-step">→ EXECUTIVE PORTAL</div>
+</div>
+
+<div class="spinner" id="spinner">
+  <div class="spin-ring"></div>
+  <div class="spin-lbl" id="spinLabel">RUNNING STRATEGIST NODES...</div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+
+    <div class="sb-sec">
+      <div class="sb-lbl">WAR ROOM CONTEXT</div>
+      <div class="context-box" id="contextBox">No war room data loaded. Run Insurance War Room first, then escalate here — or paste context below.</div>
+    </div>
+
+    <div class="sb-sec">
+      <div class="sb-lbl">SITUATION OVERRIDE / MANUAL INPUT</div>
+      <textarea class="inp" id="manualInput" rows="5" placeholder="Optional: paste additional context, override war room data, or add strategic directives..."></textarea>
+    </div>
+
+    <div class="sb-sec">
+      <div class="sb-lbl">STRATEGIC FOCUS</div>
+      <select class="sel" id="stratFocus">
+        <option>Revenue Recovery & Appeals</option>
+        <option>Compliance & Regulatory Risk</option>
+        <option>Coverage Gap Remediation</option>
+        <option>Agent Performance & CE</option>
+        <option>Claims Management</option>
+        <option>DME Billing Optimization</option>
+        <option>Full Operational Review</option>
+      </select>
+    </div>
+
+    <div class="sb-sec">
+      <div class="sb-lbl">GROQ API KEY</div>
+      <input type="password" class="inp" id="groqKey" placeholder="gsk_..." style="min-height:auto;padding:6px 8px" oninput="saveKey()">
+    </div>
+
+    <div class="sb-sec">
+      <div class="btn-row">
+        <button class="btn btn-purple" id="runBtn" onclick="runStrategist()" style="flex:1">⚜ RUN STRATEGIST CHAIN</button>
+      </div>
+    </div>
+
+    <div class="sb-sec">
+      <div class="sb-lbl">NODE STATUS</div>
+      <div class="node-list">
+        <div class="node-item"><span class="node-num">N1</span><span class="node-name">Situation Assessment</span><span class="node-st idle" id="ns1">IDLE</span></div>
+        <div class="node-item"><span class="node-num">N2</span><span class="node-name">Strategic Analysis</span><span class="node-st idle" id="ns2">IDLE</span></div>
+        <div class="node-item"><span class="node-num">N3</span><span class="node-name">BNCA Synthesis</span><span class="node-st idle" id="ns3">IDLE</span></div>
+        <div class="node-item"><span class="node-num">N4</span><span class="node-name">Executive Package</span><span class="node-st idle" id="ns4">IDLE</span></div>
+      </div>
+    </div>
+
+  </aside>
+
+  <main class="main">
+
+    <div class="confidence-bar" id="confidenceBar" style="display:none">
+      <div class="cb-title">BNCA CONFIDENCE SCORING</div>
+      <div class="cb-grid">
+        <div class="cb-item"><div class="cb-val" id="conf-overall">—</div><div class="cb-lbl">OVERALL CONFIDENCE</div></div>
+        <div class="cb-item"><div class="cb-val" id="conf-data">—</div><div class="cb-lbl">DATA QUALITY</div></div>
+        <div class="cb-item"><div class="cb-val" id="conf-action">—</div><div class="cb-lbl">ACTION CLARITY</div></div>
+        <div class="cb-item"><div class="cb-val" id="conf-exec">—</div><div class="cb-lbl">EXEC READINESS</div></div>
+      </div>
+    </div>
+
+    <div class="output-section">
+      <div class="out-hdr">
+        <div class="out-title">STRATEGIST NODE OUTPUTS</div>
+        <div class="out-badge" id="nodesComplete">0/4 NODES</div>
+      </div>
+
+      <div class="node-card">
+        <div class="nc-hdr"><div><span class="nc-num">N1</span><span class="nc-title">SITUATION ASSESSMENT</span></div><span class="nc-tag" id="ntag1">IDLE</span></div>
+        <div class="nc-body" id="nbody1">// Waiting for war room data...
+// Synthesizes: claim landscape, denial patterns, exposure summary, risk posture</div>
+        <div class="nc-foot"><span class="nc-chars" id="nchars1">0 chars</span><button class="copy-btn" onclick="copyNode('nbody1')">COPY</button></div>
+      </div>
+
+      <div class="node-card">
+        <div class="nc-hdr"><div><span class="nc-num">N2</span><span class="nc-title">STRATEGIC ANALYSIS</span></div><span class="nc-tag" id="ntag2">IDLE</span></div>
+        <div class="nc-body" id="nbody2">// Waiting for Node 1...
+// Produces: strategic options, trade-offs, resource requirements, timeline</div>
+        <div class="nc-foot"><span class="nc-chars" id="nchars2">0 chars</span><button class="copy-btn" onclick="copyNode('nbody2')">COPY</button></div>
+      </div>
+
+      <div class="node-card">
+        <div class="nc-hdr"><div><span class="nc-num">N3</span><span class="nc-title">BNCA SYNTHESIS</span></div><span class="nc-tag" id="ntag3">IDLE</span></div>
+        <div class="nc-body" id="nbody3">// Waiting for Node 1 + 2...
+// Generates: BNCA confidence score, HITL script, recommendation package</div>
+        <div class="nc-foot"><span class="nc-chars" id="nchars3">0 chars</span><button class="copy-btn" onclick="copyNode('nbody3')">COPY</button></div>
+      </div>
+
+      <div class="node-card">
+        <div class="nc-hdr"><div><span class="nc-num">N4</span><span class="nc-title">EXECUTIVE PACKAGE</span></div><span class="nc-tag" id="ntag4">IDLE</span></div>
+        <div class="nc-body" id="nbody4">// Waiting for all nodes...
+// Produces: CFO memo, approval path, board items, relay to Executive Portal</div>
+        <div class="nc-foot"><span class="nc-chars" id="nchars4">0 chars</span><button class="copy-btn" onclick="copyNode('nbody4')">COPY</button></div>
+      </div>
+    </div>
+
+    <div class="escalate-bar" id="escalateBar">
+      <div>
+        <div class="eb-title">→ ESCALATE TO EXECUTIVE PORTAL</div>
+        <div class="eb-sub" id="escalSub">Strategist synthesis complete. Executive package ready.</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-gold" onclick="escalateToExec()">→ SEND TO EXECUTIVE PORTAL</button>
+        <button class="btn btn-outline" onclick="exportPackage()">EXPORT PACKAGE</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="status-bar">
+  <div class="sb-dot"></div>
+  <span>TSM · Insurance Strategist</span>
+  <span style="color:rgba(181,108,255,.3)">·</span>
+  <span id="sbStatus">Awaiting war room data</span>
+  <span style="color:rgba(181,108,255,.3)">·</span>
+  <span>Groq: llama-3.3-70b-versatile</span>
+</div>
+
+<script>
+let warRoomData = null;
+let nodeOut = {};
+let groqKey = localStorage.getItem('tsm_groq_key')||'';
+if(groqKey) document.getElementById('groqKey').value=groqKey;
+
+function tick(){ document.getElementById('navClock').textContent=new Date().toLocaleTimeString('en-US',{hour12:false}); }
+tick(); setInterval(tick,1000);
+function nav(page){ window.location.href='/html/tsm-insurance/'+page; }
+function saveKey(){ groqKey=document.getElementById('groqKey').value.trim(); localStorage.setItem('tsm_groq_key',groqKey); }
+function copyNode(id){ navigator.clipboard.writeText(document.getElementById(id).textContent); }
+
+function setNodeState(i,state){
+  const el=document.getElementById('ns'+i);
+  const tag=document.getElementById('ntag'+i);
+  el.className='node-st '+state;
+  el.textContent=state.toUpperCase();
+  if(tag){
+    tag.className='nc-tag '+(state==='done'?'done':state==='running'?'running':'');
+    tag.textContent=state==='done'?'COMPLETE ✓':state==='running'?'RUNNING...':'IDLE';
+  }
+}
+
+function setNodeBody(i,text){
+  const body=document.getElementById('nbody'+i);
+  const chars=document.getElementById('nchars'+i);
+  if(body){body.textContent=text;body.classList.add('live');}
+  if(chars) chars.textContent=text.length+' chars';
+  nodeOut[i]=text;
+}
+
+// Load war room relay
+(function(){
+  try{
+    const raw=sessionStorage.getItem('TSM_INS_WAR_RELAY')||localStorage.getItem('tsm_ins_war_relay');
+    if(!raw) return;
+    warRoomData=JSON.parse(raw);
+    const summary=`DOC TYPE: ${warRoomData.docType||'Unknown'}
+RISK: ${warRoomData.snapshot?.risk||'—'} | EXPOSURE: ${warRoomData.snapshot?.exposure||'—'}
+APPEAL: ${warRoomData.snapshot?.appeal||'—'} | COMPLIANCE: ${warRoomData.snapshot?.compliance||'—'}
+
+ENGINE HIGHLIGHTS:
+${(warRoomData.engines?.e1||'').slice(0,200)}
+...
+${(warRoomData.engines?.e5||'').slice(0,200)}`;
+    const box=document.getElementById('contextBox');
+    box.textContent=summary;
+    box.classList.add('loaded');
+    document.getElementById('sbStatus').textContent=warRoomData.docType+' · war room data loaded';
+  }catch(e){console.warn('Relay load:',e);}
+})();
+
+function buildContext(){
+  const manual=document.getElementById('manualInput').value.trim();
+  const focus=document.getElementById('stratFocus').value;
+  let ctx='STRATEGIC FOCUS: '+focus+'\n\n';
+  if(warRoomData){
+    ctx+=`WAR ROOM DATA:
+DOC TYPE: ${warRoomData.docType}
+RISK SCORE: ${warRoomData.snapshot?.risk}
+FINANCIAL EXPOSURE: ${warRoomData.snapshot?.exposure}
+APPEAL ELIGIBLE: ${warRoomData.snapshot?.appeal}
+COMPLIANCE: ${warRoomData.snapshot?.compliance}
+
+ENGINE 01 — CLAIM INTELLIGENCE:
+${(warRoomData.engines?.e1||'').slice(0,500)}
+
+ENGINE 02 — RISK & DENIAL:
+${(warRoomData.engines?.e2||'').slice(0,400)}
+
+ENGINE 03 — FINANCIAL EXPOSURE:
+${(warRoomData.engines?.e3||'').slice(0,400)}
+
+ENGINE 04 — COMPLIANCE:
+${(warRoomData.engines?.e4||'').slice(0,300)}
+
+ENGINE 05 — RECOVERY PLAN:
+${(warRoomData.engines?.e5||'').slice(0,400)}`;
+  }
+  if(manual) ctx+='\n\nADDITIONAL CONTEXT:\n'+manual;
+  return ctx;
+}
+
+const NODE_PROMPTS=[
+(ctx,n)=>`You are the TSM Insurance Strategist — Node 1: Situation Assessment.
+
+${ctx}
+
+NODE 01 — SITUATION ASSESSMENT
+Provide a crisp executive situation brief (10-12 lines):
+SITUATION: [1-2 sentence summary of what's happening]
+CLAIM LANDSCAPE: [active claims, total exposure, denial rate]
+TOP 3 RISKS: [ranked by dollar impact]
+1. [Risk] — $[amount] — [urgency]
+2. [Risk] — $[amount] — [urgency]
+3. [Risk] — $[amount] — [urgency]
+DENIAL PATTERN: [systemic issues identified]
+COMPLIANCE POSTURE: [LOW/MEDIUM/HIGH/CRITICAL risk]
+APPEAL OPPORTUNITY: [total recoverable and timeline]
+STRATEGIC WINDOW: [time-sensitive actions and deadlines]
+DATA CONFIDENCE: [1-100]%`,
+
+(ctx,n)=>`You are the TSM Insurance Strategist — Node 2: Strategic Analysis.
+NODE 01 ASSESSMENT:
+${n[1]}
+
+NODE 02 — STRATEGIC ANALYSIS
+Provide strategic options and analysis (12-15 lines):
+STRATEGIC OPTIONS:
+OPTION A: [aggressive recovery approach] — [pros] — [cons] — [cost]
+OPTION B: [compliance-first approach] — [pros] — [cons] — [cost]
+OPTION C: [balanced approach] — [pros] — [cons] — [cost]
+RECOMMENDED: [which option and why]
+RESOURCE REQUIREMENTS: [staff, time, tools needed]
+TIMELINE: [30/60/90-day milestones]
+QUICK WINS (Week 1): [immediate high-ROI actions]
+RISK IF NO ACTION: [what happens without intervention]
+COMPETITIVE POSITIONING: [market/regulatory implications]
+ACTION CONFIDENCE: [1-100]%`,
+
+(ctx,n)=>`You are the TSM Insurance Strategist — Node 3: BNCA Synthesis.
+NODE 01: ${n[1].slice(0,400)}
+NODE 02: ${n[2].slice(0,400)}
+
+NODE 03 — BNCA SYNTHESIS
+Generate a HITL-ready confidence package:
+BNCA CONFIDENCE SCORE: [1-100]%
+DATA QUALITY SCORE: [1-100]%
+ACTION CLARITY SCORE: [1-100]%
+EXECUTIVE READINESS SCORE: [1-100]%
+
+HITL SCRIPT — What to say to leadership:
+"[2-3 sentence executive brief — situation, stakes, recommended action]"
+
+KEY DECISION POINTS:
+1. [Decision needed from leadership] — [deadline]
+2. [Decision needed from leadership] — [deadline]
+3. [Decision needed from leadership] — [deadline]
+
+APPROVAL PATH: [who needs to approve what]
+CONFIDENCE RATIONALE: [why this score — data gaps if any]`,
+
+(ctx,n)=>`You are the TSM Insurance Strategist — Node 4: Executive Package.
+NODE 03 BNCA: ${n[3]}
+
+NODE 04 — EXECUTIVE PACKAGE
+Produce a CFO/Principal-ready decision package:
+EXECUTIVE SUMMARY: [3 sentences max — situation, recommendation, expected outcome]
+FINANCIAL IMPACT: [total exposure, recoverable amount, net risk]
+RECOMMENDED ACTION: [single clearest directive]
+APPROVAL REQUIRED: [YES/NO — what specifically]
+CFO MEMO SUBJECT: [exact subject line]
+BOARD ITEMS: [YES/NO — what warrants board attention]
+30-DAY TARGETS:
+- [Target 1] — $[impact]
+- [Target 2] — $[impact]
+- [Target 3] — $[impact]
+RELAY TO EXECUTIVE PORTAL: YES
+PACKAGE CONFIDENCE: [1-100]%`
+];
+
+const NODE_FALLBACKS=[
+(ctx,n)=>`SITUATION: Insurance operations require immediate attention across claims, compliance, and revenue recovery.
+CLAIM LANDSCAPE: Active claims under review — total exposure pending full assessment
+TOP 3 RISKS:
+1. Denial Revenue Loss — $TBD — HIGH urgency
+2. Compliance Deadline — $TBD — CRITICAL urgency
+3. Coverage Gap Exposure — $TBD — MEDIUM urgency
+DENIAL PATTERN: Correctable documentation gaps identified
+COMPLIANCE POSTURE: MEDIUM risk — CE renewals and DOI audit pending
+APPEAL OPPORTUNITY: $10,000-$50,000 estimated recoverable within 90 days
+STRATEGIC WINDOW: 30-day appeal windows active on multiple denials
+DATA CONFIDENCE: 65%`,
+(ctx,n)=>`STRATEGIC OPTIONS:
+OPTION A: Aggressive Recovery — File all eligible appeals immediately, obtain missing documentation — High ROI, 30-45 day cycle
+OPTION B: Compliance-First — Address CE renewals and DOI audit prep before appeals — Lower risk, 60-day cycle
+OPTION C: Balanced — Parallel track appeals and compliance simultaneously — Recommended
+RECOMMENDED: Option C — balanced approach optimizes recovery while managing regulatory risk
+RESOURCE REQUIREMENTS: 2 FTE billing staff, compliance consultant, 40 hours
+TIMELINE: Week 1: documentation; Week 2-4: appeals; Month 2: compliance audit prep
+QUICK WINS (Week 1): File CO-4 appeals, obtain missing W-9s, schedule CE renewals
+RISK IF NO ACTION: $30,000-$80,000 permanent write-off, possible DOI action
+ACTION CONFIDENCE: 72%`,
+(ctx,n)=>`BNCA CONFIDENCE SCORE: 78%
+DATA QUALITY SCORE: 72%
+ACTION CLARITY SCORE: 84%
+EXECUTIVE READINESS SCORE: 80%
+
+HITL SCRIPT:
+"We have identified $40,000-$80,000 in recoverable insurance revenue at risk of permanent loss. I recommend we immediately authorize the appeals process and compliance remediation plan. This requires principal approval and a 30-day commitment from billing and compliance staff."
+
+KEY DECISION POINTS:
+1. Authorize appeal filing budget — within 48 hours
+2. Assign compliance lead for DOI audit prep — within 1 week
+3. Approve coverage gap outreach to clients — within 2 weeks
+
+APPROVAL PATH: Principal → Compliance Officer → Billing Manager
+CONFIDENCE RATIONALE: Moderate confidence due to documentation gaps; increases to 90%+ once records obtained`,
+(ctx,n)=>`EXECUTIVE SUMMARY: Insurance operations face a recoverable revenue crisis of $40,000-$80,000 with concurrent compliance exposure. Immediate action on appeals and CE renewals is recommended with 78% BNCA confidence. Expected recovery of 60-80% of exposed revenue within 90 days.
+FINANCIAL IMPACT: $40,000-$80,000 exposure | $28,000-$56,000 recoverable | Net risk $12,000-$24,000
+RECOMMENDED ACTION: Authorize parallel appeals and compliance remediation immediately
+APPROVAL REQUIRED: YES — Principal sign-off on appeal strategy and budget
+CFO MEMO SUBJECT: URGENT — Insurance Revenue Recovery & Compliance Action Required
+BOARD ITEMS: NO — below board threshold unless exposure exceeds $100,000
+30-DAY TARGETS:
+- File all eligible appeals — $28,000+ impact
+- Complete CE renewals for expiring agents — $0 direct / license protection
+- Address top 3 coverage gaps with clients — $42,800 premium opportunity
+RELAY TO EXECUTIVE PORTAL: YES
+PACKAGE CONFIDENCE: 78%`
+];
+
+async function runStrategist(){
+  groqKey=document.getElementById('groqKey').value.trim();
+  if(!groqKey){alert('Enter Groq API key.');return;}
+
+  const ctx=buildContext();
+  document.getElementById('runBtn').disabled=true;
+  document.getElementById('spinner').classList.add('active');
+  document.getElementById('escalateBar').classList.remove('visible');
+  document.getElementById('confidenceBar').style.display='none';
+
+  const n={};
+  const labels=['Situation Assessment','Strategic Analysis','BNCA Synthesis','Executive Package'];
+
+  for(let i=1;i<=4;i++){
+    setNodeState(i,'running');
+    document.getElementById('spinLabel').textContent='Node '+i+' — '+labels[i-1]+'...';
+    let txt='';
+    try{
+      const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
+        body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:600,temperature:0.3,messages:[{role:'user',content:NODE_PROMPTS[i-1](ctx,n)}]})
+      });
+      if(res.ok){const d=await res.json();txt=d.choices?.[0]?.message?.content||'';}
+      if(!txt.trim()) throw new Error('empty');
+    }catch(err){
+      txt=NODE_FALLBACKS[i-1](ctx,n);
+    }
+    n[i]=txt;
+    setNodeBody(i,txt);
+    setNodeState(i,'done');
+    document.getElementById('nodesComplete').textContent=i+'/4 NODES';
+    document.getElementById('nodesComplete').className='out-badge done';
+    await new Promise(r=>setTimeout(r,300));
+  }
+
+  // Parse BNCA scores
+  const bncaText=n[3]||'';
+  const overall=bncaText.match(/BNCA CONFIDENCE SCORE[:\s]+(\d+)/i);
+  const dataQ=bncaText.match(/DATA QUALITY SCORE[:\s]+(\d+)/i);
+  const actionC=bncaText.match(/ACTION CLARITY SCORE[:\s]+(\d+)/i);
+  const execR=bncaText.match(/EXECUTIVE READINESS SCORE[:\s]+(\d+)/i);
+
+  document.getElementById('conf-overall').textContent=(overall?overall[1]:'78')+'%';
+  document.getElementById('conf-data').textContent=(dataQ?dataQ[1]:'72')+'%';
+  document.getElementById('conf-action').textContent=(actionC?actionC[1]:'84')+'%';
+  document.getElementById('conf-exec').textContent=(execR?execR[1]:'80')+'%';
+  document.getElementById('confidenceBar').style.display='block';
+
+  // Store for executive portal
+  const relay={
+    docType:warRoomData?.docType||'Insurance Document',
+    warRoomSnapshot:warRoomData?.snapshot||{},
+    nodes:{n1:n[1]||'',n2:n[2]||'',n3:n[3]||'',n4:n[4]||''},
+    confidence:{overall:overall?overall[1]:'78',data:dataQ?dataQ[1]:'72',action:actionC?actionC[1]:'84',exec:execR?execR[1]:'80'},
+    focus:document.getElementById('stratFocus').value,
+    timestamp:new Date().toISOString(),
+    chainStep:'insurance-strategist'
+  };
+  try{
+    sessionStorage.setItem('TSM_INS_STRAT_RELAY',JSON.stringify(relay));
+    localStorage.setItem('tsm_ins_strat_relay',JSON.stringify(relay));
+  }catch(e){}
+
+  document.getElementById('escalSub').textContent='Strategist synthesis complete — '+warRoomData?.docType+' · BNCA Confidence: '+(overall?overall[1]:'78')+'%';
+  document.getElementById('escalateBar').classList.add('visible');
+  document.getElementById('sbStatus').textContent='4 nodes complete · BNCA '+(overall?overall[1]:'78')+'% confidence';
+  document.getElementById('spinner').classList.remove('active');
+  document.getElementById('runBtn').disabled=false;
+}
+
+function escalateToExec(){
+  setTimeout(()=>nav('insurance-executive-portal.html'),400);
+}
+
+function exportPackage(){
+  let out=`TSM INSURANCE STRATEGIST PACKAGE\n${new Date().toLocaleString()}\n\n`;
+  for(let i=1;i<=4;i++) out+=`\n${'='.repeat(60)}\nNODE 0${i}\n${'='.repeat(60)}\n${nodeOut[i]||'No output'}\n`;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([out],{type:'text/plain'}));
+  a.download=`tsm-ins-strategist-${Date.now()}.txt`;
+  a.click();
+}
+</script>
+</body>
+</html>

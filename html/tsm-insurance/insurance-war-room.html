@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Insurance War Room · TSM</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05080c;--s2:#08111a;--s3:#0b1820;--border:rgba(201,168,76,.12);
+  --gold:#c9a84c;--gold2:#e8c96a;--gold3:rgba(201,168,76,.08);
+  --green:#00ffc6;--blue:#00aaff;--red:#ff4d6d;
+  --amber:#ff9500;--cyan:#00e5ff;--purple:#b56cff;--pink:#ff6b9d;
+  --text:#cce8d8;--dim:#3a5a48;--mono:'IBM Plex Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12px;min-height:100vh}
+body::before{content:'';position:fixed;top:0;right:0;width:600px;height:600px;background:radial-gradient(circle,rgba(201,168,76,.04),transparent 70%);pointer-events:none}
+
+.nav{height:38px;background:rgba(5,8,12,.97);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:0;position:sticky;top:0;z-index:90}
+.nav-brand{color:var(--gold);font-weight:700;font-size:10px;letter-spacing:2px;margin-right:20px}
+.nav-btn{background:none;border:none;color:var(--dim);font-family:var(--mono);font-size:9px;letter-spacing:1.5px;cursor:pointer;padding:0 12px;height:38px;border-bottom:2px solid transparent;transition:all .2s}
+.nav-btn:hover{color:var(--text)}
+.nav-btn.active{color:var(--gold);border-bottom-color:var(--gold)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:16px;font-size:9px;color:var(--dim)}
+.nav-clock{color:rgba(201,168,76,.7)}
+
+.alert-bar{background:rgba(201,168,76,.04);border-bottom:1px solid rgba(201,168,76,.18);padding:5px 20px;display:flex;align-items:center;gap:8px;font-size:9px;letter-spacing:1.5px;color:var(--amber)}
+.a-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);box-shadow:0 0 5px var(--amber);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+.layout{display:grid;grid-template-columns:270px 1fr;height:calc(100vh - 62px)}
+
+.sidebar{background:var(--s2);border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column}
+.sb-sec{padding:12px 14px;border-bottom:1px solid var(--border)}
+.sb-lbl{font-size:8px;letter-spacing:2px;color:var(--dim);margin-bottom:8px}
+
+.doc-type-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px}
+.dt-btn{background:var(--s3);border:1px solid var(--border);color:var(--dim);font-family:var(--mono);font-size:8px;padding:5px 4px;cursor:pointer;letter-spacing:.5px;transition:all .2s;text-align:center}
+.dt-btn:hover{border-color:var(--gold);color:var(--gold)}
+.dt-btn.active{background:rgba(201,168,76,.08);border-color:var(--gold);color:var(--gold)}
+
+.paste-area{width:100%;background:var(--s3);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:9px;padding:8px;resize:vertical;min-height:110px;outline:none;line-height:1.6}
+.paste-area:focus{border-color:var(--gold)}
+
+.samples{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px}
+.sample-chip{background:var(--s3);border:1px solid var(--border);color:var(--dim);font-family:var(--mono);font-size:8px;padding:2px 7px;cursor:pointer;transition:all .2s}
+.sample-chip:hover{border-color:var(--gold);color:var(--gold)}
+
+.groq-wrap{display:flex;gap:4px}
+.groq-inp{flex:1;background:var(--s3);border:1px solid var(--border);color:var(--green);font-family:var(--mono);font-size:8px;padding:4px 6px;outline:none}
+.groq-inp:focus{border-color:var(--gold)}
+
+.btn{border:1px solid;font-family:var(--mono);font-size:8px;letter-spacing:1.5px;cursor:pointer;padding:6px 10px;transition:all .2s}
+.btn-gold{background:var(--gold);border-color:var(--gold);color:#000;font-weight:700}
+.btn-gold:hover{background:var(--gold2)}
+.btn-outline{background:transparent;border-color:var(--gold);color:var(--gold)}
+.btn-outline:hover{background:rgba(201,168,76,.08)}
+.btn-ghost{background:transparent;border-color:var(--border);color:var(--dim)}
+.btn-ghost:hover{border-color:var(--dim);color:var(--text)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-row{display:flex;gap:4px;flex-wrap:wrap}
+
+.eng-list{display:flex;flex-direction:column;gap:3px}
+.eng-item{display:flex;align-items:center;gap:6px;padding:4px 6px;background:var(--s3);border:1px solid var(--border)}
+.eng-num{color:var(--dim);font-size:8px;width:14px}
+.eng-name{flex:1;font-size:8px;color:var(--text)}
+.eng-st{font-size:7px;letter-spacing:1px;padding:1px 5px;border:1px solid}
+.eng-st.idle{color:var(--dim);border-color:var(--border)}
+.eng-st.running{color:var(--amber);border-color:var(--amber);animation:blink 1s infinite}
+.eng-st.done{color:var(--green);border-color:var(--green)}
+.eng-st.error{color:var(--red);border-color:var(--red)}
+
+.snap-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.snap-item{background:var(--s3);border:1px solid var(--border);padding:5px 6px}
+.snap-lbl{font-size:7px;color:var(--dim);letter-spacing:1px;margin-bottom:2px}
+.snap-val{font-size:10px;color:var(--gold);font-weight:700}
+
+.main{overflow-y:auto;background:var(--bg);padding-bottom:80px}
+.hero{padding:22px 28px 16px;border-bottom:1px solid var(--border)}
+.hero-title{font-size:22px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:3px}
+.hero-sub{color:var(--dim);font-size:9px;letter-spacing:1px}
+
+.kpi-bar{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid var(--border)}
+.kpi-cell{padding:12px 18px;border-right:1px solid var(--border)}
+.kpi-cell:last-child{border-right:none}
+.kpi-lbl{font-size:7px;letter-spacing:1.5px;color:var(--dim);margin-bottom:7px}
+.kpi-val{font-size:20px;font-weight:700;color:var(--gold)}
+.kpi-val.red{color:var(--red)}.kpi-val.green{color:var(--green)}.kpi-val.pink{color:var(--pink)}
+.kpi-bar-fill{height:2px;background:var(--border);margin-top:5px}
+.kpi-bar-inner{height:100%;background:var(--gold);width:0%;transition:width .8s}
+.kpi-sub{font-size:8px;color:var(--dim);margin-top:3px}
+
+.sec-hdr{padding:14px 28px 6px;display:flex;align-items:center;gap:8px}
+.sec-dot{width:5px;height:5px;background:var(--gold);border-radius:50%}
+.sec-title{font-size:8px;letter-spacing:2.5px;color:var(--gold)}
+
+.engine-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);margin:0 28px 20px}
+.eng-card{background:var(--s2);padding:16px;display:flex;flex-direction:column;gap:8px}
+.ec-hdr{display:flex;align-items:center;justify-content:space-between}
+.ec-num{font-size:10px;color:var(--gold);font-weight:700}
+.ec-title{font-size:9px;letter-spacing:1.5px;color:var(--text);margin-left:6px}
+.ec-tag{font-size:7px;letter-spacing:1px;padding:2px 6px;border:1px solid var(--border);color:var(--dim)}
+.ec-tag.done{color:var(--green);border-color:var(--green)}
+.ec-tag.running{color:var(--amber);border-color:var(--amber)}
+.ec-body{font-size:9px;color:var(--dim);line-height:1.7;min-height:70px;white-space:pre-wrap}
+.ec-body.live{color:var(--text)}
+.ec-foot{display:flex;align-items:center;justify-content:space-between}
+.ec-chars{font-size:8px;color:var(--dim)}
+.copy-btn{background:none;border:1px solid var(--border);color:var(--dim);font-family:var(--mono);font-size:7px;letter-spacing:1px;padding:2px 6px;cursor:pointer}
+.copy-btn:hover{border-color:var(--gold);color:var(--gold)}
+
+.app-dispatch{margin:0 28px 20px;display:none;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+.app-dispatch.visible{display:grid}
+.app-card{background:var(--s2);border:1px solid var(--border);padding:12px;transition:border-color .2s}
+.app-card:hover{border-color:rgba(201,168,76,.3)}
+.app-card-rank{font-size:8px;color:var(--dim);margin-bottom:4px}
+.app-card-name{font-size:11px;font-weight:700;color:var(--gold);margin-bottom:6px}
+.app-card-how{font-size:9px;color:var(--dim);line-height:1.6;margin-bottom:8px}
+.app-card-btn{background:transparent;border:1px solid rgba(201,168,76,.3);color:var(--gold);font-family:var(--mono);font-size:8px;letter-spacing:1px;padding:4px 10px;cursor:pointer;transition:all .2s}
+.app-card-btn:hover{background:rgba(201,168,76,.08)}
+
+.log-wrap{padding:0 28px 20px}
+.log-title{font-size:8px;letter-spacing:2px;color:var(--dim);margin-bottom:6px}
+.log-list{display:flex;flex-direction:column;gap:3px;max-height:120px;overflow-y:auto}
+.log-item{display:flex;gap:8px;font-size:8px}
+.log-dot{width:5px;height:5px;border-radius:50%;margin-top:3px;flex-shrink:0}
+.log-dot.g{background:var(--green)}.log-dot.a{background:var(--amber)}.log-dot.p{background:var(--gold)}.log-dot.f{background:var(--dim)}
+.log-text{color:var(--text)}.log-detail{color:var(--dim)}
+
+.escalate-bar{position:sticky;bottom:0;background:#060a06;border-top:1px solid rgba(201,168,76,.25);padding:12px 28px;display:none;align-items:center;justify-content:space-between;gap:16px}
+.escalate-bar.visible{display:flex}
+.eb-title{font-size:10px;color:var(--gold);letter-spacing:1.5px;font-weight:700;margin-bottom:2px}
+.eb-sub{font-size:8px;color:var(--dim)}
+.eb-btns{display:flex;gap:6px}
+
+.spinner{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.spinner.active{display:flex}
+.spin-ring{width:44px;height:44px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin-lbl{color:var(--gold);font-size:10px;letter-spacing:2px}
+.spin-eng{color:var(--dim);font-size:8px;letter-spacing:1px}
+
+.status-bar{position:fixed;bottom:0;left:0;right:0;background:#030608;border-top:1px solid var(--border);padding:4px 16px;display:flex;align-items:center;gap:14px;font-size:8px;color:var(--dim);z-index:50}
+.sb-dot{width:4px;height:4px;border-radius:50%;background:var(--gold);box-shadow:0 0 4px var(--gold)}
+.sb-sep{color:var(--border)}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">⚜ TSM INSURANCE</div>
+  <button class="nav-btn active">WAR ROOM</button>
+  <button class="nav-btn" onclick="nav('insurance-strategist.html')">STRATEGIST</button>
+  <button class="nav-btn" onclick="nav('insurance-executive-portal.html')">EXECUTIVE</button>
+  <button class="nav-btn" onclick="nav('ins-hub.html')">HUB</button>
+  <button class="nav-btn" onclick="nav('pc-command.html')">P&C COMMAND</button>
+  <button class="nav-btn" onclick="nav('dme.html')">DME</button>
+  <div class="nav-right">
+    <span id="navClock" class="nav-clock">--:--:--</span>
+  </div>
+</nav>
+
+<div class="alert-bar" id="alertBar">
+  <div class="a-dot"></div>
+  <span id="alertText">INSURANCE WAR ROOM ACTIVE — LOAD CLAIM OR POLICY DOCUMENT — FIRE 6-ENGINE ANALYSIS</span>
+</div>
+
+<div class="spinner" id="spinner">
+  <div class="spin-ring"></div>
+  <div class="spin-lbl">ANALYSIS PIPELINE RUNNING</div>
+  <div class="spin-eng" id="spinLabel">Initializing engines...</div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+
+    <div class="sb-sec">
+      <div class="sb-lbl">DOCUMENT TYPE</div>
+      <div class="doc-type-grid">
+        <button class="dt-btn active" onclick="setDocType(this,'Claims Report')">Claims Report</button>
+        <button class="dt-btn" onclick="setDocType(this,'Denial Letter')">Denial Letter</button>
+        <button class="dt-btn" onclick="setDocType(this,'Policy Review')">Policy Review</button>
+        <button class="dt-btn" onclick="setDocType(this,'DME Claim')">DME Claim</button>
+        <button class="dt-btn" onclick="setDocType(this,'AP Aging')">AP Aging</button>
+        <button class="dt-btn" onclick="setDocType(this,'ERA Batch')">ERA Batch</button>
+        <button class="dt-btn" onclick="setDocType(this,'Underwriting')">Underwriting</button>
+        <button class="dt-btn" onclick="setDocType(this,'Compliance')">Compliance</button>
+        <button class="dt-btn" onclick="setDocType(this,'CE Renewal')">CE Renewal</button>
+        <button class="dt-btn" onclick="setDocType(this,'Other')">Other</button>
+      </div>
+    </div>
+
+    <div class="sb-sec">
+      <div class="sb-lbl">PASTE DOCUMENT TEXT</div>
+      <textarea class="paste-area" id="docPaste" placeholder="Paste claim denial, policy document, ERA batch, DME claim, AP aging, underwriting submission, or any insurance document..."></textarea>
+      <div class="samples">
+        <button class="sample-chip" onclick="loadSample('claims')">Claims</button>
+        <button class="sample-chip" onclick="loadSample('dme')">DME Denial</button>
+        <button class="sample-chip" onclick="loadSample('policy')">Policy Gap</button>
+        <button class="sample-chip" onclick="loadSample('era')">ERA Batch</button>
+      </div>
+    </div>
+
+    <div class="sb-sec">
+      <div class="sb-lbl">GROQ API KEY</div>
+      <div class="groq-wrap">
+        <input type="password" class="groq-inp" id="groqKey" placeholder="gsk_..." oninput="saveKey()">
+        <button class="btn btn-outline" onclick="testKey()">TEST</button>
+      </div>
+    </div>
+
+    <div class="sb-sec">
+      <div class="btn-row">
+        <button class="btn btn-gold" id="fireBtn" onclick="fireEngines()" style="flex:1">⚡ FIRE ALL 6 ENGINES</button>
+        <button class="btn btn-ghost" onclick="clearAll()">CLR</button>
+      </div>
+    </div>
+
+    <div class="sb-sec">
+      <div class="sb-lbl">ENGINE STATUS</div>
+      <div class="eng-list">
+        <div class="eng-item"><span class="eng-num">01</span><span class="eng-name">Claim Intelligence</span><span class="eng-st idle" id="es1">IDLE</span></div>
+        <div class="eng-item"><span class="eng-num">02</span><span class="eng-name">Risk & Denial Analysis</span><span class="eng-st idle" id="es2">IDLE</span></div>
+        <div class="eng-item"><span class="eng-num">03</span><span class="eng-name">Financial Exposure</span><span class="eng-st idle" id="es3">IDLE</span></div>
+        <div class="eng-item"><span class="eng-num">04</span><span class="eng-name">Compliance & Regulatory</span><span class="eng-st idle" id="es4">IDLE</span></div>
+        <div class="eng-item"><span class="eng-num">05</span><span class="eng-name">Recovery & Appeal Plan</span><span class="eng-st idle" id="es5">IDLE</span></div>
+        <div class="eng-item"><span class="eng-num">06</span><span class="eng-name">App Dispatch</span><span class="eng-st idle" id="es6">IDLE</span></div>
+      </div>
+    </div>
+
+    <div class="sb-sec">
+      <div class="sb-lbl">CLAIM SNAPSHOT</div>
+      <div class="snap-grid">
+        <div class="snap-item"><div class="snap-lbl">DOC TYPE</div><div class="snap-val" id="snapType">—</div></div>
+        <div class="snap-item"><div class="snap-lbl">RISK SCORE</div><div class="snap-val" id="snapRisk">—</div></div>
+        <div class="snap-item"><div class="snap-lbl">EXPOSURE</div><div class="snap-val" id="snapExposure">—</div></div>
+        <div class="snap-item"><div class="snap-lbl">APPEAL?</div><div class="snap-val" id="snapAppeal">—</div></div>
+      </div>
+    </div>
+
+  </aside>
+
+  <main class="main" id="mainContent">
+
+    <div class="hero">
+      <div class="hero-title">Insurance War Room</div>
+      <div class="hero-sub">6-Engine Insurance Document Analysis · Claims · Denials · DME · Compliance · Recovery · App Dispatch → Strategist</div>
+    </div>
+
+    <div class="kpi-bar">
+      <div class="kpi-cell">
+        <div class="kpi-lbl">RISK SCORE</div>
+        <div class="kpi-val" id="kpiRisk">—</div>
+        <div class="kpi-bar-fill"><div class="kpi-bar-inner" id="riskFill"></div></div>
+        <div class="kpi-sub">/ 100</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-lbl">FINANCIAL EXPOSURE</div>
+        <div class="kpi-val red" id="kpiExposure">—</div>
+        <div class="kpi-sub">revenue at risk</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-lbl">DENIAL FLAGS</div>
+        <div class="kpi-val pink" id="kpiDenials">—</div>
+        <div class="kpi-sub">items flagged</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-lbl">COMPLIANCE STATUS</div>
+        <div class="kpi-val" id="kpiCompliance">—</div>
+        <div class="kpi-sub">regulatory posture</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-lbl">ENGINES COMPLETE</div>
+        <div class="kpi-val" id="kpiEngines">0/6</div>
+        <div class="kpi-sub">analysis pipeline</div>
+      </div>
+    </div>
+
+    <div class="sec-hdr">
+      <div class="sec-dot"></div>
+      <div class="sec-title">ENGINE OUTPUTS · INSURANCE ANALYSIS PIPELINE</div>
+    </div>
+
+    <div class="engine-grid">
+      <div class="eng-card">
+        <div class="ec-hdr"><div><span class="ec-num">01</span><span class="ec-title">CLAIM INTELLIGENCE</span></div><span class="ec-tag" id="tag-e1">IDLE</span></div>
+        <div class="ec-body" id="body-e1">// Waiting for insurance document...
+// Extracts: claim type, parties, amounts, denial codes, policy details</div>
+        <div class="ec-foot"><span class="ec-chars" id="chars-e1">0 chars</span><button class="copy-btn" onclick="copyField('body-e1')">COPY</button></div>
+      </div>
+      <div class="eng-card">
+        <div class="ec-hdr"><div><span class="ec-num">02</span><span class="ec-title">RISK & DENIAL ANALYSIS</span></div><span class="ec-tag" id="tag-e2">IDLE</span></div>
+        <div class="ec-body" id="body-e2">// Waiting for Engine 01...
+// Flags: denial codes, appeal windows, coverage gaps, fraud indicators</div>
+        <div class="ec-foot"><span class="ec-chars" id="chars-e2">0 chars</span><button class="copy-btn" onclick="copyField('body-e2')">COPY</button></div>
+      </div>
+      <div class="eng-card">
+        <div class="ec-hdr"><div><span class="ec-num">03</span><span class="ec-title">FINANCIAL EXPOSURE</span></div><span class="ec-tag" id="tag-e3">IDLE</span></div>
+        <div class="ec-body" id="body-e3">// Waiting for Engine 01 + 02...
+// Models: exposure range, recoverable revenue, appeal ROI</div>
+        <div class="ec-foot"><span class="ec-chars" id="chars-e3">0 chars</span><button class="copy-btn" onclick="copyField('body-e3')">COPY</button></div>
+      </div>
+      <div class="eng-card">
+        <div class="ec-hdr"><div><span class="ec-num">04</span><span class="ec-title">COMPLIANCE & REGULATORY</span></div><span class="ec-tag" id="tag-e4">IDLE</span></div>
+        <div class="ec-body" id="body-e4">// Waiting for Engine 01 + 02...
+// Checks: CMS rules, AZ DOI, HIPAA, CE requirements, OIG risk</div>
+        <div class="ec-foot"><span class="ec-chars" id="chars-e4">0 chars</span><button class="copy-btn" onclick="copyField('body-e4')">COPY</button></div>
+      </div>
+      <div class="eng-card">
+        <div class="ec-hdr"><div><span class="ec-num">05</span><span class="ec-title">RECOVERY & APPEAL PLAN</span></div><span class="ec-tag" id="tag-e5">IDLE</span></div>
+        <div class="ec-body" id="body-e5">// Waiting for Engine 03 + 04...
+// Generates: appeal strategy, action steps, deadlines, owner assignments</div>
+        <div class="ec-foot"><span class="ec-chars" id="chars-e5">0 chars</span><button class="copy-btn" onclick="copyField('body-e5')">COPY</button></div>
+      </div>
+      <div class="eng-card">
+        <div class="ec-hdr"><div><span class="ec-num">06</span><span class="ec-title">APP DISPATCH</span></div><span class="ec-tag" id="tag-e6">IDLE</span></div>
+        <div class="ec-body" id="body-e6">// Waiting for all 5 engines...
+// Routes to: Claims, DME, P&C Command, Compliance, CE Prep nodes</div>
+        <div class="ec-foot"><span class="ec-chars" id="chars-e6">0 chars</span><button class="copy-btn" onclick="copyField('body-e6')">COPY</button></div>
+      </div>
+    </div>
+
+    <div class="sec-hdr" id="dispatchHdr" style="display:none">
+      <div class="sec-dot" style="background:var(--pink)"></div>
+      <div class="sec-title" style="color:var(--pink)">APP ROUTING · REMEDIATION GUIDANCE</div>
+    </div>
+    <div class="app-dispatch" id="appDispatch"></div>
+
+    <div class="log-wrap">
+      <div class="log-title">WAR ROOM ACTIVITY LOG</div>
+      <div class="log-list" id="logList"></div>
+    </div>
+
+    <div class="escalate-bar" id="escalateBar">
+      <div class="eb-left">
+        <div class="eb-title">⚜ ESCALATE TO INSURANCE STRATEGIST →</div>
+        <div class="eb-sub" id="escalSub">6-engine analysis complete. Package ready for strategist synthesis.</div>
+      </div>
+      <div class="eb-btns">
+        <button class="btn btn-gold" onclick="escalateToStrategist()">⚜ ESCALATE TO STRATEGIST →</button>
+        <button class="btn btn-outline" onclick="exportFull()">EXPORT ANALYSIS</button>
+        <button class="btn btn-ghost" onclick="clearAll()">CLEAR & RESET</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="status-bar">
+  <div class="sb-dot"></div>
+  <span>TSM · Insurance War Room</span>
+  <span class="sb-sep">·</span>
+  <span id="sbEngines">0 / 6 Engines Complete</span>
+  <span class="sb-sep">·</span>
+  <span id="sbDoc">No document loaded</span>
+  <span class="sb-sep">·</span>
+  <span>Groq: llama-3.3-70b-versatile</span>
+  <span class="sb-sep">·</span>
+  <span>TOKENS: <span id="sbTokens" style="color:var(--gold)">0</span> / <span id="sbCost" style="color:var(--green)">$0.0000</span></span>
+</div>
+
+<script>
+let docText = '';
+let selectedDocType = 'Claims Report';
+let engOut = {};
+let enginesComplete = 0;
+let groqKey = localStorage.getItem('tsm_groq_key') || '';
+if (groqKey) document.getElementById('groqKey').value = groqKey;
+let totalTokensIn = 0, totalTokensOut = 0;
+
+function trackTokens(prompt, response){
+  totalTokensIn += Math.ceil(prompt.length/4);
+  totalTokensOut += Math.ceil(response.length/4);
+  const total = totalTokensIn + totalTokensOut;
+  const cost = ((totalTokensIn*0.59 + totalTokensOut*0.79)/1000000);
+  document.getElementById('sbTokens').textContent = total.toLocaleString();
+  document.getElementById('sbCost').textContent = '$'+cost.toFixed(4);
+}
+
+function tick(){ document.getElementById('navClock').textContent = new Date().toLocaleTimeString('en-US',{hour12:false}); }
+tick(); setInterval(tick,1000);
+function nav(page){ window.location.href='/html/tsm-insurance/'+page; }
+
+function setDocType(btn,type){
+  document.querySelectorAll('.dt-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedDocType = type;
+}
+
+function saveKey(){ groqKey=document.getElementById('groqKey').value.trim(); localStorage.setItem('tsm_groq_key',groqKey); }
+async function testKey(){
+  groqKey=document.getElementById('groqKey').value.trim();
+  if(!groqKey){alert('Enter Groq API key first.');return;}
+  addLog('Testing API key...','','a');
+  try{
+    const r=await fetch('https://api.groq.com/openai/v1/models',{headers:{'Authorization':'Bearer '+groqKey}});
+    if(r.ok) addLog('API key valid','Groq connection confirmed','g');
+    else addLog('API key invalid','Check key and retry','f');
+  }catch(e){addLog('Connection error',e.message,'f');}
+}
+
+const SAMPLES = {
+  claims:`INSURANCE CLAIMS REPORT — Q1 2026
+Auto Liability Claims — AZ Market
+
+ACTIVE CLAIMS: 14
+TOTAL EXPOSURE: $312,400
+
+CRITICAL CLAIMS:
+CLM-0041 — Auto Liability — $94,200 — Fault Disputed — SIU Review Pending
+CLM-0038 — Workers Comp — $52,800 — Open 94 days — Medical still ongoing
+CLM-0029 — Homeowners — $38,400 — Wildfire zone — Carrier threatening non-renewal
+CLM-0055 — Umbrella — $22,000 — Pool drowning — Legal involvement
+
+DENIAL QUEUE: 3 claims denied
+- CLM-0031: CO-45 contractual — $14,200
+- CLM-0042: Missing documentation — $8,600
+- CLM-0048: Late filing — $6,400 — APPEAL WINDOW OPEN 30 DAYS
+
+CE RENEWAL: 2 agents expiring in 45 days
+COMPLIANCE: AZ DOI audit scheduled Q2`,
+
+  dme:`DME CLAIM — Medicare Part B
+HCPCS: E0431 — Oxygen Concentrator
+PATIENT: Medicare Beneficiary
+ICD-10: J96.00 — Respiratory failure
+CLAIM AMOUNT: $3,200
+STATUS: DENIED
+
+DENIAL REASON: CO-5 — Incomplete Certificate of Medical Necessity (CMN)
+Missing: ICD-10 qualifying diagnosis, physician attestation, blood oxygen test results
+
+LCD: L33797 — Oxygen applies
+COMPETITIVE BIDDING: Yes — CBA applies
+APPEAL WINDOW: 120 days from denial
+APPEAL ELIGIBLE: YES — documentation correctable
+
+SECONDARY ISSUES:
+- W-9 missing for supplier on file
+- Prior auth not documented in record
+- Modifier KX missing from claim header`,
+
+  policy:`POLICY REVIEW REPORT — AZ Book of Business
+Review Date: April 2026
+
+COVERAGE GAP ANALYSIS — 23 clients reviewed
+
+CRITICAL GAPS:
+1. Umbrella Gap: 8 pool-owning clients with no umbrella — $1.96M unprotected
+2. Auto Minimum Limits: 12 clients at AZ minimum $25K/$50K — catastrophic exposure
+3. Cyber Liability: 6 commercial clients with no cyber coverage — avg breach $4.35M
+4. HOA Condo Gap: 4 clients with bare-walls HOA master — no HO-6
+
+RENEWALS AT RISK:
+- 3 wildfire-zone properties — carriers threatening non-renewal
+- 2 E&O policies expiring in 30 days — agents need renewal guidance
+
+PREMIUM OPPORTUNITY: $42,800 identified in upsell/cross-sell`,
+
+  era:`ERA BATCH — Insurance ERA_20260415
+835 Remittance Batch
+
+TOTAL BILLED: $184,600
+TOTAL PAID: $142,800
+VARIANCE: -$41,800
+
+DENIAL CODES:
+CO-45 (Contractual): $22,400
+PR-2 (Patient responsibility): $8,600
+CO-4 (Late filing): $6,200 ← APPEAL ELIGIBLE
+CO-197 (Auth not obtained): $4,600 ← REVIEW REQUIRED
+
+APPEAL OPPORTUNITIES: $10,800 recoverable
+MISSING W-9: 2 providers
+HRSA REPORTING: Overdue — 5 days past deadline`
+};
+
+function loadSample(key){
+  const s=SAMPLES[key];
+  if(s){
+    document.getElementById('docPaste').value=s;
+    docText=s;
+    document.getElementById('sbDoc').textContent=key.toUpperCase()+' sample · '+s.length+' chars';
+    addLog('Sample loaded',key+' document · '+s.length+' chars','g');
+  }
+}
+
+function addLog(text,detail,type){
+  const list=document.getElementById('logList');
+  const item=document.createElement('div');
+  item.className='log-item';
+  item.innerHTML=`<div class="log-dot ${type}"></div><div><span class="log-text">${text}</span>${detail?`<span class="log-detail"> · ${detail}</span>`:''}</div>`;
+  list.insertBefore(item,list.firstChild);
+}
+
+function setEngState(i,state){
+  const el=document.getElementById('es'+i);
+  const tag=document.getElementById('tag-e'+i);
+  el.className='eng-st '+state;
+  el.textContent=state.toUpperCase();
+  if(tag){
+    tag.className='ec-tag '+(state==='done'?'done':state==='running'?'running':'');
+    tag.textContent=state==='done'?'COMPLETE ✓':state==='running'?'RUNNING...':'IDLE';
+  }
+}
+
+function setEngBody(i,text){
+  const body=document.getElementById('body-e'+i);
+  const chars=document.getElementById('chars-e'+i);
+  if(body){body.textContent=text;body.classList.add('live');}
+  if(chars) chars.textContent=text.length+' chars';
+  engOut[i]=text;
+}
+
+function copyField(id){ navigator.clipboard.writeText(document.getElementById(id).textContent).then(()=>addLog('Copied',id,'f')); }
+
+const PROMPTS = [
+(doc,e)=>`You are a TSM Insurance Claim Intelligence AI.
+DOC TYPE: ${selectedDocType}
+DOCUMENT: ${doc.slice(0,1200)}
+
+ENGINE 01 — CLAIM INTELLIGENCE
+Extract key facts. Format exactly:
+DOC TYPE: [type]
+CLAIM/POLICY ID: [identifier]
+TOTAL AMOUNT: [primary dollar figure]
+KEY PARTIES: [insurer, insured, providers]
+DENIAL CODES: [codes found or "None"]
+CRITICAL ITEMS: [top 3-5 flagged items with amounts]
+APPEAL ELIGIBLE: [Yes/No — reason]
+RISK SCORE: [1-100]
+KEY FACTS:
+1. [fact]
+2. [fact]
+3. [fact]`,
+
+(doc,e)=>`You are a TSM Insurance Risk & Denial Analyst.
+ENGINE 01 FACTS:
+${e[1]}
+
+ENGINE 02 — RISK & DENIAL ANALYSIS
+DENIAL CODES IDENTIFIED: [list each with meaning and dollar amount]
+APPEAL WINDOWS: [deadlines for each appealable denial]
+COVERAGE GAPS: [missing coverage items]
+FRAUD INDICATORS: [any red flags or "None"]
+DOCUMENTATION GAPS: [missing CMN, auth, W-9, etc.]
+EXCEPTION COUNT: [number]
+RISK LEVEL: [Low/Medium/High/Critical] — [rationale]`,
+
+(doc,e)=>`You are a TSM Insurance Financial Exposure Analyst.
+ENGINE 01 FACTS: ${e[1].slice(0,400)}
+ENGINE 02 RISK: ${e[2]}
+
+ENGINE 03 — FINANCIAL EXPOSURE
+TOTAL EXPOSURE: [dollar range]
+RECOVERABLE AMOUNT: [what can be appealed/recovered]
+WRITE-OFF RISK: [amount at permanent loss risk]
+APPEAL ROI: [cost to appeal vs. recovery potential]
+PREMIUM OPPORTUNITY: [cross-sell/upsell dollar potential if applicable]
+FINANCIAL RISK SCORE: [1-100] — [rationale]
+EXECUTIVE ESCALATION: [Yes/No] — [reason]`,
+
+(doc,e)=>`You are a TSM Insurance Compliance Officer.
+ENGINE 01 FACTS: ${e[1].slice(0,300)}
+ENGINE 02 RISK FLAGS: ${e[2]}
+
+ENGINE 04 — COMPLIANCE & REGULATORY
+CMS/MEDICARE EXPOSURE: [risk level and reason]
+AZ DOI FLAGS: [state regulatory issues]
+HIPAA RISK: [any PHI/documentation concerns]
+CE/LICENSING FLAGS: [agent renewal issues or "None"]
+OIG EXPOSURE: [fraud/abuse risk level]
+SELF-DISCLOSURE RISK: [Yes/No] — [reason]
+COMPLIANCE RISK LEVEL: [Low/Medium/High/Critical]
+IMMEDIATE COMPLIANCE ACTIONS:
+1. [action]
+2. [action]
+3. [action]`,
+
+(doc,e)=>`You are a TSM Insurance Recovery Strategist.
+ENGINE 03 IMPACT: ${e[3]}
+ENGINE 04 COMPLIANCE: ${e[4]}
+
+ENGINE 05 — RECOVERY & APPEAL PLAN
+APPEAL STRATEGY: [specific approach for each appealable denial]
+PRIORITY ACTIONS (dollar-quantified):
+1. [Action] — $[amount] — [Owner] — [Deadline]
+2. [Action] — $[amount] — [Owner] — [Deadline]
+3. [Action] — $[amount] — [Owner] — [Deadline]
+4. [Action] — $[amount] — [Owner] — [Deadline]
+RECOVERY TIMELINE: [days]
+QUICK WINS (48 hrs): [immediate steps]
+DOCUMENTATION NEEDED: [list]
+ESCALATE TO PRINCIPAL: [Yes/No] — [reason]`,
+
+(doc,e)=>`You are the TSM Insurance App Dispatch Engine.
+ENGINE 03 RISK: ${e[3].slice(0,300)}
+ENGINE 05 ACTIONS: ${e[5]}
+
+ENGINE 06 — APP DISPATCH
+Recommend exactly 5 Insurance apps ranked by relevance. Available: Claims Triage, DME Billing Module, P&C Command, CE Study Prep, Agent Onboarding, AZ Insurance Command, Insurance Intel, BNCA Chain, PC Command, DME Benefits Page, AHIP Certification Prep
+
+Repeat 5 times:
+APP: [name]
+RANK: [#1-5]
+IS_TOP: [YES for #1 only, else NO]
+HOW_TO_USE: [3 sentences — exact tab to open, specific data to enter, specific output to produce for THIS document's issues]
+TAGS: [TAG1], [TAG2], [TAG3]
+
+DISPATCH_INTRO: [1-2 sentences on why these 5 apps address the specific issues found]`
+];
+
+const FALLBACKS = [
+(doc,e)=>`DOC TYPE: ${selectedDocType}\nCLAIM/POLICY ID: Review document\nTOTAL AMOUNT: Per document\nKEY PARTIES: As identified\nDENIAL CODES: Manual review required\nCRITICAL ITEMS: Review all flagged items\nAPPEAL ELIGIBLE: Assess with compliance team\nRISK SCORE: 65\nKEY FACTS:\n1. Document classified as ${selectedDocType}\n2. Manual review recommended\n3. Consult compliance before processing`,
+(doc,e)=>`DENIAL CODES IDENTIFIED: Manual review required\nAPPEAL WINDOWS: Verify 30-120 day windows per code\nCOVERAGE GAPS: Review policy against claim\nFRAUD INDICATORS: None identified without full review\nDOCUMENTATION GAPS: Verify CMN, auth, W-9 status\nEXCEPTION COUNT: Unknown\nRISK LEVEL: Medium — manual assessment required`,
+(doc,e)=>`TOTAL EXPOSURE: Review document for exact amounts\nRECOVERABLE AMOUNT: Assess after appeal review\nWRITE-OFF RISK: Monitor denials over 120 days\nAPPEAL ROI: Positive for most correctable denials\nPREMIUM OPPORTUNITY: Coverage gap analysis needed\nFINANCIAL RISK SCORE: 60\nEXECUTIVE ESCALATION: Yes — pending full assessment`,
+(doc,e)=>`CMS/MEDICARE EXPOSURE: Review for Medicare billing patterns\nAZ DOI FLAGS: Verify producer licensing current\nHIPAA RISK: Document all PHI handling\nCE/LICENSING FLAGS: Check renewal dates immediately\nOIG EXPOSURE: Review for excluded provider risk\nSELF-DISCLOSURE RISK: Assess with counsel\nCOMPLIANCE RISK LEVEL: Medium\nIMMEDIATE COMPLIANCE ACTIONS:\n1. Document all exceptions\n2. Notify compliance officer\n3. Preserve audit trail`,
+(doc,e)=>`APPEAL STRATEGY: File timely appeals for all CO-4 and CO-197 denials\nPRIORITY ACTIONS:\n1. File appeals on eligible denials — $TBD — Billing Team — 30 days\n2. Obtain missing CMN/documentation — $TBD — Clinical — 48 hours\n3. Update coverage gaps — $TBD — Agent — 72 hours\n4. Notify principal of escalations — $0 — Manager — 24 hours\nRECOVERY TIMELINE: 30-90 days\nQUICK WINS (48 hrs): Gather missing documentation\nDOCUMENTATION NEEDED: CMN, auth records, W-9s\nESCALATE TO PRINCIPAL: Yes — pending full review`,
+(doc,e)=>`APP: Claims Triage\nRANK: #1\nIS_TOP: YES\nHOW_TO_USE: Open Claims Triage tab and enter the flagged claim numbers. Submit each claim type with denial code to get severity scoring. Generate triage report with recommended action lane for each claim.\nTAGS: CLAIMS, TRIAGE, DENIAL\n\nAPP: DME Billing Module\nRANK: #2\nIS_TOP: NO\nHOW_TO_USE: Open DME Billing tab and enter HCPCS codes from denied claims. Set CMN status to reflect current documentation gaps. Generate appeal letter with required documentation checklist.\nTAGS: DME, APPEAL, CMS\n\nAPP: P&C Command\nRANK: #3\nIS_TOP: NO\nHOW_TO_USE: Open Coverage Analysis tab and cross-reference flagged policy gaps. Enter client risk factors to generate coverage recommendations. Produce gap report for client presentation.\nTAGS: POLICY, COVERAGE, GAP\n\nAPP: CE Study Prep\nRANK: #4\nIS_TOP: NO\nHOW_TO_USE: Open CE Tracker and verify agent renewal deadlines against flagged compliance issues. Generate study guide for relevant compliance topics. Schedule NIPR submission before deadline.\nTAGS: CE, COMPLIANCE, LICENSING\n\nAPP: BNCA Chain\nRANK: #5\nIS_TOP: NO\nHOW_TO_USE: Open BNCA Chain tab and enter the full situation summary from this war room analysis. Run full 4-node chain to generate executive decision package. Relay HITL script to principal or CFO.\nTAGS: BNCA, EXECUTIVE, ESCALATION\n\nDISPATCH_INTRO: These 5 apps address the primary issues: claim triage, DME appeal management, policy coverage gaps, agent CE compliance, and executive escalation through the BNCA chain.`
+];
+
+async function fireEngines(){
+  docText=document.getElementById('docPaste').value.trim();
+  groqKey=document.getElementById('groqKey').value.trim();
+  if(!docText){alert('Paste or load an insurance document first.');return;}
+  if(!groqKey){alert('Enter your Groq API key.');return;}
+
+  document.getElementById('fireBtn').disabled=true;
+  document.getElementById('spinner').classList.add('active');
+  document.getElementById('escalateBar').classList.remove('visible');
+  document.getElementById('appDispatch').classList.remove('visible');
+  document.getElementById('dispatchHdr').style.display='none';
+
+  const labels=['Claim Intelligence','Risk & Denial','Financial Exposure','Compliance','Recovery Plan','App Dispatch'];
+  enginesComplete=0;
+  const e={};
+
+  for(let i=1;i<=6;i++){
+    setEngState(i,'running');
+    document.getElementById('spinLabel').textContent='Engine 0'+i+' — '+labels[i-1]+'...';
+    addLog('Engine 0'+i+' running',labels[i-1],'a');
+
+    let txt='';
+    const prompt = PROMPTS[i-1](docText,e);
+    try{
+      const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
+        body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:550,temperature:0.3,messages:[{role:'user',content:prompt}]})
+      });
+      if(res.ok){const d=await res.json();txt=d.choices?.[0]?.message?.content||'';}
+      if(!txt.trim()) throw new Error('empty');
+      trackTokens(prompt,txt);
+    }catch(err){
+      txt=FALLBACKS[i-1](docText,e);
+      addLog('Engine 0'+i+' fallback',err.message,'f');
+    }
+
+    e[i]=txt;
+    setEngBody(i,txt);
+    setEngState(i,'done');
+    enginesComplete++;
+    document.getElementById('kpiEngines').textContent=enginesComplete+'/6';
+    document.getElementById('sbEngines').textContent=enginesComplete+' / 6 Engines Complete';
+    addLog('Engine 0'+i+' complete',labels[i-1]+' · '+new Date().toLocaleTimeString(),'g');
+    await new Promise(r=>setTimeout(r,280));
+  }
+
+  const combined=(e[1]||'')+(e[3]||'');
+  const riskM=combined.match(/(?:FINANCIAL RISK SCORE|RISK SCORE)[:\s]+(\d+)/i);
+  const expM=(e[3]||'').match(/TOTAL EXPOSURE[:\s]+([^\n]+)/i);
+  const denM=(e[2]||'').match(/EXCEPTION COUNT[:\s]+([^\n]+)/i);
+  const compM=(e[4]||'').match(/COMPLIANCE RISK LEVEL[:\s]+([^\n]+)/i);
+  const appM=(e[1]||'').match(/APPEAL ELIGIBLE[:\s]+([^\n]+)/i);
+
+  if(riskM){
+    const r=parseInt(riskM[1]);
+    document.getElementById('kpiRisk').textContent=r;
+    document.getElementById('snapRisk').textContent=r+'/100';
+    document.getElementById('riskFill').style.width=r+'%';
+    document.getElementById('riskFill').style.background=r>70?'var(--red)':r>40?'var(--amber)':'var(--green)';
+    document.getElementById('kpiRisk').className='kpi-val '+(r>70?'red':r>40?'':'green');
+  }
+  if(expM){document.getElementById('kpiExposure').textContent=expM[1].trim().slice(0,18);document.getElementById('snapExposure').textContent=expM[1].trim().slice(0,14);}
+  if(denM) document.getElementById('kpiDenials').textContent=denM[1].trim().slice(0,10);
+  if(compM) document.getElementById('kpiCompliance').textContent=compM[1].trim().slice(0,10);
+  if(appM) document.getElementById('snapAppeal').textContent=appM[1].trim().slice(0,8);
+  document.getElementById('snapType').textContent=selectedDocType.slice(0,10);
+
+  buildAppDispatch(e[6]||'');
+
+  document.getElementById('alertText').textContent='6-ENGINE ANALYSIS COMPLETE — '+selectedDocType.toUpperCase()+' — ESCALATE TO INSURANCE STRATEGIST';
+  document.querySelector('.a-dot').style.background='var(--green)';
+  document.querySelector('.a-dot').style.boxShadow='0 0 5px var(--green)';
+  document.getElementById('alertBar').style.background='rgba(0,255,198,.04)';
+  document.getElementById('alertBar').style.borderBottomColor='rgba(0,255,198,.15)';
+  document.getElementById('alertText').style.color='var(--green)';
+
+  document.getElementById('escalSub').textContent='6-engine analysis complete — '+selectedDocType+' · Ready to escalate to Insurance Strategist.';
+  document.getElementById('escalateBar').classList.add('visible');
+  document.getElementById('sbDoc').textContent=selectedDocType+' · '+docText.length+' chars';
+  document.getElementById('spinner').classList.remove('active');
+  document.getElementById('fireBtn').disabled=false;
+  addLog('All 6 Engines Complete','Ready to escalate to Insurance Strategist','p');
+
+  storeRelay(e);
+}
+
+function buildAppDispatch(e6text){
+  const dispatch=document.getElementById('appDispatch');
+  const hdr=document.getElementById('dispatchHdr');
+  if(!e6text) return;
+
+  const APP_URLS={
+    'Claims Triage':'ins-hub.html','DME Billing Module':'ins-hub.html','P&C Command':'pc-command.html',
+    'CE Study Prep':'ce-study-prep.html','Agent Onboarding':'ins-hub.html',
+    'AZ Insurance Command':'az-ins.html','Insurance Intel':'ins-intel.html',
+    'BNCA Chain':'ins-hub.html','PC Command':'pc-command.html',
+    'DME Benefits Page':'dme.html','AHIP Certification Prep':'ce-study-prep.html'
+  };
+
+  const apps=[...e6text.matchAll(/APP:\s*([^\n]+)\nRANK:\s*([^\n]+)\nIS_TOP:\s*([^\n]+)\nHOW_TO_USE:\s*([\s\S]*?)(?=\nTAGS:|$)/g)];
+  if(!apps.length) return;
+
+  dispatch.innerHTML='';
+  apps.forEach(m=>{
+    const name=m[1].trim();
+    const isTop=m[3].trim().toUpperCase()==='YES';
+    const howto=m[4].trim();
+    const url=APP_URLS[name]||'ins-hub.html';
+    const card=document.createElement('div');
+    card.className='app-card';
+    if(isTop) card.style.borderColor='rgba(201,168,76,.4)';
+    card.innerHTML=`
+      <div class="app-card-rank">${isTop?'⭐ TOP RECOMMENDATION':'Rank '+m[2].trim()}</div>
+      <div class="app-card-name" style="${isTop?'color:var(--gold2)':''}">${name}</div>
+      <div class="app-card-how">${howto}</div>
+      <button class="app-card-btn" onclick="nav('${url}')" style="${isTop?'border-color:rgba(201,168,76,.4);color:var(--gold2)':''}">OPEN ${name.toUpperCase()} →</button>
+    `;
+    dispatch.appendChild(card);
+  });
+
+  const intro=e6text.match(/DISPATCH_INTRO:\s*([^\n]+(?:\n[^\n]+)?)/i);
+  if(intro){
+    const introEl=document.createElement('div');
+    introEl.style.cssText='grid-column:1/-1;background:rgba(201,168,76,.04);border:1px solid rgba(201,168,76,.15);padding:10px 14px;font-size:9px;color:var(--dim);line-height:1.7';
+    introEl.textContent=intro[1].trim();
+    dispatch.insertBefore(introEl,dispatch.firstChild);
+  }
+
+  hdr.style.display='flex';
+  dispatch.classList.add('visible');
+}
+
+function storeRelay(e){
+  const payload={
+    doc:docText,docType:selectedDocType,
+    engines:{e1:e[1]||'',e2:e[2]||'',e3:e[3]||'',e4:e[4]||'',e5:e[5]||'',e6:e[6]||''},
+    snapshot:{
+      risk:document.getElementById('snapRisk').textContent,
+      exposure:document.getElementById('snapExposure').textContent,
+      docType:selectedDocType,
+      denials:document.getElementById('kpiDenials').textContent,
+      compliance:document.getElementById('kpiCompliance').textContent,
+      appeal:document.getElementById('snapAppeal').textContent
+    },
+    timestamp:new Date().toISOString(),
+    chainStep:'insurance-war-room'
+  };
+  try{
+    sessionStorage.setItem('TSM_INS_WAR_RELAY',JSON.stringify(payload));
+    localStorage.setItem('tsm_ins_war_relay',JSON.stringify(payload));
+  }catch(err){console.warn('Store error:',err);}
+
+  // Persist state for return navigation
+  try{
+    sessionStorage.setItem('TSM_INS_WAR_STATE',JSON.stringify({
+      docText,selectedDocType,
+      engines:{e1:e[1]||'',e2:e[2]||'',e3:e[3]||'',e4:e[4]||'',e5:e[5]||'',e6:e[6]||''},
+      kpis:{
+        risk:document.getElementById('kpiRisk').textContent,
+        exposure:document.getElementById('kpiExposure').textContent,
+        denials:document.getElementById('kpiDenials').textContent,
+        compliance:document.getElementById('kpiCompliance').textContent,
+        riskFillWidth:document.getElementById('riskFill').style.width,
+        riskFillColor:document.getElementById('riskFill').style.background
+      },
+      snap:{
+        type:document.getElementById('snapType').textContent,
+        risk:document.getElementById('snapRisk').textContent,
+        exposure:document.getElementById('snapExposure').textContent,
+        appeal:document.getElementById('snapAppeal').textContent
+      },
+      e6text:e[6]||''
+    }));
+  }catch(err){console.warn('State persist error:',err);}
+}
+
+function exportFull(){
+  let out=`TSM INSURANCE WAR ROOM — FULL ANALYSIS\n${new Date().toLocaleString()}\nDocument Type: ${selectedDocType}\n\n`;
+  for(let i=1;i<=6;i++) out+=`\n${'='.repeat(60)}\nENGINE 0${i}\n${'='.repeat(60)}\n${engOut[i]||'No output'}\n`;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([out],{type:'text/plain'}));
+  a.download=`tsm-ins-war-room-${Date.now()}.txt`;
+  a.click();
+}
+
+function clearAll(){
+  docText='';engOut={};enginesComplete=0;
+  document.getElementById('docPaste').value='';
+  document.getElementById('escalateBar').classList.remove('visible');
+  document.getElementById('appDispatch').classList.remove('visible');
+  document.getElementById('dispatchHdr').style.display='none';
+  ['kpiRisk','kpiExposure','kpiDenials','kpiCompliance'].forEach(id=>document.getElementById(id).textContent='—');
+  document.getElementById('kpiEngines').textContent='0/6';
+  ['snapRisk','snapExposure','snapType','snapAppeal'].forEach(id=>document.getElementById(id).textContent='—');
+  document.getElementById('riskFill').style.width='0%';
+  for(let i=1;i<=6;i++){
+    setEngState(i,'idle');
+    const b=document.getElementById('body-e'+i);if(b){b.classList.remove('live');b.textContent='// Waiting...';}
+    const c=document.getElementById('chars-e'+i);if(c) c.textContent='0 chars';
+  }
+  sessionStorage.removeItem('TSM_INS_WAR_STATE');
+  addLog('War Room cleared','Ready for new document','f');
+}
+
+function escalateToStrategist(){
+  addLog('Escalating to Insurance Strategist','6-engine package dispatched','p');
+  setTimeout(()=>nav('insurance-strategist.html'),400);
+}
+
+addLog('Insurance War Room initialized','6 engines standing by — load insurance document to begin','g');
+
+// Restore persisted state
+(function(){
+  try{
+    const raw=sessionStorage.getItem('TSM_INS_WAR_STATE');
+    if(!raw) return;
+    const s=JSON.parse(raw);
+    if(!s.docText) return;
+    docText=s.docText;
+    selectedDocType=s.selectedDocType||selectedDocType;
+    document.getElementById('docPaste').value=s.docText;
+    document.getElementById('sbDoc').textContent=s.selectedDocType+' · '+s.docText.length+' chars';
+    document.querySelectorAll('.dt-btn').forEach(b=>{b.classList.toggle('active',b.textContent.trim()===s.selectedDocType);});
+    for(let i=1;i<=6;i++){
+      const txt=s.engines['e'+i]||'';
+      if(!txt) continue;
+      setEngBody(i,txt);setEngState(i,'done');enginesComplete++;
+    }
+    document.getElementById('kpiEngines').textContent='6/6';
+    document.getElementById('sbEngines').textContent='6 / 6 Engines Complete';
+    document.getElementById('kpiRisk').textContent=s.kpis.risk;
+    document.getElementById('kpiExposure').textContent=s.kpis.exposure;
+    document.getElementById('kpiDenials').textContent=s.kpis.denials;
+    document.getElementById('kpiCompliance').textContent=s.kpis.compliance;
+    document.getElementById('riskFill').style.width=s.kpis.riskFillWidth;
+    document.getElementById('riskFill').style.background=s.kpis.riskFillColor;
+    document.getElementById('snapType').textContent=s.snap.type;
+    document.getElementById('snapRisk').textContent=s.snap.risk;
+    document.getElementById('snapExposure').textContent=s.snap.exposure;
+    document.getElementById('snapAppeal').textContent=s.snap.appeal;
+    if(s.e6text) buildAppDispatch(s.e6text);
+    document.getElementById('escalSub').textContent='6-engine analysis complete — '+s.selectedDocType+' · Ready to escalate to Insurance Strategist.';
+    document.getElementById('escalateBar').classList.add('visible');
+    addLog('War Room state restored',s.selectedDocType+' analysis reloaded','p');
+  }catch(err){console.warn('State restore error:',err);}
+})();
+
+// Relay from portal
+(function(){
+  try{
+    const raw=sessionStorage.getItem('INS_DOC_RELAY');
+    if(!raw) return;
+    const relay=JSON.parse(raw);
+    if(!relay.content) return;
+    sessionStorage.removeItem('INS_DOC_RELAY');
+    document.getElementById('docPaste').value=relay.content;
+    docText=relay.content;
+    document.getElementById('sbDoc').textContent=(relay.name||'Relayed doc')+' · relayed from portal';
+    addLog('Portal relay received',(relay.name||'document')+' · '+relay.content.length+' chars','p');
+  }catch(e){console.warn('Relay error:',e);}
+})();
+</script>
+</body>
+</html>
