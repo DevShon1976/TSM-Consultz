@@ -1164,7 +1164,14 @@ function speechLoadVoices(){
 
 if(speechOK){
   window.speechSynthesis.onvoiceschanged = speechLoadVoices;
-  setTimeout(speechLoadVoices, 500);
+  // Chrome loads voices async — poll until available
+  let voicePollTries = 0;
+  const voicePoll = setInterval(()=>{
+    voicePollTries++;
+    const v = window.speechSynthesis.getVoices();
+    if(v.length){ speechLoadVoices(); clearInterval(voicePoll); }
+    if(voicePollTries > 20) clearInterval(voicePoll);
+  }, 250);
 }
 
 function speechGetVoice(){
