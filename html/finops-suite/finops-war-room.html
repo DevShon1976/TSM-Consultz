@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FinOps War Room · TSM</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05090d;--s2:#07131d;--s3:#0a1a26;--border:rgba(0,170,255,.13);
+  --green:#00ffc6;--blue:#00aaff;--gold:#ffc400;--red:#ff4d6d;
+  --amber:#ff9500;--cyan:#00e5ff;--purple:#b56cff;--orange:#ff7a00;
+  --text:#cce8f4;--dim:#3a5a70;--mono:'IBM Plex Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12px;min-height:100vh}
+body::before{content:'';position:fixed;top:0;right:0;width:500px;height:500px;background:radial-gradient(circle,rgba(0,170,255,.05),transparent 70%);pointer-events:none}
+
+/* NAV */
+.nav{height:38px;background:rgba(7,19,29,.97);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:0;position:sticky;top:0;z-index:90}
+.nav-brand{color:var(--blue);font-weight:700;font-size:10px;letter-spacing:2px;margin-right:20px}
+.nav-btn{background:none;border:none;color:var(--dim);font-family:var(--mono);font-size:9px;letter-spacing:1.5px;cursor:pointer;padding:0 12px;height:38px;border-bottom:2px solid transparent;transition:all .2s}
+.nav-btn:hover{color:var(--text)}
+.nav-btn.active{color:var(--blue);border-bottom-color:var(--blue)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:16px;font-size:9px;color:var(--dim)}
+.nav-clock{color:rgba(0,170,255,.7)}
+
+/* ALERT BAR */
+.alert-bar{background:rgba(255,149,0,.05);border-bottom:1px solid rgba(255,149,0,.18);padding:5px 20px;display:flex;align-items:center;gap:8px;font-size:9px;letter-spacing:1.5px;color:var(--amber)}
+.a-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);box-shadow:0 0 5px var(--amber);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:260px 1fr;height:calc(100vh - 62px)}
+
+/* SIDEBAR */
+.sidebar{background:var(--s2);border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column}
+.sb-sec{padding:12px 14px;border-bottom:1px solid var(--border)}
+.sb-lbl{font-size:8px;letter-spacing:2px;color:var(--dim);margin-bottom:8px}
+
+.doc-type-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px}
+.dt-btn{background:var(--s3);border:1px solid var(--border);color:var(--dim);font-family:var(--mono);font-size:8px;padding:5px 4px;cursor:pointer;letter-spacing:.5px;transition:all .2s;text-align:center}
+.dt-btn:hover{border-color:var(--blue);color:var(--blue)}
+.dt-btn.active{background:rgba(0,170,255,.08);border-color:var(--blue);color:var(--blue)}
+
+.paste-area{width:100%;background:var(--s3);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:9px;padding:8px;resize:vertical;min-height:110px;outline:none;line-height:1.6}
+.paste-area:focus{border-color:var(--blue)}
+
+.samples{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px}
+.sample-chip{background:var(--s3);border:1px solid var(--border);color:var(--dim);font-family:var(--mono);font-size:8px;padding:2px 7px;cursor:pointer;transition:all .2s}
+.sample-chip:hover{border-color:var(--blue);color:var(--blue)}
+
+.groq-wrap{display:flex;gap:4px}
+.groq-inp{flex:1;background:var(--s3);border:1px solid var(--border);color:var(--green);font-family:var(--mono);font-size:8px;padding:4px 6px;outline:none}
+.groq-inp:focus{border-color:var(--blue)}
+
+.btn{border:1px solid;font-family:var(--mono);font-size:8px;letter-spacing:1.5px;cursor:pointer;padding:6px 10px;transition:all .2s}
+.btn-blue{background:var(--blue);border-color:var(--blue);color:#000;font-weight:700}
+.btn-blue:hover{background:#0090e0}
+.btn-outline{background:transparent;border-color:var(--blue);color:var(--blue)}
+.btn-outline:hover{background:rgba(0,170,255,.08)}
+.btn-ghost{background:transparent;border-color:var(--border);color:var(--dim)}
+.btn-ghost:hover{border-color:var(--dim);color:var(--text)}
+.btn-gold{background:var(--gold);border-color:var(--gold);color:#000;font-weight:700}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-row{display:flex;gap:4px;flex-wrap:wrap}
+
+/* ENGINE LIST */
+.eng-list{display:flex;flex-direction:column;gap:3px}
+.eng-item{display:flex;align-items:center;gap:6px;padding:4px 6px;background:var(--s3);border:1px solid var(--border)}
+.eng-num{color:var(--dim);font-size:8px;width:14px}
+.eng-name{flex:1;font-size:8px;color:var(--text)}
+.eng-st{font-size:7px;letter-spacing:1px;padding:1px 5px;border:1px solid}
+.eng-st.idle{color:var(--dim);border-color:var(--border)}
+.eng-st.running{color:var(--amber);border-color:var(--amber);animation:blink 1s infinite}
+.eng-st.done{color:var(--green);border-color:var(--green)}
+.eng-st.error{color:var(--red);border-color:var(--red)}
+
+/* SNAP */
+.snap-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.snap-item{background:var(--s3);border:1px solid var(--border);padding:5px 6px}
+.snap-lbl{font-size:7px;color:var(--dim);letter-spacing:1px;margin-bottom:2px}
+.snap-val{font-size:10px;color:var(--blue);font-weight:700}
+
+/* MAIN */
+.main{overflow-y:auto;background:var(--bg)}
+.hero{padding:22px 28px 16px;border-bottom:1px solid var(--border)}
+.hero-title{font-size:22px;color:var(--blue);font-weight:700;letter-spacing:2px;margin-bottom:3px}
+.hero-sub{color:var(--dim);font-size:9px;letter-spacing:1px}
+
+/* KPI BAR */
+.kpi-bar{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid var(--border)}
+.kpi-cell{padding:12px 18px;border-right:1px solid var(--border)}
+.kpi-cell:last-child{border-right:none}
+.kpi-lbl{font-size:7px;letter-spacing:1.5px;color:var(--dim);margin-bottom:7px}
+.kpi-val{font-size:20px;font-weight:700;color:var(--blue)}
+.kpi-val.red{color:var(--red)}.kpi-val.gold{color:var(--gold)}.kpi-val.green{color:var(--green)}
+.kpi-bar-fill{height:2px;background:var(--border);margin-top:5px}
+.kpi-bar-inner{height:100%;background:var(--blue);width:0%;transition:width .8s}
+.kpi-sub{font-size:8px;color:var(--dim);margin-top:3px}
+
+/* SECTION */
+.sec-hdr{padding:14px 28px 6px;display:flex;align-items:center;gap:8px}
+.sec-dot{width:5px;height:5px;background:var(--blue);border-radius:50%}
+.sec-title{font-size:8px;letter-spacing:2.5px;color:var(--blue)}
+
+/* ENGINE GRID */
+.engine-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);margin:0 28px 20px}
+.eng-card{background:var(--s2);padding:16px;display:flex;flex-direction:column;gap:8px}
+.ec-hdr{display:flex;align-items:center;justify-content:space-between}
+.ec-num{font-size:10px;color:var(--blue);font-weight:700}
+.ec-title{font-size:9px;letter-spacing:1.5px;color:var(--text);margin-left:6px}
+.ec-tag{font-size:7px;letter-spacing:1px;padding:2px 6px;border:1px solid var(--border);color:var(--dim)}
+.ec-tag.done{color:var(--green);border-color:var(--green)}
+.ec-tag.running{color:var(--amber);border-color:var(--amber)}
+.ec-body{font-size:9px;color:var(--dim);line-height:1.7;min-height:70px;white-space:pre-wrap}
+.ec-body.live{color:var(--text)}
+.ec-foot{display:flex;align-items:center;justify-content:space-between}
+.ec-chars{font-size:8px;color:var(--dim)}
+.copy-btn{background:none;border:1px solid var(--border);color:var(--dim);font-family:var(--mono);font-size:7px;letter-spacing:1px;padding:2px 6px;cursor:pointer}
+.copy-btn:hover{border-color:var(--blue);color:var(--blue)}
+
+/* APP DISPATCH */
+.app-dispatch{margin:0 28px 20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;display:none}
+.app-dispatch.visible{display:grid}
+.app-card{background:var(--s2);border:1px solid var(--border);padding:12px;transition:border-color .2s}
+.app-card:hover{border-color:rgba(0,170,255,.3)}
+.app-card-rank{font-size:8px;color:var(--dim);margin-bottom:4px}
+.app-card-name{font-size:11px;font-weight:700;color:var(--blue);margin-bottom:6px}
+.app-card-how{font-size:9px;color:var(--dim);line-height:1.6;margin-bottom:8px}
+.app-card-btn{background:transparent;border:1px solid rgba(0,170,255,.3);color:var(--blue);font-family:var(--mono);font-size:8px;letter-spacing:1px;padding:4px 10px;cursor:pointer;transition:all .2s}
+.app-card-btn:hover{background:rgba(0,170,255,.08)}
+
+/* LOG */
+.log-wrap{padding:0 28px 20px}
+.log-title{font-size:8px;letter-spacing:2px;color:var(--dim);margin-bottom:6px}
+.log-list{display:flex;flex-direction:column;gap:3px;max-height:120px;overflow-y:auto}
+.log-item{display:flex;gap:8px;font-size:8px}
+.log-dot{width:5px;height:5px;border-radius:50%;margin-top:3px;flex-shrink:0}
+.log-dot.g{background:var(--green)}.log-dot.a{background:var(--amber)}.log-dot.p{background:var(--cyan)}.log-dot.f{background:var(--dim)}
+.log-text{color:var(--text)}.log-detail{color:var(--dim)}
+
+/* ESCALATE BAR */
+.escalate-bar{position:sticky;bottom:0;background:#061018;border-top:1px solid rgba(255,196,0,.25);padding:12px 28px;display:none;align-items:center;justify-content:space-between;gap:16px}
+.escalate-bar.visible{display:flex}
+.eb-title{font-size:10px;color:var(--gold);letter-spacing:1.5px;font-weight:700;margin-bottom:2px}
+.eb-sub{font-size:8px;color:var(--dim)}
+.eb-btns{display:flex;gap:6px}
+
+/* SPINNER */
+.spinner{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.spinner.active{display:flex}
+.spin-ring{width:44px;height:44px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin-lbl{color:var(--blue);font-size:10px;letter-spacing:2px}
+.spin-eng{color:var(--dim);font-size:8px;letter-spacing:1px}
+
+/* STATUS BAR */
+.status-bar{position:fixed;bottom:0;left:0;right:0;background:#040a10;border-top:1px solid var(--border);padding:4px 16px;display:flex;align-items:center;gap:14px;font-size:8px;color:var(--dim);z-index:50}
+.sb-dot{width:4px;height:4px;border-radius:50%;background:var(--blue);box-shadow:0 0 4px var(--blue)}
+.sb-sep{color:var(--border)}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-brand">⚡ TSM FINOPS</div>
+  <button class="nav-btn active">WAR ROOM</button>
+  <button class="nav-btn" onclick="nav('doc-analysis-tab.html')">DOC ANALYSIS</button>
+  <button class="nav-btn" onclick="nav('finops-main-strategist.html')">STRATEGIST</button>
+  <button class="nav-btn" onclick="nav('finops-executive-portal.html')">EXECUTIVE</button>
+  <button class="nav-btn" onclick="nav('finops-accounting.html')">ACCOUNTING</button>
+  <button class="nav-btn" onclick="nav('finops-operations.html')">OPERATIONS</button>
+  <div class="nav-right">
+    <span id="navClock" class="nav-clock">--:--:--</span>
+  </div>
+</nav>
+
+<!-- ALERT BAR -->
+<div class="alert-bar" id="alertBar">
+  <div class="a-dot"></div>
+  <span id="alertText">FINOPS WAR ROOM ACTIVE — LOAD FINANCIAL DOCUMENT — FIRE 6-ENGINE ANALYSIS</span>
+</div>
+
+<!-- SPINNER -->
+<div class="spinner" id="spinner">
+  <div class="spin-ring"></div>
+  <div class="spin-lbl">ANALYSIS PIPELINE RUNNING</div>
+  <div class="spin-eng" id="spinLabel">Initializing engines...</div>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <div class="sb-sec">
+      <div class="sb-lbl">DOCUMENT TYPE</div>
+      <div class="doc-type-grid">
+        <button class="dt-btn active" onclick="setDocType(this,'AP Aging')">AP Aging</button>
+        <button class="dt-btn" onclick="setDocType(this,'GL Extract')">GL Extract</button>
+        <button class="dt-btn" onclick="setDocType(this,'Bank Recon')">Bank Recon</button>
+        <button class="dt-btn" onclick="setDocType(this,'Invoice Audit')">Invoice Audit</button>
+        <button class="dt-btn" onclick="setDocType(this,'Budget Variance')">Budget Var.</button>
+        <button class="dt-btn" onclick="setDocType(this,'ERA Batch')">ERA Batch</button>
+        <button class="dt-btn" onclick="setDocType(this,'Cash Flow')">Cash Flow</button>
+        <button class="dt-btn" onclick="setDocType(this,'Vendor Report')">Vendor Rpt</button>
+        <button class="dt-btn" onclick="setDocType(this,'Tax / 1099')">Tax / 1099</button>
+        <button class="dt-btn" onclick="setDocType(this,'Other')">Other</button>
+      </div>
+    </div>
+
+    <div class="sb-sec">
+      <div class="sb-lbl">PASTE DOCUMENT TEXT</div>
+      <textarea class="paste-area" id="docPaste" placeholder="Paste AP aging report, GL extract, bank reconciliation, ERA batch, invoice audit, budget variance, or any financial document..."></textarea>
+      <div class="samples">
+        <button class="sample-chip" onclick="loadSample('ap')">AP Aging</button>
+        <button class="sample-chip" onclick="loadSample('gl')">GL Variance</button>
+        <button class="sample-chip" onclick="loadSample('era')">ERA Batch</button>
+        <button class="sample-chip" onclick="loadSample('invoice')">Invoice Audit</button>
+      </div>
+    </div>
+
+    <div class="sb-sec">
+      <div class="sb-lbl">GROQ API KEY</div>
+      <div class="groq-wrap">
+        <input type="password" class="groq-inp" id="groqKey" placeholder="gsk_..." oninput="saveKey()">
+        <button class="btn btn-outline" onclick="testKey()">TEST</button>
+      </div>
+    </div>
+
+    <div class="sb-sec">
+      <div class="btn-row">
+        <button class="btn btn-blue" id="fireBtn" onclick="fireEngines()" style="flex:1">⚡ FIRE ALL 6 ENGINES</button>
+        <button class="btn btn-ghost" onclick="clearAll()">CLR</button>
+      </div>
+    </div>
+
+    <div class="sb-sec">
+      <div class="sb-lbl">ENGINE STATUS</div>
+      <div class="eng-list">
+        <div class="eng-item"><span class="eng-num">01</span><span class="eng-name">Doc Intelligence</span><span class="eng-st idle" id="es1">IDLE</span></div>
+        <div class="eng-item"><span class="eng-num">02</span><span class="eng-name">Risk & Anomaly</span><span class="eng-st idle" id="es2">IDLE</span></div>
+        <div class="eng-item"><span class="eng-num">03</span><span class="eng-name">Financial Impact</span><span class="eng-st idle" id="es3">IDLE</span></div>
+        <div class="eng-item"><span class="eng-num">04</span><span class="eng-name">Compliance</span><span class="eng-st idle" id="es4">IDLE</span></div>
+        <div class="eng-item"><span class="eng-num">05</span><span class="eng-name">Recovery Plan</span><span class="eng-st idle" id="es5">IDLE</span></div>
+        <div class="eng-item"><span class="eng-num">06</span><span class="eng-name">App Dispatch</span><span class="eng-st idle" id="es6">IDLE</span></div>
+      </div>
+    </div>
+
+    <div class="sb-sec">
+      <div class="sb-lbl">FINANCIAL SNAPSHOT</div>
+      <div class="snap-grid">
+        <div class="snap-item"><div class="snap-lbl">DOC TYPE</div><div class="snap-val" id="snapType">—</div></div>
+        <div class="snap-item"><div class="snap-lbl">RISK SCORE</div><div class="snap-val" id="snapRisk">—</div></div>
+        <div class="snap-item"><div class="snap-lbl">EXPOSURE</div><div class="snap-val" id="snapExposure">—</div></div>
+        <div class="snap-item"><div class="snap-lbl">PRIORITY</div><div class="snap-val" id="snapPriority">—</div></div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main" id="mainContent">
+
+    <div class="hero">
+      <div class="hero-title">FinOps War Room</div>
+      <div class="hero-sub">6-Engine Financial Document Analysis · AP/AR · GL · Compliance · Recovery · App Dispatch → Strategist</div>
+    </div>
+
+    <div class="kpi-bar">
+      <div class="kpi-cell">
+        <div class="kpi-lbl">RISK SCORE</div>
+        <div class="kpi-val" id="kpiRisk">—</div>
+        <div class="kpi-bar-fill"><div class="kpi-bar-inner" id="riskFill"></div></div>
+        <div class="kpi-sub">/ 100</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-lbl">FINANCIAL EXPOSURE</div>
+        <div class="kpi-val red" id="kpiExposure">—</div>
+        <div class="kpi-sub">identified at risk</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-lbl">EXCEPTIONS FOUND</div>
+        <div class="kpi-val gold" id="kpiExceptions">—</div>
+        <div class="kpi-sub">items flagged</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-lbl">COMPLIANCE STATUS</div>
+        <div class="kpi-val" id="kpiCompliance">—</div>
+        <div class="kpi-sub">regulatory posture</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-lbl">ENGINES COMPLETE</div>
+        <div class="kpi-val" id="kpiEngines">0/6</div>
+        <div class="kpi-sub">analysis pipeline</div>
+      </div>
+    </div>
+
+    <div class="sec-hdr">
+      <div class="sec-dot"></div>
+      <div class="sec-title">ENGINE OUTPUTS · FINANCIAL ANALYSIS PIPELINE</div>
+    </div>
+
+    <div class="engine-grid">
+      <div class="eng-card">
+        <div class="ec-hdr"><div><span class="ec-num">01</span><span class="ec-title">DOCUMENT INTELLIGENCE</span></div><span class="ec-tag" id="tag-e1">IDLE</span></div>
+        <div class="ec-body" id="body-e1">// Waiting for financial document...
+// Extracts: doc type, parties, amounts, periods, key line items</div>
+        <div class="ec-foot"><span class="ec-chars" id="chars-e1">0 chars</span><button class="copy-btn" onclick="copyField('body-e1')">COPY</button></div>
+      </div>
+      <div class="eng-card">
+        <div class="ec-hdr"><div><span class="ec-num">02</span><span class="ec-title">RISK & ANOMALY DETECTION</span></div><span class="ec-tag" id="tag-e2">IDLE</span></div>
+        <div class="ec-body" id="body-e2">// Waiting for Engine 01...
+// Flags: duplicates, missing POs, aging buckets, variance outliers</div>
+        <div class="ec-foot"><span class="ec-chars" id="chars-e2">0 chars</span><button class="copy-btn" onclick="copyField('body-e2')">COPY</button></div>
+      </div>
+      <div class="eng-card">
+        <div class="ec-hdr"><div><span class="ec-num">03</span><span class="ec-title">FINANCIAL IMPACT</span></div><span class="ec-tag" id="tag-e3">IDLE</span></div>
+        <div class="ec-body" id="body-e3">// Waiting for Engine 01 + 02...
+// Models: exposure range, cash impact, recovery potential</div>
+        <div class="ec-foot"><span class="ec-chars" id="chars-e3">0 chars</span><button class="copy-btn" onclick="copyField('body-e3')">COPY</button></div>
+      </div>
+      <div class="eng-card">
+        <div class="ec-hdr"><div><span class="ec-num">04</span><span class="ec-title">COMPLIANCE & REGULATORY</span></div><span class="ec-tag" id="tag-e4">IDLE</span></div>
+        <div class="ec-body" id="body-e4">// Waiting for Engine 01 + 02...
+// Checks: OIG risk, 1099 flags, audit trail gaps, control failures</div>
+        <div class="ec-foot"><span class="ec-chars" id="chars-e4">0 chars</span><button class="copy-btn" onclick="copyField('body-e4')">COPY</button></div>
+      </div>
+      <div class="eng-card">
+        <div class="ec-hdr"><div><span class="ec-num">05</span><span class="ec-title">RECOVERY PLAN</span></div><span class="ec-tag" id="tag-e5">IDLE</span></div>
+        <div class="ec-body" id="body-e5">// Waiting for Engine 03 + 04...
+// Generates: prioritized action steps, owner assignments, deadlines</div>
+        <div class="ec-foot"><span class="ec-chars" id="chars-e5">0 chars</span><button class="copy-btn" onclick="copyField('body-e5')">COPY</button></div>
+      </div>
+      <div class="eng-card">
+        <div class="ec-hdr"><div><span class="ec-num">06</span><span class="ec-title">APP DISPATCH</span></div><span class="ec-tag" id="tag-e6">IDLE</span></div>
+        <div class="ec-body" id="body-e6">// Waiting for all 5 engines...
+// Routes to: AP/AR, GL, Compliance, Accounting, Operations nodes</div>
+        <div class="ec-foot"><span class="ec-chars" id="chars-e6">0 chars</span><button class="copy-btn" onclick="copyField('body-e6')">COPY</button></div>
+      </div>
+    </div>
+
+    <!-- APP DISPATCH CARDS -->
+    <div class="sec-hdr" id="dispatchHdr" style="display:none">
+      <div class="sec-dot" style="background:var(--gold)"></div>
+      <div class="sec-title" style="color:var(--gold)">APP ROUTING · REMEDIATION GUIDANCE</div>
+    </div>
+    <div class="app-dispatch" id="appDispatch"></div>
+
+    <!-- LOG -->
+    <div class="log-wrap">
+      <div class="log-title">WAR ROOM ACTIVITY LOG</div>
+      <div class="log-list" id="logList"></div>
+    </div>
+
+    <!-- ESCALATE BAR -->
+    <div class="escalate-bar" id="escalateBar">
+      <div class="eb-left">
+        <div class="eb-title">⚡ ESCALATE TO FINOPS STRATEGIST →</div>
+        <div class="eb-sub" id="escalSub">6-engine analysis complete. Package ready for strategist synthesis.</div>
+      </div>
+      <div class="eb-btns">
+        <button class="btn btn-gold" onclick="escalateToStrategist()">⚡ ESCALATE TO STRATEGIST →</button>
+        <button class="btn btn-outline" onclick="exportFull()">EXPORT ANALYSIS</button>
+        <button class="btn btn-ghost" onclick="clearAll()">CLEAR & RESET</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <div class="sb-dot"></div>
+  <span>TSM · FinOps War Room</span>
+  <span class="sb-sep">·</span>
+  <span id="sbEngines">0 / 6 Engines Complete</span>
+  <span class="sb-sep">·</span>
+  <span id="sbDoc">No document loaded</span>
+  <span class="sb-sep">·</span>
+  <span>Groq: llama-3.3-70b-versatile</span>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+let docText = '';
+let selectedDocType = 'AP Aging';
+let engOut = {};
+let enginesComplete = 0;
+let groqKey = localStorage.getItem('tsm_groq_key') || '';
+if (groqKey) document.getElementById('groqKey').value = groqKey;
+
+// ═══════════════════════════════════════════════════
+// CLOCK + NAV
+// ═══════════════════════════════════════════════════
+function tick() { document.getElementById('navClock').textContent = new Date().toLocaleTimeString('en-US',{hour12:false}); }
+tick(); setInterval(tick, 1000);
+function nav(page) { window.location.href = '/html/finops-suite/' + page; }
+
+// ═══════════════════════════════════════════════════
+// DOC TYPE
+// ═══════════════════════════════════════════════════
+function setDocType(btn, type) {
+  document.querySelectorAll('.dt-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedDocType = type;
+}
+
+// ═══════════════════════════════════════════════════
+// KEY
+// ═══════════════════════════════════════════════════
+function saveKey() { groqKey = document.getElementById('groqKey').value.trim(); localStorage.setItem('tsm_groq_key', groqKey); }
+async function testKey() {
+  groqKey = document.getElementById('groqKey').value.trim();
+  if (!groqKey) { alert('Enter Groq API key first.'); return; }
+  addLog('Testing API key...', '', 'a');
+  try {
+    const r = await fetch('https://api.groq.com/openai/v1/models', { headers: { 'Authorization': 'Bearer ' + groqKey } });
+    if (r.ok) addLog('API key valid', 'Groq connection confirmed', 'g');
+    else addLog('API key invalid', 'Check key and retry', 'f');
+  } catch(e) { addLog('Connection error', e.message, 'f'); }
+}
+
+// ═══════════════════════════════════════════════════
+// SAMPLES
+// ═══════════════════════════════════════════════════
+const SAMPLES = {
+  ap: `AP AGING REPORT — Q1 2026
+HonorHealth Finance Operations
+
+AGING SUMMARY:
+Current (0-30): $84,200
+31-60 days: $112,400
+61-90 days: $67,800
+91-180 days: $31,600 ← REVIEW REQUIRED
+180+ days: $16,000 ← COLLECTIONS RISK
+
+CREDIT HOLDS:
+MedSupply Inc — $44,200 — ON HOLD (62 days outstanding)
+StaffPro LLC — $38,100 — ON HOLD (91 days outstanding)
+LabCore Diagnostics — $29,400 — ON HOLD (78 days outstanding)
+
+TOTAL OUTSTANDING: $312,000
+Month-end close: 48 hours`,
+
+  gl: `GL VARIANCE REPORT — Q1 2026
+Department Budget vs Actual Analysis
+
+REVENUE SUMMARY:
+Q1 Budget: $2,800,000
+Q1 Actual: $2,400,000
+Variance: -$400,000 (-14.3%)
+
+DEPARTMENT BREAKDOWN:
+Department A: Budget $820K | Actual $640K | Variance -$180K
+Department B: Budget $460K | Actual $378K | Variance -$82K
+Department C: Budget $340K | Actual $318K | Variance -$22K
+
+AR METRICS:
+AR Days: 47 (target: 35)
+Collections Rate: 91.2% (target: 96%)
+
+COGS/OPEX: Tracking to budget — revenue issue isolated`,
+
+  era: `ERA BATCH — ERA_20260414
+835 Electronic Remittance Advice
+
+BATCH SUMMARY:
+Total Payments: $1,247,400
+Expected (contracted): $1,312,800
+Variance: -$65,400
+
+ADJUSTMENT CODES:
+CO-45 (contractual adjustment): $189,200
+PR-2 (patient responsibility): $41,600
+CO-4 (late filing denial): $12,800 ← APPEAL ELIGIBLE
+CO-97 (bundled service denial): $8,200 ← REVIEW REQUIRED
+PI-27 (non-covered service): $3,600
+
+APPEAL OPPORTUNITIES: $21,000+ identified
+HRSA Grant Report: OVERDUE — 3 days
+W-9 Missing: 4 vendors`,
+
+  invoice: `INVOICE AUDIT REPORT — 340 Invoices
+Internal Audit Division — Q1 2026
+
+EXCEPTION SUMMARY: 18 items — $44,200 at risk
+
+CRITICAL FINDINGS:
+1. DUPLICATE PAYMENTS (3): $12,400 disbursed
+   - Inv #4412 BuildRight LLC $4,200 (paid twice 03/01 + 03/15)
+   - Inv #8801 Apex Supply $5,100 (paid twice 02/28 + 03/02)
+   - Inv #2234 Sierra Elec $3,100 (paid twice 03/10 + 03/11)
+
+2. UNAPPROVED VENDORS (4): $18,600
+   - 4 payments to vendors not on approved vendor list
+
+3. MISSING PO REFERENCES (8): $9,400
+   - Invoices processed without purchase order
+
+4. OVERDUE 60+ DAYS (3): $3,800
+
+OIG WATCHLIST: Duplicate pattern triggers self-disclosure risk`
+};
+
+function loadSample(key) {
+  const s = SAMPLES[key];
+  if (s) {
+    document.getElementById('docPaste').value = s;
+    docText = s;
+    document.getElementById('sbDoc').textContent = key.toUpperCase() + ' sample · ' + s.length + ' chars';
+    addLog('Sample loaded', key + ' document · ' + s.length + ' chars', 'g');
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// LOG
+// ═══════════════════════════════════════════════════
+function addLog(text, detail, type) {
+  const list = document.getElementById('logList');
+  const item = document.createElement('div');
+  item.className = 'log-item';
+  item.innerHTML = `<div class="log-dot ${type}"></div><div><span class="log-text">${text}</span>${detail ? `<span class="log-detail"> · ${detail}</span>` : ''}</div>`;
+  list.insertBefore(item, list.firstChild);
+}
+
+// ═══════════════════════════════════════════════════
+// ENGINE HELPERS
+// ═══════════════════════════════════════════════════
+function setEngState(i, state) {
+  const el = document.getElementById('es' + i);
+  const tag = document.getElementById('tag-e' + i);
+  el.className = 'eng-st ' + state;
+  el.textContent = state.toUpperCase();
+  if (tag) {
+    tag.className = 'ec-tag ' + (state === 'done' ? 'done' : state === 'running' ? 'running' : '');
+    tag.textContent = state === 'done' ? 'COMPLETE ✓' : state === 'running' ? 'RUNNING...' : 'IDLE';
+  }
+}
+
+function setEngBody(i, text) {
+  const body = document.getElementById('body-e' + i);
+  const chars = document.getElementById('chars-e' + i);
+  if (body) { body.textContent = text; body.classList.add('live'); }
+  if (chars) chars.textContent = text.length + ' chars';
+  engOut[i] = text;
+}
+
+function copyField(id) { navigator.clipboard.writeText(document.getElementById(id).textContent).then(() => addLog('Copied', id, 'f')); }
+
+// ═══════════════════════════════════════════════════
+// PROMPTS — token-efficient, each engine reads only what it needs
+// ═══════════════════════════════════════════════════
+const PROMPTS = [
+
+// E1 — doc only, extract key facts in structured format
+(doc, e) => `You are a FinOps Document Intelligence AI.
+DOC TYPE: ${selectedDocType}
+DOCUMENT: ${doc.slice(0, 1200)}
+
+ENGINE 01 — DOCUMENT INTELLIGENCE
+Extract key facts. Format exactly:
+DOC TYPE: [type]
+PERIOD: [reporting period]
+TOTAL AMOUNT: [primary dollar figure]
+KEY PARTIES: [organizations/vendors involved]
+CRITICAL ITEMS: [top 3-5 flagged items with amounts]
+AGING/STATUS: [aging buckets or status summary if applicable]
+DOCUMENT RISK SCORE: [1-100]
+KEY FACTS:
+1. [fact]
+2. [fact]
+3. [fact]`,
+
+// E2 — needs E1 only (structured facts, not full doc)
+(doc, e) => `You are a FinOps Risk & Anomaly Detection AI.
+ENGINE 01 FACTS:
+${e[1]}
+
+ENGINE 02 — RISK & ANOMALY DETECTION
+ANOMALIES FOUND: [list each with dollar amount]
+DUPLICATE RISK: [Yes/No — specific items]
+AGING RISK: [buckets exceeding thresholds]
+MISSING CONTROLS: [POs, approvals, W-9s]
+VENDOR FLAGS: [unapproved, on-hold, OIG risk]
+EXCEPTION COUNT: [number]
+RISK LEVEL: [Low/Medium/High/Critical] — [rationale]`,
+
+// E3 — needs E1 summary + E2 anomalies only
+(doc, e) => `You are a FinOps Financial Impact Analyst.
+ENGINE 01 KEY FACTS: ${e[1].slice(0, 400)}
+ENGINE 02 ANOMALIES: ${e[2]}
+
+ENGINE 03 — FINANCIAL IMPACT
+TOTAL EXPOSURE: [dollar range]
+CASH FLOW IMPACT: [immediate effect on cash]
+RECOVERABLE AMOUNT: [what can be recovered/appealed]
+WRITE-OFF RISK: [amount at risk of write-off]
+MONTH-END IMPACT: [effect on close]
+FINANCIAL RISK SCORE: [1-100] — [rationale]
+CFO ESCALATION: [Yes/No] — [reason]`,
+
+// E4 — needs E1 + E2 only (compliance doesn't need financial modeling)
+(doc, e) => `You are a FinOps Compliance Officer.
+ENGINE 01 FACTS: ${e[1].slice(0, 300)}
+ENGINE 02 RISK FLAGS: ${e[2]}
+
+ENGINE 04 — COMPLIANCE & REGULATORY
+OIG EXPOSURE: [risk level and reason]
+AUDIT TRAIL GAPS: [missing documentation]
+1099/TAX FLAGS: [W-9 issues, threshold risks]
+INTERNAL CONTROL FAILURES: [specific gaps]
+SELF-DISCLOSURE RISK: [Yes/No] — [reason]
+COMPLIANCE RISK LEVEL: [Low/Medium/High/Critical]
+IMMEDIATE COMPLIANCE ACTIONS:
+1. [action]
+2. [action]
+3. [action]`,
+
+// E5 — needs E3 + E4 only (recovery plan based on impact + compliance)
+(doc, e) => `You are a FinOps Recovery Strategist.
+ENGINE 03 IMPACT: ${e[3]}
+ENGINE 04 COMPLIANCE: ${e[4]}
+
+ENGINE 05 — RECOVERY PLAN
+PRIORITY ACTIONS (dollar-quantified, owner assigned):
+1. [Action] — $[amount] — [Owner] — [Deadline]
+2. [Action] — $[amount] — [Owner] — [Deadline]
+3. [Action] — $[amount] — [Owner] — [Deadline]
+4. [Action] — $[amount] — [Owner] — [Deadline]
+
+RECOVERY TIMELINE: [days to full resolution]
+QUICK WINS (48 hrs): [immediate actions]
+CFO MEMO REQUIRED: [Yes/No]
+BOARD ESCALATION: [Yes/No] — [reason]`,
+
+// E6 — needs E3 risk score + E5 actions only for app routing
+(doc, e) => `You are the TSM FinOps App Dispatch Engine.
+ENGINE 03 RISK: ${e[3].slice(0, 300)}
+ENGINE 05 ACTIONS: ${e[5]}
+
+ENGINE 06 — APP DISPATCH
+Recommend exactly 5 FinOps apps ranked by relevance. Available: AP/AR Node, GL Node, Vendors Node, Compliance Node, Reconciliation Node, Financial Intel Node, Budget Node, Accounting, Operations, Month-End Node, Tax Prep Node
+
+Repeat 5 times:
+APP: [name]
+RANK: [#1-5]
+IS_TOP: [YES for #1 only, else NO]
+HOW_TO_USE: [3 sentences — exact tab to open, specific data to enter, specific output to produce for THIS document's issues]
+TAGS: [TAG1], [TAG2], [TAG3]
+
+DISPATCH_INTRO: [1-2 sentences on why these 5 apps address the specific issues found]`
+];
+
+// ═══════════════════════════════════════════════════
+// FALLBACKS
+// ═══════════════════════════════════════════════════
+const FALLBACKS = [
+  (doc,e) => `DOC TYPE: ${selectedDocType}\nPERIOD: Current period\nTOTAL AMOUNT: Per document\nKEY PARTIES: As identified in document\nCRITICAL ITEMS: Review document manually\nDOCUMENT RISK SCORE: 65\nKEY FACTS:\n1. Document loaded and classified as ${selectedDocType}\n2. Manual review recommended for all flagged items\n3. Consult finance team before processing`,
+  (doc,e) => `ANOMALIES FOUND: Manual review required\nDUPLICATE RISK: Unknown — run three-way match\nAGING RISK: Review aging buckets per document\nMISSING CONTROLS: Verify POs and approvals\nVENDOR FLAGS: Check approved vendor list\nEXCEPTION COUNT: Unknown\nRISK LEVEL: Medium — manual assessment required`,
+  (doc,e) => `TOTAL EXPOSURE: Review document for exact amounts\nCASH FLOW IMPACT: Assess against current cash position\nRECOVERABLE AMOUNT: Determine after vendor contact\nWRITE-OFF RISK: Monitor items over 180 days\nMONTH-END IMPACT: Accrue all outstanding items\nFINANCIAL RISK SCORE: 60\nCFO ESCALATION: Yes — pending full assessment`,
+  (doc,e) => `OIG EXPOSURE: Review for healthcare payment patterns\nAUDIT TRAIL GAPS: Document all exceptions found\nITEM/TAX FLAGS: Collect missing W-9s immediately\nINTERNAL CONTROL FAILURES: Three-way match required\nSELF-DISCLOSURE RISK: Assess with compliance team\nCOMPLIANCE RISK LEVEL: Medium\nIMMEDIATE COMPLIANCE ACTIONS:\n1. Document all exceptions\n2. Notify compliance officer\n3. Preserve audit trail`,
+  (doc,e) => `PRIORITY ACTIONS:\n1. Review and document all flagged items — $TBD — Finance Manager — 24 hours\n2. Contact vendors for resolution — $TBD — AP Team — 48 hours\n3. Notify CFO of exceptions — $0 — Controller — 24 hours\n4. Implement corrective controls — $0 — Finance Director — 72 hours\nRECOVERY TIMELINE: 30-60 days\nQUICK WINS (48 hrs): Document exceptions and contact vendors\nCFO MEMO REQUIRED: Yes\nBOARD ESCALATION: Pending CFO review`,
+  (doc,e) => `APP: AP/AR Node\nRANK: #1\nIS_TOP: YES\nHOW_TO_USE: Open AP Aging tab and sort by aging bucket. Enter flagged vendor names to review outstanding balances. Generate vendor credit hold resolution report.\nTAGS: AP, VENDORS, AGING\n\nAPP: GL Node\nRANK: #2\nIS_TOP: NO\nHOW_TO_USE: Open Journal Entries tab and search for duplicate transaction dates. Enter invoice numbers from flagged items. Generate exception report for controller review.\nTAGS: GL, JOURNAL, ENTRIES\n\nAPP: Compliance Node\nRANK: #3\nIS_TOP: NO\nHOW_TO_USE: Open OIG Risk tab and enter vendor names from unapproved vendor list. Review against exclusion database. Generate corrective action documentation.\nTAGS: OIG, COMPLIANCE, AUDIT\n\nAPP: Vendors Node\nRANK: #4\nIS_TOP: NO\nHOW_TO_USE: Open Vendor Management tab and review approved vendor list. Cross-reference flagged vendors. Generate vendor approval or rejection documentation.\nTAGS: VENDORS, APPROVAL, CONTROLS\n\nAPP: Month-End Node\nRANK: #5\nIS_TOP: NO\nHOW_TO_USE: Open Close Checklist and verify all exceptions are documented. Enter accrual amounts for outstanding items. Generate month-end certification.\nTAGS: CLOSE, ACCRUALS, CERTIFICATION\n\nDISPATCH_INTRO: These 5 apps address the primary issues: vendor holds, GL exceptions, compliance risk, vendor approval gaps, and month-end close requirements.`
+];
+
+// ═══════════════════════════════════════════════════
+// FIRE ALL 6 ENGINES
+// ═══════════════════════════════════════════════════
+async function fireEngines() {
+  docText = document.getElementById('docPaste').value.trim();
+  groqKey = document.getElementById('groqKey').value.trim();
+  if (!docText) { alert('Paste or load a financial document first.'); return; }
+  if (!groqKey) { alert('Enter your Groq API key.'); return; }
+
+  document.getElementById('fireBtn').disabled = true;
+  document.getElementById('spinner').classList.add('active');
+  document.getElementById('escalateBar').classList.remove('visible');
+  document.getElementById('appDispatch').classList.remove('visible');
+  document.getElementById('dispatchHdr').style.display = 'none';
+
+  const labels = ['Document Intelligence','Risk & Anomaly','Financial Impact','Compliance','Recovery Plan','App Dispatch'];
+  enginesComplete = 0;
+  const e = {};
+
+  for (let i = 1; i <= 6; i++) {
+    setEngState(i, 'running');
+    document.getElementById('spinLabel').textContent = 'Engine 0' + i + ' — ' + labels[i-1] + '...';
+    addLog('Engine 0' + i + ' running', labels[i-1], 'a');
+
+    let txt = '';
+    try {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + groqKey },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          max_tokens: 550,
+          temperature: 0.3,
+          messages: [{ role: 'user', content: PROMPTS[i-1](docText, e) }]
+        })
+      });
+      if (res.ok) { const d = await res.json(); txt = d.choices?.[0]?.message?.content || ''; }
+      if (!txt.trim()) throw new Error('empty');
+    } catch(err) {
+      txt = FALLBACKS[i-1](docText, e);
+      addLog('Engine 0' + i + ' fallback', err.message, 'f');
+    }
+
+    e[i] = txt;
+    setEngBody(i, txt);
+    setEngState(i, 'done');
+    enginesComplete++;
+    document.getElementById('kpiEngines').textContent = enginesComplete + '/6';
+    document.getElementById('sbEngines').textContent = enginesComplete + ' / 6 Engines Complete';
+    addLog('Engine 0' + i + ' complete', labels[i-1] + ' · ' + new Date().toLocaleTimeString(), 'g');
+    await new Promise(r => setTimeout(r, 280));
+  }
+
+  // Parse KPIs from outputs
+  const combined = (e[1]||'') + ' ' + (e[3]||'');
+  const riskM = combined.match(/(?:FINANCIAL RISK SCORE|DOCUMENT RISK SCORE)[:\s]+(\d+)/i);
+  const expM = (e[3]||'').match(/TOTAL EXPOSURE[:\s]+([^\n]+)/i);
+  const excM = (e[2]||'').match(/EXCEPTION COUNT[:\s]+([^\n]+)/i);
+  const compM = (e[4]||'').match(/COMPLIANCE RISK LEVEL[:\s]+([^\n]+)/i);
+
+  if (riskM) {
+    const r = parseInt(riskM[1]);
+    document.getElementById('kpiRisk').textContent = r;
+    document.getElementById('snapRisk').textContent = r + '/100';
+    document.getElementById('riskFill').style.width = r + '%';
+    document.getElementById('riskFill').style.background = r > 70 ? 'var(--red)' : r > 40 ? 'var(--gold)' : 'var(--green)';
+    document.getElementById('kpiRisk').className = 'kpi-val ' + (r > 70 ? 'red' : r > 40 ? 'gold' : 'green');
+  }
+  if (expM) { document.getElementById('kpiExposure').textContent = expM[1].trim().slice(0,18); document.getElementById('snapExposure').textContent = expM[1].trim().slice(0,14); }
+  if (excM) document.getElementById('kpiExceptions').textContent = excM[1].trim().slice(0,10);
+  if (compM) document.getElementById('kpiCompliance').textContent = compM[1].trim().slice(0,10);
+  document.getElementById('snapType').textContent = selectedDocType.slice(0,10);
+
+  const prioM = (e[5]||'').match(/QUICK WINS[:\s]+([^\n]+)/i);
+  if (prioM) document.getElementById('snapPriority').textContent = prioM[1].trim().slice(0,12);
+
+  // Build app dispatch cards
+  buildAppDispatch(e[6]||'');
+
+  // Alert bar
+  document.getElementById('alertText').textContent = '6-ENGINE ANALYSIS COMPLETE — ' + selectedDocType.toUpperCase() + ' — ESCALATE TO FINOPS STRATEGIST';
+  document.querySelector('.a-dot').style.background = 'var(--green)';
+  document.querySelector('.a-dot').style.boxShadow = '0 0 5px var(--green)';
+  document.getElementById('alertBar').style.background = 'rgba(0,255,198,.04)';
+  document.getElementById('alertBar').style.borderBottomColor = 'rgba(0,255,198,.15)';
+  document.getElementById('alertText').style.color = 'var(--green)';
+
+  // Escalate bar
+  document.getElementById('escalSub').textContent = '6-engine analysis complete — ' + selectedDocType + ' · Ready to escalate to FinOps Strategist.';
+  document.getElementById('escalateBar').classList.add('visible');
+
+  document.getElementById('sbDoc').textContent = selectedDocType + ' · ' + docText.length + ' chars';
+  document.getElementById('spinner').classList.remove('active');
+  document.getElementById('fireBtn').disabled = false;
+  addLog('All 6 Engines Complete', 'Ready to escalate to FinOps Strategist', 'p');
+
+  storeRelay(e);
+}
+
+// ═══════════════════════════════════════════════════
+// BUILD APP DISPATCH CARDS
+// ═══════════════════════════════════════════════════
+function buildAppDispatch(e6text) {
+  const dispatch = document.getElementById('appDispatch');
+  const hdr = document.getElementById('dispatchHdr');
+  if (!e6text) return;
+
+  const APP_URLS = {
+    'AP/AR Node': 'finops-accounting.html',
+    'GL Node': 'finops-accounting.html',
+    'Vendors Node': 'finops-operations.html',
+    'Compliance Node': 'finops-operations.html',
+    'Reconciliation Node': 'finops-accounting.html',
+    'Financial Intel Node': 'financial-ui.html',
+    'Budget Node': 'finops-accounting.html',
+    'Accounting': 'finops-accounting.html',
+    'Operations': 'finops-operations.html',
+    'Month-End Node': 'finops-accounting.html',
+    'Tax Prep Node': 'finops-operations.html',
+  };
+
+  const apps = [...e6text.matchAll(/APP:\s*([^\n]+)\nRANK:\s*([^\n]+)\nIS_TOP:\s*([^\n]+)\nHOW_TO_USE:\s*([\s\S]*?)(?=\nTAGS:|$)/g)];
+  if (!apps.length) return;
+
+  dispatch.innerHTML = '';
+  apps.forEach(m => {
+    const name = m[1].trim();
+    const isTop = m[3].trim().toUpperCase() === 'YES';
+    const howto = m[4].trim();
+    const url = APP_URLS[name] || 'finops-operations.html';
+    const card = document.createElement('div');
+    card.className = 'app-card';
+    if (isTop) card.style.borderColor = 'rgba(255,196,0,.4)';
+    card.innerHTML = `
+      <div class="app-card-rank">${isTop ? '⭐ TOP RECOMMENDATION' : 'Rank ' + m[2].trim()}</div>
+      <div class="app-card-name" style="${isTop ? 'color:var(--gold)' : ''}">${name}</div>
+      <div class="app-card-how">${howto}</div>
+      <button class="app-card-btn" onclick="nav('${url}')" style="${isTop ? 'border-color:rgba(255,196,0,.4);color:var(--gold)' : ''}">OPEN ${name.toUpperCase()} →</button>
+    `;
+    dispatch.appendChild(card);
+  });
+
+  const intro = e6text.match(/DISPATCH_INTRO:\s*([^\n]+(?:\n[^\n]+)?)/i);
+  if (intro) {
+    const introEl = document.createElement('div');
+    introEl.style.cssText = 'grid-column:1/-1;background:rgba(0,170,255,.04);border:1px solid rgba(0,170,255,.15);padding:10px 14px;font-size:9px;color:var(--dim);line-height:1.7';
+    introEl.textContent = intro[1].trim();
+    dispatch.insertBefore(introEl, dispatch.firstChild);
+  }
+
+  hdr.style.display = 'flex';
+  dispatch.classList.add('visible');
+}
+
+// ═══════════════════════════════════════════════════
+// STORE RELAY
+// ═══════════════════════════════════════════════════
+function storeRelay(e) {
+  const payload = {
+    doc: docText,
+    docType: selectedDocType,
+    engines: { e1:e[1]||'', e2:e[2]||'', e3:e[3]||'', e4:e[4]||'', e5:e[5]||'', e6:e[6]||'' },
+    snapshot: {
+      risk: document.getElementById('snapRisk').textContent,
+      exposure: document.getElementById('snapExposure').textContent,
+      docType: selectedDocType,
+      exceptions: document.getElementById('kpiExceptions').textContent,
+      compliance: document.getElementById('kpiCompliance').textContent
+    },
+    timestamp: new Date().toISOString(),
+    chainStep: 'war-room'
+  };
+  try {
+    sessionStorage.setItem('TSM_FINOPS_WAR_RELAY', JSON.stringify(payload));
+    localStorage.setItem('tsm_finops_war_relay', JSON.stringify(payload));
+  } catch(err) { console.warn('Store error:', err); }
+}
+
+// ═══════════════════════════════════════════════════
+// ESCALATE
+// ═══════════════════════════════════════════════════
+function escalateToStrategist() {
+  addLog('Escalating to FinOps Strategist', '6-engine package dispatched', 'p');
+  setTimeout(() => nav('finops-main-strategist.html'), 400);
+}
+
+// ═══════════════════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════════════════
+function exportFull() {
+  let out = `TSM FINOPS WAR ROOM — FULL ANALYSIS\n${new Date().toLocaleString()}\nDocument Type: ${selectedDocType}\n\n`;
+  for (let i = 1; i <= 6; i++) out += `\n${'='.repeat(60)}\nENGINE 0${i}\n${'='.repeat(60)}\n${engOut[i]||'No output'}\n`;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([out], {type:'text/plain'}));
+  a.download = `tsm-finops-war-room-${Date.now()}.txt`;
+  a.click();
+}
+
+// ═══════════════════════════════════════════════════
+// CLEAR
+// ═══════════════════════════════════════════════════
+function clearAll() {
+  docText = ''; engOut = {}; enginesComplete = 0;
+  document.getElementById('docPaste').value = '';
+  document.getElementById('escalateBar').classList.remove('visible');
+  document.getElementById('appDispatch').classList.remove('visible');
+  document.getElementById('dispatchHdr').style.display = 'none';
+  ['kpiRisk','kpiExposure','kpiExceptions','kpiCompliance'].forEach(id => document.getElementById(id).textContent = '—');
+  document.getElementById('kpiEngines').textContent = '0/6';
+  ['snapRisk','snapExposure','snapType','snapPriority'].forEach(id => document.getElementById(id).textContent = '—');
+  document.getElementById('riskFill').style.width = '0%';
+  for (let i = 1; i <= 6; i++) {
+    setEngState(i, 'idle');
+    const b = document.getElementById('body-e'+i); if (b) { b.classList.remove('live'); b.textContent = '// Waiting...'; }
+    const c = document.getElementById('chars-e'+i); if (c) c.textContent = '0 chars';
+  }
+  addLog('War Room cleared', 'Ready for new document', 'f');
+}
+
+addLog('FinOps War Room initialized', '6 engines standing by — load financial document to begin', 'g');
+</script>
+</body>
+</html>
