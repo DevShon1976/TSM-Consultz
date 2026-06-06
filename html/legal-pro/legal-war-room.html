@@ -1126,40 +1126,37 @@ async function fireEngines() {
   document.getElementById('dispatch06').style.display = 'none';
   document.getElementById('spinner').style.display = 'flex';
 
-  let prev = '';
-  const labels = ['Document Intelligence','Legal Issues','Financial Impact','Recovery Plan','Case Navigator','App Dispatch'];
+  const e = {};
+const labels = ['Document Intelligence','Legal Issues','Financial Impact','Recovery Plan','Case Navigator','App Dispatch'];
 
-  for (let i = 1; i <= 6; i++) {
-    setPipeState(i, 'running');
-    if (i <= 5) setEngState(i, 'running');
-    document.getElementById('spinnerLabel').textContent = 'Engine 0' + i + ' — ' + labels[i-1] + '...';
-    addTL('Engine 0'+i+' running', labels[i-1] + ' analysis...', 'a');
+for (let i = 1; i <= 6; i++) {
+  setPipeState(i, 'running');
+  if (i <= 5) setEngState(i, 'running');
+  document.getElementById('spinnerLabel').textContent = 'Engine 0' + i + ' — ' + labels[i-1] + '...';
+  addTL('Engine 0'+i+' running', labels[i-1] + ' analysis...', 'a');
 
-    let txt = '';
-    try {
-      const prompt = i === 1 ? PROMPTS[0](doc, selectedDocType) : PROMPTS[i-1](doc, prev);
-      const res = await fetch(GROQ, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: prompt })
-      });
-      if (res.ok) { const d = await res.json(); txt = d.answer||d.response||d.text||''; }
-      if (!txt.trim()) throw new Error('empty');
-    } catch(e) {
-      txt = FALLBACKS[i-1](doc, prev);
-    }
-
-    prev += '\n\n--- ENGINE 0'+i+' ---\n' + txt;
-    if (i <= 5) setEngOut(i, txt);
-    if (i <= 5) setEngState(i, 'done');
-    setPipeState(i, 'done');
-    addTL('Engine 0'+i+' complete', labels[i-1] + ' · ' + new Date().toLocaleTimeString(), 'g');
-
-    // Engine 06 builds app cards
-    if (i === 6) { buildAppDispatch(txt); }
-
-    await new Promise(r => setTimeout(r, 350));
+  let txt = '';
+  try {
+    const prompt = PROMPTS[i-1](doc, e);
+    const res = await fetch(GROQ, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: prompt })
+    });
+    if (res.ok) { const d = await res.json(); txt = d.answer||d.response||d.text||''; }
+    if (!txt.trim()) throw new Error('empty');
+  } catch(err) {
+    txt = FALLBACKS[i-1](doc, e);
   }
+
+  e[i] = txt;
+  if (i <= 5) setEngOut(i, txt);
+  if (i <= 5) setEngState(i, 'done');
+  setPipeState(i, 'done');
+  addTL('Engine 0'+i+' complete', labels[i-1] + ' · ' + new Date().toLocaleTimeString(), 'g');
+  if (i === 6) { buildAppDispatch(txt); }
+  await new Promise(r => setTimeout(r, 350));
+}
 
   // Parse snapshot
   const combined = engOut.join(' ');
