@@ -144,6 +144,137 @@ body::before{content:'';position:fixed;top:0;right:0;width:600px;height:600px;ba
 .status-bar{position:fixed;bottom:0;left:0;right:0;background:#030608;border-top:1px solid var(--border);padding:4px 16px;display:flex;align-items:center;gap:14px;font-size:8px;color:var(--dim);z-index:50}
 .sb-dot{width:4px;height:4px;border-radius:50%;background:var(--gold);box-shadow:0 0 4px var(--gold)}
 .sb-sep{color:var(--border)}
+
+/* ═══════════════════════════════════════════════════════
+   TOUR MODE SYSTEM
+═══════════════════════════════════════════════════════ */
+
+/* Tour launch button */
+.tour-launch-btn{
+  background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.3);
+  color:var(--cyan);font-family:var(--mono);font-size:8px;letter-spacing:1.5px;
+  cursor:pointer;padding:4px 10px;transition:all .25s;white-space:nowrap;
+}
+.tour-launch-btn:hover{background:rgba(0,229,255,.15);border-color:var(--cyan);}
+
+/* Spotlight overlay — darkens everything except spotlighted element */
+#tourOverlay{
+  display:none;position:fixed;inset:0;z-index:300;pointer-events:none;
+  background:transparent;
+}
+#tourOverlay.active{display:block;}
+
+/* Spotlight cutout via box-shadow technique */
+.tour-spotlight{
+  position:fixed;z-index:301;pointer-events:none;
+  box-shadow:0 0 0 9999px rgba(0,0,0,.82);
+  border:1px solid rgba(0,229,255,.5);
+  transition:all .45s cubic-bezier(.4,0,.2,1);
+  border-radius:2px;
+}
+
+/* Narration HUD */
+#tourHUD{
+  display:none;position:fixed;z-index:302;
+  bottom:88px;left:50%;transform:translateX(-50%);
+  width:680px;max-width:calc(100vw - 32px);
+  background:rgba(5,8,12,.97);
+  border:1px solid rgba(0,229,255,.35);
+  box-shadow:0 0 40px rgba(0,229,255,.12),0 0 80px rgba(0,0,0,.8);
+}
+#tourHUD.active{display:block;}
+
+.hud-header{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 14px;
+  border-bottom:1px solid rgba(0,229,255,.15);
+  background:rgba(0,229,255,.04);
+}
+.hud-step-badge{
+  background:var(--cyan);color:#000;font-size:8px;font-weight:700;
+  letter-spacing:1.5px;padding:2px 8px;flex-shrink:0;
+}
+.hud-title{color:var(--cyan);font-size:9px;letter-spacing:2px;font-weight:600;flex:1;}
+.hud-progress{display:flex;gap:3px;align-items:center;}
+.hud-pip{width:18px;height:3px;background:rgba(0,229,255,.18);transition:background .3s;}
+.hud-pip.done{background:var(--cyan);}
+.hud-pip.active{background:var(--gold);}
+
+.hud-body{padding:14px 16px;}
+.hud-narration{
+  font-size:11px;color:var(--text);line-height:1.75;
+  min-height:52px;letter-spacing:.3px;
+}
+.hud-narration .hl{color:var(--gold);font-weight:700;}
+.hud-narration .cmd{color:var(--cyan);font-weight:600;}
+.hud-narration .warn{color:var(--amber);}
+.hud-narration .ok{color:var(--green);}
+
+.hud-action-hint{
+  margin-top:10px;font-size:8px;letter-spacing:1.5px;
+  color:var(--dim);display:flex;align-items:center;gap:6px;
+}
+.hud-action-dot{width:5px;height:5px;border-radius:50%;background:var(--amber);animation:blink 1.2s infinite;flex-shrink:0;}
+
+.hud-footer{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 14px;border-top:1px solid rgba(0,229,255,.1);
+  background:rgba(0,0,0,.3);
+}
+.hud-auto-row{display:flex;align-items:center;gap:8px;}
+.hud-auto-lbl{font-size:8px;color:var(--dim);letter-spacing:1px;}
+.hud-auto-toggle{
+  width:32px;height:16px;background:var(--s3);border:1px solid var(--border);
+  border-radius:8px;cursor:pointer;position:relative;transition:all .25s;
+}
+.hud-auto-toggle.on{background:rgba(0,229,255,.2);border-color:var(--cyan);}
+.hud-auto-toggle::after{
+  content:'';position:absolute;top:2px;left:2px;
+  width:10px;height:10px;border-radius:50%;background:var(--dim);
+  transition:all .25s;
+}
+.hud-auto-toggle.on::after{left:18px;background:var(--cyan);}
+.hud-timer-bar{height:2px;background:var(--border);flex:1;max-width:80px;border-radius:1px;overflow:hidden;}
+.hud-timer-fill{height:100%;background:var(--cyan);width:100%;transition:width linear;}
+
+.hud-nav-btns{display:flex;gap:5px;}
+.hud-btn{
+  background:transparent;border:1px solid var(--border);color:var(--dim);
+  font-family:var(--mono);font-size:8px;letter-spacing:1px;
+  padding:4px 10px;cursor:pointer;transition:all .2s;
+}
+.hud-btn:hover{border-color:var(--cyan);color:var(--cyan);}
+.hud-btn.primary{
+  border-color:var(--cyan);color:var(--cyan);
+  background:rgba(0,229,255,.08);
+}
+.hud-btn.primary:hover{background:rgba(0,229,255,.16);}
+.hud-btn.end-btn{border-color:rgba(255,77,109,.3);color:var(--red);}
+.hud-btn.end-btn:hover{background:rgba(255,77,109,.08);border-color:var(--red);}
+
+/* Auto-run progress */
+.hud-auto-step-lbl{font-size:8px;color:var(--amber);letter-spacing:1px;animation:blink 1.5s infinite;}
+
+/* Tour slide type indicator */
+.hud-slide-type{
+  font-size:7px;letter-spacing:2px;color:var(--dim);
+  border:1px solid var(--border);padding:1px 5px;
+  margin-left:auto;margin-right:8px;
+}
+.hud-slide-type.action{color:var(--amber);border-color:var(--amber);}
+.hud-slide-type.demo{color:var(--green);border-color:var(--green);}
+.hud-slide-type.info{color:var(--cyan);border-color:rgba(0,229,255,.4);}
+
+/* ── Speech Controls ── */
+.hud-speech-row{display:flex;align-items:center;gap:7px;padding:5px 14px;border-bottom:1px solid rgba(0,229,255,.08);background:rgba(0,0,0,.2);}
+.hud-speech-btn{background:transparent;border:1px solid var(--border);color:var(--dim);font-family:var(--mono);font-size:8px;letter-spacing:1px;padding:3px 8px;cursor:pointer;transition:all .2s;flex-shrink:0;}
+.hud-speech-btn:hover{border-color:var(--cyan);color:var(--cyan);}
+.hud-speech-btn.speaking{border-color:var(--green);color:var(--green);animation:blink .9s infinite;}
+.hud-speech-btn.paused{border-color:var(--amber);color:var(--amber);}
+.speech-voice-sel{background:var(--s3);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:8px;padding:2px 5px;flex:1;max-width:160px;outline:none;}
+.speech-ctrl-lbl{font-size:8px;color:var(--dim);white-space:nowrap;}
+.speech-rate-inp{width:60px;accent-color:var(--cyan);cursor:pointer;}
+.speech-vol-inp{width:50px;accent-color:var(--gold);cursor:pointer;}
 </style>
 </head>
 <body>
@@ -157,6 +288,7 @@ body::before{content:'';position:fixed;top:0;right:0;width:600px;height:600px;ba
   <button class="nav-btn" onclick="nav('pc-command.html')">P&C COMMAND</button>
   <button class="nav-btn" onclick="nav('dme.html')">DME</button>
   <div class="nav-right">
+    <button class="tour-launch-btn" id="tourLaunchBtn" onclick="startTour()">▶ GUIDED TOUR</button>
     <span id="navClock" class="nav-clock">--:--:--</span>
   </div>
 </nav>
@@ -172,12 +304,54 @@ body::before{content:'';position:fixed;top:0;right:0;width:600px;height:600px;ba
   <div class="spin-eng" id="spinLabel">Initializing engines...</div>
 </div>
 
+<!-- TOUR SYSTEM -->
+<div id="tourOverlay"></div>
+<div class="tour-spotlight" id="tourSpotlight" style="display:none"></div>
+<div id="tourHUD">
+  <div class="hud-header">
+    <div class="hud-step-badge" id="hudBadge">01 / 10</div>
+    <div class="hud-title" id="hudTitle">WELCOME TO THE INSURANCE WAR ROOM</div>
+    <div class="hud-slide-type info" id="hudSlideType">INFO</div>
+    <div class="hud-progress" id="hudProgress"></div>
+  </div>
+  <div class="hud-body">
+    <div class="hud-narration" id="hudNarration"></div>
+    <div class="hud-action-hint" id="hudActionHint" style="display:none">
+      <div class="hud-action-dot"></div>
+      <span id="hudActionText"></span>
+    </div>
+  </div>
+  <div class="hud-footer">
+  <div class="hud-speech-row">
+    <button class="hud-speech-btn" id="speechPlayBtn" onclick="speechPlay()" title="Read narration aloud">🔊 SPEAK</button>
+    <button class="hud-speech-btn" id="speechPauseBtn" onclick="speechPause()" style="display:none" title="Pause">⏸ PAUSE</button>
+    <button class="hud-speech-btn" id="speechStopBtn" onclick="speechStop()" style="display:none" title="Stop">⏹ STOP</button>
+    <select class="speech-voice-sel" id="speechVoiceSelect" title="Select voice"></select>
+    <span class="speech-ctrl-lbl">SPD</span>
+    <input type="range" class="speech-rate-inp" id="speechRate" min="0.6" max="1.8" step="0.1" value="0.95" title="Speech rate">
+    <span class="speech-ctrl-lbl">VOL</span>
+    <input type="range" class="speech-vol-inp" id="speechVol" min="0" max="1" step="0.05" value="1" title="Volume">
+  </div>
+  <div class="hud-auto-row">
+      <span class="hud-auto-lbl">AUTO-RUN</span>
+      <div class="hud-auto-toggle" id="autoToggle" onclick="toggleAuto()"></div>
+      <div class="hud-timer-bar"><div class="hud-timer-fill" id="timerFill"></div></div>
+      <span class="hud-auto-step-lbl" id="autoStepLbl" style="display:none">AUTO ▶</span>
+    </div>
+    <div class="hud-nav-btns">
+      <button class="hud-btn end-btn" onclick="endTour()">✕ END TOUR</button>
+      <button class="hud-btn" id="hudPrevBtn" onclick="tourPrev()" disabled>◀ PREV</button>
+      <button class="hud-btn primary" id="hudNextBtn" onclick="tourNext()">NEXT ▶</button>
+    </div>
+  </div>
+</div>
+
 <div class="layout">
   <aside class="sidebar">
 
     <div class="sb-sec">
       <div class="sb-lbl">DOCUMENT TYPE</div>
-      <div class="doc-type-grid">
+      <div class="doc-type-grid" id="docTypeGrid">
         <button class="dt-btn active" onclick="setDocType(this,'Claims Report')">Claims Report</button>
         <button class="dt-btn" onclick="setDocType(this,'Denial Letter')">Denial Letter</button>
         <button class="dt-btn" onclick="setDocType(this,'Policy Review')">Policy Review</button>
@@ -191,10 +365,10 @@ body::before{content:'';position:fixed;top:0;right:0;width:600px;height:600px;ba
       </div>
     </div>
 
-    <div class="sb-sec">
+    <div class="sb-sec" id="pasteSection">
       <div class="sb-lbl">PASTE DOCUMENT TEXT</div>
       <textarea class="paste-area" id="docPaste" placeholder="Paste claim denial, policy document, ERA batch, DME claim, AP aging, underwriting submission, or any insurance document..."></textarea>
-      <div class="samples">
+      <div class="samples" id="samplesRow">
         <button class="sample-chip" onclick="loadSample('claims')">Claims</button>
         <button class="sample-chip" onclick="loadSample('dme')">DME Denial</button>
         <button class="sample-chip" onclick="loadSample('policy')">Policy Gap</button>
@@ -202,7 +376,7 @@ body::before{content:'';position:fixed;top:0;right:0;width:600px;height:600px;ba
       </div>
     </div>
 
-    <div class="sb-sec">
+    <div class="sb-sec" id="groqSection">
       <div class="sb-lbl">GROQ API KEY</div>
       <div class="groq-wrap">
         <input type="password" class="groq-inp" id="groqKey" placeholder="gsk_..." oninput="saveKey()">
@@ -217,7 +391,7 @@ body::before{content:'';position:fixed;top:0;right:0;width:600px;height:600px;ba
       </div>
     </div>
 
-    <div class="sb-sec">
+    <div class="sb-sec" id="engineStatusPanel">
       <div class="sb-lbl">ENGINE STATUS</div>
       <div class="eng-list">
         <div class="eng-item"><span class="eng-num">01</span><span class="eng-name">Claim Intelligence</span><span class="eng-st idle" id="es1">IDLE</span></div>
@@ -243,12 +417,12 @@ body::before{content:'';position:fixed;top:0;right:0;width:600px;height:600px;ba
 
   <main class="main" id="mainContent">
 
-    <div class="hero">
+    <div class="hero" id="heroSection">
       <div class="hero-title">Insurance War Room</div>
       <div class="hero-sub">6-Engine Insurance Document Analysis · Claims · Denials · DME · Compliance · Recovery · App Dispatch → Strategist</div>
     </div>
 
-    <div class="kpi-bar">
+    <div class="kpi-bar" id="kpiBar">
       <div class="kpi-cell">
         <div class="kpi-lbl">RISK SCORE</div>
         <div class="kpi-val" id="kpiRisk">—</div>
@@ -282,38 +456,38 @@ body::before{content:'';position:fixed;top:0;right:0;width:600px;height:600px;ba
       <div class="sec-title">ENGINE OUTPUTS · INSURANCE ANALYSIS PIPELINE</div>
     </div>
 
-    <div class="engine-grid">
-      <div class="eng-card">
+    <div class="engine-grid" id="engineGrid">
+      <div class="eng-card" id="card-e1">
         <div class="ec-hdr"><div><span class="ec-num">01</span><span class="ec-title">CLAIM INTELLIGENCE</span></div><span class="ec-tag" id="tag-e1">IDLE</span></div>
         <div class="ec-body" id="body-e1">// Waiting for insurance document...
 // Extracts: claim type, parties, amounts, denial codes, policy details</div>
         <div class="ec-foot"><span class="ec-chars" id="chars-e1">0 chars</span><button class="copy-btn" onclick="copyField('body-e1')">COPY</button></div>
       </div>
-      <div class="eng-card">
+      <div class="eng-card" id="card-e2">
         <div class="ec-hdr"><div><span class="ec-num">02</span><span class="ec-title">RISK & DENIAL ANALYSIS</span></div><span class="ec-tag" id="tag-e2">IDLE</span></div>
         <div class="ec-body" id="body-e2">// Waiting for Engine 01...
 // Flags: denial codes, appeal windows, coverage gaps, fraud indicators</div>
         <div class="ec-foot"><span class="ec-chars" id="chars-e2">0 chars</span><button class="copy-btn" onclick="copyField('body-e2')">COPY</button></div>
       </div>
-      <div class="eng-card">
+      <div class="eng-card" id="card-e3">
         <div class="ec-hdr"><div><span class="ec-num">03</span><span class="ec-title">FINANCIAL EXPOSURE</span></div><span class="ec-tag" id="tag-e3">IDLE</span></div>
         <div class="ec-body" id="body-e3">// Waiting for Engine 01 + 02...
 // Models: exposure range, recoverable revenue, appeal ROI</div>
         <div class="ec-foot"><span class="ec-chars" id="chars-e3">0 chars</span><button class="copy-btn" onclick="copyField('body-e3')">COPY</button></div>
       </div>
-      <div class="eng-card">
+      <div class="eng-card" id="card-e4">
         <div class="ec-hdr"><div><span class="ec-num">04</span><span class="ec-title">COMPLIANCE & REGULATORY</span></div><span class="ec-tag" id="tag-e4">IDLE</span></div>
         <div class="ec-body" id="body-e4">// Waiting for Engine 01 + 02...
 // Checks: CMS rules, AZ DOI, HIPAA, CE requirements, OIG risk</div>
         <div class="ec-foot"><span class="ec-chars" id="chars-e4">0 chars</span><button class="copy-btn" onclick="copyField('body-e4')">COPY</button></div>
       </div>
-      <div class="eng-card">
+      <div class="eng-card" id="card-e5">
         <div class="ec-hdr"><div><span class="ec-num">05</span><span class="ec-title">RECOVERY & APPEAL PLAN</span></div><span class="ec-tag" id="tag-e5">IDLE</span></div>
         <div class="ec-body" id="body-e5">// Waiting for Engine 03 + 04...
 // Generates: appeal strategy, action steps, deadlines, owner assignments</div>
         <div class="ec-foot"><span class="ec-chars" id="chars-e5">0 chars</span><button class="copy-btn" onclick="copyField('body-e5')">COPY</button></div>
       </div>
-      <div class="eng-card">
+      <div class="eng-card" id="card-e6">
         <div class="ec-hdr"><div><span class="ec-num">06</span><span class="ec-title">APP DISPATCH</span></div><span class="ec-tag" id="tag-e6">IDLE</span></div>
         <div class="ec-body" id="body-e6">// Waiting for all 5 engines...
 // Routes to: Claims, DME, P&C Command, Compliance, CE Prep nodes</div>
@@ -337,7 +511,7 @@ body::before{content:'';position:fixed;top:0;right:0;width:600px;height:600px;ba
         <div class="eb-title">⚜ ESCALATE TO INSURANCE STRATEGIST →</div>
         <div class="eb-sub" id="escalSub">6-engine analysis complete. Package ready for strategist synthesis.</div>
       </div>
-      <div class="eb-btns">
+      <div class="eb-btns" id="escalBtns">
         <button class="btn btn-gold" onclick="escalateToStrategist()">⚜ ESCALATE TO STRATEGIST →</button>
         <button class="btn btn-outline" onclick="exportFull()">EXPORT ANALYSIS</button>
         <button class="btn btn-ghost" onclick="clearAll()">CLEAR & RESET</button>
@@ -361,6 +535,9 @@ body::before{content:'';position:fixed;top:0;right:0;width:600px;height:600px;ba
 </div>
 
 <script>
+/* ════════════════════════════════════════
+   CORE WAR ROOM LOGIC (unchanged)
+════════════════════════════════════════ */
 let docText = '';
 let selectedDocType = 'Claims Report';
 let engOut = {};
@@ -401,79 +578,10 @@ async function testKey(){
 }
 
 const SAMPLES = {
-  claims:`INSURANCE CLAIMS REPORT — Q1 2026
-Auto Liability Claims — AZ Market
-
-ACTIVE CLAIMS: 14
-TOTAL EXPOSURE: $312,400
-
-CRITICAL CLAIMS:
-CLM-0041 — Auto Liability — $94,200 — Fault Disputed — SIU Review Pending
-CLM-0038 — Workers Comp — $52,800 — Open 94 days — Medical still ongoing
-CLM-0029 — Homeowners — $38,400 — Wildfire zone — Carrier threatening non-renewal
-CLM-0055 — Umbrella — $22,000 — Pool drowning — Legal involvement
-
-DENIAL QUEUE: 3 claims denied
-- CLM-0031: CO-45 contractual — $14,200
-- CLM-0042: Missing documentation — $8,600
-- CLM-0048: Late filing — $6,400 — APPEAL WINDOW OPEN 30 DAYS
-
-CE RENEWAL: 2 agents expiring in 45 days
-COMPLIANCE: AZ DOI audit scheduled Q2`,
-
-  dme:`DME CLAIM — Medicare Part B
-HCPCS: E0431 — Oxygen Concentrator
-PATIENT: Medicare Beneficiary
-ICD-10: J96.00 — Respiratory failure
-CLAIM AMOUNT: $3,200
-STATUS: DENIED
-
-DENIAL REASON: CO-5 — Incomplete Certificate of Medical Necessity (CMN)
-Missing: ICD-10 qualifying diagnosis, physician attestation, blood oxygen test results
-
-LCD: L33797 — Oxygen applies
-COMPETITIVE BIDDING: Yes — CBA applies
-APPEAL WINDOW: 120 days from denial
-APPEAL ELIGIBLE: YES — documentation correctable
-
-SECONDARY ISSUES:
-- W-9 missing for supplier on file
-- Prior auth not documented in record
-- Modifier KX missing from claim header`,
-
-  policy:`POLICY REVIEW REPORT — AZ Book of Business
-Review Date: April 2026
-
-COVERAGE GAP ANALYSIS — 23 clients reviewed
-
-CRITICAL GAPS:
-1. Umbrella Gap: 8 pool-owning clients with no umbrella — $1.96M unprotected
-2. Auto Minimum Limits: 12 clients at AZ minimum $25K/$50K — catastrophic exposure
-3. Cyber Liability: 6 commercial clients with no cyber coverage — avg breach $4.35M
-4. HOA Condo Gap: 4 clients with bare-walls HOA master — no HO-6
-
-RENEWALS AT RISK:
-- 3 wildfire-zone properties — carriers threatening non-renewal
-- 2 E&O policies expiring in 30 days — agents need renewal guidance
-
-PREMIUM OPPORTUNITY: $42,800 identified in upsell/cross-sell`,
-
-  era:`ERA BATCH — Insurance ERA_20260415
-835 Remittance Batch
-
-TOTAL BILLED: $184,600
-TOTAL PAID: $142,800
-VARIANCE: -$41,800
-
-DENIAL CODES:
-CO-45 (Contractual): $22,400
-PR-2 (Patient responsibility): $8,600
-CO-4 (Late filing): $6,200 ← APPEAL ELIGIBLE
-CO-197 (Auth not obtained): $4,600 ← REVIEW REQUIRED
-
-APPEAL OPPORTUNITIES: $10,800 recoverable
-MISSING W-9: 2 providers
-HRSA REPORTING: Overdue — 5 days past deadline`
+  claims:`INSURANCE CLAIMS REPORT — Q1 2026\nAuto Liability Claims — AZ Market\n\nACTIVE CLAIMS: 14\nTOTAL EXPOSURE: $312,400\n\nCRITICAL CLAIMS:\nCLM-0041 — Auto Liability — $94,200 — Fault Disputed — SIU Review Pending\nCLM-0038 — Workers Comp — $52,800 — Open 94 days — Medical still ongoing\nCLM-0029 — Homeowners — $38,400 — Wildfire zone — Carrier threatening non-renewal\nCLM-0055 — Umbrella — $22,000 — Pool drowning — Legal involvement\n\nDENIAL QUEUE: 3 claims denied\n- CLM-0031: CO-45 contractual — $14,200\n- CLM-0042: Missing documentation — $8,600\n- CLM-0048: Late filing — $6,400 — APPEAL WINDOW OPEN 30 DAYS\n\nCE RENEWAL: 2 agents expiring in 45 days\nCOMPLIANCE: AZ DOI audit scheduled Q2`,
+  dme:`DME CLAIM — Medicare Part B\nHCPCS: E0431 — Oxygen Concentrator\nPATIENT: Medicare Beneficiary\nICD-10: J96.00 — Respiratory failure\nCLAIM AMOUNT: $3,200\nSTATUS: DENIED\n\nDENIAL REASON: CO-5 — Incomplete Certificate of Medical Necessity (CMN)\nMissing: ICD-10 qualifying diagnosis, physician attestation, blood oxygen test results\n\nLCD: L33797 — Oxygen applies\nCOMPETITIVE BIDDING: Yes — CBA applies\nAPPEAL WINDOW: 120 days from denial\nAPPEAL ELIGIBLE: YES — documentation correctable\n\nSECONDARY ISSUES:\n- W-9 missing for supplier on file\n- Prior auth not documented in record\n- Modifier KX missing from claim header`,
+  policy:`POLICY REVIEW REPORT — AZ Book of Business\nReview Date: April 2026\n\nCOVERAGE GAP ANALYSIS — 23 clients reviewed\n\nCRITICAL GAPS:\n1. Umbrella Gap: 8 pool-owning clients with no umbrella — $1.96M unprotected\n2. Auto Minimum Limits: 12 clients at AZ minimum $25K/$50K — catastrophic exposure\n3. Cyber Liability: 6 commercial clients with no cyber coverage — avg breach $4.35M\n4. HOA Condo Gap: 4 clients with bare-walls HOA master — no HO-6\n\nRENEWALS AT RISK:\n- 3 wildfire-zone properties — carriers threatening non-renewal\n- 2 E&O policies expiring in 30 days — agents need renewal guidance\n\nPREMIUM OPPORTUNITY: $42,800 identified in upsell/cross-sell`,
+  era:`ERA BATCH — Insurance ERA_20260415\n835 Remittance Batch\n\nTOTAL BILLED: $184,600\nTOTAL PAID: $142,800\nVARIANCE: -$41,800\n\nDENIAL CODES:\nCO-45 (Contractual): $22,400\nPR-2 (Patient responsibility): $8,600\nCO-4 (Late filing): $6,200 ← APPEAL ELIGIBLE\nCO-197 (Auth not obtained): $4,600 ← REVIEW REQUIRED\n\nAPPEAL OPPORTUNITIES: $10,800 recoverable\nMISSING W-9: 2 providers\nHRSA REPORTING: Overdue — 5 days past deadline`
 };
 
 function loadSample(key){
@@ -516,99 +624,12 @@ function setEngBody(i,text){
 function copyField(id){ navigator.clipboard.writeText(document.getElementById(id).textContent).then(()=>addLog('Copied',id,'f')); }
 
 const PROMPTS = [
-(doc,e)=>`You are a TSM Insurance Claim Intelligence AI.
-DOC TYPE: ${selectedDocType}
-DOCUMENT: ${doc.slice(0,1200)}
-
-ENGINE 01 — CLAIM INTELLIGENCE
-Extract key facts. Format exactly:
-DOC TYPE: [type]
-CLAIM/POLICY ID: [identifier]
-TOTAL AMOUNT: [primary dollar figure]
-KEY PARTIES: [insurer, insured, providers]
-DENIAL CODES: [codes found or "None"]
-CRITICAL ITEMS: [top 3-5 flagged items with amounts]
-APPEAL ELIGIBLE: [Yes/No — reason]
-RISK SCORE: [1-100]
-KEY FACTS:
-1. [fact]
-2. [fact]
-3. [fact]`,
-
-(doc,e)=>`You are a TSM Insurance Risk & Denial Analyst.
-ENGINE 01 FACTS:
-${e[1]}
-
-ENGINE 02 — RISK & DENIAL ANALYSIS
-DENIAL CODES IDENTIFIED: [list each with meaning and dollar amount]
-APPEAL WINDOWS: [deadlines for each appealable denial]
-COVERAGE GAPS: [missing coverage items]
-FRAUD INDICATORS: [any red flags or "None"]
-DOCUMENTATION GAPS: [missing CMN, auth, W-9, etc.]
-EXCEPTION COUNT: [number]
-RISK LEVEL: [Low/Medium/High/Critical] — [rationale]`,
-
-(doc,e)=>`You are a TSM Insurance Financial Exposure Analyst.
-ENGINE 01 FACTS: ${e[1].slice(0,400)}
-ENGINE 02 RISK: ${e[2]}
-
-ENGINE 03 — FINANCIAL EXPOSURE
-TOTAL EXPOSURE: [dollar range]
-RECOVERABLE AMOUNT: [what can be appealed/recovered]
-WRITE-OFF RISK: [amount at permanent loss risk]
-APPEAL ROI: [cost to appeal vs. recovery potential]
-PREMIUM OPPORTUNITY: [cross-sell/upsell dollar potential if applicable]
-FINANCIAL RISK SCORE: [1-100] — [rationale]
-EXECUTIVE ESCALATION: [Yes/No] — [reason]`,
-
-(doc,e)=>`You are a TSM Insurance Compliance Officer.
-ENGINE 01 FACTS: ${e[1].slice(0,300)}
-ENGINE 02 RISK FLAGS: ${e[2]}
-
-ENGINE 04 — COMPLIANCE & REGULATORY
-CMS/MEDICARE EXPOSURE: [risk level and reason]
-AZ DOI FLAGS: [state regulatory issues]
-HIPAA RISK: [any PHI/documentation concerns]
-CE/LICENSING FLAGS: [agent renewal issues or "None"]
-OIG EXPOSURE: [fraud/abuse risk level]
-SELF-DISCLOSURE RISK: [Yes/No] — [reason]
-COMPLIANCE RISK LEVEL: [Low/Medium/High/Critical]
-IMMEDIATE COMPLIANCE ACTIONS:
-1. [action]
-2. [action]
-3. [action]`,
-
-(doc,e)=>`You are a TSM Insurance Recovery Strategist.
-ENGINE 03 IMPACT: ${e[3]}
-ENGINE 04 COMPLIANCE: ${e[4]}
-
-ENGINE 05 — RECOVERY & APPEAL PLAN
-APPEAL STRATEGY: [specific approach for each appealable denial]
-PRIORITY ACTIONS (dollar-quantified):
-1. [Action] — $[amount] — [Owner] — [Deadline]
-2. [Action] — $[amount] — [Owner] — [Deadline]
-3. [Action] — $[amount] — [Owner] — [Deadline]
-4. [Action] — $[amount] — [Owner] — [Deadline]
-RECOVERY TIMELINE: [days]
-QUICK WINS (48 hrs): [immediate steps]
-DOCUMENTATION NEEDED: [list]
-ESCALATE TO PRINCIPAL: [Yes/No] — [reason]`,
-
-(doc,e)=>`You are the TSM Insurance App Dispatch Engine.
-ENGINE 03 RISK: ${e[3].slice(0,300)}
-ENGINE 05 ACTIONS: ${e[5]}
-
-ENGINE 06 — APP DISPATCH
-Recommend exactly 5 Insurance apps ranked by relevance. Available: Claims Triage, DME Billing Module, P&C Command, CE Study Prep, Agent Onboarding, AZ Insurance Command, Insurance Intel, BNCA Chain, PC Command, DME Benefits Page, AHIP Certification Prep
-
-Repeat 5 times:
-APP: [name]
-RANK: [#1-5]
-IS_TOP: [YES for #1 only, else NO]
-HOW_TO_USE: [3 sentences — exact tab to open, specific data to enter, specific output to produce for THIS document's issues]
-TAGS: [TAG1], [TAG2], [TAG3]
-
-DISPATCH_INTRO: [1-2 sentences on why these 5 apps address the specific issues found]`
+(doc,e)=>`You are a TSM Insurance Claim Intelligence AI.\nDOC TYPE: ${selectedDocType}\nDOCUMENT: ${doc.slice(0,1200)}\n\nENGINE 01 — CLAIM INTELLIGENCE\nExtract key facts. Format exactly:\nDOC TYPE: [type]\nCLAIM/POLICY ID: [identifier]\nTOTAL AMOUNT: [primary dollar figure]\nKEY PARTIES: [insurer, insured, providers]\nDENIAL CODES: [codes found or "None"]\nCRITICAL ITEMS: [top 3-5 flagged items with amounts]\nAPPEAL ELIGIBLE: [Yes/No — reason]\nRISK SCORE: [1-100]\nKEY FACTS:\n1. [fact]\n2. [fact]\n3. [fact]`,
+(doc,e)=>`You are a TSM Insurance Risk & Denial Analyst.\nENGINE 01 FACTS:\n${e[1]}\n\nENGINE 02 — RISK & DENIAL ANALYSIS\nDENIAL CODES IDENTIFIED: [list each with meaning and dollar amount]\nAPPEAL WINDOWS: [deadlines for each appealable denial]\nCOVERAGE GAPS: [missing coverage items]\nFRAUD INDICATORS: [any red flags or "None"]\nDOCUMENTATION GAPS: [missing CMN, auth, W-9, etc.]\nEXCEPTION COUNT: [number]\nRISK LEVEL: [Low/Medium/High/Critical] — [rationale]`,
+(doc,e)=>`You are a TSM Insurance Financial Exposure Analyst.\nENGINE 01 FACTS: ${e[1].slice(0,400)}\nENGINE 02 RISK: ${e[2]}\n\nENGINE 03 — FINANCIAL EXPOSURE\nTOTAL EXPOSURE: [dollar range]\nRECOVERABLE AMOUNT: [what can be appealed/recovered]\nWRITE-OFF RISK: [amount at permanent loss risk]\nAPPEAL ROI: [cost to appeal vs. recovery potential]\nPREMIUM OPPORTUNITY: [cross-sell/upsell dollar potential if applicable]\nFINANCIAL RISK SCORE: [1-100] — [rationale]\nEXECUTIVE ESCALATION: [Yes/No] — [reason]`,
+(doc,e)=>`You are a TSM Insurance Compliance Officer.\nENGINE 01 FACTS: ${e[1].slice(0,300)}\nENGINE 02 RISK FLAGS: ${e[2]}\n\nENGINE 04 — COMPLIANCE & REGULATORY\nCMS/MEDICARE EXPOSURE: [risk level and reason]\nAZ DOI FLAGS: [state regulatory issues]\nHIPAA RISK: [any PHI/documentation concerns]\nCE/LICENSING FLAGS: [agent renewal issues or "None"]\nOIG EXPOSURE: [fraud/abuse risk level]\nSELF-DISCLOSURE RISK: [Yes/No] — [reason]\nCOMPLIANCE RISK LEVEL: [Low/Medium/High/Critical]\nIMMEDIATE COMPLIANCE ACTIONS:\n1. [action]\n2. [action]\n3. [action]`,
+(doc,e)=>`You are a TSM Insurance Recovery Strategist.\nENGINE 03 IMPACT: ${e[3]}\nENGINE 04 COMPLIANCE: ${e[4]}\n\nENGINE 05 — RECOVERY & APPEAL PLAN\nAPPEAL STRATEGY: [specific approach for each appealable denial]\nPRIORITY ACTIONS (dollar-quantified):\n1. [Action] — $[amount] — [Owner] — [Deadline]\n2. [Action] — $[amount] — [Owner] — [Deadline]\n3. [Action] — $[amount] — [Owner] — [Deadline]\n4. [Action] — $[amount] — [Owner] — [Deadline]\nRECOVERY TIMELINE: [days]\nQUICK WINS (48 hrs): [immediate steps]\nDOCUMENTATION NEEDED: [list]\nESCALATE TO PRINCIPAL: [Yes/No] — [reason]`,
+(doc,e)=>`You are the TSM Insurance App Dispatch Engine.\nENGINE 03 RISK: ${e[3].slice(0,300)}\nENGINE 05 ACTIONS: ${e[5]}\n\nENGINE 06 — APP DISPATCH\nRecommend exactly 5 Insurance apps ranked by relevance. Available: Claims Triage, DME Billing Module, P&C Command, CE Study Prep, Agent Onboarding, AZ Insurance Command, Insurance Intel, BNCA Chain, PC Command, DME Benefits Page, AHIP Certification Prep\n\nRepeat 5 times:\nAPP: [name]\nRANK: [#1-5]\nIS_TOP: [YES for #1 only, else NO]\nHOW_TO_USE: [3 sentences — exact tab to open, specific data to enter, specific output to produce for THIS document's issues]\nTAGS: [TAG1], [TAG2], [TAG3]\n\nDISPATCH_INTRO: [1-2 sentences on why these 5 apps address the specific issues found]`
 ];
 
 const FALLBACKS = [
@@ -711,7 +732,6 @@ function buildAppDispatch(e6text){
   const dispatch=document.getElementById('appDispatch');
   const hdr=document.getElementById('dispatchHdr');
   if(!e6text) return;
-
   const APP_URLS={
     'Claims Triage':'ins-hub.html','DME Billing Module':'ins-hub.html','P&C Command':'pc-command.html',
     'CE Study Prep':'ce-study-prep.html','Agent Onboarding':'ins-hub.html',
@@ -719,10 +739,8 @@ function buildAppDispatch(e6text){
     'BNCA Chain':'ins-hub.html','PC Command':'pc-command.html',
     'DME Benefits Page':'dme.html','AHIP Certification Prep':'ce-study-prep.html'
   };
-
   const apps=[...e6text.matchAll(/APP:\s*([^\n]+)\nRANK:\s*([^\n]+)\nIS_TOP:\s*([^\n]+)\nHOW_TO_USE:\s*([\s\S]*?)(?=\nTAGS:|$)/g)];
   if(!apps.length) return;
-
   dispatch.innerHTML='';
   apps.forEach(m=>{
     const name=m[1].trim();
@@ -732,15 +750,9 @@ function buildAppDispatch(e6text){
     const card=document.createElement('div');
     card.className='app-card';
     if(isTop) card.style.borderColor='rgba(201,168,76,.4)';
-    card.innerHTML=`
-      <div class="app-card-rank">${isTop?'⭐ TOP RECOMMENDATION':'Rank '+m[2].trim()}</div>
-      <div class="app-card-name" style="${isTop?'color:var(--gold2)':''}">${name}</div>
-      <div class="app-card-how">${howto}</div>
-      <button class="app-card-btn" onclick="nav('${url}')" style="${isTop?'border-color:rgba(201,168,76,.4);color:var(--gold2)':''}">OPEN ${name.toUpperCase()} →</button>
-    `;
+    card.innerHTML=`<div class="app-card-rank">${isTop?'⭐ TOP RECOMMENDATION':'Rank '+m[2].trim()}</div><div class="app-card-name" style="${isTop?'color:var(--gold2)':''}">${name}</div><div class="app-card-how">${howto}</div><button class="app-card-btn" onclick="nav('${url}')" style="${isTop?'border-color:rgba(201,168,76,.4);color:var(--gold2)':''}">OPEN ${name.toUpperCase()} →</button>`;
     dispatch.appendChild(card);
   });
-
   const intro=e6text.match(/DISPATCH_INTRO:\s*([^\n]+(?:\n[^\n]+)?)/i);
   if(intro){
     const introEl=document.createElement('div');
@@ -748,7 +760,6 @@ function buildAppDispatch(e6text){
     introEl.textContent=intro[1].trim();
     dispatch.insertBefore(introEl,dispatch.firstChild);
   }
-
   hdr.style.display='flex';
   dispatch.classList.add('visible');
 }
@@ -760,20 +771,13 @@ function storeRelay(e){
     snapshot:{
       risk:document.getElementById('snapRisk').textContent,
       exposure:document.getElementById('snapExposure').textContent,
-      docType:selectedDocType,
-      denials:document.getElementById('kpiDenials').textContent,
+      docType:selectedDocType,denials:document.getElementById('kpiDenials').textContent,
       compliance:document.getElementById('kpiCompliance').textContent,
       appeal:document.getElementById('snapAppeal').textContent
     },
-    timestamp:new Date().toISOString(),
-    chainStep:'insurance-war-room'
+    timestamp:new Date().toISOString(),chainStep:'insurance-war-room'
   };
-  try{
-    sessionStorage.setItem('TSM_INS_WAR_RELAY',JSON.stringify(payload));
-    localStorage.setItem('tsm_ins_war_relay',JSON.stringify(payload));
-  }catch(err){console.warn('Store error:',err);}
-
-  // Persist state for return navigation
+  try{sessionStorage.setItem('TSM_INS_WAR_RELAY',JSON.stringify(payload));localStorage.setItem('tsm_ins_war_relay',JSON.stringify(payload));}catch(err){console.warn('Store error:',err);}
   try{
     sessionStorage.setItem('TSM_INS_WAR_STATE',JSON.stringify({
       docText,selectedDocType,
@@ -832,35 +836,23 @@ function escalateToStrategist(){
 
 addLog('Insurance War Room initialized','6 engines standing by — load insurance document to begin','g');
 
-// Restore persisted state
 (function(){
   try{
     const raw=sessionStorage.getItem('TSM_INS_WAR_STATE');
     if(!raw) return;
     const s=JSON.parse(raw);
     if(!s.docText) return;
-    docText=s.docText;
-    selectedDocType=s.selectedDocType||selectedDocType;
+    docText=s.docText;selectedDocType=s.selectedDocType||selectedDocType;
     document.getElementById('docPaste').value=s.docText;
     document.getElementById('sbDoc').textContent=s.selectedDocType+' · '+s.docText.length+' chars';
     document.querySelectorAll('.dt-btn').forEach(b=>{b.classList.toggle('active',b.textContent.trim()===s.selectedDocType);});
-    for(let i=1;i<=6;i++){
-      const txt=s.engines['e'+i]||'';
-      if(!txt) continue;
-      setEngBody(i,txt);setEngState(i,'done');enginesComplete++;
-    }
-    document.getElementById('kpiEngines').textContent='6/6';
-    document.getElementById('sbEngines').textContent='6 / 6 Engines Complete';
-    document.getElementById('kpiRisk').textContent=s.kpis.risk;
-    document.getElementById('kpiExposure').textContent=s.kpis.exposure;
-    document.getElementById('kpiDenials').textContent=s.kpis.denials;
-    document.getElementById('kpiCompliance').textContent=s.kpis.compliance;
-    document.getElementById('riskFill').style.width=s.kpis.riskFillWidth;
-    document.getElementById('riskFill').style.background=s.kpis.riskFillColor;
-    document.getElementById('snapType').textContent=s.snap.type;
-    document.getElementById('snapRisk').textContent=s.snap.risk;
-    document.getElementById('snapExposure').textContent=s.snap.exposure;
-    document.getElementById('snapAppeal').textContent=s.snap.appeal;
+    for(let i=1;i<=6;i++){const txt=s.engines['e'+i]||'';if(!txt) continue;setEngBody(i,txt);setEngState(i,'done');enginesComplete++;}
+    document.getElementById('kpiEngines').textContent='6/6';document.getElementById('sbEngines').textContent='6 / 6 Engines Complete';
+    document.getElementById('kpiRisk').textContent=s.kpis.risk;document.getElementById('kpiExposure').textContent=s.kpis.exposure;
+    document.getElementById('kpiDenials').textContent=s.kpis.denials;document.getElementById('kpiCompliance').textContent=s.kpis.compliance;
+    document.getElementById('riskFill').style.width=s.kpis.riskFillWidth;document.getElementById('riskFill').style.background=s.kpis.riskFillColor;
+    document.getElementById('snapType').textContent=s.snap.type;document.getElementById('snapRisk').textContent=s.snap.risk;
+    document.getElementById('snapExposure').textContent=s.snap.exposure;document.getElementById('snapAppeal').textContent=s.snap.appeal;
     if(s.e6text) buildAppDispatch(s.e6text);
     document.getElementById('escalSub').textContent='6-engine analysis complete — '+s.selectedDocType+' · Ready to escalate to Insurance Strategist.';
     document.getElementById('escalateBar').classList.add('visible');
@@ -868,7 +860,6 @@ addLog('Insurance War Room initialized','6 engines standing by — load insuranc
   }catch(err){console.warn('State restore error:',err);}
 })();
 
-// Relay from portal
 (function(){
   try{
     const raw=sessionStorage.getItem('INS_DOC_RELAY');
@@ -882,6 +873,370 @@ addLog('Insurance War Room initialized','6 engines standing by — load insuranc
     addLog('Portal relay received',(relay.name||'document')+' · '+relay.content.length+' chars','p');
   }catch(e){console.warn('Relay error:',e);}
 })();
+
+
+/* ════════════════════════════════════════
+   TOUR MODE ENGINE
+════════════════════════════════════════ */
+
+const TOUR_SLIDES = [
+  {
+    id: 'welcome',
+    title: 'INSURANCE WAR ROOM OVERVIEW',
+    type: 'info',
+    target: 'heroSection',
+    autoMs: 7000,
+    narration: `Welcome to the <span class="hl">Insurance War Room</span> — TSM's 6-engine document analysis pipeline. This guided tour walks you through the <span class="cmd">complete workflow</span> from raw document upload to executive escalation. You'll see how each engine builds on the last to produce a full risk, financial, compliance, and recovery brief — ready to hand to the principal.`,
+    actionHint: null
+  },
+  {
+    id: 'doctype',
+    title: 'STEP 1 · SELECT DOCUMENT TYPE',
+    type: 'action',
+    target: 'docTypeGrid',
+    autoMs: 6000,
+    narration: `<span class="hl">Select your document type</span> first — this primes Engine 01's extraction logic. The war room handles <span class="cmd">10 document classes</span>: Claims Reports, Denial Letters, Policy Reviews, DME Claims, AP Aging, ERA Batches, Underwriting submissions, Compliance docs, CE Renewals, and Other. <span class="warn">Wrong type = wrong extraction frame</span> — always set this before loading content.`,
+    actionHint: 'Click any document type button in the sidebar to classify your document'
+  },
+  {
+    id: 'paste',
+    title: 'STEP 2 · LOAD DOCUMENT CONTENT',
+    type: 'action',
+    target: 'pasteSection',
+    autoMs: 8000,
+    narration: `Paste your raw document text into the input area — <span class="hl">no formatting required</span>. The engines parse plain text, comma-delimited data, denial letter copy, ERA 835 batches, or any unstructured insurance document. For this tour, click one of the <span class="cmd">sample chips</span> below the textarea: <span class="ok">Claims</span>, <span class="ok">DME Denial</span>, <span class="ok">Policy Gap</span>, or <span class="ok">ERA Batch</span>. Each sample is a realistic AZ-market scenario.`,
+    actionHint: 'Paste document text OR click a sample chip (Claims / DME Denial / Policy Gap / ERA Batch)'
+  },
+  {
+    id: 'groq',
+    title: 'STEP 3 · CONNECT GROQ API',
+    type: 'action',
+    target: 'groqSection',
+    autoMs: 6000,
+    narration: `The war room runs on <span class="hl">Groq's llama-3.3-70b-versatile</span> — the fastest inference endpoint for this workload. Enter your <span class="cmd">gsk_...</span> key, hit TEST to verify the connection. Your key is stored locally in <span class="warn">localStorage</span> and never transmitted to TSM servers. If you don't have a key, the engines fall back to structured fallback outputs — useful for demos.`,
+    actionHint: 'Enter your Groq API key (gsk_...) and click TEST to validate'
+  },
+  {
+    id: 'fire',
+    title: 'STEP 4 · FIRE THE ENGINE PIPELINE',
+    type: 'action',
+    target: 'fireBtn',
+    autoMs: 7000,
+    narration: `Click <span class="hl">⚡ FIRE ALL 6 ENGINES</span> to launch the sequential analysis pipeline. The engines run <span class="cmd">in dependency order</span>: Engine 01 extracts facts → 02 flags risk using 01's output → 03 + 04 run in parallel using 01+02 → 05 synthesizes 03+04 → 06 routes to the right apps. Each engine takes ~2-4 seconds on Groq. <span class="warn">Do not navigate away</span> during the run — state is stored on completion.`,
+    actionHint: 'Click ⚡ FIRE ALL 6 ENGINES to launch the analysis pipeline'
+  },
+  {
+    id: 'enginestatus',
+    title: 'STEP 5 · MONITOR ENGINE STATUS',
+    type: 'demo',
+    target: 'engineStatusPanel',
+    autoMs: 6000,
+    narration: `Watch the <span class="hl">Engine Status panel</span> in real time. Each engine cycles: <span class="warn">IDLE → RUNNING → COMPLETE</span>. The amber pulsing badge means that engine is calling Groq. Green COMPLETE means output is stored and downstream engines have access to it. If an engine errors out, the system falls back to structured heuristic output so the chain doesn't break.`,
+    actionHint: null
+  },
+  {
+    id: 'kpis',
+    title: 'STEP 6 · READ THE KPI BAR',
+    type: 'demo',
+    target: 'kpiBar',
+    autoMs: 7000,
+    narration: `After engines complete, the <span class="hl">KPI Bar</span> populates with extracted metrics. <span class="cmd">Risk Score</span> (1-100) drives the color-coded fill bar — red over 70, amber 40-70, green below 40. <span class="cmd">Financial Exposure</span> shows total revenue at risk. <span class="cmd">Denial Flags</span> counts exception items. <span class="cmd">Compliance Status</span> shows regulatory posture. Use these to triage before reading full engine outputs.`,
+    actionHint: null
+  },
+  {
+    id: 'engines',
+    title: 'STEP 7 · REVIEW ENGINE OUTPUTS',
+    type: 'demo',
+    target: 'engineGrid',
+    autoMs: 9000,
+    narration: `The <span class="hl">6 engine output cards</span> hold the full analysis text. Each card has a COPY button for direct paste into emails, Salesforce, or appeal letters. <span class="cmd">Engine 01</span> = extracted facts and risk score. <span class="cmd">Engine 02</span> = denial codes, appeal windows, fraud flags. <span class="cmd">Engine 03</span> = financial exposure model. <span class="cmd">Engine 04</span> = CMS, AZ DOI, HIPAA, OIG compliance posture. <span class="cmd">Engine 05</span> = dollar-quantified appeal plan with deadlines. <span class="cmd">Engine 06</span> = app routing recommendations.`,
+    actionHint: 'Click COPY on any engine card to copy output to clipboard'
+  },
+  {
+    id: 'dispatch',
+    title: 'STEP 8 · APP DISPATCH ROUTING',
+    type: 'demo',
+    target: 'appDispatch',
+    autoMs: 7000,
+    narration: `Engine 06 generates the <span class="hl">App Dispatch panel</span> — ranked routing cards telling you exactly which TSM insurance node to open next and what data to enter. The <span class="cmd">⭐ Top Recommendation</span> is highlighted in gold. Each card shows a 3-sentence how-to specific to your document's issues — not generic instructions, but tailored guidance based on what the engines found.`,
+    actionHint: 'Click any OPEN [APP] → button to route directly to that TSM node'
+  },
+  {
+    id: 'escalate',
+    title: 'STEP 9 · ESCALATE TO EXECUTIVE PORTAL',
+    type: 'action',
+    target: 'escalBtns',
+    autoMs: 8000,
+    narration: `The final step: <span class="hl">escalate the full 6-engine package</span> to the Insurance Strategist or Executive Portal. Click <span class="cmd">⚜ ESCALATE TO STRATEGIST →</span> to relay all engine outputs, KPIs, snapshot data, and document text to the next node via <span class="ok">sessionStorage relay</span>. The Strategist synthesizes the package into an executive brief. Use <span class="cmd">EXPORT ANALYSIS</span> to download a full plaintext report for offline use or client delivery.`,
+    actionHint: 'Click ⚜ ESCALATE TO STRATEGIST → to relay the full analysis package'
+  },
+  {
+    id: 'done',
+    title: 'TOUR COMPLETE · WAR ROOM READY',
+    type: 'info',
+    target: 'heroSection',
+    autoMs: 0,
+    narration: `<span class="ok">Tour complete.</span> You now know the full Insurance War Room workflow: <span class="cmd">classify → load → connect → fire → review → route → escalate</span>. The war room persists state across navigation so you can move between nodes and return to find your analysis intact. <span class="hl">Load a real document and fire the engines</span> to start your first live analysis run.`,
+    actionHint: null
+  }
+];
+
+let tourActive = false;
+let tourStep = 0;
+let autoMode = false;
+let autoTimer = null;
+let timerInterval = null;
+let autoMs = 6000;
+
+function spotlightEl(targetId){
+  const sp = document.getElementById('tourSpotlight');
+  if(!targetId){ sp.style.display='none'; return; }
+  const el = document.getElementById(targetId);
+  if(!el){ sp.style.display='none'; return; }
+  const r = el.getBoundingClientRect();
+  const pad = 8;
+  sp.style.display = 'block';
+  sp.style.top = (r.top - pad) + 'px';
+  sp.style.left = (r.left - pad) + 'px';
+  sp.style.width = (r.width + pad*2) + 'px';
+  sp.style.height = (r.height + pad*2) + 'px';
+  // Scroll element into view
+  el.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function buildPips(){
+  const prog = document.getElementById('hudProgress');
+  prog.innerHTML = '';
+  TOUR_SLIDES.forEach((s,i) => {
+    const pip = document.createElement('div');
+    pip.className = 'hud-pip' + (i < tourStep ? ' done' : i === tourStep ? ' active' : '');
+    prog.appendChild(pip);
+  });
+}
+
+function renderSlide(idx){
+  const slide = TOUR_SLIDES[idx];
+  document.getElementById('hudBadge').textContent = String(idx+1).padStart(2,'0') + ' / ' + TOUR_SLIDES.length;
+  document.getElementById('hudTitle').textContent = slide.title;
+  document.getElementById('hudNarration').innerHTML = slide.narration;
+  const typeEl = document.getElementById('hudSlideType');
+  typeEl.textContent = slide.type.toUpperCase();
+  typeEl.className = 'hud-slide-type ' + slide.type;
+  const hint = document.getElementById('hudActionHint');
+  if(slide.actionHint){
+    hint.style.display = 'flex';
+    document.getElementById('hudActionText').textContent = slide.actionHint;
+  } else {
+    hint.style.display = 'none';
+  }
+  document.getElementById('hudPrevBtn').disabled = idx === 0;
+  const nextBtn = document.getElementById('hudNextBtn');
+  if(idx === TOUR_SLIDES.length - 1){
+    nextBtn.textContent = 'END TOUR ✓';
+    nextBtn.onclick = endTour;
+  } else {
+    nextBtn.textContent = 'NEXT ▶';
+    nextBtn.onclick = tourNext;
+  }
+  buildPips();
+  spotlightEl(slide.target);
+  if(autoMode) startAutoTimer(slide.autoMs || 6000);
+}
+
+function startAutoTimer(ms){
+  clearAutoTimer();
+  if(!ms || ms === 0) { stopAuto(); return; }
+  autoMs = ms;
+  const fill = document.getElementById('timerFill');
+  fill.style.transition = 'none';
+  fill.style.width = '100%';
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      fill.style.transition = `width ${ms}ms linear`;
+      fill.style.width = '0%';
+    });
+  });
+  autoTimer = setTimeout(()=>{
+    if(tourStep < TOUR_SLIDES.length - 1) tourNext();
+    else endTour();
+  }, ms);
+}
+
+function clearAutoTimer(){
+  if(autoTimer){ clearTimeout(autoTimer); autoTimer = null; }
+  if(timerInterval){ clearInterval(timerInterval); timerInterval = null; }
+  document.getElementById('timerFill').style.transition = 'none';
+  document.getElementById('timerFill').style.width = '100%';
+}
+
+function toggleAuto(){
+  autoMode = !autoMode;
+  const tog = document.getElementById('autoToggle');
+  const lbl = document.getElementById('autoStepLbl');
+  tog.classList.toggle('on', autoMode);
+  lbl.style.display = autoMode ? 'inline' : 'none';
+  if(autoMode){
+    startAutoTimer(TOUR_SLIDES[tourStep].autoMs || 6000);
+  } else {
+    clearAutoTimer();
+  }
+}
+
+function stopAuto(){
+  autoMode = false;
+  document.getElementById('autoToggle').classList.remove('on');
+  document.getElementById('autoStepLbl').style.display = 'none';
+  clearAutoTimer();
+}
+
+function tourNext(){
+  if(tourStep < TOUR_SLIDES.length - 1){
+    tourStep++;
+    renderSlide(tourStep);
+  }
+}
+
+function tourPrev(){
+  if(tourStep > 0){
+    tourStep--;
+    renderSlide(tourStep);
+  }
+}
+
+function startTour(){
+  tourActive = true;
+  tourStep = 0;
+  document.getElementById('tourOverlay').classList.add('active');
+  document.getElementById('tourHUD').classList.add('active');
+  document.getElementById('tourLaunchBtn').textContent = '■ TOUR ACTIVE';
+  document.getElementById('tourLaunchBtn').style.color = 'var(--amber)';
+  document.getElementById('tourLaunchBtn').style.borderColor = 'rgba(255,149,0,.4)';
+  renderSlide(0);
+  addLog('Guided tour started','Step-by-step narration active','p');
+}
+
+function endTour(){
+  tourActive = false;
+  stopAuto();
+  document.getElementById('tourOverlay').classList.remove('active');
+  document.getElementById('tourHUD').classList.remove('active');
+  document.getElementById('tourSpotlight').style.display = 'none';
+  document.getElementById('tourLaunchBtn').textContent = '▶ GUIDED TOUR';
+  document.getElementById('tourLaunchBtn').style.color = 'var(--cyan)';
+  document.getElementById('tourLaunchBtn').style.borderColor = 'rgba(0,229,255,.3)';
+  addLog('Tour ended','War room ready for live use','g');
+}
+
+// Re-spotlight on resize/scroll
+window.addEventListener('resize', ()=>{ if(tourActive) spotlightEl(TOUR_SLIDES[tourStep].target); });
+document.querySelector('.main').addEventListener('scroll', ()=>{ if(tourActive) spotlightEl(TOUR_SLIDES[tourStep].target); });
+
+/* ════════════════════════════════════════
+   SPEECH SYSTEM — Web Speech API (zero deps)
+   Supported: Chrome, Edge, Safari, Firefox 49+
+════════════════════════════════════════ */
+let speechVoices = [];
+let speechUtter = null;
+const speechOK = 'speechSynthesis' in window;
+
+function speechClean(html){
+  const d = document.createElement('div');
+  d.innerHTML = html;
+  return (d.textContent || d.innerText || '').replace(/\s+/g,' ').trim();
+}
+
+function speechLoadVoices(){
+  if(!speechOK) return;
+  speechVoices = window.speechSynthesis.getVoices();
+  const sel = document.getElementById('speechVoiceSelect');
+  if(!sel || !speechVoices.length) return;
+  sel.innerHTML = '';
+  const sorted = [...speechVoices].sort((a,b)=>(a.lang.startsWith('en')?0:1)-(b.lang.startsWith('en')?0:1));
+  let defaultSet = false;
+  sorted.forEach((v,i)=>{
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = v.name + ' (' + v.lang + ')';
+    if(!defaultSet && v.lang === 'en-US'){ opt.selected = true; defaultSet = true; }
+    sel.appendChild(opt);
+  });
+}
+
+if(speechOK){
+  window.speechSynthesis.onvoiceschanged = speechLoadVoices;
+  setTimeout(speechLoadVoices, 500);
+}
+
+function speechGetVoice(){
+  const sel = document.getElementById('speechVoiceSelect');
+  if(!sel || !speechVoices.length) return null;
+  return speechVoices[parseInt(sel.value) || 0] || null;
+}
+
+function speechPlay(){
+  if(!speechOK){ alert('Web Speech API not supported in this browser.'); return; }
+  if(window.speechSynthesis.paused){ window.speechSynthesis.resume(); speechSetState('speaking'); return; }
+  window.speechSynthesis.cancel();
+  const text = speechClean(TOUR_SLIDES[tourStep].narration);
+  if(!text) return;
+  speechUtter = new SpeechSynthesisUtterance(text);
+  const v = speechGetVoice();
+  if(v) speechUtter.voice = v;
+  speechUtter.rate   = parseFloat(document.getElementById('speechRate').value) || 0.95;
+  speechUtter.volume = parseFloat(document.getElementById('speechVol').value)  || 1;
+  speechUtter.pitch  = 1.0;
+  speechUtter.onstart  = ()=> speechSetState('speaking');
+  speechUtter.onend    = ()=> speechSetState('idle');
+  speechUtter.onerror  = ()=> speechSetState('idle');
+  speechUtter.onpause  = ()=> speechSetState('paused');
+  speechUtter.onresume = ()=> speechSetState('speaking');
+  window.speechSynthesis.speak(speechUtter);
+}
+
+function speechPause(){
+  if(!speechOK) return;
+  if(window.speechSynthesis.speaking && !window.speechSynthesis.paused){
+    window.speechSynthesis.pause();
+    speechSetState('paused');
+  }
+}
+
+function speechStop(){
+  if(!speechOK) return;
+  window.speechSynthesis.cancel();
+  speechSetState('idle');
+}
+
+function speechSetState(state){
+  const playBtn  = document.getElementById('speechPlayBtn');
+  const pauseBtn = document.getElementById('speechPauseBtn');
+  const stopBtn  = document.getElementById('speechStopBtn');
+  if(!playBtn) return;
+  if(state === 'speaking'){
+    playBtn.style.display  = 'none';
+    pauseBtn.style.display = '';
+    stopBtn.style.display  = '';
+    pauseBtn.className = 'hud-speech-btn speaking';
+  } else if(state === 'paused'){
+    playBtn.style.display  = '';
+    playBtn.textContent    = '▶ RESUME';
+    playBtn.className      = 'hud-speech-btn paused';
+    pauseBtn.style.display = 'none';
+    stopBtn.style.display  = '';
+  } else {
+    playBtn.style.display  = '';
+    playBtn.textContent    = '🔊 SPEAK';
+    playBtn.className      = 'hud-speech-btn';
+    pauseBtn.style.display = 'none';
+    stopBtn.style.display  = 'none';
+  }
+}
+
+// Stop speech on slide change or tour end (wrap originals)
+const _rsOrig = renderSlide;
+renderSlide = function(idx){ speechStop(); _rsOrig(idx); };
+const _etOrig = endTour;
+endTour = function(){ speechStop(); _etOrig(); };
 </script>
 </body>
 </html>
