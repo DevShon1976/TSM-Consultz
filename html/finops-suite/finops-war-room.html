@@ -766,6 +766,30 @@ async function fireEngines() {
   addLog('All 6 Engines Complete', 'Ready to escalate to FinOps Strategist', 'p');
 
   storeRelay(e);
+
+  // Persist war room state for return navigation
+  try {
+    sessionStorage.setItem('TSM_WAR_ROOM_STATE', JSON.stringify({
+      docText: docText,
+      selectedDocType: selectedDocType,
+      engines: { e1:e[1]||'', e2:e[2]||'', e3:e[3]||'', e4:e[4]||'', e5:e[5]||'', e6:e[6]||'' },
+      kpis: {
+        risk: document.getElementById('kpiRisk').textContent,
+        exposure: document.getElementById('kpiExposure').textContent,
+        exceptions: document.getElementById('kpiExceptions').textContent,
+        compliance: document.getElementById('kpiCompliance').textContent,
+        riskFillWidth: document.getElementById('riskFill').style.width,
+        riskFillColor: document.getElementById('riskFill').style.background
+      },
+      snap: {
+        type: document.getElementById('snapType').textContent,
+        risk: document.getElementById('snapRisk').textContent,
+        exposure: document.getElementById('snapExposure').textContent,
+        priority: document.getElementById('snapPriority').textContent
+      },
+      e6text: e[6]||''
+    }));
+  } catch(err) { console.warn('State persist error:', err); }
 }
 
 // ═══════════════════════════════════════════════════
@@ -885,10 +909,57 @@ function clearAll() {
     const b = document.getElementById('body-e'+i); if (b) { b.classList.remove('live'); b.textContent = '// Waiting...'; }
     const c = document.getElementById('chars-e'+i); if (c) c.textContent = '0 chars';
   }
+  sessionStorage.removeItem('TSM_WAR_ROOM_STATE');
   addLog('War Room cleared', 'Ready for new document', 'f');
 }
 
 addLog('FinOps War Room initialized', '6 engines standing by — load financial document to begin', 'g');
+
+// Restore persisted state on return navigation
+(function(){
+  try {
+    const raw = sessionStorage.getItem('TSM_WAR_ROOM_STATE');
+    if(!raw) return;
+    const s = JSON.parse(raw);
+    if(!s.docText) return;
+    docText = s.docText;
+    selectedDocType = s.selectedDocType || selectedDocType;
+    document.getElementById('docPaste').value = s.docText;
+    document.getElementById('sbDoc').textContent = s.selectedDocType + ' · ' + s.docText.length + ' chars';
+    // Restore doc type button
+    document.querySelectorAll('.dt-btn').forEach(b=>{
+      b.classList.toggle('active', b.textContent.trim() === s.selectedDocType);
+    });
+    // Restore engine outputs
+    const labels = ['Document Intelligence','Risk & Anomaly','Financial Impact','Compliance','Recovery Plan','App Dispatch'];
+    for(let i=1;i<=6;i++){
+      const txt = s.engines['e'+i]||'';
+      if(!txt) continue;
+      setEngBody(i, txt);
+      setEngState(i, 'done');
+      enginesComplete++;
+    }
+    document.getElementById('kpiEngines').textContent = '6/6';
+    document.getElementById('sbEngines').textContent = '6 / 6 Engines Complete';
+    // Restore KPIs
+    document.getElementById('kpiRisk').textContent = s.kpis.risk;
+    document.getElementById('kpiExposure').textContent = s.kpis.exposure;
+    document.getElementById('kpiExceptions').textContent = s.kpis.exceptions;
+    document.getElementById('kpiCompliance').textContent = s.kpis.compliance;
+    document.getElementById('riskFill').style.width = s.kpis.riskFillWidth;
+    document.getElementById('riskFill').style.background = s.kpis.riskFillColor;
+    document.getElementById('snapType').textContent = s.snap.type;
+    document.getElementById('snapRisk').textContent = s.snap.risk;
+    document.getElementById('snapExposure').textContent = s.snap.exposure;
+    document.getElementById('snapPriority').textContent = s.snap.priority;
+    // Restore app dispatch
+    if(s.e6text) buildAppDispatch(s.e6text);
+    // Restore escalate bar
+    document.getElementById('escalSub').textContent = '6-engine analysis complete — ' + s.selectedDocType + ' · Ready to escalate to FinOps Strategist.';
+    document.getElementById('escalateBar').classList.add('visible');
+    addLog('War Room state restored', s.selectedDocType + ' analysis reloaded', 'p');
+  } catch(err){ console.warn('State restore error:', err); }
+})();
 
 (function(){
   try {
