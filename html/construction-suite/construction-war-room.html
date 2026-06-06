@@ -1005,6 +1005,47 @@ async function fireEngines(){
   const labels=['Document Intelligence','FieldOps Analysis','Financial Impact · GAAP','Legal Command','Compliance Shield','BNCA Executive Dispatch'];
   enginesComplete=0;
   const e={};
+  const compressed={};
+
+  function compress(i,raw){
+    if(i===1){
+      // Extract only the structured fields, drop prose
+      const fields=['DOC TYPE','PARTIES','PROJECT','KEY AMOUNTS','CRITICAL DEADLINES','GAAP IMPACT','DISPUTE STATUS','RISK SCORE'];
+      return fields.map(f=>{
+        const m=raw.match(new RegExp(f+':[\\s]*([^\\n]+)'));
+        return m?f+': '+m[1].trim():'';
+      }).filter(Boolean).join('\n');
+    }
+    if(i===2){
+      const fields=['SCHEDULE IMPACT','COST TO BUDGET VARIANCE','CREW AND LABOR RISK','AP VERIFICATION GAPS','CRITICAL PATH THREAT','FIELDOPS RISK LEVEL'];
+      return fields.map(f=>{
+        const m=raw.match(new RegExp(f+':[\\s]*([^\\n]+)'));
+        return m?f+': '+m[1].trim():'';
+      }).filter(Boolean).join('\n');
+    }
+    if(i===3){
+      const fields=['EXPOSURE RANGE','JOURNAL ENTRY REQUIRED','GAAP TREATMENT','CASH FLOW IMPACT','RETAINAGE AT RISK','FINANCIAL RISK SCORE','RESTATEMENT RISK'];
+      return fields.map(f=>{
+        const m=raw.match(new RegExp(f+':[\\s]*([^\\n]+)'));
+        return m?f+': '+m[1].trim():'';
+      }).filter(Boolean).join('\n');
+    }
+    if(i===4){
+      const fields=['PRIMARY LEGAL RISK','LIEN EXPOSURE','BOND CLAIM STATUS','CONTRACT BREACH RISK','RECOMMENDED LEGAL ACTION','LEGAL RISK LEVEL'];
+      return fields.map(f=>{
+        const m=raw.match(new RegExp(f+':[\\s]*([^\\n]+)'));
+        return m?f+': '+m[1].trim():'';
+      }).filter(Boolean).join('\n');
+    }
+    if(i===5){
+      const fields=['OSHA EXPOSURE','DAVIS-BACON / PREVAILING WAGE','1099 / WORKER CLASSIFICATION','PAYROLL COMPLIANCE','ABATEMENT REQUIRED','COMPLIANCE RISK LEVEL'];
+      return fields.map(f=>{
+        const m=raw.match(new RegExp(f+':[\\s]*([^\\n]+)'));
+        return m?f+': '+m[1].trim():'';
+      }).filter(Boolean).join('\n');
+    }
+    return raw.slice(0,300);
+  }
 
   for(let i=1;i<=6;i++){
     setEngState(i,'running');
@@ -1013,7 +1054,7 @@ async function fireEngines(){
 
     let txt='';
     try{
-      const prompt=i===1?PROMPTS[0](docText):PROMPTS[i-1](docText,e);
+      const prompt=i===1?PROMPTS[0](docText):PROMPTS[i-1](docText,compressed);
       txt=await callGroq(prompt);
       if(!txt.trim()) throw new Error('empty response');
     }catch(err){
@@ -1022,6 +1063,7 @@ async function fireEngines(){
     }
 
     e[i]=txt;
+    compressed[i]=compress(i,txt);
     setEngBody(i,txt);
     setEngState(i,'done');
     enginesComplete++;
