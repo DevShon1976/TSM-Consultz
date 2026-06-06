@@ -157,6 +157,7 @@ body::before{content:'';position:fixed;top:0;right:0;width:500px;height:500px;ba
 
 /* STATUS BAR */
 .status-bar{position:fixed;bottom:0;left:0;right:0;background:#040a10;border-top:1px solid var(--border);padding:4px 16px;display:flex;align-items:center;gap:14px;font-size:8px;color:var(--dim);z-index:50}
+.main{padding-bottom:80px}
 .sb-dot{width:4px;height:4px;border-radius:50%;background:var(--blue);box-shadow:0 0 4px var(--blue)}
 .sb-sep{color:var(--border)}
 </style>
@@ -382,6 +383,8 @@ body::before{content:'';position:fixed;top:0;right:0;width:500px;height:500px;ba
   <span id="sbDoc">No document loaded</span>
   <span class="sb-sep">·</span>
   <span>Groq: llama-3.3-70b-versatile</span>
+  <span class="sb-sep">·</span>
+  <span>TOKENS: <span id="sbTokens" style="color:var(--cyan)">0</span> / <span id="sbCost" style="color:var(--green)">$0.0000</span></span>
 </div>
 
 <script>
@@ -394,6 +397,18 @@ let engOut = {};
 let enginesComplete = 0;
 let groqKey = localStorage.getItem('tsm_groq_key') || '';
 if (groqKey) document.getElementById('groqKey').value = groqKey;
+let totalTokensIn = 0, totalTokensOut = 0;
+
+function trackTokens(promptText, responseText){
+  const tIn = Math.ceil(promptText.length / 4);
+  const tOut = Math.ceil(responseText.length / 4);
+  totalTokensIn += tIn;
+  totalTokensOut += tOut;
+  const total = totalTokensIn + totalTokensOut;
+  const cost = ((totalTokensIn * 0.59 + totalTokensOut * 0.79) / 1000000);
+  document.getElementById('sbTokens').textContent = total.toLocaleString();
+  document.getElementById('sbCost').textContent = '$' + cost.toFixed(4);
+}
 
 // ═══════════════════════════════════════════════════
 // CLOCK + NAV
@@ -705,7 +720,7 @@ async function fireEngines() {
           messages: [{ role: 'user', content: PROMPTS[i-1](docText, e) }]
         })
       });
-      if (res.ok) { const d = await res.json(); txt = d.choices?.[0]?.message?.content || ''; }
+      if (res.ok) { const d = await res.json(); txt = d.choices?.[0]?.message?.content || ''; trackTokens(PROMPTS[i-1](docText, e), txt); }
       if (!txt.trim()) throw new Error('empty');
     } catch(err) {
       txt = FALLBACKS[i-1](docText, e);
