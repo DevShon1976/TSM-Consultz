@@ -889,6 +889,29 @@ function clearAll() {
 }
 
 addLog('FinOps War Room initialized', '6 engines standing by — load financial document to begin', 'g');
+
+(function(){
+  try {
+    const raw = sessionStorage.getItem('FINOPS_DOC_RELAY');
+    if(!raw) return;
+    const relay = JSON.parse(raw);
+    if(!relay.content) return;
+    sessionStorage.removeItem('FINOPS_DOC_RELAY');
+    document.getElementById('docPaste').value = relay.content;
+    docText = relay.content;
+    const typeMap = {
+      'GL':'GL Extract','AP':'AP Aging','AR':'AR Aging','BANK':'Bank Recon',
+      'BUDGET':'Budget Variance','TAX':'Tax / 1099','ERA':'ERA Batch','VENDOR':'Vendor Report'
+    };
+    const matchedType = typeMap[relay.type] || relay.type || selectedDocType;
+    document.querySelectorAll('.dt-btn').forEach(b=>{
+      if(b.textContent.trim() === matchedType){ b.classList.add('active'); selectedDocType = matchedType; }
+      else b.classList.remove('active');
+    });
+    document.getElementById('sbDoc').textContent = relay.name + ' · relayed from Doc Processor';
+    addLog('Doc Processor relay received', relay.name + ' · ' + relay.content.length + ' chars', 'p');
+  } catch(e){ console.warn('Relay load error:', e); }
+})();
 </script>
 </body>
 </html>

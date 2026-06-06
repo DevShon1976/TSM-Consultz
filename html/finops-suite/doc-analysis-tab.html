@@ -362,6 +362,17 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
     </div>
   </div>
 
+<div style="margin-top:12px;text-align:right">
+  <button
+    class="sample-pill"
+    style="background:#00d4ff;color:#001018;font-weight:700"
+    onclick="sendToWarRoom()">
+
+    ⚡ SEND TO WAR ROOM →
+
+  </button>
+</div>
+
   <!-- SAMPLE PILLS -->
   <div class="sample-pills" id="samplePills">
     <button class="sample-pill" onclick="loadSample('ap-aging')">AP Aging</button>
@@ -546,8 +557,25 @@ function updateGroqBadge(){
 
 // ===== MODE TOGGLE =====
 let currentMode = 'sample';
+let currentDocType = '';
+let currentDocName = '';
+let currentDocumentText = '';
 let currentDoc = null;
 let docsProcessed = 0;
+
+function sendToWarRoom(){
+  if(!currentDoc){ alert('Load a document first.'); return; }
+  const payload = {
+    type: currentDocType || currentDoc.tag || 'DOC',
+    name: currentDocName || currentDoc.label || 'Document',
+    content: currentDocumentText || currentDoc.context || '',
+    label: currentDoc.label || '',
+    tag: currentDoc.tag || '',
+    timestamp: Date.now()
+  };
+  sessionStorage.setItem('FINOPS_DOC_RELAY', JSON.stringify(payload));
+  window.location.href = '/html/finops-suite/finops-war-room.html';
+}
 
 function setMode(mode){
   currentMode = mode;
@@ -675,10 +703,16 @@ RECOMMENDATION: Pause payments to non-compliant until resolved`
   }
 };
 
-function loadSample(key){
+function loadSample(type){
+
+  currentDocType = type;
+  currentDocName = type;
+  const key = type;
   document.querySelectorAll('.sample-pill').forEach(p=>p.classList.remove('active'));
   event.target.classList.add('active');
   const s = SAMPLES[key];
+  currentDocumentText = s ? s.context : '';
+  const s2 = SAMPLES[key];
   if(!s) return;
   currentDoc = s;
   // Update dropzone
@@ -693,22 +727,15 @@ function loadSample(key){
   appendTerminal(`\n<span class="t-prompt">›</span> <span class="t-green">LOADED</span> <span class="t-cyan">${s.label}</span>\n<span class="t-dim">  Type: ${s.tag} · Document classified · Ready to process</span>\n<span class="t-muted">  Run PROCESS DOCUMENT to fire all 4 engines →</span>\n`);
 }
 
-async function handleUpload(e){
-  const file = e.target.files[0]; if(!file) return;
-  document.getElementById('dzIcon').textContent='⏳';
-  document.getElementById('dzTitle').textContent='Reading '+file.name+'...';
-  document.getElementById('dzSub').textContent='Parsing document structure...';
-  const content = await file.text().catch(()=>'[Binary file — using filename for context]');
-  currentDoc = {
-    label: file.name,
-    tag: 'UPLOAD',
-    icon: '📂',
-    context: `UPLOADED DOCUMENT: ${file.name}\nSIZE: ${(file.size/1024).toFixed(1)}KB\n\n${content.substring(0,4000)}`
-  };
-  document.getElementById('dzIcon').textContent='✓';
-  document.getElementById('dzTitle').textContent=file.name+' — READY';
-  document.getElementById('dzSub').textContent='Upload parsed · 4-engine analysis ready';
-  appendTerminal(`\n<span class="t-prompt">›</span> <span class="t-green">UPLOAD RECEIVED</span> <span class="t-cyan">${file.name}</span>\n<span class="t-dim">  Size: ${(file.size/1024).toFixed(1)}KB · Auto-classifying...</span>\n`);
+function sendToWarRoom(){
+  if(!currentDoc){ alert('Load a document first.'); return; }
+  sessionStorage.setItem('FINOPS_DOC_RELAY', JSON.stringify({
+    type: currentDoc.tag || currentDocType || 'DOC',
+    name: currentDoc.label || currentDocName || 'Document',
+    content: currentDoc.context || currentDocumentText || '',
+    timestamp: Date.now()
+  }));
+  window.location.href = '/html/finops-suite/finops-war-room.html';
 }
 
 // ===== TERMINAL HELPERS =====
