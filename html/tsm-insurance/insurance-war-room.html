@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Insurance War Room · TSM</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://code.responsivevoice.org/responsivevoice.js?key=FREE"></script>
 <style>
 :root{
   --bg:#05080c;--s2:#08111a;--s3:#0b1820;--border:rgba(201,168,76,.12);
@@ -1132,12 +1133,32 @@ window.addEventListener('resize', ()=>{ if(tourActive) spotlightEl(TOUR_SLIDES[t
 document.querySelector('.main').addEventListener('scroll', ()=>{ if(tourActive) spotlightEl(TOUR_SLIDES[tourStep].target); });
 
 /* ════════════════════════════════════════
-   SPEECH SYSTEM — Web Speech API (zero deps)
-   Supported: Chrome, Edge, Safari, Firefox 49+
+   SPEECH SYSTEM — ResponsiveVoice CDN
+   Works on locked-down Chrome (no OS voices needed)
 ════════════════════════════════════════ */
-let speechVoices = [];
-let speechUtter = null;
-const speechOK = 'speechSynthesis' in window;
+
+const RV_VOICES = [
+  'US English Male',
+  'US English Female',
+  'UK English Male',
+  'UK English Female',
+  'Australian Female',
+  'Australian Male'
+];
+
+// Populate voice dropdown with ResponsiveVoice options
+(function initRVVoices(){
+  const sel = document.getElementById('speechVoiceSelect');
+  if(!sel) return;
+  sel.innerHTML = '';
+  RV_VOICES.forEach((v,i)=>{
+    const opt = document.createElement('option');
+    opt.value = v;
+    opt.textContent = v;
+    if(i === 0) opt.selected = true;
+    sel.appendChild(opt);
+  });
+})();
 
 function speechClean(html){
   const d = document.createElement('div');
@@ -1145,72 +1166,36 @@ function speechClean(html){
   return (d.textContent || d.innerText || '').replace(/\s+/g,' ').trim();
 }
 
-function speechLoadVoices(){
-  if(!speechOK) return;
-  speechVoices = window.speechSynthesis.getVoices();
-  const sel = document.getElementById('speechVoiceSelect');
-  if(!sel || !speechVoices.length) return;
-  sel.innerHTML = '';
-  const sorted = [...speechVoices].sort((a,b)=>(a.lang.startsWith('en')?0:1)-(b.lang.startsWith('en')?0:1));
-  let defaultSet = false;
-  sorted.forEach((v,i)=>{
-    const opt = document.createElement('option');
-    opt.value = i;
-    opt.textContent = v.name + ' (' + v.lang + ')';
-    if(!defaultSet && v.lang === 'en-US'){ opt.selected = true; defaultSet = true; }
-    sel.appendChild(opt);
+function speechPlay(){
+  if(typeof responsiveVoice === 'undefined'){
+    alert('ResponsiveVoice not loaded — check network connection.');
+    return;
+  }
+  // If paused, resume isn't supported by RV — just restart
+  responsiveVoice.cancel();
+  const text  = speechClean(TOUR_SLIDES[tourStep].narration);
+  const voice = document.getElementById('speechVoiceSelect').value || 'US English Male';
+  const rate  = parseFloat(document.getElementById('speechRate').value) || 0.95;
+  const vol   = parseFloat(document.getElementById('speechVol').value)  || 1;
+  responsiveVoice.speak(text, voice, {
+    rate,
+    volume: vol,
+    pitch: 1,
+    onstart:  ()=> speechSetState('speaking'),
+    onend:    ()=> speechSetState('idle'),
+    onerror:  ()=> speechSetState('idle')
   });
 }
 
-if(speechOK){
-  window.speechSynthesis.onvoiceschanged = speechLoadVoices;
-  // Chrome loads voices async — poll until available
-  let voicePollTries = 0;
-  const voicePoll = setInterval(()=>{
-    voicePollTries++;
-    const v = window.speechSynthesis.getVoices();
-    if(v.length){ speechLoadVoices(); clearInterval(voicePoll); }
-    if(voicePollTries > 20) clearInterval(voicePoll);
-  }, 250);
-}
-
-function speechGetVoice(){
-  const sel = document.getElementById('speechVoiceSelect');
-  if(!sel || !speechVoices.length) return null;
-  return speechVoices[parseInt(sel.value) || 0] || null;
-}
-
-function speechPlay(){
-  if(!speechOK){ alert('Web Speech API not supported in this browser.'); return; }
-  if(window.speechSynthesis.paused){ window.speechSynthesis.resume(); speechSetState('speaking'); return; }
-  window.speechSynthesis.cancel();
-  const text = speechClean(TOUR_SLIDES[tourStep].narration);
-  if(!text) return;
-  speechUtter = new SpeechSynthesisUtterance(text);
-  const v = speechGetVoice();
-  if(v) speechUtter.voice = v;
-  speechUtter.rate   = parseFloat(document.getElementById('speechRate').value) || 0.95;
-  speechUtter.volume = parseFloat(document.getElementById('speechVol').value)  || 1;
-  speechUtter.pitch  = 1.0;
-  speechUtter.onstart  = ()=> speechSetState('speaking');
-  speechUtter.onend    = ()=> speechSetState('idle');
-  speechUtter.onerror  = ()=> speechSetState('idle');
-  speechUtter.onpause  = ()=> speechSetState('paused');
-  speechUtter.onresume = ()=> speechSetState('speaking');
-  window.speechSynthesis.speak(speechUtter);
-}
-
 function speechPause(){
-  if(!speechOK) return;
-  if(window.speechSynthesis.speaking && !window.speechSynthesis.paused){
-    window.speechSynthesis.pause();
-    speechSetState('paused');
-  }
+  if(typeof responsiveVoice === 'undefined') return;
+  responsiveVoice.pause();
+  speechSetState('paused');
 }
 
 function speechStop(){
-  if(!speechOK) return;
-  window.speechSynthesis.cancel();
+  if(typeof responsiveVoice === 'undefined') return;
+  responsiveVoice.cancel();
   speechSetState('idle');
 }
 
@@ -1239,7 +1224,7 @@ function speechSetState(state){
   }
 }
 
-// Stop speech on slide change or tour end (wrap originals)
+// Stop speech on slide change or tour end
 const _rsOrig = renderSlide;
 renderSlide = function(idx){ speechStop(); _rsOrig(idx); };
 const _etOrig = endTour;
