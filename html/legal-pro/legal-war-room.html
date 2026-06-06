@@ -1024,14 +1024,31 @@ function buildAppDispatch(raw) {
       {name:'Case Strategist',rank:'#2',isTop:false,how:'Feed the war room output into the Case Strategist. Use Strategic Synthesis mode to build the unified matter strategy document ready for partner review.',tagsRaw:'STRATEGY, SYNTHESIS, PARTNER'},
       {name:'Litigation Node',rank:'#3',isTop:false,how:'Open the Exposure Assessment tab. Enter the damages figures and litigation stage. Get procedural risk analysis and motion sequencing.',tagsRaw:'LITIGATION, EXPOSURE, MOTIONS'},
       {name:'Compliance Node',rank:'#4',isTop:false,how:'Use the Compliance Audit tab. Enter the denial reason and jurisdiction. Surface the exact policy checklist and corrective action steps.',tagsRaw:'COMPLIANCE, AUDIT, POLICY'},
-      {name:'Chief Strategist',rank:'#5',isTop:false,how:'Route the full 6-engine package to the Chief Strategist for cross-matter synthesis, BNCA escalation, and executive relay preparation.',tagsRaw:'ESCALATION, EXECUTIVE, RELAY'}
+      {name:'Chief Strategist',rank:'#5',isTop:false,how:'Route the full 6-engine package to the Chief Strategist for cross-matter synthesis, BNCA escalation, and executive relay preparation.',tagsRaw:'ESCALATION, EXECUTIVE, RELAY'},
+      {name:'Case Strategist Pro',rank:'#6',isTop:false,how:'Advanced matter synthesis — multi-party disputes, cross-jurisdiction analysis, partner-ready strategy documents.',tagsRaw:'STRATEGY, MULTI-PARTY, PARTNER'},
+      {name:'BPO Legal',rank:'#7',isTop:false,how:'Contract processing, vendor dispute resolution, and legal operations workflow management across business process engagements.',tagsRaw:'BPO, CONTRACT, VENDOR, OPERATIONS'}
     );
   }
+
+  // Guarantee defaults always present
+  const LEGAL_DEFAULTS=[
+    {name:'Legal Nodes',how:'Navigate to the relevant specialist node for your matter type.',tagsRaw:'NODES, ANALYSIS, INTAKE'},
+    {name:'Case Strategist',how:'Feed war room output into Case Strategist for unified matter strategy.',tagsRaw:'STRATEGY, SYNTHESIS, PARTNER'},
+    {name:'Chief Strategist',how:'Route full 6-engine package for cross-matter synthesis and executive relay.',tagsRaw:'ESCALATION, EXECUTIVE, RELAY'},
+    {name:'Case Strategist Pro',how:'Advanced matter synthesis for multi-party and cross-jurisdiction matters.',tagsRaw:'STRATEGY, MULTI-PARTY, PARTNER'},
+    {name:'BPO Legal',how:'Contract processing and vendor dispute resolution for BPO engagements.',tagsRaw:'BPO, CONTRACT, VENDOR'},
+  ];
+  LEGAL_DEFAULTS.forEach((d,di)=>{
+    if(!apps.find(a=>a.name.toLowerCase()===d.name.toLowerCase())){
+      apps.push({...d,rank:'#'+(apps.length+1),isTop:false});
+    }
+  });
 
   // Route map — legal-pro app URLs
   const routeMap = {
     'legal nodes':       'legal-nodes.html',
     'case strategist':   'legal-strategist.html',
+    'case strategist pro': 'case-strategist.html',
     'chief strategist':  'legal-main-strategist.html',
     'contracts node':    'legal-nodes.html#contracts',
     'litigation node':   'legal-nodes.html#litigation',
@@ -1040,6 +1057,8 @@ function buildAppDispatch(raw) {
     'billing node':      'legal-nodes.html#billing',
     'employment node':   'legal-nodes.html#employment',
     'settlement node':   'legal-nodes.html#settlement',
+    'bpo legal':         '/html/bpo/bpo-legal.html',
+    'bpo legal ops':     '/html/bpo/bpo-legal.html',
   };
 
   const dotColors = ['#00ff88','#d4af37','#00e5ff','#a855f7','#ff5555'];
@@ -1132,6 +1151,21 @@ async function fireEngines() {
   document.getElementById('spinner').style.display = 'flex';
 
   const e = {};
+  const compressed = {};
+
+  function compressLegal(i, raw){
+    const extract=(fields)=>fields.map(f=>{
+      const m=raw.match(new RegExp(f+'[:\\s]+([^\\n]+)'));
+      return m?f+': '+m[1].trim():'';
+    }).filter(Boolean).join('\n');
+    if(i===1) return extract(['CASE TYPE','PARTIES','KEY AMOUNTS','CRITICAL DEADLINES','LITIGATION STAGE','RISK SCORE','DISPUTE STATUS']);
+    if(i===2) return extract(['PRIMARY LEGAL ISSUE','BREACH RISK','LIABILITY EXPOSURE','KEY VIOLATIONS','STATUTE OF LIMITATIONS','LEGAL RISK LEVEL']);
+    if(i===3) return extract(['DAMAGES EXPOSURE','SETTLEMENT RANGE','LITIGATION COST','CASH FLOW IMPACT','FINANCIAL RISK SCORE','RESTATEMENT RISK']);
+    if(i===4) return extract(['RECOMMENDED ACTION','APPEAL STRATEGY','DOCUMENTS NEEDED','DEADLINE MAP','RECOVERY PROBABILITY']);
+    if(i===5) return extract(['IMMEDIATE NEXT STEPS','STAFF ASSIGNMENTS','ESCALATION TRIGGER','SETTLEMENT WINDOW','BNCA ACTION']);
+    return raw.slice(0,300);
+  }
+
 const labels = ['Document Intelligence','Legal Issues','Financial Impact','Recovery Plan','Case Navigator','App Dispatch'];
 
 for (let i = 1; i <= 6; i++) {
@@ -1142,7 +1176,7 @@ for (let i = 1; i <= 6; i++) {
 
   let txt = '';
   try {
-    const prompt = PROMPTS[i-1](doc, e);
+    const prompt = PROMPTS[i-1](doc, compressed);
     const res = await fetch(GROQ, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1155,6 +1189,7 @@ for (let i = 1; i <= 6; i++) {
   }
 
   e[i] = txt;
+  compressed[i] = compressLegal(i, txt);
   if (i <= 6) setEngOut(i, txt);
   if (i <= 5) setEngState(i, 'done');
   setPipeState(i, 'done');
