@@ -777,7 +777,7 @@ PRIORITY ACTIONS (dollar-quantified, owner assigned, deadline specific):
 3. [Action] — $[Amount] — [Owner] — [Deadline]
 4. [Action] — $[Amount] — [Owner] — [Deadline]
 
-APP ROUTING (ranked by relevance — use exact app names):
+APP ROUTING — YOU MUST OUTPUT ALL 12 APPS BELOW, NO EXCEPTIONS. Rank by relevance but include every app:
 TOP APP: [App Name] — [Why this is #1 for this specific document]
 
 APP: FinOps Accounting
@@ -925,13 +925,22 @@ function buildDispatch(raw){
     if(name) apps.push({name,rank,isTop,how,tagsRaw});
   }
 
-  // Ensure FinOps apps always present if not parsed
-  if(!apps.find(a=>a.name.toLowerCase().includes('finops accounting'))){
-    apps.unshift({name:'FinOps Accounting',rank:'#1',isTop:apps.length===0,how:'Open the GL Reconciliation tab → correct journal entries for this document → use GAAP Treatment advisor for capitalization and intercompany issues.',tagsRaw:'JOURNAL ENTRY, GAAP, GL, RECONCILIATION'});
-  }
-  if(!apps.find(a=>a.name.toLowerCase().includes('finops operations'))){
-    apps.splice(1,0,{name:'FinOps Operations',rank:'#2',isTop:false,how:'Open the Draw Verification tab → input variance amounts → generate AP entries and cash flow update.',tagsRaw:'DRAW, AP, CASH FLOW, VARIANCE'});
-  }
+  const DEFAULTS=[
+    {name:'FinOps Accounting',how:'GL reconciliation, journal entry correction, GAAP restatement — open GL tab and correct misclassified entries.',tagsRaw:'JOURNAL ENTRY, GAAP, GL'},
+    {name:'FinOps Operations',how:'Draw verification, AP/AR processing, cash flow update — open Draw Verification tab.',tagsRaw:'DRAW, AP, CASH FLOW'},
+    {name:'Legal Analyst Pro',how:'Lien response, contract breach, bond claim — open Lien Rights tab.',tagsRaw:'LIEN, CONTRACT, DISPUTE'},
+    {name:'AuditOps Sovereign Core',how:'Select Finance or Legal playbook — run module and chain through Intelligence Feed.',tagsRaw:'AUDIT, PLAYBOOK, COMPLIANCE'},
+    {name:'TSM Compliance Command',how:'OSHA response, Davis-Bacon audit, permit review — open relevant compliance module.',tagsRaw:'OSHA, DAVIS-BACON, PERMIT'},
+    {name:'AuditOps Pro Tax Intelligence',how:'Payroll scan, 1099 misclassification, certified payroll reconciliation.',tagsRaw:'PAYROLL, 1099, TAX'},
+    {name:'TSM Financial Command',how:'Cash flow reconciliation, draw variance, cost overrun dashboard.',tagsRaw:'CASH FLOW, DRAW, VARIANCE'},
+    {name:'TSM Construction Suite Field & Document Ops',how:'Field crew dispatch, equipment tracking, subcontractor coordination.',tagsRaw:'FIELDOPS, CREW, SCHEDULE'},
+    {name:'TSM Zero-Trust Enterprise Access Command',how:'Lock down unauthorized access roles, flag credential anomalies.',tagsRaw:'ACCESS, SECURITY, BREACH'},
+  ];
+  DEFAULTS.forEach((d,di)=>{
+    if(!apps.find(a=>a.name.toLowerCase().includes(d.name.toLowerCase().split(' ')[0]))){
+      apps.push({...d,rank:'#'+(apps.length+1),isTop:false});
+    }
+  });
 
   const container=document.getElementById('appCardsList');
   container.innerHTML='';
