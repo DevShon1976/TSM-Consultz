@@ -293,6 +293,38 @@ select.fi option{background:var(--s2)}
 .nv-select{flex:1;background:var(--bg);border:1px solid var(--border2);
   color:var(--text);font-family:var(--mono);font-size:.48rem;padding:.25rem .4rem}
 .nv-frame{flex:1;border:none;width:100%;background:var(--bg)}
+.rem-tile{background:var(--s1);padding:.5rem .6rem;cursor:pointer;transition:background .12s;
+  display:flex;flex-direction:column;gap:.18rem;border-top:2px solid var(--border2)}
+.rem-tile:hover{background:var(--s2);border-top-color:var(--acc)}
+.rem-tile.active{background:var(--s2);border-top-color:var(--acc)}
+.rem-icon{font-size:.75rem;line-height:1}
+.rem-name{font-family:var(--mono);font-size:.48rem;font-weight:700;color:var(--white);letter-spacing:.08rem}
+.rem-desc{font-family:var(--mono);font-size:.4rem;color:var(--muted);line-height:1.3}
+.rem-tag{font-family:var(--mono);font-size:.38rem;letter-spacing:.06rem;margin-top:.1rem}
+
+/* ─── REMEDIATION PATH PANEL ─── */
+#remPathPanel{border-top:1px solid var(--border);background:linear-gradient(90deg,rgba(245,158,11,.05),rgba(0,229,204,.03));padding:.5rem .75rem}
+.rp-bar{display:flex;align-items:center;gap:.6rem;margin-bottom:.4rem}
+.rp-hdr-lbl{font-family:var(--mono);font-size:.45rem;letter-spacing:.12rem;color:var(--acc);text-transform:uppercase}
+.rp-node-lbl{font-family:var(--mono);font-size:.4rem;color:var(--muted)}
+.rp-dismiss{margin-left:auto;background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:.6rem;line-height:1}
+.rp-dismiss:hover{color:var(--white)}
+.rp-flow{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.rp-best{background:var(--s2);border:1px solid var(--acc);padding:.45rem .6rem;cursor:pointer;
+  min-width:110px;transition:background .12s;position:relative}
+.rp-best:hover{background:rgba(245,158,11,.12)}
+.rp-best-badge{font-family:var(--mono);font-size:.35rem;letter-spacing:.1rem;color:var(--acc);margin-bottom:.18rem}
+.rp-best-icon{font-size:.7rem;line-height:1}
+.rp-best-name{font-family:var(--mono);font-size:.45rem;font-weight:700;color:var(--white);margin-top:.15rem}
+.rp-best-desc{font-family:var(--mono);font-size:.38rem;color:var(--muted);margin-top:.1rem}
+.rp-arrow{font-family:var(--mono);font-size:.8rem;color:var(--border3);flex-shrink:0}
+.rp-steps{display:flex;gap:1px;background:var(--border);flex-wrap:wrap}
+.rp-step{background:var(--s1);border:none;padding:.38rem .5rem;cursor:pointer;
+  display:flex;align-items:center;gap:.3rem;transition:background .12s}
+.rp-step:hover{background:var(--s2)}
+.rp-step-num{font-family:var(--mono);font-size:.38rem;color:var(--muted);width:10px}
+.rp-step-icon{font-size:.55rem;line-height:1}
+.rp-step-label{font-family:var(--mono);font-size:.42rem;color:var(--text);white-space:nowrap}
 
 /* TEXTAREA REPORT */
 .rp-textarea{
@@ -596,6 +628,8 @@ select.fi option{background:var(--s2)}
           <div class="feed-body" id="feedBody">
             <span style="color:var(--muted);font-style:italic">Select any node module above to run analysis. Output streams here.</span>
           </div>
+          <!-- REMEDIATION PATH PANEL — injected by renderRemPath() after node completes -->
+          <div id="remPathPanel" style="display:none;flex-shrink:0"></div>
         </div><!-- /node-grid-wrap -->
 
         <!-- RIGHT PANEL -->
@@ -779,21 +813,72 @@ select.fi option{background:var(--s2)}
       </div>
     </div><!-- /view-rescue -->
 
-    <!-- ═══ NODE VIEWER VIEW ═══ -->
+    <!-- ═══ NODE VIEWER / REMEDIATION TOOLS ═══ -->
     <div id="view-nodes" class="view">
       <div class="nodes-viewer">
         <div class="nv-bar">
-          <select class="nv-select" id="nodeSelect" onchange="loadNodeFrame(this.value)">
-            <option value="">— Select Connected Node —</option>
-            <option value="https://reo-pro.tsmatter.com">REO PRO</option>
-            <option value="https://tax.tsmatter.com">TAX STRATEGIST</option>
-            <option value="https://compliance.tsmatter.com">COMPLIANCE SHIELD</option>
-            <option value="https://mortgage.tsmatter.com">MORTGAGE COMMAND</option>
-            <option value="https://strategist.tsmatter.com">STRATEGIST</option>
+          <span style="font-family:var(--mono);font-size:.48rem;color:var(--acc);letter-spacing:.12rem">REMEDIATION TOOLS</span>
+          <select class="nv-select" id="nodeSelect" onchange="loadNodeFrame(this.value)" style="margin-left:.5rem">
+            <option value="">— Load Tool in Frame —</option>
+            <option value="../../tsm-shell/financial.html">⚡ FINANCIAL ANALYZER</option>
+            <option value="../../tsm-shell/auditops-pro.html">🔍 AUDIT OPS PRO</option>
+            <option value="../legal-pro/legal-analyst-pro.html">⚖️ LEGAL ANALYST PRO</option>
+            <option value="../../tsm-shell/html/compliance.html">🛡 COMPLIANCE SHIELD</option>
+            <option value="../../tsm-shell/html/zero-trust.html">🔐 ZERO-TRUST ACCESS</option>
+            <option value="../finops-suite/finops-accounting.html">📊 FINOPS ACCOUNTING</option>
+            <option value="../finops-suite/finops-operations.html">⚙️ FINOPS OPERATIONS</option>
           </select>
-          <button class="tb-btn" onclick="openNodeNewTab()">&#8599; OPEN NEW TAB</button>
-          <span style="font-family:var(--mono);font-size:.45rem;color:var(--muted);margin-left:auto">RE STRATEGIST: <a href="re-strategist.html" target="_blank" style="color:var(--purple);text-decoration:none">LAUNCH ↗</a></span>
-          <span style="font-family:var(--mono);font-size:.45rem;color:var(--muted);margin-left:1rem">RE EXEC PORTAL: <a href="re-exec-portal.html" target="_blank" style="color:var(--acc);text-decoration:none">LAUNCH ↗</a></span>
+          <button class="tb-btn" onclick="openNodeNewTab()">&#8599; NEW TAB</button>
+          <span style="font-family:var(--mono);font-size:.42rem;color:var(--muted);margin-left:auto">
+            <a href="re-strategist.html" style="color:var(--purple);text-decoration:none">↑ STRATEGIST</a>
+            &nbsp;·&nbsp;
+            <a href="re-exec-portal.html" style="color:var(--acc);text-decoration:none">↑ EXEC PORTAL</a>
+          </span>
+        </div>
+        <!-- REMEDIATION TOOL TILES -->
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);flex-shrink:0">
+          <div class="rem-tile" onclick="loadNodeTile('../../tsm-shell/financial.html')">
+            <div class="rem-icon">$</div>
+            <div class="rem-name">FINANCIAL</div>
+            <div class="rem-desc">P&amp;L · Cash Flow · Exposure</div>
+            <div class="rem-tag" style="color:var(--green)">FINANCE ANOMALY</div>
+          </div>
+          <div class="rem-tile" onclick="loadNodeTile('../../tsm-shell/auditops-pro.html')">
+            <div class="rem-icon">⊛</div>
+            <div class="rem-name">AUDIT OPS</div>
+            <div class="rem-desc">Doc Review · Findings · Risk</div>
+            <div class="rem-tag" style="color:var(--acc)">DOCUMENT ISSUE</div>
+          </div>
+          <div class="rem-tile" onclick="loadNodeTile('../legal-pro/legal-analyst-pro.html')">
+            <div class="rem-icon">⚖</div>
+            <div class="rem-name">LEGAL ANALYST</div>
+            <div class="rem-desc">Lien · Contract · Statute</div>
+            <div class="rem-tag" style="color:var(--purple)">LEGAL FLAG</div>
+          </div>
+          <div class="rem-tile" onclick="loadNodeTile('../../tsm-shell/html/compliance.html')">
+            <div class="rem-icon">🛡</div>
+            <div class="rem-name">COMPLIANCE</div>
+            <div class="rem-desc">TRID · RESPA · FinCEN</div>
+            <div class="rem-tag" style="color:var(--red)">COMPLIANCE BREACH</div>
+          </div>
+          <div class="rem-tile" onclick="loadNodeTile('../../tsm-shell/html/zero-trust.html')">
+            <div class="rem-icon">🔐</div>
+            <div class="rem-name">ZERO-TRUST</div>
+            <div class="rem-desc">Access · Identity · Audit Log</div>
+            <div class="rem-tag" style="color:var(--cyan)">ACCESS CONTROL</div>
+          </div>
+          <div class="rem-tile" onclick="loadNodeTile('../finops-suite/finops-accounting.html')">
+            <div class="rem-icon">📊</div>
+            <div class="rem-name">FINOPS ACCTG</div>
+            <div class="rem-desc">Ledger · Reconcile · P&amp;L</div>
+            <div class="rem-tag" style="color:var(--green)">ACCOUNTING FLAG</div>
+          </div>
+          <div class="rem-tile" onclick="loadNodeTile('../finops-suite/finops-operations.html')">
+            <div class="rem-icon">⚙</div>
+            <div class="rem-name">FINOPS OPS</div>
+            <div class="rem-desc">Pipeline · Ops · Workflow</div>
+            <div class="rem-tag" style="color:var(--blue)">OPS ANOMALY</div>
+          </div>
         </div>
         <iframe id="nodeFrame" class="nv-frame" src="about:blank"></iframe>
       </div>
@@ -857,6 +942,102 @@ async function callAI(userMessage, systemOverride) {
   return data.answer || data.response || data.reply || 'No response.';
 }
 
+// ─── REMEDIATION PATH ENGINE ──────────────────────────────────────────────────
+const REM_TOOLS = [
+  {
+    id:'financial', label:'FINANCIAL ANALYZER', icon:'$',
+    desc:'P&L anomalies · cash exposure · net position',
+    url:'../../tsm-shell/financial.html',
+    color:'var(--green)',
+    keys:['cash','revenue','income','expense','loss','profit','p&l','ledger','receivable','payable','write-off','write off','revenue gap','budget','cost','fee','dollar','$','financial','fund','asset value','capital']
+  },
+  {
+    id:'audit', label:'AUDIT OPS PRO', icon:'⊛',
+    desc:'Document review · findings log · risk flags',
+    url:'../../tsm-shell/auditops-pro.html',
+    color:'var(--acc)',
+    keys:['audit','document','missing','incomplete','discrepancy','error','finding','review','evidence','record','file','intake','deficiency','condition','gap','verify','validation']
+  },
+  {
+    id:'legal', label:'LEGAL ANALYST PRO', icon:'⚖',
+    desc:'Lien · contract · statute · ARS',
+    url:'../legal-pro/legal-analyst-pro.html',
+    color:'var(--purple)',
+    keys:['lien','legal','statute','contract','ars','hoa','super-lien','title defect','encumbrance','judgment','foreclosure','deed','easement','lawsuit','litigation','attorney','counsel','clause','breach']
+  },
+  {
+    id:'compliance', label:'COMPLIANCE SHIELD', icon:'🛡',
+    desc:'TRID · RESPA · FinCEN · HMDA · Fair Housing',
+    url:'../../tsm-shell/html/compliance.html',
+    color:'var(--red)',
+    keys:['trid','respa','fincen','hmda','fair housing','cfpb','violation','tolerance','cure','disclosure','le timing','closing disclosure','aml','bsa','sar','gto','rre','beneficial ownership','compliance']
+  },
+  {
+    id:'zerotrust', label:'ZERO-TRUST ACCESS', icon:'🔐',
+    desc:'Access control · identity · audit log',
+    url:'../../tsm-shell/html/zero-trust.html',
+    color:'var(--cyan)',
+    keys:['access','identity','authentication','unauthorized','credential','permission','role','user','login','security','breach','exposure','data','privacy','pii']
+  },
+  {
+    id:'finops-acct', label:'FINOPS ACCOUNTING', icon:'📊',
+    desc:'Ledger · reconciliation · P&L · journal entries',
+    url:'../finops-suite/finops-accounting.html',
+    color:'var(--green)',
+    keys:['reconcil','journal','ledger','balance sheet','accrual','debit','credit','accounting','gaap','tax','depreci','amortiz','escrow','settlement','hud-1','disbursement','proceeds','net sheet']
+  },
+  {
+    id:'finops-ops', label:'FINOPS OPERATIONS', icon:'⚙',
+    desc:'Pipeline ops · workflow · velocity · throughput',
+    url:'../finops-suite/finops-operations.html',
+    color:'var(--blue)',
+    keys:['pipeline','velocity','throughput','pull-through','workflow','queue','backlog','capacity','delay','bottleneck','operations','process','turn time','ctc','days','closing delay','fall-through','fallthrough']
+  }
+];
+
+function scoreTools(text) {
+  const t = text.toLowerCase();
+  return REM_TOOLS.map(tool => {
+    const hits = tool.keys.filter(k => t.includes(k)).length;
+    return { ...tool, score: hits };
+  }).filter(t => t.score > 0).sort((a,b) => b.score - a.score);
+}
+
+function renderRemPath(text, node) {
+  const ranked = scoreTools(text);
+  if (!ranked.length) return; // no keywords matched — don't render
+
+  const best = ranked[0];
+  const rest = ranked.slice(1, 6); // up to 5 follow-ups
+
+  const stepBtns = rest.map((t, i) =>
+    `<button class="rp-step" onclick="loadNodeTile('${t.url}')" title="${t.desc}">
+      <span class="rp-step-num">${i+2}</span>
+      <span class="rp-step-icon">${t.icon}</span>
+      <span class="rp-step-label">${t.label}</span>
+    </button>`
+  ).join('');
+
+  const panel = document.getElementById('remPathPanel');
+  panel.innerHTML = `
+    <div class="rp-bar">
+      <span class="rp-hdr-lbl">⚡ RECOMMENDED REMEDIATION PATH</span>
+      <span class="rp-node-lbl">${node} analysis detected ${ranked.length} tool match${ranked.length>1?'es':''}</span>
+      <button class="rp-dismiss" onclick="document.getElementById('remPathPanel').innerHTML=''">✕</button>
+    </div>
+    <div class="rp-flow">
+      <div class="rp-best" onclick="loadNodeTile('${best.url}')" title="${best.desc}">
+        <div class="rp-best-badge">BEST MATCH</div>
+        <div class="rp-best-icon">${best.icon}</div>
+        <div class="rp-best-name">${best.label}</div>
+        <div class="rp-best-desc">${best.desc}</div>
+      </div>
+      ${rest.length ? `<div class="rp-arrow">→</div><div class="rp-steps">${stepBtns}</div>` : ''}
+    </div>
+  `;
+  panel.style.display = 'block';
+}
+
 // ─── NODE RUNNER ─────────────────────────────────────────────────────────────
 async function runNode(card) {
   const prompt = card.dataset.prompt;
@@ -892,6 +1073,7 @@ async function runNode(card) {
     document.getElementById('feedMeta').textContent = '✓ Complete — ' + title;
     card.querySelector('.nc-status').textContent = '✓ COMPLETE';
     card.querySelector('.nc-status').style.color = 'var(--green)';
+    renderRemPath(text, node);
   } catch(e) {
     feed.innerHTML = `<span style="color:var(--red)">[ERROR] ${e.message}</span>`;
     document.getElementById('feedMeta').textContent = 'ERROR';
@@ -1201,6 +1383,14 @@ function updateHealthScore(score) {
 
 function loadNodeFrame(url) {
   if (url) document.getElementById('nodeFrame').src = url;
+}
+
+function loadNodeTile(url) {
+  document.querySelectorAll('.rem-tile').forEach(t => t.classList.remove('active'));
+  const tile = document.querySelector(`.rem-tile[onclick*="${url}"]`);
+  if (tile) tile.classList.add('active');
+  document.getElementById('nodeSelect').value = url;
+  document.getElementById('nodeFrame').src = url;
 }
 
 function openNodeNewTab() {
