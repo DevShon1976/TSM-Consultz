@@ -1494,9 +1494,14 @@ async function runPipeline() {
 
   if (actTxt) actTxt.textContent = '5 / 5 Engines Complete';
   relay();
-  setTimeout(() => { const s = document.getElementById('hcAnomalyStrip'); if(s) s.style.display='flex'; }, 1200);
-
-  setTimeout(() => { const s = document.getElementById('hcAnomalyStrip'); if(s) s.style.display='flex'; }, 1200);
+  setTimeout(() => {
+    try {
+      const docEl = document.getElementById('doc-input') || document.getElementById('docInput') || document.querySelector('textarea');
+      const dt = docEl ? docEl.value : '';
+      sessionStorage.setItem('tsmHcWarRoom', JSON.stringify({ docText: dt, selectedDocType: 'HC Denial', engineOutputs: outputs, timestamp: Date.now() }));
+    } catch(e) {}
+    showAnomalyAdvisorPanel(outputs, docText);
+  }, 1200);
 
   // Also fix output badge IDs
   ['badge1','badge2','badge3','badge4','badge5'].forEach((id, i) => {
@@ -2258,37 +2263,85 @@ function exportAll() {
   a.download = 'denial-war-room-export.txt';
   a.click();
 }
-function openAnomalyAdvisor() {
-  try {
-    const docText = document.getElementById('doc-text')?.value || '';
-    sessionStorage.setItem('tsmHcWarRoom', JSON.stringify({
-      docText,
-      selectedDocType: 'Denial Claim',
-      timestamp: Date.now()
-    }));
-  } catch(e) {}
-  window.open('hc-anomaly-advisor.html', '_blank');
-}
-</script>
 
+</script>
+<script>
 function openAnomalyAdvisor() {
   try {
-    const docEl = document.getElementById('doc-input') || document.getElementById('docInput') || document.getElementById('claimText');
+    const docEl = document.getElementById('doc-text') || document.getElementById('doc-input') || document.getElementById('docInput') || document.querySelector('textarea');
     const docText = docEl ? docEl.value : '';
-    sessionStorage.setItem('tsmHcWarRoom', JSON.stringify({
-      docText,
-      selectedDocType: 'HC Denial',
-      timestamp: Date.now()
-    }));
+    sessionStorage.setItem('tsmHcWarRoom', JSON.stringify({ docText, selectedDocType: 'HC Denial', timestamp: Date.now() }));
   } catch(e) {}
   window.open('hc-anomaly-advisor.html', '_blank');
 }
+
+function showAnomalyAdvisorPanel(outputs, docText) {
+  const existing = document.getElementById('anomaly-slide-panel');
+  if (existing) existing.remove();
+
+  const panel = document.createElement('div');
+  panel.id = 'anomaly-slide-panel';
+  panel.style.cssText = `
+    position:fixed; bottom:0; right:0; width:420px; max-height:60vh;
+    background:#0a0f0a; border-top:2px solid #1ee8b6; border-left:2px solid #1ee8b6;
+    z-index:300; display:flex; flex-direction:column;
+    transform:translateY(100%); transition:transform 0.4s cubic-bezier(0.16,1,0.3,1);
+    font-family:'JetBrains Mono',monospace;
+  `;
+
+  panel.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #1ee8b633;background:#0d1a0d;">
+      <span style="color:#1ee8b6;font-size:11px;font-weight:700;letter-spacing:2px;">⬡ ANOMALY ADVISOR — FIELD DEFECT SCAN</span>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button onclick="window.open('hc-anomaly-advisor.html','_blank')" style="background:#1ee8b620;border:1px solid #1ee8b6;color:#1ee8b6;font-size:9px;padding:3px 8px;cursor:pointer;font-family:inherit;letter-spacing:1px;">FULL REPORT ↗</button>
+        <button onclick="document.getElementById('anomaly-slide-panel').remove()" style="background:transparent;border:none;color:#666;font-size:16px;cursor:pointer;line-height:1;padding:0 2px;">✕</button>
+      </div>
+    </div>
+    <div id="anomaly-panel-body" style="flex:1;overflow-y:auto;padding:12px 14px;font-size:11px;line-height:1.8;color:#a0b8a0;">
+      <div id="anomaly-scan-msg" style="color:#1ee8b6;font-size:10px;letter-spacing:1px;">⬡ SCANNING ENGINE OUTPUTS FOR FIELD-LEVEL DEFECTS...</div>
+    </div>
+  `;
+
+  document.body.appendChild(panel);
+  requestAnimationFrame(() => { panel.style.transform = 'translateY(0)'; });
+
+  const body = document.getElementById('anomaly-panel-body');
+  const context = `ENGINE 1 (DOCUMENT INTEL):\n${(outputs[0]||'').slice(0,400)}\n\nENGINE 2 (ROOT CAUSE):\n${(ou
+  const sys = `You are TSM Anomaly Advisor, a field-level defect detection engine for healthcare RCM documents. Analyze the engine outputs and identify specific actionable document defects. Output ONLY a numbered list. Each item must follow this exact format:
+⚠ [FIELD NAME] — what is wrong — exact fix instruction (which tab, which field, what to enter or change).
+Maximum 8 items. No preamble. No headers. No summary. Start immediately with item 1.`;
+
+  let firstChunk = true;
+  groqStreamModel(
+    'llama-3.3-70b-versatile', sys, context,
+    (chunk) => {
+      if (firstChunk) {
+        firstChunk = false;
+        const scanMsg = document.getElementById('anomaly-scan-msg');
+        if (scanMsg) scanMsg.remove();
+      }
+      const span = document.createElement('span');
+      span.innerHTML = chunk
+        .replace(/⚠/g, '<span style="color:#f59e0b">⚠</span>')
+        .replace(/—/g, '<span style="color:#1ee8b660"> — </span>');
+      body.appendChild(span);
+      body.scrollTop = body.scrollHeight;
+    },
+    () => {
+      const footer = document.createElement('div');
+      footer.style.cssText = 'margin-top:14px;padding-top:10px;border-top:1px solid #1ee8b620;color:#1ee8b650;font-size:9px;letter-spacing:1px;';
+      footer.textContent = '⬡ SCAN COMPLETE — ANOMALY REPORT PACKAGED FOR STRATEGIST RELAY';
+      body.appendChild(footer);
+    },
+    (err) => {
+      const errDiv = document.createElement('div');
+      errDiv.style.color = '#ef4444';
+      errDiv.textContent = '[Advisor error: ' + err + ']';
+      body.appendChild(errDiv);
+    },
+    600
+  );
+}
 </script>
-<div id="hcAnomalyStrip" style="display:none;position:fixed;bottom:32px;right:24px;z-index:200;background:#0a150f;border:1px solid rgba(56,189,248,.4);border-radius:4px;padding:12px 16px;align-items:center;gap:14px;font-family:monospace;font-size:11px;color:#38bdf8;letter-spacing:.06em;box-shadow:0 4px 24px rgba(0,0,0,.5);">
-  <span style="color:#1ee8b6;">◈</span>
-  <span>5-ENGINE COMPLETE — RUN ANOMALY ADVISOR?</span>
-  <button onclick="openAnomalyAdvisor();document.getElementById('hcAnomalyStrip').style.display='none';" style="background:rgba(56,189,248,.12);border:1px solid #38bdf8;color:#38bdf8;font-family:monospace;font-size:10px;letter-spacing:.08em;padding:5px 12px;border-radius:3px;cursor:pointer;">OPEN →</button>
-  <button onclick="document.getElementById('hcAnomalyStrip').style.display='none';" style="background:transparent;border:none;color:#445544;font-size:14px;cursor:pointer;">✕</button>
-</div>
-</body>
+  </body>
 </html>
