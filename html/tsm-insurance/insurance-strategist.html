@@ -557,6 +557,155 @@ function exportPackage(){
   a.download=`tsm-ins-strategist-${Date.now()}.txt`;
   a.click();
 }
+// ═══ INSURANCE ISSUE PACK ═══
+(function(){
+  try {
+    const raw = sessionStorage.getItem('TSM_INS_WAR_RELAY') || localStorage.getItem('tsm_ins_war_relay');
+    if (!raw) return;
+    const brief = JSON.parse(raw);
+    if (!brief) return;
+
+    const banner = document.createElement('div');
+    banner.id = 'tsm-ins-war-banner';
+    banner.style.cssText = 'background:rgba(6,5,12,.97);border:1px solid rgba(201,168,76,.3);font-family:monospace;margin:10px 14px;box-shadow:0 0 20px rgba(201,168,76,.08);overflow:hidden;';
+    banner.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 16px;background:rgba(201,168,76,.05);border-bottom:1px solid rgba(201,168,76,.12);">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="background:#c9a84c;color:#000;font-size:9px;font-weight:bold;padding:2px 7px;letter-spacing:1px;">⚡ WAR ROOM BRIEF</span>
+          <span style="color:#555;font-size:10px;">${brief.docType||'Document'} · ${brief.timestamp?new Date(brief.timestamp).toLocaleTimeString():''}</span>
+          <span style="background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.3);color:#c9a84c;font-size:9px;padding:2px 8px;">ESCALATED TO INSURANCE STRATEGIST</span>
+        </div>
+        <span style="color:#c9a84c;font-size:10px;">RISK: ${brief.snapshot?.risk||'—'} · EXP: ${brief.snapshot?.exposure||'—'}</span>
+      </div>
+      <div style="padding:10px 16px;border-bottom:1px solid rgba(201,168,76,.08);font-size:10px;color:#aaa;line-height:1.7;">${(brief.engines?.e5||'').slice(0,200)}...</div>
+      <div style="padding:8px 16px;display:flex;gap:8px;">
+        <button onclick="window.runInsIssuePack()" style="padding:6px 14px;background:rgba(201,168,76,.08);border:1px solid #c9a84c;color:#c9a84c;font-family:monospace;font-size:9px;cursor:pointer;"
+          onmouseover="this.style.background='#c9a84c';this.style.color='#000'" onmouseout="this.style.background='rgba(201,168,76,.08)';this.style.color='#c9a84c'">
+          ⚡ RUN ISSUE PACK ON WAR ROOM DATA
+        </button>
+      </div>`;
+
+    const target = document.querySelector('.main') || document.querySelector('main') || document.body;
+    target.insertBefore(banner, target.firstChild);
+
+    window.runInsIssuePack = function(){
+      const groqKeyVal = document.getElementById('groqKey')?.value || localStorage.getItem('tsm_groq_key') || '';
+      if(!groqKeyVal){ alert('Enter Groq API key first.'); return; }
+
+      let panel = document.getElementById('tsm-ins-issue-panel');
+      if(!panel){
+        panel = document.createElement('div');
+        panel.id = 'tsm-ins-issue-panel';
+        panel.style.cssText = 'background:rgba(6,5,12,.97);border:1px solid #c9a84c;font-family:monospace;margin:10px 14px;box-shadow:0 0 24px rgba(201,168,76,.1);overflow:hidden;';
+        panel.innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 16px;background:rgba(201,168,76,.06);border-bottom:1px solid rgba(201,168,76,.15);">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="background:#c9a84c;color:#000;font-size:9px;font-weight:bold;padding:2px 7px;letter-spacing:1px;">⚡ ISSUE PACK</span>
+              <span style="color:#555;font-size:10px;">${brief.docType} · War Room Escalation</span>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button onclick="navigator.clipboard.writeText(document.getElementById('iip-output').textContent)" style="background:none;border:1px solid #333;color:#666;font-family:monospace;font-size:8px;padding:2px 8px;cursor:pointer;">COPY</button>
+              <button onclick="document.getElementById('tsm-ins-issue-panel').remove()" style="background:none;border:none;color:#444;font-size:14px;cursor:pointer;">✕</button>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid rgba(201,168,76,.1);">
+            <div style="padding:8px 14px;border-right:1px solid rgba(201,168,76,.08);">
+              <div style="font-size:7px;letter-spacing:1.5px;color:#444;margin-bottom:3px;">DOC TYPE</div>
+              <div style="font-size:11px;color:#c9a84c;font-weight:700;">${brief.docType||'—'}</div>
+            </div>
+            <div style="padding:8px 14px;border-right:1px solid rgba(201,168,76,.08);">
+              <div style="font-size:7px;letter-spacing:1.5px;color:#444;margin-bottom:3px;">RISK SCORE</div>
+              <div style="font-size:11px;color:#ff9500;font-weight:700;">${brief.snapshot?.risk||'—'}</div>
+            </div>
+            <div style="padding:8px 14px;">
+              <div style="font-size:7px;letter-spacing:1.5px;color:#444;margin-bottom:3px;">EXPOSURE</div>
+              <div style="font-size:11px;color:#ff4d6d;font-weight:700;">${brief.snapshot?.exposure||'—'}</div>
+            </div>
+          </div>
+          <div style="padding:14px 16px;">
+            <div style="font-size:8px;letter-spacing:2px;color:#444;margin-bottom:8px;">ISSUE PACK OUTPUT</div>
+            <div id="iip-spinner" style="display:flex;align-items:center;gap:8px;color:#c9a84c;font-size:10px;margin-bottom:8px;">
+              <div style="width:10px;height:10px;border:1px solid rgba(201,168,76,.3);border-top-color:#c9a84c;border-radius:50%;animation:spin .7s linear infinite;"></div>
+              RUNNING ISSUE PACK...
+            </div>
+            <div id="iip-output" style="font-size:10px;color:#ccc;line-height:1.8;white-space:pre-wrap;min-height:80px;display:none;"></div>
+            <div id="iip-error" style="font-size:9px;color:#ff4d6d;display:none;margin-top:6px;"></div>
+          </div>
+          <div style="padding:8px 16px;border-top:1px solid rgba(201,168,76,.1);display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <span style="font-size:7px;letter-spacing:1.5px;color:#444;margin-right:4px;">ASSIGN TO →</span>
+            <button onclick="assignInsIssuePack('Billing Coordinator')" style="background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.3);color:#00e5ff;font-family:monospace;font-size:8px;padding:4px 10px;cursor:pointer;">BILLING COORD</button>
+            <button onclick="assignInsIssuePack('Office Manager')" style="background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.3);color:#c9a84c;font-family:monospace;font-size:8px;padding:4px 10px;cursor:pointer;">OFFICE MGR</button>
+            <button onclick="assignInsIssuePack('RCM Manager')" style="background:rgba(0,255,157,.08);border:1px solid rgba(0,255,157,.3);color:#00ff9d;font-family:monospace;font-size:8px;padding:4px 10px;cursor:pointer;">RCM MANAGER</button>
+            <div style="margin-left:auto;">
+              <button onclick="window.runInsIssuePack()" style="background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.3);color:#c9a84c;font-family:monospace;font-size:8px;padding:4px 10px;cursor:pointer;">↺ RE-RUN</button>
+            </div>
+          </div>
+          <div id="iip-assign-tag" style="display:none;padding:6px 16px;background:rgba(0,255,100,.04);border-top:1px solid rgba(0,255,100,.12);font-size:9px;color:#00ffc6;letter-spacing:1px;"></div>`;
+        banner.insertAdjacentElement('afterend', panel);
+      }
+
+      document.getElementById('iip-spinner').style.display='flex';
+      document.getElementById('iip-output').style.display='none';
+      document.getElementById('iip-error').style.display='none';
+      panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+
+      const warData = Object.entries(brief.engines||{}).map(([k,v])=>`${k}:\n${v.slice(0,400)}`).join('\n\n');
+      const prompt = `[INSURANCE ISSUE PACK — ${brief.docType}]
+
+WAR ROOM DATA:
+${warData.slice(0,2000)}
+
+You are the TSM Insurance Strategist Issue Pack engine. Produce a structured insurance issue remediation package:
+
+ISSUE PACK FORMAT:
+CLAIM SUMMARY: [claim/policy type, parties, total exposure, payer]
+DENIAL CODES: [each code with full meaning and dollar amount]
+ROOT CAUSE: [specific insurance reason for each issue]
+COMPLIANCE EXPOSURE: [CMS, AZ DOI, HIPAA, CE items]
+APPEAL STRATEGY: [payer-specific approach]
+DOCUMENTATION CHECKLIST:
+1. [required doc]
+2. [required doc]
+3. [required doc]
+PRIORITY ACTIONS:
+1. [Action] — [Owner] — [Deadline] — [$impact]
+2. [Action] — [Owner] — [Deadline] — [$impact]
+3. [Action] — [Owner] — [Deadline] — [$impact]
+RECOVERY PROBABILITY: [%] — [rationale]
+PRINCIPAL ESCALATION: [Yes/No] — [reason]`;
+
+      fetch('https://api.groq.com/openai/v1/chat/completions',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKeyVal},
+        body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:700,temperature:0.2,messages:[{role:'user',content:prompt}]})
+      })
+      .then(r=>r.json())
+      .then(d=>{
+        const txt=d.choices?.[0]?.message?.content||'';
+        if(!txt) throw new Error('Empty response');
+        document.getElementById('iip-spinner').style.display='none';
+        document.getElementById('iip-output').style.display='block';
+        document.getElementById('iip-output').textContent=txt;
+      })
+      .catch(err=>{
+        document.getElementById('iip-spinner').style.display='none';
+        document.getElementById('iip-error').style.display='block';
+        document.getElementById('iip-error').textContent='✗ Issue pack failed: '+err.message;
+      });
+    };
+
+    window.assignInsIssuePack = function(role){
+      const content=document.getElementById('iip-output')?.textContent||'';
+      if(!content){alert('Run the issue pack first.');return;}
+      const queue=JSON.parse(localStorage.getItem('tsm_ins_issue_queue')||'[]');
+      queue.push({role,assignedAt:new Date().toLocaleString(),docType:brief.docType,exposure:brief.snapshot?.exposure,packSnippet:content.slice(0,300)});
+      localStorage.setItem('tsm_ins_issue_queue',JSON.stringify(queue));
+      const tag=document.getElementById('iip-assign-tag');
+      if(tag){tag.style.display='block';tag.textContent='✓ ASSIGNED TO: '+role.toUpperCase()+' · '+new Date().toLocaleTimeString();}
+    };
+
+  } catch(e){ console.warn('Insurance issue pack error:',e); }
+})();
 </script>
 </body>
 </html>

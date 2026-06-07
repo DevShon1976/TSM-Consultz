@@ -998,6 +998,157 @@ document.addEventListener('DOMContentLoaded', () => {
 setInterval(() => {
   if (!warRoomRelay) loadWarRoomRelay();
 }, 15000);
+
+// ═══ CONSTRUCTION ISSUE PACK ═══
+(function(){
+  try {
+    const raw = sessionStorage.getItem('TSM_CONSTRUCTION_WAR_RELAY') || localStorage.getItem('tsm_construction_war_relay');
+    if (!raw) return;
+    const brief = JSON.parse(raw);
+    if (!brief) return;
+
+    const banner = document.createElement('div');
+    banner.id = 'tsm-const-war-banner';
+    banner.style.cssText = 'background:rgba(8,12,6,.97);border:1px solid rgba(255,215,0,.3);font-family:monospace;margin:10px 14px;box-shadow:0 0 20px rgba(255,215,0,.08);overflow:hidden;';
+    banner.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 16px;background:rgba(255,215,0,.05);border-bottom:1px solid rgba(255,215,0,.12);">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="background:#ffd700;color:#000;font-size:9px;font-weight:bold;padding:2px 7px;letter-spacing:1px;">⚡ WAR ROOM BRIEF</span>
+          <span style="color:#555;font-size:10px;">${brief.docType||'Document'} · ${brief.timestamp?new Date(brief.timestamp).toLocaleTimeString():''}</span>
+          <span style="background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.3);color:#ffd700;font-size:9px;padding:2px 8px;">ESCALATED TO CONSTRUCTION STRATEGIST</span>
+        </div>
+        <span style="color:#ffd700;font-size:10px;">RISK: ${brief.snapshot?.risk||'—'} · EXP: ${brief.snapshot?.exposure||'—'}</span>
+      </div>
+      <div style="padding:10px 16px;border-bottom:1px solid rgba(255,215,0,.08);font-size:10px;color:#aaa;line-height:1.7;">${(brief.engines?.e5||'').slice(0,200)}...</div>
+      <div style="padding:8px 16px;display:flex;gap:8px;">
+        <button onclick="window.runConstIssuePack()" style="padding:6px 14px;background:rgba(255,215,0,.08);border:1px solid #ffd700;color:#ffd700;font-family:monospace;font-size:9px;cursor:pointer;"
+          onmouseover="this.style.background='#ffd700';this.style.color='#000'" onmouseout="this.style.background='rgba(255,215,0,.08)';this.style.color='#ffd700'">
+          ⚡ RUN ISSUE PACK ON WAR ROOM DATA
+        </button>
+        <button onclick="injectWarRoomContext()" style="padding:6px 14px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.4);color:#a855f7;font-family:monospace;font-size:9px;cursor:pointer;">◈ INJECT INTO STRATEGIST</button>
+      </div>`;
+
+    const target = document.querySelector('.strategist-content') || document.querySelector('main') || document.querySelector('.content') || document.body;
+    target.insertBefore(banner, target.firstChild);
+
+    window.runConstIssuePack = function(){
+      const groqKeyVal = document.getElementById('groqKey')?.value || localStorage.getItem('tsm_groq_key') || '';
+      if(!groqKeyVal){ alert('Enter Groq API key first.'); return; }
+
+      let panel = document.getElementById('tsm-const-issue-panel');
+      if(!panel){
+        panel = document.createElement('div');
+        panel.id = 'tsm-const-issue-panel';
+        panel.style.cssText = 'background:rgba(8,12,6,.97);border:1px solid #ffd700;font-family:monospace;margin:10px 14px;box-shadow:0 0 24px rgba(255,215,0,.1);overflow:hidden;';
+        panel.innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 16px;background:rgba(255,215,0,.06);border-bottom:1px solid rgba(255,215,0,.15);">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="background:#ffd700;color:#000;font-size:9px;font-weight:bold;padding:2px 7px;letter-spacing:1px;">⚡ ISSUE PACK</span>
+              <span style="color:#555;font-size:10px;">${brief.docType} · War Room Escalation</span>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button onclick="navigator.clipboard.writeText(document.getElementById('cip-output').textContent)" style="background:none;border:1px solid #333;color:#666;font-family:monospace;font-size:8px;padding:2px 8px;cursor:pointer;">COPY</button>
+              <button onclick="document.getElementById('tsm-const-issue-panel').remove()" style="background:none;border:none;color:#444;font-size:14px;cursor:pointer;">✕</button>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid rgba(255,215,0,.1);">
+            <div style="padding:8px 14px;border-right:1px solid rgba(255,215,0,.08);">
+              <div style="font-size:7px;letter-spacing:1.5px;color:#444;margin-bottom:3px;">DOC TYPE</div>
+              <div style="font-size:11px;color:#ffd700;font-weight:700;">${brief.docType||'—'}</div>
+            </div>
+            <div style="padding:8px 14px;border-right:1px solid rgba(255,215,0,.08);">
+              <div style="font-size:7px;letter-spacing:1.5px;color:#444;margin-bottom:3px;">RISK SCORE</div>
+              <div style="font-size:11px;color:#ff9500;font-weight:700;">${brief.snapshot?.risk||'—'}</div>
+            </div>
+            <div style="padding:8px 14px;">
+              <div style="font-size:7px;letter-spacing:1.5px;color:#444;margin-bottom:3px;">EXPOSURE</div>
+              <div style="font-size:11px;color:#ff4d6d;font-weight:700;">${brief.snapshot?.exposure||'—'}</div>
+            </div>
+          </div>
+          <div style="padding:14px 16px;">
+            <div style="font-size:8px;letter-spacing:2px;color:#444;margin-bottom:8px;">ISSUE PACK OUTPUT</div>
+            <div id="cip-spinner" style="display:flex;align-items:center;gap:8px;color:#ffd700;font-size:10px;margin-bottom:8px;">
+              <div style="width:10px;height:10px;border:1px solid rgba(255,215,0,.3);border-top-color:#ffd700;border-radius:50%;animation:spin .7s linear infinite;"></div>
+              RUNNING ISSUE PACK...
+            </div>
+            <div id="cip-output" style="font-size:10px;color:#ccc;line-height:1.8;white-space:pre-wrap;min-height:80px;display:none;"></div>
+            <div id="cip-error" style="font-size:9px;color:#ff4d6d;display:none;margin-top:6px;"></div>
+          </div>
+          <div style="padding:8px 16px;border-top:1px solid rgba(255,215,0,.1);display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <span style="font-size:7px;letter-spacing:1.5px;color:#444;margin-right:4px;">ASSIGN TO →</span>
+            <button onclick="assignConstIssuePack('Project Manager')" style="background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.3);color:#ffd700;font-family:monospace;font-size:8px;padding:4px 10px;cursor:pointer;">PROJECT MGR</button>
+            <button onclick="assignConstIssuePack('Site Supervisor')" style="background:rgba(255,149,0,.08);border:1px solid rgba(255,149,0,.3);color:#ff9500;font-family:monospace;font-size:8px;padding:4px 10px;cursor:pointer;">SITE SUPERVISOR</button>
+            <button onclick="assignConstIssuePack('Construction Executive')" style="background:rgba(0,255,157,.08);border:1px solid rgba(0,255,157,.3);color:#00ff9d;font-family:monospace;font-size:8px;padding:4px 10px;cursor:pointer;">EXEC</button>
+            <div style="margin-left:auto;">
+              <button onclick="window.runConstIssuePack()" style="background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.3);color:#ffd700;font-family:monospace;font-size:8px;padding:4px 10px;cursor:pointer;">↺ RE-RUN</button>
+            </div>
+          </div>
+          <div id="cip-assign-tag" style="display:none;padding:6px 16px;background:rgba(0,255,100,.04);border-top:1px solid rgba(0,255,100,.12);font-size:9px;color:#00ffc6;letter-spacing:1px;"></div>`;
+        banner.insertAdjacentElement('afterend', panel);
+      }
+
+      document.getElementById('cip-spinner').style.display='flex';
+      document.getElementById('cip-output').style.display='none';
+      document.getElementById('cip-error').style.display='none';
+      panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+
+      const warData = Object.entries(brief.engines||{}).map(([k,v])=>`${k}:\n${v.slice(0,400)}`).join('\n\n');
+      const prompt = `[CONSTRUCTION ISSUE PACK — ${brief.docType}]
+
+WAR ROOM DATA:
+${warData.slice(0,2000)}
+
+You are the TSM Construction Strategist Issue Pack engine. Produce a structured construction issue remediation package:
+
+ISSUE PACK FORMAT:
+PROJECT SUMMARY: [doc type, project/contract, total exposure, key parties]
+RISK FLAGS: [each flag with dollar amount]
+ROOT CAUSE: [specific construction/financial reason for each issue]
+COMPLIANCE EXPOSURE: [lien, bond, permit, OSHA items]
+RECOVERY STRATEGY: [contract-specific approach]
+DOCUMENTATION CHECKLIST:
+1. [required doc]
+2. [required doc]
+3. [required doc]
+PRIORITY ACTIONS:
+1. [Action] — [Owner] — [Deadline] — [$impact]
+2. [Action] — [Owner] — [Deadline] — [$impact]
+3. [Action] — [Owner] — [Deadline] — [$impact]
+RECOVERY PROBABILITY: [%] — [rationale]
+EXECUTIVE ESCALATION: [Yes/No] — [reason]`;
+
+      fetch('https://api.groq.com/openai/v1/chat/completions',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKeyVal},
+        body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:700,temperature:0.2,messages:[{role:'user',content:prompt}]})
+      })
+      .then(r=>r.json())
+      .then(d=>{
+        const txt=d.choices?.[0]?.message?.content||'';
+        if(!txt) throw new Error('Empty response');
+        document.getElementById('cip-spinner').style.display='none';
+        document.getElementById('cip-output').style.display='block';
+        document.getElementById('cip-output').textContent=txt;
+      })
+      .catch(err=>{
+        document.getElementById('cip-spinner').style.display='none';
+        document.getElementById('cip-error').style.display='block';
+        document.getElementById('cip-error').textContent='✗ Issue pack failed: '+err.message;
+      });
+    };
+
+    window.assignConstIssuePack = function(role){
+      const content=document.getElementById('cip-output')?.textContent||'';
+      if(!content){alert('Run the issue pack first.');return;}
+      const queue=JSON.parse(localStorage.getItem('tsm_const_issue_queue')||'[]');
+      queue.push({role,assignedAt:new Date().toLocaleString(),docType:brief.docType,exposure:brief.snapshot?.exposure,packSnippet:content.slice(0,300)});
+      localStorage.setItem('tsm_const_issue_queue',JSON.stringify(queue));
+      const tag=document.getElementById('cip-assign-tag');
+      if(tag){tag.style.display='block';tag.textContent='✓ ASSIGNED TO: '+role.toUpperCase()+' · '+new Date().toLocaleTimeString();}
+    };
+
+  } catch(e){ console.warn('Construction issue pack error:',e); }
+})();
 </script>
 </body>
 </html>
