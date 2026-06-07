@@ -1229,16 +1229,23 @@ let autoMs = 6000;
 
 function spotlightEl(targetId){
   const sp = document.getElementById('tourSpotlight');
-  if(!targetId){ sp.style.display='none'; return; }
+  if(!targetId){ if(sp) sp.style.display='none'; return; }
   const el = document.getElementById(targetId);
-  if(!el){ sp.style.display='none'; return; }
+  if(!el){ if(sp) sp.style.display='none'; return; }
+  
   const r = el.getBoundingClientRect();
   const pad = 8;
+  
+  // Calculate true viewport coordinates + current window scrolling values
+  const scrollTop  = window.pageYOffset || document.documentElement.scrollTop;
+  const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+  
   sp.style.display = 'block';
-  sp.style.top = (r.top - pad) + 'px';
-  sp.style.left = (r.left - pad) + 'px';
-  sp.style.width = (r.width + pad*2) + 'px';
-  sp.style.height = (r.height + pad*2) + 'px';
+  sp.style.top     = (r.top + scrollTop - pad) + 'px';
+  sp.style.left    = (r.left + scrollLeft - pad) + 'px';
+  sp.style.width   = (r.width + pad*2) + 'px';
+  sp.style.height  = (r.height + pad*2) + 'px';
+  
   el.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
@@ -1343,14 +1350,22 @@ function stopAuto(){
 function tourNext(){
   if(tourStep < TOUR_SLIDES.length - 1){
     tourStep++;
-    renderSlide(tourStep);
+    if (typeof window.renderSlide === 'function') {
+      window.renderSlide(tourStep);
+    } else {
+      renderSlide(tourStep);
+    }
   }
 }
 
 function tourPrev(){
   if(tourStep > 0){
     tourStep--;
-    renderSlide(tourStep);
+    if (typeof window.renderSlide === 'function') {
+      window.renderSlide(tourStep);
+    } else {
+      renderSlide(tourStep);
+    }
   }
 }
 
@@ -1478,11 +1493,22 @@ function speechSetState(state){
   }
 }
 
-// Global wrap interceptors to shut down voice systems on transition states
-const _rsOrig = renderSlide;
-renderSlide = function(idx){ speechStop(); _rsOrig(idx); };
-const _etOrig = endTour;
-endTour = function(){ speechStop(); _etOrig(); };
+// Global wrap interceptors to shut down voice systems cleanly on state transitions
+window.renderSlide = (function() {
+  const originalRender = renderSlide;
+  return function(idx) {
+    speechStop();
+    if (typeof originalRender === 'function') originalRender(idx);
+  };
+})();
+
+window.endTour = (function() {
+  const originalEnd = endTour;
+  return function() {
+    speechStop();
+    if (typeof originalEnd === 'function') originalEnd();
+  };
+})();
 
 // ═══════════════════════════════
 // SESSION
