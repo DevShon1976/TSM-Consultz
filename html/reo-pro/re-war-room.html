@@ -1074,6 +1074,7 @@ async function runNode(card) {
     card.querySelector('.nc-status').textContent = '✓ COMPLETE';
     card.querySelector('.nc-status').style.color = 'var(--green)';
     renderRemPath(text, node);
+    setTimeout(() => showAnomalyAdvisorPanel(text, node, title), 1200);
   } catch(e) {
     feed.innerHTML = `<span style="color:var(--red)">[ERROR] ${e.message}</span>`;
     document.getElementById('feedMeta').textContent = 'ERROR';
@@ -1439,6 +1440,71 @@ async function rwAsk() {
     thinking.textContent = 'Error: ' + e.message;
     thinking.style.color = 'var(--red)';
   }
+}
+<script>
+function showAnomalyAdvisorPanel(analysisText, node, title) {
+  const existing = document.getElementById('anomaly-slide-panel');
+  if (existing) existing.remove();
+
+  const panel = document.createElement('div');
+  panel.id = 'anomaly-slide-panel';
+  panel.style.cssText = `
+    position:fixed; bottom:0; right:0; width:420px; max-height:60vh;
+    background:#0a0f0a; border-top:2px solid #1ee8b6; border-left:2px solid #1ee8b6;
+    z-index:300; display:flex; flex-direction:column;
+    transform:translateY(100%); transition:transform 0.4s cubic-bezier(0.16,1,0.3,1);
+    font-family:'JetBrains Mono',monospace;
+  `;
+
+  panel.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #1ee8b633;background:#0d1a0d;">
+      <span style="color:#1ee8b6;font-size:11px;font-weight:700;letter-spacing:2px;">⬡ ANOMALY ADVISOR — ${(node||'REO').toUpperCase()}</span>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button onclick="document.getElementById('anomaly-slide-panel').remove()" style="background:transparent;border:none;color:#666;font-size:16px;cursor:pointer;line-height:1;padding:0 2px;">✕</button>
+      </div>
+    </div>
+    <div id="anomaly-panel-body" style="flex:1;overflow-y:auto;padding:12px 14px;font-size:11px;line-height:1.8;color:#a0b8a0;">
+      <div id="anomaly-scan-msg" style="color:#1ee8b6;font-size:10px;letter-spacing:1px;">⬡ SCANNING ${(title||'ANALYSIS').toUpperCase()} FOR DEFECTS...</div>
+    </div>
+  `;
+
+  document.body.appendChild(panel);
+  requestAnimationFrame(() => { panel.style.transform = 'translateY(0)'; });
+
+  const body = document.getElementById('anomaly-panel-body');
+
+  const sys = `You are TSM Anomaly Advisor for real estate operations. Review this analysis output and identify specific actionable defects or risks. Output ONLY a numbered list. Each item must follow this exact format:
+⚠ [FIELD/ITEM] — what is wrong or at risk — exact next action (which document, which party, what to verify or correct).
+Maximum 8 items. No preamble. No headers. No summary. Start immediately with item 1.`;
+
+  const userMsg = `NODE: ${node}\nANALYSIS: ${title}\n\nOUTPUT:\n${(analysisText||'').slice(0,1200)}`;
+
+  fetch('/api/hc/query', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ question: userMsg, context: sys, app: 'tsm-re' })
+  })
+  .then(r => r.json())
+  .then(d => {
+    const scanMsg = document.getElementById('anomaly-scan-msg');
+    if (scanMsg) scanMsg.remove();
+    const text = d.answer || d.response || '';
+    const span = document.createElement('span');
+    span.innerHTML = text
+      .replace(/⚠/g, '<span style="color:#f59e0b">⚠</span>')
+      .replace(/—/g, '<span style="color:#1ee8b660"> — </span>');
+    body.appendChild(span);
+    const footer = document.createElement('div');
+    footer.style.cssText = 'margin-top:14px;padding-top:10px;border-top:1px solid #1ee8b620;color:#1ee8b650;font-size:9px;letter-spacing:1px;';
+    footer.textContent = '⬡ SCAN COMPLETE — ' + (node||'REO') + ' · ' + (title||'');
+    body.appendChild(footer);
+  })
+  .catch(err => {
+    const errDiv = document.createElement('div');
+    errDiv.style.color = '#ef4444';
+    errDiv.textContent = '[Advisor error: ' + err.message + ']';
+    body.appendChild(errDiv);
+  });
 }
 </script>
 </body>
