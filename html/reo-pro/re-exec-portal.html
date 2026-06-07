@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TSM // RE EXECUTIVE PORTAL</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#03060c;--s1:#060a12;--s2:#080d18;--s3:#0a1020;
+  --border:#182030;--border2:#22304a;
+  --acc:#f59e0b;--acc2:rgba(245,158,11,.3);--acc3:rgba(245,158,11,.07);
+  --green:#00ff88;--red:#ef4444;--cyan:#00e5cc;--blue:#3b82f6;--purple:#a78bfa;
+  --white:#e6f0fa;--text:#8090a8;--muted:#404f62;--dim:#222e3e;
+  --mono:'Share Tech Mono',monospace;--orb:'Orbitron',monospace;--raj:'Rajdhani',sans-serif
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--raj);display:flex;flex-direction:column}
+body::before{content:'';position:fixed;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(245,158,11,.006) 3px,rgba(245,158,11,.006) 6px);
+  pointer-events:none;z-index:9998}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
+@keyframes sweep{0%{transform:translateX(-100%)}100%{transform:translateX(200%)}}
+
+/* TOPBAR */
+.topbar{
+  background:linear-gradient(90deg,#020409,#050810,#020409);
+  border-bottom:1px solid var(--border);height:50px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 1.2rem;flex-shrink:0;position:relative;z-index:100
+}
+.topbar::after{content:'';position:absolute;bottom:-1px;left:0;width:100%;height:1px;
+  background:linear-gradient(90deg,transparent 0%,var(--acc) 40%,var(--acc) 60%,transparent 100%);
+  opacity:.35}
+.logo{display:flex;align-items:center;gap:.7rem}
+.logo-mark{font-family:var(--orb);font-weight:900;font-size:.72rem;color:#000;
+  background:linear-gradient(135deg,var(--acc),#d48a00);padding:.25rem .5rem;letter-spacing:.1rem;
+  position:relative;overflow:hidden}
+.logo-mark::after{content:'';position:absolute;top:0;left:0;width:30%;height:100%;
+  background:rgba(255,255,255,.3);animation:sweep 3s ease-in-out infinite}
+.logo-text{font-family:var(--orb);font-size:.72rem;font-weight:700;color:var(--acc);letter-spacing:.2rem}
+.logo-rank{font-family:var(--mono);font-size:.46rem;color:var(--muted);letter-spacing:.12rem;
+  border:1px solid var(--border2);padding:.15rem .45rem;margin-left:.3rem}
+.tb-right{display:flex;align-items:center;gap:.5rem}
+.tb-btn{background:transparent;border:1px solid var(--border2);color:var(--text);
+  padding:.3rem .75rem;font-family:var(--mono);font-size:.47rem;cursor:pointer;
+  letter-spacing:.1rem;text-transform:uppercase;transition:all .12s}
+.tb-btn:hover{border-color:var(--acc);color:var(--acc)}
+.tb-btn.primary{border-color:var(--acc2);color:var(--acc);background:var(--acc3)}
+.tb-btn.back{border-color:rgba(167,139,250,.3);color:var(--purple)}
+.tb-btn.fire{border-color:rgba(239,68,68,.4);color:var(--red);background:rgba(239,68,68,.05)}
+.tb-btn.fire:hover{background:rgba(239,68,68,.15)}
+
+/* KPI BAR */
+.kpi-bar{
+  background:var(--s1);border-bottom:1px solid var(--border);
+  display:flex;height:56px;flex-shrink:0;overflow:hidden
+}
+.kpi{padding:0 1rem;border-right:1px solid var(--border);display:flex;flex-direction:column;
+  justify-content:center;flex:1;min-width:0;cursor:pointer;transition:background .12s}
+.kpi:hover{background:rgba(255,255,255,.02)}
+.kpi-val{font-family:var(--orb);font-size:.88rem;font-weight:700;color:var(--acc);line-height:1;white-space:nowrap}
+.kpi-lbl{font-family:var(--mono);font-size:.43rem;color:var(--muted);letter-spacing:.1rem;
+  margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi-delta{font-family:var(--mono);font-size:.42rem}
+.kpi-delta.up{color:var(--green)}
+.kpi-delta.down{color:var(--red)}
+.kpi-delta.flat{color:var(--acc)}
+
+/* MAIN */
+.main{display:flex;flex:1;overflow:hidden}
+
+/* SIDEBAR */
+.sidebar{width:195px;flex-shrink:0;background:var(--s1);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow-y:auto}
+.sidebar::-webkit-scrollbar{width:2px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--acc2)}
+.sb-hdr{font-family:var(--mono);font-size:.42rem;letter-spacing:.2rem;color:var(--dim);
+  padding:.5rem .8rem .22rem;border-top:1px solid var(--border);text-transform:uppercase}
+.sb-hdr:first-child{border-top:none}
+.sb-link{display:flex;align-items:center;gap:.4rem;padding:.38rem .8rem;cursor:pointer;
+  font-size:.58rem;font-weight:600;color:var(--text);border-left:2px solid transparent;
+  transition:all .12s;text-decoration:none}
+.sb-link:hover{background:rgba(255,255,255,.03);color:var(--white);border-left-color:var(--acc)}
+.sb-link.active{color:var(--white);border-left-color:var(--acc);background:rgba(255,255,255,.04)}
+.sb-dot{width:5px;height:5px;border-radius:50%;background:var(--acc);flex-shrink:0;animation:pulse 2.5s infinite}
+.chain-step{padding:.35rem .8rem;display:flex;align-items:center;gap:.5rem;font-family:var(--mono);font-size:.47rem}
+.cs-icon{color:var(--acc);font-size:.55rem}
+.cs-label{color:var(--text)}
+.cs-arrow{color:var(--muted);margin:0 .15rem}
+.chain-active{color:var(--acc)}
+.chain-done{color:var(--green)}
+.chain-next{color:var(--muted)}
+
+/* CONTENT */
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+/* EXEC HEADER */
+.exec-hdr{
+  background:linear-gradient(90deg,rgba(245,158,11,.06),transparent);
+  border-bottom:1px solid var(--border);padding:.55rem 1rem;
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0
+}
+.eh-left{display:flex;flex-direction:column;gap:.2rem}
+.eh-title{font-family:var(--orb);font-size:.75rem;font-weight:700;color:var(--white);letter-spacing:.12rem}
+.eh-sub{font-family:var(--mono);font-size:.47rem;color:var(--muted)}
+.eh-right{display:flex;align-items:center;gap:.75rem}
+.risk-badge{
+  font-family:var(--orb);font-size:.6rem;font-weight:700;letter-spacing:.12rem;
+  padding:.28rem .7rem;border:1px solid currentColor;display:flex;align-items:center;gap:.4rem
+}
+.risk-badge.medium{color:var(--acc);border-color:var(--acc2)}
+.risk-badge.high{color:var(--red);border-color:rgba(239,68,68,.4)}
+.risk-badge.low{color:var(--green);border-color:rgba(0,255,136,.3)}
+.risk-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 1.5s infinite}
+
+/* WORKSPACE */
+.workspace{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);flex:1;overflow:hidden}
+.wp-panel{background:var(--s1);display:flex;flex-direction:column;overflow:hidden}
+.wp-panel.full{grid-column:1/-1}
+.wp-hdr{
+  padding:.4rem .75rem;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+  background:var(--s2)
+}
+.wp-title{font-family:var(--mono);font-size:.45rem;letter-spacing:.15rem;color:var(--acc);text-transform:uppercase}
+.wp-meta{font-family:var(--mono);font-size:.43rem;color:var(--muted)}
+.wp-body{flex:1;overflow-y:auto;padding:.6rem .75rem;font-family:var(--mono);font-size:.52rem;line-height:1.8;color:var(--text)}
+.wp-body::-webkit-scrollbar{width:2px}
+.wp-body::-webkit-scrollbar-thumb{background:var(--acc2)}
+
+/* ACTION ITEMS */
+.action-item{
+  border:1px solid var(--border);background:var(--s2);padding:.5rem .6rem;
+  margin-bottom:.4rem;display:flex;flex-direction:column;gap:.2rem;
+  cursor:pointer;transition:border-color .12s
+}
+.action-item:hover{border-color:var(--acc2)}
+.ai-header{display:flex;align-items:center;justify-content:space-between}
+.ai-priority{font-family:var(--mono);font-size:.4rem;letter-spacing:.1rem;text-transform:uppercase;padding:.12rem .35rem;border:1px solid currentColor}
+.ai-p-critical{color:var(--red);border-color:rgba(239,68,68,.4)}
+.ai-p-high{color:var(--acc);border-color:var(--acc2)}
+.ai-p-medium{color:var(--blue);border-color:rgba(59,130,246,.3)}
+.ai-dollar{font-family:var(--mono);font-size:.48rem;color:var(--green)}
+.ai-title{font-size:.6rem;font-weight:700;color:var(--white);margin:.18rem 0}
+.ai-desc{font-size:.5rem;color:var(--text);line-height:1.5}
+.ai-meta{display:flex;gap:.75rem;margin-top:.15rem;font-family:var(--mono);font-size:.42rem;color:var(--muted)}
+.ai-check{width:12px;height:12px;border:1px solid var(--border2);flex-shrink:0;cursor:pointer;margin-top:2px;transition:all .12s}
+.ai-check.done{background:var(--green);border-color:var(--green)}
+
+/* PIPELINE TABLE */
+.pipe-table{width:100%;border-collapse:collapse}
+.pipe-table th{font-family:var(--mono);font-size:.42rem;letter-spacing:.1rem;color:var(--muted);
+  text-align:left;padding:.3rem .5rem;border-bottom:1px solid var(--border);text-transform:uppercase}
+.pipe-table td{font-family:var(--mono);font-size:.5rem;padding:.32rem .5rem;
+  border-bottom:1px solid rgba(255,255,255,.03)}
+.pipe-table tr:hover td{background:rgba(255,255,255,.02)}
+.pt-status{padding:.1rem .35rem;border:1px solid currentColor;font-size:.38rem;letter-spacing:.06rem}
+.pts-ctc{color:var(--green);border-color:rgba(0,255,136,.3)}
+.pts-cond{color:var(--acc);border-color:var(--acc2)}
+.pts-uw{color:var(--blue);border-color:rgba(59,130,246,.3)}
+.pts-risk{color:var(--red);border-color:rgba(239,68,68,.3)}
+
+/* CHARTS - pure CSS */
+.bar-chart{display:flex;flex-direction:column;gap:.4rem;padding:.2rem 0}
+.bar-row{display:flex;align-items:center;gap:.5rem}
+.bar-lbl{font-family:var(--mono);font-size:.45rem;color:var(--muted);width:90px;flex-shrink:0;text-align:right}
+.bar-track{flex:1;height:12px;background:var(--border);position:relative;overflow:hidden}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--fill-a,var(--acc)),var(--fill-b,var(--acc)));
+  transition:width 1s ease;position:relative;overflow:hidden}
+.bar-fill::after{content:'';position:absolute;top:0;left:0;width:30%;height:100%;
+  background:rgba(255,255,255,.15);animation:sweep 2s ease-in-out infinite}
+.bar-val{font-family:var(--mono);font-size:.45rem;color:var(--white);width:50px;flex-shrink:0}
+
+/* EXEC OUTPUT */
+.exec-output{
+  font-family:var(--mono);font-size:.52rem;line-height:1.85;color:var(--text);
+  white-space:pre-wrap
+}
+
+/* ESCALATION BUTTONS */
+.escalation-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem;padding:.55rem .75rem;flex-shrink:0;border-top:1px solid var(--border)}
+.esc-btn{
+  background:var(--s2);border:1px solid var(--border2);padding:.42rem .5rem;
+  cursor:pointer;transition:all .12s;text-align:center;display:flex;flex-direction:column;gap:.15rem;align-items:center
+}
+.esc-btn:hover{border-color:var(--acc);background:var(--acc3)}
+.esc-icon{font-size:.9rem}
+.esc-label{font-family:var(--mono);font-size:.45rem;color:var(--white);letter-spacing:.06rem}
+.esc-sub{font-family:var(--mono);font-size:.38rem;color:var(--muted)}
+
+/* LOADER */
+.loader{color:var(--muted);font-family:var(--mono);font-size:.52rem;padding:1rem 0;animation:pulse 1.5s infinite}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-mark">TSM</div>
+    <div class="logo-text">RE EXEC PORTAL</div>
+    <div class="logo-rank">TIER 3 · EXECUTIVE</div>
+  </div>
+  <div class="tb-right">
+    <button class="tb-btn back" onclick="window.open('re-strategist.html','_blank')">&#8592; STRATEGIST</button>
+    <button class="tb-btn back" style="border-color:rgba(0,229,204,.3);color:var(--cyan)" onclick="window.open('re-war-room.html','_blank')">&#8592; WAR ROOM</button>
+    <button class="tb-btn fire" onclick="runExecBrief()">&#9889; EXECUTIVE BRIEF</button>
+    <button class="tb-btn primary" onclick="generateBoardReport()">&#9632; BOARD REPORT</button>
+    <button class="tb-btn" onclick="exportAll()">&#8595; EXPORT FULL SESSION</button>
+  </div>
+</div>
+
+<!-- KPI BAR -->
+<div class="kpi-bar">
+  <div class="kpi" onclick="runKPIAnalysis('pipeline')">
+    <div class="kpi-val" id="kpi-pipeline">$18.4M</div>
+    <div class="kpi-lbl">PIPELINE VOLUME</div>
+    <div class="kpi-delta up" id="kpi-pipeline-d">+12% QoQ</div>
+  </div>
+  <div class="kpi" onclick="runKPIAnalysis('pullthrough')">
+    <div class="kpi-val kpi-caution" id="kpi-pt" style="color:var(--acc)">68%</div>
+    <div class="kpi-lbl">PULL-THROUGH RATE</div>
+    <div class="kpi-delta down" id="kpi-pt-d">Target: 75%</div>
+  </div>
+  <div class="kpi" onclick="runKPIAnalysis('revenue')">
+    <div class="kpi-val" id="kpi-rev">$276K</div>
+    <div class="kpi-lbl">EST. REVENUE (PIPELINE)</div>
+    <div class="kpi-delta up" id="kpi-rev-d">At 68% PT</div>
+  </div>
+  <div class="kpi" onclick="runKPIAnalysis('risk')">
+    <div class="kpi-val" style="color:var(--red)" id="kpi-risk">$47K</div>
+    <div class="kpi-lbl">DOLLAR RISK EXPOSURE</div>
+    <div class="kpi-delta down" id="kpi-risk-d">3 violations</div>
+  </div>
+  <div class="kpi" onclick="runKPIAnalysis('reo')">
+    <div class="kpi-val" id="kpi-reo">$2.1M</div>
+    <div class="kpi-lbl">REO PORTFOLIO</div>
+    <div class="kpi-delta flat" id="kpi-reo-d">6 assets</div>
+  </div>
+  <div class="kpi" onclick="runKPIAnalysis('closing')">
+    <div class="kpi-val" style="color:var(--green)" id="kpi-close">5</div>
+    <div class="kpi-lbl">CLOSINGS THIS WEEK</div>
+    <div class="kpi-delta up" id="kpi-close-d">$2.3M funding</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb-hdr">CHAIN</div>
+    <div style="padding:.4rem .8rem">
+      <div class="chain-step">
+        <span class="chain-done">✓</span>
+        <span class="chain-done" style="font-size:.52rem">RE WAR ROOM</span>
+      </div>
+      <div class="chain-step" style="padding:.1rem .8rem;color:var(--dim);font-family:var(--mono);font-size:.4rem">↓</div>
+      <div class="chain-step">
+        <span class="chain-done">✓</span>
+        <span class="chain-done" style="font-size:.52rem">RE STRATEGIST</span>
+      </div>
+      <div class="chain-step" style="padding:.1rem .8rem;color:var(--dim);font-family:var(--mono);font-size:.4rem">↓</div>
+      <div class="chain-step">
+        <span class="chain-active">●</span>
+        <span class="chain-active" style="font-size:.52rem;font-weight:700">EXEC PORTAL</span>
+      </div>
+    </div>
+    <div class="sb-hdr">EXEC ACTIONS</div>
+    <div class="sb-link active" onclick="switchExecPanel('brief')"><div class="sb-dot"></div>Executive Brief</div>
+    <div class="sb-link" onclick="switchExecPanel('actions')"><div class="sb-dot"></div>Action Items</div>
+    <div class="sb-link" onclick="switchExecPanel('pipeline')"><div class="sb-dot"></div>Pipeline View</div>
+    <div class="sb-link" onclick="switchExecPanel('forecast')"><div class="sb-dot"></div>Revenue Forecast</div>
+    <div class="sb-link" onclick="runBoardReport()"><div class="sb-dot" style="background:var(--acc)"></div>Board Report</div>
+    <div class="sb-hdr">QUICK ANALYSIS</div>
+    <div class="sb-link" onclick="quickExec('Provide the executive summary of the entire RE operation: pipeline health, top risks, top wins, and 3 strategic recommendations for the board.')"><div class="sb-dot"></div>Board Snapshot</div>
+    <div class="sb-link" onclick="quickExec('Calculate the revenue impact of improving pull-through from 68% to 75% on an $18.4M pipeline. Show monthly, quarterly, and annual impact. Include cost of TRID cure and compliance remediation.')"><div class="sb-dot"></div>Revenue Impact</div>
+    <div class="sb-link" onclick="quickExec('What does a distressed buyer or lender most need to hear in the first 10 minutes of a demo? Build a 3-point proof of value statement for the TSM Real Estate platform.')"><div class="sb-dot"></div>Client Demo Script</div>
+    <div class="sb-link" onclick="quickExec('Analyze the REO portfolio: 6 assets, $2.1M. Build a 60-day disposition timeline that maximizes net proceeds. Include list pricing strategy, reduction schedule, and bulk sale fallback.')"><div class="sb-dot"></div>REO 60-Day Plan</div>
+    <div class="sb-hdr">EXPORTS</div>
+    <div class="sb-link" onclick="exportAll()"><div class="sb-dot" style="background:var(--green)"></div>Export Full Session</div>
+    <div class="sb-link" onclick="exportBoard()"><div class="sb-dot" style="background:var(--gold)"></div>Export Board Report</div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- EXEC HEADER -->
+    <div class="exec-hdr">
+      <div class="eh-left">
+        <div class="eh-title" id="execTitle">LOADING EXECUTIVE BRIEF...</div>
+        <div class="eh-sub" id="execSub">Receiving intelligence from RE Strategist</div>
+      </div>
+      <div class="eh-right">
+        <div class="risk-badge medium" id="riskBadge">● MEDIUM RISK</div>
+        <div style="font-family:var(--mono);font-size:.45rem;color:var(--muted)" id="execTimestamp">—</div>
+      </div>
+    </div>
+
+    <!-- WORKSPACE PANELS -->
+    <div class="workspace" id="workspaceGrid">
+
+      <!-- EXECUTIVE BRIEF PANEL (default, full width) -->
+      <div class="wp-panel full" id="exec-panel-brief">
+        <div class="wp-hdr">
+          <span class="wp-title">EXECUTIVE INTELLIGENCE BRIEF</span>
+          <span class="wp-meta" id="briefStatus">LOADING...</span>
+        </div>
+        <div class="wp-body" id="execBriefBody">
+          <div class="loader">⟳ &nbsp;Synthesizing RE War Room + Strategist intelligence...</div>
+        </div>
+        <div class="escalation-grid">
+          <div class="esc-btn" onclick="switchExecPanel('actions')"><div class="esc-icon">📋</div><div class="esc-label">ACTION ITEMS</div><div class="esc-sub">Priority queue</div></div>
+          <div class="esc-btn" onclick="switchExecPanel('pipeline')"><div class="esc-icon">📊</div><div class="esc-label">PIPELINE VIEW</div><div class="esc-sub">22 active loans</div></div>
+          <div class="esc-btn" onclick="switchExecPanel('forecast')"><div class="esc-icon">💰</div><div class="esc-label">REVENUE FORECAST</div><div class="esc-sub">PT optimization</div></div>
+        </div>
+      </div>
+
+      <!-- ACTION ITEMS PANEL -->
+      <div class="wp-panel full" id="exec-panel-actions" style="display:none">
+        <div class="wp-hdr">
+          <span class="wp-title">EXECUTIVE ACTION ITEMS</span>
+          <span class="wp-meta" id="actionsStatus">LOADING...</span>
+        </div>
+        <div class="wp-body" id="execActionsBody">
+          <div class="loader">⟳ &nbsp;Building action item queue...</div>
+        </div>
+      </div>
+
+      <!-- PIPELINE VIEW -->
+      <div class="wp-panel full" id="exec-panel-pipeline" style="display:none">
+        <div class="wp-hdr">
+          <span class="wp-title">PIPELINE INTELLIGENCE VIEW</span>
+          <span class="wp-meta">22 LOANS · $18.4M · 68% PT</span>
+        </div>
+        <div class="wp-body">
+          <table class="pipe-table">
+            <thead>
+              <tr>
+                <th>LOAN ID</th>
+                <th>ADDRESS</th>
+                <th>AMOUNT</th>
+                <th>TYPE</th>
+                <th>STATUS</th>
+                <th>RISK</th>
+                <th>CLOSING</th>
+              </tr>
+            </thead>
+            <tbody id="pipelineTable">
+              <tr><td colspan="7" style="color:var(--muted);text-align:center;padding:1rem">Loading pipeline data...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- FORECAST VIEW -->
+      <div class="wp-panel full" id="exec-panel-forecast" style="display:none">
+        <div class="wp-hdr">
+          <span class="wp-title">REVENUE FORECAST MODEL</span>
+          <span class="wp-meta">PULL-THROUGH OPTIMIZATION</span>
+        </div>
+        <div class="wp-body" id="execForecastBody">
+          <div class="loader">⟳ &nbsp;Building revenue forecast...</div>
+        </div>
+      </div>
+
+    </div><!-- /workspace -->
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+const API = '/api/mortgage/query';
+const APP = 'realestate';
+
+const EXEC_SYSTEM = `You are the TSM Real Estate Executive Intelligence Officer. You provide C-suite grade analysis for real estate and mortgage operations executives. Your outputs are board-ready: precise, dollar-focused, and action-oriented.
+
+Expertise: portfolio-level risk management, revenue optimization, compliance liability quantification, executive decision support, board reporting.
+
+Format: Use ► section headers. Lead every section with a dollar figure or metric. Assign ownership to every action. Provide 30/60/90-day horizons. Executive grade only.`;
+
+// STATE
+let stratPayload = null;
+let warRoomPayload = null;
+let execSaved = [];
+let boardReport = '';
+
+// LOAD CHAIN PAYLOAD
+function loadPayloads() {
+  try {
+    const sp = localStorage.getItem('tsm_re_strat_payload');
+    if (sp) {
+      stratPayload = JSON.parse(sp);
+      warRoomPayload = stratPayload.warRoomPayload || null;
+      applyPayloads();
+    } else {
+      document.getElementById('execSub').textContent = 'No upstream payload — standalone executive mode';
+      generateExecBrief();
+    }
+  } catch(e) {
+    document.getElementById('execSub').textContent = 'Payload error — standalone mode';
+    generateExecBrief();
+  }
+}
+
+function applyPayloads() {
+  const sp = stratPayload;
+  const t = new Date(sp.timestamp);
+  document.getElementById('execTitle').textContent = (sp.reportTitle || 'RE EXECUTIVE BRIEF').toUpperCase();
+  document.getElementById('execSub').textContent =
+    `Chain complete · War Room → Strategist → Exec Portal · ${t.toLocaleString()}`;
+  document.getElementById('execTimestamp').textContent = t.toLocaleTimeString();
+
+  // Risk badge from rescue pack
+  if (warRoomPayload && warRoomPayload.rescuePack) {
+    const risk = warRoomPayload.rescuePack.risk || 'MEDIUM';
+    const badge = document.getElementById('riskBadge');
+    badge.textContent = '● ' + risk + ' RISK';
+    badge.className = 'risk-badge ' + risk.toLowerCase();
+  }
+
+  generateExecBrief();
+  buildPipelineTable();
+  buildForecastChart();
+}
+
+async function callAI(userMessage, systemOverride) {
+  const res = await fetch(API, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      question: userMessage,
+      context: systemOverride || EXEC_SYSTEM,
+      app: APP,
+      maxTokens: 1400
+    })
+  });
+  const data = await res.json();
+  return data.answer || data.response || data.reply || 'No response.';
+}
+
+function formatOutput(text) {
+  return text
+    .replace(/►\s*/g, `<span style="color:var(--acc)">►</span> `)
+    .replace(/\*\*(.*?)\*\*/g, `<span style="color:var(--white);font-weight:700">$1</span>`)
+    .replace(/\*(.*?)\*/g, `<span style="color:var(--white)">$1</span>`);
+}
+
+async function generateExecBrief() {
+  const body = document.getElementById('execBriefBody');
+  document.getElementById('briefStatus').textContent = 'GENERATING...';
+
+  // Build context from chain
+  let context = '';
+  if (stratPayload && stratPayload.stratSaved && stratPayload.stratSaved.length > 0) {
+    context += '\n\nSTRATEGIST OUTPUTS:\n' +
+      stratPayload.stratSaved.slice(0,4).map(o => `${o.title}:\n${o.text.substring(0,500)}`).join('\n\n');
+  }
+  if (warRoomPayload && warRoomPayload.outputs && warRoomPayload.outputs.length > 0) {
+    context += '\n\nWAR ROOM OUTPUTS:\n' +
+      warRoomPayload.outputs.slice(0,3).map(o => `${o.title}:\n${o.text.substring(0,300)}`).join('\n\n');
+  }
+  if (warRoomPayload && warRoomPayload.rescuePack) {
+    const rp = warRoomPayload.rescuePack;
+    context += `\n\nRESCUE PACK: ${rp.address || 'Subject Property'} · Score: ${rp.score}/100 · Risk: ${rp.risk}`;
+  }
+
+  const prompt = context
+    ? `Based on this complete intelligence chain:\n${context}\n\nGenerate an EXECUTIVE INTELLIGENCE BRIEF covering:\n1. PORTFOLIO HEALTH SUMMARY (overall risk rating, key metrics)\n2. CRITICAL ISSUES (top 3 items needing executive attention this week, with dollar impact)\n3. PIPELINE PERFORMANCE (pull-through analysis, revenue forecast, 30-day projection)\n4. COMPLIANCE EXPOSURE (total liability, priority cures)\n5. STRATEGIC RECOMMENDATIONS (3 decisions the executive needs to make this week)\n6. 30-60-90 DAY ROADMAP\n\nExecutive grade. Dollar-focused. Board-ready. Use ► headers.`
+    : `Generate a COMPREHENSIVE EXECUTIVE INTELLIGENCE BRIEF for a real estate and mortgage operation:\n\nCurrent State:\n- Pipeline: 22 loans, $18.4M volume, 68% pull-through\n- TRID: 2 violations, $1,247 cure needed\n- REO: 6 assets, $2.1M portfolio\n- Title: 1 open lien, $12,400\n- Closings: 5 this week, $2.3M\n- Phoenix metro market conditions\n\nCover: portfolio health, critical issues, pipeline performance, compliance exposure, strategic recommendations, 30-60-90 day roadmap. Board-ready. ► headers.`;
+
+  try {
+    const text = await callAI(prompt);
+    body.innerHTML = formatOutput(text);
+    boardReport = text;
+    document.getElementById('briefStatus').textContent = '✓ COMPLETE';
+    execSaved.push({title: 'Executive Brief', text, time: new Date()});
+  } catch(e) {
+    body.innerHTML = `<span style="color:var(--red)">[ERROR] ${e.message}</span>`;
+    document.getElementById('briefStatus').textContent = 'ERROR';
+  }
+}
+
+async function buildActionItems() {
+  const body = document.getElementById('execActionsBody');
+  document.getElementById('actionsStatus').textContent = 'GENERATING...';
+
+  const prompt = `Generate a PRIORITIZED EXECUTIVE ACTION ITEM LIST for the RE operation this week.
+
+Current state: 22 loans ($18.4M), 68% pull-through, 2 TRID violations ($1,247 cure), 1 title lien ($12,400), 6 REO assets ($2.1M), appraisal gap on one file ($24K gap), 5 closings this week.
+
+Generate exactly 8 action items formatted as:
+PRIORITY: CRITICAL/HIGH/MEDIUM
+TITLE: Action item title
+OWNER: Who is responsible
+DEADLINE: Specific deadline
+DOLLAR IMPACT: Dollar amount at stake
+DETAIL: 2-sentence description of action required
+
+Use ► to separate items.`;
+
+  try {
+    const text = await callAI(prompt);
+    body.innerHTML = '';
+
+    // Parse into action cards
+    const items = text.split('►').filter(s => s.trim());
+    if (items.length > 1) {
+      items.forEach((item, i) => {
+        if (!item.trim()) return;
+        const priorityMatch = item.match(/CRITICAL|HIGH|MEDIUM/i);
+        const titleMatch = item.match(/TITLE:\s*(.+)/i);
+        const ownerMatch = item.match(/OWNER:\s*(.+)/i);
+        const deadlineMatch = item.match(/DEADLINE:\s*(.+)/i);
+        const dollarMatch = item.match(/DOLLAR[^:]*:\s*(.+)/i);
+        const detailMatch = item.match(/DETAIL:\s*([\s\S]+)/i);
+
+        const priority = priorityMatch ? priorityMatch[0].toUpperCase() : 'MEDIUM';
+        const title = titleMatch ? titleMatch[1].trim() : item.trim().split('\n')[0].substring(0,60);
+        const owner = ownerMatch ? ownerMatch[1].trim() : 'Operations';
+        const deadline = deadlineMatch ? deadlineMatch[1].trim() : 'This week';
+        const dollar = dollarMatch ? dollarMatch[1].trim() : '—';
+        const detail = detailMatch ? detailMatch[1].trim().substring(0,200) : item.substring(0,150);
+
+        const pClass = {CRITICAL:'ai-p-critical',HIGH:'ai-p-high',MEDIUM:'ai-p-medium'}[priority] || 'ai-p-medium';
+
+        const card = document.createElement('div');
+        card.className = 'action-item';
+        card.innerHTML = `
+          <div class="ai-header">
+            <span class="ai-priority ${pClass}">${priority}</span>
+            <span class="ai-dollar">${dollar}</span>
+            <div class="ai-check" id="check-${i}" onclick="toggleCheck(${i})"></div>
+          </div>
+          <div class="ai-title">${title}</div>
+          <div class="ai-desc">${detail}</div>
+          <div class="ai-meta">
+            <span>OWNER: ${owner}</span>
+            <span>DUE: ${deadline}</span>
+          </div>
+        `;
+        body.appendChild(card);
+      });
+    } else {
+      body.innerHTML = formatOutput(text);
+    }
+    document.getElementById('actionsStatus').textContent = `${items.length} ACTION ITEMS`;
+  } catch(e) {
+    body.innerHTML = `<span style="color:var(--red)">[ERROR] ${e.message}</span>`;
+    document.getElementById('actionsStatus').textContent = 'ERROR';
+  }
+}
+
+function toggleCheck(id) {
+  const el = document.getElementById('check-' + id);
+  el.classList.toggle('done');
+}
+
+function buildPipelineTable() {
+  const tbody = document.getElementById('pipelineTable');
+  const loans = [
+    {id:'#4721',addr:'4721 Desert Ridge Dr',amt:'$485K',type:'Conv',status:'CTC',risk:'LOW',close:'Jun 9'},
+    {id:'#4718',addr:'2341 Camelback Rd',amt:'$392K',type:'FHA',status:'COND',risk:'MED',close:'Jun 12'},
+    {id:'#4715',addr:'890 Mesquite Ln',amt:'$628K',type:'Conv',status:'UW',risk:'HIGH',close:'Jun 18'},
+    {id:'#4713',addr:'555 Scottsdale Rd',amt:'$215K',type:'VA',status:'CTC',risk:'LOW',close:'Jun 10'},
+    {id:'#4710',addr:'1200 Central Ave',amt:'$847K',type:'Conv',status:'RISK',risk:'HIGH',close:'Jun 20'},
+    {id:'#4709',addr:'3388 Paradise Vly',amt:'$1.2M',type:'Jumbo',status:'UW',risk:'MED',close:'Jun 25'},
+    {id:'#4706',addr:'7711 Peoria Ave',amt:'$310K',type:'FHA',status:'COND',risk:'MED',close:'Jun 15'},
+    {id:'#4703',addr:'180 E Lincoln Dr',amt:'$445K',type:'Conv',status:'CTC',risk:'LOW',close:'Jun 11'},
+  ];
+  const statusClass = {CTC:'pts-ctc',COND:'pts-cond',UW:'pts-uw',RISK:'pts-risk'};
+  const riskColor = {LOW:'var(--green)',MED:'var(--acc)',HIGH:'var(--red)'};
+  tbody.innerHTML = loans.map(l => `
+    <tr>
+      <td style="color:var(--muted)">${l.id}</td>
+      <td style="color:var(--white)">${l.addr}</td>
+      <td style="color:var(--acc)">${l.amt}</td>
+      <td>${l.type}</td>
+      <td><span class="pt-status ${statusClass[l.status]}">${l.status}</span></td>
+      <td style="color:${riskColor[l.risk]}">${l.risk}</td>
+      <td style="color:var(--white)">${l.close}</td>
+    </tr>
+  `).join('');
+}
+
+function buildForecastChart() {
+  const body = document.getElementById('execForecastBody');
+  body.innerHTML = `
+    <div style="margin-bottom:1rem">
+      <div style="font-family:var(--mono);font-size:.5rem;color:var(--acc);letter-spacing:.1rem;margin-bottom:.6rem">► PULL-THROUGH IMPACT ANALYSIS</div>
+      <div class="bar-chart">
+        <div class="bar-row">
+          <div class="bar-lbl">Current (68%)</div>
+          <div class="bar-track"><div class="bar-fill" style="width:68%;--fill-a:var(--acc);--fill-b:#d08a00"></div></div>
+          <div class="bar-val" style="color:var(--acc)">$276K</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-lbl">Target (75%)</div>
+          <div class="bar-track"><div class="bar-fill" style="width:75%;--fill-a:var(--cyan);--fill-b:#00b09a"></div></div>
+          <div class="bar-val" style="color:var(--cyan)">$304K</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-lbl">Optimized (82%)</div>
+          <div class="bar-track"><div class="bar-fill" style="width:82%;--fill-a:var(--green);--fill-b:#00cc6a"></div></div>
+          <div class="bar-val" style="color:var(--green)">$333K</div>
+        </div>
+      </div>
+      <div style="font-family:var(--mono);font-size:.45rem;color:var(--muted);margin-top:.5rem">
+        Revenue uplift 68%→75%: <span style="color:var(--green)">+$28K/month · +$336K/year</span>
+      </div>
+    </div>
+
+    <div style="margin-bottom:1rem">
+      <div style="font-family:var(--mono);font-size:.5rem;color:var(--acc);letter-spacing:.1rem;margin-bottom:.6rem">► 90-DAY REVENUE PROJECTION</div>
+      <div class="bar-chart">
+        <div class="bar-row">
+          <div class="bar-lbl">June (Current)</div>
+          <div class="bar-track"><div class="bar-fill" style="width:55%;--fill-a:#f59e0b;--fill-b:#d48a00"></div></div>
+          <div class="bar-val">$276K</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-lbl">July (Optimized)</div>
+          <div class="bar-track"><div class="bar-fill" style="width:68%;--fill-a:var(--cyan);--fill-b:#009980"></div></div>
+          <div class="bar-val" style="color:var(--cyan)">$340K</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-lbl">August (Target)</div>
+          <div class="bar-track"><div class="bar-fill" style="width:75%;--fill-a:var(--green);--fill-b:#00cc6a"></div></div>
+          <div class="bar-val" style="color:var(--green)">$375K</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:1rem">
+      <div style="font-family:var(--mono);font-size:.5rem;color:var(--acc);letter-spacing:.1rem;margin-bottom:.6rem">► REO DISPOSITION TIMELINE ($2.1M)</div>
+      <div class="bar-chart">
+        <div class="bar-row">
+          <div class="bar-lbl">MLS Retail</div>
+          <div class="bar-track"><div class="bar-fill" style="width:88%;--fill-a:var(--green);--fill-b:#00aa55"></div></div>
+          <div class="bar-val" style="color:var(--green)">$1.85M</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-lbl">Investor Direct</div>
+          <div class="bar-track"><div class="bar-fill" style="width:76%;--fill-a:var(--acc);--fill-b:#c88800"></div></div>
+          <div class="bar-val" style="color:var(--acc)">$1.60M</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-lbl">Bulk Sale</div>
+          <div class="bar-track"><div class="bar-fill" style="width:65%;--fill-a:var(--muted);--fill-b:#334455"></div></div>
+          <div class="bar-val" style="color:var(--muted)">$1.37M</div>
+        </div>
+      </div>
+      <div style="font-family:var(--mono);font-size:.45rem;color:var(--muted);margin-top:.5rem">
+        Recommended: MLS Retail for 4 assets, Investor Direct for 2 distressed · Net uplift vs bulk: <span style="color:var(--green)">+$480K</span>
+      </div>
+    </div>
+
+    <div>
+      <div style="font-family:var(--mono);font-size:.5rem;color:var(--acc);letter-spacing:.1rem;margin-bottom:.4rem">► COMPLIANCE COST SUMMARY</div>
+      <div style="font-family:var(--mono);font-size:.5rem;line-height:2;color:var(--text)">
+        TRID Cure (Loan #2847): <span style="color:var(--red)">$1,247</span><br>
+        Title Lien Payoff: <span style="color:var(--red)">$12,400</span><br>
+        HMDA LAR Correction: <span style="color:var(--acc)">$0 (internal)</span><br>
+        Total Compliance Cost: <span style="color:var(--red);font-weight:700">$13,647</span><br>
+        Revenue at risk if unresolved: <span style="color:var(--red)">$47,200</span>
+      </div>
+    </div>
+  `;
+}
+
+async function quickExec(prompt) {
+  switchExecPanel('brief');
+  const body = document.getElementById('execBriefBody');
+  document.getElementById('briefStatus').textContent = 'RUNNING...';
+  body.innerHTML = '<div class="loader">⟳ &nbsp;Generating executive analysis...</div>';
+  try {
+    const text = await callAI(prompt);
+    body.innerHTML = formatOutput(text);
+    boardReport = text;
+    document.getElementById('briefStatus').textContent = '✓ COMPLETE';
+    execSaved.push({title: 'Quick Analysis', text, time: new Date()});
+  } catch(e) {
+    body.innerHTML = `<span style="color:var(--red)">[ERROR] ${e.message}</span>`;
+    document.getElementById('briefStatus').textContent = 'ERROR';
+  }
+}
+
+async function runExecBrief() { await generateExecBrief(); }
+
+async function generateBoardReport() {
+  const body = document.getElementById('execBriefBody');
+  switchExecPanel('brief');
+  document.getElementById('briefStatus').textContent = 'GENERATING BOARD REPORT...';
+  body.innerHTML = '<div class="loader">⟳ &nbsp;Generating board-ready report...</div>';
+
+  const prompt = `Generate a BOARD-READY REAL ESTATE OPERATIONS REPORT. This is for the executive/board review.
+
+Current metrics:
+- Pipeline: 22 loans, $18.4M, 68% pull-through
+- Revenue this month: $276K (est.)
+- Compliance: 2 TRID violations, $13,647 total cure cost
+- REO Portfolio: 6 assets, $2.1M
+- Closings this week: 5, $2.3M funding
+- Phoenix metro: median $415K, 28 DOM
+
+Structure as:
+1. EXECUTIVE SUMMARY (3 sentences max)
+2. FINANCIAL PERFORMANCE vs targets
+3. RISK REGISTER (top 5 risks with dollar impact)
+4. OPERATIONAL HIGHLIGHTS
+5. STRATEGIC INITIATIVES (3 recommendations with ROI)
+6. OUTLOOK (30/60/90 day)
+
+Board-grade. Every number backed by calculation. Action-oriented conclusions.`;
+
+  try {
+    const text = await callAI(prompt);
+    body.innerHTML = formatOutput(text);
+    boardReport = text;
+    document.getElementById('briefStatus').textContent = '✓ BOARD REPORT COMPLETE';
+    execSaved.push({title: 'Board Report', text, time: new Date()});
+  } catch(e) {
+    body.innerHTML = `<span style="color:var(--red)">[ERROR] ${e.message}</span>`;
+  }
+}
+
+async function runBoardReport() { await generateBoardReport(); }
+
+async function runKPIAnalysis(kpi) {
+  const labels = {
+    pipeline:'Provide a detailed analysis of the $18.4M mortgage pipeline: loan mix, risk distribution, expected revenue, and top 3 actions to optimize.',
+    pullthrough:'Analyze the 68% pull-through rate: root causes, fallthrough risk by loan type, and a specific 4-week action plan to reach 75%.',
+    revenue:'Model the revenue forecast: current $276K at 68% PT, target $304K at 75% PT, and the month-by-month path to get there.',
+    risk:'Quantify total dollar risk exposure: TRID $1,247 cure, title lien $12,400, buyback risk on 3 files, and the compliance remediation priority order.',
+    reo:'Analyze the 6-asset REO portfolio: optimal disposition mix, 60-day timeline, expected net proceeds, and tax treatment.',
+    closing:'Analyze the 5 closings this week: readiness status for each, risks to funding, and what needs to happen in the next 72 hours.'
+  };
+  await quickExec(labels[kpi] || 'Provide executive analysis for this metric.');
+}
+
+function switchExecPanel(name) {
+  document.querySelectorAll('[id^="exec-panel-"]').forEach(el => el.style.display = 'none');
+  const panel = document.getElementById('exec-panel-' + name);
+  if (panel) panel.style.display = 'flex';
+
+  // Lazy load panels
+  if (name === 'actions') {
+    const body = document.getElementById('execActionsBody');
+    if (body.querySelector('.loader')) buildActionItems();
+  }
+  if (name === 'forecast') {
+    buildForecastChart();
+  }
+
+  document.querySelectorAll('.sb-link').forEach(l => l.classList.remove('active'));
+}
+
+function exportAll() {
+  const chains = [];
+  if (warRoomPayload) chains.push('=== RE WAR ROOM ===\n' + (warRoomPayload.outputs || []).map(o => '## ' + o.title + '\n' + o.text).join('\n\n'));
+  if (stratPayload) chains.push('=== RE STRATEGIST ===\n' + (stratPayload.stratSaved || []).map(o => '## ' + o.title + '\n' + o.text).join('\n\n'));
+  chains.push('=== EXEC PORTAL ===\n' + execSaved.map(o => '## ' + o.title + '\n' + o.text).join('\n\n'));
+  const content = chains.join('\n\n' + '═'.repeat(60) + '\n\n');
+  if (!content.trim()) { alert('No content to export.'); return; }
+  const blob = new Blob(['# TSM REAL ESTATE FULL SESSION REPORT\nGenerated: ' +
+    new Date().toLocaleString() + '\n\n' + content], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 're-full-session-' + Date.now() + '.txt';
+  a.click();
+}
+
+function exportBoard() {
+  if (!boardReport) { alert('Generate board report first.'); return; }
+  const blob = new Blob(['# TSM REAL ESTATE BOARD REPORT\nGenerated: ' +
+    new Date().toLocaleString() + '\n\n' + boardReport], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 're-board-report-' + Date.now() + '.txt';
+  a.click();
+}
+
+// init
+loadPayloads();
+</script>
+</body>
+</html>

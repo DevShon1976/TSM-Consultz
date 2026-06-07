@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TSM // RE WAR ROOM</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#050810;--s1:#080c14;--s2:#0b0f1a;--s3:#0d1220;
+  --border:#1a2535;--border2:#243045;--border3:#2e3d55;
+  --acc:#f59e0b;--acc2:rgba(245,158,11,.25);--acc3:rgba(245,158,11,.08);
+  --green:#00ff88;--red:#ef4444;--cyan:#00e5cc;--blue:#3b82f6;--purple:#a78bfa;
+  --white:#e2eaf4;--text:#8aa0b8;--muted:#445566;--dim:#2a3a4a;
+  --mono:'Share Tech Mono',monospace;--orb:'Orbitron',monospace;--raj:'Rajdhani',sans-serif;
+  /* node colors */
+  --rea:#f59e0b;--reaf:#3b82f6;--reat:#00e5cc;--ream:#a78bfa;
+  --reac:#ef4444;--reai:#00ff88;--reax:#f97316;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--raj);display:flex;flex-direction:column}
+body::before{content:'';position:fixed;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(245,158,11,.008) 2px,rgba(245,158,11,.008) 4px);
+  pointer-events:none;z-index:9998}
+
+/* SCANLINE */
+@keyframes scanpulse{0%,100%{opacity:0}50%{opacity:.06}}
+body::after{content:'';position:fixed;inset:0;background:linear-gradient(180deg,transparent 0%,rgba(245,158,11,.04) 50%,transparent 100%);
+  background-size:100% 6px;animation:scanpulse 4s ease-in-out infinite;pointer-events:none;z-index:9997}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes slideIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ─── TOPBAR ─── */
+.topbar{
+  background:linear-gradient(90deg,#030508,#06090f,#030508);
+  border-bottom:1px solid var(--border);height:46px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 1rem;flex-shrink:0;position:relative;z-index:100
+}
+.topbar::after{content:'';position:absolute;bottom:-1px;left:0;width:100%;height:1px;
+  background:linear-gradient(90deg,transparent 0%,var(--acc) 30%,var(--cyan) 70%,transparent 100%);
+  opacity:.4}
+.logo{display:flex;align-items:center;gap:.6rem}
+.logo-mark{font-family:var(--orb);font-weight:900;font-size:.75rem;color:var(--bg);
+  background:linear-gradient(135deg,var(--acc),#e08600);
+  padding:.2rem .4rem;letter-spacing:.1rem}
+.logo-text{font-family:var(--orb);font-size:.7rem;font-weight:700;color:var(--acc);letter-spacing:.18rem}
+.logo-sep{color:var(--muted);font-family:var(--mono);font-size:.65rem;margin:0 .2rem}
+.logo-sub{font-family:var(--mono);font-size:.48rem;color:var(--muted);letter-spacing:.12rem}
+.tb-actions{display:flex;align-items:center;gap:.4rem}
+.tb-btn{
+  background:transparent;border:1px solid var(--border2);color:var(--text);
+  padding:.3rem .75rem;font-family:var(--mono);font-size:.48rem;cursor:pointer;
+  letter-spacing:.1rem;text-transform:uppercase;transition:all .15s;
+  display:inline-flex;align-items:center;gap:.35rem
+}
+.tb-btn:hover{border-color:var(--acc);color:var(--acc)}
+.tb-btn.primary{border-color:var(--acc2);color:var(--acc);background:var(--acc3)}
+.tb-btn.primary:hover{background:rgba(245,158,11,.15)}
+.tb-btn.rescue{border-color:rgba(239,68,68,.5);color:var(--red);background:rgba(239,68,68,.06)}
+.tb-btn.rescue:hover{background:rgba(239,68,68,.15)}
+.tb-btn.escalate{border-color:rgba(167,139,250,.5);color:var(--purple);background:rgba(167,139,250,.06)}
+.tb-btn.escalate:hover{background:rgba(167,139,250,.15)}
+.tb-pill{font-family:var(--mono);font-size:.45rem;letter-spacing:.1rem;
+  padding:.2rem .5rem;display:flex;align-items:center;gap:.35rem}
+.pill-dot{width:5px;height:5px;border-radius:50%;animation:pulse 2s infinite}
+
+/* ─── TICKER ─── */
+.ticker{height:20px;background:var(--s1);border-bottom:1px solid var(--border);
+  overflow:hidden;flex-shrink:0;position:relative}
+.ticker-track{white-space:nowrap;font-family:var(--mono);font-size:.43rem;
+  letter-spacing:.08rem;line-height:20px;position:absolute;
+  animation:tickscroll 90s linear infinite}
+@keyframes tickscroll{0%{transform:translateX(100vw)}100%{transform:translateX(-300%)}}
+.t-item{display:inline;padding:0 2rem}
+.t-warn{color:var(--red)}
+.t-info{color:var(--acc)}
+.t-ok{color:var(--green)}
+
+/* ─── MAIN LAYOUT ─── */
+.main{display:flex;flex:1;overflow:hidden}
+
+/* ─── SIDEBAR ─── */
+.sidebar{
+  width:188px;flex-shrink:0;
+  background:linear-gradient(180deg,#040710,#040608);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow-y:auto
+}
+.sidebar::-webkit-scrollbar{width:2px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--acc2)}
+.sb-section{border-bottom:1px solid var(--border)}
+.sb-hdr{font-family:var(--mono);font-size:.42rem;letter-spacing:.18rem;
+  color:var(--dim);padding:.55rem .85rem .25rem;text-transform:uppercase}
+.node-btn{
+  display:flex;align-items:center;gap:.45rem;padding:.4rem .85rem;
+  cursor:pointer;font-size:.6rem;font-weight:600;color:var(--text);
+  border-left:2px solid transparent;transition:all .12s;
+  text-decoration:none;letter-spacing:.02rem
+}
+.node-btn:hover{background:rgba(255,255,255,.03);color:var(--white)}
+.node-btn.active{background:rgba(255,255,255,.05);color:var(--white);border-left-color:var(--nc)}
+.nb-dot{width:5px;height:5px;border-radius:50%;background:var(--nc,var(--acc));flex-shrink:0;animation:pulse 2.5s infinite}
+.nb-badge{margin-left:auto;font-family:var(--mono);font-size:.38rem;
+  padding:.1rem .3rem;border:1px solid currentColor;opacity:.6}
+.quick-link{
+  padding:.35rem .85rem;cursor:pointer;font-family:var(--mono);font-size:.48rem;
+  color:var(--muted);border-left:2px solid transparent;transition:all .12s;
+  display:flex;align-items:center;gap:.4rem
+}
+.quick-link:hover{color:var(--acc);border-left-color:var(--acc);background:rgba(245,158,11,.04)}
+.sys-stat{display:flex;align-items:center;gap:.4rem;padding:.3rem .85rem;font-family:var(--mono);font-size:.48rem}
+.sys-d{width:4px;height:4px;border-radius:50%;animation:pulse 2s infinite}
+
+/* ─── CONTENT ─── */
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+/* ─── VIEW TABS ─── */
+.viewtabs{
+  background:var(--s1);border-bottom:1px solid var(--border);
+  padding:.3rem .75rem;display:flex;gap:.3rem;flex-shrink:0
+}
+.vtab{
+  font-family:var(--mono);font-size:.48rem;letter-spacing:.1rem;
+  padding:.27rem .65rem;border:1px solid var(--border);background:transparent;
+  color:var(--muted);cursor:pointer;transition:all .12s;text-transform:uppercase
+}
+.vtab:hover{color:var(--text);border-color:var(--border2)}
+.vtab.active{color:var(--acc);border-color:var(--acc);background:var(--acc3)}
+
+/* ─── VIEW CONTAINERS ─── */
+.view{display:none;flex:1;overflow:hidden;flex-direction:column}
+.view.active{display:flex}
+
+/* ─── WAR ROOM VIEW (grid + feed) ─── */
+.warroom-layout{display:grid;grid-template-columns:1fr 280px;flex:1;overflow:hidden}
+
+/* NODE GRID */
+.node-grid-wrap{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border)}
+.node-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);overflow-y:auto;flex:1}
+.node-grid::-webkit-scrollbar{width:2px}
+.node-grid::-webkit-scrollbar-thumb{background:var(--acc2)}
+.node-card{
+  background:var(--s1);padding:.65rem .7rem;cursor:pointer;
+  transition:background .12s;position:relative;min-height:90px;
+  display:flex;flex-direction:column;gap:.22rem
+}
+.node-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:2px;
+  background:var(--nc,var(--acc));opacity:.25;transition:opacity .12s}
+.node-card:hover{background:var(--s2)}
+.node-card:hover::before{opacity:.8}
+.node-card.active{background:var(--s2)}
+.node-card.active::before{opacity:1}
+.node-card.running::before{opacity:1;animation:pulse 1.2s infinite}
+.nc-node{font-family:var(--mono);font-size:.4rem;letter-spacing:.12rem;
+  color:var(--nc,var(--acc));opacity:.75;text-transform:uppercase}
+.nc-title{font-size:.62rem;font-weight:700;color:var(--white);line-height:1.2}
+.nc-desc{font-size:.5rem;color:var(--muted);line-height:1.4;margin-top:auto}
+.nc-status{font-family:var(--mono);font-size:.38rem;letter-spacing:.08rem;margin-top:.2rem}
+
+/* FEED */
+.feed-header{
+  background:var(--s1);border-top:1px solid var(--border);
+  padding:.3rem .75rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0
+}
+.feed-lbl{font-family:var(--mono);font-size:.43rem;letter-spacing:.15rem;color:var(--acc);text-transform:uppercase}
+.feed-meta{font-family:var(--mono);font-size:.43rem;color:var(--muted)}
+.feed-body{
+  height:160px;overflow-y:auto;padding:.5rem .75rem;
+  font-family:var(--mono);font-size:.55rem;line-height:1.75;color:var(--text);
+  background:var(--bg);border-top:1px solid var(--border);flex-shrink:0
+}
+.feed-body::-webkit-scrollbar{width:2px}
+.feed-body::-webkit-scrollbar-thumb{background:var(--acc2)}
+
+/* RIGHT PANEL */
+.rpanel{background:var(--s1);display:flex;flex-direction:column;overflow-y:auto}
+.rpanel::-webkit-scrollbar{width:2px}
+.rpanel::-webkit-scrollbar-thumb{background:var(--acc2)}
+.rp-block{border-bottom:1px solid var(--border);padding:.55rem .7rem}
+.rp-hdr{font-family:var(--mono);font-size:.43rem;letter-spacing:.15rem;
+  color:var(--acc);text-transform:uppercase;margin-bottom:.45rem}
+.rp-sub{font-family:var(--mono);font-size:.43rem;letter-spacing:.1rem;
+  color:var(--muted);text-transform:uppercase;margin-bottom:.35rem}
+.score-ring{
+  width:64px;height:64px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;
+  border:2px solid var(--acc2);margin:0 auto .45rem;position:relative
+}
+.score-val{font-family:var(--orb);font-size:1rem;font-weight:900;color:var(--acc)}
+.score-lbl{font-family:var(--mono);font-size:.38rem;color:var(--muted)}
+.kpi-row{display:flex;justify-content:space-between;padding:.22rem 0;font-size:.56rem}
+.kpi-l{color:var(--muted)}
+.kpi-v{font-family:var(--mono);color:var(--white)}
+.kpi-v.warn{color:var(--red)}
+.kpi-v.ok{color:var(--green)}
+.kpi-v.caution{color:var(--acc)}
+.rp-btn{
+  width:100%;margin-top:.3rem;background:transparent;
+  border:1px solid var(--border2);color:var(--text);
+  font-family:var(--mono);font-size:.48rem;padding:.35rem;
+  cursor:pointer;letter-spacing:.08rem;text-transform:uppercase;transition:all .12s
+}
+.rp-btn:hover{border-color:var(--acc);color:var(--acc)}
+.rp-btn.g{border-color:rgba(0,255,136,.3);color:var(--green)}
+.rp-btn.g:hover{background:rgba(0,255,136,.06)}
+.rp-btn.r{border-color:rgba(239,68,68,.4);color:var(--red)}
+.rp-btn.r:hover{background:rgba(239,68,68,.08)}
+.rp-btn.p{border-color:rgba(167,139,250,.4);color:var(--purple)}
+.rp-btn.p:hover{background:rgba(167,139,250,.08)}
+.saved-item{
+  padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,.04);
+  cursor:pointer;font-size:.54rem;font-family:var(--mono);color:var(--text);transition:color .1s
+}
+.saved-item:hover{color:var(--acc)}
+.saved-item:last-child{border-bottom:none}
+
+/* ─── RESCUE PACK VIEW ─── */
+.rescue-layout{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);flex:1;overflow:hidden}
+.rescue-form-wrap,.rescue-results-wrap{background:var(--s1);display:flex;flex-direction:column;overflow:hidden}
+.rescue-form-wrap{overflow-y:auto}
+.rescue-form-wrap::-webkit-scrollbar{width:2px}
+.rescue-form-wrap::-webkit-scrollbar-thumb{background:var(--acc2)}
+.rf-inner{padding:.75rem .85rem;display:flex;flex-direction:column;gap:.5rem}
+.rf-hdr{font-family:var(--orb);font-size:.62rem;font-weight:700;color:var(--red);
+  letter-spacing:.1rem;display:flex;align-items:center;gap:.5rem;padding-bottom:.4rem;
+  border-bottom:1px solid var(--border)}
+.rf-icon{width:20px;height:20px;border:1px solid var(--red);display:flex;align-items:center;justify-content:center;
+  font-size:.65rem;flex-shrink:0}
+.field-group{display:flex;flex-direction:column;gap:.25rem}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:.45rem}
+.fl{font-family:var(--mono);font-size:.45rem;letter-spacing:.1rem;color:var(--muted);
+  text-transform:uppercase;margin-bottom:.15rem}
+.fi{
+  width:100%;background:var(--s2);border:1px solid var(--border2);
+  color:var(--white);font-family:var(--mono);font-size:.52rem;
+  padding:.38rem .5rem;outline:none;transition:border-color .12s
+}
+.fi:focus{border-color:var(--acc2)}
+.fi::placeholder{color:var(--dim)}
+select.fi option{background:var(--s2)}
+.fi-ta{resize:vertical;height:70px;line-height:1.5}
+.scenario-grid{display:grid;grid-template-columns:1fr 1fr;gap:.45rem}
+.scenario-btn{
+  background:var(--s2);border:1px solid var(--border2);padding:.45rem .5rem;
+  cursor:pointer;transition:all .12s;text-align:left;display:flex;flex-direction:column;gap:.15rem
+}
+.scenario-btn:hover,.scenario-btn.active{border-color:var(--red);background:rgba(239,68,68,.06)}
+.sc-icon{font-size:.8rem}
+.sc-label{font-family:var(--mono);font-size:.48rem;color:var(--white);letter-spacing:.04rem}
+.sc-sub{font-family:var(--mono);font-size:.4rem;color:var(--muted)}
+.rescue-fire-btn{
+  background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.5);
+  color:var(--red);font-family:var(--orb);font-size:.58rem;font-weight:700;
+  letter-spacing:.15rem;padding:.55rem;cursor:pointer;transition:all .15s;
+  display:flex;align-items:center;justify-content:center;gap:.5rem;
+  text-transform:uppercase;margin-top:.2rem
+}
+.rescue-fire-btn:hover{background:rgba(239,68,68,.18);border-color:var(--red)}
+.rescue-fire-btn:disabled{opacity:.5;cursor:not-allowed}
+
+.rescue-results-wrap{overflow-y:auto}
+.rescue-results-wrap::-webkit-scrollbar{width:2px}
+.rescue-results-wrap::-webkit-scrollbar-thumb{background:rgba(239,68,68,.3)}
+.rr-inner{padding:.75rem .85rem;display:flex;flex-direction:column;gap:.6rem}
+.rr-hdr{font-family:var(--mono);font-size:.43rem;letter-spacing:.15rem;color:var(--red);text-transform:uppercase;margin-bottom:.3rem}
+.health-score-bar{background:var(--s2);border:1px solid var(--border2);padding:.55rem .65rem}
+.hs-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem}
+.hs-label{font-family:var(--orb);font-size:.52rem;font-weight:700;color:var(--white);letter-spacing:.08rem}
+.hs-val{font-family:var(--orb);font-size:1.1rem;font-weight:900}
+.hs-track{height:5px;background:var(--border);position:relative}
+.hs-fill{height:100%;background:linear-gradient(90deg,var(--red),var(--acc));transition:width .8s ease}
+.rescue-output{
+  font-family:var(--mono);font-size:.52rem;line-height:1.8;color:var(--text);
+  white-space:pre-wrap;min-height:200px
+}
+.scenario-result{
+  border:1px solid var(--border2);background:var(--s2);padding:.55rem .65rem;
+  display:flex;flex-direction:column;gap:.25rem
+}
+.sr-node{font-family:var(--mono);font-size:.42rem;letter-spacing:.1rem;text-transform:uppercase;opacity:.7}
+.sr-title{font-size:.6rem;font-weight:700;color:var(--white)}
+.sr-body{font-family:var(--mono);font-size:.5rem;color:var(--text);line-height:1.7}
+
+/* ─── NODES VIEWER ─── */
+.nodes-viewer{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.nv-bar{padding:.35rem .7rem;background:var(--s2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:.5rem;flex-shrink:0}
+.nv-select{flex:1;background:var(--bg);border:1px solid var(--border2);
+  color:var(--text);font-family:var(--mono);font-size:.48rem;padding:.25rem .4rem}
+.nv-frame{flex:1;border:none;width:100%;background:var(--bg)}
+
+/* TEXTAREA REPORT */
+.rp-textarea{
+  width:100%;background:var(--s2);border:1px solid var(--border2);
+  color:var(--text);font-family:var(--mono);font-size:.5rem;
+  padding:.4rem;outline:none;resize:none;height:80px;line-height:1.5
+}
+.rp-textarea:focus{border-color:var(--acc2)}
+.rp-input-sm{
+  width:100%;background:var(--s2);border:1px solid var(--border2);
+  color:var(--white);font-family:var(--mono);font-size:.48rem;
+  padding:.32rem .45rem;outline:none
+}
+.rp-input-sm:focus{border-color:var(--acc2)}
+
+/* RESCUE INLINE WIDGET */
+.rescue-widget{
+  position:fixed;bottom:1rem;right:1rem;z-index:9999;
+  width:320px;font-family:var(--mono)
+}
+.rw-toggle{
+  background:var(--s1);border:1px solid rgba(239,68,68,.35);
+  padding:.4rem .75rem;cursor:pointer;display:flex;align-items:center;gap:.5rem;
+  font-size:.48rem;color:var(--red);letter-spacing:.1rem
+}
+.rw-panel{
+  display:none;flex-direction:column;background:var(--s1);
+  border:1px solid rgba(239,68,68,.2);margin-top:3px;overflow:hidden
+}
+.rw-msgs{max-height:200px;overflow-y:auto;padding:.5rem .65rem;
+  display:flex;flex-direction:column;gap:.4rem;font-size:.5rem;line-height:1.6}
+.rw-msgs::-webkit-scrollbar{width:2px}
+.rw-msgs::-webkit-scrollbar-thumb{background:rgba(239,68,68,.2)}
+.rw-input-row{display:flex;border-top:1px solid rgba(239,68,68,.1)}
+.rw-inp{flex:1;background:transparent;border:none;outline:none;
+  padding:.45rem .6rem;font-family:var(--mono);font-size:.5rem;color:var(--white)}
+.rw-send{background:transparent;border:none;border-left:1px solid rgba(239,68,68,.1);
+  padding:.4rem .6rem;color:var(--red);font-family:var(--mono);font-size:.45rem;cursor:pointer}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-mark">TSM</div>
+    <div class="logo-text">RE WAR ROOM</div>
+    <span class="logo-sep">//</span>
+    <div class="logo-sub">REAL ESTATE &amp; MORTGAGE INTELLIGENCE PLATFORM</div>
+  </div>
+  <div class="tb-actions">
+    <div class="tb-pill">
+      <div class="pill-dot" style="background:var(--green)"></div>
+      <span style="color:var(--green);font-family:var(--mono);font-size:.45rem">7 NODES ACTIVE</span>
+    </div>
+    <button class="tb-btn rescue" onclick="showView('rescue')">&#9889; DEAL RESCUE PACK</button>
+    <button class="tb-btn primary" onclick="showView('warroom')">&#9632; WAR ROOM</button>
+    <button class="tb-btn" onclick="showView('nodes')">&#9671; NODE VIEWER</button>
+    <button class="tb-btn escalate" onclick="escalateToStrategist()">&#8599; ESCALATE → STRATEGIST</button>
+    <button class="tb-btn" onclick="exportSession()">&#8595; EXPORT</button>
+  </div>
+</div>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-track">
+    <span class="t-item t-warn">⚠ APPRAISAL GAP ALERT · 123 MAPLE ST · CONTRACT $485K · APPRAISED $461K · GAP: $24,000</span>
+    <span class="t-item t-info">REO PIPELINE · 6 ACTIVE ASSETS · $2.1M PORTFOLIO · 2 READY FOR LISTING</span>
+    <span class="t-item t-warn">TRID VIOLATION · LOAN #2847 · APR VARIANCE +0.18% · CURE REQUIRED</span>
+    <span class="t-item t-ok">✓ CLEAR-TO-CLOSE · 4721 DESERT RIDGE DR · FUNDING IN 2 DAYS</span>
+    <span class="t-item t-info">PIPELINE VOLUME · $18.4M · 22 LOANS ACTIVE · 5 CLOSING THIS WEEK</span>
+    <span class="t-item t-warn">TITLE DEFECT · 890 MESQUITE LN · OPEN LIEN $12,400 · PAYOFF REQUIRED</span>
+    <span class="t-item t-ok">✓ MARKET INTEL · PHOENIX MEDIAN $415K · DOM 28 DAYS · INV -8% YOY</span>
+    <span class="t-item t-warn">⚠ APPRAISAL GAP ALERT · 123 MAPLE ST · CONTRACT $485K · APPRAISED $461K · GAP: $24,000</span>
+    <span class="t-item t-info">REO PIPELINE · 6 ACTIVE ASSETS · $2.1M PORTFOLIO · 2 READY FOR LISTING</span>
+    <span class="t-item t-warn">TRID VIOLATION · LOAN #2847 · APR VARIANCE +0.18% · CURE REQUIRED</span>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb-section">
+      <div class="sb-hdr">RE NODES</div>
+      <div class="node-btn active" style="--nc:var(--rea)" onclick="activateNode('REA',this)">
+        <div class="nb-dot"></div>REA · ACQUISITION
+      </div>
+      <div class="node-btn" style="--nc:var(--reaf)" onclick="activateNode('REAF',this)">
+        <div class="nb-dot"></div>REAF · FINANCE
+        <span class="nb-badge" style="color:var(--reaf)">3</span>
+      </div>
+      <div class="node-btn" style="--nc:var(--reat)" onclick="activateNode('REAT',this)">
+        <div class="nb-dot"></div>REAT · TRANSACTION
+      </div>
+      <div class="node-btn" style="--nc:var(--ream)" onclick="activateNode('REAM',this)">
+        <div class="nb-dot"></div>REAM · MORTGAGE OPS
+        <span class="nb-badge" style="color:var(--ream)">2</span>
+      </div>
+      <div class="node-btn" style="--nc:var(--reac)" onclick="activateNode('REAC',this)">
+        <div class="nb-dot"></div>REAC · COMPLIANCE
+      </div>
+      <div class="node-btn" style="--nc:var(--reai)" onclick="activateNode('REAI',this)">
+        <div class="nb-dot"></div>REAI · MARKET INTEL
+      </div>
+      <div class="node-btn" style="--nc:var(--reax)" onclick="activateNode('REAX',this)">
+        <div class="nb-dot"></div>REAX · CLOSING
+        <span class="nb-badge" style="color:var(--reax)">1</span>
+      </div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-hdr">QUICK FIRE</div>
+      <div class="quick-link" onclick="quickFire('Cross-node synthesis: analyze current deal risk, compliance exposure, title issues, and market position. Top 3 actions with dollar impact.')">&#9658; Full Synthesis</div>
+      <div class="quick-link" onclick="quickFire('What is the highest-risk deal in the pipeline right now and what needs to happen in the next 48 hours to prevent it from falling apart?')">&#9658; Highest Risk Deal</div>
+      <div class="quick-link" onclick="quickFire('Run a compliance sweep: TRID violations, HMDA errors, Fair Housing exposure, FinCEN RRE reporting requirements. Prioritize by dollar liability.')">&#9658; Compliance Sweep</div>
+      <div class="quick-link" onclick="quickFire('Analyze the current REO portfolio: disposition strategy, days on market, title issues, and recommended next actions for each asset.')">&#9658; REO Portfolio Status</div>
+      <div class="quick-link" onclick="quickFire('Market intelligence update: Phoenix metro median price, DOM trends, inventory levels, and buyer/seller market conditions. Investment thesis.')">&#9658; Market Update</div>
+      <div class="quick-link" onclick="showView('rescue')">&#9889; Launch Rescue Pack</div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-hdr">SYSTEM</div>
+      <div class="sys-stat"><div class="sys-d" style="background:var(--green)"></div><span style="color:var(--muted);font-size:.48rem">NEURAL CORE</span><span style="color:var(--green);margin-left:auto;font-size:.48rem">ONLINE</span></div>
+      <div class="sys-stat"><div class="sys-d" style="background:var(--acc)"></div><span style="color:var(--muted);font-size:.48rem">API ROUTE</span><span style="color:var(--acc);margin-left:auto;font-size:.48rem">/MORTGAGE</span></div>
+      <div class="sys-stat"><div class="sys-d" style="background:var(--blue)" id="sessionDot"></div><span style="color:var(--muted);font-size:.48rem">SESSION</span><span style="color:var(--blue);margin-left:auto;font-size:.48rem" id="sessionCount">0 SAVED</span></div>
+    </div>
+  </div><!-- /sidebar -->
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- VIEW TABS -->
+    <div class="viewtabs">
+      <button class="vtab active" id="vtab-warroom" onclick="showView('warroom',this)">WAR ROOM</button>
+      <button class="vtab" id="vtab-rescue" onclick="showView('rescue',this)">&#9889; DEAL RESCUE PACK</button>
+      <button class="vtab" id="vtab-nodes" onclick="showView('nodes',this)">NODE VIEWER</button>
+    </div>
+
+    <!-- ═══ WAR ROOM VIEW ═══ -->
+    <div id="view-warroom" class="view active">
+      <div class="warroom-layout">
+
+        <!-- NODE GRID + FEED -->
+        <div class="node-grid-wrap">
+          <div class="node-grid" id="nodeGrid">
+
+            <!-- REA -->
+            <div class="node-card active" style="--nc:var(--rea)"
+              data-node="REA"
+              data-prompt="You are the TSM Acquisition Node (REA). Analyze buyer/seller intake, lead qualification, and property matching opportunities. Cover: buyer qualification criteria, seller motivation analysis, property value drivers, and top 3 acquisition opportunities in the current market. Include specific dollar thresholds. Use ► section markers."
+              onclick="runNode(this)">
+              <div class="nc-node" style="color:var(--rea)">REA · ACQUISITION</div>
+              <div class="nc-title">Buyer &amp; Seller Intake</div>
+              <div class="nc-desc">Lead qual · property matching · intake analysis</div>
+              <div class="nc-status" style="color:var(--rea)">READY</div>
+            </div>
+
+            <div class="node-card" style="--nc:var(--rea)"
+              data-node="REA"
+              data-prompt="Analyze investment property acquisition criteria: 70% rule calculation for fix-and-flip, BRRRR strategy qualification, cap rate minimum thresholds, and current Phoenix metro opportunities. Identify properties in the $200K-$450K range meeting acquisition criteria."
+              onclick="runNode(this)">
+              <div class="nc-node" style="color:var(--rea)">REA · ACQUISITION</div>
+              <div class="nc-title">Investment Criteria</div>
+              <div class="nc-desc">70% rule · BRRRR · cap rate filters</div>
+              <div class="nc-status" style="color:var(--rea)">READY</div>
+            </div>
+
+            <!-- REAF -->
+            <div class="node-card" style="--nc:var(--reaf)"
+              data-node="REAF"
+              data-prompt="You are the TSM Finance Node (REAF). Run pre-qualification analysis: DTI calculation, loan product comparison (FHA/VA/Conventional/DSCR), and pre-approval readiness scoring. Cover: maximum loan amount based on $8,500/mo gross income with $1,200 existing debts, available loan products, and down payment requirements. Use ► section markers."
+              onclick="runNode(this)">
+              <div class="nc-node" style="color:var(--reaf)">REAF · FINANCE</div>
+              <div class="nc-title">Pre-Qualification Engine</div>
+              <div class="nc-desc">DTI · loan products · pre-approval scoring</div>
+              <div class="nc-status" style="color:var(--reaf)">READY</div>
+            </div>
+
+            <div class="node-card" style="--nc:var(--reaf)"
+              data-node="REAF"
+              data-prompt="Run DTI stress test and loan product comparison for investor financing. Analyze: conventional investment (25% down), DSCR loan (1.25x ratio), hard money bridge, and seller financing scenarios. Include rate comparison, monthly payment, cash-to-close, and 5-year ROI for a $380,000 rental property. Use ► section markers."
+              onclick="runNode(this)">
+              <div class="nc-node" style="color:var(--reaf)">REAF · FINANCE</div>
+              <div class="nc-title">Loan Product Compare</div>
+              <div class="nc-desc">Conv · DSCR · hard money · seller finance</div>
+              <div class="nc-status" style="color:var(--reaf)">READY</div>
+            </div>
+
+            <!-- REAT -->
+            <div class="node-card" style="--nc:var(--reat)"
+              data-node="REAT"
+              data-prompt="You are the TSM Transaction Node (REAT). Analyze offer management and contract review. Cover: current contract status, inspection findings management, appraisal tracking, and critical path to closing. Identify the top 3 transaction risks and specific remediation steps. Use ► section markers."
+              onclick="runNode(this)">
+              <div class="nc-node" style="color:var(--reat)">REAT · TRANSACTION</div>
+              <div class="nc-title">Contract &amp; Offer Mgmt</div>
+              <div class="nc-desc">Offer strategy · inspection · contract review</div>
+              <div class="nc-status" style="color:var(--reat)">READY</div>
+            </div>
+
+            <div class="node-card" style="--nc:var(--reat)"
+              data-node="REAT"
+              data-prompt="Analyze appraisal gap resolution strategies for a $485K contract with $461K appraisal (gap: $24,000). Generate: seller negotiation memo with price reduction justification, comparable sale package, buyer financing alternatives (increased down payment, second mortgage, seller concession structure), and the optimal resolution strategy ranked by deal survival probability. Use ► section markers."
+              onclick="runNode(this)">
+              <div class="nc-node" style="color:var(--reat)">REAT · TRANSACTION</div>
+              <div class="nc-title">Appraisal Gap Rescue</div>
+              <div class="nc-desc">Gap analysis · seller negotiation · comps</div>
+              <div class="nc-status" style="color:var(--reat)">READY</div>
+            </div>
+
+            <!-- REAM -->
+            <div class="node-card" style="--nc:var(--ream)"
+              data-node="REAM"
+              data-prompt="You are the TSM Mortgage Operations Node (REAM). Analyze underwriting conditions pipeline. Current file has 18 conditions — 6 income, 5 asset, 4 employment, 3 property. Prioritize by clear-to-close impact, identify which conditions are blocking funding, generate a processor work queue, and project days-to-CTC. Use ► section markers."
+              onclick="runNode(this)">
+              <div class="nc-node" style="color:var(--ream)">REAM · MORTGAGE OPS</div>
+              <div class="nc-title">Underwriting Conditions</div>
+              <div class="nc-desc">Conditions tracker · CTC projection · queue</div>
+              <div class="nc-status" style="color:var(--ream)">READY</div>
+            </div>
+
+            <div class="node-card" style="--nc:var(--ream)"
+              data-node="REAM"
+              data-prompt="Analyze mortgage pipeline velocity and pull-through optimization. Current pipeline: 22 loans, $18.4M, 68% pull-through vs 75% target. Identify the top 5 loans at fall-through risk, the dollar impact of improving pull-through to 75%, and a 30-day action plan to rescue at-risk files. Use ► section markers."
+              onclick="runNode(this)">
+              <div class="nc-node" style="color:var(--ream)">REAM · MORTGAGE OPS</div>
+              <div class="nc-title">Pipeline Velocity</div>
+              <div class="nc-desc">Pull-through · fall-through risk · optimization</div>
+              <div class="nc-status" style="color:var(--ream)">READY</div>
+            </div>
+
+            <!-- REAC -->
+            <div class="node-card" style="--nc:var(--reac)"
+              data-node="REAC"
+              data-prompt="You are the TSM Compliance Node (REAC). Perform a full RESPA/TRID compliance audit. Cover: Loan Estimate timing violations, Changed Circumstance documentation, Closing Disclosure delivery, tolerance bucket analysis (zero/10%/no limit), cure procedures, and potential CFPB examination exposure. Current file: 2 TRID violations, $1,247 fee cure needed. Use ► section markers."
+              onclick="runNode(this)">
+              <div class="nc-node" style="color:var(--reac)">REAC · COMPLIANCE</div>
+              <div class="nc-title">RESPA / TRID Audit</div>
+              <div class="nc-desc">LE timing · CD delivery · tolerance cures</div>
+              <div class="nc-status" style="color:var(--reac)">READY</div>
+            </div>
+
+            <div class="node-card" style="--nc:var(--reac)"
+              data-node="REAC"
+              data-prompt="Audit FinCEN Real Estate Reporting compliance. Cover: current Geographic Targeting Order jurisdictions, beneficial ownership identification for LLC/trust buyers, proposed nationwide RRE reporting rule, AML red flags specific to real estate, SAR filing procedures, and required closing policies for transactions over $300K. Generate a compliance checklist. Use ► section markers."
+              onclick="runNode(this)">
+              <div class="nc-node" style="color:var(--reac)">REAC · COMPLIANCE</div>
+              <div class="nc-title">FinCEN / AML Audit</div>
+              <div class="nc-desc">GTOs · beneficial ownership · AML checklist</div>
+              <div class="nc-status" style="color:var(--reac)">READY</div>
+            </div>
+
+            <!-- REAI -->
+            <div class="node-card" style="--nc:var(--reai)"
+              data-node="REAI"
+              data-prompt="You are the TSM Market Intelligence Node (REAI). Provide a comprehensive Phoenix metro market analysis. Cover: current median price and YOY trend, days on market, inventory levels, price per sqft by submarket, absorption rate, buyer vs seller market conditions, and top 3 investment thesis recommendations for Q3 2026. Use ► section markers."
+              onclick="runNode(this)">
+              <div class="nc-node" style="color:var(--reai)">REAI · MARKET INTEL</div>
+              <div class="nc-title">Phoenix Market Analysis</div>
+              <div class="nc-desc">Median price · DOM · inventory · comps</div>
+              <div class="nc-status" style="color:var(--reai)">READY</div>
+            </div>
+
+            <div class="node-card" style="--nc:var(--reai)"
+              data-node="REAI"
+              data-prompt="Generate a property valuation analysis using the sales comparison approach. Analyze how to identify the best comparable sales, adjustments for GLA, lot size, condition, and location. Provide a step-by-step BPO methodology, the formula for calculating adjusted value, and how to document the opinion of value for an REO asset. Use ► section markers."
+              onclick="runNode(this)">
+              <div class="nc-node" style="color:var(--reai)">REAI · MARKET INTEL</div>
+              <div class="nc-title">BPO / Valuation Engine</div>
+              <div class="nc-desc">Comps · adjustments · BPO methodology</div>
+              <div class="nc-status" style="color:var(--reai)">READY</div>
+            </div>
+
+            <!-- REAX -->
+            <div class="node-card" style="--nc:var(--reax)"
+              data-node="REAX"
+              data-prompt="You are the TSM Closing Node (REAX). Analyze closing readiness for a transaction scheduled in 7 days. Check: title commitment status, HOA docs, insurance binder, final walkthrough scheduling, wire transfer instructions, closing disclosure delivery timing, and funding conditions. Generate a closing readiness report and priority action list. Use ► section markers."
+              onclick="runNode(this)">
+              <div class="nc-node" style="color:var(--reax)">REAX · CLOSING</div>
+              <div class="nc-title">Closing Readiness</div>
+              <div class="nc-desc">Title · escrow · CD delivery · funding</div>
+              <div class="nc-status" style="color:var(--reax)">READY</div>
+            </div>
+
+            <div class="node-card" style="--nc:var(--reax)"
+              data-node="REAX"
+              data-prompt="Generate a closing delay rescue plan. Current issues: HOA docs missing, outstanding title lien ($12,400), insurance binder not received. Calculate the daily carrying cost impact of each day of delay ($285K loan at 7.25%), draft an escalation memo to all parties, generate a revised closing timeline with contingency dates, and identify which issue has the fastest resolution path. Use ► section markers."
+              onclick="runNode(this)">
+              <div class="nc-node" style="color:var(--reax)">REAX · CLOSING</div>
+              <div class="nc-title">Closing Delay Rescue</div>
+              <div class="nc-desc">HOA · title · insurance · revised timeline</div>
+              <div class="nc-status" style="color:var(--reax)">READY</div>
+            </div>
+
+          </div><!-- /node-grid -->
+
+          <!-- FEED -->
+          <div class="feed-header">
+            <span class="feed-lbl">INTELLIGENCE FEED</span>
+            <span class="feed-meta" id="feedMeta">SELECT A NODE MODULE TO RUN</span>
+          </div>
+          <div class="feed-body" id="feedBody">
+            <span style="color:var(--muted);font-style:italic">Select any node module above to run analysis. Output streams here.</span>
+          </div>
+        </div><!-- /node-grid-wrap -->
+
+        <!-- RIGHT PANEL -->
+        <div class="rpanel">
+
+          <div class="rp-block">
+            <div class="rp-hdr">TRANSACTION HEALTH</div>
+            <div class="score-ring" id="healthRing">
+              <div class="score-val" id="healthScore">—</div>
+              <div class="score-lbl">SCORE</div>
+            </div>
+            <div class="kpi-row"><span class="kpi-l">Pipeline Volume</span><span class="kpi-v">$18.4M</span></div>
+            <div class="kpi-row"><span class="kpi-l">Loans Active</span><span class="kpi-v">22</span></div>
+            <div class="kpi-row"><span class="kpi-l">Closing This Week</span><span class="kpi-v ok">5</span></div>
+            <div class="kpi-row"><span class="kpi-l">TRID Violations</span><span class="kpi-v warn">2</span></div>
+            <div class="kpi-row"><span class="kpi-l">Pull-Through Rate</span><span class="kpi-v caution">68%</span></div>
+            <div class="kpi-row"><span class="kpi-l">REO Assets</span><span class="kpi-v">6 · $2.1M</span></div>
+            <div class="kpi-row"><span class="kpi-l">Title Issues</span><span class="kpi-v warn">1 OPEN</span></div>
+          </div>
+
+          <div class="rp-block">
+            <div class="rp-hdr">REPORT HISTORY</div>
+            <div id="savedList"><div style="font-size:.48rem;color:var(--muted);font-family:var(--mono)">No saves yet.</div></div>
+            <button class="rp-btn" onclick="saveCurrentFeed()" style="margin-top:.35rem">+ SAVE CURRENT OUTPUT</button>
+          </div>
+
+          <div class="rp-block" style="flex:1;display:flex;flex-direction:column;gap:.3rem">
+            <div class="rp-hdr">SYNTHESIS REPORT</div>
+            <input type="text" id="rptTitle" class="rp-input-sm" placeholder="RE War Room Report" style="margin-bottom:.15rem">
+            <textarea class="rp-textarea" id="rptContent" placeholder="Save outputs then Synthesize..."></textarea>
+            <button class="rp-btn" onclick="buildSynthesis()">&#9889; SYNTHESIZE ALL NODES</button>
+            <button class="rp-btn g" onclick="exportSession()">&#8595; EXPORT (.TXT)</button>
+            <button class="rp-btn p" onclick="escalateToStrategist()">&#8599; ESCALATE → RE STRATEGIST</button>
+            <button class="rp-btn r" onclick="clearReport()">&#10005; CLEAR SESSION</button>
+          </div>
+
+          <div class="rp-block">
+            <div class="rp-hdr">SESSION</div>
+            <div class="kpi-row"><span class="kpi-l">Modules Run</span><span class="kpi-v" id="statRun">0</span></div>
+            <div class="kpi-row"><span class="kpi-l">Outputs Saved</span><span class="kpi-v" id="statSaved">0</span></div>
+            <div class="kpi-row"><span class="kpi-l">Last Module</span><span class="kpi-v" id="statLast" style="font-size:.42rem;color:var(--muted)">—</span></div>
+          </div>
+        </div><!-- /rpanel -->
+      </div><!-- /warroom-layout -->
+    </div><!-- /view-warroom -->
+
+    <!-- ═══ RESCUE PACK VIEW ═══ -->
+    <div id="view-rescue" class="view">
+      <div class="rescue-layout">
+
+        <!-- FORM -->
+        <div class="rescue-form-wrap">
+          <div class="rf-inner">
+            <div class="rf-hdr">
+              <div class="rf-icon">⚡</div>
+              DEAL RESCUE PACK — TSM TRANSACTION RESCUE SYSTEM
+            </div>
+
+            <div class="field-group">
+              <div class="fl">DEAL IDENTIFICATION</div>
+              <div class="field-row">
+                <div>
+                  <div class="fl">Property Address</div>
+                  <input type="text" class="fi" id="rf-address" placeholder="123 Desert Ridge Dr, Phoenix AZ">
+                </div>
+                <div>
+                  <div class="fl">Contract Price</div>
+                  <input type="text" class="fi" id="rf-price" placeholder="$485,000">
+                </div>
+              </div>
+              <div class="field-row">
+                <div>
+                  <div class="fl">Loan Type</div>
+                  <select class="fi" id="rf-loantype">
+                    <option value="">Select loan type</option>
+                    <option>Conventional</option>
+                    <option>FHA</option>
+                    <option>VA</option>
+                    <option>DSCR / Investment</option>
+                    <option>Hard Money</option>
+                    <option>Cash</option>
+                  </select>
+                </div>
+                <div>
+                  <div class="fl">Contract Status</div>
+                  <select class="fi" id="rf-status">
+                    <option value="">Select status</option>
+                    <option>Under Contract</option>
+                    <option>In Underwriting</option>
+                    <option>Conditional Approval</option>
+                    <option>Clear to Close</option>
+                    <option>Closing Scheduled</option>
+                    <option>Post-Close Issue</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field-row">
+                <div>
+                  <div class="fl">Closing Date</div>
+                  <input type="text" class="fi" id="rf-closing" placeholder="e.g. June 20, 2026">
+                </div>
+                <div>
+                  <div class="fl">Days Until Closing</div>
+                  <input type="number" class="fi" id="rf-days" placeholder="13">
+                </div>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <div class="fl">SELECT RESCUE SCENARIOS (select all that apply)</div>
+              <div class="scenario-grid">
+                <button class="scenario-btn" data-scenario="financing" onclick="toggleScenario(this)">
+                  <div class="sc-icon">💸</div>
+                  <div class="sc-label">FINANCING FAILURE</div>
+                  <div class="sc-sub">DTI · docs · asset sourcing</div>
+                </button>
+                <button class="scenario-btn" data-scenario="appraisal" onclick="toggleScenario(this)">
+                  <div class="sc-icon">📉</div>
+                  <div class="sc-label">APPRAISAL GAP</div>
+                  <div class="sc-sub">Value below contract · comps needed</div>
+                </button>
+                <button class="scenario-btn" data-scenario="title" onclick="toggleScenario(this)">
+                  <div class="sc-icon">⚖️</div>
+                  <div class="sc-label">TITLE DEFECT</div>
+                  <div class="sc-sub">Liens · clouds · chain gaps</div>
+                </button>
+                <button class="scenario-btn" data-scenario="inspection" onclick="toggleScenario(this)">
+                  <div class="sc-icon">🔧</div>
+                  <div class="sc-label">INSPECTION ISSUES</div>
+                  <div class="sc-sub">Repairs · credits · negotiations</div>
+                </button>
+                <button class="scenario-btn" data-scenario="conditions" onclick="toggleScenario(this)">
+                  <div class="sc-icon">📋</div>
+                  <div class="sc-label">UW CONDITIONS</div>
+                  <div class="sc-sub">Open conditions · CTC blocked</div>
+                </button>
+                <button class="scenario-btn" data-scenario="closing" onclick="toggleScenario(this)">
+                  <div class="sc-icon">🚨</div>
+                  <div class="sc-label">CLOSING DELAY</div>
+                  <div class="sc-sub">HOA · title · insurance · wire</div>
+                </button>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <div class="fl">Additional Details / Problem Description</div>
+              <textarea class="fi fi-ta" id="rf-details" placeholder="Describe the specific issues, amounts, timelines, parties involved..."></textarea>
+            </div>
+
+            <div class="field-group">
+              <div class="fl">Known Dollar Amounts at Risk</div>
+              <div class="field-row">
+                <div>
+                  <div class="fl">Earnest Money</div>
+                  <input type="text" class="fi" id="rf-em" placeholder="$15,000">
+                </div>
+                <div>
+                  <div class="fl">Appraisal Gap / Issue Amount</div>
+                  <input type="text" class="fi" id="rf-gap" placeholder="$24,000">
+                </div>
+              </div>
+            </div>
+
+            <button class="rescue-fire-btn" id="rescueBtn" onclick="fireRescuePack()">
+              <span id="rescueBtnIcon">⚡</span>
+              <span id="rescueBtnText">RUN TRANSACTION RESCUE PACK</span>
+            </button>
+          </div>
+        </div><!-- /rescue-form-wrap -->
+
+        <!-- RESULTS -->
+        <div class="rescue-results-wrap">
+          <div class="rr-inner" id="rescueResults">
+            <div style="color:var(--muted);font-family:var(--mono);font-size:.52rem;line-height:2;padding:1rem 0">
+              Fill in deal details and select rescue scenarios, then fire the Rescue Pack.<br><br>
+              TSM will analyze every dimension of the deal and generate a complete remediation plan.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /view-rescue -->
+
+    <!-- ═══ NODE VIEWER VIEW ═══ -->
+    <div id="view-nodes" class="view">
+      <div class="nodes-viewer">
+        <div class="nv-bar">
+          <select class="nv-select" id="nodeSelect" onchange="loadNodeFrame(this.value)">
+            <option value="">— Select Connected Node —</option>
+            <option value="https://reo-pro.tsmatter.com">REO PRO</option>
+            <option value="https://tax.tsmatter.com">TAX STRATEGIST</option>
+            <option value="https://compliance.tsmatter.com">COMPLIANCE SHIELD</option>
+            <option value="https://mortgage.tsmatter.com">MORTGAGE COMMAND</option>
+            <option value="https://strategist.tsmatter.com">STRATEGIST</option>
+          </select>
+          <button class="tb-btn" onclick="openNodeNewTab()">&#8599; OPEN NEW TAB</button>
+          <span style="font-family:var(--mono);font-size:.45rem;color:var(--muted);margin-left:auto">RE STRATEGIST: <a href="re-strategist.html" target="_blank" style="color:var(--purple);text-decoration:none">LAUNCH ↗</a></span>
+          <span style="font-family:var(--mono);font-size:.45rem;color:var(--muted);margin-left:1rem">RE EXEC PORTAL: <a href="re-exec-portal.html" target="_blank" style="color:var(--acc);text-decoration:none">LAUNCH ↗</a></span>
+        </div>
+        <iframe id="nodeFrame" class="nv-frame" src="about:blank"></iframe>
+      </div>
+    </div><!-- /view-nodes -->
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- RESCUE WIDGET -->
+<div class="rescue-widget" id="rescueWidget">
+  <div class="rw-toggle" onclick="toggleRWPanel()">
+    <span style="width:5px;height:5px;border-radius:50%;background:var(--red);animation:pulse 2s infinite;flex-shrink:0"></span>
+    TSM RESCUE · LIVE DEAL SUPPORT
+  </div>
+  <div class="rw-panel" id="rwPanel">
+    <div class="rw-msgs" id="rwMsgs">
+      <div style="color:var(--muted);font-size:.45rem">Ask any deal question — rescue support active.</div>
+    </div>
+    <div class="rw-input-row">
+      <input class="rw-inp" id="rwInput" placeholder="Describe your deal problem..." onkeydown="if(event.key==='Enter')rwAsk()">
+      <button class="rw-send" onclick="rwAsk()">SEND</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── CONSTANTS ───────────────────────────────────────────────────────────────
+const API = '/api/mortgage/query';
+const APP = 'realestate';
+
+const SYSTEM = `You are the TSM Real Estate War Room Strategist — an elite AI for real estate investors, brokers, mortgage professionals, title companies, and transaction coordinators. You have expert knowledge of:
+- Transaction rescue: appraisal gaps, title defects, inspection negotiations, financing failures, closing delays
+- Mortgage operations: TRID compliance, underwriting conditions, pipeline management, buyback risk
+- Real estate law: §1031 exchanges, liens, HOA super-liens, ARS statutes for Arizona
+- Investment analysis: BRRRR, cap rates, DSCR, 70% rule, IRR projections
+- REO asset management: disposition strategy, BPO methodology, title resolution
+- Compliance: FinCEN RRE, RESPA, Fair Housing, HMDA
+- Market intelligence: Phoenix metro trends, comps methodology, valuation
+Always use ► section headers. Include specific dollar amounts, timelines, and actionable next steps.`;
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let savedOutputs = [];
+let runCount = 0;
+let currentOutput = '';
+let selectedScenarios = new Set();
+let sessionPayload = {};
+
+// ─── AI CALL ─────────────────────────────────────────────────────────────────
+async function callAI(userMessage, systemOverride) {
+  const res = await fetch(API, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      question: userMessage,
+      context: systemOverride || SYSTEM,
+      app: APP,
+      maxTokens: 1200
+    })
+  });
+  const data = await res.json();
+  return data.answer || data.response || data.reply || 'No response.';
+}
+
+// ─── NODE RUNNER ─────────────────────────────────────────────────────────────
+async function runNode(card) {
+  const prompt = card.dataset.prompt;
+  const node = card.dataset.node;
+  const title = card.querySelector('.nc-title').textContent;
+  if (!prompt) return;
+
+  // visual state
+  document.querySelectorAll('.node-card').forEach(c => c.classList.remove('active','running'));
+  card.classList.add('active','running');
+  card.querySelector('.nc-status').textContent = 'RUNNING...';
+  card.querySelector('.nc-status').style.color = 'var(--acc)';
+
+  document.getElementById('feedMeta').textContent = 'Running: ' + node + ' · ' + title;
+  document.getElementById('statLast').textContent = title;
+
+  const feed = document.getElementById('feedBody');
+  feed.innerHTML = `<span style="color:var(--acc)">[${node}] ${title}</span>\n\n<span style="color:var(--muted)">Analyzing...</span>`;
+
+  runCount++;
+  document.getElementById('statRun').textContent = runCount;
+
+  try {
+    const text = await callAI(prompt);
+    currentOutput = text;
+
+    feed.innerHTML = `<span style="color:var(--acc)">[${node}] ${title}</span>\n\n` +
+      formatOutput(text);
+    feed.scrollTop = 0;
+
+    autoSave(node + ' · ' + title, text);
+    updateHealthScore();
+    document.getElementById('feedMeta').textContent = '✓ Complete — ' + title;
+    card.querySelector('.nc-status').textContent = '✓ COMPLETE';
+    card.querySelector('.nc-status').style.color = 'var(--green)';
+  } catch(e) {
+    feed.innerHTML = `<span style="color:var(--red)">[ERROR] ${e.message}</span>`;
+    document.getElementById('feedMeta').textContent = 'ERROR';
+    card.querySelector('.nc-status').textContent = 'ERROR';
+    card.querySelector('.nc-status').style.color = 'var(--red)';
+  } finally {
+    card.classList.remove('running');
+  }
+}
+
+// ─── QUICK FIRE ──────────────────────────────────────────────────────────────
+async function quickFire(prompt) {
+  const feed = document.getElementById('feedBody');
+  document.getElementById('feedMeta').textContent = 'Running quick analysis...';
+  feed.innerHTML = '<span style="color:var(--acc)">[QUICK FIRE]</span>\n\nAnalyzing...';
+  runCount++;
+  document.getElementById('statRun').textContent = runCount;
+  try {
+    const text = await callAI(prompt);
+    currentOutput = text;
+    feed.innerHTML = '<span style="color:var(--acc)">[QUICK FIRE SYNTHESIS]</span>\n\n' + formatOutput(text);
+    feed.scrollTop = 0;
+    autoSave('Quick Fire', text);
+    document.getElementById('feedMeta').textContent = '✓ Quick analysis complete';
+  } catch(e) {
+    feed.innerHTML = `<span style="color:var(--red)">[ERROR] ${e.message}</span>`;
+  }
+}
+
+// ─── RESCUE PACK ─────────────────────────────────────────────────────────────
+function toggleScenario(btn) {
+  const s = btn.dataset.scenario;
+  btn.classList.toggle('active');
+  if (selectedScenarios.has(s)) selectedScenarios.delete(s);
+  else selectedScenarios.add(s);
+}
+
+async function fireRescuePack() {
+  const btn = document.getElementById('rescueBtn');
+  const address = document.getElementById('rf-address').value || 'Subject Property';
+  const price = document.getElementById('rf-price').value || 'Unknown';
+  const loanType = document.getElementById('rf-loantype').value || 'Not specified';
+  const status = document.getElementById('rf-status').value || 'Unknown';
+  const days = document.getElementById('rf-days').value || 'Unknown';
+  const closing = document.getElementById('rf-closing').value || 'Unknown';
+  const details = document.getElementById('rf-details').value || '';
+  const em = document.getElementById('rf-em').value || '';
+  const gap = document.getElementById('rf-gap').value || '';
+
+  if (selectedScenarios.size === 0 && !details) {
+    alert('Select at least one rescue scenario or describe the problem.');
+    return;
+  }
+
+  btn.disabled = true;
+  document.getElementById('rescueBtnText').textContent = 'ANALYZING DEAL...';
+  document.getElementById('rescueBtnIcon').style.animation = 'pulse .8s infinite';
+
+  const results = document.getElementById('rescueResults');
+  results.innerHTML = `
+    <div class="rr-hdr">RUNNING TRANSACTION RESCUE PACK</div>
+    <div class="health-score-bar">
+      <div class="hs-top"><div class="hs-label">TRANSACTION HEALTH</div><div class="hs-val" style="color:var(--muted)">ANALYZING...</div></div>
+      <div class="hs-track"><div class="hs-fill" style="width:0%"></div></div>
+    </div>
+    <div style="color:var(--muted);font-family:var(--mono);font-size:.52rem;line-height:2;animation:pulse 1.5s infinite">
+      ⚡ Routing deal data across ${selectedScenarios.size || 1} rescue nodes...<br>
+      ⚡ Generating remediation plan...
+    </div>
+  `;
+
+  const scenarios = Array.from(selectedScenarios);
+  const scenarioLabels = {
+    financing: 'Financing Failure Risk',
+    appraisal: 'Appraisal Gap Rescue',
+    title: 'Title Defect Rescue',
+    inspection: 'Inspection Deficiency Rescue',
+    conditions: 'Mortgage Conditions Rescue',
+    closing: 'Closing Delay Rescue'
+  };
+
+  const prompt = `You are running a DEAL RESCUE PACK for a real estate transaction in distress.
+
+DEAL SUMMARY:
+- Property: ${address}
+- Contract Price: ${price}
+- Loan Type: ${loanType}
+- Current Status: ${status}
+- Scheduled Closing: ${closing} (${days} days away)
+- Earnest Money at Risk: ${em || 'Not specified'}
+- Gap/Issue Amount: ${gap || 'Not specified'}
+- Additional Details: ${details || 'None provided'}
+
+RESCUE SCENARIOS ACTIVATED: ${scenarios.map(s => scenarioLabels[s] || s).join(', ') || 'General Deal Rescue'}
+
+INSTRUCTIONS:
+1. Generate a TRANSACTION HEALTH SCORE (0-100) with Overall Risk: LOW/MEDIUM/HIGH/CRITICAL
+2. List ALL Issues Found with dollar impact for each
+3. For each activated rescue scenario, provide a specific REMEDIATION PLAN with:
+   - Root cause
+   - Required actions (numbered, specific)
+   - Parties responsible
+   - Resolution timeline
+   - Dollar impact if unresolved
+4. Provide RECOMMENDED PRIORITY ORDER (what to do in the next 24 hours vs 72 hours vs this week)
+5. Projected Closing Delay (days) if issues unresolved
+
+Use ► section headers. Be specific with dollar amounts, party names, and action steps.`;
+
+  try {
+    const text = await callAI(prompt);
+
+    // Parse health score from response
+    const scoreMatch = text.match(/(\d{1,3})\s*(?:\/\s*100)?.*?(?:score|health)/i) ||
+                       text.match(/health[^\d]*(\d{1,3})/i);
+    const score = scoreMatch ? Math.min(100, parseInt(scoreMatch[1])) : 62;
+
+    const riskMatch = text.match(/overall risk[:\s]+(\w+)/i);
+    const risk = riskMatch ? riskMatch[1].toUpperCase() : 'MEDIUM';
+    const riskColor = {LOW:'var(--green)',MEDIUM:'var(--acc)',HIGH:'var(--red)',CRITICAL:'var(--red)'}[risk] || 'var(--acc)';
+
+    results.innerHTML = `
+      <div class="rr-hdr">⚡ RESCUE PACK COMPLETE — ${address.toUpperCase()}</div>
+
+      <div class="health-score-bar">
+        <div class="hs-top">
+          <div class="hs-label">TRANSACTION HEALTH SCORE</div>
+          <div class="hs-val" style="color:${riskColor}">${score}/100</div>
+        </div>
+        <div class="hs-track"><div class="hs-fill" style="width:${score}%"></div></div>
+        <div style="display:flex;justify-content:space-between;margin-top:.3rem;font-family:var(--mono);font-size:.42rem">
+          <span style="color:${riskColor}">OVERALL RISK: ${risk}</span>
+          <span style="color:var(--muted)">SCENARIOS: ${scenarios.length || 1} ACTIVE</span>
+        </div>
+      </div>
+
+      <div class="scenario-result">
+        <div class="sr-node" style="color:var(--red)">TRANSACTION RESCUE ANALYSIS</div>
+        <div class="sr-title">${address}</div>
+        <div class="sr-body">${formatOutput(text)}</div>
+      </div>
+    `;
+
+    // Store in session payload
+    sessionPayload.rescuePack = { address, price, score, risk, analysis: text, scenarios };
+    autoSave('Deal Rescue · ' + address, text);
+    updateHealthScore(score);
+
+  } catch(e) {
+    results.innerHTML = `<div style="color:var(--red);font-family:var(--mono);font-size:.52rem">[RESCUE ERROR] ${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    document.getElementById('rescueBtnText').textContent = 'RUN TRANSACTION RESCUE PACK';
+    document.getElementById('rescueBtnIcon').style.animation = '';
+  }
+}
+
+// ─── FORMAT OUTPUT ────────────────────────────────────────────────────────────
+function formatOutput(text) {
+  return text
+    .replace(/►\s*/g, `<span style="color:var(--acc)">►</span> `)
+    .replace(/\*\*(.*?)\*\*/g, `<span style="color:var(--white);font-weight:700">$1</span>`)
+    .replace(/\*(.*?)\*/g, `<span style="color:var(--white)">$1</span>`);
+}
+
+// ─── SAVE & HISTORY ───────────────────────────────────────────────────────────
+function autoSave(title, text) {
+  savedOutputs.push({title, text, time: new Date()});
+  document.getElementById('statSaved').textContent = savedOutputs.length;
+  document.getElementById('sessionCount').textContent = savedOutputs.length + ' SAVED';
+  renderSavedList();
+}
+
+function saveCurrentFeed() {
+  if (!currentOutput) { alert('Run a module first.'); return; }
+  const title = document.getElementById('statLast').textContent || 'Manual Save';
+  autoSave(title, currentOutput);
+}
+
+function renderSavedList() {
+  const el = document.getElementById('savedList');
+  el.innerHTML = '';
+  savedOutputs.slice().reverse().forEach((o, i) => {
+    const d = document.createElement('div');
+    d.className = 'saved-item';
+    d.textContent = o.title;
+    d.onclick = () => addToReport(o.title, o.text);
+    el.appendChild(d);
+  });
+}
+
+function addToReport(title, text) {
+  const cur = document.getElementById('rptContent').value;
+  document.getElementById('rptContent').value =
+    (cur ? cur + '\n\n---\n\n' : '') + '## ' + title + '\n\n' + text;
+}
+
+// ─── SYNTHESIS ────────────────────────────────────────────────────────────────
+async function buildSynthesis() {
+  if (!savedOutputs.length) { alert('Run analyses first.'); return; }
+  const feed = document.getElementById('feedBody');
+  document.getElementById('feedMeta').textContent = 'Building synthesis...';
+  feed.innerHTML = '<span style="color:var(--purple)">[SYNTHESIS]</span>\n\nCombining all node outputs...';
+
+  const combined = savedOutputs.map(o => `=== ${o.title} ===\n${o.text}`).join('\n\n');
+  const prompt = `You are the TSM RE War Room Strategist. Synthesize the following intelligence from multiple nodes into one unified executive report:\n\n${combined}\n\nProvide:\n1. KEY FINDINGS across all nodes\n2. CRITICAL RISKS ranked by dollar impact\n3. IMMEDIATE ACTIONS (next 30 days)\n4. STRATEGIC RECOMMENDATION\n\nBe specific, dollar-focused, actionable.`;
+
+  try {
+    const text = await callAI(prompt);
+    feed.innerHTML = '<span style="color:var(--purple)">[UNIFIED SYNTHESIS]</span>\n\n' + formatOutput(text);
+    document.getElementById('rptContent').value = savedOutputs.map(o => '## ' + o.title + '\n\n' + o.text).join('\n\n---\n\n');
+    document.getElementById('feedMeta').textContent = '✓ Synthesis complete';
+    autoSave('Synthesis Report', text);
+    sessionPayload.synthesis = text;
+  } catch(e) {
+    feed.innerHTML = `<span style="color:var(--red)">[ERROR] ${e.message}</span>`;
+  }
+}
+
+// ─── SESSION PAYLOAD / ESCALATION ────────────────────────────────────────────
+function buildWarRoomPayload() {
+  return {
+    timestamp: new Date().toISOString(),
+    platform: 'RE War Room',
+    modulesRun: runCount,
+    savedOutputs: savedOutputs.length,
+    outputs: savedOutputs,
+    rescuePack: sessionPayload.rescuePack || null,
+    synthesis: sessionPayload.synthesis || null,
+    reportTitle: document.getElementById('rptTitle').value || 'RE War Room Report',
+    reportContent: document.getElementById('rptContent').value
+  };
+}
+
+function escalateToStrategist() {
+  const payload = buildWarRoomPayload();
+  if (!payload.savedOutputs && !payload.rescuePack) {
+    alert('Run some analyses before escalating.');
+    return;
+  }
+  try {
+    localStorage.setItem('tsm_re_warroom_payload', JSON.stringify(payload));
+    window.open('re-strategist.html', '_blank');
+  } catch(e) {
+    alert('Session saved. Open re-strategist.html to continue.');
+  }
+}
+
+// ─── EXPORT ───────────────────────────────────────────────────────────────────
+function exportSession() {
+  const title = document.getElementById('rptTitle').value || 'RE War Room Report';
+  const content = document.getElementById('rptContent').value ||
+    savedOutputs.map(o => '## ' + o.title + '\n\n' + o.text).join('\n\n---\n\n');
+  if (!content.trim()) { alert('No content to export.'); return; }
+  const blob = new Blob(['# TSM RE WAR ROOM\n# ' + title + '\nGenerated: ' +
+    new Date().toLocaleString() + '\n\n' + content], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 're-war-room-' + Date.now() + '.txt';
+  a.click();
+}
+
+function clearReport() {
+  if (!confirm('Clear session?')) return;
+  document.getElementById('rptContent').value = '';
+  document.getElementById('rptTitle').value = '';
+  savedOutputs = [];
+  runCount = 0;
+  sessionPayload = {};
+  document.getElementById('statRun').textContent = '0';
+  document.getElementById('statSaved').textContent = '0';
+  document.getElementById('savedList').innerHTML = '<div style="font-size:.48rem;color:var(--muted);font-family:var(--mono)">No saves yet.</div>';
+  document.getElementById('sessionCount').textContent = '0 SAVED';
+}
+
+// ─── UI HELPERS ───────────────────────────────────────────────────────────────
+function showView(name, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name)?.classList.add('active');
+  document.querySelectorAll('.vtab').forEach(t => t.classList.remove('active'));
+  const tab = document.getElementById('vtab-' + name);
+  if (tab) tab.classList.add('active');
+  if (btn && btn.classList && btn.classList.contains('vtab')) {
+    btn.classList.add('active');
+  }
+}
+
+function activateNode(nodeId, el) {
+  document.querySelectorAll('.node-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function updateHealthScore(score) {
+  const el = document.getElementById('healthScore');
+  const ring = document.getElementById('healthRing');
+  if (score !== undefined) {
+    el.textContent = score;
+    const color = score >= 75 ? 'var(--green)' : score >= 50 ? 'var(--acc)' : 'var(--red)';
+    el.style.color = color;
+    ring.style.borderColor = color.replace(')', ',.4)').replace('var(','rgba(').replace(')','');
+    ring.style.borderColor = color;
+  } else {
+    const count = runCount;
+    el.textContent = count > 0 ? Math.min(98, 60 + count * 4) : '—';
+  }
+}
+
+function loadNodeFrame(url) {
+  if (url) document.getElementById('nodeFrame').src = url;
+}
+
+function openNodeNewTab() {
+  const url = document.getElementById('nodeSelect').value;
+  if (url) window.open(url, '_blank');
+}
+
+// ─── RESCUE WIDGET ────────────────────────────────────────────────────────────
+function toggleRWPanel() {
+  const p = document.getElementById('rwPanel');
+  p.style.display = p.style.display === 'flex' ? 'none' : 'flex';
+  if (p.style.display === 'flex') p.style.flexDirection = 'column';
+}
+
+async function rwAsk() {
+  const inp = document.getElementById('rwInput');
+  const msgs = document.getElementById('rwMsgs');
+  const q = inp.value.trim();
+  if (!q) return;
+  inp.value = '';
+
+  const ud = document.createElement('div');
+  ud.style.cssText = 'color:var(--acc);border-left:2px solid rgba(245,158,11,.3);padding-left:5px';
+  ud.textContent = q;
+  msgs.appendChild(ud);
+
+  const thinking = document.createElement('div');
+  thinking.style.cssText = 'color:var(--muted);animation:pulse 1s infinite';
+  thinking.textContent = '// analyzing...';
+  msgs.appendChild(thinking);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  try {
+    const text = await callAI('DEAL RESCUE SUPPORT: ' + q);
+    thinking.style.animation = '';
+    thinking.style.color = 'var(--text)';
+    thinking.style.cssText = 'color:var(--text);border-left:2px solid rgba(255,255,255,.08);padding-left:5px;white-space:pre-wrap';
+    const words = text.split(' ');
+    thinking.textContent = '';
+    for (let i = 0; i < words.length; i++) {
+      thinking.textContent += (i > 0 ? ' ' : '') + words[i];
+      msgs.scrollTop = msgs.scrollHeight;
+      if (i % 8 === 0) await new Promise(r => setTimeout(r, 15));
+    }
+  } catch(e) {
+    thinking.textContent = 'Error: ' + e.message;
+    thinking.style.color = 'var(--red)';
+  }
+}
+</script>
+</body>
+</html>
