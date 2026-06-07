@@ -773,12 +773,56 @@ document.addEventListener("DOMContentLoaded", function() {
   const dropTarget = document.getElementById("ins-drop-target");
 
   function handleFile(file) {
-    if (!file) return;
-    statusEl.textContent = `> Ingesting: ${file.name} — routing in progress...`;
-    statusEl.style.color = "#1ee8b6";
-    window.TSMUploader.ingest(file, { amount: 133000 }, "tsm-insurance");
-    setTimeout(() => { statusEl.textContent = `> ${file.name} processed. Queue updated.`; statusEl.style.color = ""; }, 1200);
+  if (!file) return;
+  statusEl.textContent = `> Ingesting: ${file.name} — routing in progress...`;
+  statusEl.style.color = "#1ee8b6";
+
+  const payload = window.TSMUploader.ingest(file, { amount: 133000 }, "tsm-insurance");
+
+  // ── Push to TSM Doc Index ────────────────────────────────────────────────
+  const record = {
+    id:           "DOC-" + Date.now(),
+    fileName:     file.name,
+    fileSize:     file.size,
+    documentType: payload.documentType,
+    vendor:       payload.vendor       || "—",
+    invoiceNo:    payload.invoiceNo    || "—",
+    amount:       payload.amount       || 0,
+    routing:      payload.routing      || [],
+    sourceNode:   "insurance-portal",
+    timestamp:    Date.now(),
+  };
+
+  try {
+    const existing = JSON.parse(localStorage.getItem("tsm_doc_index") || "[]");
+    existing.unshift(record);                          // newest first
+    localStorage.setItem("tsm_doc_index", JSON.stringify(existing.slice(0, 200)));  // cap at 200
+  } catch(e) { console.warn("[TSM DocIndex] Write failed:", e); }
+
+  // ── Show doc-search shortcut ─────────────────────────────────────────────
+  let btn = document.getElementById("doc-search-link-btn");
+  if (!btn) {
+    btn = document.createElement("a");
+    btn.id        = "doc-search-link-btn";
+    btn.href      = "/html/doc1-search.html";
+    btn.target    = "_blank";
+    btn.innerHTML = "📁 VIEW IN DOC SEARCH";
+    btn.style.cssText = `
+      display:inline-block;margin-top:10px;padding:7px 16px;
+      background:#38bdf811;border:1px solid #38bdf8;color:#38bdf8;
+      font-family:var(--mono);font-size:11px;letter-spacing:.08em;
+      border-radius:3px;text-decoration:none;transition:background .2s;
+    `;
+    btn.onmouseenter = () => btn.style.background = "#38bdf822";
+    btn.onmouseleave = () => btn.style.background = "#38bdf811";
+    statusEl.parentElement.appendChild(btn);
   }
+
+  setTimeout(() => {
+    statusEl.textContent = `> ${file.name} indexed. Record saved to Doc Search.`;
+    statusEl.style.color = "";
+  }, 1200);
+}
 
   fileInput.addEventListener("change", function() { handleFile(this.files[0]); this.value = ""; });
 

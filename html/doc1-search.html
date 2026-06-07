@@ -608,21 +608,17 @@ mark {
     </div>
   </div>
 
-  <!-- HC Node Quick Links -->
+  <!-- Insurance Node Quick Links -->
   <div class="node-links">
-    <span class="node-links-label">HC Nodes:</span>
-    <a class="node-link exec" href="/html/healthcare/executive-portal.html">Executive Portal</a>
-    <a class="node-link" href="/healthcare/hc-billing">Billing</a>
-    <a class="node-link" href="/healthcare/hc-compliance">Compliance</a>
-    <a class="node-link" href="/healthcare/hc-insurance">Insurance</a>
-    <a class="node-link" href="/healthcare/hc-medical">Medical</a>
-    <a class="node-link" href="/healthcare/hc-operations">Operations</a>
-    <a class="node-link" href="/healthcare/hc-financial">Financial</a>
-    <a class="node-link" href="/healthcare/hc-grants">Grants</a>
-    <a class="node-link" href="/healthcare/hc-legal">Legal</a>
-    <a class="node-link" href="/healthcare/hc-pharmacy">Pharmacy</a>
-    <a class="node-link" href="/healthcare/hc-vendors">Vendors</a>
-    <a class="node-link" href="/healthcare/hc-taxprep">Tax Prep</a>
+    <span class="node-links-label">Insurance:</span>
+    <a class="node-link exec" href="/html/insurance-portal.html">Insurance Portal</a>
+    <a class="node-link" href="/html/ins-hub.html">INS Hub</a>
+    <a class="node-link" href="/html/ins-claims.html">Claims</a>
+    <a class="node-link" href="/html/ins-appeals.html">Appeals</a>
+    <a class="node-link" href="/html/ins-liability.html">Liability</a>
+    <a class="node-link" href="/html/ins-underwriting.html">Underwriting</a>
+    <a class="node-link" href="/html/ins-malpractice.html">Malpractice</a>
+    <a class="node-link" href="/html/ins-compliance.html">Compliance</a>
   </div>
 
   <div class="demo-banner" id="demo-banner">
@@ -867,7 +863,7 @@ function renderCard(doc, query) {
 function runSearch() {
   const filters   = getFilters();
   const results   = searchDocs(filters);
-  const container = document.getElementById("results-container");
+  const container = document.querySelector("#results-list");
   const countEl   = document.getElementById("results-count");
   const total     = loadIndex().length;
 
@@ -975,6 +971,98 @@ function seedDemoData() {
 
 refreshTotalCount();
 runSearch();
+// ════════════════════════════════════════════════════════════════════════════
+// TSM DOC INDEX RECEIVER  — reads records pushed from insurance-portal
+// ════════════════════════════════════════════════════════════════════════════
+(function initDocIndexReceiver() {
+  const INDEX_KEY = "tsm_doc_index";
+
+  function renderRecord(rec, container) {
+    const isBnca   = (rec.routing || []).includes("bnca-engine");
+    const ts       = new Date(rec.timestamp).toLocaleString();
+    const amt      = rec.amount ? "$" + Number(rec.amount).toLocaleString() : "—";
+    const docType  = rec.documentType || "DOCUMENT REPORT";
+    const typeColor = isBnca ? "#f87171" : "#38bdf8";
+
+    const routeTags = (rec.routing || []).map(r => {
+      const colors = {
+        "executive-portal": "#1ee8b6", "strategist": "#1ee8b6",
+        "tsm-insurance": "#38bdf8",   "hc-billing": "#22d3a0",
+        "hc-vendors": "#22d3a0",      "bnca-engine": "#f87171",
+        "finops-accounting": "#86efac","construction-command": "#fbbf24",
+      };
+      const c = colors[r] || "#888";
+      const label = r === "bnca-engine" ? "BNCA Escalated"
+                  : r === "executive-portal" ? "Executive Portal"
+                  : r === "tsm-insurance" ? "HC Insurance"
+                  : r === "hc-billing" ? "HC Billing"
+                  : r === "hc-vendors" ? "HC Vendors"
+                  : r === "strategist" ? "Strategist"
+                  : r;
+      return `<span style="background:${c}18;color:${c};border:1px solid ${c}44;padding:2px 8px;border-radius:3px;font-size:10px;font-family:var(--mono,monospace);">${label}</span>`;
+    }).join(" ");
+
+    // Derive node URL for OPEN NODE button
+    const nodeMap = {
+      "tsm-insurance": "/html/insurance-portal.html",
+      "hc-billing":    "/html/hc-billing.html",
+      "hc-vendors":    "/html/hc-vendors.html",
+    };
+    const primaryNode = (rec.routing || []).find(r => nodeMap[r]) || "tsm-insurance";
+    const nodeUrl     = nodeMap[primaryNode] || "/html/insurance-portal.html";
+
+    const card = document.createElement("div");
+    card.setAttribute("data-tsm-id", rec.id);
+    card.style.cssText = `border-left:3px solid ${typeColor};background:#0d1f17;border:1px solid #1a2e1f;border-left:3px solid ${typeColor};border-radius:4px;padding:14px 16px;margin-bottom:10px;`;
+    card.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="background:${typeColor}22;color:${typeColor};border:1px solid ${typeColor}44;padding:2px 8px;border-radius:3px;font-size:10px;font-family:var(--mono,monospace);text-transform:uppercase;">${docType}</span>
+          <span style="color:#e2ffe8;font-weight:600;font-size:13px;">${rec.fileName}</span>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <a href="${nodeUrl}" target="_blank" style="background:#0d2a1d;border:1px solid #1ee8b6;color:#1ee8b6;padding:4px 10px;border-radius:3px;font-size:10px;font-family:var(--mono,monospace);text-decoration:none;cursor:pointer;">↗ OPEN NODE</a>
+          <button onclick="(function(el){try{const idx=JSON.parse(localStorage.getItem('tsm_doc_index')||'[]');localStorage.setItem('tsm_doc_index',JSON.stringify(idx.filter(r=>r.id!=='${rec.id}')));el.closest('[data-tsm-id]').remove();}catch(e){}})(this)" style="background:#1a0d0d;border:1px solid #f87171;color:#f87171;padding:4px 10px;border-radius:3px;font-size:10px;font-family:var(--mono,monospace);cursor:pointer;">✕ REMOVE</button>
+        </div>
+      </div>
+      <div style="font-size:11px;color:#88aa88;margin-bottom:8px;line-height:1.8;">
+        ${rec.vendor ? `<span>Vendor: <strong style="color:#ccc;">${rec.vendor}</strong></span> &nbsp;` : ""}
+        ${rec.invoiceNo && rec.invoiceNo !== "—" ? `<span>Claim: <strong style="color:#38bdf8;">${rec.invoiceNo}</strong></span> &nbsp;` : ""}
+        <span>Exposure: <strong style="color:${isBnca ? "#f87171" : "#e2ffe8"};">${amt}</strong></span> &nbsp;
+        <span>Node: <strong style="color:#1ee8b6;">${rec.sourceNode || "insurance-portal"}</strong></span> &nbsp;
+        <span>Indexed: <strong style="color:#556655;">${ts}</strong></span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;">
+        <span style="font-size:10px;color:#445544;font-family:var(--mono,monospace);margin-right:4px;">ROUTED TO:</span>
+        ${routeTags}
+      </div>
+    `;
+    container.insertAdjacentElement("afterbegin", card);
+  }
+
+  function loadIndex() {
+    try {
+      const records = JSON.parse(localStorage.getItem(INDEX_KEY) || "[]");
+      if (!records.length) return;
+
+      // ── Swap "#doc-results-tbody" for whatever your results tbody id is ──
+      const container = document.querySelector("#doc-results-list") || document.querySelector(".results-list") || document.querySelector(".doc-cards-container");
+      if (!container) return;
+
+      // Dedupe: skip IDs already rendered
+      const rendered = new Set([...container.querySelectorAll("[data-tsm-id]")].map(r => r.dataset.tsmId));
+      records.forEach(rec => { if (!rendered.has(rec.id)) renderRecord(rec, container); });
+    } catch(e) { console.warn("[TSM DocIndex] Load failed:", e); }
+  }
+
+  // Load on page open
+  document.addEventListener("DOMContentLoaded", loadIndex);
+
+  // Real-time: if insurance-portal pushes while this tab is open
+  window.addEventListener("storage", e => {
+    if (e.key === INDEX_KEY && e.newValue) loadIndex();
+  });
+})();
 </script>
 </body>
 </html>
