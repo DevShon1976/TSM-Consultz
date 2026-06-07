@@ -1133,6 +1133,168 @@ function showRelayToast(msg){
   setTimeout(()=>t.classList.remove('show'),5000);
 }
 
+// ═══ FINOPS ISSUE PACK ═══
+(function(){
+  try {
+    const raw = sessionStorage.getItem('TSM_FINOPS_WAR_RELAY') || localStorage.getItem('tsm_finops_war_relay');
+    if (!raw) return;
+    const brief = JSON.parse(raw);
+    if (!brief) return;
+
+    const banner = document.createElement('div');
+    banner.id = 'tsm-finops-war-banner';
+    banner.style.cssText = 'background:rgba(6,15,10,.97);border:1px solid rgba(0,212,255,.3);font-family:monospace;margin:10px 14px;box-shadow:0 0 20px rgba(0,212,255,.08);overflow:hidden;flex-shrink:0;';
+    banner.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 16px;background:rgba(0,212,255,.06);border-bottom:1px solid rgba(0,212,255,.12);">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="background:#00d4ff;color:#000;font-size:9px;font-weight:bold;padding:2px 7px;letter-spacing:1px;">⚡ WAR ROOM BRIEF</span>
+          <span style="color:#555;font-size:10px;">${brief.docType||'Document'} · ${brief.timestamp?new Date(brief.timestamp).toLocaleTimeString():''}</span>
+          <span style="background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);color:#00d4ff;font-size:9px;padding:2px 8px;letter-spacing:1px;">ESCALATED TO FINOPS STRATEGIST</span>
+        </div>
+        <span style="color:#00d4ff;font-size:10px;">RISK: ${brief.snapshot?.risk||'—'} · EXP: ${brief.snapshot?.exposure||'—'}</span>
+      </div>
+      <div style="padding:10px 16px;border-bottom:1px solid rgba(0,212,255,.08);font-size:10px;color:#aaa;line-height:1.7;">
+        ${(brief.engines?.e5||'').slice(0,200)}...
+      </div>
+      <div style="padding:8px 16px;display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="window.runFinOpsIssuePack()" style="padding:6px 14px;background:rgba(0,212,255,.1);border:1px solid #00d4ff;color:#00d4ff;font-family:monospace;font-size:9px;cursor:pointer;letter-spacing:.5px;"
+          onmouseover="this.style.background='#00d4ff';this.style.color='#000'" onmouseout="this.style.background='rgba(0,212,255,.1)';this.style.color='#00d4ff'">
+          ⚡ RUN ISSUE PACK ON WAR ROOM DATA
+        </button>
+        <button onclick="window.injectFinOpsContext()" style="padding:6px 14px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.4);color:#a855f7;font-family:monospace;font-size:9px;cursor:pointer;">
+          ◈ INJECT INTO STRATEGIST
+        </button>
+      </div>`;
+
+    const target = document.querySelector('.main-content') || document.querySelector('main') || document.body;
+    target.insertBefore(banner, target.firstChild);
+
+    window.injectFinOpsContext = function(){
+      const ctx = Object.entries(brief.engines||{}).map(([k,v])=>`${k}: ${v.slice(0,300)}`).join('\n');
+      const el = document.getElementById('stratOutput');
+      if(el) el.textContent = `[WAR ROOM RELAY — ${brief.docType}]\nRisk: ${brief.snapshot?.risk} · Exposure: ${brief.snapshot?.exposure}\n\n${ctx.slice(0,800)}`;
+      relaySource='warroom';
+    };
+
+    window.runFinOpsIssuePack = function(){
+      const groqKeyVal = document.getElementById('groqKey')?.value || localStorage.getItem('tsm_groq_key') || '';
+      if(!groqKeyVal){ alert('Enter your Groq API key first.'); return; }
+
+      let panel = document.getElementById('tsm-finops-issue-panel');
+      if(!panel){
+        panel = document.createElement('div');
+        panel.id = 'tsm-finops-issue-panel';
+        panel.style.cssText = 'background:rgba(6,15,10,.97);border:1px solid #00d4ff;font-family:monospace;margin:10px 14px;box-shadow:0 0 24px rgba(0,212,255,.1);overflow:hidden;';
+        panel.innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 16px;background:rgba(0,212,255,.06);border-bottom:1px solid rgba(0,212,255,.15);">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="background:#00d4ff;color:#000;font-size:9px;font-weight:bold;padding:2px 7px;letter-spacing:1px;">⚡ ISSUE PACK</span>
+              <span style="color:#555;font-size:10px;">${brief.docType} · War Room Escalation</span>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button onclick="navigator.clipboard.writeText(document.getElementById('fip-output').textContent)" style="background:none;border:1px solid #333;color:#666;font-family:monospace;font-size:8px;padding:2px 8px;cursor:pointer;">COPY</button>
+              <button onclick="document.getElementById('tsm-finops-issue-panel').remove()" style="background:none;border:none;color:#444;font-size:14px;cursor:pointer;">✕</button>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid rgba(0,212,255,.1);">
+            <div style="padding:8px 14px;border-right:1px solid rgba(0,212,255,.08);">
+              <div style="font-size:7px;letter-spacing:1.5px;color:#444;margin-bottom:3px;">DOC TYPE</div>
+              <div style="font-size:11px;color:#00d4ff;font-weight:700;">${brief.docType||'—'}</div>
+            </div>
+            <div style="padding:8px 14px;border-right:1px solid rgba(0,212,255,.08);">
+              <div style="font-size:7px;letter-spacing:1.5px;color:#444;margin-bottom:3px;">RISK SCORE</div>
+              <div style="font-size:11px;color:#ff9500;font-weight:700;">${brief.snapshot?.risk||'—'}</div>
+            </div>
+            <div style="padding:8px 14px;">
+              <div style="font-size:7px;letter-spacing:1.5px;color:#444;margin-bottom:3px;">EXPOSURE</div>
+              <div style="font-size:11px;color:#ff4d6d;font-weight:700;">${brief.snapshot?.exposure||'—'}</div>
+            </div>
+          </div>
+          <div style="padding:14px 16px;">
+            <div style="font-size:8px;letter-spacing:2px;color:#444;margin-bottom:8px;">ISSUE PACK OUTPUT</div>
+            <div id="fip-spinner" style="display:flex;align-items:center;gap:8px;color:#00d4ff;font-size:10px;margin-bottom:8px;">
+              <div style="width:10px;height:10px;border:1px solid rgba(0,212,255,.3);border-top-color:#00d4ff;border-radius:50%;animation:spin .7s linear infinite;"></div>
+              RUNNING ISSUE PACK...
+            </div>
+            <div id="fip-output" style="font-size:10px;color:#ccc;line-height:1.8;white-space:pre-wrap;min-height:80px;display:none;"></div>
+            <div id="fip-error" style="font-size:9px;color:#ff4d6d;display:none;margin-top:6px;"></div>
+          </div>
+          <div style="padding:8px 16px;border-top:1px solid rgba(0,212,255,.1);display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <span style="font-size:7px;letter-spacing:1.5px;color:#444;margin-right:4px;">ASSIGN TO →</span>
+            <button onclick="assignFinOpsIssuePack('AP Coordinator')" style="background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.3);color:#00d4ff;font-family:monospace;font-size:8px;letter-spacing:1px;padding:4px 10px;cursor:pointer;">AP COORDINATOR</button>
+            <button onclick="assignFinOpsIssuePack('Controller')" style="background:rgba(255,149,0,.08);border:1px solid rgba(255,149,0,.3);color:#ff9500;font-family:monospace;font-size:8px;letter-spacing:1px;padding:4px 10px;cursor:pointer;">CONTROLLER</button>
+            <button onclick="assignFinOpsIssuePack('CFO')" style="background:rgba(0,255,157,.08);border:1px solid rgba(0,255,157,.3);color:#00ff9d;font-family:monospace;font-size:8px;letter-spacing:1px;padding:4px 10px;cursor:pointer;">CFO</button>
+            <div style="margin-left:auto;display:flex;gap:6px;">
+              <button onclick="window.runFinOpsIssuePack()" style="background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.3);color:#00d4ff;font-family:monospace;font-size:8px;letter-spacing:1px;padding:4px 10px;cursor:pointer;">↺ RE-RUN</button>
+            </div>
+          </div>
+          <div id="fip-assign-tag" style="display:none;padding:6px 16px;background:rgba(0,255,100,.04);border-top:1px solid rgba(0,255,100,.12);font-size:9px;color:#00ffc6;letter-spacing:1px;"></div>`;
+        banner.insertAdjacentElement('afterend', panel);
+      }
+
+      document.getElementById('fip-spinner').style.display='flex';
+      document.getElementById('fip-output').style.display='none';
+      document.getElementById('fip-error').style.display='none';
+      panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+
+      const warData = Object.entries(brief.engines||{}).map(([k,v])=>`${k}:\n${v.slice(0,400)}`).join('\n\n');
+      const prompt = `[FINOPS ISSUE PACK — ${brief.docType}]
+
+WAR ROOM DATA:
+${warData.slice(0,2000)}
+
+You are the TSM FinOps Strategist Issue Pack engine. Produce a structured financial issue remediation package:
+
+ISSUE PACK FORMAT:
+DOC SUMMARY: [doc type, period, total exposure, key entities]
+RISK FLAGS: [each flag with dollar amount]
+ROOT CAUSE: [specific financial reason for each issue]
+COMPLIANCE EXPOSURE: [GAAP/IRS/OIG items]
+APPEAL/RECOVERY STRATEGY: [payer or vendor specific approach]
+DOCUMENTATION CHECKLIST:
+1. [required doc]
+2. [required doc]
+3. [required doc]
+PRIORITY ACTIONS:
+1. [Action] — [Owner] — [Deadline] — [$impact]
+2. [Action] — [Owner] — [Deadline] — [$impact]
+3. [Action] — [Owner] — [Deadline] — [$impact]
+RECOVERY PROBABILITY: [%] — [rationale]
+CFO ESCALATION: [Yes/No] — [reason]`;
+
+      fetch('https://api.groq.com/openai/v1/chat/completions',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKeyVal},
+        body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:700,temperature:0.2,messages:[{role:'user',content:prompt}]})
+      })
+      .then(r=>r.json())
+      .then(d=>{
+        const txt=d.choices?.[0]?.message?.content||'';
+        if(!txt) throw new Error('Empty response');
+        document.getElementById('fip-spinner').style.display='none';
+        document.getElementById('fip-output').style.display='block';
+        document.getElementById('fip-output').textContent=txt;
+      })
+      .catch(err=>{
+        document.getElementById('fip-spinner').style.display='none';
+        document.getElementById('fip-error').style.display='block';
+        document.getElementById('fip-error').textContent='✗ Issue pack failed: '+err.message;
+      });
+    };
+
+    window.assignFinOpsIssuePack = function(role){
+      const content=document.getElementById('fip-output')?.textContent||'';
+      if(!content){alert('Run the issue pack first.');return;}
+      const queue=JSON.parse(localStorage.getItem('tsm_finops_issue_queue')||'[]');
+      queue.push({role,assignedAt:new Date().toLocaleString(),docType:brief.docType,exposure:brief.snapshot?.exposure,packSnippet:content.slice(0,300)});
+      localStorage.setItem('tsm_finops_issue_queue',JSON.stringify(queue));
+      const tag=document.getElementById('fip-assign-tag');
+      if(tag){tag.style.display='block';tag.textContent='✓ ASSIGNED TO: '+role.toUpperCase()+' · '+new Date().toLocaleTimeString();}
+    };
+
+  } catch(e){ console.warn('FinOps issue pack error:',e); }
+})();
+
 function clearOutput(){
   document.getElementById('stratOutput').textContent='Cleared. Ready for next run.';
   document.getElementById('runStatus').textContent='IDLE';
