@@ -865,6 +865,27 @@ function focusOffice(office){
   quickAsk(prompts[office]);
 }
 
+// ── DENIAL PACK ASSIGNMENT ──
+function assignDenialPack(role){
+  const tag = document.getElementById('dp-assign-tag');
+  const content = document.getElementById('dp-output')?.textContent||'';
+  if(!content){ alert('Run the denial pack first.'); return; }
+  const record = {
+    role, assignedAt: new Date().toLocaleString(),
+    claimId: document.getElementById('dp-claim-id')?.textContent||'—',
+    codes: document.getElementById('dp-codes')?.textContent||'—',
+    exposure: document.getElementById('dp-exposure')?.textContent||'—',
+    packSnippet: content.slice(0,300)
+  };
+  const queue = JSON.parse(localStorage.getItem('tsm_denial_queue')||'[]');
+  queue.push(record);
+  localStorage.setItem('tsm_denial_queue', JSON.stringify(queue));
+  if(tag){
+    tag.style.display='block';
+    tag.textContent='✓ ASSIGNED TO: '+role.toUpperCase()+' · '+new Date().toLocaleTimeString()+' · Claim: '+record.claimId;
+  }
+}
+
 // ── CLEAR ──
 function clearOut(){
   ['strat-out','strat-err'].forEach(id=>{
@@ -941,6 +962,7 @@ function clearOut(){
 
   // Run a full denial pack pre-loaded with War Room data
   window.runWarRoomDenialPack = function() {
+  const groqKey = localStorage.getItem('tsm_groq_key') || window.groqKey || '';
   if (!groqKey) { alert('Enter your Groq API key first — click the key icon in the topbar.'); return; }
 
   // ── Build or reuse dedicated Denial Pack panel ───────────────────────────
@@ -989,16 +1011,32 @@ function clearOut(){
         <div id="dp-output" style="font-size:10px;color:#ccc;line-height:1.8;white-space:pre-wrap;min-height:80px;display:none;"></div>
         <div id="dp-error" style="font-size:9px;color:#ff4d6d;display:none;margin-top:6px;"></div>
       </div>
-      <div style="padding:8px 16px;border-top:1px solid rgba(245,158,11,0.1);display:flex;gap:8px;">
-        <button onclick="runWarRoomDenialPack()"
-          style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:#f59e0b;font-family:monospace;font-size:8px;letter-spacing:1px;padding:4px 12px;cursor:pointer;">
-          ↺ RE-RUN
+      <div style="padding:8px 16px;border-top:1px solid rgba(245,158,11,0.1);display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <span style="font-size:7px;letter-spacing:1.5px;color:#555;margin-right:4px;">ASSIGN TO →</span>
+        <button onclick="assignDenialPack('Billing Coordinator')"
+          style="background:rgba(0,229,255,0.08);border:1px solid rgba(0,229,255,0.3);color:#00e5ff;font-family:monospace;font-size:8px;letter-spacing:1px;padding:4px 12px;cursor:pointer;">
+          BILLING COORD
         </button>
-        <button onclick="injectWarRoomContext()"
-          style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.3);color:#a855f7;font-family:monospace;font-size:8px;letter-spacing:1px;padding:4px 12px;cursor:pointer;">
-          ◈ INJECT INTO STRATEGIST
+        <button onclick="assignDenialPack('Office Manager')"
+          style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);color:#f59e0b;font-family:monospace;font-size:8px;letter-spacing:1px;padding:4px 12px;cursor:pointer;">
+          OFFICE MGR
         </button>
+        <button onclick="assignDenialPack('RCM Manager')"
+          style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.3);color:#a855f7;font-family:monospace;font-size:8px;letter-spacing:1px;padding:4px 12px;cursor:pointer;">
+          RCM MANAGER
+        </button>
+        <div style="margin-left:auto;display:flex;gap:6px;">
+          <button onclick="runWarRoomDenialPack()"
+            style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:#f59e0b;font-family:monospace;font-size:8px;letter-spacing:1px;padding:4px 12px;cursor:pointer;">
+            ↺ RE-RUN
+          </button>
+          <button onclick="injectWarRoomContext()"
+            style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.3);color:#a855f7;font-family:monospace;font-size:8px;letter-spacing:1px;padding:4px 12px;cursor:pointer;">
+            ◈ INJECT INTO STRATEGIST
+          </button>
+        </div>
       </div>
+      <div id="dp-assign-tag" style="display:none;padding:6px 16px;background:rgba(0,255,100,.04);border-top:1px solid rgba(0,255,100,.12);font-size:9px;color:#00ffc6;letter-spacing:1px;"></div>
     `;
     // Insert directly after the war room banner
     banner.insertAdjacentElement('afterend', dpPanel);
