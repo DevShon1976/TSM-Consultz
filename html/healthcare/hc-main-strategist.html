@@ -942,12 +942,139 @@ function clearOut(){
   // Run a full denial pack pre-loaded with War Room data
   window.runWarRoomDenialPack = function() {
   if (!groqKey) { alert('Enter your Groq API key first — click the key icon in the topbar.'); return; }
-  
-    const warRoomData = Object.entries(brief.engineOutputs||{}).map(([k,v])=>`${k}:\n${v.slice(0,400)}`).join('\n\n');
-    showTab('exec');
-    const prompt = `[WAR ROOM ESCALATION — Session ${brief.sessionId}]\n\nThe following denial case was escalated from the TSM Denial Recovery War Room:\n\n${warRoomData.slice(0,2000)}\n\nEngine 06 Dispatch: ${brief.engine06?.narrative||''}\n\nAs HC Strategist for HonorHealth: cross-reference this escalated case against current HonorHealth denial patterns (PR-96, CO-4, CO-11, CO-29). Identify if this case matches any active denial pattern, calculate additional revenue at risk, and generate a priority action plan with payer-specific appeal strategy.`;
-    callClaude(prompt, document.getElementById('strat-out'), document.getElementById('thinking-bar'), document.getElementById('strat-err'));
-  };
+
+  // ── Build or reuse dedicated Denial Pack panel ───────────────────────────
+  let dpPanel = document.getElementById('tsm-denial-pack-panel');
+  if (!dpPanel) {
+    dpPanel = document.createElement('div');
+    dpPanel.id = 'tsm-denial-pack-panel';
+    dpPanel.style.cssText = `
+      background:rgba(10,14,22,0.97);border:1px solid #f59e0b;
+      font-family:monospace;margin:10px 14px;
+      box-shadow:0 0 24px rgba(245,158,11,0.12);overflow:hidden;flex-shrink:0;
+    `;
+    dpPanel.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 16px;background:rgba(245,158,11,0.08);border-bottom:1px solid rgba(245,158,11,0.2);">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="background:#f59e0b;color:#000;font-size:9px;font-weight:bold;padding:2px 7px;letter-spacing:1px;">⚡ DENIAL PACK</span>
+          <span style="color:#888;font-size:10px;">Session ${brief.sessionId} · War Room Escalation</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button onclick="navigator.clipboard.writeText(document.getElementById('dp-output').textContent)"
+            style="background:none;border:1px solid #444;color:#888;font-family:monospace;font-size:8px;padding:2px 8px;cursor:pointer;letter-spacing:1px;">COPY</button>
+          <button onclick="document.getElementById('tsm-denial-pack-panel').remove()"
+            style="background:none;border:none;color:#555;font-size:14px;cursor:pointer;padding:0 2px;">✕</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid rgba(245,158,11,0.12);">
+        <div style="padding:8px 14px;border-right:1px solid rgba(245,158,11,0.1);">
+          <div style="font-size:7px;letter-spacing:1.5px;color:#666;margin-bottom:3px;">CLAIM ID</div>
+          <div style="font-size:11px;color:#f59e0b;font-weight:700;" id="dp-claim-id">—</div>
+        </div>
+        <div style="padding:8px 14px;border-right:1px solid rgba(245,158,11,0.1);">
+          <div style="font-size:7px;letter-spacing:1.5px;color:#666;margin-bottom:3px;">DENIAL CODES</div>
+          <div style="font-size:11px;color:#ec4899;font-weight:700;" id="dp-codes">—</div>
+        </div>
+        <div style="padding:8px 14px;">
+          <div style="font-size:7px;letter-spacing:1.5px;color:#666;margin-bottom:3px;">AT RISK</div>
+          <div style="font-size:11px;color:#ff4d6d;font-weight:700;" id="dp-exposure">—</div>
+        </div>
+      </div>
+      <div style="padding:14px 16px;">
+        <div style="font-size:8px;letter-spacing:2px;color:#666;margin-bottom:8px;">DENIAL PACK OUTPUT</div>
+        <div id="dp-spinner" style="display:flex;align-items:center;gap:8px;color:#f59e0b;font-size:10px;margin-bottom:8px;">
+          <div style="width:10px;height:10px;border:1px solid rgba(245,158,11,0.3);border-top-color:#f59e0b;border-radius:50%;animation:spin .7s linear infinite;"></div>
+          RUNNING DENIAL PACK...
+        </div>
+        <div id="dp-output" style="font-size:10px;color:#ccc;line-height:1.8;white-space:pre-wrap;min-height:80px;display:none;"></div>
+        <div id="dp-error" style="font-size:9px;color:#ff4d6d;display:none;margin-top:6px;"></div>
+      </div>
+      <div style="padding:8px 16px;border-top:1px solid rgba(245,158,11,0.1);display:flex;gap:8px;">
+        <button onclick="runWarRoomDenialPack()"
+          style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:#f59e0b;font-family:monospace;font-size:8px;letter-spacing:1px;padding:4px 12px;cursor:pointer;">
+          ↺ RE-RUN
+        </button>
+        <button onclick="injectWarRoomContext()"
+          style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.3);color:#a855f7;font-family:monospace;font-size:8px;letter-spacing:1px;padding:4px 12px;cursor:pointer;">
+          ◈ INJECT INTO STRATEGIST
+        </button>
+      </div>
+    `;
+    // Insert directly after the war room banner
+    banner.insertAdjacentElement('afterend', dpPanel);
+  }
+
+  // ── Pre-fill meta from war room data ────────────────────────────────────
+  const allText = Object.values(brief.engineOutputs||{}).join(' ');
+  const claimM  = allText.match(/claim[:\s#-]+([A-Z0-9-]+)/i);
+  const codeM   = allText.match(/denial codes?[:\s]+([A-Z0-9,\s-]+)/i);
+  const expM    = allText.match(/\$[\d,]+/);
+  if(claimM) document.getElementById('dp-claim-id').textContent  = claimM[1];
+  if(codeM)  document.getElementById('dp-codes').textContent     = codeM[1].trim().slice(0,20);
+  if(expM)   document.getElementById('dp-exposure').textContent  = expM[0];
+
+  // ── Show spinner, hide old output ────────────────────────────────────────
+  document.getElementById('dp-spinner').style.display = 'flex';
+  document.getElementById('dp-output').style.display  = 'none';
+  document.getElementById('dp-error').style.display   = 'none';
+  dpPanel.scrollIntoView({ behavior:'smooth', block:'nearest' });
+
+  // ── Build prompt ─────────────────────────────────────────────────────────
+  const warRoomData = Object.entries(brief.engineOutputs||{})
+    .map(([k,v])=>`${k}:\n${v.slice(0,400)}`).join('\n\n');
+
+  const prompt = `[WAR ROOM DENIAL PACK — Session ${brief.sessionId}]
+
+ESCALATED DATA:
+${warRoomData.slice(0,2000)}
+
+Engine 06 Dispatch: ${brief.engine06?.narrative||''}
+
+You are the HC Strategist Denial Pack engine for HonorHealth. Produce a structured denial remediation package:
+
+DENIAL PACK OUTPUT FORMAT:
+CLAIM SUMMARY: [claim ID, CPT, ICD-10, payer, date of service, billed amount]
+DENIAL CODES: [each code with full meaning]
+ROOT CAUSE: [specific reason this was denied]
+APPEAL DEADLINE: [exact date or days remaining]
+APPEAL STRATEGY: [payer-specific approach — HonorHealth standard for this payer]
+APPEAL LETTER OPENING: [first 3 sentences of the appeal letter, ready to send]
+DOCUMENTATION CHECKLIST:
+1. [required doc]
+2. [required doc]
+3. [required doc]
+PRIORITY ACTIONS:
+1. [Action] — [Owner] — [Deadline] — [$impact]
+2. [Action] — [Owner] — [Deadline] — [$impact]
+3. [Action] — [Owner] — [Deadline] — [$impact]
+RECOVERY PROBABILITY: [%] — [rationale]
+PATTERN MATCH: [does this match active HonorHealth denial patterns CO-4/CO-11/CO-29/PR-96? Yes/No — detail]`;
+
+  // ── Call Groq directly (no dependency on callClaude signature) ───────────
+  fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+groqKey },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      max_tokens: 700,
+      temperature: 0.2,
+      messages: [{ role:'user', content: prompt }]
+    })
+  })
+  .then(r => r.json())
+  .then(d => {
+    const txt = d.choices?.[0]?.message?.content || '';
+    if(!txt) throw new Error('Empty response');
+    document.getElementById('dp-spinner').style.display = 'none';
+    document.getElementById('dp-output').style.display  = 'block';
+    document.getElementById('dp-output').textContent    = txt;
+  })
+  .catch(err => {
+    document.getElementById('dp-spinner').style.display = 'none';
+    document.getElementById('dp-error').style.display   = 'block';
+    document.getElementById('dp-error').textContent     = '✗ Denial pack failed: ' + err.message;
+  });
+};
 })();
 
 // ── INIT: auto-load score ──
