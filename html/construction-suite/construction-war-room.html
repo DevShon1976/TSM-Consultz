@@ -1117,6 +1117,373 @@ async function fireEngines(){
   storeSession(e);
 }
 
+/* ════════════════════════════════════════   CONSTRUCTION TOUR MODE ENGINE ════════════════════════════════════════ */
+const TOUR_SLIDES = [
+  {
+    id: 'welcome',
+    title: 'CONSTRUCTION WAR ROOM OVERVIEW',
+    type: 'info',
+    target: 'heroSection',
+    autoMs: 7000,
+    narration: `Welcome to the <span class="hl">Construction War Room</span> — TSM's 6-engine neural document analysis pipeline. This guided tour walks you through the <span class="cmd">complete workflow</span> from raw project document upload to field, financial, and executive escalation. You'll see how each engine builds on the last to produce a full risk, job costing, GAAP compliance, and legal brief — ready to hand to the principal.`,
+    actionHint: null
+  },
+  {
+    id: 'doctype',
+    title: 'STEP 1 · SELECT DOCUMENT TYPE',
+    type: 'action',
+    target: 'docTypeGrid',
+    autoMs: 6000,
+    narration: `<span class="hl">Select your construction document type</span> first — this primes Engine 01's extraction schema. The war room handles <span class="cmd">12 core document classes</span>: Change Orders, OSHA Citations, Lien Notices, Subcontracts, RFIs, Draw Requests, Permits, Retainage Records, Journal Entries, Job Costs, Payroll/1099s, and Compliance reports. <span class="warn">Wrong type = wrong extraction frame</span> — always select this before loading content.`,
+    actionHint: 'Click any construction document type button in the sidebar to classify your document'
+  },
+  {
+    id: 'paste',
+    title: 'STEP 2 · LOAD DOCUMENT CONTENT',
+    type: 'action',
+    target: 'pasteSection',
+    autoMs: 8000,
+    narration: `Paste your raw document text into the input area — <span class="hl">no formatting required</span>. The engines clean and parse plain text, CSV ledger records, compliance PDFs, or daily field logs. For this tour, click one of the <span class="cmd">sample chips</span> below the textarea: <span class="ok">Change Order</span>, <span class="ok">OSHA Citation</span>, <span class="ok">Lien Notice</span>, or <span class="ok">Draw Request</span>. Each sample mimics a high-stakes, multi-tier subcontractor scenario.`,
+    actionHint: 'Paste document text OR click a sample chip (Change Order / OSHA / Lien / Draw Request)'
+  },
+  {
+    id: 'groq',
+    title: 'STEP 3 · CONNECT GROQ API',
+    type: 'action',
+    target: 'groqSection',
+    autoMs: 6000,
+    narration: `The war room runs on <span class="hl">Groq's llama-3.3-70b-versatile</span> — providing lightning-fast structural inference for complex contracts and logs. Enter your <span class="cmd">gsk_...</span> key, then click TEST to verify the connection. Your key is stored locally in <span class="warn">localStorage</span> and is never transmitted to outside servers. If you don't have a key, the pipeline yields mock mock-ups — ideal for demonstrations.`,
+    actionHint: 'Enter your Groq API key (gsk_...) and click TEST to validate'
+  },
+  {
+    id: 'fire',
+    title: 'STEP 4 · FIRE THE ENGINE PIPELINE',
+    type: 'action',
+    target: 'fireBtn',
+    autoMs: 7000,
+    narration: `Click <span class="hl">⚡ FIRE ALL 6 ENGINES</span> to launch the sequential analysis pipeline. The engines execute <span class="cmd">in dependency order</span>: Engine 01 extracts facts → 02 flags field operations risks using 01's parameters → 03 + 04 analyze financial impact and legal liabilities in parallel → 05 compiles the unified risk playbook → 06 routes data to project nodes. Each engine takes ~2-4 seconds. <span class="warn">Do not refresh or navigate away</span> during processing.`,
+    actionHint: 'Click ⚡ FIRE ALL 6 ENGINES to launch the neural pipeline'
+  },
+  {
+    id: 'enginestatus',
+    title: 'STEP 5 · MONITOR ENGINE STATUS',
+    type: 'demo',
+    target: 'engineStatusPanel',
+    autoMs: 6000,
+    narration: `Watch the <span class="hl">Engine Status panel</span> at the footer in real time. Each engine cycles from <span class="warn">IDLE → RUNNING → COMPLETE</span>. The amber pulsing badge means that engine is communicating with the Groq cluster. Green COMPLETE means output text is verified and downstream dependencies have been successfully served. If an engine fails, a structural fallback executes to keep the chain unbroken.`,
+    actionHint: null
+  },
+  {
+    id: 'kpis',
+    title: 'STEP 6 · READ THE KPI BAR',
+    type: 'demo',
+    target: 'kpiBar',
+    autoMs: 7000,
+    narration: `Upon engine completion, the <span class="hl">KPI Bar</span> dynamically populates with metrics. <span class="cmd">Risk Score</span> (1-100) reflects overall operational exposure. <span class="cmd">Financial Exposure</span> tracks dollar-quantified liabilities or unapproved overages. <span class="cmd">Safety Risk</span> grades site hazards (High, Medium, Low). <span class="cmd">Compliance Status</span> monitors structural and labor compliance posture. Use these to triage files instantly.`,
+    actionHint: null
+  },
+  {
+    id: 'engines',
+    title: 'STEP 7 · REVIEW ENGINE OUTPUTS',
+    type: 'demo',
+    target: 'engineGrid',
+    autoMs: 9000,
+    narration: `The <span class="hl">6 engine output cards</span> display the full analytics breakdown. Every card features a COPY button for immediate paste into your PMS, Procore, or legal letters. <span class="cmd">Engine 01</span> = extracted parties, deadlines, and scope. <span class="cmd">Engine 02</span> = schedule impacts and safety compliance. <span class="cmd">Engine 03</span> = job cost variance and GAAP treatment. <span class="cmd">Engine 04</span> = active lien risks, bonds, and contract gaps. <span class="cmd">Engine 05</span> = your tactical resolution strategy. <span class="cmd">Engine 06</span> = automated application dispatch mapping.`,
+    actionHint: 'Click COPY on any engine card to copy output to clipboard'
+  },
+  {
+    id: 'dispatch',
+    title: 'STEP 8 · APP DISPATCH ROUTING',
+    type: 'demo',
+    target: 'appDispatch',
+    autoMs: 7000,
+    narration: `Engine 06 formats the <span class="hl">App Dispatch panel</span> — displaying prioritized routing cards telling you exactly which TSM construction module to open next (e.g., Permits, AuditOps, or Hub). The <span class="cmd">⭐ Top Recommendation</span> is highlighted in gold. Each card includes tailored execution steps generated dynamically based on your document's findings.`,
+    actionHint: 'Click any OPEN [APP] → button to route data directly to that specific module'
+  },
+  {
+    id: 'escalate',
+    title: 'STEP 9 · ESCALATE TO EXECUTIVE PORTAL',
+    type: 'action',
+    target: 'escalBtns',
+    autoMs: 8000,
+    narration: `The final step: <span class="hl">escalate the complete 6-engine dossier</span> to the Construction Strategist or Executive Suite. Click <span class="cmd">⚜ ESCALATE TO STRATEGIST →</span> to relay all raw and processed text via <span class="ok">sessionStorage relay</span>. The Strategist synthesizes this info into a polished project change brief. You can also click <span class="cmd">EXPORT ANALYSIS</span> to save a clear plaintext record offline.`,
+    actionHint: 'Click ⚜ ESCALATE TO STRATEGIST → to transfer the entire audit package'
+  },
+  {
+    id: 'done',
+    title: 'TOUR COMPLETE · WAR ROOM READY',
+    type: 'info',
+    target: 'heroSection',
+    autoMs: 0,
+    narration: `<span class="ok">Tour complete.</span> You are now fully trained on the Construction War Room workflow: <span class="cmd">classify → load → connect → fire → review → route → escalate</span>. The system maintains its internal state across internal module jumps so you won't lose your progress. <span class="hl">Select a document and fire the engines</span> to begin your first live project audit.`,
+    actionHint: null
+  }
+];
+
+let tourActive = false;
+let tourStep = 0;
+let autoMode = false;
+let autoTimer = null;
+let timerInterval = null;
+let autoMs = 6000;
+
+function spotlightEl(targetId){
+  const sp = document.getElementById('tourSpotlight');
+  if(!targetId){ sp.style.display='none'; return; }
+  const el = document.getElementById(targetId);
+  if(!el){ sp.style.display='none'; return; }
+  const r = el.getBoundingClientRect();
+  const pad = 8;
+  sp.style.display = 'block';
+  sp.style.top = (r.top - pad) + 'px';
+  sp.style.left = (r.left - pad) + 'px';
+  sp.style.width = (r.width + pad*2) + 'px';
+  sp.style.height = (r.height + pad*2) + 'px';
+  el.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function buildPips(){
+  const prog = document.getElementById('hudProgress');
+  if(!prog) return;
+  prog.innerHTML = '';
+  TOUR_SLIDES.forEach((s,i) => {
+    const pip = document.createElement('div');
+    pip.className = 'hud-pip' + (i < tourStep ? ' done' : i === tourStep ? ' active' : '');
+    prog.appendChild(pip);
+  });
+}
+
+function renderSlide(idx){
+  const slide = TOUR_SLIDES[idx];
+  document.getElementById('hudBadge').textContent = String(idx+1).padStart(2,'0') + ' / ' + TOUR_SLIDES.length;
+  document.getElementById('hudTitle').textContent = slide.title;
+  document.getElementById('hudNarration').innerHTML = slide.narration;
+  
+  const typeEl = document.getElementById('hudSlideType');
+  if(typeEl) {
+    typeEl.textContent = slide.type.toUpperCase();
+    typeEl.className = 'hud-slide-type ' + slide.type;
+  }
+  
+  const hint = document.getElementById('hudActionHint');
+  if(slide.actionHint){
+    hint.style.display = 'flex';
+    document.getElementById('hudActionText').textContent = slide.actionHint;
+  } else {
+    hint.style.display = 'none';
+  }
+  
+  document.getElementById('hudPrevBtn').disabled = idx === 0;
+  const nextBtn = document.getElementById('hudNextBtn');
+  if(idx === TOUR_SLIDES.length - 1){
+    nextBtn.textContent = 'END TOUR ✓';
+    nextBtn.onclick = endTour;
+  } else {
+    nextBtn.textContent = 'NEXT ▶';
+    nextBtn.onclick = tourNext;
+  }
+  
+  buildPips();
+  spotlightEl(slide.target);
+  if(autoMode) startAutoTimer(slide.autoMs || 6000);
+}
+
+function startAutoTimer(ms){
+  clearAutoTimer();
+  if(!ms || ms === 0) { stopAuto(); return; }
+  autoMs = ms;
+  const fill = document.getElementById('timerFill');
+  if(!fill) return;
+  fill.style.transition = 'none';
+  fill.style.width = '100%';
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      fill.style.transition = `width ${ms}ms linear`;
+      fill.style.width = '0%';
+    });
+  });
+  autoTimer = setTimeout(()=>{
+    if(tourStep < TOUR_SLIDES.length - 1) tourNext();
+    else endTour();
+  }, ms);
+}
+
+function clearAutoTimer(){
+  if(autoTimer){ clearTimeout(autoTimer); autoTimer = null; }
+  if(timerInterval){ clearInterval(timerInterval); timerInterval = null; }
+  const fill = document.getElementById('timerFill');
+  if(fill) {
+    fill.style.transition = 'none';
+    fill.style.width = '100%';
+  }
+}
+
+function toggleAuto(){
+  autoMode = !autoMode;
+  const tog = document.getElementById('autoToggle');
+  const lbl = document.getElementById('autoStepLbl');
+  if(tog) tog.classList.toggle('on', autoMode);
+  if(lbl) lbl.style.display = autoMode ? 'inline' : 'none';
+  if(autoMode){
+    startAutoTimer(TOUR_SLIDES[tourStep].autoMs || 6000);
+  } else {
+    clearAutoTimer();
+  }
+}
+
+function stopAuto(){
+  autoMode = false;
+  const tog = document.getElementById('autoToggle');
+  const lbl = document.getElementById('autoStepLbl');
+  if(tog) tog.classList.remove('on');
+  if(lbl) lbl.style.display = 'none';
+  clearAutoTimer();
+}
+
+function tourNext(){
+  if(tourStep < TOUR_SLIDES.length - 1){
+    tourStep++;
+    renderSlide(tourStep);
+  }
+}
+
+function tourPrev(){
+  if(tourStep > 0){
+    tourStep--;
+    renderSlide(tourStep);
+  }
+}
+
+function startTour(){
+  tourActive = true;
+  tourStep = 0;
+  document.getElementById('tourOverlay').classList.add('active');
+  document.getElementById('tourHUD').classList.add('active');
+  
+  const launchBtn = document.getElementById('tourLaunchBtn');
+  if(launchBtn) {
+    launchBtn.textContent = '■ TOUR ACTIVE';
+    launchBtn.style.color = 'var(--amber)';
+    launchBtn.style.borderColor = 'rgba(255,149,0,.4)';
+  }
+  renderSlide(0);
+  if(typeof addLog === 'function') addLog('Guided tour started', 'Construction narration active', 'p');
+}
+
+function endTour(){
+  tourActive = false;
+  stopAuto();
+  document.getElementById('tourOverlay').classList.remove('active');
+  document.getElementById('tourHUD').classList.remove('active');
+  document.getElementById('tourSpotlight').style.display = 'none';
+  
+  const launchBtn = document.getElementById('tourLaunchBtn');
+  if(launchBtn) {
+    launchBtn.textContent = '▶ GUIDED TOUR';
+    launchBtn.style.color = 'var(--matrix-green)';
+    launchBtn.style.borderColor = 'rgba(0,255,102,.3)';
+  }
+  if(typeof addLog === 'function') addLog('Tour ended', 'Construction War Room configured', 'g');
+}
+
+window.addEventListener('resize', ()=>{ if(tourActive) spotlightEl(TOUR_SLIDES[tourStep].target); });
+const mainPanel = document.querySelector('.main') || window;
+mainPanel.addEventListener('scroll', ()=>{ if(tourActive) spotlightEl(TOUR_SLIDES[tourStep].target); });
+
+/* ════════════════════════════════════════   SPEECH SYSTEM — ResponsiveVoice CDN ════════════════════════════════════════ */
+const RV_VOICES = [
+  'US English Male',
+  'US English Female',
+  'UK English Male',
+  'UK English Female',
+  'Australian Female',
+  'Australian Male'
+];
+
+(function initRVVoices(){
+  const sel = document.getElementById('speechVoiceSelect');
+  if(!sel) return;
+  sel.innerHTML = '';
+  RV_VOICES.forEach((v,i)=>{
+    const opt = document.createElement('option');
+    opt.value = v;
+    opt.textContent = v;
+    if(i === 0) opt.selected = true;
+    sel.appendChild(opt);
+  });
+})();
+
+function speechClean(html){
+  const d = document.createElement('div');
+  d.innerHTML = html;
+  return (d.textContent || d.innerText || '').replace(/\s+/g,' ').trim();
+}
+
+function speechPlay(){
+  if(typeof responsiveVoice === 'undefined'){
+    alert('ResponsiveVoice CDN not found — verify external library injection.');
+    return;
+  }
+  responsiveVoice.cancel();
+  const text  = speechClean(TOUR_SLIDES[tourStep].narration);
+  const voice = document.getElementById('speechVoiceSelect').value || 'US English Male';
+  const rate  = parseFloat(document.getElementById('speechRate').value) || 0.95;
+  const vol   = parseFloat(document.getElementById('speechVol').value)  || 1;
+  
+  responsiveVoice.speak(text, voice, {
+    rate,
+    volume: vol,
+    pitch: 1,
+    onstart:  ()=> speechSetState('speaking'),
+    onend:    ()=> speechSetState('idle'),
+    onerror:  ()=> speechSetState('idle')
+  });
+}
+
+function speechPause(){
+  if(typeof responsiveVoice === 'undefined') return;
+  responsiveVoice.pause();
+  speechSetState('paused');
+}
+
+function speechStop(){
+  if(typeof responsiveVoice === 'undefined') return;
+  responsiveVoice.cancel();
+  speechSetState('idle');
+}
+
+function speechSetState(state){
+  const playBtn  = document.getElementById('speechPlayBtn');
+  const pauseBtn = document.getElementById('speechPauseBtn');
+  const stopBtn  = document.getElementById('speechStopBtn');
+  if(!playBtn) return;
+  
+  if(state === 'speaking'){
+    playBtn.style.display  = 'none';
+    if(pauseBtn) pauseBtn.style.display = '';
+    if(stopBtn) stopBtn.style.display  = '';
+    if(pauseBtn) pauseBtn.className = 'hud-speech-btn speaking';
+  } else if(state === 'paused'){
+    playBtn.style.display  = '';
+    playBtn.textContent    = '▶ RESUME';
+    playBtn.className      = 'hud-speech-btn paused';
+    if(pauseBtn) pauseBtn.style.display = 'none';
+    if(stopBtn) stopBtn.style.display  = '';
+  } else {
+    playBtn.style.display  = '';
+    playBtn.textContent    = '🔊 SPEAK';
+    playBtn.className      = 'hud-speech-btn';
+    if(pauseBtn) pauseBtn.style.display = 'none';
+    if(stopBtn) stopBtn.style.display  = 'none';
+  }
+}
+
+// Global wrap interceptors to shut down voice systems on transition states
+const _rsOrig = renderSlide;
+renderSlide = function(idx){ speechStop(); _rsOrig(idx); };
+const _etOrig = endTour;
+endTour = function(){ speechStop(); _etOrig(); };
+
 // ═══════════════════════════════
 // SESSION
 // ═══════════════════════════════
