@@ -360,7 +360,7 @@ body::before{content:'';position:fixed;top:0;right:0;width:500px;height:500px;ba
     <!-- ESCALATE BAR -->
     <div class="escalate-bar" id="escalateBar">
       <div class="eb-left">
-        <div class="eb-title">⚡ ESCALATE TO FINOPS STRATEGIST →</div>
+        <div class="eb-title">⚡ ESCALATE TO CONSTRUCTION STRATEGIST →</div>
         <div class="eb-sub" id="escalSub">6-engine analysis complete. Package ready for strategist synthesis.</div>
       </div>
       <div class="eb-btns">
@@ -778,9 +778,16 @@ async function fireEngines() {
   document.getElementById('sbDoc').textContent = selectedDocType + ' · ' + docText.length + ' chars';
   document.getElementById('spinner').classList.remove('active');
   document.getElementById('fireBtn').disabled = false;
-  addLog('All 6 Engines Complete', 'Ready to escalate to FinOps Strategist', 'p');
+  addLog('All 6 Engines Complete', 'Ready to escalate to Construction Strategist', 'p');
 
   storeRelay(e);
+
+  setTimeout(() => {
+    try {
+      sessionStorage.setItem('TSM_CONSTRUCTION_WAR_RELAY', JSON.stringify({ docText, selectedDocType, engineOutputs: [e[1]||'',e[2]||'',e[3]||'',e[4]||'',e[5]||'',e[6]||''], timestamp: Date.now() }));
+    } catch(err) {}
+    showAnomalyAdvisorPanel([e[1]||'',e[2]||'',e[3]||'',e[4]||''], docText);
+  }, 1200);
 
   // Persist war room state for return navigation
   try {
@@ -970,7 +977,7 @@ addLog('FinOps War Room initialized', '6 engines standing by — load financial 
     // Restore app dispatch
     if(s.e6text) buildAppDispatch(s.e6text);
     // Restore escalate bar
-    document.getElementById('escalSub').textContent = '6-engine analysis complete — ' + s.selectedDocType + ' · Ready to escalate to FinOps Strategist.';
+    document.getElementById('escalSub').textContent = '6-engine analysis complete — ' + s.selectedDocType + ' · Ready to escalate to Construction Strategist.';
     document.getElementById('escalateBar').classList.add('visible');
     addLog('War Room state restored', s.selectedDocType + ' analysis reloaded', 'p');
   } catch(err){ console.warn('State restore error:', err); }
@@ -998,6 +1005,76 @@ addLog('FinOps War Room initialized', '6 engines standing by — load financial 
     addLog('Doc Processor relay received', relay.name + ' · ' + relay.content.length + ' chars', 'p');
   } catch(e){ console.warn('Relay load error:', e); }
 })();
+</script>
+<script>
+function showAnomalyAdvisorPanel(outputs, docText) {
+  const existing = document.getElementById('anomaly-slide-panel');
+  if (existing) existing.remove();
+
+  const panel = document.createElement('div');
+  panel.id = 'anomaly-slide-panel';
+  panel.style.cssText = `
+    position:fixed; bottom:0; right:0; width:420px; max-height:60vh;
+    background:#0a0f0a; border-top:2px solid #1ee8b6; border-left:2px solid #1ee8b6;
+    z-index:300; display:flex; flex-direction:column;
+    transform:translateY(100%); transition:transform 0.4s cubic-bezier(0.16,1,0.3,1);
+    font-family:'JetBrains Mono',monospace;
+  `;
+
+  panel.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #1ee8b633;background:#0d1a0d;">
+      <span style="color:#1ee8b6;font-size:11px;font-weight:700;letter-spacing:2px;">⬡ ANOMALY ADVISOR — FINOPS DEFECT SCAN</span>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button onclick="window.open('finops-anomaly-advisor.html','_blank')" style="background:#1ee8b620;border:1px solid #1ee8b6;color:#1ee8b6;font-size:9px;padding:3px 8px;cursor:pointer;font-family:inherit;letter-spacing:1px;">FULL REPORT ↗</button>
+        <button onclick="document.getElementById('anomaly-slide-panel').remove()" style="background:transparent;border:none;color:#666;font-size:16px;cursor:pointer;line-height:1;padding:0 2px;">✕</button>
+      </div>
+    </div>
+    <div id="anomaly-panel-body" style="flex:1;overflow-y:auto;padding:12px 14px;font-size:11px;line-height:1.8;color:#a0b8a0;">
+      <div id="anomaly-scan-msg" style="color:#1ee8b6;font-size:10px;letter-spacing:1px;">⬡ SCANNING PROJECT DOCUMENTS FOR DEFECTS...</div>
+    </div>
+  `;
+
+  document.body.appendChild(panel);
+  requestAnimationFrame(() => { panel.style.transform = 'translateY(0)'; });
+
+  const body = document.getElementById('anomaly-panel-body');
+  const context = `ENGINE 1 (DOCUMENT INTEL):\n${(outputs[0]||'').slice(0,400)}\n\nENGINE 2 (RISK & ANOMALY):\n${(outputs[1]||'').slice(0,400)}\n\nENGINE 3 (FINANCIAL IMPACT):\n${(outputs[2]||'').slice(0,300)}\n\nENGINE 4 (COMPLIANCE):\n${(outputs[3]||'').slice(0,300)}\n\nDOC SAMPLE:\n${(docText||'').slice(0,500)}`;
+
+  const sys = `You are TSM Anomaly Advisor, a field-level defect detection engine for finops project documents. Analyze the engine outputs and identify specific actionable defects. Output ONLY a numbered list. Each item must follow this exact format:
+⚠ [FIELD/SECTION] — what is wrong — exact fix instruction (which document, which line item, which spec section, what to correct or flag).
+Maximum 8 items. No preamble. No headers. No summary. Start immediately with item 1.`;
+
+  let firstChunk = true;
+  groqStreamModel(
+    'llama-3.3-70b-versatile', sys, context,
+    (chunk) => {
+      if (firstChunk) {
+        firstChunk = false;
+        const scanMsg = document.getElementById('anomaly-scan-msg');
+        if (scanMsg) scanMsg.remove();
+      }
+      const span = document.createElement('span');
+      span.innerHTML = chunk
+        .replace(/⚠/g, '<span style="color:#f59e0b">⚠</span>')
+        .replace(/—/g, '<span style="color:#1ee8b660"> — </span>');
+      body.appendChild(span);
+      body.scrollTop = body.scrollHeight;
+    },
+    () => {
+      const footer = document.createElement('div');
+      footer.style.cssText = 'margin-top:14px;padding-top:10px;border-top:1px solid #1ee8b620;color:#1ee8b650;font-size:9px;letter-spacing:1px;';
+      footer.textContent = '⬡ SCAN COMPLETE — FINOPS ANOMALIES PACKAGED FOR STRATEGIST RELAY';
+      body.appendChild(footer);
+    },
+    (err) => {
+      const errDiv = document.createElement('div');
+      errDiv.style.color = '#ef4444';
+      errDiv.textContent = '[Advisor error: ' + err + ']';
+      body.appendChild(errDiv);
+    },
+    600
+  );
+}
 </script>
 </body>
 </html>
