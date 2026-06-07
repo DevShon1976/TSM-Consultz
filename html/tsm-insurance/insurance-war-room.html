@@ -738,21 +738,18 @@ async function fireEngines(){
 
   storeRelay(e);
 
-  // Auto-show anomaly advisor prompt after 1.2s
+  // Auto-show anomaly advisor panel after 1.2s
   setTimeout(() => {
-    const strip = document.getElementById('anomalyAutoStrip');
-    if (strip) strip.style.display = 'flex';
+    try {
+      sessionStorage.setItem('tsmInsWarRoom', JSON.stringify({ docText, selectedDocType, timestamp: Date.now() }));
+    } catch(err) {}
+    showAnomalyAdvisorPanel([e[1]||'',e[2]||'',e[3]||'',e[4]||''], docText);
   }, 1200);
 }
 
 function openAnomalyAdvisor() {
-  // Relay current war room state to anomaly advisor via sessionStorage
   try {
-    const existing = JSON.parse(sessionStorage.getItem('tsmInsWarRoom') || '{}');
-    existing.docText = docText;
-    existing.selectedDocType = selectedDocType;
-    existing.timestamp = Date.now();
-    sessionStorage.setItem('tsmInsWarRoom', JSON.stringify(existing));
+    sessionStorage.setItem('tsmInsWarRoom', JSON.stringify({ docText, selectedDocType, timestamp: Date.now() }));
   } catch(e) {}
   window.open('ins-anomaly-advisor.html', '_blank');
 }
