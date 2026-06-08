@@ -856,6 +856,23 @@ function clearAll(){
 }
 
 function escalateToStrategist(){
+try {
+    const combined = engOut ? engOut.join(' ') : '';
+    const e5 = engOut ? (engOut[4]||'') : '';
+    localStorage.setItem('tsm_active_mission', JSON.stringify({
+      missionId: 'INS-' + Date.now(),
+      anomalyType: (combined.match(/DOC TYPE[:\s]+([^\n]+)/i)||[])[1]?.trim() || selectedDocType || 'Insurance Claim',
+      anomalySummary: e5.slice(0,200) || 'War room analysis complete — review strategist nodes for action plan.',
+      targetApp: 'Insurance Strategist',
+      steps: [
+        {id:'s1',title:'Run Situation Assessment',instruction:'Click RUN STRATEGIST CHAIN. Review N1 output for claim landscape and denial pattern.',fieldHint:'Focus on denial code: '+(combined.match(/DENIAL CODE[S]?[:\s]+([^\n]+)/i)||[])[1]?.trim(),status:'active'},
+        {id:'s2',title:'Review Strategic Analysis',instruction:'Read N2 output for strategic options and trade-offs.',fieldHint:'Note the recommended appeal strategy and timeline',status:'pending'},
+        {id:'s3',title:'Run Issue Pack',instruction:'Click RUN ISSUE PACK ON WAR ROOM DATA button in the banner.',fieldHint:'Exposure: '+(combined.match(/TOTAL EXPOSURE[:\s]+([^\n]+)/i)||[])[1]?.trim()||'See Engine 03',status:'pending'},
+        {id:'s4',title:'Assign to Team',instruction:'Click ASSIGN TO in the Issue Pack panel — select role based on claim type.',fieldHint:'Billing Coord for billing issues · RCM Manager for denials · Office Mgr for compliance',status:'pending'},
+        {id:'s5',title:'Escalate to Executive Portal',instruction:'After nodes complete, click → EXECUTIVE PORTAL in the nav.',fieldHint:'All 4 nodes must be complete before escalation',status:'pending'}
+      ]
+    }));
+  } catch(err) {}
   addLog('Escalating to Insurance Strategist','6-engine package dispatched','p');
   setTimeout(()=>nav('insurance-strategist.html'),400);
 }
