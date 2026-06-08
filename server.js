@@ -588,7 +588,7 @@ app.post('/api/strategist/query', async (req, res) => {
 
 // ── MISC ROUTES ───────────────────────────────────────────────────────────────
 app.get(['/html/healthcare/poc-html', '/html/healthcare/poc-html/'], (req, res) => res.sendFile(path.join(dirPath, 'healthcare', 'poc-html', 'index.html')));
-app.get('/_debug', (_req, res) => res.json({ dirname: __dirname, dirPath, suitesConfigured: suites.length }));
+app.get('/_debug', (_req, res) => res.json({ dirname: __dirname, dirPath, suitesConfigured: suites.length, cacheBust: 'v2-20260607' }));
 app.get('/', (_req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
   res.sendFile(path.join(dirPath, 'bpo', 'bpo-command-center.html'), (err) => {
