@@ -632,7 +632,15 @@ Respond ONLY with valid JSON — no markdown, no explanation.`,
       });
       const data = await res.json();
       const text = (data.response || data.content || '').replace(/```json|```/g, '').trim();
-      const parsed = JSON.parse(text);
+      let parsed;
+try {
+  parsed = JSON.parse(text);
+} catch(parseErr) {
+  // Try to extract partial JSON
+  const match = text.match(/\{[\s\S]*\}/);
+  if(match) parsed = JSON.parse(match[0]);
+  else throw parseErr;
+}
 
       m.steps = (parsed.steps || []).map((s, i) => ({
         id: `step-${i}`,
@@ -653,27 +661,48 @@ Respond ONLY with valid JSON — no markdown, no explanation.`,
   }
 
   function buildStepPrompt(m) {
-    return `Generate a step-by-step guided mission for resolving this insurance anomaly.
+  const denialIntel = {
+    'CO-5':  { reason:'Procedure inconsistent with place of service', missingDocs:'CMN, W-9, Prior Authorization', appealTeam:'Authorization & Billing Team', appealPath:'Submit corrected claim with CMN + prior auth within 120 days', urgency:'HIGH — timely filing window applies' },
+    'CO-4':  { reason:'Service inconsistent with covered benefit', missingDocs:'Medical necessity letter, Physician order', appealTeam:'Clinical Appeals Team', appealPath:'Submit medical necessity letter from ordering physician', urgency:'MEDIUM — 90-day appeal window' },
+    'CO-16': { reason:'Claim lacks required information', missingDocs:'Missing modifier, NPI/taxonomy correction', appealTeam:'Billing Corrections Team', appealPath:'Correct and resubmit — no formal appeal needed', urgency:'LOW — correctable resubmission' },
+    'CO-22': { reason:'Covered by another payer per COB', missingDocs:'COB form, Secondary payer EOB, Insurance verification', appealTeam:'COB/Eligibility Team', appealPath:'Verify payer order and resubmit with COB documentation', urgency:'MEDIUM' },
+    'CO-97': { reason:'Bundled service included in another service', missingDocs:'Modifier 59 documentation, Operative report', appealTeam:'Coding & Compliance Team', appealPath:'Apply correct NCCI modifier and resubmit', urgency:'MEDIUM — coding correction required' },
+    'PR-96': { reason:'Non-covered charge — patient responsibility', missingDocs:'ABN signed form, Patient consent', appealTeam:'Patient Financial Services', appealPath:'Verify ABN signature. Issue patient statement', urgency:'HIGH — patient liability risk' },
+  };
 
-ANOMALY TYPE: ${m.anomalyType}
-ANOMALY SUMMARY: ${m.anomalySummary}
+  // Extract denial code from mission fields or anomaly text
+  const codeMatch = (m.denialCode)
+    || (m.anomalyType||'').match(/\b(CO-\d+|PR-\d+|OA-\d+|PI-\d+)\b/i)?.[1]
+    || (m.anomalySummary||'').match(/\b(CO-\d+|PR-\d+|OA-\d+|PI-\d+)\b/i)?.[1];
+  const denialCode = codeMatch ? codeMatch.toUpperCase() : null;
+  const intel = denialCode ? (denialIntel[denialCode] || null) : null;
+
+  const denialContext = intel
+    ? `DENIAL CODE: ${denialCode}
+DENIAL REASON: ${intel.reason}
+MISSING DOCUMENTS: ${intel.missingDocs}
+APPEAL TEAM: ${intel.appealTeam}
+APPEAL PATH: ${intel.appealPath}
+URGENCY: ${intel.urgency}`
+    : `DENIAL REASON: ${(m.warRoomContext?.denialReason || m.anomalySummary || 'Not specified').slice(0, 200)}`;
+
+  return `You are TSM Neural Core. Generate denial-code-aware mission steps for this insurance claim.
+
+ANOMALY: ${m.anomalyType}
 TARGET APP: ${m.targetApp}
-CLIENT/PATIENT: ${m.patientOrClient || 'N/A'}
-CLAIM AMOUNT: ${m.claimAmount || 'N/A'}
-ADDITIONAL CONTEXT: ${JSON.stringify(m.warRoomContext || {})}
+PAYER: ${m.payer || m.warRoomContext?.payer || 'Unknown'}
+CLAIM AMOUNT: ${m.claimAmount || 'Unknown'}
+PATIENT: ${m.patientOrClient || 'Unknown'}
 
-Generate 5-8 actionable steps. Each step must include:
-- title: short action title (max 8 words)
-- instruction: clear 1-2 sentence instruction of what to do
-- fieldHint: specific field names, values, or inputs to enter (e.g. "Enter ICD-10: 396.00 in the Diagnosis Code field, set Denial Reason to 'Medical Necessity'")
+${denialContext}
+
+Generate exactly 5 steps. Each step must include title, instruction, fieldHint.
+${intel ? `Step 1 must address: ${intel.missingDocs}. Final step must escalate to Executive Portal.` : ''}
+${denialCode ? `Mark urgent steps with [URGENT].` : ''}
 
 Respond with ONLY this JSON:
-{
-  "steps": [
-    { "title": "...", "instruction": "...", "fieldHint": "..." }
-  ]
-}`;
-  }
+{"steps":[{"title":"...","instruction":"...","fieldHint":"..."}]}`;
+}
 
   // ── Utils ──────────────────────────────────────────────────────────────────
   function escHtml(str) {
