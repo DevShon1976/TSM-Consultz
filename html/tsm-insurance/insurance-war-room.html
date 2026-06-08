@@ -1423,6 +1423,616 @@ window.addEventListener('DOMContentLoaded', () => {
 window.insTourOpen = insTourOpen;
 window.insHowtoOpen = () => document.getElementById('insHowtoOverlay').classList.add('active');
 </script>
+<!-- ============================================================
+  TSM INSURANCE WAR ROOM — MISSION DISPATCH PATCH
+  Add this block just before </body> in insurance-war-room.html
+  Also add the mission guide script tag at the top of this block.
+  ============================================================ -->
 
+<script src="/js/tsm-mission-guide.js"></script>
+
+<style>
+/* ── Mission Preview Modal ─────────────────────────────────── */
+#tmg-mission-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 99998;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px);
+}
+#tmg-mission-modal-overlay.active { display: flex; }
+
+#tmg-mission-modal {
+  width: 540px;
+  max-height: 88vh;
+  background: #0a0e0a;
+  border: 1px solid #2a4a2a;
+  border-top: 3px solid #39ff14;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: #c8e6c9;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 0 60px rgba(57,255,20,0.15);
+  animation: tmg-modal-in 0.2s ease;
+}
+@keyframes tmg-modal-in {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.tmg-modal-header {
+  padding: 14px 16px;
+  background: #0d140d;
+  border-bottom: 1px solid #1a3a1a;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.tmg-modal-header-title {
+  color: #39ff14;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+.tmg-modal-header-sub {
+  color: #5a8a5a;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+.tmg-modal-close {
+  background: none;
+  border: 1px solid #2a4a2a;
+  color: #5a8a5a;
+  width: 22px; height: 22px;
+  border-radius: 2px;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+.tmg-modal-close:hover { border-color: #ff4444; color: #ff4444; }
+
+.tmg-modal-body { overflow-y: auto; flex: 1; padding: 14px 16px; }
+
+.tmg-modal-anomaly {
+  background: #0f1f0f;
+  border: 1px solid #1e3d1e;
+  border-left: 3px solid #ffd600;
+  padding: 10px 12px;
+  border-radius: 2px;
+  margin-bottom: 12px;
+}
+.tmg-modal-anomaly-label { color: #ffd600; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+.tmg-modal-anomaly-type { color: #fff; font-size: 12px; font-weight: 700; margin-bottom: 5px; }
+.tmg-modal-anomaly-details { color: #8ab48a; font-size: 10px; line-height: 1.5; }
+
+.tmg-modal-app-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #0d1a0d;
+  border: 1px solid #1a3a1a;
+  border-radius: 3px;
+  margin-bottom: 12px;
+}
+.tmg-modal-app-star { color: #ffd600; font-size: 14px; }
+.tmg-modal-app-info { flex: 1; }
+.tmg-modal-app-rank { color: #5a8a5a; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; }
+.tmg-modal-app-name { color: #39ff14; font-size: 12px; font-weight: 700; }
+
+.tmg-modal-steps-preview {
+  margin-bottom: 12px;
+}
+.tmg-modal-steps-label {
+  color: #5a8a5a;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.tmg-modal-step-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  background: #0d140d;
+  border: 1px solid #1a3a1a;
+  border-radius: 2px;
+}
+.tmg-modal-step-num {
+  color: #39ff14;
+  font-size: 9px;
+  font-weight: 700;
+  min-width: 16px;
+}
+.tmg-modal-step-content {}
+.tmg-modal-step-title { color: #c8e6c9; font-size: 10px; font-weight: 700; margin-bottom: 2px; }
+.tmg-modal-step-instruction { color: #7aaa7a; font-size: 10px; line-height: 1.4; margin-bottom: 4px; }
+.tmg-modal-step-hint {
+  background: #071207;
+  border-left: 2px solid #ffd600;
+  padding: 4px 7px;
+  color: #ffd600;
+  font-size: 9.5px;
+  line-height: 1.4;
+}
+
+.tmg-modal-generating {
+  text-align: center;
+  padding: 28px 0;
+}
+.tmg-modal-gen-spinner {
+  width: 28px; height: 28px;
+  border: 2px solid #1a3a1a;
+  border-top-color: #39ff14;
+  border-radius: 50%;
+  animation: tmg-spin 0.8s linear infinite;
+  margin: 0 auto 12px;
+}
+@keyframes tmg-spin { to { transform: rotate(360deg); } }
+.tmg-modal-gen-text { color: #5a8a5a; font-size: 10px; line-height: 1.7; letter-spacing: 0.06em; }
+.tmg-modal-gen-label { color: #39ff14; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 6px; }
+
+.tmg-modal-footer {
+  border-top: 1px solid #1a3a1a;
+  padding: 12px 16px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+.tmg-modal-btn {
+  padding: 8px 16px;
+  border-radius: 2px;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tmg-modal-btn-primary {
+  background: #39ff14;
+  color: #000;
+  border: none;
+}
+.tmg-modal-btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+.tmg-modal-btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.tmg-modal-btn-secondary {
+  background: none;
+  color: #5a8a5a;
+  border: 1px solid #2a4a2a;
+}
+.tmg-modal-btn-secondary:hover { border-color: #39ff14; color: #39ff14; }
+
+/* ── Upgrade existing recommendation cards ─── */
+.tmg-card-launch-btn {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 7px 0;
+  background: transparent;
+  border: 1px solid #2a5a1a;
+  color: #39ff14;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.15s;
+  text-align: center;
+}
+.tmg-card-launch-btn:hover {
+  background: #39ff14;
+  color: #000;
+  border-color: #39ff14;
+}
+</style>
+
+<!-- Mission Preview Modal -->
+<div id="tmg-mission-modal-overlay">
+  <div id="tmg-mission-modal">
+    <div class="tmg-modal-header">
+      <div>
+        <div class="tmg-modal-header-title">⚡ Mission Briefing</div>
+        <div class="tmg-modal-header-sub" id="tmg-modal-subtitle">Generating guided mission plan...</div>
+      </div>
+      <button class="tmg-modal-close" id="tmg-modal-close-btn">✕</button>
+    </div>
+    <div class="tmg-modal-body" id="tmg-modal-body">
+      <div class="tmg-modal-generating">
+        <div class="tmg-modal-gen-spinner"></div>
+        <div class="tmg-modal-gen-label">TSM Neural Core</div>
+        <div class="tmg-modal-gen-text">Analyzing anomaly...<br>Generating step-by-step mission plan...</div>
+      </div>
+    </div>
+    <div class="tmg-modal-footer" id="tmg-modal-footer" style="display:none">
+      <button class="tmg-modal-btn tmg-modal-btn-secondary" id="tmg-modal-cancel-btn">Cancel</button>
+      <button class="tmg-modal-btn tmg-modal-btn-primary" id="tmg-modal-launch-btn" disabled>
+        Launch with Guide →
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  const STORAGE_KEY = 'tsm_active_mission';
+  let _pendingMission = null;
+
+  // ── Inject "Launch with Guide" button into each recommendation card ────────
+  function upgradeRecommendationCards() {
+    // Targets the existing OPEN ... → buttons and their parent cards
+    const openBtns = document.querySelectorAll('[class*="open-btn"], .rec-open-btn, a[href*=".html"]');
+
+    // More robust: find all card-level containers by looking for the rank labels
+    // Adjust selector to match your actual War Room card structure
+    const cards = document.querySelectorAll('.recommendation-card, .rec-card, [data-app-rank]');
+
+    if (cards.length > 0) {
+      cards.forEach(card => upgradeCard(card));
+    } else {
+      // Fallback: find by the open buttons pattern
+      document.querySelectorAll('button, a').forEach(btn => {
+        const text = (btn.textContent || '').toUpperCase();
+        if (text.includes('OPEN ') && text.includes('→')) {
+          injectLaunchBtn(btn.closest('[class]') || btn.parentElement, btn);
+        }
+      });
+    }
+  }
+
+  function upgradeCard(card) {
+    if (card.dataset.tmgUpgraded) return;
+    card.dataset.tmgUpgraded = '1';
+
+    const appName = extractAppName(card);
+    const appUrl  = extractAppUrl(card);
+    const rank    = card.dataset.appRank || card.querySelector('[class*="rank"]')?.textContent || '';
+
+    const btn = document.createElement('button');
+    btn.className = 'tmg-card-launch-btn';
+    btn.textContent = '⚡ Launch with Mission Guide';
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openMissionModal(appName, appUrl, rank, card);
+    });
+    card.appendChild(btn);
+  }
+
+  function injectLaunchBtn(container, existingBtn) {
+    if (!container || container.dataset.tmgUpgraded) return;
+    container.dataset.tmgUpgraded = '1';
+
+    const appName = extractAppName(container);
+    const appUrl  = existingBtn?.href || extractAppUrl(container);
+
+    const btn = document.createElement('button');
+    btn.className = 'tmg-card-launch-btn';
+    btn.textContent = '⚡ Launch with Mission Guide';
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openMissionModal(appName, appUrl, '', container);
+    });
+    existingBtn.insertAdjacentElement('afterend', btn);
+  }
+
+  function extractAppName(el) {
+    const nameEl = el.querySelector('[class*="app-name"], [class*="rec-name"], h3, h4, strong');
+    if (nameEl) return nameEl.textContent.trim();
+    const btn = el.querySelector('button, a');
+    if (btn) {
+      const t = btn.textContent.replace(/OPEN|→/gi, '').trim();
+      if (t.length > 0 && t.length < 60) return t;
+    }
+    return 'Recommended App';
+  }
+
+  function extractAppUrl(el) {
+    const a = el.querySelector('a[href*=".html"]');
+    if (a) return a.href;
+    const btn = el.querySelector('button');
+    if (btn) {
+      const onclick = btn.getAttribute('onclick') || '';
+      const match = onclick.match(/['"]([^'"]*\.html[^'"]*)['"]/);
+      if (match) return match[1];
+    }
+    return null;
+  }
+
+  // ── Open mission modal & trigger AI generation ─────────────────────────────
+  function openMissionModal(appName, appUrl, rank, cardEl) {
+    const overlay = document.getElementById('tmg-mission-modal-overlay');
+    const body    = document.getElementById('tmg-modal-body');
+    const footer  = document.getElementById('tmg-modal-footer');
+    const launchBtn = document.getElementById('tmg-modal-launch-btn');
+    const subtitle  = document.getElementById('tmg-modal-subtitle');
+
+    // Reset modal state
+    body.innerHTML = `
+      <div class="tmg-modal-generating">
+        <div class="tmg-modal-gen-spinner"></div>
+        <div class="tmg-modal-gen-label">TSM Neural Core</div>
+        <div class="tmg-modal-gen-text">Analyzing anomaly...<br>Generating mission steps for <strong style="color:#c8e6c9">${escHtml(appName)}</strong>...</div>
+      </div>
+    `;
+    footer.style.display = 'none';
+    launchBtn.disabled = true;
+    subtitle.textContent = appName + ' · Generating plan...';
+    overlay.classList.add('active');
+    _pendingMission = null;
+
+    // Gather context from the War Room
+    const context = gatherWarRoomContext();
+
+    generateMissionSteps(appName, appUrl, context)
+      .then(mission => {
+        _pendingMission = mission;
+        renderModalMission(mission);
+        footer.style.display = 'flex';
+        launchBtn.disabled = false;
+        subtitle.textContent = appName + ' · Mission ready — ' + (mission.steps?.length || 0) + ' steps';
+      })
+      .catch(err => {
+        console.error('Mission generation error:', err);
+        body.innerHTML = `
+          <div class="tmg-modal-generating">
+            <div style="color:#ff6b6b;font-size:11px;text-align:center;margin-bottom:10px">⚠ Generation Failed</div>
+            <div class="tmg-modal-gen-text" style="color:#5a8a5a">Could not connect to TSM Neural Core.<br>Check server connection and retry.</div>
+          </div>
+        `;
+        footer.style.display = 'flex';
+        launchBtn.disabled = true;
+      });
+  }
+
+  function renderModalMission(m) {
+    const body = document.getElementById('tmg-modal-body');
+    const prog = m.steps?.length || 0;
+
+    body.innerHTML = `
+      <div class="tmg-modal-anomaly">
+        <div class="tmg-modal-anomaly-label">Anomaly Detected</div>
+        <div class="tmg-modal-anomaly-type">${escHtml(m.anomalyType)}</div>
+        <div class="tmg-modal-anomaly-details">${escHtml(m.anomalySummary)}</div>
+      </div>
+
+      <div class="tmg-modal-app-row">
+        <div class="tmg-modal-app-star">★</div>
+        <div class="tmg-modal-app-info">
+          <div class="tmg-modal-app-rank">Recommended App</div>
+          <div class="tmg-modal-app-name">${escHtml(m.targetApp)}</div>
+        </div>
+        <div style="color:#5a8a5a;font-size:9px">${prog} steps generated</div>
+      </div>
+
+      <div class="tmg-modal-steps-preview">
+        <div class="tmg-modal-steps-label">Mission Steps Preview</div>
+        ${(m.steps || []).map((s, i) => `
+          <div class="tmg-modal-step-row">
+            <div class="tmg-modal-step-num">${String(i+1).padStart(2,'0')}</div>
+            <div class="tmg-modal-step-content">
+              <div class="tmg-modal-step-title">${escHtml(s.title)}</div>
+              <div class="tmg-modal-step-instruction">${escHtml(s.instruction)}</div>
+              ${s.fieldHint ? `<div class="tmg-modal-step-hint">↳ ${escHtml(s.fieldHint)}</div>` : ''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  // ── Generate steps via TSM Neural Core ────────────────────────────────────
+  async function generateMissionSteps(appName, appUrl, context) {
+    const missionId =
+  ((window.location.pathname.match(/\/([^\/]+)-war-room/i)?.[1] || 'TSM')
+    .toUpperCase()) +
+  '-' +
+  Date.now().toString(36).toUpperCase();
+
+    const systemPrompt = `You are TSM Neural Core, an expert insurance operations AI. 
+You generate precise guided mission steps for insurance staff to resolve anomalies using specific apps.
+Respond ONLY with valid JSON. No markdown, no explanation, no code fences.`;
+
+    const userPrompt = `Generate a step-by-step guided mission for this insurance anomaly resolution task.
+
+TARGET APP: ${appName}
+ANOMALY TYPE: ${context.documentType || 'Insurance Claim'}
+DOCUMENT/CLAIM CONTEXT:
+${context.documentText || 'No document loaded'}
+
+CURRENT ANALYSIS CONTEXT:
+Claim Amount: ${context.claimAmount || 'Unknown'}
+Patient/Policy: ${context.patient || 'Unknown'}
+Status: ${context.status || 'Unknown'}
+Denial Reason: ${context.denialReason || 'Not specified'}
+
+Generate 5-7 actionable mission steps. Each must include:
+- title: short action title (max 7 words)
+- instruction: clear 1-2 sentence instruction of exactly what to do in the ${appName} app
+- fieldHint: specific field names, exact values, or inputs to enter (e.g., "In the Denial Analysis tab, set Denial Code to CO-16, enter ICD-10: 396.00 in the Diagnosis field, enter Claim Amount: $3,200")
+
+Also output:
+- anomalyType: one-line label for what the anomaly is
+- anomalySummary: 2-3 sentence summary of what happened and why this app was recommended
+
+Respond with ONLY this JSON structure:
+{
+  "anomalyType": "...",
+  "anomalySummary": "...",
+  "steps": [
+    { "title": "...", "instruction": "...", "fieldHint": "..." }
+  ]
+}`;
+
+    const res = await fetch('/api/insurance/query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ system: systemPrompt, message: userPrompt })
+    });
+
+    if (!res.ok) throw new Error('API error: ' + res.status);
+
+    const data = await res.json();
+    const rawText = (data.response || data.content || data.result || '').replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(rawText);
+
+    return {
+      missionId,
+      anomalyType: parsed.anomalyType || context.documentType || 'Insurance Anomaly',
+      anomalySummary: parsed.anomalySummary || '',
+      targetApp: appName,
+      targetUrl: appUrl,
+      patientOrClient: context.patient,
+      claimAmount: context.claimAmount,
+      steps: (parsed.steps || []).map((s, i) => ({
+        id: `step-${i}`,
+        title: s.title,
+        instruction: s.instruction,
+        fieldHint: s.fieldHint || '',
+        status: i === 0 ? 'active' : 'pending'
+      })),
+      generatedAt: new Date().toISOString(),
+      warRoomContext: context
+    };
+  }
+
+  // ── Gather context from the War Room DOM ──────────────────────────────────
+  function gatherWarRoomContext() {
+    const ctx = {};
+
+    // Document type button that is active/selected
+    const activeDocType = document.querySelector(`
+  .doc-type-btn.active,
+  .doc-type-btn.selected,
+  .sample-btn.active,
+  .type-btn.active,
+  .guide-btn.active,
+  .doc-btn.active,
+  [data-doc-type].active,
+  [data-type].active,
+  button.active[data-type]
+`);
+
+    ctx.documentType = activeDocType?.textContent?.trim()
+      || document.querySelector('#selectedDocType, [id*="docType"]')?.textContent?.trim()
+      || 'AP Aging';
+
+    // Pasted document text
+    const docTextArea = document.querySelector(`
+  textarea[id*="doc"],
+  textarea[id*="paste"],
+  textarea[id*="text"],
+  textarea[id*="input"],
+  textarea[id*="claim"],
+  textarea[id*="contract"],
+  textarea[id*="legal"],
+  textarea[id*="financial"],
+  textarea[placeholder*="Paste"],
+  textarea[placeholder*="Document"],
+  #documentText,
+  #pasteArea,
+  #docText,
+  #inputText,
+  #sourceText
+`);
+    ctx.documentText = docTextArea?.value?.trim()?.slice(0, 1000) || '';
+
+    // Try to extract claim details from the text
+    if (ctx.documentText) {
+      const amtMatch = ctx.documentText.match(/CLAIM AMOUNT[:\s]+(\$[\d,]+)/i);
+      if (amtMatch) ctx.claimAmount = amtMatch[1];
+
+      const patMatch = ctx.documentText.match(/PATIENT[:\s]+([^\n]+)/i);
+      if (patMatch) ctx.patient = patMatch[1].trim();
+
+      const statusMatch = ctx.documentText.match(/STATUS[:\s]+([^\n]+)/i);
+      if (statusMatch) ctx.status = statusMatch[1].trim();
+
+      const denialMatch = ctx.documentText.match(/DENIAL[:\s]+([^\n]+)/i);
+      if (denialMatch) ctx.denialReason = denialMatch[1].trim();
+    }
+
+    // Fallback: try to read from visible DOM elements (status bar, etc.)
+    if (!ctx.claimAmount) {
+      const statusBar = document.querySelector('[id*="statusBar"], .status-bar, #engineStatus');
+      ctx.claimAmount = statusBar?.textContent?.match(/\$[\d,]+/)?.[0] || '';
+    }
+
+    return ctx;
+  }
+
+  // ── Modal button handlers ──────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('tmg-modal-close-btn')?.addEventListener('click', closeMissionModal);
+    document.getElementById('tmg-modal-cancel-btn')?.addEventListener('click', closeMissionModal);
+    document.getElementById('tmg-mission-modal-overlay')?.addEventListener('click', function(e) {
+      if (e.target === this) closeMissionModal();
+    });
+
+    document.getElementById('tmg-modal-launch-btn')?.addEventListener('click', function () {
+      if (!_pendingMission) return;
+      // Write mission to localStorage — the guide panel in the target app will read it
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(_pendingMission));
+      } catch(e) {}
+      closeMissionModal();
+
+      // Navigate to target app
+      if (_pendingMission.targetUrl) {
+        window.location.href = _pendingMission.targetUrl;
+      } else {
+        // Guide is now loaded — alert user the panel is ready
+        if (window.TSMMissionGuide) window.TSMMissionGuide.refresh();
+      }
+    });
+
+    // Upgrade recommendation cards after a short delay (let War Room render first)
+    setTimeout(upgradeRecommendationCards, 600);
+
+    // Also re-run after engine analysis completes (if War Room fires a custom event)
+    document.addEventListener('warRoomAnalysisComplete', upgradeRecommendationCards);
+    document.addEventListener('enginesComplete', upgradeRecommendationCards);
+
+    // MutationObserver to catch dynamically rendered cards
+    const observer = new MutationObserver(() => {
+      upgradeRecommendationCards();
+    });
+    const recContainer = document.querySelector(
+      '#recommendationsContainer, .recommendations, [id*="rec"], [class*="rec-container"]'
+    );
+    if (recContainer) {
+      observer.observe(recContainer, { childList: true, subtree: true });
+    }
+  });
+
+  function closeMissionModal() {
+    document.getElementById('tmg-mission-modal-overlay')?.classList.remove('active');
+    _pendingMission = null;
+  }
+
+  function escHtml(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+ 
+})();
+</script>
 </body>
 </html>
