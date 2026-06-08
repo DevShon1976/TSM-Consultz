@@ -1,0 +1,27 @@
+name: Cleanup bloat
+on: workflow_dispatch
+jobs:
+  clean:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Remove tracked bloat
+        run: |
+          git rm -r --cached tsm-shell/ || true
+          git rm -r --cached _backup_pricing_1750_2026-04-28_135159/ || true
+          git rm -r --cached _backup_scroll_fix_1777375011/ || true
+          git rm -r --cached _backup_scroll_fix_1777375057/ || true
+          git rm -r --cached html/_backup_pricing_1750_2026-04-28_135159/ || true
+          git rm -r --cached html/_backup_scroll_fix_1777375011/ || true
+          git rm -r --cached html/_backup_scroll_fix_1777375057/ || true
+          git rm --cached GHS_BannerHealth_Presentation.pptx || true
+          git rm --cached TSM_Insurance_Presentation.pptx || true
+          git rm --cached html/GHS_BannerHealth_Presentation.pptx || true
+          git rm --cached html/TSM_Insurance_Presentation.pptx || true
+          git config user.email "cleanup@tsm"
+          git config user.name "TSM Cleanup"
+          git commit -m "chore: remove bloated files from Git tracking" || echo "nothing to commit"
+          git push
