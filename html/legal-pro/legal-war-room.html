@@ -282,7 +282,7 @@ main{padding:18px;display:flex;flex-direction:column;gap:14px}
   <span class="fn-arrow">›</span>
   <button class="fn-step" onclick="nav('legal-nodes.html')"><div class="fn-dot"></div>LEGAL NODES</button>
   <span class="fn-arrow">›</span>
-  <button class="fn-step" onclick="nav('legal-strategist.html')"><div class="fn-dot"></div>CASE STRATEGIST</button>
+  <button class="nav-btn" id="tourLaunchBtn" onclick="startTour()">▶ GUIDED TOUR</button><button class="nav-btn" onclick="document.getElementById('howtoOverlay').style.display='block'">HOW-TO GUIDE</button><button class="nav-btn" onclick="goNav('legal-strategist.html')">STRATEGIST</button>
   <span class="fn-arrow">›</span>
   <button class="fn-step" onclick="nav('legal-main-strategist.html')"><div class="fn-dot"></div>CHIEF STRATEGIST</button>
   <span class="fn-arrow">›</span>
@@ -1323,6 +1323,160 @@ Maximum 8 items. No preamble. No headers. No summary. Start immediately with ite
     600
   );
 }
+</script>
+<!-- HOW-TO GUIDE MODAL -->
+<div id="howtoOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:10001;overflow-y:auto;padding:2rem 1rem">
+  <div style="max-width:760px;margin:0 auto;background:#061018;border:1px solid rgba(255,196,0,.25);padding:2rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;border-bottom:1px solid rgba(255,196,0,.18);padding-bottom:1rem">
+      <div style="font-family:'Orbitron',monospace;font-size:.9rem;font-weight:700;color:#ffc400;letter-spacing:.15rem">LEGAL WAR ROOM · HOW-TO GUIDE</div>
+      <button onclick="document.getElementById('howtoOverlay').style.display='none'" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#8090a0;font-family:monospace;font-size:.7rem;padding:.3rem .7rem;cursor:pointer">✕ CLOSE</button>
+    </div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:.58rem;line-height:2;color:#8090a0">
+      <div style="color:#ffc400;font-size:.65rem;letter-spacing:.12rem;margin-bottom:.5rem">► WHAT IS THE LEGAL WAR ROOM?</div>
+      <p style="margin-bottom:1rem">Welcome to the Legal War Room — TSM's 6-engine legal document analysis pipeline. Processes <span style="color:#fff">Contracts, MSAs, NDAs, Litigation Filings, Demand Letters, Regulatory Notices, eDiscovery Packages, Settlement Agreements, Compliance Audits</span>.</p>
+      <div style="color:#ffc400;font-size:.65rem;letter-spacing:.12rem;margin-bottom:.5rem">► ENGINE PIPELINE</div>
+      <div style="margin-bottom:1rem">
+        <div style="padding:.35rem 0;border-bottom:1px solid rgba(255,255,255,.05)"><span style="color:#ffc400;font-size:.6rem">ENGINE 01</span><br>Extracts parties, effective dates, obligations, termination clauses, penalty triggers, and jurisdiction indicators from the raw legal document.</div>
+        <div style="padding:.35rem 0;border-bottom:1px solid rgba(255,255,255,.05)"><span style="color:#ffc400;font-size:.6rem">ENGINE 02</span><br>Identifies contract breaches, statute of limitations risks, unfavorable indemnification clauses, and litigation exposure flags.</div>
+        <div style="padding:.35rem 0;border-bottom:1px solid rgba(255,255,255,.05)"><span style="color:#ffc400;font-size:.6rem">ENGINE 03</span><br>Calculates total legal exposure, potential damages, penalty amounts, and settlement value range in dollars.</div>
+        <div style="padding:.35rem 0;border-bottom:1px solid rgba(255,255,255,.05)"><span style="color:#ffc400;font-size:.6rem">ENGINE 04</span><br>Audits regulatory compliance, GDPR/HIPAA/SOX obligations, filing deadlines, and jurisdictional exposure.</div>
+        <div style="padding:.35rem 0;border-bottom:1px solid rgba(255,255,255,.05)"><span style="color:#ffc400;font-size:.6rem">ENGINE 05</span><br>Synthesizes Engines 01–04 into a dollar-quantified risk mitigation plan with counsel assignments and response deadlines.</div>
+        <div style="padding:.35rem 0"><span style="color:#ffc400;font-size:.6rem">ENGINE 06 / NODES</span><br>Routes findings to the highest-priority TSM Legal apps with tailored how-to instructions for each node.</div>
+      </div>
+      <div style="color:#ffc400;font-size:.65rem;letter-spacing:.12rem;margin-bottom:.5rem">► ESCALATION CHAIN</div>
+      <p style="margin-bottom:1rem">After analysis, escalate to the <span style="color:#fff">Legal Chief Strategist</span> via the escalation button. Use EXPORT to download a full plaintext report for counsel review.</p>
+      <div style="background:#081420;border:1px solid rgba(255,196,0,.15);padding:.75rem;margin-top:.5rem">
+        <div style="color:#ffc400;font-size:.55rem;letter-spacing:.1rem;margin-bottom:.3rem">PRO TIPS</div>
+        <div style="color:#607070">▸ Load an MSA sample → fire engines → read Engine 02 for unfavorable indemnification flags<br>▸ Engine 03 calculates settlement value range — use before entering mediation<br>▸ Engine 04 flags HIPAA/GDPR obligations before escalating to Chief Strategist<br>▸ Anomaly Advisor auto-launches after engines — review field-level defects before escalating</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOUR OVERLAY -->
+<div id="tourOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9990;pointer-events:none"></div>
+<style>#tourOverlay.active,#tourHUD.active{display:block!important}</style>
+<div id="tourSpotlight" style="display:none;position:fixed;z-index:9992;border:2px solid rgba(255,196,0,.75);box-shadow:0 0 0 4px rgba(255,196,0,.12),0 0 30px rgba(255,196,0,.2);pointer-events:none;transition:all .25s ease"></div>
+
+<div id="tourHUD" style="display:none;position:fixed;bottom:1.2rem;right:1.2rem;width:360px;z-index:9995;font-family:'Share Tech Mono',monospace">
+  <style>
+    .hud-card{background:#081420;border:1px solid rgba(255,196,0,.3);overflow:hidden}
+    .hud-header{background:#061018;padding:.5rem .75rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,196,0,.15)}
+    .hud-badge{font-family:'Orbitron',monospace;font-size:.55rem;font-weight:700;color:#ffc400;letter-spacing:.1rem}
+    .hud-slide-type{font-size:.42rem;letter-spacing:.12rem;padding:.15rem .4rem;border:1px solid currentColor}
+    .hud-slide-type.info{color:#3b82f6;border-color:rgba(59,130,246,.4)}
+    .hud-slide-type.action{color:#ffc400;border-color:rgba(255,196,0,.4)}
+    .hud-slide-type.demo{color:#00ff80;border-color:rgba(0,255,80,.4)}
+    .hud-title{font-family:'Orbitron',monospace;font-size:.58rem;font-weight:700;color:#e4eaf4;letter-spacing:.08rem;padding:.45rem .75rem;border-bottom:1px solid rgba(255,196,0,.1)}
+    .hud-narration{padding:.55rem .75rem;font-size:.52rem;line-height:1.85;color:#7a8898;max-height:140px;overflow-y:auto}
+    .hud-narration::-webkit-scrollbar{width:2px}
+    .hud-narration::-webkit-scrollbar-thumb{background:rgba(255,196,0,.2)}
+    .hud-narration .hl{color:#ffc400}
+    .hud-narration .cmd{color:#e0e080}
+    .hud-narration .warn{color:#ff6060}
+    .hud-narration .ok{color:#00ff80}
+    .hud-hint{padding:.3rem .75rem;background:rgba(255,196,0,.06);border-top:1px solid rgba(255,196,0,.15);display:flex;align-items:flex-start;gap:.4rem;font-size:.48rem;color:rgba(255,196,0,.8)}
+    .hud-progress{display:flex;gap:3px;padding:.4rem .75rem;border-top:1px solid rgba(255,196,0,.1);flex-wrap:wrap}
+    .hud-pip{width:14px;height:3px;background:rgba(255,196,0,.12);border-radius:2px;transition:background .2s}
+    .hud-pip.active{background:#ffc400}
+    .hud-pip.done{background:rgba(255,196,0,.35)}
+    .hud-timer{height:2px;background:rgba(255,196,0,.1)}
+    #timerFill{height:100%;background:#ffc400;width:100%;transition:width 6s linear}
+    .hud-controls{display:flex;gap:.3rem;padding:.4rem .75rem;border-top:1px solid rgba(255,196,0,.1)}
+    .hud-btn{flex:1;background:transparent;border:1px solid rgba(255,196,0,.2);color:rgba(255,196,0,.5);font-family:'Share Tech Mono',monospace;font-size:.47rem;padding:.3rem;cursor:pointer;letter-spacing:.08rem;transition:all .12s}
+    .hud-btn:hover:not(:disabled){border-color:#ffc400;color:#ffc400}
+    .hud-btn:disabled{opacity:.35;cursor:not-allowed}
+    .hud-btn.primary{border-color:rgba(255,196,0,.5);color:#ffc400}
+    .hud-speech-row{display:flex;gap:.3rem;align-items:center;padding:.35rem .75rem;border-top:1px solid rgba(255,196,0,.1);flex-wrap:wrap}
+    .hud-speech-btn{background:transparent;border:1px solid rgba(255,196,0,.2);color:rgba(255,196,0,.5);font-family:'Share Tech Mono',monospace;font-size:.44rem;padding:.25rem .5rem;cursor:pointer;transition:all .12s;white-space:nowrap}
+    .hud-speech-btn:hover{border-color:#ffc400;color:#ffc400}
+    .hud-speech-btn.speaking{border-color:rgba(255,196,0,.7);color:#ffc400;animation:pulse 1.5s infinite}
+    .hud-speech-btn.paused{border-color:rgba(245,158,11,.5);color:#f59e0b}
+    .hud-speech-select{background:#081420;border:1px solid rgba(255,196,0,.15);color:rgba(255,196,0,.6);font-family:'Share Tech Mono',monospace;font-size:.43rem;padding:.2rem .3rem;flex:1;min-width:100px}
+    .hud-speech-input{background:#081420;border:1px solid rgba(255,196,0,.15);color:rgba(255,196,0,.6);font-family:'Share Tech Mono',monospace;font-size:.43rem;padding:.2rem .3rem;width:42px;text-align:center}
+    .hud-auto-row{display:flex;align-items:center;gap:.5rem;padding:.3rem .75rem .4rem;border-top:1px solid rgba(255,196,0,.08)}
+    .hud-auto-toggle{width:28px;height:14px;background:rgba(255,196,0,.1);border:1px solid rgba(255,196,0,.2);border-radius:7px;cursor:pointer;position:relative;transition:background .15s;flex-shrink:0}
+    .hud-auto-toggle .tog-knob{width:10px;height:10px;border-radius:50%;background:rgba(255,196,0,.3);position:absolute;top:1px;left:1px;transition:all .15s}
+    .hud-auto-toggle.on{background:rgba(255,196,0,.25);border-color:rgba(255,196,0,.5)}
+    .hud-auto-toggle.on .tog-knob{background:#ffc400;transform:translateX(14px)}
+    .hud-auto-lbl{font-size:.44rem;color:rgba(255,196,0,.4)}
+  </style>
+  <div class="hud-card">
+    <div class="hud-header">
+      <div class="hud-badge" id="hudBadge">01 / 11</div>
+      <div style="display:flex;align-items:center;gap:.4rem">
+        <span class="hud-slide-type info" id="hudSlideType">INFO</span>
+        <button onclick="endTour()" style="background:transparent;border:none;color:rgba(255,196,0,.3);font-size:.7rem;cursor:pointer">✕</button>
+      </div>
+    </div>
+    <div class="hud-title" id="hudTitle">LEGAL WAR ROOM</div>
+    <div class="hud-narration" id="hudNarration"></div>
+    <div class="hud-hint" id="hudActionHint" style="display:none">
+      <span style="flex-shrink:0;color:#ffc400">▶</span>
+      <span id="hudActionText"></span>
+    </div>
+    <div class="hud-progress" id="hudProgress"></div>
+    <div class="hud-timer"><div id="timerFill"></div></div>
+    <div class="hud-speech-row">
+      <button class="hud-speech-btn" id="speechPlayBtn" onclick="speechPlay()">🔊 SPEAK</button>
+      <button class="hud-speech-btn" id="speechPauseBtn" onclick="speechPause()" style="display:none">⏸ PAUSE</button>
+      <button class="hud-speech-btn" id="speechStopBtn" onclick="speechStop()" style="display:none">■ STOP</button>
+      <select class="hud-speech-select" id="speechVoiceSelect"></select>
+      <input class="hud-speech-input" id="speechRate" type="number" value="0.95" min="0.5" max="1.5" step="0.05" title="Rate">
+      <input class="hud-speech-input" id="speechVol" type="number" value="1" min="0" max="1" step="0.1" title="Volume">
+    </div>
+    <div class="hud-auto-row">
+      <div class="hud-auto-toggle" id="autoToggle" onclick="toggleAuto()"><div class="tog-knob"></div></div>
+      <span class="hud-auto-lbl">AUTO ADVANCE</span>
+      <span class="hud-auto-lbl" id="autoStepLbl" style="display:none;color:#ffc400">● RUNNING</span>
+    </div>
+    <div class="hud-controls">
+      <button class="hud-btn" id="hudPrevBtn" onclick="tourPrev()">◀ PREV</button>
+      <button class="hud-btn primary" id="hudNextBtn" onclick="tourNext()">NEXT ▶</button>
+      <button class="hud-btn" onclick="endTour()">✕ EXIT</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const TOUR_SLIDES = [
+  {"id":"welcome","title":"LEGAL WAR ROOM OVERVIEW","type":"info","target":"alertBar","autoMs":7000,"narration":"Welcome to the <span class='hl'>Legal War Room</span> — TSM's 6-engine legal document analysis pipeline. This tour covers the complete workflow: classify your document, load content, connect the AI, fire the engines, review legal risk intelligence, and escalate to the Chief Strategist.","actionHint":null},
+  {"id":"doctype","title":"STEP 1 · SELECT DOCUMENT TYPE","type":"action","target":"docTypeGrid","autoMs":6000,"narration":"<span class='hl'>Select your document type</span> first. The war room handles: <span class='cmd'>Contracts, MSAs, NDAs, Litigation Filings, Demand Letters, Regulatory Notices, eDiscovery Packages, Settlement Agreements, Compliance Audits</span>. <span class='warn'>Wrong type = wrong extraction frame</span> — always set this before loading content.","actionHint":"Select a document type to classify your analysis"},
+  {"id":"paste","title":"STEP 2 · LOAD DOCUMENT CONTENT","type":"action","target":"docPaste","autoMs":8000,"narration":"Paste raw document text — <span class='hl'>no formatting required</span>. Click one of the <span class='cmd'>sample chips</span> to load a realistic scenario: <span class='ok'>MSA (indemnification risk), NDA (breach scenario), Demand Letter (litigation exposure), eDiscovery Package</span>.","actionHint":"Paste document text OR click a sample chip to load a pre-built scenario"},
+  {"id":"api","title":"STEP 3 · CONNECT TSM NEURAL CORE","type":"action","target":"groqKey","autoMs":6000,"narration":"The war room runs on <span class='hl'>TSM's Neural Core</span> — Groq llama-3.3-70b-versatile. Enter your <span class='cmd'>gsk_...</span> API key and click TEST to validate. Without a key, engines fall back to structured heuristic output — still useful for demos.","actionHint":"Enter your Groq API key (gsk_...) and click TEST to validate the connection"},
+  {"id":"fire","title":"STEP 4 · FIRE THE ENGINE PIPELINE","type":"action","target":"fireBtn","autoMs":7000,"narration":"Click <span class='hl'>⚡ FIRE ALL ENGINES</span>. Engines run in dependency order: <span class='cmd'>01</span> extracts facts → <span class='cmd'>02</span> flags risk → <span class='cmd'>03</span> models legal exposure → <span class='cmd'>04</span> audits compliance → <span class='cmd'>05</span> synthesizes the plan → <span class='cmd'>06</span> routes to apps. <span class='warn'>Do not navigate away</span> during the run.","actionHint":"Click ⚡ FIRE ALL ENGINES to launch the analysis pipeline"},
+  {"id":"status","title":"STEP 5 · MONITOR ENGINE STATUS","type":"demo","target":"fireBtn","autoMs":6000,"narration":"Watch the <span class='hl'>engine status badges</span>. Each cycles: <span class='warn'>IDLE → RUNNING → COMPLETE</span>. Amber pulsing = calling AI. Green COMPLETE = output locked. If an engine errors, the system falls back to heuristic output so the chain never fully breaks.","actionHint":null},
+  {"id":"kpis","title":"STEP 6 · READ THE KPI SNAPSHOT","type":"demo","target":"snapRisk","autoMs":7000,"narration":"After engines complete, the <span class='hl'>KPI snapshot</span> populates: <span class='cmd'>Risk Score</span> (1–100), <span class='cmd'>Damages Exposure</span>, <span class='cmd'>Critical Deadline</span>, <span class='cmd'>Case Type</span>, and <span class='cmd'>Litigation Stage</span>. Risk >70 = red. Use these to triage before reading full engine outputs.","actionHint":null},
+  {"id":"engines","title":"STEP 7 · REVIEW ENGINE OUTPUT CARDS","type":"demo","target":"enginesGrid","autoMs":9000,"narration":"The engine output cards hold the full analysis. Each has a <span class='cmd'>COPY</span> button. <span class='cmd'>E01</span>: Extracts parties, obligations, termination clauses, penalty triggers. <span class='cmd'>E02</span>: Flags breaches, SOL risks, unfavorable indemnification. <span class='cmd'>E05</span>: Dollar-quantified risk mitigation plan with counsel assignments and deadlines.","actionHint":"Click COPY on any engine card to copy output to clipboard"},
+  {"id":"anomaly","title":"STEP 8 · ANOMALY ADVISOR PANEL","type":"demo","target":"anomaly-slide-panel","autoMs":7000,"narration":"After engines complete, the <span class='hl'>Anomaly Advisor</span> auto-launches as a slide-in panel. It scans all engine outputs for <span class='cmd'>field-level matter defects</span> — missing clauses, SOL risks, filing gaps — with exact fix instructions. Click <span class='cmd'>FULL REPORT ↗</span> to open the dedicated advisor page.","actionHint":"Review Anomaly Advisor defect list — click FULL REPORT ↗ for the complete scan"},
+  {"id":"dispatch","title":"STEP 9 · APP DISPATCH / BNCA","type":"demo","target":"dispatch06","autoMs":7000,"narration":"Engine 06 generates the <span class='hl'>App Dispatch</span> panel — ranked routing cards for which TSM Legal module to open next. The <span class='cmd'>⭐ TOP MATCH</span> is highlighted. Each card has tailored how-to instructions specific to your matter's findings.","actionHint":"Click any LAUNCH [APP] → button to route directly to that TSM module"},
+  {"id":"escalate","title":"STEP 10 · ESCALATE TO CHIEF STRATEGIST","type":"action","target":"alertBar","autoMs":8000,"narration":"Final step: <span class='hl'>escalate the full engine package</span> to the <span class='cmd'>Legal Chief Strategist</span> via sessionStorage relay. The Strategist synthesizes the package into an executive legal brief. Use <span class='cmd'>EXPORT</span> to download a plaintext report for counsel review.","actionHint":"Click ESCALATE → CHIEF STRATEGIST to transfer the full analysis package"},
+  {"id":"done","title":"TOUR COMPLETE · WAR ROOM READY","type":"info","target":"alertBar","autoMs":0,"narration":"<span class='ok'>Tour complete.</span> Full LEGAL WAR ROOM workflow: <span class='cmd'>classify → load → connect → fire → review → anomaly scan → route → escalate</span>. Click <span class='hl'>HOW-TO GUIDE</span> anytime to reference this workflow. <span class='hl'>Load a real matter document and fire the engines</span> to begin your first live analysis.","actionHint":null}
+];
+</script>
+<script>
+let tourActive=false,tourStep=0,autoMode=false,autoTimer=null,autoMs=6000;
+function spotlightEl(id){const sp=document.getElementById('tourSpotlight');if(!id){sp.style.display='none';return;}const el=document.getElementById(id);if(!el){sp.style.display='none';return;}const r=el.getBoundingClientRect(),p=8;sp.style.display='block';sp.style.top=(r.top-p)+'px';sp.style.left=(r.left-p)+'px';sp.style.width=(r.width+p*2)+'px';sp.style.height=(r.height+p*2)+'px';el.scrollIntoView({behavior:'smooth',block:'nearest'});}
+function buildPips(){const prog=document.getElementById('hudProgress');prog.innerHTML='';TOUR_SLIDES.forEach((s,i)=>{const pip=document.createElement('div');pip.className='hud-pip'+(i<tourStep?' done':i===tourStep?' active':'');prog.appendChild(pip);});}
+function renderSlide(idx){speechStop();const s=TOUR_SLIDES[idx];document.getElementById('hudBadge').textContent=String(idx+1).padStart(2,'0')+' / '+TOUR_SLIDES.length;document.getElementById('hudTitle').textContent=s.title;document.getElementById('hudNarration').innerHTML=s.narration;const te=document.getElementById('hudSlideType');te.textContent=s.type.toUpperCase();te.className='hud-slide-type '+s.type;const hi=document.getElementById('hudActionHint');if(s.actionHint){hi.style.display='flex';document.getElementById('hudActionText').textContent=s.actionHint;}else hi.style.display='none';document.getElementById('hudPrevBtn').disabled=idx===0;const nb=document.getElementById('hudNextBtn');if(idx===TOUR_SLIDES.length-1){nb.textContent='END TOUR ✓';nb.onclick=endTour;}else{nb.textContent='NEXT ▶';nb.onclick=tourNext;}buildPips();spotlightEl(s.target);if(autoMode)startAutoTimer(s.autoMs||6000);}
+function startAutoTimer(ms){clearAutoTimer();if(!ms||ms===0){stopAuto();return;}const fill=document.getElementById('timerFill');fill.style.transition='none';fill.style.width='100%';requestAnimationFrame(()=>requestAnimationFrame(()=>{fill.style.transition=`width ${ms}ms linear`;fill.style.width='0%';}));autoTimer=setTimeout(()=>{if(tourStep<TOUR_SLIDES.length-1)tourNext();else endTour();},ms);}
+function clearAutoTimer(){if(autoTimer){clearTimeout(autoTimer);autoTimer=null;}const fill=document.getElementById('timerFill');if(fill){fill.style.transition='none';fill.style.width='100%';}}
+function toggleAuto(){autoMode=!autoMode;document.getElementById('autoToggle').classList.toggle('on',autoMode);document.getElementById('autoStepLbl').style.display=autoMode?'inline':'none';if(autoMode)startAutoTimer(TOUR_SLIDES[tourStep].autoMs||6000);else clearAutoTimer();}
+function stopAuto(){autoMode=false;const t=document.getElementById('autoToggle'),l=document.getElementById('autoStepLbl');if(t)t.classList.remove('on');if(l)l.style.display='none';clearAutoTimer();}
+function tourNext(){if(tourStep<TOUR_SLIDES.length-1){tourStep++;renderSlide(tourStep);}}
+function tourPrev(){if(tourStep>0){tourStep--;renderSlide(tourStep);}}
+function startTour(){tourActive=true;tourStep=0;document.getElementById('tourOverlay').classList.add('active');document.getElementById('tourHUD').classList.add('active');const lb=document.getElementById('tourLaunchBtn');if(lb)lb.textContent='■ TOUR ACTIVE';renderSlide(0);}
+function endTour(){tourActive=false;speechStop();stopAuto();document.getElementById('tourOverlay').classList.remove('active');document.getElementById('tourHUD').classList.remove('active');document.getElementById('tourSpotlight').style.display='none';const lb=document.getElementById('tourLaunchBtn');if(lb)lb.textContent='▶ GUIDED TOUR';}
+window.addEventListener('resize',()=>{if(tourActive)spotlightEl(TOUR_SLIDES[tourStep].target);});
+const _sp=document.querySelector('.main')||document.querySelector('main')||document.body;
+_sp.addEventListener('scroll',()=>{if(tourActive)spotlightEl(TOUR_SLIDES[tourStep].target);});
+const RV_VOICES=['US English Male','US English Female','UK English Male','UK English Female','Australian Female','Australian Male'];
+(function(){const s=document.getElementById('speechVoiceSelect');if(!s)return;s.innerHTML='';RV_VOICES.forEach((v,i)=>{const o=document.createElement('option');o.value=v;o.textContent=v;if(i===0)o.selected=true;s.appendChild(o);});})();
+function speechClean(h){const d=document.createElement('div');d.innerHTML=h;return(d.textContent||d.innerText||'').replace(/\s+/g,' ').trim();}
+function speechPlay(){if(typeof responsiveVoice==='undefined'){alert('ResponsiveVoice not loaded.');return;}responsiveVoice.cancel();responsiveVoice.speak(speechClean(TOUR_SLIDES[tourStep].narration),document.getElementById('speechVoiceSelect').value||'US English Male',{rate:parseFloat(document.getElementById('speechRate').value)||0.95,volume:parseFloat(document.getElementById('speechVol').value)||1,pitch:1,onstart:()=>speechSetState('speaking'),onend:()=>speechSetState('idle'),onerror:()=>speechSetState('idle')});}
+function speechPause(){if(typeof responsiveVoice!=='undefined')responsiveVoice.pause();speechSetState('paused');}
+function speechStop(){if(typeof responsiveVoice!=='undefined')responsiveVoice.cancel();speechSetState('idle');}
+function speechSetState(state){const pb=document.getElementById('speechPlayBtn'),ps=document.getElementById('speechPauseBtn'),st=document.getElementById('speechStopBtn');if(!pb)return;if(state==='speaking'){pb.style.display='none';ps.style.display='';st.style.display='';ps.className='hud-speech-btn speaking';}else if(state==='paused'){pb.style.display='';pb.textContent='▶ RESUME';pb.className='hud-speech-btn paused';ps.style.display='none';st.style.display='';}else{pb.style.display='';pb.textContent='🔊 SPEAK';pb.className='hud-speech-btn';ps.style.display='none';st.style.display='none';}}
 </script>
 </body>
 </html>
