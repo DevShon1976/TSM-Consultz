@@ -1255,5 +1255,174 @@ renderSlide = function(idx){ speechStop(); _rsOrig(idx); };
 const _etOrig = endTour;
 endTour = function(){ speechStop(); _etOrig(); };
 </script>
+
+<!-- ── GUIDED TOUR ──────────────────────────────────────────────── -->
+<div class="tour-overlay" id="insTourOverlay">
+  <div class="tour-card">
+    <button class="tour-close" onclick="insTourClose()">✕</button>
+    <div class="tour-pip-row" id="insTourPips"></div>
+    <div class="tour-step-label" id="insTourStepLabel"></div>
+    <div class="tour-title" id="insTourTitle"></div>
+    <div class="tour-body" id="insTourBody"></div>
+    <div class="tour-actions">
+      <button class="tour-btn" id="insTourBack" onclick="insTourNav(-1)">← BACK</button>
+      <button class="tour-btn primary" id="insTourNext" onclick="insTourNav(1)">NEXT →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── HOW-TO MODAL ──────────────────────────────────────────────── -->
+<div class="howto-overlay" id="insHowtoOverlay">
+  <div class="howto-card">
+    <h2>⚡ HOW TO USE — INSURANCE WAR ROOM</h2>
+    <div class="howto-section">
+      <h3>STEP 1 — LOAD YOUR DOCUMENT</h3>
+      <ul>
+        <li>Drop a claims document, EOB, policy filing, underwriting report, or compliance notice into the intake zone — or paste raw text.</li>
+        <li>Use a sample document to demo the pipeline instantly.</li>
+      </ul>
+    </div>
+    <div class="howto-section">
+      <h3>STEP 2 — CONFIGURE API KEY</h3>
+      <ul>
+        <li>Enter your Groq API key and hit Test. Green dot = connected. Saved to localStorage.</li>
+      </ul>
+    </div>
+    <div class="howto-section">
+      <h3>STEP 3 — RUN THE ENGINE PIPELINE</h3>
+      <ul>
+        <li><strong style="color:var(--cyan)">E1 · DOCUMENT INTEL</strong> — Extracts policy numbers, claim IDs, denial codes, coverage types, and dates.</li>
+        <li><strong style="color:var(--cyan)">E2 · COVERAGE ANALYST</strong> — Maps denial to policy language, identifies coverage gaps and exclusions.</li>
+        <li><strong style="color:var(--cyan)">E3 · FINANCIAL IMPACT</strong> — Quantifies dollar exposure, reserve requirements, and subrogation potential.</li>
+        <li><strong style="color:var(--cyan)">E4 · RECOVERY STRATEGY</strong> — Builds appeal plan, re-submission checklist, and regulatory escalation path.</li>
+        <li><strong style="color:var(--cyan)">E5 · NAVIGATOR</strong> — Routes tasks to Claims Adjuster, Underwriter, Compliance Officer, or Carrier Contact.</li>
+      </ul>
+    </div>
+    <div class="howto-section">
+      <h3>STEP 4 — NARRATED TOUR</h3>
+      <ul>
+        <li>Hit the 🎙 SPEAK button to activate ResponsiveVoice narration of engine output.</li>
+        <li>Use the App Dispatch panel to route to the recommended Insurance suite app.</li>
+      </ul>
+    </div>
+    <button class="howto-close-btn" onclick="document.getElementById('insHowtoOverlay').classList.remove('active')">CLOSE</button>
+  </div>
+</div>
+
+<!-- ── DEFECT MANIFEST ───────────────────────────────────────────── -->
+<button class="manifest-btn" onclick="document.getElementById('insManifestOverlay').classList.add('active')">⚠ DEFECT MANIFEST</button>
+<div class="manifest-overlay" id="insManifestOverlay">
+  <div class="manifest-card">
+    <h2>⚠ INSURANCE WAR ROOM — DEFECT MANIFEST</h2>
+    <table class="manifest-table">
+      <thead><tr><th>#</th><th>COMPONENT</th><th>DEFECT</th><th>SEV</th><th>STATUS</th></tr></thead>
+      <tbody>
+        <tr><td>D-01</td><td>ResponsiveVoice</td><td>CDN narration blocked on some corporate networks; no offline fallback</td><td class="sev-crit">CRIT</td><td>OPEN</td></tr>
+        <tr><td>D-02</td><td>File Drop Zone</td><td>Binary PDF/DOCX extraction may silently fail on unsupported browsers</td><td class="sev-crit">CRIT</td><td>OPEN</td></tr>
+        <tr><td>D-03</td><td>App Dispatch</td><td>APP_URLS fallback routes to ins-hub.html for all unrecognized app names</td><td class="sev-med">MED</td><td>OPEN</td></tr>
+        <tr><td>D-04</td><td>Existing Tour</td><td>renderSlide tour uses slide index state — may conflict if called during engine run</td><td class="sev-med">MED</td><td>OPEN</td></tr>
+        <tr><td>D-05</td><td>API Key</td><td>Stored in localStorage plaintext; no expiry or rotation</td><td class="sev-med">MED</td><td>ACCEPTED</td></tr>
+        <tr><td>D-06</td><td>sessionStorage Relay</td><td>Key collisions possible if multiple Insurance tabs open simultaneously</td><td class="sev-med">MED</td><td>OPEN</td></tr>
+        <tr><td>D-07</td><td>Mobile Layout</td><td>Engine output panels overflow on screens &lt;768px</td><td class="sev-low">LOW</td><td>OPEN</td></tr>
+      </tbody>
+    </table>
+    <button class="manifest-close-btn" onclick="document.getElementById('insManifestOverlay').classList.remove('active')">CLOSE</button>
+  </div>
+</div>
+
+<style>
+.tour-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9000;display:none;align-items:center;justify-content:center}
+.tour-overlay.active{display:flex}
+.tour-card{background:#0d1117;border:1px solid var(--cyan);border-radius:8px;padding:28px 32px;max-width:480px;width:90%;position:relative;box-shadow:0 0 40px rgba(0,212,212,.18)}
+.tour-step-label{font-family:'Orbitron',sans-serif;font-size:.65rem;color:var(--cyan);letter-spacing:.12em;margin-bottom:6px}
+.tour-title{font-family:'Orbitron',sans-serif;font-size:1.05rem;color:#fff;margin-bottom:12px}
+.tour-body{font-size:.88rem;color:#aaa;line-height:1.6;margin-bottom:20px}
+.tour-actions{display:flex;gap:10px;justify-content:flex-end}
+.tour-btn{padding:7px 18px;border-radius:4px;border:1px solid var(--cyan);background:transparent;color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:.72rem;cursor:pointer;letter-spacing:.08em}
+.tour-btn.primary{background:var(--cyan);color:#000}
+.tour-btn:hover{opacity:.8}
+.tour-pip-row{display:flex;gap:6px;margin-bottom:18px}
+.tour-pip{width:28px;height:3px;border-radius:2px;background:#2a2a2a}
+.tour-pip.done{background:var(--cyan)}
+.tour-pip.active{background:var(--amber)}
+.tour-close{position:absolute;top:12px;right:14px;background:none;border:none;color:#555;font-size:1.1rem;cursor:pointer}
+.howto-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:8500;display:none;align-items:center;justify-content:center}
+.howto-overlay.active{display:flex}
+.howto-card{background:#0d1117;border:1px solid #333;border-radius:8px;padding:32px;max-width:560px;width:92%;max-height:80vh;overflow-y:auto}
+.howto-card h2{font-family:'Orbitron',sans-serif;font-size:.95rem;color:var(--cyan);margin-bottom:18px;letter-spacing:.1em}
+.howto-section{margin-bottom:16px}
+.howto-section h3{font-family:'Orbitron',sans-serif;font-size:.72rem;color:var(--amber);margin-bottom:6px;letter-spacing:.08em}
+.howto-section p,.howto-section li{font-size:.83rem;color:#aaa;line-height:1.55}
+.howto-section ul{padding-left:16px}
+.howto-close-btn{margin-top:20px;padding:8px 22px;background:transparent;border:1px solid var(--cyan);color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:.72rem;border-radius:4px;cursor:pointer;letter-spacing:.08em}
+.howto-close-btn:hover{background:var(--cyan);color:#000}
+.manifest-btn{position:fixed;bottom:18px;left:18px;z-index:7000;background:#0d1117;border:1px solid #ef4444;color:#ef4444;font-family:'Orbitron',sans-serif;font-size:.62rem;padding:7px 14px;border-radius:4px;cursor:pointer;letter-spacing:.08em;opacity:.7}
+.manifest-btn:hover{opacity:1}
+.manifest-overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9500;display:none;align-items:center;justify-content:center}
+.manifest-overlay.active{display:flex}
+.manifest-card{background:#0d1117;border:1px solid #ef4444;border-radius:8px;padding:28px 32px;max-width:600px;width:92%;max-height:78vh;overflow-y:auto}
+.manifest-card h2{font-family:'Orbitron',sans-serif;font-size:.9rem;color:#ef4444;margin-bottom:16px;letter-spacing:.1em}
+.manifest-table{width:100%;border-collapse:collapse;font-size:.8rem}
+.manifest-table th{text-align:left;color:#555;font-family:'Orbitron',sans-serif;font-size:.65rem;padding:6px 8px;border-bottom:1px solid #222;letter-spacing:.06em}
+.manifest-table td{padding:7px 8px;color:#aaa;border-bottom:1px solid #1a1a1a;vertical-align:top}
+.manifest-table tr:hover td{background:#111}
+.sev-crit{color:#ef4444;font-weight:700}
+.sev-med{color:var(--amber)}
+.sev-low{color:var(--cyan)}
+.manifest-close-btn{margin-top:18px;padding:7px 20px;background:transparent;border:1px solid #ef4444;color:#ef4444;font-family:'Orbitron',sans-serif;font-size:.7rem;border-radius:4px;cursor:pointer;letter-spacing:.08em}
+.manifest-close-btn:hover{background:#ef4444;color:#000}
+</style>
+
+<script>
+const INS_TOUR_STEPS = [
+  { title: 'INSURANCE WAR ROOM', body: 'This is the Insurance Operations command center. The AI pipeline processes claims documents, EOBs, policy filings, and compliance notices — delivering coverage analysis, financial impact, and a full recovery strategy.' },
+  { title: 'E1 · DOCUMENT INTEL', body: 'Extracts structured data: policy numbers, claim IDs, denial codes, coverage types, carrier info, and key dates. Feeds all downstream engines.' },
+  { title: 'E2 · COVERAGE ANALYST', body: 'Maps the denial or dispute to specific policy language. Identifies coverage gaps, exclusions, and conditions precedent that apply to the claim.' },
+  { title: 'E3 · FINANCIAL IMPACT', body: 'Quantifies total dollar exposure: reserve requirements, subrogation potential, litigation risk, and carrier recovery estimates.' },
+  { title: 'E4 · RECOVERY STRATEGY', body: 'Builds a step-by-step appeal and re-submission plan with regulatory escalation path, documentation checklist, and carrier contact protocol.' },
+  { title: 'E5 · NAVIGATOR', body: 'Routes each action to the correct role — Claims Adjuster, Underwriter, Compliance Officer, or Carrier Contact — with priority and escalation order.' },
+  { title: 'NARRATION & DISPATCH', body: 'Use the 🎙 SPEAK button for ResponsiveVoice narration of engine output. The App Dispatch panel recommends the best Insurance suite app for your document type.' },
+  { title: 'YOU\'RE READY', body: 'Load a claims document or hit a sample, enter your Groq key, and run the pipeline. Hit HOW TO anytime for a full control walkthrough.' },
+];
+
+let insTourIdx = 0;
+function insTourOpen() { insTourIdx = 0; insTourRender(); document.getElementById('insTourOverlay').classList.add('active'); }
+function insTourClose() { document.getElementById('insTourOverlay').classList.remove('active'); }
+function insTourNav(dir) {
+  const total = INS_TOUR_STEPS.length;
+  if (dir === 1 && insTourIdx === total - 1) { insTourClose(); return; }
+  insTourIdx = Math.max(0, Math.min(total - 1, insTourIdx + dir));
+  insTourRender();
+}
+function insTourRender() {
+  const s = INS_TOUR_STEPS[insTourIdx];
+  const total = INS_TOUR_STEPS.length;
+  document.getElementById('insTourStepLabel').textContent = 'STEP ' + (insTourIdx + 1) + ' OF ' + total;
+  document.getElementById('insTourTitle').textContent = s.title;
+  document.getElementById('insTourBody').textContent = s.body;
+  document.getElementById('insTourBack').style.display = insTourIdx === 0 ? 'none' : '';
+  document.getElementById('insTourNext').textContent = insTourIdx === total - 1 ? 'FINISH' : 'NEXT →';
+  const pips = document.getElementById('insTourPips');
+  pips.innerHTML = '';
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('div');
+    d.className = 'tour-pip' + (i < insTourIdx ? ' done' : i === insTourIdx ? ' active' : '');
+    pips.appendChild(d);
+  }
+}
+window.addEventListener('DOMContentLoaded', () => {
+  const tb = document.getElementById('tour-btn') || document.getElementById('tourBtn') || document.getElementById('insTourBtn');
+  if (tb) tb.addEventListener('click', insTourOpen);
+  const hb = document.getElementById('howto-btn') || document.getElementById('howtoBtn') || document.getElementById('insHowtoBtn');
+  if (hb) hb.addEventListener('click', () => document.getElementById('insHowtoOverlay').classList.add('active'));
+  if (!localStorage.getItem('ins_war_tour_done')) {
+    setTimeout(insTourOpen, 800);
+    localStorage.setItem('ins_war_tour_done', '1');
+  }
+});
+window.insTourOpen = insTourOpen;
+window.insHowtoOpen = () => document.getElementById('insHowtoOverlay').classList.add('active');
+</script>
+
 </body>
 </html>

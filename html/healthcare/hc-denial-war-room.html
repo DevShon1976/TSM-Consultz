@@ -338,6 +338,49 @@ textarea::placeholder{color:var(--faint)}
 .phase-pane{display:none}
 .phase-pane.active{display:block;animation:fadeIn 0.2s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+/* ── GUIDED TOUR ─────────────────────────────────────────── */
+.tour-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9000;display:none;align-items:center;justify-content:center}
+.tour-overlay.active{display:flex}
+.tour-card{background:#0d1117;border:1px solid var(--cyan);border-radius:8px;padding:28px 32px;max-width:480px;width:90%;position:relative;box-shadow:0 0 40px rgba(0,212,212,.18)}
+.tour-step-label{font-family:'Orbitron',sans-serif;font-size:.65rem;color:var(--cyan);letter-spacing:.12em;margin-bottom:6px}
+.tour-title{font-family:'Orbitron',sans-serif;font-size:1.05rem;color:#fff;margin-bottom:12px}
+.tour-body{font-size:.88rem;color:#aaa;line-height:1.6;margin-bottom:20px}
+.tour-actions{display:flex;gap:10px;justify-content:flex-end}
+.tour-btn{padding:7px 18px;border-radius:4px;border:1px solid var(--cyan);background:transparent;color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:.72rem;cursor:pointer;letter-spacing:.08em}
+.tour-btn.primary{background:var(--cyan);color:#000}
+.tour-btn:hover{opacity:.8}
+.tour-pip-row{display:flex;gap:6px;margin-bottom:18px}
+.tour-pip{width:28px;height:3px;border-radius:2px;background:#2a2a2a}
+.tour-pip.done{background:var(--cyan)}
+.tour-pip.active{background:var(--amber)}
+.tour-close{position:absolute;top:12px;right:14px;background:none;border:none;color:#555;font-size:1.1rem;cursor:pointer}
+/* ── HOW-TO MODAL ────────────────────────────────────────── */
+.howto-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:8500;display:none;align-items:center;justify-content:center}
+.howto-overlay.active{display:flex}
+.howto-card{background:#0d1117;border:1px solid #333;border-radius:8px;padding:32px;max-width:560px;width:92%;max-height:80vh;overflow-y:auto}
+.howto-card h2{font-family:'Orbitron',sans-serif;font-size:.95rem;color:var(--cyan);margin-bottom:18px;letter-spacing:.1em}
+.howto-section{margin-bottom:16px}
+.howto-section h3{font-family:'Orbitron',sans-serif;font-size:.72rem;color:var(--amber);margin-bottom:6px;letter-spacing:.08em}
+.howto-section p,.howto-section li{font-size:.83rem;color:#aaa;line-height:1.55}
+.howto-section ul{padding-left:16px}
+.howto-close-btn{margin-top:20px;padding:8px 22px;background:transparent;border:1px solid var(--cyan);color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:.72rem;border-radius:4px;cursor:pointer;letter-spacing:.08em}
+.howto-close-btn:hover{background:var(--cyan);color:#000}
+/* ── DEFECT MANIFEST ─────────────────────────────────────── */
+.manifest-btn{position:fixed;bottom:18px;left:18px;z-index:7000;background:#0d1117;border:1px solid #ef4444;color:#ef4444;font-family:'Orbitron',sans-serif;font-size:.62rem;padding:7px 14px;border-radius:4px;cursor:pointer;letter-spacing:.08em;opacity:.7}
+.manifest-btn:hover{opacity:1}
+.manifest-overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9500;display:none;align-items:center;justify-content:center}
+.manifest-overlay.active{display:flex}
+.manifest-card{background:#0d1117;border:1px solid #ef4444;border-radius:8px;padding:28px 32px;max-width:600px;width:92%;max-height:78vh;overflow-y:auto}
+.manifest-card h2{font-family:'Orbitron',sans-serif;font-size:.9rem;color:#ef4444;margin-bottom:16px;letter-spacing:.1em}
+.manifest-table{width:100%;border-collapse:collapse;font-size:.8rem}
+.manifest-table th{text-align:left;color:#555;font-family:'Orbitron',sans-serif;font-size:.65rem;padding:6px 8px;border-bottom:1px solid #222;letter-spacing:.06em}
+.manifest-table td{padding:7px 8px;color:#aaa;border-bottom:1px solid #1a1a1a;vertical-align:top}
+.manifest-table tr:hover td{background:#111}
+.sev-crit{color:#ef4444;font-weight:700}
+.sev-med{color:var(--amber)}
+.sev-low{color:var(--cyan)}
+.manifest-close-btn{margin-top:18px;padding:7px 20px;background:transparent;border:1px solid #ef4444;color:#ef4444;font-family:'Orbitron',sans-serif;font-size:.7rem;border-radius:4px;cursor:pointer;letter-spacing:.08em}
+.manifest-close-btn:hover{background:#ef4444;color:#000}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://code.responsivevoice.org/responsivevoice.js?key=FREE"></script>
@@ -362,7 +405,7 @@ textarea::placeholder{color:var(--faint)}
   <div class="hdr-right">
     <div class="pill pill-red" id="scenario-pill">DENIAL RECOVERY</div>
     <div class="pill pill-green">5 ENGINES LIVE</div>
-    <div class="pill pill-teal">NAVIGATOR ACTIVE</div><button class="mode-btn" id="tourLaunchBtn" onclick="startTour()" style="background:transparent;border:1px solid rgba(0,229,255,.3);color:#00e5ff;font-family:monospace;font-size:9px;padding:4px 10px;cursor:pointer;margin-left:4px">▶ TOUR</button><button class="mode-btn" onclick="document.getElementById('howtoOverlay').style.display='block'" style="background:transparent;border:1px solid rgba(0,229,255,.2);color:#6a9aaa;font-family:monospace;font-size:9px;padding:4px 10px;cursor:pointer">HOW-TO</button><button class="mode-btn" id="tourLaunchBtn" onclick="startTour()" style="background:transparent;border:1px solid rgba(0,229,255,.3);color:#00e5ff;font-family:monospace;font-size:9px;padding:4px 10px;cursor:pointer;letter-spacing:.08em;margin-left:4px">▶ TOUR</button><button class="mode-btn" onclick="document.getElementById('howtoOverlay').style.display='block'" style="background:transparent;border:1px solid rgba(0,229,255,.2);color:#6a9aaa;font-family:monospace;font-size:9px;padding:4px 10px;cursor:pointer;letter-spacing:.08em">HOW-TO</button>
+    <div class="pill pill-teal">NAVIGATOR ACTIVE</div>
     <div class="clock" id="clock">--:--:--</div>
   </div>
 </div>
@@ -2344,6 +2387,135 @@ Maximum 8 items. No preamble. No headers. No summary. Start immediately with ite
   );
 }
 </script>
+
+<!-- ── GUIDED TOUR ──────────────────────────────────────────────── -->
+<div class="tour-overlay" id="tourOverlay">
+  <div class="tour-card">
+    <button class="tour-close" onclick="tourClose()">✕</button>
+    <div class="tour-pip-row" id="tourPips"></div>
+    <div class="tour-step-label" id="tourStepLabel"></div>
+    <div class="tour-title" id="tourTitle"></div>
+    <div class="tour-body" id="tourBody"></div>
+    <div class="tour-actions">
+      <button class="tour-btn" id="tourBack" onclick="tourNav(-1)">← BACK</button>
+      <button class="tour-btn primary" id="tourNext" onclick="tourNav(1)">NEXT →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── HOW-TO MODAL ──────────────────────────────────────────────── -->
+<div class="howto-overlay" id="howtoOverlay">
+  <div class="howto-card">
+    <h2>⚡ HOW TO USE — HC DENIAL WAR ROOM</h2>
+    <div class="howto-section">
+      <h3>STEP 1 — LOAD YOUR DOCUMENT</h3>
+      <ul>
+        <li>Drop a PDF, DOCX, or image into the intake zone — or paste raw text into the text area.</li>
+        <li>Use a sample (Denial / Prior Auth / Compliance) to demo the system instantly.</li>
+      </ul>
+    </div>
+    <div class="howto-section">
+      <h3>STEP 2 — CONFIGURE API KEY</h3>
+      <ul>
+        <li>Enter your Groq API key in the key field and hit Test. A green dot = connected.</li>
+        <li>Key is saved to localStorage — you only need to do this once per browser.</li>
+      </ul>
+    </div>
+    <div class="howto-section">
+      <h3>STEP 3 — FIRE ALL 5 ENGINES</h3>
+      <ul>
+        <li><strong style="color:var(--cyan)">E1 · DOCUMENT INTEL</strong> — Extracts claim ID, CPT, denial codes, payer, amounts.</li>
+        <li><strong style="color:var(--cyan)">E2 · ROOT CAUSE</strong> — Identifies denial reason, policy violation, coding error.</li>
+        <li><strong style="color:var(--cyan)">E3 · FINANCIAL IMPACT</strong> — Calculates revenue at risk, timely filing exposure.</li>
+        <li><strong style="color:var(--cyan)">E4 · RECOVERY PLAN</strong> — Builds step-by-step appeal plan with deadlines.</li>
+        <li><strong style="color:var(--cyan)">E5 · RECOVERY NAVIGATOR</strong> — Routes next steps to the right staff roles.</li>
+      </ul>
+    </div>
+    <div class="howto-section">
+      <h3>STEP 4 — DOWNSTREAM WORKFLOW</h3>
+      <ul>
+        <li>Engine output feeds into the <strong style="color:var(--amber)">HC Strategist</strong> and <strong style="color:var(--amber)">Executive Portal</strong> via sessionStorage relay.</li>
+        <li>Navigate using the Ecosystem panel to route to other TSM suites.</li>
+      </ul>
+    </div>
+    <button class="howto-close-btn" onclick="document.getElementById('howtoOverlay').classList.remove('active')">CLOSE</button>
+  </div>
+</div>
+
+<!-- ── DEFECT MANIFEST ───────────────────────────────────────────── -->
+<button class="manifest-btn" onclick="document.getElementById('manifestOverlay').classList.add('active')">⚠ DEFECT MANIFEST</button>
+<div class="manifest-overlay" id="manifestOverlay">
+  <div class="manifest-card">
+    <h2>⚠ HC DENIAL WAR ROOM — DEFECT MANIFEST</h2>
+    <table class="manifest-table">
+      <thead><tr><th>#</th><th>COMPONENT</th><th>DEFECT</th><th>SEV</th><th>STATUS</th></tr></thead>
+      <tbody>
+        <tr><td>D-01</td><td>Engine E3</td><td>Financial calc uses LARGE model — may time out on slow Groq keys; no retry logic</td><td class="sev-crit">CRIT</td><td>OPEN</td></tr>
+        <tr><td>D-02</td><td>File Drop Zone</td><td>PDF/DOCX extraction dependent on browser FileReader; binary formats may silently fail</td><td class="sev-crit">CRIT</td><td>OPEN</td></tr>
+        <tr><td>D-03</td><td>Engine E5</td><td>Nav container used as outId — clear() wipes nav HTML on re-run</td><td class="sev-med">MED</td><td>OPEN</td></tr>
+        <tr><td>D-04</td><td>API Key</td><td>Key stored in localStorage plaintext; no expiry or rotation mechanism</td><td class="sev-med">MED</td><td>ACCEPTED</td></tr>
+        <tr><td>D-05</td><td>Timely Filing</td><td>Deadline calculation is narrative only — no date math against actual service date</td><td class="sev-med">MED</td><td>OPEN</td></tr>
+        <tr><td>D-06</td><td>clearAll()</td><td>Does not reset E5 nav-container output — stale nav persists on re-run</td><td class="sev-med">MED</td><td>OPEN</td></tr>
+        <tr><td>D-07</td><td>Mobile Layout</td><td>Engine output panels overflow viewport on screens &lt;768px</td><td class="sev-low">LOW</td><td>OPEN</td></tr>
+        <tr><td>D-08</td><td>Sample Data</td><td>BCBS AZ sample uses future date (Apr 2026) — may confuse timely filing engine</td><td class="sev-low">LOW</td><td>OPEN</td></tr>
+      </tbody>
+    </table>
+    <button class="manifest-close-btn" onclick="document.getElementById('manifestOverlay').classList.remove('active')">CLOSE</button>
+  </div>
+</div>
+
+<script>
+// ── GUIDED TOUR ENGINE ────────────────────────────────────────────
+const HC_TOUR_STEPS = [
+  { title: 'HC DENIAL WAR ROOM', body: 'This is the Healthcare Revenue Cycle command center. 5 AI engines process your denial documents in sequence — from raw extraction to a full recovery plan. This tour takes 60 seconds.' },
+  { title: 'E1 · DOCUMENT INTEL', body: 'The first engine ingests your claim document and extracts structured data: Claim ID, CPT codes, denial codes (CO-50, CO-4, PR-96), payer, billed amount, and denial reason — in under 10 seconds.' },
+  { title: 'E2 · ROOT CAUSE ANALYST', body: 'Feeds off E1 output. Identifies the exact denial root cause: payer policy violated, documentation gap, or coding error. This is what you\'d normally spend 2 hours researching manually.' },
+  { title: 'E3 · FINANCIAL IMPACT', body: 'Calculates total revenue at risk, timely filing deadline exposure, and dollar amounts per denial. Uses the LARGE model (llama-3.3-70b) for accuracy. Output feeds the HC Strategist.' },
+  { title: 'E4 · RECOVERY PLAN', body: 'Builds a step-by-step appeal plan: documents required, appeal letter talking points, payer portal instructions, and submission deadline. Ready to hand off to your billing team.' },
+  { title: 'E5 · RECOVERY NAVIGATOR', body: 'Final engine. Routes next actions to the correct staff roles — Billing Coordinator, Office Manager, or Appeals Specialist — with escalation path and priority order.' },
+  { title: 'DOWNSTREAM WORKFLOW', body: 'Engine output is relayed via sessionStorage to the HC Strategist and Executive Portal. Use the Ecosystem nav at the bottom of the page to route to other TSM suites or escalate to leadership.' },
+  { title: 'YOU\'RE READY', body: 'Load a denial document (or hit a sample), enter your Groq key, and fire all 5 engines. For a full walkthrough of controls, hit the HOW TO button in the toolbar.' },
+];
+
+let tourIdx = 0;
+function tourOpen() { tourIdx = 0; tourRender(); document.getElementById('tourOverlay').classList.add('active'); }
+function tourClose() { document.getElementById('tourOverlay').classList.remove('active'); }
+function tourNav(dir) {
+  const total = HC_TOUR_STEPS.length;
+  if (dir === 1 && tourIdx === total - 1) { tourClose(); return; }
+  tourIdx = Math.max(0, Math.min(total - 1, tourIdx + dir));
+  tourRender();
+}
+function tourRender() {
+  const s = HC_TOUR_STEPS[tourIdx];
+  const total = HC_TOUR_STEPS.length;
+  document.getElementById('tourStepLabel').textContent = 'STEP ' + (tourIdx + 1) + ' OF ' + total;
+  document.getElementById('tourTitle').textContent = s.title;
+  document.getElementById('tourBody').textContent = s.body;
+  document.getElementById('tourBack').style.display = tourIdx === 0 ? 'none' : '';
+  document.getElementById('tourNext').textContent = tourIdx === total - 1 ? 'FINISH' : 'NEXT →';
+  const pips = document.getElementById('tourPips');
+  pips.innerHTML = '';
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('div');
+    d.className = 'tour-pip' + (i < tourIdx ? ' done' : i === tourIdx ? ' active' : '');
+    pips.appendChild(d);
+  }
+}
+window.addEventListener('DOMContentLoaded', () => {
+  const tb = document.getElementById('tour-btn') || document.getElementById('tourBtn');
+  if (tb) tb.addEventListener('click', tourOpen);
+  const hb = document.getElementById('howto-btn') || document.getElementById('howtoBtn');
+  if (hb) hb.addEventListener('click', () => document.getElementById('howtoOverlay').classList.add('active'));
+  if (!localStorage.getItem('hc_denial_tour_done')) {
+    setTimeout(tourOpen, 800);
+    localStorage.setItem('hc_denial_tour_done', '1');
+  }
+});
+window.tourOpen = tourOpen;
+window.howtoOpen = () => document.getElementById('howtoOverlay').classList.add('active');
+</script>
+
   </body>
 </html>
 
