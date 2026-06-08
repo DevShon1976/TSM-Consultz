@@ -896,66 +896,28 @@ PRINCIPAL ESCALATION: [Yes/No] — [reason]`;
     panel.querySelector('#tmg-clear-btn')?.addEventListener('click',()=>{if(confirm('Clear this mission?')){localStorage.removeItem(STORAGE_KEY);render();}});
   }
   async function regenerateSteps(m) {
-  m._loading=true;saveMission(m);render();
-  try {
-    // Extract denial code from anomalyType or anomalySummary
-    const denialCodeMatch = (m.anomalyType||'').match(/\b(CO-\d+|PR-\d+|OA-\d+|PI-\d+)\b/i)
-      || (m.anomalySummary||'').match(/\b(CO-\d+|PR-\d+|OA-\d+|PI-\d+)\b/i);
-    const denialCode = denialCodeMatch ? denialCodeMatch[1].toUpperCase() : null;
-
-    // Denial code intelligence map
-    const denialIntel = {
-      'CO-5':  { reason:'Procedure inconsistent with place of service', missingDocs:['CMN (Certificate of Medical Necessity)','W-9 (Supplier Form)','Prior Authorization documentation'], appealTeam:'Authorization & Billing Team', appealPath:'Submit corrected claim with CMN + prior auth. Attach W-9 if supplier. File appeal within 120 days of denial.', urgency:'HIGH — timely filing window applies', recovery:'Appeal success rate ~65% with complete documentation' },
-      'CO-4':  { reason:'Service inconsistent with covered benefit', missingDocs:['Medical necessity documentation','Physician order','Benefit coverage letter'], appealTeam:'Clinical Appeals Team', appealPath:'Submit medical necessity letter from ordering physician with clinical notes.', urgency:'MEDIUM — 90-day appeal window', recovery:'Requires physician attestation for approval' },
-      'CO-16': { reason:'Claim lacks information required for adjudication', missingDocs:['Missing modifier','Incomplete patient demographics','NPI/taxonomy mismatch'], appealTeam:'Billing Corrections Team', appealPath:'Correct and resubmit claim with all required fields. No formal appeal needed if within timely filing.', urgency:'LOW — correctable resubmission', recovery:'High success rate on corrected resubmission' },
-      'CO-22': { reason:'Payment adjusted because this care may be covered by another payer', missingDocs:['COB (Coordination of Benefits) form','Secondary payer EOB','Patient insurance verification'], appealTeam:'COB/Eligibility Team', appealPath:'Verify primary/secondary payer order. Submit COB documentation with correct payer sequencing.', urgency:'MEDIUM', recovery:'Recoverable with correct COB documentation' },
-      'CO-97': { reason:'Payment adjusted because the benefit for this service is included in another service', missingDocs:['Unbundling justification','Modifier 59 documentation','Operative report'], appealTeam:'Coding & Compliance Team', appealPath:'Review NCCI edits. Append Modifier 59/XS/XU as appropriate. Include operative report.', urgency:'MEDIUM — coding correction required', recovery:'Recoverable with correct modifier application' },
-      'PR-96': { reason:'Non-covered charge — patient responsibility', missingDocs:['ABN (Advance Beneficiary Notice)','Patient consent form','Coverage denial letter'], appealTeam:'Patient Financial Services', appealPath:'Verify ABN was signed. If not, liability may shift to provider. Issue patient statement with denial detail.', urgency:'HIGH — patient liability risk', recovery:'Collect from patient if ABN signed; write-off if not' },
-    };
-
-    const intel = denialCode ? (denialIntel[denialCode] || null) : null;
-
-    const denialContext = intel ? `
-DENIAL CODE: ${denialCode}
-DENIAL REASON: ${intel.reason}
-MISSING DOCUMENTS REQUIRED: ${intel.missingDocs.join(', ')}
-APPEAL TEAM: ${intel.appealTeam}
-APPEAL PATH: ${intel.appealPath}
-URGENCY: ${intel.urgency}
-RECOVERY OUTLOOK: ${intel.recovery}
-` : `No specific denial code detected — generate general insurance claim resolution steps.`;
-
-    const prompt = `You are TSM Neural Core, an expert insurance RCM resolution engine.
-Generate a precise, denial-code-aware step-by-step mission to resolve this insurance claim anomaly.
-
-ANOMALY TYPE: ${m.anomalyType}
-ANOMALY SUMMARY: ${m.anomalySummary}
-TARGET APP: ${m.targetApp}
-CLIENT/PATIENT: ${m.patientOrClient||'N/A'}
-CLAIM AMOUNT: ${m.claimAmount||'N/A'}
-PAYER: ${m.payer||'N/A'}
-${denialContext}
-
-INSTRUCTIONS:
-- Generate exactly 5-7 steps specific to resolving THIS denial code
-- Step 1 must address the most urgent missing document or action
-- Include a document checklist in the fieldHint for any document-gathering steps
-- Step for team assignment must name the correct team (${intel?.appealTeam||'RCM Team'})
-- Final step must be escalation to Executive Portal only after all prior steps complete
-- fieldHint must include specific field names, document names, or system actions
-- Mark urgency in step titles where applicable (e.g. "[URGENT]")
-
-Respond with ONLY this JSON: {"steps":[{"title":"...","instruction":"...","fieldHint":"..."}]}`;
-
-    const res=await fetch('/api/insurance/query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:'You are TSM Neural Core. Respond ONLY with valid JSON, no markdown, no explanation.',message:prompt,maxTokens:800})});
-    const data=await res.json();
-    const text=(data.answer||data.response||data.content||'').replace(/```json|```/g,'').trim();
-    const parsed=JSON.parse(text);
-    m.steps=(parsed.steps||[]).map((s,i)=>({id:`step-${i}`,title:s.title||`Step ${i+1}`,instruction:s.instruction||'',fieldHint:s.fieldHint||'',status:i===0?'active':'pending'}));
-    m._loading=false;m.generatedAt=new Date().toISOString();saveMission(m);
-  } catch(err){console.error('TMG regen failed',err);m._loading=false;saveMission(m);}
-  render();
-}
+    m._loading=true;saveMission(m);render();
+    try {
+      const denialCode=(m.denialCode||(m.anomalyType||'').match(/\b(CO-\d+|PR-\d+|OA-\d+|PI-\d+)\b/i)?.[1]||(m.anomalySummary||'').match(/\b(CO-\d+|PR-\d+|OA-\d+|PI-\d+)\b/i)?.[1]||'').toUpperCase();
+      const intel={'CO-5':'CMN + W-9 + Prior Auth required. Appeal team: Authorization & Billing. 120-day timely filing. HIGH urgency.','CO-4':'Medical necessity letter required. Appeal team: Clinical Appeals. 90-day window.','CO-16':'Missing modifier or NPI fix. Billing Corrections team. Resubmit.','CO-22':'COB form + secondary EOB required. COB/Eligibility team.','CO-97':'Modifier 59 + operative report. Coding & Compliance team.','PR-96':'ABN signature required. Patient Financial Services.'}[denialCode]||'';
+      const prompt=`Resolve this insurance claim anomaly with 5 steps.
+ANOMALY: ${m.anomalyType}
+PAYER: ${m.payer||'Unknown'}
+AMOUNT: ${m.claimAmount||'Unknown'}
+${denialCode?'DENIAL CODE: '+denialCode:''}
+${intel?'INTEL: '+intel:''}
+Return ONLY: {"steps":[{"title":"...","instruction":"...","fieldHint":"..."}]}`;
+      const res=await fetch('/api/insurance/query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:'You are TSM Neural Core. Respond ONLY with valid JSON.',message:prompt,maxTokens:600})});
+      const data=await res.json();
+      const text=(data.answer||data.response||data.content||'').replace(/```json|```/g,'').trim();
+      let parsed;
+      try{parsed=JSON.parse(text);}catch(e){const match=text.match(/\{[\s\S]*\}/);if(match)parsed=JSON.parse(match[0]);else throw e;}
+      m.steps=(parsed.steps||[]).map((s,i)=>({id:`step-${i}`,title:s.title||`Step ${i+1}`,instruction:s.instruction||'',fieldHint:s.fieldHint||'',status:i===0?'active':'pending'}));
+      m._loading=false;m.generatedAt=new Date().toISOString();saveMission(m);
+    } catch(err){console.error('TMG regen failed',err);m._loading=false;saveMission(m);}
+    render();
+  }
+    
   function init() {
     render();
     window.addEventListener('storage',(e)=>{if(e.key===STORAGE_KEY)render();});
