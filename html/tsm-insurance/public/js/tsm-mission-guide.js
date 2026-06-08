@@ -618,7 +618,7 @@
     saveMission(m);
     render();
 
-    try {
+    try {insurance/query
       const prompt = buildStepPrompt(m);
       const res = await fetch('/api/insurance/query', {
         method: 'POST',
@@ -631,7 +631,7 @@ Respond ONLY with valid JSON — no markdown, no explanation.`,
         })
       });
       const data = await res.json();
-      const text = (data.response || data.content || '').replace(/```json|```/g, '').trim();
+      const text = (data.answer || data.response || data.content || '').replace(/```json|```/g, '').trim();
       let parsed;
 try {
   parsed = JSON.parse(text);
