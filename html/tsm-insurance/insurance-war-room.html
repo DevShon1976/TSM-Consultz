@@ -1919,6 +1919,8 @@ Respond with ONLY this JSON structure:
       targetUrl: appUrl,
       patientOrClient: context.patient,
       claimAmount: context.claimAmount,
+      denialCode: context.denialCode || null,
+      payer: context.payer || null,
       steps: (parsed.steps || []).map((s, i) => ({
         id: `step-${i}`,
         title: s.title,
@@ -1974,20 +1976,51 @@ Respond with ONLY this JSON structure:
 
     // Try to extract claim details from the text
     if (ctx.documentText) {
-      const amtMatch = ctx.documentText.match(/CLAIM AMOUNT[:\s]+(\$[\d,]+)/i);
+      const amtMatch = ctx.documentText.match(/CLAIM[\s_]?AMOUNT[:\s]+(\$[\d,]+)/i)
+        || ctx.documentText.match(/TOTAL[\s_]?AMOUNT[:\s]+(\$[\d,]+)/i)
+        || ctx.documentText.match(/(\$[\d,]+)/);
       if (amtMatch) ctx.claimAmount = amtMatch[1];
 
-      const patMatch = ctx.documentText.match(/PATIENT[:\s]+([^\n]+)/i);
+      const patMatch = ctx.documentText.match(/PATIENT[:\s]+([^\n]+)/i)
+        || ctx.documentText.match(/POLICY[\s_]?HOLDER[:\s]+([^\n]+)/i)
+        || ctx.documentText.match(/MEMBER[:\s]+([^\n]+)/i);
       if (patMatch) ctx.patient = patMatch[1].trim();
 
       const statusMatch = ctx.documentText.match(/STATUS[:\s]+([^\n]+)/i);
       if (statusMatch) ctx.status = statusMatch[1].trim();
 
-      const denialMatch = ctx.documentText.match(/DENIAL[:\s]+([^\n]+)/i);
+      const denialMatch = ctx.documentText.match(/DENIAL[\s_]?REASON[:\s]+([^\n]+)/i)
+        || ctx.documentText.match(/DENIAL[:\s]+([^\n]+)/i)
+        || ctx.documentText.match(/REASON[\s_]?FOR[\s_]?DENIAL[:\s]+([^\n]+)/i);
       if (denialMatch) ctx.denialReason = denialMatch[1].trim();
+
+      // Extract denial code (CO-5, PR-96, OA-23, etc.)
+      const codeMatch = ctx.documentText.match(/\b(CO-\d+|PR-\d+|OA-\d+|PI-\d+|CR-\d+)\b/i)
+        || (ctx.denialReason||'').match(/\b(CO-\d+|PR-\d+|OA-\d+|PI-\d+|CR-\d+)\b/i);
+      if (codeMatch) ctx.denialCode = codeMatch[1].toUpperCase();
+
+      // Extract payer
+      const payerMatch = ctx.documentText.match(/PAYER[:\s]+([^\n]+)/i)
+        || ctx.documentText.match(/INSURANCE[:\s]+([^\n]+)/i)
+        || ctx.documentText.match(/\b(Medicare|Medicaid|Blue Cross|Aetna|Cigna|UnitedHealth|Humana|Anthem|Centene)\b/i);
+      if (payerMatch) ctx.payer = payerMatch[1].trim();
     }
 
-    // Fallback: try to read from visible DOM elements (status bar, etc.)
+    // Fallback: scrape denial code from visible engine output panels
+    if (!ctx.denialCode) {
+      const allText = document.body.innerText || '';
+      const codeMatch = allText.match(/\b(CO-\d+|PR-\d+|OA-\d+|PI-\d+)\b/i);
+      if (codeMatch) ctx.denialCode = codeMatch[1].toUpperCase();
+    }
+
+    // Fallback: scrape payer from visible DOM
+    if (!ctx.payer) {
+      const allText = document.body.innerText || '';
+      const payerMatch = allText.match(/\b(Medicare|Medicaid|Blue Cross|Aetna|Cigna|UnitedHealth|Humana|Anthem|Centene)\b/i);
+      if (payerMatch) ctx.payer = payerMatch[1];
+    }
+
+    // Fallback claimAmount from status bar
     if (!ctx.claimAmount) {
       const statusBar = document.querySelector('[id*="statusBar"], .status-bar, #engineStatus');
       ctx.claimAmount = statusBar?.textContent?.match(/\$[\d,]+/)?.[0] || '';
