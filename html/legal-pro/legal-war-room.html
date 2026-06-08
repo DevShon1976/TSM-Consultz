@@ -999,7 +999,7 @@ function clearAll() {
 // ═══════════════════════════════════════════════════
 // ENGINE 06 — BUILD APP CARDS
 // ═══════════════════════════════════════════════════
-function buildAppDispatch(raw) {
+function buildAppDispatch(raw, defectManifest) {
   // Parse dispatch intro
   const introMatch = raw.match(/DISPATCH_INTRO:\s*([^\n]+(?:\n(?!APP:)[^\n]+)*)/);
   const intro = introMatch ? introMatch[1].trim() : '5 remediation pathways identified. Route to the highest-ranked app first — each contains step-by-step guidance specific to the issues detected in this document.';
@@ -1087,7 +1087,8 @@ function buildAppDispatch(raw) {
           : `<span class="app-rank">${app.rank||'#'+(i+1)}</span>`}
       </div>
       <div class="app-how-label">HOW TO USE THIS APP FOR YOUR ISSUE</div>
-      <div class="app-how-text">${esc(app.how||'Navigate to this app and use the intake form to begin analysis.')}</div>
+      <div class="app-how-text">${esc(app.how||'Navigate to this app and use the intake form to begin analysis.')}${defectManifest?`\n\nKEY DEFECTS TO RESOLVE:\n${defectManifest}`:''}
+        ')}</div>
       <div class="app-tags">${tagHTML}</div>
       <button class="app-launch" onclick="launchApp('${href}')">LAUNCH ${esc(app.name.toUpperCase())} →</button>
     `;
@@ -1142,6 +1143,33 @@ function escalateToChief() {
 // ═══════════════════════════════════════════════════
 // FIRE ALL 6 ENGINES
 // ═══════════════════════════════════════════════════
+function buildDefectManifest(e) {
+  const lines = [];
+  const src = [e[2]||'', e[3]||'', e[4]||'', e[5]||''].join('\n');
+  const patterns = [
+    /PRIMARY LEGAL ISSUE[:\s]+([^\n]+)/gi,
+    /BREACH RISK[:\s]+([^\n]+)/gi,
+    /LIABILITY EXPOSURE[:\s]+([^\n]+)/gi,
+    /KEY VIOLATIONS[:\s]+([^\n]+)/gi,
+    /STATUTE OF LIMITATIONS[:\s]+([^\n]+)/gi,
+    /DAMAGES EXPOSURE[:\s]+([^\n]+)/gi,
+    /SETTLEMENT RANGE[:\s]+([^\n]+)/gi,
+    /RECOMMENDED ACTION[:\s]+([^\n]+)/gi,
+    /APPEAL STRATEGY[:\s]+([^\n]+)/gi,
+    /DEADLINE MAP[\s\S]*?1\.\s*([^\n]+)/i,
+    /IMMEDIATE NEXT STEPS[\s\S]*?1\.\s*([^\n]+)/i,
+    /ESCALATION TRIGGER[:\s]+([^\n]+)/gi,
+  ];
+  patterns.forEach(p => {
+    let m;
+    while ((m = p.exec(src)) !== null) {
+      const line = m[1].trim();
+      if (line.length > 10 && !lines.includes(line)) lines.push(line);
+    }
+  });
+  return lines.slice(0, 12).map((d, i) => `DEFECT ${i+1}: ${d}`).join('\n') || 'No structured defects extracted — use Engine 01-05 output directly.';
+}
+
 async function fireEngines() {
   const doc = docText || document.getElementById('docPaste').value;
   if (!doc.trim()) { alert('Load a matter document first.'); return; }
@@ -1194,7 +1222,7 @@ for (let i = 1; i <= 6; i++) {
   if (i <= 5) setEngState(i, 'done');
   setPipeState(i, 'done');
   addTL('Engine 0'+i+' complete', labels[i-1] + ' · ' + new Date().toLocaleTimeString(), 'g');
-  if (i === 6) { buildAppDispatch(txt); }
+  if (i === 6) { buildAppDispatch(txt, buildDefectManifest(e)); }
   await new Promise(r => setTimeout(r, 350));
 }
 

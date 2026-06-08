@@ -762,6 +762,23 @@ IMMEDIATE COMPLIANCE ACTIONS:
 3. [Action — Owner — Deadline]`,
 
 (doc,e)=>`You are the TSM Construction BNCA Executive Engine.
+DEFECT MANIFEST — EXTRACTED FROM ENGINE ANALYSIS:
+${buildDefectManifest(e)}
+
+DOCUMENT-SPECIFIC CONTEXT:
+DOC TYPE: ${selectedDocType}
+KEY AMOUNTS: ${(e[1]||'').match(/KEY AMOUNTS[:\s]+([^\n]+)/)?.[1]||'See Engine 01'}
+FINANCIAL EXPOSURE: ${(e[3]||'').match(/EXPOSURE RANGE[:\s]+([^\n]+)/)?.[1]||'See Engine 03'}
+PRIMARY LEGAL RISK: ${(e[4]||'').match(/PRIMARY LEGAL RISK[:\s]+([^\n]+)/)?.[1]||'See Engine 04'}
+COMPLIANCE ACTIONS: ${(e[5]||'').match(/IMMEDIATE COMPLIANCE ACTIONS[:\s]+([\s\S]*?)(?=\n[A-Z]|$)/)?.[1]?.slice(0,300)||'See Engine 05'}
+
+CRITICAL INSTRUCTION: Every HOW_TO_USE field must reference the specific defects above.
+Write HOW_TO_USE as numbered steps:
+1. Open [exact tab or section name in this app]
+2. In [field name], enter: [exact value from the defect manifest or engine output above]
+3. Select [option] because [specific reason tied to a defect above]
+4. Click [action] — this generates [specific output needed]
+Do NOT write generic instructions. Every step must reference a specific defect, amount, date, or party from this document.
 ENGINE 03 FINANCIAL: ${e[3]}
 ENGINE 04 LEGAL: ${e[4]}
 ENGINE 05 COMPLIANCE: ${e[5]}
@@ -1003,7 +1020,34 @@ async function callGroq(prompt){
   return d.choices?.[0]?.message?.content||'';
 }
 
-async function fireEngines(){
+function buildDefectManifest(e) {
+  const lines = [];
+  const src = [e[2]||'', e[3]||'', e[4]||'', e[5]||''].join('\n');
+  const patterns = [
+    /DEFECT[:\s]+([^\n]+)/gi,
+    /OSHA EXPOSURE[:\s]+([^\n]+)/gi,
+    /LIEN EXPOSURE[:\s]+([^\n]+)/gi,
+    /CONTRACT BREACH RISK[:\s]+([^\n]+)/gi,
+    /COST OVERRUN[:\s]+([^\n]+)/gi,
+    /AP VERIFICATION GAPS[:\s]+([^\n]+)/gi,
+    /ABATEMENT REQUIRED[:\s]+([^\n]+)/gi,
+    /RESTATEMENT RISK[:\s]+([^\n]+)/gi,
+    /CRITICAL PATH THREAT[:\s]+([^\n]+)/gi,
+    /FILING DEADLINES[\s\S]*?1\.\s*([^\n]+)/i,
+    /IMMEDIATE COMPLIANCE ACTIONS[\s\S]*?1\.\s*([^\n]+)/i,
+    /PRIMARY LEGAL RISK[:\s]+([^\n]+)/gi,
+  ];
+  patterns.forEach(p => {
+    let m;
+    while ((m = p.exec(src)) !== null) {
+      const line = m[1].trim();
+      if (line.length > 10 && !lines.includes(line)) lines.push(line);
+    }
+  });
+  return lines.slice(0, 12).map((d, i) => `DEFECT ${i+1}: ${d}`).join('\n') || 'No structured defects extracted — use Engine 01-05 output directly.';
+}
+
+async function fireEngines() {
   docText=document.getElementById('docPaste').value.trim();
   if(!docText){alert('Load or paste a construction document first.');return;}
 
