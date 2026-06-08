@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TSM BPO · War Room</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Orbitron:wght@400;700;900&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#04080f;--bg2:#070d18;--bg3:#0a1220;--bg4:#0d1829;
+  --border:rgba(0,229,255,.1);--border2:rgba(0,229,255,.22);
+  --cyan:#00e5ff;--green:#00ff88;--gold:#ffc400;--red:#ff4444;
+  --amber:#f59e0b;--purple:#a855f7;--blue:#3b82f6;
+  --text:#7a9ab0;--bright:#d8eef8;--dim:#2a4a5a;
+  --mono:'JetBrains Mono',monospace;--orb:'Orbitron',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,229,255,.012) 2px,rgba(0,229,255,.012) 4px);pointer-events:none;z-index:9999;}
+
+.nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:8px;padding:0 20px;height:48px;background:rgba(4,8,15,.97);border-bottom:1px solid var(--border2);backdrop-filter:blur(12px);}
+.nav-brand{font-family:var(--orb);font-size:.7rem;font-weight:700;color:var(--cyan);letter-spacing:.2rem;}
+.nav-badge{font-size:.5rem;letter-spacing:.15rem;color:var(--gold);border:1px solid rgba(255,196,0,.3);padding:.15rem .5rem;}
+.nav-btn{background:transparent;border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:.5rem;letter-spacing:.1rem;padding:.3rem .7rem;cursor:pointer;transition:.15s;}
+.nav-btn:hover{border-color:var(--cyan);color:var(--cyan);}
+.nav-btn.active{border-color:var(--cyan);color:var(--cyan);background:rgba(0,229,255,.07);}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+
+/* ALERT BAR */
+.alert-bar{display:flex;align-items:center;gap:8px;padding:.5rem 2rem;background:var(--bg2);border-bottom:1px solid var(--border);font-size:.5rem;}
+.alert-dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:pulse 2s infinite;flex-shrink:0;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* CHAIN BAR */
+.chain-bar{display:flex;align-items:stretch;gap:0;margin:0 2rem 1rem;border:1px solid var(--border2);overflow:hidden;margin-top:1rem;}
+.chain-node{flex:1;padding:.6rem 1rem;border-right:1px solid var(--border);position:relative;}
+.chain-node:last-child{border-right:none;}
+.chain-node.done{background:rgba(0,255,136,.04);}
+.chain-node.done::before{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--green);}
+.chain-node.current{background:rgba(0,229,255,.08);}
+.chain-node.current::before{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--cyan);}
+.chain-node.upcoming{opacity:.4;}
+.cn-num{font-family:var(--orb);font-size:.42rem;color:var(--cyan);letter-spacing:.1rem;margin-bottom:.15rem;}
+.cn-title{font-size:.52rem;color:var(--bright);font-weight:600;margin-bottom:.1rem;}
+.cn-desc{font-size:.42rem;color:var(--text);}
+
+/* KPI SNAP */
+.kpi-row{display:flex;gap:8px;padding:0 2rem 1rem;flex-wrap:wrap;}
+.kpi{background:var(--bg2);border:1px solid var(--border);padding:.6rem 1rem;flex:1;min-width:110px;}
+.kpi-label{font-size:.4rem;letter-spacing:.12rem;color:var(--text);margin-bottom:.3rem;}
+.kpi-val{font-family:var(--orb);font-size:.9rem;font-weight:700;color:var(--bright);}
+.kpi-val.ok{color:var(--green);}
+.kpi-val.warn{color:var(--gold);}
+.kpi-val.bad{color:var(--red);}
+
+/* MAIN LAYOUT */
+.war-layout{display:grid;grid-template-columns:1fr 300px;gap:1rem;padding:0 2rem 4rem;}
+
+/* PIPELINE */
+.pipeline-bar{display:flex;gap:6px;margin-bottom:1rem;flex-wrap:wrap;}
+.pipe-eng{background:var(--bg2);border:1px solid var(--border);padding:.4rem .75rem;font-size:.45rem;display:flex;align-items:center;gap:.4rem;flex:1;min-width:80px;}
+.pipe-eng.running{border-color:var(--gold);background:rgba(255,196,0,.05);}
+.pipe-eng.done{border-color:var(--green);background:rgba(0,255,136,.04);}
+.pe-num{font-family:var(--orb);font-size:.4rem;color:var(--cyan);}
+.pe-status{font-size:.4rem;color:var(--text);}
+.pe-status.running{color:var(--gold);}
+.pe-status.done{color:var(--green);}
+
+/* ENGINE CARDS */
+.engines-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem;}
+.engine-card{background:var(--bg2);border:1px solid var(--border);padding:.75rem;transition:.15s;}
+.engine-card.running{border-color:var(--gold);}
+.engine-card.done{border-color:rgba(0,255,136,.3);}
+.ec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;}
+.ec-title{font-family:var(--orb);font-size:.45rem;color:var(--cyan);letter-spacing:.08rem;}
+.ec-status{font-size:.4rem;padding:.1rem .35rem;border:1px solid;}
+.ec-status.idle{color:var(--dim);border-color:var(--dim);}
+.ec-status.running{color:var(--gold);border-color:var(--gold);animation:pulse 1s infinite;}
+.ec-status.done{color:var(--green);border-color:rgba(0,255,136,.4);}
+.ec-output{font-size:.46rem;line-height:1.7;color:var(--text);max-height:120px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;}
+.ec-output::-webkit-scrollbar{width:2px;}
+.ec-output::-webkit-scrollbar-thumb{background:rgba(0,229,255,.2);}
+.ec-footer{display:flex;justify-content:space-between;align-items:center;margin-top:.4rem;padding-top:.4rem;border-top:1px solid var(--border);}
+.ec-chars{font-size:.38rem;color:var(--dim);}
+.copy-btn{background:transparent;border:1px solid var(--border);color:var(--dim);font-family:var(--mono);font-size:.38rem;padding:.15rem .5rem;cursor:pointer;transition:.12s;}
+.copy-btn:hover{border-color:var(--cyan);color:var(--cyan);}
+
+/* ENGINE 5 FULL WIDTH */
+.engine-card-full{background:var(--bg2);border:1px solid var(--border);padding:.75rem;margin-bottom:8px;}
+
+/* APP DISPATCH */
+.dispatch-section{display:none;margin-bottom:1rem;}
+.dispatch-intro{font-size:.5rem;color:var(--text);line-height:1.7;margin-bottom:.75rem;padding:.6rem;background:var(--bg3);border-left:2px solid var(--cyan);}
+.app-cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.app-card{background:var(--bg3);border:1px solid var(--border);padding:.75rem;transition:.15s;}
+.app-card.top{border-color:var(--gold);background:rgba(255,196,0,.04);}
+.app-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;}
+.app-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-right:.4rem;}
+.app-name{font-size:.52rem;color:var(--bright);font-weight:600;}
+.app-category{font-size:.38rem;color:var(--dim);margin-top:.1rem;}
+.top-match-badge{font-size:.38rem;color:var(--gold);border:1px solid rgba(255,196,0,.4);padding:.1rem .35rem;}
+.app-rank{font-size:.38rem;color:var(--dim);}
+.app-how-label{font-size:.38rem;letter-spacing:.1rem;color:var(--cyan);margin:.4rem 0 .25rem;}
+.app-how-text{font-size:.46rem;color:var(--text);line-height:1.65;white-space:pre-wrap;}
+.app-tags{display:flex;gap:4px;flex-wrap:wrap;margin:.4rem 0;}
+.app-tag{font-size:.36rem;padding:.1rem .35rem;background:rgba(0,229,255,.06);border:1px solid var(--border);color:var(--dim);}
+.app-launch{width:100%;background:transparent;border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:.42rem;padding:.35rem;cursor:pointer;transition:.15s;margin-top:.3rem;}
+.app-launch:hover{border-color:var(--cyan);color:var(--cyan);}
+.app-card.top .app-launch{border-color:rgba(255,196,0,.4);color:var(--gold);}
+
+/* REMEDIATION TILES */
+.rem-section{background:var(--bg2);border:1px solid var(--border);padding:.75rem;margin-bottom:8px;}
+.rem-tiles{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);margin-top:.5rem;}
+.rem-tile{background:var(--bg3);padding:.5rem .3rem;text-align:center;cursor:pointer;transition:.15s;}
+.rem-tile:hover{background:rgba(0,229,255,.07);}
+.rem-tile.active{background:rgba(0,229,255,.1);border-bottom:2px solid var(--cyan);}
+.rem-icon{font-size:1rem;margin-bottom:.2rem;}
+.rem-name{font-size:.38rem;color:var(--bright);font-weight:600;margin-bottom:.1rem;}
+.rem-desc{font-size:.33rem;color:var(--dim);}
+.rem-tag{font-size:.3rem;margin-top:.15rem;}
+.node-frame{width:100%;height:400px;border:1px solid var(--border);background:var(--bg3);margin-top:.5rem;display:none;}
+
+/* ESCALATE BAR */
+.escalate-bar{background:var(--bg2);border:1px solid var(--border2);padding:.75rem 1rem;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;}
+.escalate-btn{background:linear-gradient(135deg,rgba(0,229,255,.15),rgba(0,255,136,.1));border:1px solid var(--cyan);color:var(--cyan);font-family:var(--orb);font-size:.55rem;font-weight:700;letter-spacing:.12rem;padding:.6rem 1.2rem;cursor:pointer;transition:.2s;}
+.escalate-btn:hover{box-shadow:0 0 16px rgba(0,229,255,.25);}
+.export-btn{background:transparent;border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:.48rem;padding:.5rem .9rem;cursor:pointer;transition:.15s;}
+.export-btn:hover{border-color:var(--gold);color:var(--gold);}
+.esc-sub{font-size:.46rem;color:var(--text);flex:1;}
+
+/* RIGHT PANEL */
+.right-col{display:flex;flex-direction:column;gap:.75rem;}
+.side-card{background:var(--bg2);border:1px solid var(--border);padding:.75rem;}
+.section-label{font-family:var(--orb);font-size:.45rem;letter-spacing:.15rem;color:var(--cyan);margin-bottom:.6rem;display:flex;align-items:center;gap:.4rem;}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+.snap-row{display:flex;justify-content:space-between;padding:.3rem 0;border-bottom:1px solid rgba(0,229,255,.05);font-size:.46rem;}
+.snap-row:last-child{border-bottom:none;}
+.snap-label{color:var(--text);}
+.snap-val{color:var(--bright);font-weight:600;text-align:right;max-width:140px;word-break:break-word;}
+.risk-bar-wrap{height:4px;background:var(--bg3);border:1px solid var(--border);margin-top:.3rem;}
+.risk-fill{height:100%;background:var(--cyan);width:0%;transition:width .8s;}
+
+/* DOC PREVIEW */
+.doc-preview{font-size:.44rem;line-height:1.6;color:var(--dim);max-height:120px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;background:var(--bg3);border:1px solid var(--border);padding:.5rem;}
+
+/* TIMELINE */
+.timeline-wrap{max-height:200px;overflow-y:auto;}
+.tl-item{display:flex;gap:.4rem;padding:.3rem 0;border-bottom:1px solid rgba(0,229,255,.04);font-size:.44rem;}
+.tl-item:last-child{border-bottom:none;}
+.tl-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+.tl-dot.c{background:var(--cyan);}
+.tl-dot.g{background:var(--green);}
+.tl-dot.a{background:var(--gold);}
+.tl-dot.m{background:var(--text);}
+.tl-dot.p{background:var(--purple);}
+.tl-title{color:var(--bright);}
+.tl-meta{color:var(--dim);}
+
+/* SPINNER */
+.spinner{display:none;align-items:center;gap:.75rem;padding:1rem;background:rgba(0,229,255,.04);border:1px solid var(--border2);margin-bottom:1rem;}
+.spin-ring{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--cyan);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin-label{font-family:var(--orb);font-size:.52rem;color:var(--cyan);letter-spacing:.1rem;}
+
+/* STATUS BAR */
+.status-bar{position:fixed;bottom:0;left:0;right:0;height:26px;background:rgba(4,8,15,.97);border-top:1px solid var(--border);display:flex;align-items:center;gap:16px;padding:0 20px;font-size:.42rem;z-index:100;}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">TSM</div>
+  <span class="nav-badge">BPO WAR ROOM</span>
+  <button class="nav-btn" onclick="window.location.href='bpo-doc-uploader.html'">← UPLOADER</button>
+  <button class="nav-btn active">WAR ROOM</button>
+  <button class="nav-btn" onclick="escalateToStrategist()">STRATEGIST →</button>
+  <button class="nav-btn" onclick="window.location.href='bpo-executive-portal.html'">EXECUTIVE</button>
+  <button class="nav-btn" id="tourLaunchBtn" onclick="startTour()">▶ GUIDED TOUR</button>
+  <button class="nav-btn" onclick="document.getElementById('howtoOverlay').style.display='block'">HOW-TO GUIDE</button>
+  <div class="nav-right">
+    <span id="sbTime" style="font-size:.42rem;color:var(--dim)">--:--:--</span>
+  </div>
+</nav>
+
+<div class="alert-bar">
+  <div class="alert-dot" id="alertDot"></div>
+  <span id="alertText">BPO WAR ROOM · STAGE 02 · LOAD DOCUMENT FROM UPLOADER OR PASTE BELOW · FIRE 6-ENGINE ANALYSIS</span>
+</div>
+
+<div class="chain-bar">
+  <div class="chain-node done"><div class="cn-num">STAGE 01 ✓</div><div class="cn-title">⬆ UPLOADER</div><div class="cn-desc">Document received</div></div>
+  <div class="chain-node current"><div class="cn-num">STAGE 02</div><div class="cn-title">⚡ BPO WAR ROOM</div><div class="cn-desc">6-Engine Pipeline</div></div>
+  <div class="chain-node upcoming"><div class="cn-num">STAGE 03</div><div class="cn-title">◈ STRATEGIST</div><div class="cn-desc">Synthesis · Plan</div></div>
+  <div class="chain-node upcoming"><div class="cn-num">STAGE 04</div><div class="cn-title">★ EXECUTIVE</div><div class="cn-desc">Brief · KPIs</div></div>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi"><div class="kpi-label">RISK SCORE</div><div class="kpi-val" id="snapRisk">—</div><div class="risk-bar-wrap"><div class="risk-fill" id="riskFill"></div></div></div>
+  <div class="kpi"><div class="kpi-label">FINANCIAL EXPOSURE</div><div class="kpi-val warn" id="snapExposure">—</div></div>
+  <div class="kpi"><div class="kpi-label">SECTOR</div><div class="kpi-val" id="snapSector">—</div></div>
+  <div class="kpi"><div class="kpi-label">DOC TYPE</div><div class="kpi-val" id="snapDocType">—</div></div>
+  <div class="kpi"><div class="kpi-label">CRITICAL DEADLINE</div><div class="kpi-val bad" id="snapDeadline">—</div></div>
+  <div class="kpi"><div class="kpi-label">PRIMARY ISSUE</div><div class="kpi-val" id="snapIssue">—</div></div>
+</div>
+
+<div class="war-layout">
+  <div>
+    <!-- PIPELINE STATUS -->
+    <div class="pipeline-bar" id="pipelineBar">
+      <div class="pipe-eng" id="pe1"><span class="pe-num">E01</span><span class="pe-status" id="ps1">STANDBY</span></div>
+      <div class="pipe-eng" id="pe2"><span class="pe-num">E02</span><span class="pe-status" id="ps2">STANDBY</span></div>
+      <div class="pipe-eng" id="pe3"><span class="pe-num">E03</span><span class="pe-status" id="ps3">STANDBY</span></div>
+      <div class="pipe-eng" id="pe4"><span class="pe-num">E04</span><span class="pe-status" id="ps4">STANDBY</span></div>
+      <div class="pipe-eng" id="pe5"><span class="pe-num">E05</span><span class="pe-status" id="ps5">STANDBY</span></div>
+      <div class="pipe-eng" id="pe6"><span class="pe-num">E06</span><span class="pe-status" id="ps6">STANDBY</span></div>
+    </div>
+
+    <!-- SPINNER -->
+    <div class="spinner" id="spinner">
+      <div class="spin-ring"></div>
+      <span class="spin-label" id="spinnerLabel">INITIALIZING...</span>
+    </div>
+
+    <!-- ENGINE CARDS 1-4 -->
+    <div class="engines-grid">
+      <div class="engine-card" id="ec1">
+        <div class="ec-header"><span class="ec-title">ENGINE 01 · DOCUMENT INTEL</span><span class="ec-status idle" id="es1">IDLE</span></div>
+        <div class="ec-output" id="eo1">// Awaiting document load</div>
+        <div class="ec-footer"><span class="ec-chars" id="ch1">—</span><button class="copy-btn" onclick="copyEng(1)">COPY</button></div>
+      </div>
+      <div class="engine-card" id="ec2">
+        <div class="ec-header"><span class="ec-title">ENGINE 02 · ISSUE ANALYSIS</span><span class="ec-status idle" id="es2">IDLE</span></div>
+        <div class="ec-output" id="eo2">// Awaiting Engine 01</div>
+        <div class="ec-footer"><span class="ec-chars" id="ch2">—</span><button class="copy-btn" onclick="copyEng(2)">COPY</button></div>
+      </div>
+      <div class="engine-card" id="ec3">
+        <div class="ec-header"><span class="ec-title">ENGINE 03 · FINANCIAL IMPACT</span><span class="ec-status idle" id="es3">IDLE</span></div>
+        <div class="ec-output" id="eo3">// Awaiting Engine 02</div>
+        <div class="ec-footer"><span class="ec-chars" id="ch3">—</span><button class="copy-btn" onclick="copyEng(3)">COPY</button></div>
+      </div>
+      <div class="engine-card" id="ec4">
+        <div class="ec-header"><span class="ec-title">ENGINE 04 · COMPLIANCE & LEGAL</span><span class="ec-status idle" id="es4">IDLE</span></div>
+        <div class="ec-output" id="eo4">// Awaiting Engine 03</div>
+        <div class="ec-footer"><span class="ec-chars" id="ch4">—</span><button class="copy-btn" onclick="copyEng(4)">COPY</button></div>
+      </div>
+    </div>
+
+    <!-- ENGINE 5 FULL WIDTH -->
+    <div class="engine-card-full">
+      <div class="ec-header"><span class="ec-title">ENGINE 05 · RECOVERY PLAN · STEP-BY-STEP ACTIONS</span><span class="ec-status idle" id="es5">IDLE</span></div>
+      <div class="ec-output" id="eo5" style="max-height:180px;">// Awaiting Engines 01-04</div>
+      <div class="ec-footer"><span class="ec-chars" id="ch5">—</span><button class="copy-btn" onclick="copyEng(5)">COPY</button></div>
+    </div>
+
+    <!-- APP DISPATCH -->
+    <div class="dispatch-section" id="dispatch06">
+      <div class="section-label">ENGINE 06 · APP DISPATCH · REMEDIATION ROUTING</div>
+      <div class="dispatch-intro" id="dispatchIntro"></div>
+      <div class="app-cards-grid" id="appCards"></div>
+      <div style="margin-top:.5rem;font-size:.42rem;color:var(--dim)" id="appCount"></div>
+    </div>
+
+    <!-- REMEDIATION TILES -->
+    <div class="rem-section" id="remSection">
+      <div class="section-label">REMEDIATION TOOL PANEL</div>
+      <div class="rem-tiles">
+        <div class="rem-tile" onclick="loadTile('financial.html',this)"><div class="rem-icon">$</div><div class="rem-name">FINANCIAL</div><div class="rem-desc">P&L · Cash · Exposure</div><div class="rem-tag" style="color:var(--green)">FINANCE</div></div>
+        <div class="rem-tile" onclick="loadTile('auditops-pro.html',this)"><div class="rem-icon">⊛</div><div class="rem-name">AUDIT OPS</div><div class="rem-desc">Doc Review · Risk</div><div class="rem-tag" style="color:var(--cyan)">AUDIT</div></div>
+        <div class="rem-tile" onclick="loadTile('../legal-pro/legal-analyst-pro.html',this)"><div class="rem-icon">⚖</div><div class="rem-name">LEGAL</div><div class="rem-desc">Lien · Contract · Statute</div><div class="rem-tag" style="color:var(--purple)">LEGAL</div></div>
+        <div class="rem-tile" onclick="loadTile('../html/compliance.html',this)"><div class="rem-icon">🛡</div><div class="rem-name">COMPLIANCE</div><div class="rem-desc">TRID · RESPA · FinCEN</div><div class="rem-tag" style="color:var(--red)">COMPLIANCE</div></div>
+        <div class="rem-tile" onclick="loadTile('../html/zero-trust.html',this)"><div class="rem-icon">🔐</div><div class="rem-name">ZERO-TRUST</div><div class="rem-desc">Access · Identity</div><div class="rem-tag" style="color:var(--cyan)">ACCESS</div></div>
+        <div class="rem-tile" onclick="loadTile('../finops-suite/finops-accounting.html',this)"><div class="rem-icon">📊</div><div class="rem-name">FINOPS ACCTG</div><div class="rem-desc">Ledger · P&L</div><div class="rem-tag" style="color:var(--green)">ACCOUNTING</div></div>
+        <div class="rem-tile" onclick="loadTile('../finops-suite/finops-operations.html',this)"><div class="rem-icon">⚙</div><div class="rem-name">FINOPS OPS</div><div class="rem-desc">Pipeline · Workflow</div><div class="rem-tag" style="color:var(--blue)">OPS</div></div>
+      </div>
+      <iframe id="nodeFrame" class="node-frame" src="about:blank"></iframe>
+    </div>
+
+    <!-- ESCALATE BAR -->
+    <div class="escalate-bar" id="escalateBar">
+      <div style="flex:1">
+        <div style="font-family:var(--orb);font-size:.5rem;color:var(--cyan);letter-spacing:.1rem;margin-bottom:.2rem">CHAIN STATUS</div>
+        <div class="esc-sub" id="escalSub">Complete 6-engine analysis to unlock escalation to BPO Strategist</div>
+      </div>
+      <button class="export-btn" onclick="exportFull()">⬇ EXPORT</button>
+      <button class="escalate-btn" onclick="escalateToStrategist()">ESCALATE → BPO STRATEGIST ▶</button>
+    </div>
+  </div>
+
+  <!-- RIGHT COL -->
+  <div class="right-col">
+    <div class="side-card">
+      <div class="section-label">DOC SNAPSHOT</div>
+      <div class="snap-row"><span class="snap-label">SECTOR</span><span class="snap-val" id="rSector">—</span></div>
+      <div class="snap-row"><span class="snap-label">DOC TYPE</span><span class="snap-val" id="rDocType">—</span></div>
+      <div class="snap-row"><span class="snap-label">RISK</span><span class="snap-val bad" id="rRisk">—</span></div>
+      <div class="snap-row"><span class="snap-label">EXPOSURE</span><span class="snap-val warn" id="rExposure">—</span></div>
+      <div class="snap-row"><span class="snap-label">DEADLINE</span><span class="snap-val bad" id="rDeadline">—</span></div>
+      <div class="snap-row"><span class="snap-label">ACTION</span><span class="snap-val ok" id="rAction">—</span></div>
+    </div>
+
+    <div class="side-card">
+      <div class="section-label">DOCUMENT PREVIEW</div>
+      <div class="doc-preview" id="docPreview">// No document loaded</div>
+    </div>
+
+    <div class="side-card">
+      <div class="section-label">GROQ API KEY</div>
+      <div style="display:flex;gap:4px;margin-bottom:.4rem;">
+        <input type="password" id="groqKey" placeholder="gsk_..." style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--bright);font-family:var(--mono);font-size:.46rem;padding:.35rem .5rem;outline:none;">
+        <button onclick="testKey()" style="background:transparent;border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:.42rem;padding:.3rem .6rem;cursor:pointer;">TEST</button>
+      </div>
+      <div style="font-size:.42rem;color:var(--dim)" id="keyStatus">Key stored in localStorage only</div>
+      <button class="escalate-btn" style="width:100%;margin-top:.5rem;font-size:.5rem;padding:.5rem;" id="fireBtn" onclick="fireEngines()">⚡ FIRE ALL ENGINES</button>
+    </div>
+
+    <div class="side-card">
+      <div class="section-label">ACTIVITY LOG</div>
+      <div class="timeline-wrap" id="timeline"></div>
+    </div>
+  </div>
+</div>
+
+<div class="status-bar">
+  <span style="color:var(--cyan)">BPO WAR ROOM · STAGE 02</span>
+  <span id="sbSector" style="color:var(--dim)">NO SECTOR</span>
+  <span id="sbStatus" style="color:var(--dim)">IDLE</span>
+  <span style="margin-left:auto" id="sbTime2" style="color:var(--dim)">--:--:--</span>
+</div>
+
+<!-- HOW-TO OVERLAY -->
+<div id="howtoOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:10001;overflow-y:auto;padding:2rem 1rem">
+  <div style="max-width:760px;margin:0 auto;background:#061018;border:1px solid rgba(0,229,255,.25);padding:2rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;border-bottom:1px solid rgba(0,229,255,.18);padding-bottom:1rem">
+      <div style="font-family:'Orbitron',monospace;font-size:.9rem;font-weight:700;color:#00e5ff;letter-spacing:.15rem">BPO WAR ROOM · HOW-TO GUIDE</div>
+      <button onclick="document.getElementById('howtoOverlay').style.display='none'" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#8090a0;font-family:monospace;font-size:.7rem;padding:.3rem .7rem;cursor:pointer">✕ CLOSE</button>
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:.58rem;line-height:2;color:#8090a0">
+      <div style="color:#00e5ff;font-size:.65rem;letter-spacing:.12rem;margin-bottom:.5rem">► ENGINE PIPELINE</div>
+      <p style="margin-bottom:1rem"><b style="color:#fff">E01</b> Document Intelligence — extracts all key facts, parties, amounts, deadlines<br><b style="color:#fff">E02</b> Issue Analysis — identifies root causes, risk flags, denial patterns<br><b style="color:#fff">E03</b> Financial Impact — quantifies dollar exposure, recovery probability<br><b style="color:#fff">E04</b> Compliance & Legal — audits regulatory obligations, filing deadlines<br><b style="color:#fff">E05</b> Recovery Plan — numbered step-by-step actions for each remediation app<br><b style="color:#fff">E06</b> App Dispatch — routes defects to specific remediation tools with field-level instructions</p>
+      <div style="color:#00e5ff;font-size:.65rem;letter-spacing:.12rem;margin-bottom:.5rem">► REMEDIATION TOOL PANEL</div>
+      <p style="margin-bottom:1rem">After engines complete, click any remediation tile (Financial, Audit Ops, Legal, Compliance, Zero-Trust, FinOps Accounting, FinOps Ops) to open the tool in the panel below. The app receives defect context from Engine 06.</p>
+      <div style="color:#00e5ff;font-size:.65rem;letter-spacing:.12rem;margin-bottom:.5rem">► ESCALATION</div>
+      <p>After analysis, escalate to the BPO Strategist. The Strategist synthesizes all 6 engine outputs into a unified action plan and executive brief.</p>
+    </div>
+  </div>
+</div>
+
+<!-- TOUR + HUD (same structure as other war rooms) -->
+<div id="tourOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9990;pointer-events:none"></div>
+<style>#tourOverlay.active,#tourHUD.active{display:block!important}</style>
+<div id="tourSpotlight" style="display:none;position:fixed;z-index:9992;border:2px solid rgba(0,229,255,.75);box-shadow:0 0 0 4px rgba(0,229,255,.12),0 0 30px rgba(0,229,255,.2);pointer-events:none;transition:all .25s ease"></div>
+<div id="tourHUD" style="display:none;position:fixed;bottom:1.5rem;right:1.5rem;width:360px;z-index:9995;font-family:'JetBrains Mono',monospace">
+  <style>
+    .hud-card{background:#081420;border:1px solid rgba(0,229,255,.3);overflow:hidden}
+    .hud-header{background:#061018;padding:.5rem .75rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(0,229,255,.15)}
+    .hud-badge{font-family:'Orbitron',monospace;font-size:.55rem;font-weight:700;color:#00e5ff;letter-spacing:.1rem}
+    .hud-slide-type{font-size:.42rem;letter-spacing:.12rem;padding:.15rem .4rem;border:1px solid currentColor}
+    .hud-slide-type.info{color:#3b82f6;border-color:rgba(59,130,246,.4)}
+    .hud-slide-type.action{color:#00e5ff;border-color:rgba(0,229,255,.4)}
+    .hud-slide-type.demo{color:#00ff88;border-color:rgba(0,255,136,.4)}
+    .hud-title{font-family:'Orbitron',monospace;font-size:.58rem;font-weight:700;color:#e4eaf4;letter-spacing:.08rem;padding:.45rem .75rem;border-bottom:1px solid rgba(0,229,255,.1)}
+    .hud-narration{padding:.55rem .75rem;font-size:.52rem;line-height:1.85;color:#7a8898;max-height:140px;overflow-y:auto}
+    .hud-narration .hl{color:#00e5ff}.hud-narration .cmd{color:#e0e080}.hud-narration .warn{color:#ff6060}.hud-narration .ok{color:#00ff88}
+    .hud-hint{padding:.3rem .75rem;background:rgba(0,229,255,.06);border-top:1px solid rgba(0,229,255,.15);display:flex;align-items:flex-start;gap:.4rem;font-size:.48rem;color:rgba(0,229,255,.8)}
+    .hud-progress{display:flex;gap:3px;padding:.4rem .75rem;border-top:1px solid rgba(0,229,255,.1);flex-wrap:wrap}
+    .hud-pip{width:14px;height:3px;background:rgba(0,229,255,.12);border-radius:2px;transition:background .2s}
+    .hud-pip.active{background:#00e5ff}.hud-pip.done{background:rgba(0,229,255,.35)}
+    .hud-timer{height:2px;background:rgba(0,229,255,.1)}
+    #timerFill{height:100%;background:#00e5ff;width:100%;transition:width 6s linear}
+    .hud-controls{display:flex;gap:.3rem;padding:.4rem .75rem;border-top:1px solid rgba(0,229,255,.1)}
+    .hud-btn{flex:1;background:transparent;border:1px solid rgba(0,229,255,.2);color:rgba(0,229,255,.5);font-family:'JetBrains Mono',monospace;font-size:.47rem;padding:.3rem;cursor:pointer;letter-spacing:.08rem;transition:all .12s}
+    .hud-btn:hover:not(:disabled){border-color:#00e5ff;color:#00e5ff}
+    .hud-btn:disabled{opacity:.35;cursor:not-allowed}
+    .hud-btn.primary{border-color:rgba(0,229,255,.5);color:#00e5ff}
+    .hud-speech-row{display:flex;gap:.3rem;align-items:center;padding:.35rem .75rem;border-top:1px solid rgba(0,229,255,.1);flex-wrap:wrap}
+    .hud-speech-btn{background:transparent;border:1px solid rgba(0,229,255,.2);color:rgba(0,229,255,.5);font-family:'JetBrains Mono',monospace;font-size:.44rem;padding:.25rem .5rem;cursor:pointer;transition:all .12s;white-space:nowrap}
+    .hud-speech-btn:hover{border-color:#00e5ff;color:#00e5ff}
+    .hud-speech-select{background:#081420;border:1px solid rgba(0,229,255,.15);color:rgba(0,229,255,.6);font-family:'JetBrains Mono',monospace;font-size:.43rem;padding:.2rem .3rem;flex:1;min-width:100px}
+    .hud-speech-input{background:#081420;border:1px solid rgba(0,229,255,.15);color:rgba(0,229,255,.6);font-family:'JetBrains Mono',monospace;font-size:.43rem;padding:.2rem .3rem;width:42px;text-align:center}
+    .hud-auto-row{display:flex;align-items:center;gap:.5rem;padding:.3rem .75rem .4rem;border-top:1px solid rgba(0,229,255,.08)}
+    .hud-auto-toggle{width:28px;height:14px;background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.2);border-radius:7px;cursor:pointer;position:relative;transition:background .15s;flex-shrink:0}
+    .hud-auto-toggle .tog-knob{width:10px;height:10px;border-radius:50%;background:rgba(0,229,255,.3);position:absolute;top:1px;left:1px;transition:all .15s}
+    .hud-auto-toggle.on{background:rgba(0,229,255,.25);border-color:rgba(0,229,255,.5)}
+    .hud-auto-toggle.on .tog-knob{background:#00e5ff;transform:translateX(14px)}
+    .hud-auto-lbl{font-size:.44rem;color:rgba(0,229,255,.4)}
+  </style>
+  <div class="hud-card">
+    <div class="hud-header">
+      <div class="hud-badge" id="hudBadge">01 / 10</div>
+      <div style="display:flex;align-items:center;gap:.4rem">
+        <span class="hud-slide-type info" id="hudSlideType">INFO</span>
+        <button onclick="endTour()" style="background:transparent;border:none;color:rgba(0,229,255,.3);font-size:.7rem;cursor:pointer">✕</button>
+      </div>
+    </div>
+    <div class="hud-title" id="hudTitle">BPO WAR ROOM</div>
+    <div class="hud-narration" id="hudNarration"></div>
+    <div class="hud-hint" id="hudActionHint" style="display:none"><span style="flex-shrink:0;color:#00e5ff">▶</span><span id="hudActionText"></span></div>
+    <div class="hud-progress" id="hudProgress"></div>
+    <div class="hud-timer"><div id="timerFill"></div></div>
+    <div class="hud-speech-row">
+      <button class="hud-speech-btn" id="speechPlayBtn" onclick="speechPlay()">🔊 SPEAK</button>
+      <button class="hud-speech-btn" id="speechPauseBtn" onclick="speechPause()" style="display:none">⏸ PAUSE</button>
+      <button class="hud-speech-btn" id="speechStopBtn" onclick="speechStop()" style="display:none">■ STOP</button>
+      <select class="hud-speech-select" id="speechVoiceSelect"></select>
+      <input class="hud-speech-input" id="speechRate" type="number" value="0.95" min="0.5" max="1.5" step="0.05">
+      <input class="hud-speech-input" id="speechVol" type="number" value="1" min="0" max="1" step="0.1">
+    </div>
+    <div class="hud-auto-row">
+      <div class="hud-auto-toggle" id="autoToggle" onclick="toggleAuto()"><div class="tog-knob"></div></div>
+      <span class="hud-auto-lbl">AUTO ADVANCE</span>
+      <span class="hud-auto-lbl" id="autoStepLbl" style="display:none;color:#00e5ff">● RUNNING</span>
+    </div>
+    <div class="hud-controls">
+      <button class="hud-btn" id="hudPrevBtn" onclick="tourPrev()">◀ PREV</button>
+      <button class="hud-btn primary" id="hudNextBtn" onclick="tourNext()">NEXT ▶</button>
+      <button class="hud-btn" onclick="endTour()">✕ EXIT</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://code.responsivevoice.org/responsivevoice.js?key=FREE"></script>
+<script>
+const GROQ = '/api/hc/query';
+let docText='', selectedSector='', selectedDocType='', engOut=['','','','','',''], e={};
+
+// ── LOAD FROM UPLOADER ──
+(function(){
+  const r = sessionStorage.getItem('TSM_BPO_DOC');
+  if(r){ try{
+    const d=JSON.parse(r);
+    docText=d.docText||''; selectedSector=d.selectedSector||''; selectedDocType=d.selectedDocType||'';
+    if(docText){ document.getElementById('docPreview').textContent=docText.slice(0,400)+'...'; }
+    document.getElementById('snapSector').textContent=selectedSector||'—';
+    document.getElementById('snapDocType').textContent=selectedDocType||'—';
+    document.getElementById('rSector').textContent=selectedSector||'—';
+    document.getElementById('rDocType').textContent=selectedDocType||'—';
+    document.getElementById('sbSector').textContent=selectedSector||'NO SECTOR';
+    document.getElementById('alertText').textContent='BPO WAR ROOM · STAGE 02 · '+selectedSector.toUpperCase()+' · '+selectedDocType.toUpperCase()+' LOADED · FIRE ENGINES TO BEGIN';
+    addTL('Document received from Uploader', selectedSector+' · '+selectedDocType, 'g');
+    if(docText) document.getElementById('fireBtn').disabled=false;
+  }catch(e){}}
+  const k=localStorage.getItem('GROQ_KEY'); if(k) document.getElementById('groqKey').value=k;
+})();
+
+function testKey(){
+  const k=document.getElementById('groqKey').value.trim();
+  if(!k){document.getElementById('keyStatus').textContent='Enter a key first';return;}
+  localStorage.setItem('GROQ_KEY',k);
+  document.getElementById('keyStatus').textContent='✓ Key saved';
+}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function addTL(title,meta,dot){const tl=document.getElementById('timeline');const d=document.createElement('div');d.className='tl-item';d.innerHTML=`<div class="tl-dot ${dot}"></div><div><div class="tl-title">${title}</div><div class="tl-meta">${meta}</div></div>`;tl.appendChild(d);tl.scrollTop=tl.scrollHeight;}
+function copyEng(n){if(engOut[n-1])navigator.clipboard.writeText(engOut[n-1]).catch(()=>{});}
+function exportFull(){const f=engOut.filter(Boolean).join('\n\n'+'═'.repeat(60)+'\n\n');navigator.clipboard.writeText(f).catch(()=>{});addTL('Full Report Exported','All 6 engine outputs copied','c');}
+
+function setPipeState(n,s){const pe=document.getElementById('pe'+n),ps=document.getElementById('ps'+n);pe.className='pipe-eng '+(s==='running'?'running':s==='done'?'done':'');ps.textContent=s==='running'?'RUNNING...':s==='done'?'COMPLETE ✓':'STANDBY';ps.className='pe-status'+(s==='running'?' running':s==='done'?' done':'');}
+function setEngState(n,s){if(n<=4){const c=document.getElementById('ec'+n),st=document.getElementById('es'+n);c.className='engine-card '+(s==='running'?'running':s==='done'?'done':'');st.className='ec-status '+s;st.textContent=s==='running'?'RUNNING...':s==='done'?'COMPLETE ✓':'IDLE';}else{const st=document.getElementById('es'+n);if(st){st.className='ec-status '+s;st.textContent=s==='running'?'RUNNING...':s==='done'?'COMPLETE ✓':'IDLE';}}}
+function setEngOut(n,txt){engOut[n-1]=txt;const el=document.getElementById('eo'+n);if(el){el.innerHTML=`<span style="color:var(--gold);font-weight:700">▸ E0${n} · ${new Date().toLocaleTimeString()}</span>\n\n`+esc(txt);const ch=document.getElementById('ch'+n);if(ch)ch.textContent=txt.length+' chars';}}
+
+function loadTile(href,el){document.querySelectorAll('.rem-tile').forEach(t=>t.classList.remove('active'));el.classList.add('active');const frame=document.getElementById('nodeFrame');frame.src=href;frame.style.display='block';addTL('Remediation tool opened',href.split('/').pop(),'c');}
+
+function buildDefectManifest(engines){
+  const lines=[];const src=[engines[2]||'',engines[3]||'',engines[4]||'',engines[5]||''].join('\n');
+  const patterns=[/PRIMARY ISSUE[:\s]+([^\n]+)/gi,/RISK FLAG[:\s]+([^\n]+)/gi,/FINANCIAL EXPOSURE[:\s]+([^\n]+)/gi,/COMPLIANCE[:\s]+([^\n]+)/gi,/DEADLINE[:\s]+([^\n]+)/gi,/RECOMMENDED ACTION[:\s]+([^\n]+)/gi,/VIOLATION[:\s]+([^\n]+)/gi,/DEFECT[:\s]+([^\n]+)/gi,/RECOVERY[:\s]+([^\n]+)/gi,/IMMEDIATE[:\s]+([^\n]+)/gi];
+  patterns.forEach(p=>{let m;while((m=p.exec(src))!==null){const line=m[1].trim();if(line.length>10&&!lines.includes(line))lines.push(line);}});
+  return lines.slice(0,12).map((d,i)=>`DEFECT ${i+1}: ${d}`).join('\n')||'No structured defects extracted — use engine outputs directly.';
+}
+
+function buildAppDispatch(raw,defectManifest){
+  const introMatch=raw.match(/DISPATCH_INTRO:\s*([^\n]+(?:\n(?!APP:)[^\n]+)*)/);
+  document.getElementById('dispatchIntro').textContent=introMatch?introMatch[1].trim():'Remediation pathways identified. Route to the highest-ranked app first.';
+  const appBlocks=raw.split(/\n(?=APP:)/);const apps=[];
+  for(const block of appBlocks){const name=(block.match(/APP:\s*(.+)/)||[])[1]?.trim();const rank=(block.match(/RANK:\s*(.+)/)||[])[1]?.trim();const isTop=/IS_TOP:\s*YES/i.test(block);const how=(block.match(/HOW_TO_USE:\s*([\s\S]+?)(?=\nTAGS:|$)/)||[])[1]?.trim();const tagsRaw=(block.match(/TAGS:\s*(.+)/)||[])[1]?.trim();if(name)apps.push({name,rank,isTop,how,tagsRaw});}
+  if(apps.length===0){apps.push({name:'Financial',rank:'#1',isTop:true,how:'1. Open Financial tab\n2. Enter exposure amount from Engine 03\n3. Run P&L impact analysis\n4. Export recovery projection',tagsRaw:'FINANCE,RECOVERY'},{name:'Audit Ops',rank:'#2',isTop:false,how:'1. Open Doc Review module\n2. Upload the flagged document\n3. Run findings analysis\n4. Generate audit trail',tagsRaw:'AUDIT,REVIEW'},{name:'Legal Analyst',rank:'#3',isTop:false,how:'1. Open Contract/Claim tab\n2. Enter parties and claim details\n3. Run legal risk analysis\n4. Draft response letter',tagsRaw:'LEGAL,RESPONSE'});}
+  const routeMap={'financial':'financial.html','audit ops':'auditops-pro.html','legal analyst':'../legal-pro/legal-analyst-pro.html','compliance':'../html/compliance.html','zero-trust':'../html/zero-trust.html','finops accounting':'../finops-suite/finops-accounting.html','finops ops':'../finops-suite/finops-operations.html'};
+  const dotColors=['#00ff88','#ffc400','#00e5ff','#a855f7','#ff4444','#3b82f6','#f59e0b'];
+  const container=document.getElementById('appCards');container.innerHTML='';
+  apps.slice(0,6).forEach((app,i)=>{const key=app.name.toLowerCase();const href=routeMap[key]||'financial.html';const tags=(app.tagsRaw||'').split(',').map(t=>t.trim()).filter(Boolean);const tagHTML=tags.map(t=>`<span class="app-tag">${t}</span>`).join('');const card=document.createElement('div');card.className='app-card'+(app.isTop?' top':'');card.innerHTML=`<div class="app-card-header"><div style="display:flex;align-items:center"><div class="app-dot" style="background:${dotColors[i]||'#5a6f90'}"></div><div><div class="app-name">${esc(app.name)}</div><div class="app-category">BPO Operations</div></div></div>${app.isTop?'<span class="top-match-badge">★ TOP MATCH</span>':`<span class="app-rank">${app.rank||'#'+(i+1)}</span>`}</div><div class="app-how-label">HOW TO USE FOR YOUR ISSUE</div><div class="app-how-text">${esc(app.how||'Open this app and use the intake form.')}${defectManifest?'\n\nKEY DEFECTS:\n'+defectManifest:''}</div><div class="app-tags">${tagHTML}</div><button class="app-launch" onclick="loadTile('${href}',this.closest('.app-card'))">OPEN ${esc(app.name.toUpperCase())} →</button>`;container.appendChild(card);});
+  document.getElementById('appCount').textContent=`✓ ${apps.length} APPS RECOMMENDED`;
+  document.getElementById('dispatch06').style.display='block';
+  document.getElementById('dispatch06').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+const PROMPTS=[
+(doc,dtype,sector)=>`You are a TSM BPO Document Intelligence Engine.
+SECTOR: ${sector}
+DOCUMENT TYPE: ${dtype}
+DOCUMENT TEXT: ${doc}
+
+ENGINE 01 — DOCUMENT INTELLIGENCE
+Extract all key facts. Format exactly:
+DOC TYPE: [specific document type]
+SECTOR: [business sector]
+PARTIES: [all parties involved]
+KEY AMOUNTS: [all dollar figures]
+CRITICAL DEADLINES: [all dates and deadlines]
+PRIMARY ISSUE: [the single most critical problem]
+RISK SCORE: [1-100]
+MATERIAL FACTS:
+1. [Fact]
+2. [Fact]
+3. [Fact]
+4. [Fact]
+5. [Fact]`,
+
+(doc,e,sector)=>`You are a TSM BPO Issue Analyst.
+SECTOR: ${sector}
+ENGINE 01 FACTS: ${e[1]}
+
+ENGINE 02 — ISSUE ANALYSIS
+ROOT CAUSE: [primary root cause]
+RISK FLAG 1: [specific risk]
+RISK FLAG 2: [specific risk]
+RISK FLAG 3: [specific risk]
+PATTERN DETECTED: [systemic or one-off]
+URGENCY LEVEL: [Critical/High/Medium/Low]
+RECOVERY PROBABILITY: [percentage]
+RISK LEVEL: [Low/Medium/High/Critical]`,
+
+(doc,e,sector)=>`You are a TSM BPO Financial Analyst.
+ENGINE 01: ${e[1]}
+ENGINE 02: ${e[2]}
+
+ENGINE 03 — FINANCIAL IMPACT
+FINANCIAL EXPOSURE: [total dollars at risk]
+RECOVERY OPPORTUNITY: [recoverable amount]
+CASH FLOW IMPACT: [immediate cash effect]
+COST IF UNRESOLVED: [escalation cost]
+FINANCIAL RISK SCORE: [1-100]
+PRIORITY: [Immediate/High/Medium/Low]`,
+
+(doc,e,sector)=>`You are a TSM BPO Compliance & Legal Analyst.
+ENGINE 01: ${e[1]}
+ENGINE 03: ${e[3]}
+
+ENGINE 04 — COMPLIANCE & LEGAL
+REGULATORY FRAMEWORK: [applicable laws/regulations]
+COMPLIANCE VIOLATION: [specific violations if any]
+FILING DEADLINE: [critical dates]
+LEGAL EXPOSURE: [litigation or penalty risk]
+RECOMMENDED LEGAL ACTION: [specific action]
+COMPLIANCE RISK: [Low/Medium/High/Critical]`,
+
+(doc,e,sector)=>`You are a TSM BPO Recovery Strategist.
+ENGINE 01: ${e[1]}
+ENGINE 02: ${e[2]}
+ENGINE 03: ${e[3]}
+ENGINE 04: ${e[4]}
+
+ENGINE 05 — RECOVERY PLAN
+Generate a NUMBERED STEP-BY-STEP action plan. For EACH step specify:
+- WHICH TSM app to open (Financial, Audit Ops, Legal Analyst, Compliance, Zero-Trust, FinOps Accounting, or FinOps Ops)
+- WHICH tab or section within that app
+- WHAT EXACTLY to enter or upload
+- WHAT action to take
+- WHAT output to expect
+
+Format each step as:
+STEP [N]: Open [APP NAME] → [TAB/SECTION]
+INPUT: [exact value or data to enter from the document]
+ACTION: [what to click or do]
+OUTPUT: [what you get]
+
+Minimum 5 steps. Reference specific amounts, dates, and parties from the document.
+
+IMMEDIATE NEXT STEPS:
+1. [Action — Owner — Deadline]
+2. [Action — Owner — Deadline]
+3. [Action — Owner — Deadline]`,
+
+(doc,e,sector,defectManifest)=>`You are the TSM BPO BNCA Executive Engine.
+DEFECT MANIFEST:
+${defectManifest}
+
+SECTOR: ${sector}
+KEY AMOUNTS: ${(e[1]||'').match(/KEY AMOUNTS?[:\s]+([^\n]+)/i)?.[1]||'See E01'}
+FINANCIAL EXPOSURE: ${(e[3]||'').match(/FINANCIAL EXPOSURE[:\s]+([^\n]+)/i)?.[1]||'See E03'}
+PRIMARY ISSUE: ${(e[1]||'').match(/PRIMARY ISSUE[:\s]+([^\n]+)/i)?.[1]||'See E01'}
+IMMEDIATE STEPS: ${(e[5]||'').match(/IMMEDIATE NEXT STEPS[:\s]+([\s\S]*?)(?=\n[A-Z]|$)/i)?.[1]?.slice(0,300)||'See E05'}
+
+CRITICAL INSTRUCTION: Every HOW_TO_USE must be numbered steps tied to the specific defects above.
+For each app: 1. Open [exact tab] 2. In [field], enter [exact value from defect manifest] 3. Select [option] because [specific defect reason] 4. Click [action] → generates [output needed]
+
+APP ROUTING — OUTPUT ALL 7 APPS:
+APP: Financial
+RANK: #[1-7]
+IS_TOP: [YES/NO]
+HOW_TO_USE: [Numbered steps referencing specific defects, amounts, parties]
+TAGS: [TAG1,TAG2]
+
+APP: Audit Ops
+RANK: #[1-7]
+IS_TOP: [YES/NO]
+HOW_TO_USE: [Numbered steps]
+TAGS: [TAG1,TAG2]
+
+APP: Legal Analyst
+RANK: #[1-7]
+IS_TOP: [YES/NO]
+HOW_TO_USE: [Numbered steps]
+TAGS: [TAG1,TAG2]
+
+APP: Compliance
+RANK: #[1-7]
+IS_TOP: [YES/NO]
+HOW_TO_USE: [Numbered steps]
+TAGS: [TAG1,TAG2]
+
+APP: Zero-Trust
+RANK: #[1-7]
+IS_TOP: [YES/NO]
+HOW_TO_USE: [Numbered steps]
+TAGS: [TAG1,TAG2]
+
+APP: FinOps Accounting
+RANK: #[1-7]
+IS_TOP: [YES/NO]
+HOW_TO_USE: [Numbered steps]
+TAGS: [TAG1,TAG2]
+
+APP: FinOps Ops
+RANK: #[1-7]
+IS_TOP: [YES/NO]
+HOW_TO_USE: [Numbered steps]
+TAGS: [TAG1,TAG2]
+
+DISPATCH_INTRO: [Why these apps address the specific risks in this document]
+BNCA — BEST NEXT COURSE OF ACTION: [Single paragraph — most critical 72-hour action sequence]
+ESCALATION TRIGGER: [Condition requiring immediate executive involvement]`
+];
+
+const FALLBACKS=[
+(doc)=>`DOC TYPE: BPO Document\nPARTIES: See document\nKEY AMOUNTS: See document\nCRITICAL DEADLINES: Review immediately\nPRIMARY ISSUE: Document requires immediate review\nRISK SCORE: 75\nMATERIAL FACTS:\n1. Document loaded for BPO analysis\n2. Full AI analysis requires Groq API key\n3. Manual review recommended\n4. Route to appropriate remediation app\n5. Escalate after review`,
+()=>`ROOT CAUSE: Requires AI analysis\nRISK FLAG 1: Document needs review\nRISK FLAG 2: Deadlines may apply\nRISK LEVEL: High — review immediately`,
+()=>`FINANCIAL EXPOSURE: Quantify from document\nRECOVERY OPPORTUNITY: Assess after review\nFINANCIAL RISK SCORE: 70`,
+()=>`REGULATORY FRAMEWORK: Review applicable regulations\nCOMPLIANCE RISK: High — verify requirements\nRECOMMENDED LEGAL ACTION: Consult appropriate specialist`,
+()=>`STEP 1: Open Financial → P&L Tab\nINPUT: Dollar amounts from document\nACTION: Run exposure analysis\nOUTPUT: Financial risk report\n\nSTEP 2: Open Legal Analyst → Contract Review\nINPUT: Party names and claim details\nACTION: Analyze legal exposure\nOUTPUT: Legal risk assessment\n\nIMMEDIATE NEXT STEPS:\n1. Review all deadlines in document\n2. Route to appropriate remediation app\n3. Escalate to BPO Strategist`,
+()=>`APP: Financial\nRANK: #1\nIS_TOP: YES\nHOW_TO_USE: 1. Open Financial tab 2. Enter exposure amounts 3. Run analysis 4. Export report\nTAGS: FINANCE,RECOVERY\n\nAPP: Audit Ops\nRANK: #2\nIS_TOP: NO\nHOW_TO_USE: 1. Open Doc Review 2. Upload document 3. Run audit 4. Get findings\nTAGS: AUDIT,REVIEW\n\nDISPATCH_INTRO: Route to Financial first for exposure quantification, then Audit Ops for documentation review.\nBNCA — BEST NEXT COURSE OF ACTION: Load document into Financial app, quantify exposure, then route to Legal Analyst for response strategy.\nESCALATION TRIGGER: Financial exposure exceeds $50,000 or regulatory deadline within 14 days.`
+];
+
+async function fireEngines(){
+  const doc=docText||(()=>{const el=document.getElementById('docPreview');return el?el.textContent.replace('// No document loaded',''):'';})();
+  if(!doc.trim()){alert('No document loaded. Return to Uploader or paste document text.');return;}
+  document.getElementById('fireBtn').disabled=true;
+  document.getElementById('dispatch06').style.display='none';
+  document.getElementById('spinner').style.display='flex';
+  const labels=['Document Intelligence','Issue Analysis','Financial Impact','Compliance & Legal','Recovery Plan','App Dispatch'];
+  for(let i=1;i<=6;i++){
+    setPipeState(i,'running');
+    if(i<=5)setEngState(i,'running');
+    document.getElementById('spinnerLabel').textContent='Engine 0'+i+' — '+labels[i-1]+'...';
+    document.getElementById('sbStatus').textContent='E0'+i+' RUNNING';
+    addTL('Engine 0'+i+' running',labels[i-1],'a');
+    let txt='';
+    try{
+      const k=localStorage.getItem('GROQ_KEY')||document.getElementById('groqKey').value.trim();
+      let prompt;
+      if(i===6){const dm=buildDefectManifest(e);prompt=PROMPTS[5](doc,e,selectedSector,dm);}
+      else if(i===1){prompt=PROMPTS[0](doc,selectedDocType,selectedSector);}
+      else{prompt=PROMPTS[i-1](doc,e,selectedSector);}
+      const res=await fetch(GROQ,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:prompt})});
+      if(res.ok){const d=await res.json();txt=d.answer||d.response||d.text||'';}
+      if(!txt.trim())throw new Error('empty');
+    }catch(err){txt=FALLBACKS[i-1](doc,e);}
+    e[i]=txt;
+    if(i<=6)setEngOut(i,txt);
+    if(i<=5)setEngState(i,'done');
+    setPipeState(i,'done');
+    addTL('Engine 0'+i+' complete',labels[i-1]+' · '+new Date().toLocaleTimeString(),'g');
+    if(i===6){buildAppDispatch(txt,buildDefectManifest(e));}
+    await new Promise(r=>setTimeout(r,350));
+  }
+  // Parse KPIs
+  const combined=Object.values(e).join(' ');
+  const riskM=combined.match(/RISK SCORE[:\s]+(\d+)/i);
+  const expM=combined.match(/FINANCIAL EXPOSURE[:\s]+([^\n]+)/i);
+  const dlM=combined.match(/(?:CRITICAL DEADLINE|FILING DEADLINE)[:\s]+([^\n]+)/i);
+  const issueM=combined.match(/PRIMARY ISSUE[:\s]+([^\n]+)/i);
+  const actionM=combined.match(/RECOMMENDED(?:\s+LEGAL)?\s+ACTION[:\s]+([^\n]+)/i);
+  if(riskM){const r=parseInt(riskM[1]);document.getElementById('snapRisk').textContent=r+'/100';document.getElementById('snapRisk').className='kpi-val '+(r>70?'bad':r>40?'warn':'ok');document.getElementById('riskFill').style.width=r+'%';document.getElementById('riskFill').style.background=r>70?'var(--red)':r>40?'var(--gold)':'var(--green)';document.getElementById('rRisk').textContent=r+'/100';}
+  if(expM){document.getElementById('snapExposure').textContent=expM[1].trim().slice(0,20);document.getElementById('rExposure').textContent=expM[1].trim().slice(0,20);}
+  if(dlM){document.getElementById('snapDeadline').textContent=dlM[1].trim().slice(0,20);document.getElementById('rDeadline').textContent=dlM[1].trim().slice(0,20);}
+  if(issueM)document.getElementById('snapIssue').textContent=issueM[1].trim().slice(0,22);
+  if(actionM)document.getElementById('rAction').textContent=actionM[1].trim().slice(0,22);
+  document.getElementById('escalSub').textContent='6-engine analysis complete · '+selectedSector+' · Route to remediation apps or escalate to BPO Strategist';
+  document.getElementById('spinner').style.display='none';
+  document.getElementById('fireBtn').disabled=false;
+  document.getElementById('sbStatus').textContent='COMPLETE';
+  addTL('All 6 Engines Complete','App Dispatch ready — escalate or use remediation tools','p');
+  storeSession();
+}
+
+function storeSession(){
+  try{sessionStorage.setItem('TSM_BPO_WAR_RELAY',JSON.stringify({docText,selectedSector,selectedDocType,engOut,engines:{e1:e[1]||'',e2:e[2]||'',e3:e[3]||'',e4:e[4]||'',e5:e[5]||'',e6:e[6]||''},timestamp:new Date().toISOString(),chainStep:'war-room'}));}catch(err){}
+}
+
+function escalateToStrategist(){
+  storeSession();
+  addTL('Escalating to BPO Strategist','6-engine package relay → bpo-strategist.html','p');
+  setTimeout(()=>{window.location.href='bpo-strategist.html';},600);
+}
+
+setInterval(()=>{const t=new Date().toLocaleTimeString('en-US',{hour12:false});document.getElementById('sbTime').textContent=t;document.getElementById('sbTime2').textContent=t;},1000);
+
+// ── TOUR ──
+const TOUR_SLIDES=[
+  {"id":"welcome","title":"BPO WAR ROOM · STAGE 02","type":"info","target":"alertBar","autoMs":7000,"narration":"Welcome to the <span class='hl'>BPO War Room</span> — Stage 02 of the 4-stage chain. Your document arrived from the Uploader. This page fires a <span class='cmd'>6-engine AI analysis pipeline</span> and routes each defect to the correct remediation app with step-by-step instructions.","actionHint":null},
+  {"id":"doc","title":"DOCUMENT RECEIVED","type":"demo","target":"alertBar","autoMs":6000,"narration":"Your document, sector, and doc type relayed automatically from the Uploader. Check the <span class='hl'>KPI bar</span> at the top — after engines complete it shows Risk Score, Financial Exposure, Critical Deadline, and Primary Issue at a glance.","actionHint":null},
+  {"id":"key","title":"STEP 1 · CONNECT NEURAL CORE","type":"action","target":"groqKey","autoMs":6000,"narration":"Enter your <span class='hl'>Groq API key</span> (gsk_...) and click TEST. Without a key the engines fall back to structured heuristic output — still useful for demos. Key is stored in localStorage only.","actionHint":"Enter gsk_... key and click TEST"},
+  {"id":"fire","title":"STEP 2 · FIRE ALL ENGINES","type":"action","target":"fireBtn","autoMs":7000,"narration":"Click <span class='hl'>⚡ FIRE ALL ENGINES</span>. The 6 engines run in dependency order: <span class='cmd'>E01</span> extracts facts → <span class='cmd'>E02</span> flags issues → <span class='cmd'>E03</span> quantifies exposure → <span class='cmd'>E04</span> audits compliance → <span class='cmd'>E05</span> builds step-by-step recovery plan → <span class='cmd'>E06</span> routes to apps.","actionHint":"Click ⚡ FIRE ALL ENGINES"},
+  {"id":"e05","title":"ENGINE 05 · RECOVERY PLAN","type":"demo","target":"eo5","autoMs":8000,"narration":"<span class='hl'>Engine 05</span> is the core of the War Room — it generates a <span class='cmd'>numbered step-by-step action plan</span> that tells you: which TSM app to open, which tab, exactly what to enter, and what output to expect. Every step references specific amounts, dates, and parties from your document.","actionHint":null},
+  {"id":"dispatch","title":"ENGINE 06 · APP DISPATCH","type":"demo","target":"dispatch06","autoMs":7000,"narration":"Engine 06 generates <span class='hl'>ranked app cards</span>. Each card shows: which remediation app to use, why, and numbered steps with field-level instructions tied to your specific defects. The <span class='cmd'>⭐ TOP MATCH</span> is highest priority. Click <span class='cmd'>OPEN [APP] →</span> to load it in the panel below.","actionHint":"Click OPEN [APP] → on any card to load the remediation tool"},
+  {"id":"tiles","title":"REMEDIATION TOOL PANEL","type":"demo","target":"remSection","autoMs":7000,"narration":"The <span class='hl'>Remediation Tool Panel</span> houses 7 TSM apps: Financial, Audit Ops, Legal Analyst, Compliance, Zero-Trust, FinOps Accounting, FinOps Ops. Click any tile to open the app inline. The app receives context from Engine 06's defect manifest so it knows exactly what you're working on.","actionHint":"Click any remediation tile to open the tool inline"},
+  {"id":"escalate","title":"STEP 3 · ESCALATE TO STRATEGIST","type":"action","target":"escalateBar","autoMs":8000,"narration":"After reviewing the engine outputs and remediation tools, click <span class='hl'>ESCALATE → BPO STRATEGIST</span>. All 6 engine outputs relay via sessionStorage to Stage 03. The Strategist synthesizes everything into a unified action plan and routes to the Executive Portal.","actionHint":"Click ESCALATE → BPO STRATEGIST"},
+  {"id":"done","title":"WAR ROOM COMPLETE","type":"info","target":"alertBar","autoMs":0,"narration":"<span class='ok'>War Room ready.</span> Workflow: <span class='cmd'>load → key → fire → review E05 → use remediation tiles → escalate</span>. The tour continues in the Strategist and Executive Portal. <span class='hl'>Fire the engines on your document</span> to begin.","actionHint":null}
+];
+
+let tourActive=false,tourStep=0,autoMode=false,autoTimer=null;
+function spotlightEl(id){const sp=document.getElementById('tourSpotlight');if(!id){sp.style.display='none';return;}const el=document.getElementById(id);if(!el){sp.style.display='none';return;}const r=el.getBoundingClientRect(),p=8;sp.style.display='block';sp.style.top=(r.top-p)+'px';sp.style.left=(r.left-p)+'px';sp.style.width=(r.width+p*2)+'px';sp.style.height=(r.height+p*2)+'px';el.scrollIntoView({behavior:'smooth',block:'nearest'});}
+function buildPips(){const prog=document.getElementById('hudProgress');prog.innerHTML='';TOUR_SLIDES.forEach((s,i)=>{const pip=document.createElement('div');pip.className='hud-pip'+(i<tourStep?' done':i===tourStep?' active':'');prog.appendChild(pip);});}
+function renderSlide(idx){speechStop();const s=TOUR_SLIDES[idx];document.getElementById('hudBadge').textContent=String(idx+1).padStart(2,'0')+' / '+TOUR_SLIDES.length;document.getElementById('hudTitle').textContent=s.title;document.getElementById('hudNarration').innerHTML=s.narration;const te=document.getElementById('hudSlideType');te.textContent=s.type.toUpperCase();te.className='hud-slide-type '+s.type;const hi=document.getElementById('hudActionHint');if(s.actionHint){hi.style.display='flex';document.getElementById('hudActionText').textContent=s.actionHint;}else hi.style.display='none';document.getElementById('hudPrevBtn').disabled=idx===0;const nb=document.getElementById('hudNextBtn');if(idx===TOUR_SLIDES.length-1){nb.textContent='END TOUR ✓';nb.onclick=endTour;}else{nb.textContent='NEXT ▶';nb.onclick=tourNext;}buildPips();spotlightEl(s.target);if(autoMode)startAutoTimer(s.autoMs||6000);}
+function startAutoTimer(ms){clearAutoTimer();if(!ms||ms===0){stopAuto();return;}const fill=document.getElementById('timerFill');fill.style.transition='none';fill.style.width='100%';requestAnimationFrame(()=>requestAnimationFrame(()=>{fill.style.transition=`width ${ms}ms linear`;fill.style.width='0%';}));autoTimer=setTimeout(()=>{if(tourStep<TOUR_SLIDES.length-1)tourNext();else endTour();},ms);}
+function clearAutoTimer(){if(autoTimer){clearTimeout(autoTimer);autoTimer=null;}const fill=document.getElementById('timerFill');if(fill){fill.style.transition='none';fill.style.width='100%';}}
+function toggleAuto(){autoMode=!autoMode;document.getElementById('autoToggle').classList.toggle('on',autoMode);document.getElementById('autoStepLbl').style.display=autoMode?'inline':'none';if(autoMode)startAutoTimer(TOUR_SLIDES[tourStep].autoMs||6000);else clearAutoTimer();}
+function stopAuto(){autoMode=false;const t=document.getElementById('autoToggle'),l=document.getElementById('autoStepLbl');if(t)t.classList.remove('on');if(l)l.style.display='none';clearAutoTimer();}
+function tourNext(){if(tourStep<TOUR_SLIDES.length-1){tourStep++;renderSlide(tourStep);}}
+function tourPrev(){if(tourStep>0){tourStep--;renderSlide(tourStep);}}
+function startTour(){tourActive=true;tourStep=0;document.getElementById('tourOverlay').classList.add('active');document.getElementById('tourHUD').classList.add('active');const lb=document.getElementById('tourLaunchBtn');if(lb)lb.textContent='■ TOUR ACTIVE';renderSlide(0);}
+function endTour(){tourActive=false;speechStop();stopAuto();document.getElementById('tourOverlay').classList.remove('active');document.getElementById('tourHUD').classList.remove('active');document.getElementById('tourSpotlight').style.display='none';const lb=document.getElementById('tourLaunchBtn');if(lb)lb.textContent='▶ GUIDED TOUR';}
+window.addEventListener('resize',()=>{if(tourActive)spotlightEl(TOUR_SLIDES[tourStep].target);});
+const RV_VOICES=['US English Male','US English Female','UK English Male','UK English Female','Australian Female','Australian Male'];
+(function(){const s=document.getElementById('speechVoiceSelect');if(!s)return;s.innerHTML='';RV_VOICES.forEach((v,i)=>{const o=document.createElement('option');o.value=v;o.textContent=v;if(i===0)o.selected=true;s.appendChild(o);});})();
+function speechClean(h){const d=document.createElement('div');d.innerHTML=h;return(d.textContent||d.innerText||'').replace(/\s+/g,' ').trim();}
+function speechPlay(){if(typeof responsiveVoice==='undefined'){alert('ResponsiveVoice not loaded.');return;}responsiveVoice.cancel();responsiveVoice.speak(speechClean(TOUR_SLIDES[tourStep].narration),document.getElementById('speechVoiceSelect').value||'US English Male',{rate:parseFloat(document.getElementById('speechRate').value)||0.95,volume:parseFloat(document.getElementById('speechVol').value)||1,pitch:1,onstart:()=>speechSetState('speaking'),onend:()=>speechSetState('idle'),onerror:()=>speechSetState('idle')});}
+function speechPause(){if(typeof responsiveVoice!=='undefined')responsiveVoice.pause();speechSetState('paused');}
+function speechStop(){if(typeof responsiveVoice!=='undefined')responsiveVoice.cancel();speechSetState('idle');}
+function speechSetState(state){const pb=document.getElementById('speechPlayBtn'),ps=document.getElementById('speechPauseBtn'),st=document.getElementById('speechStopBtn');if(!pb)return;if(state==='speaking'){pb.style.display='none';ps.style.display='';st.style.display='';ps.className='hud-speech-btn';}else if(state==='paused'){pb.style.display='';pb.textContent='▶ RESUME';ps.style.display='none';st.style.display='';}else{pb.style.display='';pb.textContent='🔊 SPEAK';ps.style.display='none';st.style.display='none';}}
+</script>
+</body>
+</html>
