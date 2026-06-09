@@ -917,26 +917,6 @@ Return ONLY: {"steps":[{"title":"...","instruction":"...","fieldHint":"..."}]}`;
     } catch(err){console.error('TMG regen failed',err);m._loading=false;saveMission(m);}
     render();
   }
-    try {
-      const denialCode=(m.denialCode||(m.anomalyType||'').match(/\b(CO-\d+|PR-\d+|OA-\d+|PI-\d+)\b/i)?.[1]||(m.anomalySummary||'').match(/\b(CO-\d+|PR-\d+|OA-\d+|PI-\d+)\b/i)?.[1]||'').toUpperCase();
-      const intel={'CO-5':'CMN + W-9 + Prior Auth required. Appeal team: Authorization & Billing. 120-day timely filing. HIGH urgency.','CO-4':'Medical necessity letter required. Appeal team: Clinical Appeals. 90-day window.','CO-16':'Missing modifier or NPI fix. Billing Corrections team. Resubmit.','CO-22':'COB form + secondary EOB required. COB/Eligibility team.','CO-97':'Modifier 59 + operative report. Coding & Compliance team.','PR-96':'ABN signature required. Patient Financial Services.'}[denialCode]||'';
-      const prompt=`Resolve this insurance claim anomaly with 5 steps.
-ANOMALY: ${m.anomalyType}
-PAYER: ${m.payer||'Unknown'}
-AMOUNT: ${m.claimAmount||'Unknown'}
-${denialCode?'DENIAL CODE: '+denialCode:''}
-${intel?'INTEL: '+intel:''}
-Return ONLY: {"steps":[{"title":"...","instruction":"...","fieldHint":"..."}]}`;
-      const res=await fetch('/api/insurance/query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:'You are TSM Neural Core. Respond ONLY with valid JSON.',message:prompt,maxTokens:600})});
-      const data=await res.json();
-      const text=(data.answer||data.response||data.content||'').replace(/```json|```/g,'').trim();
-      let parsed;
-      try{parsed=JSON.parse(text);}catch(e){const match=text.match(/\{[\s\S]*\}/);if(match)parsed=JSON.parse(match[0]);else throw e;}
-      m.steps=(parsed.steps||[]).map((s,i)=>({id:`step-${i}`,title:s.title||`Step ${i+1}`,instruction:s.instruction||'',fieldHint:s.fieldHint||'',status:i===0?'active':'pending'}));
-      m._loading=false;m.generatedAt=new Date().toISOString();saveMission(m);
-    } catch(err){console.error('TMG regen failed',err);m._loading=false;saveMission(m);}
-    render();
-  }
     
   function init() {
     render();
