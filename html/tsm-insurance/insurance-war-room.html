@@ -738,6 +738,23 @@ async function fireEngines(){
 
   storeRelay(e);
 
+  // ── TSM Mission Guide trigger ──────────────────────────────────────────
+  if (window.TSMMissionGuide) {
+    const denialCodeMatch = ((e[2]||'')+(e[1]||'')).match(/\b(CO-\d+|PR-\d+|OA-\d+|PI-\d+)\b/i);
+    const exposureMatch   = (e[3]||'').match(/TOTAL EXPOSURE[:\s]+([^\n]+)/i);
+    const patientMatch    = (e[1]||'').match(/PATIENT[:\s]+([^\n]+)/i);
+    const payerMatch      = (e[1]||'').match(/PAYER[:\s]+([^\n]+)/i);
+    window.TSMMissionGuide.triggerFromEngine({
+      anomalyType:     selectedDocType + ' · Denial Analysis',
+      anomalySummary:  (e[2]||'').slice(0, 200),
+      denialCode:      denialCodeMatch ? denialCodeMatch[1].toUpperCase() : null,
+      claimAmount:     exposureMatch   ? exposureMatch[1].trim().slice(0, 20) : null,
+      patientOrClient: patientMatch    ? patientMatch[1].trim().slice(0, 40) : null,
+      payer:           payerMatch      ? payerMatch[1].trim().slice(0, 30)   : null,
+      targetApp:       'Insurance War Room'
+    });
+  }
+
   // Auto-show anomaly advisor panel after 1.2s
   setTimeout(() => {
     try {
