@@ -539,7 +539,7 @@ app.post('/api/insurance/query', async (req, res) => {
   const msg = message || question || query || '';
   if (!msg) return res.status(400).json({ ok: false, error: 'message required' });
   try { const answer = await groqChat(system || SP.insurance, msg, maxTokens || 1400); res.json({ ok: true, answer }); }
-  catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  catch (e) { console.error('GROQ ERROR:', e.message); res.status(500).json({ ok: false, error: e.message, detail: e.stack }); }
 });
 
 app.post('/api/insurance/quiz', async (req, res) => {
