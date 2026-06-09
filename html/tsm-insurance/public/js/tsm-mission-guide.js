@@ -412,6 +412,7 @@
     if (!panel) {
       panel = document.createElement('div');
       panel.id = PANEL_ID;
+      panel.style.display = 'none';
       document.body.appendChild(panel);
     }
 
@@ -711,14 +712,14 @@ Respond with ONLY this JSON:
 
   // ── Init ───────────────────────────────────────────────────────────────────
   function init() {
-    render();
-    // Listen for mission updates from other tabs/pages
+    // Don't auto-render on load — wait to be called
     window.addEventListener('storage', (e) => {
       if (e.key === STORAGE_KEY) render();
     });
-    // Expose API for War Room to trigger re-render
     window.TSMMissionGuide = {
       refresh: render,
+      show: () => { const p = document.getElementById(PANEL_ID); if(p) p.style.display='flex'; render(); },
+      hide: () => { const p = document.getElementById(PANEL_ID); if(p) p.style.display='none'; },
       setMission: (m) => { saveMission(m); render(); },
       regenerate: (m) => regenerateSteps(m)
     };
