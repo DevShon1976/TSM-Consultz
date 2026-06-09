@@ -761,11 +761,18 @@ function buildAppDispatch(e6text){
   const hdr=document.getElementById('dispatchHdr');
   if(!e6text) return;
   const APP_URLS={
-    'Claims Triage':'ins-hub.html','DME Billing Module':'ins-hub.html','P&C Command':'pc-command.html',
-    'CE Study Prep':'ce-study-prep.html','Agent Onboarding':'ins-hub.html',
-    'AZ Insurance Command':'az-ins.html','Insurance Intel':'ins-intel.html',
-    'BNCA Chain':'ins-hub.html','PC Command':'pc-command.html',
-    'DME Benefits Page':'dme.html','AHIP Certification Prep':'ce-study-prep.html'
+    'Claims Triage':'ins-hub.html',
+    'DME Billing Module':'dme.html',
+    'P&C Command':'pc-command.html',
+    'CE Study Prep':'ce-study-prep.html',
+    'Agent Onboarding':'ins-hub.html',
+    'AZ Insurance Command':'az-ins.html',
+    'Insurance Intel':'ins-intel.html',
+    'Insurance Strategist':'insurance-strategist.html',
+    'BNCA Chain':'ins-hub.html',
+    'PC Command':'pc-command.html',
+    'DME Benefits Page':'dme.html',
+    'AHIP Certification Prep':'ce-study-prep.html'
   };
   const apps=[...e6text.matchAll(/APP:\s*([^\n]+)\nRANK:\s*([^\n]+)\nIS_TOP:\s*([^\n]+)\nHOW_TO_USE:\s*([\s\S]*?)(?=\nTAGS:|$)/g)];
   if(!apps.length) return;
@@ -1801,6 +1808,50 @@ window.insHowtoOpen = () => document.getElementById('insHowtoOverlay').classList
     // Gather context from the War Room
     const context = gatherWarRoomContext();
 
+    function resolveTargetApp(context) {
+  const text = ((context.documentType||'') + ' ' + (context.denialReason||'') + ' ' + (context.documentText||'')).toLowerCase();
+  const code = context.denialCode || '';
+
+  // Denial code routing
+  const denialRoutes = {
+    'CO-5':  { app:'Insurance Strategist', url:'insurance-strategist.html', reason:'Authorization & prior auth dispute requires strategist workflow' },
+    'CO-4':  { app:'Insurance Strategist', url:'insurance-strategist.html', reason:'Medical necessity appeal requires strategist review' },
+    'CO-16': { app:'Insurance Strategist', url:'insurance-strategist.html', reason:'Claim correction and resubmission via strategist' },
+    'CO-22': { app:'Insurance Strategist', url:'insurance-strategist.html', reason:'COB dispute requires payer sequencing review' },
+    'CO-97': { app:'P&C Command',          url:'pc-command.html',           reason:'Coding/bundling error requires compliance review' },
+    'PR-96': { app:'Insurance Strategist', url:'insurance-strategist.html', reason:'Patient liability determination requires strategist' },
+  };
+  if (code && denialRoutes[code]) return denialRoutes[code];
+
+  // Document type / scenario routing
+  if (/dme|oxygen|hcpcs|concentrator|wheelchair|prosthetic/.test(text))
+    return { app:'DME Billing Module', url:'dme.html', reason:'DME claim requires DME-specific billing workflow' };
+
+  if (/compliance|stark|anti.?kickback|cms|regulation|audit|rac/.test(text))
+    return { app:'P&C Command', url:'pc-command.html', reason:'Compliance issue requires P&C regulatory review' };
+
+  if (/ce |continuing education|ahip|license|licensing|certification/.test(text))
+    return { app:'CE Study Prep', url:'ce-study-prep.html', reason:'Licensing/CE issue routed to CE Study Prep' };
+
+  if (/agent|onboard|npn|appointment|carrier appointment/.test(text))
+    return { app:'Agent Onboarding', url:'ins-hub.html', reason:'Agent credentialing issue routed to onboarding workflow' };
+
+  if (/underwriting|policy lapse|cancellation|non.?renewal|rescission/.test(text))
+    return { app:'AZ Insurance Command', url:'az-ins.html', reason:'Policy lifecycle issue routed to AZ Command' };
+
+  if (/p&c|property|casualty|auto|homeowner|liability|vehicle/.test(text))
+    return { app:'P&C Command', url:'pc-command.html', reason:'P&C claim routed to P&C Command' };
+
+  if (/era|835|remittance|eob|payment posting/.test(text))
+    return { app:'Insurance Strategist', url:'insurance-strategist.html', reason:'ERA/remittance issue routed to strategist' };
+
+  if (/bnca|negotiated|contract|fee schedule/.test(text))
+    return { app:'Insurance Intel', url:'ins-intel.html', reason:'Contract/BNCA analysis routed to Insurance Intel' };
+
+  // Default
+  return { app:'Insurance Strategist', url:'insurance-strategist.html', reason:'General claim anomaly routed to strategist' };
+}
+
     generateMissionSteps(appName, appUrl, context)
       .then(mission => {
         _pendingMission = mission;
@@ -1858,9 +1909,46 @@ window.insHowtoOpen = () => document.getElementById('insHowtoOverlay').classList
     `;
   }
 
+  function resolveTargetApp(context) {
+    const text = ((context.documentType||'') + ' ' + (context.denialReason||'') + ' ' + (context.documentText||'')).toLowerCase();
+    const code = context.denialCode || '';
+    const denialRoutes = {
+      'CO-5':  { app:'Insurance Strategist', url:'insurance-strategist.html', reason:'Authorization & prior auth dispute' },
+      'CO-4':  { app:'Insurance Strategist', url:'insurance-strategist.html', reason:'Medical necessity appeal' },
+      'CO-16': { app:'Insurance Strategist', url:'insurance-strategist.html', reason:'Claim correction and resubmission' },
+      'CO-22': { app:'Insurance Strategist', url:'insurance-strategist.html', reason:'COB dispute — payer sequencing' },
+      'CO-97': { app:'P&C Command',          url:'pc-command.html',           reason:'Coding/bundling error — compliance review' },
+      'PR-96': { app:'Insurance Strategist', url:'insurance-strategist.html', reason:'Patient liability determination' },
+    };
+    if (code && denialRoutes[code]) return denialRoutes[code];
+    if (/dme|oxygen|hcpcs|concentrator|wheelchair|prosthetic/.test(text))
+      return { app:'DME Billing Module', url:'dme.html', reason:'DME claim requires DME billing workflow' };
+    if (/compliance|stark|anti.?kickback|cms|regulation|audit|rac/.test(text))
+      return { app:'P&C Command', url:'pc-command.html', reason:'Compliance issue — P&C regulatory review' };
+    if (/ce |continuing education|ahip|license|licensing|certification/.test(text))
+      return { app:'CE Study Prep', url:'ce-study-prep.html', reason:'Licensing/CE issue' };
+    if (/agent|onboard|npn|appointment|carrier appointment/.test(text))
+      return { app:'Agent Onboarding', url:'ins-hub.html', reason:'Agent credentialing issue' };
+    if (/underwriting|policy lapse|cancellation|non.?renewal|rescission/.test(text))
+      return { app:'AZ Insurance Command', url:'az-ins.html', reason:'Policy lifecycle issue' };
+    if (/p&c|property|casualty|auto|homeowner|liability|vehicle/.test(text))
+      return { app:'P&C Command', url:'pc-command.html', reason:'P&C claim' };
+    if (/era|835|remittance|eob|payment posting/.test(text))
+      return { app:'Insurance Strategist', url:'insurance-strategist.html', reason:'ERA/remittance issue' };
+    if (/bnca|negotiated|contract|fee schedule/.test(text))
+      return { app:'Insurance Intel', url:'ins-intel.html', reason:'Contract/BNCA analysis' };
+    return { app:'Insurance Strategist', url:'insurance-strategist.html', reason:'General claim anomaly' };
+  }
+
   // ── Generate steps via TSM Neural Core ────────────────────────────────────
   async function generateMissionSteps(appName, appUrl, context) {
     const missionId =
+    // Override app routing based on anomaly intelligence
+    const route = resolveTargetApp(context);
+    if (route.url !== appUrl) {
+      appName = route.app;
+      appUrl = route.url;
+    }
   ((window.location.pathname.match(/\/([^\/]+)-war-room/i)?.[1] || 'TSM')
     .toUpperCase()) +
   '-' +
