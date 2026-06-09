@@ -492,12 +492,21 @@ async function runStrategist(){
     document.getElementById('spinLabel').textContent='Node '+i+' — '+labels[i-1]+'...';
     let txt='';
     try{
-      const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
-        body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:600,temperature:0.3,messages:[{role:'user',content:NODE_PROMPTS[i-1](ctx,n)}]})
+      const res = await fetch('/api/hc/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: prompt,
+          system: `You are TSM Neural Core, an expert insurance operations AI. 
+You generate precise, step-by-step guided instructions for insurance staff to resolve anomalies using specific apps.
+Respond ONLY with valid JSON — no markdown, no explanation, no code fences.`,
+          model: 'llama-3.3-70b-versatile',
+          max_tokens: 1200
+        })
       });
-      if(res.ok){const d=await res.json();txt=d.choices?.[0]?.message?.content||'';}
+      if (!res.ok) throw new Error('API ' + res.status);
+      const data = await res.json();
+      const text = (data.result || data.response || data.content || '').replace(/```json|```/g, '').trim();
       if(!txt.trim()) throw new Error('empty');
     }catch(err){
       txt=NODE_FALLBACKS[i-1](ctx,n);

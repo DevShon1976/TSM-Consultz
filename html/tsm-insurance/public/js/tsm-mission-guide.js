@@ -613,36 +613,32 @@
     });
   }
 
-  // ── AI Step Regeneration (calls /api/insurance/query) ─────────────────────
+  // ── AI Step Regeneration ───────────────────────────────────────────────────
   async function regenerateSteps(m) {
     m._loading = true;
     saveMission(m);
     render();
 
-    try {insurance/query
+    
+
+  try {
       const prompt = buildStepPrompt(m);
-      const res = await fetch('/api/insurance/query', {
+      const res = await fetch('/api/hc/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system: `You are TSM Neural Core, an expert insurance operations AI. 
-You generate precise, step-by-step guided instructions for insurance staff to resolve anomalies using specific apps.
-Respond ONLY with valid JSON — no markdown, no explanation.`,
-          message: prompt
-        })
+        body: JSON.stringify({ prompt: prompt, system: buildStepSystem(), model: 'llama-3.3-70b-versatile', max_tokens: 1200 })
       });
+      if (!res.ok) throw new Error('API ' + res.status);
       const data = await res.json();
-      const text = (data.answer || data.response || data.content || '').replace(/```json|```/g, '').trim();
+      const text = (data.result || data.answer || data.response || data.content || '').replace(/```json|```/g, '').trim();
       let parsed;
-try {
-  parsed = JSON.parse(text);
-} catch(parseErr) {
-  // Try to extract partial JSON
-  const match = text.match(/\{[\s\S]*\}/);
-  if(match) parsed = JSON.parse(match[0]);
-  else throw parseErr;
-}
-
+      try {
+        parsed = JSON.parse(text);
+      } catch(parseErr) {
+        const match = text.match(/\{[\s\S]*\}/);
+        if (match) parsed = JSON.parse(match[0]);
+        else throw parseErr;
+      }
       m.steps = (parsed.steps || []).map((s, i) => ({
         id: `step-${i}`,
         title: s.title || `Step ${i + 1}`,
@@ -659,6 +655,10 @@ try {
       saveMission(m);
     }
     render();
+  }
+
+  function buildStepSystem() {
+    return `You are TSM Neural Core, an expert insurance operations AI. Generate precise step-by-step guided instructions for insurance staff to resolve anomalies. Respond ONLY with valid JSON — no markdown, no explanation, no code fences.`;
   }
 
   function buildStepPrompt(m) {
