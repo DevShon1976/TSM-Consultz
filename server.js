@@ -48,7 +48,7 @@ async function groqChat(system, message, maxTokens) {
       max_tokens: maxTokens,
       messages: [
         { role: 'system', content: system },
-        { role: 'user', content: user }
+        { role: 'user', content: message }
       ]
     })
   });
