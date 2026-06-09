@@ -150,7 +150,7 @@ app.get('/executive-portal', (req, res) => res.redirect('/html/executive-portal/
 app.get('/healthcare/executive-portal', (req, res) => res.redirect('/html/executive-portal/index.html'));
 
 // ── STATIC MOUNTS ─────────────────────────────────────────────────────────────
-const dirPath = path.join(__dirname, 'html');
+const dirPath = path.join(__dirname, 'html');// ── STATIC MOUNTS v2 ──
 
 app.use('/html', express.static(path.join(__dirname, 'html'), { setHeaders: (res) => res.setHeader('Cache-Control', 'no-store') }));
 app.use('/js', express.static(path.join(__dirname, 'html/tsm-insurance/public/js')));
