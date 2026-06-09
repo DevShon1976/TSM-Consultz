@@ -623,10 +623,10 @@
 
   try {
       const prompt = buildStepPrompt(m);
-      const res = await fetch('/api/hc/query', {
+      const res = await fetch('/api/insurance/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: prompt, system: buildStepSystem(), model: 'llama-3.3-70b-versatile', max_tokens: 1200 })
+        body: JSON.stringify({ system: buildStepSystem(), message: prompt, max_tokens: 1200 })
       });
       if (!res.ok) throw new Error('API ' + res.status);
       const data = await res.json();
