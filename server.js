@@ -193,7 +193,7 @@ app.post('/api/hc/query', async (req, res) => {
   } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
 
-const clientUsage = {}; // v2
+const clientUsage = {}; // v3
 
 app.post('/api/hc/stream', async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
