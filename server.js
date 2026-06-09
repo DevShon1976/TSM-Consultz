@@ -34,9 +34,9 @@ app.use((req, res, next) => {
 
 // ── GROQ AI ENGINE ────────────────────────────────────────────────────────────
 // Primary: fetch-based (reliable on Railway)
-async function groqChat(system, user, maxTokens) {
-  maxTokens = maxTokens || 1024;
-  if (!process.env.GROQ_API_KEY) throw new Error('GROQ_API_KEY missing');
+async function groqChat(system, message, maxTokens) {
+  const groqKey = process.env.GROQ_KEY || process.env.GROQ_API_KEY;
+  const client = new Groq({ apiKey: groqKey });
   const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {

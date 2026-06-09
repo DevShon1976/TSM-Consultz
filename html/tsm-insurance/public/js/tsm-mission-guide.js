@@ -657,7 +657,9 @@
     render();
   }
 
-  function buildStepSystem() {
+  setTimeout(upgradeRecommendationCards, 600);
+    setTimeout(upgradeRecommendationCards, 2000);
+    setTimeout(upgradeRecommendationCards, 4000);
     return `You are TSM Neural Core, an expert insurance operations AI. Generate precise step-by-step guided instructions for insurance staff to resolve anomalies. Respond ONLY with valid JSON — no markdown, no explanation, no code fences.`;
   }
 
