@@ -63,11 +63,128 @@
       anomalyLabel: 'Denial Code',
       usesDenialIntel: true,
       appPool: [
-        {name:'Insurance Portal',     url:'/html/tsm-insurance/insurance-portal.html',     solves:['policy lookup','member eligibility','coverage verification','enrollment gaps','benefit summary missing','plan mismatch']},
-        {name:'Insurance Hub',        url:'/html/tsm-insurance/ins-hub1.html',              solves:['claims intake','claim status unknown','submission errors','duplicate claim','clearinghouse rejection','payer ID mismatch']},
-        {name:'Claims Pro',           url:'/html/tsm-insurance/insurance-claims-pro.html', solves:['CO-5 denial','CO-4 denial','CO-16 denial','CO-22 denial','CO-97 denial','PR-96 denial','CO-50 denial','CO-29 denial','missing modifier','prior auth not documented','CMN missing','W-9 missing','COB conflict','timely filing','bundling error','medical necessity']},
-        {name:'Insurance CE Command', url:'/html/tsm-insurance/insurance-ce-command.html', solves:['compliance gap','CE credit missing','license renewal','regulatory requirement','staff training flag','audit finding']},
-        {name:'Insurance Demo Trail', url:'/html/tsm-insurance/tsm-ins-demo-trail.html',   solves:['full workflow walkthrough','executive demo','client presentation','onboarding new staff','process overview']},
+        {
+          name: 'Agent Command Center',
+          url: '/html/tsm-insurance/agents-ins.html',
+          solves: [
+            'agent workflow gap','Arizona insurance issue','life insurance anomaly',
+            'health insurance gap','accident insurance issue','Medicare plan gap',
+            'premium framework error','agent node issue','producer workflow gap',
+            'agent licensing issue','policy framework anomaly','Medicare premium issue',
+            'agent performance gap','commission discrepancy','agent assignment missing'
+          ]
+        },
+        {
+          name: 'AZ Insurance Overview',
+          url: '/html/tsm-insurance/az-ins.html',
+          solves: [
+            'general insurance domain review','multi-line insurance issue','cross-domain anomaly',
+            'insurance portfolio gap','multi-product overlap','insurance domain classification needed',
+            'coverage type unclear','insurance line mismatch','policy domain unknown',
+            'multi-carrier issue','insurance overview needed','product line confusion',
+            'insurance landscape review','carrier comparison needed'
+          ]
+        },
+        {
+          name: 'DME Services',
+          url: '/html/tsm-insurance/dme.html',
+          solves: [
+            'DME claim denied','durable medical equipment issue','CMN missing',
+            'DME prior auth not documented','equipment coverage gap','DME billing error',
+            'CO-5 denial on DME','DME supplier issue','HCPCS code mismatch',
+            'DME medical necessity missing','equipment rental dispute','DME modifier error',
+            'DME payer rejection','DME documentation gap','oxygen equipment claim'
+          ]
+        },
+        {
+          name: 'Anomaly Advisor',
+          url: '/html/tsm-insurance/ins-anomaly-advisor.html',
+          solves: [
+            'anomaly scenario review','denial pattern analysis','claim anomaly walkthrough',
+            'insurance scenario simulation','anomaly classification needed','risk scenario analysis',
+            'denial scenario training','anomaly intelligence needed','pattern recognition gap',
+            'scenario-based anomaly review','claim behavior anomaly','outlier detection needed'
+          ]
+        },
+        {
+          name: 'Insurance Appeals',
+          url: '/html/tsm-insurance/ins-appeals.html',
+          solves: [
+            'appeal needed','denial appeal','CO-5 appeal','CO-4 appeal','CO-29 appeal',
+            'CO-50 appeal','PR-96 appeal','timely filing appeal','medical necessity appeal',
+            'prior auth appeal','appeal letter missing','appeal deadline at risk',
+            'appeal documentation gap','second level appeal','external review needed',
+            'appeal response overdue','reconsideration request','grievance filing'
+          ]
+        },
+        {
+          name: 'Insurance Claims',
+          url: '/html/tsm-insurance/ins-claims.html',
+          solves: [
+            'claim submission error','claim status unknown','claim not filed',
+            'duplicate claim','clearinghouse rejection','payer ID mismatch',
+            'claim resubmission needed','CO-16 denial','missing modifier',
+            'claim edit error','claim scrubbing failure','EOB discrepancy',
+            'claim underpayment','coordination of benefits issue','COB conflict',
+            'claim adjustment needed','remittance mismatch','ERA posting error'
+          ]
+        },
+        {
+          name: 'Insurance Compliance',
+          url: '/html/tsm-insurance/ins-compliance.html',
+          solves: [
+            'compliance violation','regulatory non-compliance','DOI requirement missing',
+            'insurance audit finding','policy compliance gap','filing requirement missed',
+            'state mandate gap','CE credit missing','license renewal overdue',
+            'compliance report needed','regulatory filing missing','market conduct issue',
+            'suitability violation','disclosure requirement gap','HIPAA violation'
+          ]
+        },
+        {
+          name: 'Insurance Intel',
+          url: '/html/tsm-insurance/ins-intel.html',
+          solves: [
+            'intelligence review needed','market intel gap','payer behavior analysis',
+            'denial trend analysis','carrier intel missing','payer policy change',
+            'reimbursement rate shift','network status change','payer contract gap',
+            'insurance market analysis','competitive intel needed','payer mix analysis',
+            'denial pattern intelligence','claim trend anomaly','risk intelligence gap'
+          ]
+        },
+        {
+          name: 'Liability',
+          url: '/html/tsm-insurance/ins-liability.html',
+          solves: [
+            'liability claim','general liability issue','liability coverage gap',
+            'liability exposure','third party claim','bodily injury claim',
+            'property damage claim','liability dispute','coverage limit issue',
+            'liability documentation missing','indemnification gap','subrogation issue',
+            'liability reserve inadequate','occurrence vs claims-made gap','liability audit'
+          ]
+        },
+        {
+          name: 'Malpractice',
+          url: '/html/tsm-insurance/ins-malpractice.html',
+          solves: [
+            'malpractice claim','professional liability issue','E&O gap',
+            'malpractice coverage missing','professional negligence claim','tail coverage gap',
+            'malpractice documentation missing','claims-made policy issue','prior acts gap',
+            'malpractice reserve issue','professional liability audit','E&O exclusion issue',
+            'malpractice incident report missing','risk management gap'
+          ]
+        },
+        {
+          name: 'Underwriting',
+          url: '/html/tsm-insurance/ins-underwriting.html',
+          solves: [
+            'underwriting gap','risk assessment missing','policy issuance error',
+            'underwriting documentation incomplete','risk classification error',
+            'premium calculation gap','underwriting approval missing','policy binding issue',
+            'risk appetite mismatch','underwriting criteria not met','policy exclusion gap',
+            'underwriting audit finding','coverage issuance delay','rating factor error',
+            'underwriting referral needed','policy amendment gap'
+          ]
+        },
       ],
     },
     hc: {
@@ -75,21 +192,180 @@
       anomalyLabel: 'Denial Code',
       usesDenialIntel: true,
       appPool: [
-        {name:'Healthcare Workbench',    url:'/html/healthcare/healthcare-wip.html',        solves:['claim denial','billing error','coding mismatch','prior auth missing','AR aging','remittance discrepancy','EOB mismatch','underpayment','charge capture gap','patient balance error']},
-        {name:'Healthcare Academy',      url:'/html/healthcare/hc-academy.html',            solves:['coder training needed','billing staff knowledge gap','CPT code confusion','ICD-10 error','compliance training','new hire onboarding']},
-        {name:'CRC Practice Lab',        url:'/html/healthcare/crc-hc-practice.html',       solves:['CRC exam prep','coding accuracy issue','revenue cycle knowledge gap','practice scenario needed','certification readiness']},
-        {name:'CRCR Scenario Simulator', url:'/html/healthcare/crcr-scenarios.html',        solves:['CRCR exam prep','scenario-based training','denial scenario practice','RCM workflow simulation','staff readiness assessment']},
-        {name:'Healthcare Demo Trail',   url:'/html/healthcare/tsm-hc-demo-trail.html',     solves:['full RCM walkthrough','executive demo','client presentation','process overview','onboarding']},
-      ],
-    },
+        {
+          name: 'HC Anomaly Advisor',
+          url: '/html/healthcare/hc-anomaly-advisor.html',
+          solves: [
+            'anomaly scenario review','denial pattern analysis','claim anomaly walkthrough',
+            'healthcare scenario simulation','anomaly classification needed','risk scenario analysis',
+            'denial scenario training','anomaly intelligence needed','pattern recognition gap',
+            'scenario-based anomaly review','claim behavior anomaly','outlier detection needed',
+            'RCM anomaly diagnosis','billing anomaly pattern','coding anomaly review'
+          ]
+        },
+        {
+          name: 'HC Billing',
+          url: '/html/healthcare/hc-billing/index.html',
+          solves: [
+            'claim denial','billing error','coding mismatch','CPT code error','ICD-10 error',
+            'modifier missing','prior auth not documented','charge capture gap',
+            'claim submission error','clearinghouse rejection','payer ID mismatch',
+            'CO-5 denial','CO-4 denial','CO-16 denial','CO-22 denial','CO-97 denial',
+            'PR-96 denial','CO-50 denial','CO-29 denial','timely filing','bundling error',
+            'claim resubmission needed','EOB discrepancy','remittance mismatch',
+            'claim underpayment','ERA posting error','claim edit error'
+          ]
+        },
+        {
+          name: 'HC Compliance',
+          url: '/html/healthcare/hc-compliance.html',
+          solves: [
+            'HIPAA violation','compliance audit finding','regulatory non-compliance',
+            'CMS requirement missing','OIG risk flag','compliance policy gap',
+            'healthcare regulation breach','compliance report needed','STARK law issue',
+            'Anti-Kickback concern','credential compliance gap','accreditation issue',
+            'compliance training missing','quality reporting gap','OSHA healthcare violation'
+          ]
+        },
+        {
+          name: 'HC Financial',
+          url: '/html/healthcare/hc-financial.html',
+          solves: [
+            'AR aging issue','revenue cycle gap','cash flow anomaly','budget variance',
+            'cost report issue','financial statement error','payer mix analysis needed',
+            'net revenue discrepancy','contractual adjustment error','bad debt gap',
+            'financial performance anomaly','reimbursement rate issue','write-off gap',
+            'collection rate drop','days in AR elevated','financial audit finding'
+          ]
+        },
+        {
+          name: 'HC Grants',
+          url: '/html/healthcare/hc-grants.html',
+          solves: [
+            'grant documentation missing','grant compliance gap','funding report missing',
+            'grant milestone not met','grant application gap','federal funding issue',
+            'grant reporting requirement','grant audit finding','grant expenditure gap',
+            'grant period close issue','grant allocation error','funding source mismatch',
+            'grant drawdown issue','grant renewal gap','sub-recipient monitoring gap'
+          ]
+        },
+        {
+          name: 'HC Insurance',
+          url: '/html/healthcare/hc-insurance.html',
+          solves: [
+            'insurance verification gap','eligibility issue','coverage not verified',
+            'payer enrollment missing','insurance authorization gap','COB conflict',
+            'secondary insurance not filed','insurance plan mismatch','benefit verification gap',
+            'network status unknown','out of network issue','insurance policy gap',
+            'enrollment error','credentialing gap','payer contract issue'
+          ]
+        },
+        {
+          name: 'HC Legal',
+          url: '/html/healthcare/hc-legal.html',
+          solves: [
+            'legal compliance gap','healthcare contract issue','patient rights violation',
+            'legal hold missing','litigation risk','malpractice documentation gap',
+            'consent form missing','legal filing missing','healthcare regulation legal gap',
+            'contract clause anomaly','legal deadline risk','legal review needed',
+            'BAA missing','business associate agreement gap','legal escalation needed'
+          ]
+        },
+        {
+          name: 'HC Medical',
+          url: '/html/healthcare/hc-medical.html',
+          solves: [
+            'medical necessity missing','clinical documentation gap','physician order missing',
+            'medical record incomplete','clinical note gap','diagnosis not supported',
+            'procedure not documented','medical coding gap','clinical criteria not met',
+            'medical review needed','physician sign-off missing','clinical pathway gap',
+            'treatment plan missing','medical decision making gap','clinical escalation needed'
+          ]
+        },
+        {
+          name: 'HC Operations',
+          url: '/html/healthcare/hc-operations.html',
+          solves: [
+            'daily operations gap','workflow bottleneck','staffing shortage',
+            'scheduling anomaly','capacity issue','operational KPI miss',
+            'patient flow gap','department coordination failure','operational report missing',
+            'SLA breach','throughput issue','operational cost overrun',
+            'resource allocation gap','shift coverage missing','ops escalation needed'
+          ]
+        },
+        {
+          name: 'HC Pharmacy',
+          url: '/html/healthcare/hc-pharmacy.html',
+          solves: [
+            'pharmacy claim denied','drug authorization missing','formulary issue',
+            'prior auth for medication missing','NDC code error','pharmacy billing gap',
+            'medication not covered','step therapy requirement','pharmacy benefit gap',
+            'drug interaction documentation','controlled substance documentation gap',
+            'pharmacy compliance issue','prescription not filled','specialty drug issue',
+            'pharmacy reconciliation gap','medication dispensing error'
+          ]
+        },
+        {
+          name: 'HC Tax Prep',
+          url: '/html/healthcare/hc-taxprep.html',
+          solves: [
+            'tax document missing','W-9 gap','1099 not issued','tax filing issue',
+            'tax compliance anomaly','healthcare tax classification','IRS reporting gap',
+            'tax liability undocumented','year-end tax prep gap','tax audit risk',
+            'nonprofit tax filing gap','5
     legal: {
       systemRole: 'legal operations and case management AI',
       anomalyLabel: 'Issue Type',
       usesDenialIntel: false,
       appPool: [
-        {name:'Strategist Command Center', url:'/html/strategist-index.html',           solves:['case strategy gap','matter escalation','cross-matter conflict','deadline risk','legal hold missing','counsel assignment needed','strategic review']},
-        {name:'DOC1 Enterprise Search',    url:'/html/doc1-search.html',                solves:['missing document','contract clause gap','discovery gap','evidence not found','filing missing','deposition transcript needed','prior case reference']},
-        {name:'Enterprise WIP Dashboard',  url:'/html/wip-dashboard.html',              solves:['matter status unknown','billing milestone gap','case progress stalled','deliverable overdue','workload imbalance','SLA breach']},
+        {
+          name: 'Legal Accounting',
+          url: '/html/legal-pro/legal-account.html',
+          solves: [
+            'legal billing error','trust account issue','IOLTA gap','client billing discrepancy',
+            'matter billing gap','invoice not generated','legal fee dispute','retainer issue',
+            'billing write-off needed','accounts receivable legal gap','legal cost overrun',
+            'matter budget variance','legal financial audit','billing rate error',
+            'time entry missing','disbursement gap','legal accounting reconciliation',
+            'client ledger discrepancy','billing compliance gap','legal expense error'
+          ]
+        },
+        {
+          name: 'Legal Analyst Pro',
+          url: '/html/legal-pro/legal-analyst-pro.html',
+          solves: [
+            'legal overview needed','multi-matter analysis','cross-domain legal issue',
+            'legal intelligence gap','matter portfolio review','legal risk assessment',
+            'contract analysis needed','legal document review','clause extraction',
+            'legal pattern analysis','regulatory legal gap','legal research needed',
+            'legal landscape review','matter classification needed','legal anomaly diagnosis',
+            'legal due diligence gap','legal intelligence report','overall legal review'
+          ]
+        },
+        {
+          name: 'Case Strategist',
+          url: '/html/legal-pro/case-strategist.html',
+          solves: [
+            'case filing gap','court filing missing','filing deadline at risk',
+            'case strategy needed','matter escalation','pleading not filed',
+            'motion missing','discovery deadline risk','case status unknown',
+            'legal hold missing','litigation strategy gap','case brief missing',
+            'deposition not scheduled','evidence gap','court order missing',
+            'case chronology gap','trial prep gap','settlement documentation missing',
+            'judgment not documented','case closure gap','docket management issue'
+          ]
+        },
+        {
+          name: 'Legal BPO',
+          url: '/html/legal-pro/bpo-legal.html',
+          solves: [
+            'legal BPO workflow gap','outsourced legal task issue','legal process outsourcing gap',
+            'contract review backlog','document review queue','legal support gap',
+            'legal staffing issue','paralegal workflow gap','legal intake gap',
+            'contract abstraction missing','legal data entry error','legal BPO SLA breach',
+            'legal process bottleneck','outsourced compliance gap','legal vendor issue'
+          ]
+        },
       ],
     },
     finops: {
@@ -97,11 +373,86 @@
       anomalyLabel: 'Variance Type',
       usesDenialIntel: false,
       appPool: [
-        {name:'Financial Scenarios',    url:'/html/finops-suite/finops-scenarios.html',          solves:['budget variance','cash flow anomaly','forecast deviation','revenue shortfall','cost overrun','scenario modeling needed','P&L discrepancy']},
-        {name:'Document Analysis',      url:'/html/finops-suite/doc-analysis-tab.html',          solves:['invoice discrepancy','contract payment mismatch','AP document missing','vendor statement error','remittance gap','purchase order mismatch','duplicate payment']},
-        {name:'FinOps Presentation',    url:'/html/finops-suite/finops-presentation.html',       solves:['executive reporting gap','board summary needed','financial overview missing','stakeholder briefing','ROI documentation']},
-        {name:'Accounting Study Guide', url:'/html/finops-suite/study-guide.html',               solves:['accounting error','GAAP compliance gap','reconciliation confusion','staff knowledge gap','journal entry error','audit prep']},
-        {name:'Interview Prep',         url:'/html/finops-suite/staff-accountant-interview.html',solves:['staff readiness gap','role assessment needed','hiring decision support','accountant evaluation','skills verification']},
+        {
+          name: 'FinOps Strategist',
+          url: '/html/finops-suite/finops-main-strategist.html',
+          solves: [
+            'BNCA decision needed','next course of action unclear','multi-anomaly synthesis',
+            'financial risk escalation','strategic financial review','executive decision required',
+            'cross-file data relay','war room escalation','financial recovery strategy',
+            'root cause analysis','senior review needed','project financial briefing',
+            'stakeholder escalation','remediation plan needed','financial pattern analysis'
+          ]
+        },
+        {
+          name: 'Document Analysis',
+          url: '/html/finops-suite/doc-analysis-tab.html',
+          solves: [
+            'document extraction needed','financial document gap','invoice extraction',
+            'contract clause analysis','statement parsing','remittance document missing',
+            'purchase order analysis','vendor document review','AP document missing',
+            'financial record extraction','document intelligence','PDF financial analysis',
+            'EOB extraction','payment document gap','supporting documentation missing'
+          ]
+        },
+        {
+          name: 'FinOps Accounting',
+          url: '/html/finops-suite/finops-accounting.html',
+          solves: [
+            'accounting error','journal entry error','GAAP compliance gap',
+            'reconciliation failure','trial balance discrepancy','general ledger error',
+            'accounts payable mismatch','accounts receivable gap','month-end close issue',
+            'accrual error','depreciation miscalculation','chart of accounts mismatch',
+            'financial statement error','balance sheet discrepancy','audit finding',
+            'bookkeeping gap','cost allocation error','intercompany transaction issue'
+          ]
+        },
+        {
+          name: 'FinOps Operations',
+          url: '/html/finops-suite/finops-operations.html',
+          solves: [
+            'daily operations gap','cash flow issue','budget variance','invoice not paid',
+            'payment delayed','AP aging issue','AR aging issue','vendor payment dispute',
+            'operational cost overrun','spend analysis needed','purchase order mismatch',
+            'expense report anomaly','duplicate payment','missing payment approval',
+            'financial workflow bottleneck','SLA breach on payment','operational KPI gap',
+            'daily financial report missing','treasury gap','working capital issue'
+          ]
+        },
+        {
+          name: 'Tax Prep',
+          url: '/html/finops-suite/tax.html',
+          solves: [
+            'tax filing gap','W-9 missing','1099 not issued','tax document incomplete',
+            'tax liability undocumented','year-end tax prep','tax compliance issue',
+            'contractor tax classification','IRS reporting gap','sales tax error',
+            'use tax undocumented','tax audit risk','estimated tax payment missing',
+            'deduction documentation gap','tax return preparation','entity tax classification'
+          ]
+        },
+        {
+          name: 'Zero Trust',
+          url: '/html/finops-suite/zero-trust.html',
+          solves: [
+            'user access issue','unauthorized access','user management gap',
+            'permission error','role assignment missing','access control failure',
+            'user provisioning gap','authentication issue','security policy violation',
+            'credential anomaly','user offboarding incomplete','access audit needed',
+            'privileged access risk','identity verification gap','login anomaly'
+          ]
+        },
+        {
+          name: 'FinOps Compliance',
+          url: '/html/finops-suite/compliance.html',
+          solves: [
+            'compliance violation','regulatory non-compliance','SOX gap',
+            'financial audit finding','internal control failure','policy violation',
+            'compliance report needed','regulatory filing missing','AML flag',
+            'KYC gap','GAAP violation','financial regulation breach',
+            'reporting requirement missed','compliance risk flag','external audit issue',
+            'fiduciary duty gap','disclosure requirement missing'
+          ]
+        },
       ],
     },
     construction: {
@@ -109,9 +460,93 @@
       anomalyLabel: 'Defect Type',
       usesDenialIntel: false,
       appPool: [
-        {name:'Construction Workbench', url:'/html/construction-suite/construction-wip.html',   solves:['missing RFI','punch list item','daily log gap','crew documentation missing','superintendent notes incomplete','progress tracking failure','phase completion flag','change order pending','schedule deviation','labor hours missing','inspection not scheduled','subcontractor assignment gap']},
-        {name:'Document Showcase',      url:'/html/construction-suite/document-showcase.html',  solves:['missing submittal','spec compliance failure','drawing discrepancy','contract document gap','inspection sign-off missing','cure documentation not uploaded','material certification missing','structural defect documentation','permit gap','as-built missing','test report not filed']},
-        {name:'Construction Pitch',     url:'/html/construction-suite/construct-pitch.html',    solves:['client escalation needed','executive summary required','stakeholder reporting gap','project overview presentation','owner briefing needed','GC communication failure']},
+        {
+          name: 'Field & Document Ops',
+          url: '/html/construction-suite/construction-suite-expansion.html',
+          solves: [
+            'missing RFI','RFI not filed','RFI response overdue','change order pending','change order not documented',
+            'field service gap','site condition undocumented','daily field report missing','superintendent log incomplete',
+            'punch list item','punch list not closed','inspection not scheduled','subcontractor non-compliance',
+            'work order missing','site visit not logged','field defect unreported','crew assignment gap',
+            'schedule deviation','phase milestone missed','scope change not captured'
+          ]
+        },
+        {
+          name: 'Document Showcase',
+          url: '/html/construction-suite/document-showcase.html',
+          solves: [
+            'document extraction needed','contract document gap','drawing discrepancy','spec compliance failure',
+            'submittal missing','submittal package incomplete','cure documentation not uploaded',
+            'material certification missing','test report not filed','as-built missing',
+            'inspection sign-off missing','structural defect documentation','permit documentation gap',
+            'document analysis required','clause extraction','document intelligence','PDF extraction'
+          ]
+        },
+        {
+          name: 'Construction Financial',
+          url: '/html/construction-suite/financial.html',
+          solves: [
+            'invoice discrepancy','invoice not paid','billing gap','payment application missing',
+            'retainage issue','cost overrun','budget variance','subcontractor invoice dispute',
+            'lien waiver missing','AIA billing error','schedule of values mismatch',
+            'contractor payment delayed','financial exposure','overpayment','underpayment',
+            'draw request incomplete','cost code mismatch','job cost variance'
+          ]
+        },
+        {
+          name: 'Tax Prep',
+          url: '/html/construction-suite/tax-prep.html',
+          solves: [
+            'tax filing gap','W-9 missing','1099 not issued','tax document incomplete',
+            'contractor tax classification','tax liability undocumented','year-end tax prep',
+            'tax compliance issue','subcontractor tax form missing','IRS reporting gap',
+            'sales tax on materials','use tax undocumented','tax audit risk'
+          ]
+        },
+        {
+          name: 'Permits & Proposals',
+          url: '/html/construction-suite/permits-proposals.html',
+          solves: [
+            'permit missing','permit not pulled','permit expired','permit application gap',
+            'building permit violation','proposal not generated','bid document missing',
+            'proposal gap','scope of work undefined','RFP response missing',
+            'zoning issue','certificate of occupancy missing','inspection permit required',
+            'proposal revision needed','contract not executed','pre-construction checklist gap'
+          ]
+        },
+        {
+          name: 'Construction Pro',
+          url: '/html/construction-suite/construction-pro.html',
+          solves: [
+            'module analysis needed','playbook required','intelligence report missing',
+            'multi-issue analysis','cross-module review','custom report needed',
+            'combined output required','pattern analysis across documents',
+            'strategic intelligence feed','category filter analysis','report history gap',
+            'export needed','saved output review','comprehensive project audit'
+          ]
+        },
+        {
+          name: 'Compliance',
+          url: '/html/construction-suite/compliance.html',
+          solves: [
+            'compliance violation','OSHA issue','safety gap','regulatory non-compliance',
+            'compliance audit finding','code violation','AHJ requirement missing',
+            'safety inspection failed','hazmat documentation missing','environmental compliance gap',
+            'labor law violation','prevailing wage issue','certified payroll missing',
+            'insurance certificate expired','bonding gap','licensing issue','compliance report needed'
+          ]
+        },
+        {
+          name: 'Construction Strategist',
+          url: '/html/construction-suite/construction-strategist.html',
+          solves: [
+            'escalation to strategist','next course of action needed','multi-anomaly synthesis',
+            'project risk summary','executive decision required','strategic review',
+            'cross-file data relay','war room escalation','senior review needed',
+            'project status briefing','stakeholder escalation','remediation plan needed',
+            'root cause analysis','project recovery strategy','owner communication required'
+          ]
+        },
       ],
     },
     re: {
@@ -119,9 +554,84 @@
       anomalyLabel: 'Document Issue',
       usesDenialIntel: false,
       appPool: [
-        {name:'DOC1 Enterprise Search',    url:'/html/doc1-search.html',           solves:['title document missing','deed gap','lien not found','easement undocumented','survey missing','closing document gap','HOA document missing','inspection report not filed','disclosure gap']},
-        {name:'Enterprise WIP Dashboard',  url:'/html/wip-dashboard.html',         solves:['transaction stalled','milestone overdue','closing timeline at risk','contingency deadline missed','escrow status unknown','deal progress gap']},
-        {name:'Strategist Command Center', url:'/html/strategist-index.html',      solves:['deal strategy needed','portfolio risk flag','market analysis gap','investment thesis missing','asset review escalation','executive decision needed']},
+        {
+          name: 'RealtyOps AI',
+          url: '/html/reo-pro/index.html',
+          solves: [
+            'real estate intelligence needed','property transaction anomaly','listing document gap',
+            'title issue','deed discrepancy','lien not found','easement undocumented',
+            'survey missing','closing document gap','HOA document missing',
+            'inspection report not filed','disclosure gap','appraisal discrepancy',
+            'MLS data mismatch','property valuation gap','buyer qualification issue',
+            'offer document missing','escrow anomaly','real estate compliance gap',
+            'property management issue','lease agreement gap','rental income discrepancy',
+            'asset classification error','portfolio gap','real estate risk flag'
+          ]
+        },
+        {
+          name: 'RE Guide',
+          url: '/html/reo-pro/re-guide.html',
+          solves: [
+            'navigation guidance needed','workflow walkthrough required','app onboarding gap',
+            'process overview needed','how-to reference','staff training on RE ops',
+            'new user orientation','RE workflow unclear','process documentation gap',
+            'step-by-step guidance needed','RE procedure reference'
+          ]
+        },
+        {
+          name: 'FinOps Accounting',
+          url: '/html/finops-suite/finops-accounting.html',
+          solves: [
+            'accounting error','journal entry error','GAAP compliance gap',
+            'reconciliation failure','general ledger error','accounts payable mismatch',
+            'accounts receivable gap','month-end close issue','accrual error',
+            'depreciation miscalculation','financial statement error','balance sheet discrepancy',
+            'audit finding','bookkeeping gap','cost allocation error','intercompany transaction issue'
+          ]
+        },
+        {
+          name: 'FinOps Operations',
+          url: '/html/finops-suite/finops-operations.html',
+          solves: [
+            'daily operations gap','cash flow issue','budget variance','invoice not paid',
+            'payment delayed','AP aging issue','AR aging issue','vendor payment dispute',
+            'operational cost overrun','duplicate payment','missing payment approval',
+            'financial workflow bottleneck','daily financial report missing',
+            'treasury gap','working capital issue','expense report anomaly'
+          ]
+        },
+        {
+          name: 'FinOps Compliance',
+          url: '/html/finops-suite/compliance.html',
+          solves: [
+            'compliance violation','regulatory non-compliance','SOX gap',
+            'financial audit finding','internal control failure','policy violation',
+            'compliance report needed','regulatory filing missing','AML flag',
+            'KYC gap','GAAP violation','financial regulation breach',
+            'reporting requirement missed','fiduciary duty gap','disclosure requirement missing'
+          ]
+        },
+        {
+          name: 'Legal BPO',
+          url: '/html/bpo/legal-bpo.html',
+          solves: [
+            'legal document gap','contract issue','case file missing','legal compliance gap',
+            'matter escalation','legal hold missing','discovery gap','filing missing',
+            'contract clause anomaly','legal deadline risk','legal review needed',
+            'title legal dispute','deed legal issue','easement legal gap','zoning legal issue'
+          ]
+        },
+        {
+          name: 'Tax Prep',
+          url: '/html/finops-suite/tax.html',
+          solves: [
+            'tax document missing','W-9 gap','1099 not issued','tax filing issue',
+            'tax compliance anomaly','property tax gap','real estate tax issue',
+            'capital gains documentation missing','tax liability undocumented',
+            'year-end tax prep gap','tax audit risk','1031 exchange documentation',
+            'depreciation schedule missing','cost basis error','tax return gap'
+          ]
+        },
       ],
     },
     bpo: {
@@ -129,14 +639,121 @@
       anomalyLabel: 'Workflow Issue',
       usesDenialIntel: false,
       appPool: [
-        {name:'BPO Command Center',    url:'/html/bpo/bpo-command-center.html',               solves:['SLA breach','queue overflow','escalation needed','real-time ops gap','agent performance flag','ticket backlog','workflow bottleneck','routing error']},
-        {name:'Staffing Intelligence', url:'/html/bpo/tsm-staffing-intelligence.html',         solves:['headcount gap','candidate pipeline thin','role unfilled','placement at risk','workforce shortage','skill mismatch','attrition flag','requisition stalled']},
-        {name:'Competitive Playbook',  url:'/html/bpo/tsm-bpo-competitive-playbook.html',      solves:['client objection','competitive displacement risk','pricing challenge','contract renewal at risk','win/loss analysis needed','market positioning gap']},
-        {name:'BPO Suite Hub',         url:'/html/bpo/suite-hub.html',                        solves:['ops overview needed','cross-function coordination gap','multi-client management','portfolio status unknown','hub navigation needed']},
-        {name:'Workforce Intelligence',url:'/html/wia.html',                                  solves:['workforce analytics gap','labor market data needed','compensation benchmark missing','diversity gap','org structure analysis','talent pipeline report']},
+        {
+          name: 'BPO Services Pro',
+          url: '/html/bpo/services-pro.html',
+          solves: [
+            'revenue recovery needed','queue ops issue','AI analyst review required',
+            'strategist relay needed','BPO service gap','revenue leakage',
+            'queue backlog','ops performance anomaly','service delivery failure',
+            'BPO workflow breakdown','analyst escalation','recovery strategy needed',
+            'multi-service coordination gap','BPO KPI miss','service level failure'
+          ]
+        },
+        {
+          name: 'BPO Document Uploader',
+          url: '/html/bpo/bpo-doc-uploader.html',
+          solves: [
+            'document not uploaded','document classification needed','file routing gap',
+            'document intake missing','upload stage incomplete','chain not initiated',
+            'document not classified','file not routed to war room','stage 01 gap',
+            'document relay missing','BPO pipeline not started','intake error',
+            'document submission gap','file processing not started'
+          ]
+        },
+        {
+          name: 'BPO Competitive Playbook',
+          url: '/html/bpo/tsm-bpo-competitive-playbook.html',
+          solves: [
+            'BPO service scenario','competitive displacement risk','client objection',
+            'pricing challenge','contract renewal at risk','win/loss analysis needed',
+            'market positioning gap','BPO scenario analysis','service comparison needed',
+            'vendor evaluation','outsourcing decision','BPO strategy gap',
+            'competitive intelligence needed','proposal counter needed','RFP response gap'
+          ]
+        },
+        {
+          name: 'BPO Scenarios',
+          url: '/html/bpo/bpo-scenarios-demo.html',
+          solves: [
+            'scenario walkthrough needed','BPO demo required','use case simulation',
+            'workflow scenario gap','process demonstration needed','staff training scenario',
+            'onboarding simulation','client demo needed','scenario-based review',
+            'BPO process illustration','workflow modeling','case scenario analysis'
+          ]
+        },
+        {
+          name: 'Real Estate BPO',
+          url: '/html/bpo/realty-bpo.html',
+          solves: [
+            'real estate document issue','property transaction gap','title anomaly',
+            'deed discrepancy','lease document missing','property valuation gap',
+            'real estate compliance issue','HOA document missing','closing document gap',
+            'real estate BPO workflow','property management issue','listing document error'
+          ]
+        },
+        {
+          name: 'Tax BPO',
+          url: '/html/bpo/tax-bpo.html',
+          solves: [
+            'tax document missing','W-9 gap','1099 not issued','tax filing issue',
+            'tax compliance anomaly','contractor tax classification','IRS reporting gap',
+            'tax liability undocumented','tax audit risk','year-end tax prep gap',
+            'sales tax error','deduction documentation missing','tax return gap'
+          ]
+        },
+        {
+          name: 'Legal BPO',
+          url: '/html/bpo/legal-bpo.html',
+          solves: [
+            'legal document gap','contract issue','case file missing','legal compliance gap',
+            'matter escalation','legal hold missing','discovery gap','filing missing',
+            'contract clause anomaly','legal deadline risk','counsel assignment gap',
+            'legal workflow issue','regulatory legal gap','legal review needed'
+          ]
+        },
+        {
+          name: 'Insurance BPO',
+          url: '/html/bpo/insurance-bpo.html',
+          solves: [
+            'insurance claim gap','policy document missing','claim denial',
+            'prior auth not documented','COB conflict','eligibility issue',
+            'insurance compliance gap','coverage verification missing','payer mismatch',
+            'insurance workflow issue','claim submission error','EOB discrepancy'
+          ]
+        },
+        {
+          name: 'Healthcare BPO',
+          url: '/html/bpo/healthcare-bpo.html',
+          solves: [
+            'healthcare claim denial','billing error','coding mismatch',
+            'prior auth missing','AR aging issue','remittance discrepancy',
+            'EOB mismatch','underpayment','charge capture gap','patient balance error',
+            'healthcare compliance gap','RCM workflow issue','denial recovery needed'
+          ]
+        },
+        {
+          name: 'FinOps BPO',
+          url: '/html/bpo/finops-bpo.html',
+          solves: [
+            'financial document gap','invoice discrepancy','payment delayed',
+            'AP aging issue','budget variance','cost overrun','cash flow anomaly',
+            'vendor payment dispute','duplicate payment','expense anomaly',
+            'financial compliance gap','reconciliation failure','financial workflow issue'
+          ]
+        },
+        {
+          name: 'Construction BPO',
+          url: '/html/bpo/construction-bpo.html',
+          solves: [
+            'construction document gap','RFI missing','change order issue',
+            'submittal missing','permit gap','compliance violation','defect unreported',
+            'subcontractor issue','punch list gap','inspection sign-off missing',
+            'construction billing issue','lien waiver missing','job cost variance'
+          ]
+        },
       ],
     },
-  };
 
   function extractCode(text) {
     const m = (text || '').match(/\b(CO-\d+|PR-\d+|OA-\d+|PI-\d+)\b/i);
