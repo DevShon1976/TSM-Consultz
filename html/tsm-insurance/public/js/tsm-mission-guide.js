@@ -60,45 +60,81 @@
   const DOMAIN_INTEL = {
     insurance: {
       systemRole: 'insurance operations and claims denial management AI',
-      appPool: ['Claim Reviewer','Groq AI Query','EOB Analyzer','Clearinghouse Export','Prior Auth Portal','Coding Validator','COB Checker'],
       anomalyLabel: 'Denial Code',
       usesDenialIntel: true,
+      appPool: [
+        {name:'Insurance Portal',     url:'/html/tsm-insurance/insurance-portal.html',     solves:['policy lookup','member eligibility','coverage verification','enrollment gaps','benefit summary missing','plan mismatch']},
+        {name:'Insurance Hub',        url:'/html/tsm-insurance/ins-hub1.html',              solves:['claims intake','claim status unknown','submission errors','duplicate claim','clearinghouse rejection','payer ID mismatch']},
+        {name:'Claims Pro',           url:'/html/tsm-insurance/insurance-claims-pro.html', solves:['CO-5 denial','CO-4 denial','CO-16 denial','CO-22 denial','CO-97 denial','PR-96 denial','CO-50 denial','CO-29 denial','missing modifier','prior auth not documented','CMN missing','W-9 missing','COB conflict','timely filing','bundling error','medical necessity']},
+        {name:'Insurance CE Command', url:'/html/tsm-insurance/insurance-ce-command.html', solves:['compliance gap','CE credit missing','license renewal','regulatory requirement','staff training flag','audit finding']},
+        {name:'Insurance Demo Trail', url:'/html/tsm-insurance/tsm-ins-demo-trail.html',   solves:['full workflow walkthrough','executive demo','client presentation','onboarding new staff','process overview']},
+      ],
     },
     hc: {
       systemRole: 'healthcare RCM and medical billing AI',
-      appPool: ['HC Billing Node','Denial Recovery Engine','Prior Auth Checker','Groq AI Query','BNCA Analyzer','Coding Validator','AR Aging Tracker'],
       anomalyLabel: 'Denial Code',
       usesDenialIntel: true,
+      appPool: [
+        {name:'Healthcare Workbench',    url:'/html/healthcare/healthcare-wip.html',        solves:['claim denial','billing error','coding mismatch','prior auth missing','AR aging','remittance discrepancy','EOB mismatch','underpayment','charge capture gap','patient balance error']},
+        {name:'Healthcare Academy',      url:'/html/healthcare/hc-academy.html',            solves:['coder training needed','billing staff knowledge gap','CPT code confusion','ICD-10 error','compliance training','new hire onboarding']},
+        {name:'CRC Practice Lab',        url:'/html/healthcare/crc-hc-practice.html',       solves:['CRC exam prep','coding accuracy issue','revenue cycle knowledge gap','practice scenario needed','certification readiness']},
+        {name:'CRCR Scenario Simulator', url:'/html/healthcare/crcr-scenarios.html',        solves:['CRCR exam prep','scenario-based training','denial scenario practice','RCM workflow simulation','staff readiness assessment']},
+        {name:'Healthcare Demo Trail',   url:'/html/healthcare/tsm-hc-demo-trail.html',     solves:['full RCM walkthrough','executive demo','client presentation','process overview','onboarding']},
+      ],
     },
     legal: {
       systemRole: 'legal operations and case management AI',
-      appPool: ['Case Strategist','Legal Document Search','Contract Analyzer','Groq AI Query','Compliance Checker','Deadline Tracker','Court Filing Assistant'],
       anomalyLabel: 'Issue Type',
       usesDenialIntel: false,
+      appPool: [
+        {name:'Strategist Command Center', url:'/html/strategist-index.html',           solves:['case strategy gap','matter escalation','cross-matter conflict','deadline risk','legal hold missing','counsel assignment needed','strategic review']},
+        {name:'DOC1 Enterprise Search',    url:'/html/doc1-search.html',                solves:['missing document','contract clause gap','discovery gap','evidence not found','filing missing','deposition transcript needed','prior case reference']},
+        {name:'Enterprise WIP Dashboard',  url:'/html/wip-dashboard.html',              solves:['matter status unknown','billing milestone gap','case progress stalled','deliverable overdue','workload imbalance','SLA breach']},
+      ],
     },
     finops: {
       systemRole: 'financial operations and AP/AR management AI',
-      appPool: ['AP Aging Analyzer','Invoice Validator','Groq AI Query','Variance Detector','Budget Reconciler','Vendor Portal','ERP Sync Tool'],
       anomalyLabel: 'Variance Type',
       usesDenialIntel: false,
+      appPool: [
+        {name:'Financial Scenarios',    url:'/html/finops-suite/finops-scenarios.html',          solves:['budget variance','cash flow anomaly','forecast deviation','revenue shortfall','cost overrun','scenario modeling needed','P&L discrepancy']},
+        {name:'Document Analysis',      url:'/html/finops-suite/doc-analysis-tab.html',          solves:['invoice discrepancy','contract payment mismatch','AP document missing','vendor statement error','remittance gap','purchase order mismatch','duplicate payment']},
+        {name:'FinOps Presentation',    url:'/html/finops-suite/finops-presentation.html',       solves:['executive reporting gap','board summary needed','financial overview missing','stakeholder briefing','ROI documentation']},
+        {name:'Accounting Study Guide', url:'/html/finops-suite/study-guide.html',               solves:['accounting error','GAAP compliance gap','reconciliation confusion','staff knowledge gap','journal entry error','audit prep']},
+        {name:'Interview Prep',         url:'/html/finops-suite/staff-accountant-interview.html',solves:['staff readiness gap','role assessment needed','hiring decision support','accountant evaluation','skills verification']},
+      ],
     },
     construction: {
       systemRole: 'construction project management and defect resolution AI',
-      appPool: ['Defect Tracker','RFI Manager','Groq AI Query','Punch List Tool','Subcontractor Portal','Change Order Analyzer','Inspection Scheduler'],
       anomalyLabel: 'Defect Type',
       usesDenialIntel: false,
+      appPool: [
+        {name:'Construction Workbench', url:'/html/construction-suite/construction-wip.html',   solves:['missing RFI','punch list item','daily log gap','crew documentation missing','superintendent notes incomplete','progress tracking failure','phase completion flag','change order pending','schedule deviation','labor hours missing','inspection not scheduled','subcontractor assignment gap']},
+        {name:'Document Showcase',      url:'/html/construction-suite/document-showcase.html',  solves:['missing submittal','spec compliance failure','drawing discrepancy','contract document gap','inspection sign-off missing','cure documentation not uploaded','material certification missing','structural defect documentation','permit gap','as-built missing','test report not filed']},
+        {name:'Construction Pitch',     url:'/html/construction-suite/construct-pitch.html',    solves:['client escalation needed','executive summary required','stakeholder reporting gap','project overview presentation','owner briefing needed','GC communication failure']},
+      ],
     },
     re: {
       systemRole: 'real estate transaction and document analysis AI',
-      appPool: ['RE Doc Command','Title Analyzer','Groq AI Query','Lease Reviewer','Compliance Checker','Appraisal Validator','Transaction Tracker'],
       anomalyLabel: 'Document Issue',
       usesDenialIntel: false,
+      appPool: [
+        {name:'DOC1 Enterprise Search',    url:'/html/doc1-search.html',           solves:['title document missing','deed gap','lien not found','easement undocumented','survey missing','closing document gap','HOA document missing','inspection report not filed','disclosure gap']},
+        {name:'Enterprise WIP Dashboard',  url:'/html/wip-dashboard.html',         solves:['transaction stalled','milestone overdue','closing timeline at risk','contingency deadline missed','escrow status unknown','deal progress gap']},
+        {name:'Strategist Command Center', url:'/html/strategist-index.html',      solves:['deal strategy needed','portfolio risk flag','market analysis gap','investment thesis missing','asset review escalation','executive decision needed']},
+      ],
     },
     bpo: {
       systemRole: 'BPO operations and workflow management AI',
-      appPool: ['Workflow Analyzer','SLA Tracker','Groq AI Query','Quality Scorer','Escalation Manager','Candidate Pipeline','Performance Dashboard'],
       anomalyLabel: 'Workflow Issue',
       usesDenialIntel: false,
+      appPool: [
+        {name:'BPO Command Center',    url:'/html/bpo/bpo-command-center.html',               solves:['SLA breach','queue overflow','escalation needed','real-time ops gap','agent performance flag','ticket backlog','workflow bottleneck','routing error']},
+        {name:'Staffing Intelligence', url:'/html/bpo/tsm-staffing-intelligence.html',         solves:['headcount gap','candidate pipeline thin','role unfilled','placement at risk','workforce shortage','skill mismatch','attrition flag','requisition stalled']},
+        {name:'Competitive Playbook',  url:'/html/bpo/tsm-bpo-competitive-playbook.html',      solves:['client objection','competitive displacement risk','pricing challenge','contract renewal at risk','win/loss analysis needed','market positioning gap']},
+        {name:'BPO Suite Hub',         url:'/html/bpo/suite-hub.html',                        solves:['ops overview needed','cross-function coordination gap','multi-client management','portfolio status unknown','hub navigation needed']},
+        {name:'Workforce Intelligence',url:'/html/wia.html',                                  solves:['workforce analytics gap','labor market data needed','compensation benchmark missing','diversity gap','org structure analysis','talent pipeline report']},
+      ],
     },
   };
 
@@ -452,11 +488,16 @@ ${intel ? `  Step 1 must address: ${intel.missingDocs}. Step 5 must escalate to 
 ${code  ? '  Mark time-critical steps with [URGENT] prefix in title.' : ''}
 - prompts: exactly 2 ready-to-use AI prompt strings for the query box
 - remediation: object with:
-    app: the single most critical external or internal tool to open (e.g. "Availity", "CMS Portal", "Change Healthcare", "Waystar", "Epic", "Kareo", "Office Ally", "Payor Web Portal", "Medicare FISS DDE", "Medicaid MMIS", "Zelis", "Experian Health")
-    url: the direct public URL for that app (e.g. "https://www.availity.com", "https://medicare.cms.gov", "https://www.changehealthcare.com")
-    role: who should action this (e.g. "AR Specialist", "Billing Coordinator", "Denial Manager", "Coding Lead", "Prior Auth Team")
-    urgency: one of "CRITICAL" | "HIGH" | "MEDIUM" | "LOW"
-    fixSteps: exactly 3 concise action strings — what to do inside that app to resolve this specific anomaly
+    app: select the BEST TSM app by matching the anomaly keywords against each app's problem domain below.
+         Choose the app whose domain contains the closest semantic match to the detected anomaly.
+         App domains:
+         ${di.appPool.map(a => `"${a.name}" → handles: ${a.solves.join(', ')}`).join('\n         ')}
+         Return the exact app name string from the list above — do not invent a new name.
+    url: return the exact url paired with the chosen app name:
+         ${di.appPool.map(a => `"${a.name}" → "${a.url}"`).join('\n         ')}
+    role: the specific job title who should open this app and action the fix (e.g. "AR Specialist", "Billing Coordinator", "Project Engineer", "QC Manager", "Denial Manager", "Field Superintendent", "Subcontractor PM")
+    urgency: one of "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" — based on anomaly severity and financial/schedule impact
+    fixSteps: exactly 3 concise action strings — specific steps to take inside the chosen TSM app to resolve this exact anomaly
 
 Respond with ONLY this JSON (no markdown, no fences):
 {"apps":["..."],"tsmWay":"...","bpoWay":"...","steps":[{"title":"...","instruction":"...","fieldHint":"..."}],"prompts":["...","..."],"remediation":{"app":"...","url":"...","role":"...","urgency":"...","fixSteps":["...","...","..."]}}`;
