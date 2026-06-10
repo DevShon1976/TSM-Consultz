@@ -490,6 +490,143 @@ function buildAppDispatch(raw,defectManifest){
   document.getElementById('appCount').textContent=`✓ ${apps.length} APPS RECOMMENDED`;
   document.getElementById('dispatch06').style.display='block';
   document.getElementById('dispatch06').scrollIntoView({behavior:'smooth',block:'start'});
+ 
+  // ── BPO WAR ROOM MISSION GUIDE ────────────────────────────
+  const existingMW = document.getElementById('bpo-mission-wrap');
+  if (existingMW) existingMW.remove();
+  const missionWrap = document.createElement('div');
+  missionWrap.id = 'bpo-mission-wrap';
+  missionWrap.style.cssText = 'margin-top:14px;padding:0 4px;';
+  missionWrap.innerHTML = `
+    <button id="bpo-build-mission-btn" onclick="bpoLaunchMission()" style="width:100%;background:rgba(0,232,122,.08);border:1px solid rgba(0,232,122,.3);color:#00e87a;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1px;padding:10px;cursor:pointer;text-transform:uppercase;border-radius:3px;">⚡ BUILD REMEDIATION MISSION</button>
+    <div id="bpo-mission-container" style="margin-top:8px;"></div>
+  `;
+  const dispatch06 = document.getElementById('dispatch06');
+  dispatch06.appendChild(missionWrap);
+  document.getElementById('bpo-build-mission-btn').dataset.text = raw;
+}
+ 
+const BPO_WR_APP_ROUTES = [
+  { keys:['denial','co-','claim','remark','billing','cpt','icd'], app:'HC Denial War Room', url:'/html/healthcare/hc-denial-war-room.html', reason:'HC denial issue requires war room analysis' },
+  { keys:['insurance','dme','prior auth','authorization','eligibility'], app:'Insurance War Room', url:'/html/tsm-insurance/insurance-war-room.html', reason:'Insurance issue requires insurance war room' },
+  { keys:['construction','bid','subcontractor','change order','risk'], app:'Construction War Room', url:'/html/construction/construction-war-room.html', reason:'Construction risk requires war room analysis' },
+  { keys:['legal','contract','litigation','compliance','regulation'], app:'Legal War Room', url:'/html/legal/legal-war-room.html', reason:'Legal issue requires legal war room analysis' },
+  { keys:['cost','spend','vendor','budget','variance','cloud','ap','ar'], app:'FinOps War Room', url:'/html/finops/finops-war-room.html', reason:'Financial anomaly requires FinOps war room' },
+  { keys:['real estate','mortgage','appraisal','title','closing'], app:'RE War Room', url:'/html/real-estate/re-war-room.html', reason:'RE transaction issue requires RE war room' },
+  { keys:['financial','p&l','exposure','recovery','audit'], app:'Financial App', url:'financial.html', reason:'Financial exposure requires financial analysis' },
+  { keys:['audit','doc review','findings','audit trail'], app:'Audit Ops', url:'auditops-pro.html', reason:'Audit issue requires audit ops review' },
+];
+ 
+function bpoWRResolveApp(text) {
+  const t = (text||'').toLowerCase();
+  for (const r of BPO_WR_APP_ROUTES) { if (r.keys.some(k=>t.includes(k))) return r; }
+  return { app:'Financial', url:'financial.html', reason:'General BPO anomaly — financial review recommended' };
+}
+ 
+async function bpoWRGenerateMissionSteps(rawText) {
+  const route = bpoWRResolveApp(rawText);
+  const BPO_APPS = BPO_WR_APP_ROUTES.map(r=>`${r.app} | ${r.url}`).join('\n');
+  const sys = `You are TSM Neural Core. Generate a cross-domain BPO remediation mission. Respond ONLY with valid JSON. No markdown.`;
+  const msg = `Engine 06 dispatch output:\n"${rawText.slice(0,600)}"\n\nAvailable apps:\n${BPO_APPS}\n\nGenerate 4-6 steps. Return ONLY:\n{"missionTitle":"...","summary":"...","steps":[{"id":"step-1","title":"...","appName":"...","appUrl":"...","objective":"...","instructions":"...","expectedOutput":"...","completionCriteria":"..."}]}`;
+ 
+  try {
+    const k = localStorage.getItem('GROQ_KEY')||localStorage.getItem('tsm_groq_key')||'';
+    const res = await fetch('/api/hc/query', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ system:sys, message:msg, apiKey:k })
+    });
+    const data = await res.json();
+    const raw2 = (data.response||data.content||'').replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(raw2);
+    return { missionId:'BPOWR-'+Date.now(), ...parsed, steps:(parsed.steps||[]).map((s,i)=>({...s,status:i===0?'active':'pending'})) };
+  } catch(err) {
+    return {
+      missionId:'BPOWR-'+Date.now(), missionTitle:'BPO Remediation Mission',
+      summary:'Route the flagged defect to the correct vertical war room for resolution.',
+      steps:[
+        { id:'step-1', title:route.app, appName:route.app, appUrl:route.url, objective:route.reason,
+          instructions:`Open ${route.app}. Load the relevant document and run the engine pipeline. Review all outputs before proceeding to the next step.`,
+          expectedOutput:'Defect root cause confirmed and remediation path identified', completionCriteria:'Findings documented', status:'active' },
+        { id:'step-2', title:'Financial Review', appName:'Financial', appUrl:'financial.html',
+          objective:'Quantify financial exposure and model recovery',
+          instructions:'Open the Financial app. Enter the exposure amount from Engine 03. Run the P&L impact analysis and export the recovery projection.',
+          expectedOutput:'Recovery projection with financial impact summary', completionCriteria:'Projection exported and reviewed', status:'pending' }
+      ]
+    };
+  }
+}
+ 
+function renderBPOWRMissionGuide(mission, container) {
+  function completeStep(stepId) {
+    const idx = mission.steps.findIndex(s=>s.id===stepId);
+    if (idx<0) return;
+    mission.steps[idx].status = 'complete';
+    if (idx+1 < mission.steps.length) mission.steps[idx+1].status = 'active';
+    renderGuide();
+    if (mission.steps.every(s=>s.status==='complete')) {
+      setTimeout(()=>{
+        const d = document.createElement('div');
+        d.style.cssText = 'padding:8px;background:rgba(0,232,122,.06);border:1px solid rgba(0,232,122,.2);color:#00e87a;font-size:9px;letter-spacing:1px;text-align:center;font-family:JetBrains Mono,monospace;border-radius:3px;margin-top:6px;';
+        d.textContent = '⚡ MISSION COMPLETE — ALL STEPS RESOLVED';
+        container.appendChild(d);
+      }, 300);
+    }
+  }
+  window._bpoWRMissionComplete = completeStep;
+ 
+  function renderGuide() {
+    const step = mission.steps.find(s=>s.status==='active');
+    const done = mission.steps.filter(s=>s.status==='complete').length;
+    const pct = Math.round((done/mission.steps.length)*100);
+    container.innerHTML = `
+      <div style="font-family:'JetBrains Mono',monospace;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+          <span style="color:#00e87a;font-size:9px;letter-spacing:1px;font-weight:700;">⚡ REMEDIATION MISSION</span>
+          <span style="color:rgba(0,232,122,.4);font-size:9px;">${done}/${mission.steps.length} · ${pct}%</span>
+        </div>
+        <div style="height:2px;background:rgba(0,232,122,.1);margin-bottom:8px;border-radius:1px;">
+          <div style="height:100%;width:${pct}%;background:#00e87a;transition:width .3s;border-radius:1px;"></div>
+        </div>
+        <div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:8px;line-height:1.5;">${mission.summary||''}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:8px;">
+          ${mission.steps.map((s,i)=>`<span style="font-size:8px;padding:2px 6px;border-radius:2px;background:${s.status==='complete'?'rgba(0,232,122,.12)':s.status==='active'?'rgba(0,232,122,.06)':'rgba(255,255,255,.02)'};border:1px solid ${s.status==='complete'?'rgba(0,232,122,.3)':s.status==='active'?'rgba(0,232,122,.15)':'rgba(255,255,255,.05)'};color:${s.status==='complete'?'#00e87a':s.status==='active'?'#f0f0f0':'rgba(255,255,255,.25)'};">${s.status==='complete'?'✓ ':s.status==='active'?'▶ ':`${i+1}. `}${s.appName}</span>`).join('')}
+        </div>
+        ${step ? `
+        <div style="background:#0a0a0a;border:1px solid rgba(0,232,122,.12);border-radius:3px;padding:10px;margin-bottom:6px;">
+          <div style="font-size:8px;color:rgba(0,232,122,.5);letter-spacing:1px;margin-bottom:4px;">STEP ${mission.steps.indexOf(step)+1} OF ${mission.steps.length}</div>
+          <div style="font-size:11px;color:#f0f0f0;font-weight:700;margin-bottom:8px;">${step.title}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(0,232,122,.04);border:1px solid rgba(0,232,122,.1);padding:7px 10px;margin-bottom:8px;border-radius:3px;">
+            <div>
+              <div style="font-size:8px;color:rgba(0,232,122,.5);margin-bottom:2px;">APP</div>
+              <div style="font-size:10px;color:#00e87a;font-weight:700;">${step.appName}</div>
+              <div style="font-size:8px;color:rgba(255,255,255,.2);">${step.appUrl}</div>
+            </div>
+            <a href="${step.appUrl}" target="_blank" style="background:#00e87a;color:#000;font-size:9px;font-weight:700;padding:6px 10px;text-decoration:none;letter-spacing:1px;border-radius:3px;white-space:nowrap;">OPEN ↗</a>
+          </div>
+          <div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:6px;line-height:1.6;">
+            <span style="color:rgba(0,232,122,.5);font-size:8px;display:block;margin-bottom:2px;">OBJECTIVE</span>${step.objective}
+          </div>
+          <div style="background:#111;border:1px solid rgba(255,255,255,.05);border-radius:3px;padding:8px;margin-bottom:8px;font-size:9px;color:rgba(255,255,255,.35);line-height:1.7;white-space:pre-wrap;">
+            <span style="color:rgba(0,232,122,.5);font-size:8px;display:block;margin-bottom:3px;">ACTIONS</span>${step.instructions}
+          </div>
+          <div style="border-left:2px solid rgba(0,232,122,.25);padding:5px 8px;margin-bottom:8px;font-size:9px;color:rgba(255,255,255,.35);">
+            <span style="color:rgba(0,232,122,.5);font-size:8px;display:block;margin-bottom:2px;">EXPECTED OUTPUT</span>${step.expectedOutput}
+          </div>
+          <button onclick="window._bpoWRMissionComplete('${step.id}')" style="width:100%;background:rgba(0,232,122,.08);border:1px solid rgba(0,232,122,.2);color:#00e87a;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1px;padding:9px;cursor:pointer;text-transform:uppercase;border-radius:3px;" onmouseover="this.style.background='rgba(0,232,122,.15)'" onmouseout="this.style.background='rgba(0,232,122,.08)'">✓ COMPLETE STEP ${mission.steps.indexOf(step)+1}</button>
+        </div>` : ''}
+      </div>`;
+  }
+  renderGuide();
+}
+ 
+async function bpoLaunchMission() {
+  const btn = document.getElementById('bpo-build-mission-btn');
+  const container = document.getElementById('bpo-mission-container');
+  if (!btn || !container) return;
+  btn.style.display = 'none';
+  container.innerHTML = '<div style="color:rgba(0,232,122,.5);font-size:9px;letter-spacing:1px;padding:8px 0;font-family:JetBrains Mono,monospace;text-align:center;">⚡ BUILDING MISSION...</div>';
+  const mission = await bpoWRGenerateMissionSteps(btn.dataset.text||'');
+  renderBPOWRMissionGuide(mission, container);
 }
 
 const PROMPTS=[

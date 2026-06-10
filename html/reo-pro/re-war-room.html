@@ -1037,6 +1037,122 @@ function renderRemPath(text, node) {
     </div>
   `;
   panel.style.display = 'block';
+ 
+  // ── RE MISSION GUIDE ──────────────────────────────────────
+  const existing = document.getElementById('re-mission-wrap');
+  if (existing) existing.remove();
+  const missionWrap = document.createElement('div');
+  missionWrap.id = 're-mission-wrap';
+  missionWrap.style.cssText = 'margin-top:12px;';
+  missionWrap.innerHTML = `
+    <button id="re-build-mission-btn" onclick="reLaunchMission()" style="width:100%;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);color:#f59e0b;font-family:'Share Tech Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1px;padding:10px;cursor:pointer;text-transform:uppercase;border-radius:3px;">⚡ BUILD REMEDIATION MISSION</button>
+    <div id="re-mission-container" style="margin-top:8px;"></div>
+  `;
+  panel.appendChild(missionWrap);
+  document.getElementById('re-build-mission-btn').dataset.text = text;
+}
+ 
+const RE_APP_ROUTES = [
+  { keys:['financing','dti','loan','pre-approval','mortgage','lender'], app:'RE War Room — Finance Node', url:'/html/real-estate/re-war-room.html', reason:'Financing issue requires RE finance analysis' },
+  { keys:['appraisal','valuation','comps','gap','value'], app:'RE War Room — Market Intel', url:'/html/real-estate/re-war-room.html', reason:'Appraisal gap requires market intel review' },
+  { keys:['title','lien','encumbrance','chain','deed'], app:'RE Strategist', url:'/html/real-estate/re-strategist.html', reason:'Title defect requires strategist review' },
+  { keys:['compliance','trid','respa','fincen','hmda','disclosure'], app:'RE Strategist', url:'/html/real-estate/re-strategist.html', reason:'Compliance issue requires strategist review' },
+  { keys:['closing','delay','ctc','hoa','wire','escrow'], app:'RE Exec Portal', url:'/html/real-estate/re-exec-portal.html', reason:'Closing issue requires exec portal escalation' },
+  { keys:['document','intake','file','upload','extract'], app:'RE Doc Command', url:'/html/real-estate/re-doc-command.html', reason:'Document issue requires doc command review' },
+];
+ 
+function reResolveApp(text) {
+  const t=(text||'').toLowerCase();
+  for (const r of RE_APP_ROUTES) { if(r.keys.some(k=>t.includes(k))) return r; }
+  return { app:'RE Strategist', url:'/html/real-estate/re-strategist.html', reason:'General RE anomaly — strategist review required' };
+}
+ 
+async function reGenerateMissionSteps(anomalyText) {
+  const route = reResolveApp(anomalyText);
+  const RE_APPS = [
+    'RE Doc Command | /html/real-estate/re-doc-command.html',
+    'RE War Room | /html/real-estate/re-war-room.html',
+    'RE Strategist | /html/real-estate/re-strategist.html',
+    'RE Exec Portal | /html/real-estate/re-exec-portal.html',
+  ].join('\n');
+ 
+  const sys=`You are TSM Neural Core. Generate a step-by-step real estate transaction remediation mission. Respond ONLY with valid JSON. No markdown.`;
+  const msg=`Anomaly detected:\n"${anomalyText.slice(0,600)}"\n\nAvailable apps:\n${RE_APPS}\n\nGenerate 4-6 steps. Return ONLY:\n{"missionTitle":"...","summary":"...","steps":[{"id":"step-1","title":"...","appName":"...","appUrl":"...","objective":"...","instructions":"...","expectedOutput":"...","completionCriteria":"..."}]}`;
+ 
+  try {
+    const res=await fetch('/api/hc/query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sys,message:msg,apiKey:localStorage.getItem('tsm_groq_key')||''})});
+    const data=await res.json();
+    const raw=(data.response||data.content||'').replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(raw);
+    return {missionId:'RE-'+Date.now(),...parsed,steps:(parsed.steps||[]).map((s,i)=>({...s,status:i===0?'active':'pending'}))};
+  } catch(e) {
+    return {
+      missionId:'RE-'+Date.now(),missionTitle:'RE Transaction Remediation',
+      summary:'Resolve the flagged real estate transaction issue.',
+      steps:[
+        {id:'step-1',title:route.app,appName:route.app,appUrl:route.url,objective:route.reason,
+          instructions:`Open ${route.app}. Review the flagged transaction issue and run the relevant analysis. Document all findings.`,
+          expectedOutput:'Issue root cause confirmed',completionCriteria:'Findings documented',status:'active'},
+        {id:'step-2',title:'RE Strategist',appName:'RE Strategist',appUrl:'/html/real-estate/re-strategist.html',
+          objective:'Generate transaction strategy brief',
+          instructions:'Open RE Strategist. Relay findings and generate a deal strategy brief with recommended next actions.',
+          expectedOutput:'Strategy brief with action plan',completionCriteria:'Actions assigned to responsible parties',status:'pending'}
+      ]
+    };
+  }
+}
+ 
+function renderREMissionGuide(mission, container) {
+  function completeStep(stepId) {
+    const idx=mission.steps.findIndex(s=>s.id===stepId);
+    if(idx<0)return;
+    mission.steps[idx].status='complete';
+    if(idx+1<mission.steps.length)mission.steps[idx+1].status='active';
+    renderGuide();
+    if(mission.steps.every(s=>s.status==='complete')){setTimeout(()=>{const d=document.createElement('div');d.style.cssText='padding:8px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);color:#f59e0b;font-size:9px;letter-spacing:1px;text-align:center;font-family:var(--mono);border-radius:3px;';d.textContent='⚡ MISSION COMPLETE';container.appendChild(d);},300);}
+  }
+  window._reMissionComplete=completeStep;
+ 
+  function renderGuide(){
+    const step=mission.steps.find(s=>s.status==='active');
+    const done=mission.steps.filter(s=>s.status==='complete').length;
+    const pct=Math.round((done/mission.steps.length)*100);
+    container.innerHTML=`
+      <div style="font-family:var(--mono,'Share Tech Mono',monospace);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="color:#f59e0b;font-size:9px;letter-spacing:1px;">⚡ REMEDIATION MISSION</span>
+          <span style="color:rgba(245,158,11,.4);font-size:9px;">${done}/${mission.steps.length} · ${pct}%</span>
+        </div>
+        <div style="height:2px;background:rgba(245,158,11,.1);margin-bottom:8px;"><div style="height:100%;width:${pct}%;background:#f59e0b;transition:width .3s;"></div></div>
+        <div style="font-size:9px;color:var(--muted,#607070);margin-bottom:8px;line-height:1.5;">${mission.summary||''}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:8px;">
+          ${mission.steps.map((s,i)=>`<span style="font-size:8px;padding:2px 6px;background:${s.status==='complete'?'rgba(245,158,11,.12)':s.status==='active'?'rgba(245,158,11,.06)':'rgba(255,255,255,.02)'};border:1px solid ${s.status==='complete'?'rgba(245,158,11,.3)':s.status==='active'?'rgba(245,158,11,.15)':'rgba(255,255,255,.05)'};color:${s.status==='complete'?'#f59e0b':s.status==='active'?'var(--white,#e4e0d8)':'var(--muted,#607070)'};">${s.status==='complete'?'✓ ':s.status==='active'?'▶ ':`${i+1}. `}${s.appName}</span>`).join('')}
+        </div>
+        ${step?`
+        <div style="background:rgba(0,0,0,.3);border:1px solid rgba(245,158,11,.12);border-radius:3px;padding:8px;margin-bottom:6px;">
+          <div style="font-size:8px;color:rgba(245,158,11,.5);letter-spacing:1px;margin-bottom:3px;">STEP ${mission.steps.indexOf(step)+1} OF ${mission.steps.length}</div>
+          <div style="font-size:10px;color:var(--white,#e4e0d8);font-weight:700;margin-bottom:7px;">${step.title}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(245,158,11,.04);border:1px solid rgba(245,158,11,.1);padding:6px 8px;margin-bottom:7px;border-radius:2px;">
+            <div><div style="font-size:8px;color:rgba(245,158,11,.5);margin-bottom:2px;">APP</div><div style="font-size:9px;color:#f59e0b;font-weight:700;">${step.appName}</div></div>
+            <a href="${step.appUrl}" target="_blank" style="background:#f59e0b;color:#000;font-size:8px;font-weight:700;padding:5px 9px;text-decoration:none;letter-spacing:1px;border-radius:2px;white-space:nowrap;">OPEN ↗</a>
+          </div>
+          <div style="font-size:9px;color:var(--muted,#607070);margin-bottom:6px;line-height:1.6;"><span style="color:rgba(245,158,11,.5);font-size:8px;display:block;margin-bottom:2px;">OBJECTIVE</span>${step.objective}</div>
+          <div style="background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.04);padding:7px;margin-bottom:7px;font-size:9px;color:var(--muted,#607070);line-height:1.7;white-space:pre-wrap;border-radius:2px;"><span style="color:rgba(245,158,11,.5);font-size:8px;display:block;margin-bottom:2px;">ACTIONS</span>${step.instructions}</div>
+          <button onclick="window._reMissionComplete('${step.id}')" style="width:100%;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);color:#f59e0b;font-family:var(--mono,'Share Tech Mono',monospace);font-size:9px;font-weight:700;letter-spacing:1px;padding:8px;cursor:pointer;text-transform:uppercase;border-radius:2px;" onmouseover="this.style.background='rgba(245,158,11,.15)'" onmouseout="this.style.background='rgba(245,158,11,.08)'">✓ COMPLETE STEP ${mission.steps.indexOf(step)+1}</button>
+        </div>`:''}
+      </div>`;
+  }
+  renderGuide();
+}
+ 
+async function reLaunchMission(){
+  const btn=document.getElementById('re-build-mission-btn');
+  const container=document.getElementById('re-mission-container');
+  if(!btn||!container)return;
+  btn.style.display='none';
+  container.innerHTML='<div style="color:rgba(245,158,11,.5);font-size:9px;letter-spacing:1px;padding:8px 0;font-family:var(--mono);">⚡ BUILDING MISSION...</div>';
+  const mission=await reGenerateMissionSteps(btn.dataset.text||'');
+  renderREMissionGuide(mission,container);
 }
 
 // ─── NODE RUNNER ─────────────────────────────────────────────────────────────
