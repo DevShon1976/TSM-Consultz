@@ -230,6 +230,25 @@
       /* ── Empty state ── */
       .tmg-empty { padding:28px 14px; text-align:center; color:#2a3545; font-size:11px; letter-spacing:0.06em; line-height:1.6; }
       .tmg-empty-icon { font-size:28px; margin-bottom:10px; opacity:0.4; }
+
+      /* ── Remediation block ── */
+      .tmg-remediation { margin:0 14px 10px; border:1px solid rgba(0,200,100,0.25); border-radius:6px; background:rgba(0,200,100,0.04); overflow:hidden; }
+      .tmg-rem-header { display:flex; align-items:center; justify-content:space-between; padding:8px 10px 6px; border-bottom:1px solid rgba(0,200,100,0.12); }
+      .tmg-rem-app { font-size:12px; color:#00c864; font-weight:700; letter-spacing:0.06em; }
+      .tmg-rem-urgency { font-size:9px; letter-spacing:0.1em; text-transform:uppercase; border-radius:3px; padding:2px 6px; }
+      .tmg-rem-urgency.CRITICAL { background:rgba(255,50,50,0.12); border:1px solid rgba(255,50,50,0.3); color:#ff3232; }
+      .tmg-rem-urgency.HIGH     { background:rgba(255,107,53,0.12); border:1px solid rgba(255,107,53,0.3); color:#ff6b35; }
+      .tmg-rem-urgency.MEDIUM   { background:rgba(255,215,0,0.10); border:1px solid rgba(255,215,0,0.25); color:#ffd700; }
+      .tmg-rem-urgency.LOW      { background:rgba(0,200,100,0.08); border:1px solid rgba(0,200,100,0.2); color:#00c864; }
+      .tmg-rem-meta { display:flex; align-items:center; gap:8px; padding:6px 10px; border-bottom:1px solid rgba(0,200,100,0.08); }
+      .tmg-rem-role { font-size:10px; color:#5a7090; letter-spacing:0.05em; }
+      .tmg-rem-url { font-size:10px; color:#00c8ff; text-decoration:none; letter-spacing:0.03em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:200px; }
+      .tmg-rem-url:hover { text-decoration:underline; }
+      .tmg-rem-steps { padding:8px 10px 10px; display:flex; flex-direction:column; gap:5px; }
+      .tmg-rem-step { display:flex; gap:7px; align-items:flex-start; font-size:10px; color:#8aaac8; line-height:1.45; }
+      .tmg-rem-step-num { min-width:16px; height:16px; border-radius:50%; background:rgba(0,200,100,0.15); border:1px solid rgba(0,200,100,0.3); color:#00c864; font-size:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; font-weight:700; }
+      .tmg-rem-open-btn { display:flex; align-items:center; justify-content:center; gap:6px; width:calc(100% - 20px); margin:0 10px 10px; background:rgba(0,200,100,0.08); border:1px solid rgba(0,200,100,0.25); border-radius:5px; color:#00c864; font-size:10px; font-family:inherit; letter-spacing:0.08em; text-transform:uppercase; padding:7px; cursor:pointer; text-decoration:none; transition:all 0.15s; }
+      .tmg-rem-open-btn:hover { background:rgba(0,200,100,0.16); border-color:rgba(0,200,100,0.5); }
     `;
     document.head.appendChild(s);
   }
@@ -349,6 +368,27 @@
       <div class="tmg-section-label">Apps Used in This Workflow</div>
       <div class="tmg-app-chips">${chipsHtml}</div>
 
+      ${m.remediation ? `
+      <div class="tmg-section-label">Remediation App</div>
+      <div class="tmg-remediation">
+        <div class="tmg-rem-header">
+          <span class="tmg-rem-app">◈ ${escHtml(m.remediation.app)}</span>
+          <span class="tmg-rem-urgency ${escHtml(m.remediation.urgency || 'MEDIUM')}">${escHtml(m.remediation.urgency || 'MEDIUM')}</span>
+        </div>
+        <div class="tmg-rem-meta">
+          <span class="tmg-rem-role">→ ${escHtml(m.remediation.role)}</span>
+          ${m.remediation.url ? `<a class="tmg-rem-url" href="${escHtml(m.remediation.url)}" target="_blank" rel="noopener">${escHtml(m.remediation.url)}</a>` : ''}
+        </div>
+        <div class="tmg-rem-steps">
+          ${(m.remediation.fixSteps || []).map((step, i) => `
+          <div class="tmg-rem-step">
+            <span class="tmg-rem-step-num">${i + 1}</span>
+            <span>${escHtml(step)}</span>
+          </div>`).join('')}
+        </div>
+        ${m.remediation.url ? `<a class="tmg-rem-open-btn" href="${escHtml(m.remediation.url)}" target="_blank" rel="noopener">↗ Open ${escHtml(m.remediation.app)}</a>` : ''}
+      </div>` : ''}
+
       <div class="tmg-compare">
         <div class="tmg-compare-card tsm"><div class="tmg-compare-label">TSM Way</div><div class="tmg-compare-body">${escHtml(tsmWay)}</div></div>
         <div class="tmg-compare-card bpo"><div class="tmg-compare-label">Old BPO Way</div><div class="tmg-compare-body">${escHtml(bpoWay)}</div></div>
@@ -372,7 +412,7 @@
     return `You are TSM Neural Core, an expert ${di.systemRole}.
 Generate anomaly-aware guided repair workflows for staff.
 Respond ONLY with valid JSON — no markdown, no explanation, no code fences.
-Schema: {"apps":["..."],"tsmWay":"...","bpoWay":"...","steps":[{"title":"...","instruction":"...","fieldHint":"..."}],"prompts":["...","..."]}`;
+Schema: {"apps":["..."],"tsmWay":"...","bpoWay":"...","steps":[{"title":"...","instruction":"...","fieldHint":"..."}],"prompts":["...","..."],"remediation":{"app":"...","url":"...","role":"...","urgency":"...","fixSteps":["...","...","..."]}}`;
   }
 
   function buildPrompt(m, v) {
@@ -411,9 +451,15 @@ REQUIREMENTS:
 ${intel ? `  Step 1 must address: ${intel.missingDocs}. Step 5 must escalate to Executive Portal.` : '  Step 5 must escalate to Executive Portal or senior review.'}
 ${code  ? '  Mark time-critical steps with [URGENT] prefix in title.' : ''}
 - prompts: exactly 2 ready-to-use AI prompt strings for the query box
+- remediation: object with:
+    app: the single most critical external or internal tool to open (e.g. "Availity", "CMS Portal", "Change Healthcare", "Waystar", "Epic", "Kareo", "Office Ally", "Payor Web Portal", "Medicare FISS DDE", "Medicaid MMIS", "Zelis", "Experian Health")
+    url: the direct public URL for that app (e.g. "https://www.availity.com", "https://medicare.cms.gov", "https://www.changehealthcare.com")
+    role: who should action this (e.g. "AR Specialist", "Billing Coordinator", "Denial Manager", "Coding Lead", "Prior Auth Team")
+    urgency: one of "CRITICAL" | "HIGH" | "MEDIUM" | "LOW"
+    fixSteps: exactly 3 concise action strings — what to do inside that app to resolve this specific anomaly
 
 Respond with ONLY this JSON (no markdown, no fences):
-{"apps":["..."],"tsmWay":"...","bpoWay":"...","steps":[{"title":"...","instruction":"...","fieldHint":"..."}],"prompts":["...","..."]}`;
+{"apps":["..."],"tsmWay":"...","bpoWay":"...","steps":[{"title":"...","instruction":"...","fieldHint":"..."}],"prompts":["...","..."],"remediation":{"app":"...","url":"...","role":"...","urgency":"...","fixSteps":["...","...","..."]}}`;
   }
 
   // ── AI Step Regeneration ───────────────────────────────────────────────────
@@ -446,10 +492,11 @@ Respond with ONLY this JSON (no markdown, no fences):
         else throw new Error('JSON parse failed');
       }
 
-      m.apps    = parsed.apps    || m.apps    || [];
-      m.tsmWay  = parsed.tsmWay  || m.tsmWay  || '';
-      m.bpoWay  = parsed.bpoWay  || m.bpoWay  || '';
-      m.prompts = parsed.prompts || m.prompts || [];
+      m.apps        = parsed.apps        || m.apps    || [];
+      m.tsmWay      = parsed.tsmWay      || m.tsmWay  || '';
+      m.bpoWay      = parsed.bpoWay      || m.bpoWay  || '';
+      m.prompts     = parsed.prompts     || m.prompts || [];
+      m.remediation = parsed.remediation || m.remediation || null;
       m.steps   = (parsed.steps || []).map((s, i) => ({
         id: 'step-' + i,
         title: s.title || 'Step ' + (i + 1),
