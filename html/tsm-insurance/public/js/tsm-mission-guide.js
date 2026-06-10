@@ -1106,6 +1106,7 @@ ${code  ? '  Mark time-critical steps with [URGENT] prefix in title.' : ''}
 - prompts: exactly 2 ready-to-use AI prompt strings for the query box
 - remediation: object with:
     app: select the BEST TSM app by matching the anomaly keywords against each app's problem domain below.
+         IMPORTANT: you must ONLY choose from the apps listed below. Do not reference or select any app outside this list.
          Choose the app whose domain contains the closest semantic match to the detected anomaly.
          App domains:
          ${di.appPool.map(a => `"${a.name}" → handles: ${a.solves.join(', ')}`).join('\n         ')}
@@ -1118,6 +1119,20 @@ ${code  ? '  Mark time-critical steps with [URGENT] prefix in title.' : ''}
 
 Respond with ONLY this JSON (no markdown, no fences):
 {"apps":["..."],"tsmWay":"...","bpoWay":"...","steps":[{"title":"...","instruction":"...","fieldHint":"..."}],"prompts":["...","..."],"remediation":{"app":"...","url":"...","role":"...","urgency":"...","fixSteps":["...","...","..."]}}`;
+  }
+
+  // ── Keyword scorer — fallback app selection ────────────────────────────────
+  function scoreBestApp(pool, anomalyText) {
+    const text = (anomalyText || '').toLowerCase();
+    let best = pool[0];
+    let bestScore = 0;
+    pool.forEach(function(app) {
+      const score = (app.solves || []).reduce(function(acc, keyword) {
+        return acc + (text.includes(keyword.toLowerCase()) ? 1 : 0);
+      }, 0);
+      if (score > bestScore) { bestScore = score; best = app; }
+    });
+    return best;
   }
 
   // ── AI Step Regeneration ───────────────────────────────────────────────────
@@ -1154,7 +1169,21 @@ Respond with ONLY this JSON (no markdown, no fences):
       m.tsmWay      = parsed.tsmWay      || m.tsmWay  || '';
       m.bpoWay      = parsed.bpoWay      || m.bpoWay  || '';
       m.prompts     = parsed.prompts     || m.prompts || [];
-      m.remediation = parsed.remediation || m.remediation || null;
+
+      // ── Guardrail: validate remediation app against vertical appPool ──
+      if (parsed.remediation) {
+        const pool = di.appPool || [];
+        const returned = (parsed.remediation.app || '').toLowerCase();
+        const validApp = pool.find(a => a.name.toLowerCase() === returned)
+          || pool.find(a => returned.includes(a.name.toLowerCase()))
+          || pool.find(a => a.name.toLowerCase().includes(returned))
+          || scoreBestApp(pool, m.anomalyType + ' ' + m.anomalySummary);
+        parsed.remediation.app = validApp.name;
+        parsed.remediation.url = validApp.url;
+        m.remediation = parsed.remediation;
+      } else {
+        m.remediation = null;
+      }
       m.steps   = (parsed.steps || []).map((s, i) => ({
         id: 'step-' + i,
         title: s.title || 'Step ' + (i + 1),
