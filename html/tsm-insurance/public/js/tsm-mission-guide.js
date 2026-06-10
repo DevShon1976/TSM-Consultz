@@ -720,8 +720,12 @@ Respond with ONLY this JSON (no markdown, no fences):
     if (m) {
       try { sessionStorage.setItem('TSM_ESCALATE_RELAY', JSON.stringify(m)); } catch {}
     }
-    const msg = document.querySelector('[data-escalate], .escalate-btn, #escalate-strategist');
-    if (msg) msg.click();
+    if (typeof escalateToStrategist === 'function') {
+  escalateToStrategist();
+} else {
+  const msg = document.querySelector('[data-escalate], .escalate-btn, #escalate-strategist');
+  if (msg) msg.click();
+}
   }
 
   // ── Copy prompt ───────────────────────────────────────────────────────────
