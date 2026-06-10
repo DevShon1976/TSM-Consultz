@@ -1090,7 +1090,7 @@ function buildAppDispatch(raw, defectManifest) {
       <div class="app-how-text">${esc(app.how||'Navigate to this app and use the intake form to begin analysis.')}${defectManifest?`\n\nKEY DEFECTS TO RESOLVE:\n${defectManifest}`:''}
         ')}</div>
       <div class="app-tags">${tagHTML}</div>
-      <button class="app-launch" onclick="launchApp('${href}')">LAUNCH ${esc(app.name.toUpperCase())} →</button>
+      <button class="app-launch" onclick="launchApp('${href}',{name:app.name,how:app.how||'',tags:[]})">LAUNCH ${esc(app.name.toUpperCase())} →</button>
     `;
     container.appendChild(card);
   });
@@ -1100,9 +1100,16 @@ function buildAppDispatch(raw, defectManifest) {
   document.getElementById('dispatch06').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
-function launchApp(href) {
+function launchApp(href, appMeta) {
   storeSession();
-  nav(href);
+  if(appMeta && window.TSMCureConductor){
+    window.TSMCureConductor.launch(href, appMeta, {
+      docText: document.getElementById('docPaste')?.value||'',
+      vertical: 'Legal'
+    });
+  } else {
+    nav(href);
+  }
 }
 
 // ═══════════════════════════════════════════════════

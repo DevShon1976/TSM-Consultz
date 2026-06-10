@@ -467,6 +467,16 @@ function buildDefectManifest(engines){
   return lines.slice(0,12).map((d,i)=>`DEFECT ${i+1}: ${d}`).join('\n')||'No structured defects extracted — use engine outputs directly.';
 }
 
+function launchApp(href, appMeta){
+  if(appMeta && window.TSMCureConductor){
+    window.TSMCureConductor.launch(href, appMeta, {
+      docText: document.getElementById('docPaste')?.value||'',
+      vertical: 'BPO'
+    });
+  } else {
+    window.open(href.startsWith('/')?href:'/bpo/'+href, '_blank');
+  }
+}
 function buildAppDispatch(raw,defectManifest){
   const introMatch=raw.match(/DISPATCH_INTRO:\s*([^\n]+(?:\n(?!APP:)[^\n]+)*)/);
   document.getElementById('dispatchIntro').textContent=introMatch?introMatch[1].trim():'Remediation pathways identified. Route to the highest-ranked app first.';
@@ -476,7 +486,7 @@ function buildAppDispatch(raw,defectManifest){
   const routeMap={'financial':'financial.html','audit ops':'auditops-pro.html','legal analyst':'../legal-pro/legal-analyst-pro.html','compliance':'../html/compliance.html','zero-trust':'../html/zero-trust.html','finops accounting':'../finops-suite/finops-accounting.html','finops ops':'../finops-suite/finops-operations.html'};
   const dotColors=['#00ff88','#ffc400','#00e5ff','#a855f7','#ff4444','#3b82f6','#f59e0b'];
   const container=document.getElementById('appCards');container.innerHTML='';
-  apps.slice(0,6).forEach((app,i)=>{const key=app.name.toLowerCase();const href=routeMap[key]||'financial.html';const tags=(app.tagsRaw||'').split(',').map(t=>t.trim()).filter(Boolean);const tagHTML=tags.map(t=>`<span class="app-tag">${t}</span>`).join('');const card=document.createElement('div');card.className='app-card'+(app.isTop?' top':'');card.innerHTML=`<div class="app-card-header"><div style="display:flex;align-items:center"><div class="app-dot" style="background:${dotColors[i]||'#5a6f90'}"></div><div><div class="app-name">${esc(app.name)}</div><div class="app-category">BPO Operations</div></div></div>${app.isTop?'<span class="top-match-badge">★ TOP MATCH</span>':`<span class="app-rank">${app.rank||'#'+(i+1)}</span>`}</div><div class="app-how-label">HOW TO USE FOR YOUR ISSUE</div><div class="app-how-text">${esc(app.how||'Open this app and use the intake form.')}${defectManifest?'\n\nKEY DEFECTS:\n'+defectManifest:''}</div><div class="app-tags">${tagHTML}</div><button class="app-launch" onclick="loadTile('${href}',this.closest('.app-card'))">OPEN ${esc(app.name.toUpperCase())} →</button>`;container.appendChild(card);});
+  apps.slice(0,6).forEach((app,i)=>{const key=app.name.toLowerCase();const href=routeMap[key]||'financial.html';const tags=(app.tagsRaw||'').split(',').map(t=>t.trim()).filter(Boolean);const tagHTML=tags.map(t=>`<span class="app-tag">${t}</span>`).join('');const card=document.createElement('div');card.className='app-card'+(app.isTop?' top':'');card.innerHTML=`<div class="app-card-header"><div style="display:flex;align-items:center"><div class="app-dot" style="background:${dotColors[i]||'#5a6f90'}"></div><div><div class="app-name">${esc(app.name)}</div><div class="app-category">BPO Operations</div></div></div>${app.isTop?'<span class="top-match-badge">★ TOP MATCH</span>':`<span class="app-rank">${app.rank||'#'+(i+1)}</span>`}</div><div class="app-how-label">HOW TO USE FOR YOUR ISSUE</div><div class="app-how-text">${esc(app.how||'Open this app and use the intake form.')}${defectManifest?'\n\nKEY DEFECTS:\n'+defectManifest:''}</div><div class="app-tags">${tagHTML}</div><button class="app-launch" onclick="launchApp('${href}',{name:app.name,how:app.how||'',tags:tags})">OPEN ${esc(app.name.toUpperCase())} →</button>`;container.appendChild(card);});
   document.getElementById('appCount').textContent=`✓ ${apps.length} APPS RECOMMENDED`;
   document.getElementById('dispatch06').style.display='block';
   document.getElementById('dispatch06').scrollIntoView({behavior:'smooth',block:'start'});
@@ -738,6 +748,7 @@ function speechStop(){if(typeof responsiveVoice!=='undefined')responsiveVoice.ca
 function speechSetState(state){const pb=document.getElementById('speechPlayBtn'),ps=document.getElementById('speechPauseBtn'),st=document.getElementById('speechStopBtn');if(!pb)return;if(state==='speaking'){pb.style.display='none';ps.style.display='';st.style.display='';ps.className='hud-speech-btn';}else if(state==='paused'){pb.style.display='';pb.textContent='▶ RESUME';ps.style.display='none';st.style.display='';}else{pb.style.display='';pb.textContent='🔊 SPEAK';ps.style.display='none';st.style.display='none';}}
 </script>
 <script src="/js/tsm-mission-guide.js"></script>
+<script src="../tsm-cure-conductor.js"></script>
 </body>
 </html>
 

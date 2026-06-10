@@ -773,6 +773,26 @@ function openAnomalyAdvisor() {
   window.open('ins-anomaly-advisor.html', '_blank');
 }
 
+function launchApp(href, appMeta){
+  if(appMeta && window.TSMCureConductor){
+    window.TSMCureConductor.launch(href, appMeta, {
+      docText: document.getElementById('docPaste')?.value||'',
+      vertical: 'Insurance'
+    });
+  } else {
+    window.open('/html/tsm-insurance/' + href, '_blank');
+  }
+}
+function launchApp(href, appMeta){
+  if(appMeta && window.TSMCureConductor){
+    window.TSMCureConductor.launch(href, appMeta, {
+      docText: document.getElementById('docPaste')?.value||'',
+      vertical: 'Insurance'
+    });
+  } else {
+    window.open(href.startsWith('/')?href:'/html/tsm-insurance/'+href, '_blank');
+  }
+}
 function buildAppDispatch(e6text){
   const dispatch=document.getElementById('appDispatch');
   const hdr=document.getElementById('dispatchHdr');
@@ -802,7 +822,7 @@ function buildAppDispatch(e6text){
     const card=document.createElement('div');
     card.className='app-card';
     if(isTop) card.style.borderColor='rgba(201,168,76,.4)';
-    card.innerHTML=`<div class="app-card-rank">${isTop?'⭐ TOP RECOMMENDATION':'Rank '+m[2].trim()}</div><div class="app-card-name" style="${isTop?'color:var(--gold2)':''}">${name}</div><div class="app-card-how">${howto}</div><button class="app-card-btn" onclick="nav('${url}')" style="${isTop?'border-color:rgba(201,168,76,.4);color:var(--gold2)':''}">OPEN ${name.toUpperCase()} →</button>`;
+    card.innerHTML=`<div class="app-card-rank">${isTop?'⭐ TOP RECOMMENDATION':'Rank '+m[2].trim()}</div><div class="app-card-name" style="${isTop?'color:var(--gold2)':''}">${name}</div><div class="app-card-how">${howto}</div><button class="app-card-btn" onclick="launchApp('${url}', {name:name,how:howto,tags:[]})" style="${isTop?'border-color:rgba(201,168,76,.4);color:var(--gold2)':''}">OPEN ${name.toUpperCase()} →</button>`;
     dispatch.appendChild(card);
   });
   const intro=e6text.match(/DISPATCH_INTRO:\s*([^\n]+(?:\n[^\n]+)?)/i);
@@ -2194,5 +2214,6 @@ if(window.TSMMissionGuide) window.TSMMissionGuide.show();
 })();
 </script>
 <script src="/html/tsm-insurance/public/js/tsm-mission-guide.js"></script>
+<script src="../../tsm-cure-conductor.js"></script>
 </body>
 </html>
