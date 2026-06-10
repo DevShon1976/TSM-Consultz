@@ -6,7 +6,7 @@
  * Drop at: html/js/tsm-mission-conductor.js
  * Load with: <script src="/js/tsm-mission-conductor.js"></script>
  *
- * Replaces: tsm-cure-conductor.js
+ * Replaces: /js/tsm-mission-conductor.js
  *
  * Each war room must define (or it will auto-detect):
  *   window.TSM_VERTICAL = 'Construction' | 'Healthcare' | 'Legal' | 'FinOps' | 'Insurance' | 'BPO' | 'Real Estate'

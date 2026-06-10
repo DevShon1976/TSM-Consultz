@@ -2,8 +2,8 @@
  * TSM CURE CONDUCTOR v1.0
  * Shared across all TSM war rooms.
  * Intercepts launchApp() clicks → generates AI step-by-step cure panel via Groq.
- * Drop at: html/tsm-cure-conductor.js
- * Load with: <script src="../../tsm-cure-conductor.js"></script>
+ * Drop at: html//js/tsm-mission-conductor.js
+ * Load with: <script src="../..//js/tsm-mission-conductor.js"></script>
  */
 
 (function(){
