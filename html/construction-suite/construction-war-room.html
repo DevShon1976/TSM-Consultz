@@ -987,7 +987,7 @@ function buildDispatch(raw){
       <div class="app-how-lbl">HOW TO USE THIS APP FOR YOUR ISSUE</div>
       <div class="app-how-txt">${esc(app.how||'Navigate to this app and use the intake form to begin analysis.')}</div>
       <div class="app-tags-row">${tags.map(t=>`<span class="app-tag">${esc(t)}</span>`).join('')}</div>
-      <button class="app-launch-btn" onclick="launchApp('${href}')">LAUNCH ${esc(app.name.toUpperCase())} →</button>
+      <button class="app-launch-btn" onclick="launchApp('${href}', ${JSON.stringify({name:app.name,how:app.how||'',tags:tags})})">LAUNCH ${esc(app.name.toUpperCase())} →</button>
     `;
     container.appendChild(card);
   });
@@ -996,10 +996,17 @@ function buildDispatch(raw){
   document.getElementById('dispatchSection').style.display='block';
 }
 
-function launchApp(href){
+function launchApp(href, appMeta){
   storeSession();
-  if(href.startsWith('/')) window.open(href, '_blank');
-  else window.open('/construction-suite/'+href, '_blank');
+  if(appMeta && window.TSMCureConductor){
+    window.TSMCureConductor.launch(href, appMeta, {
+      docText: document.getElementById('docPaste')?.value||'',
+      vertical: 'Construction'
+    });
+  } else {
+    if(href.startsWith('/')) window.open(href, '_blank');
+    else window.open('/construction-suite/'+href, '_blank');
+  }
 }
 
 function esc(s){ return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
@@ -1533,5 +1540,6 @@ function speechStop(){if(typeof responsiveVoice!=='undefined')responsiveVoice.ca
 function speechSetState(state){const pb=document.getElementById('speechPlayBtn'),ps=document.getElementById('speechPauseBtn'),st=document.getElementById('speechStopBtn');if(!pb)return;if(state==='speaking'){pb.style.display='none';ps.style.display='';st.style.display='';ps.className='hud-speech-btn speaking';}else if(state==='paused'){pb.style.display='';pb.textContent='▶ RESUME';pb.className='hud-speech-btn paused';ps.style.display='none';st.style.display='';}else{pb.style.display='';pb.textContent='🔊 SPEAK';pb.className='hud-speech-btn';ps.style.display='none';st.style.display='none';}}
 </script>
 <script src="/js/tsm-mission-guide.js"></script>
+<script src="../../tsm-cure-conductor.js"></script>
 </body>
 </html>
