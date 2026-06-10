@@ -480,4 +480,4 @@ const TSMMission = {
 };
 
 // Make available globally
-window.TSMMission = TSMMission;upgrade fix
+window.TSMMission = TSMMission;
