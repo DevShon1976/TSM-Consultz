@@ -1254,6 +1254,8 @@ function showAnomalyAdvisorPanel(outputs, docText) {
     <div id="anomaly-panel-body" style="flex:1;overflow-y:auto;padding:12px 14px;font-size:11px;line-height:1.8;color:#a0b8a0;">
       <div id="anomaly-scan-msg" style="color:#1ee8b6;font-size:10px;letter-spacing:1px;">⬡ SCANNING PROJECT DOCUMENTS FOR DEFECTS...</div>
     </div>
+    <div id="tsm-mission-panel" style="display:none;padding:0 14px 14px;"></div>
+    <button id="tsm-build-mission-btn" onclick="tsmLaunchMission()" style="display:none;margin:0 14px 14px;width:calc(100% - 28px);background:rgba(30,232,182,.1);border:1px solid rgba(30,232,182,.4);color:#1ee8b6;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.12em;padding:10px;cursor:pointer;text-transform:uppercase;">⚡ BUILD REMEDIATION MISSION</button>
   `;
 
   document.body.appendChild(panel);
@@ -1287,6 +1289,8 @@ Maximum 8 items. No preamble. No headers. No summary. Start immediately with ite
       footer.style.cssText = 'margin-top:14px;padding-top:10px;border-top:1px solid #1ee8b620;color:#1ee8b650;font-size:9px;letter-spacing:1px;';
       footer.textContent = '⬡ SCAN COMPLETE — PROJECT DEFECTS PACKAGED FOR STRATEGIST RELAY';
       body.appendChild(footer);
+      const btn = document.getElementById('tsm-build-mission-btn');
+      if (btn) { btn.dataset.anomaly = body.innerText || ''; btn.style.display = 'block'; }
     },
     (err) => {
       const errDiv = document.createElement('div');
@@ -1538,6 +1542,23 @@ function speechPlay(){if(typeof responsiveVoice==='undefined'){alert('Responsive
 function speechPause(){if(typeof responsiveVoice!=='undefined')responsiveVoice.pause();speechSetState('paused');}
 function speechStop(){if(typeof responsiveVoice!=='undefined')responsiveVoice.cancel();speechSetState('idle');}
 function speechSetState(state){const pb=document.getElementById('speechPlayBtn'),ps=document.getElementById('speechPauseBtn'),st=document.getElementById('speechStopBtn');if(!pb)return;if(state==='speaking'){pb.style.display='none';ps.style.display='';st.style.display='';ps.className='hud-speech-btn speaking';}else if(state==='paused'){pb.style.display='';pb.textContent='▶ RESUME';pb.className='hud-speech-btn paused';ps.style.display='none';st.style.display='';}else{pb.style.display='';pb.textContent='🔊 SPEAK';pb.className='hud-speech-btn';ps.style.display='none';st.style.display='none';}}
+</script>
+<script>
+const TSM_MISSION_VERTICAL = 'construction';
+async function tsmLaunchMission() {
+  const btn = document.getElementById('tsm-build-mission-btn');
+  const panel = document.getElementById('tsm-mission-panel');
+  if (!btn || !panel || !window.TSMMission) return;
+  btn.style.display = 'none';
+  panel.style.display = 'block';
+  await TSMMission.launch({
+    vertical: TSM_MISSION_VERTICAL,
+    anomaly: btn.dataset.anomaly || '',
+    container: panel,
+    apiKey: localStorage.getItem('tsm_groq_key') || '',
+    onComplete: (m) => sessionStorage.setItem('TSM_MISSION_COMPLETE_CONSTRUCTION', JSON.stringify({ missionId: m.missionId, ts: Date.now() }))
+  });
+}
 </script>
 <script src="/js/tsm-mission-guide.js"></script>
 <script src="../..//js/tsm-mission-conductor.js"></script>
