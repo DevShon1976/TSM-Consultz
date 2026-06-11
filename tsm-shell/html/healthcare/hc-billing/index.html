@@ -665,7 +665,11 @@ function submitStep(stepNum) {
 // ─────────────────────────────────────────────
 //  CORE API CALL → Railway /api/hc/query
 // ─────────────────────────────────────────────
+let _apiQueue = Promise.resolve();
 async function callAPI(prompt) {
+  return _apiQueue = _apiQueue.then(() => _callAPI(prompt));
+}
+async function _callAPI(prompt) {
   const r = await fetch('/api/hc/query', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
