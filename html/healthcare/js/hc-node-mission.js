@@ -12,11 +12,11 @@ window.addEventListener('load', function () {
   let html = `
     <div id="tsm-mission" style="margin-top:16px;border-top:1px solid #0f4;padding-top:12px;">
       <div style="font-size:10px;letter-spacing:2px;color:#0f4;margin-bottom:8px;">MISSION OBJECTIVES · ${node.toUpperCase()}</div>
-      <div style="font-size:11px;color:#aaa;margin-bottom:12px;">
+      ${!['operations','financial','legal','vendors','tax','grants','staffing'].some(n => node.includes(n)) ? `<div style="font-size:11px;color:#aaa;margin-bottom:12px;">
         Patient: <strong style="color:#0f4">${patient.name}</strong> &nbsp;·&nbsp;
         Claim: <strong style="color:#0f4">${claim.cpt}</strong> &nbsp;·&nbsp;
         Payer: <strong style="color:#0f4">${patient.payer}</strong>
-      </div>`;
+      </div>` : ''}`;
   steps.forEach(([idx, obj], i) => {
     html += `
       <div id="ms-${idx}" style="background:#0a1a0a;border:1px solid #1a3a1a;border-radius:4px;padding:10px;margin-bottom:8px;${i > 0 ? 'opacity:0.4;pointer-events:none;' : ''}">
