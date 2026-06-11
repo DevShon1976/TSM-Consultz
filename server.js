@@ -68,29 +68,12 @@ async function groqChat(system, message, maxTokens) {
   }
   throw new Error('All Groq models rate limited. Try again later.');
 }
-  
-    body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
-      max_tokens: maxTokens,
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: message }
-      ]
-    })
-  });
-  if (!r.ok) {
-    const errText = await r.text();
-    throw new Error('Groq API error ' + r.status + ': ' + errText);
-  }
-  const data = await r.json();
-  return data?.choices?.[0]?.message?.content || '';
-}
 
 // JSON-returning variant for structured routes
 async function tsmAIJSON(prompt, fallback) {
   try {
     const groqKey = process.env.GROQ_KEY || process.env.GROQ_API_KEY;
-  if (!groqKey) return res.status(500).json({ error: 'GROQ_KEY not configured on server.' });
+  if (!groqKey) return fallback || null;
     const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
