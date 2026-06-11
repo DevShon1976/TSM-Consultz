@@ -141,7 +141,7 @@ const suites = [
 ];
 
 // ── HEALTH & STUB ROUTES ──────────────────────────────────────────────────────
-app.get('/health', (req, res) => res.json({ status: 'ok', v: 2 }));
+app.get('/health', (req, res) => res.json({ status: 'ok', v: 3 }));
 app.post('/api/bpo/query', (req, res) => res.json({ reply: 'ok' }));
 app.post('/api/wip/sector-ai', (req, res) => res.json({ content: 'ok' }));
 
