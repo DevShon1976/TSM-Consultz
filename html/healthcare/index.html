@@ -368,14 +368,6 @@ const NODE_MAP = {
   "pharmacy-node":"pharmacy","financial-node":"financial","legal-node":"legal","vendors-node":"vendors",
   "taxprep-node":"taxprep","grants-node":"grants"
 };
-TSMMissionQueue.getQueue()
-  billing:{title:"Prevent denial before payer adjudication",domain:"BILLING / CLAIMS",objectives:[
-    {id:0,label:"Review claim for all required fields",node:"billing-queue",domain:"billing",riskDelta:-8,strat:"Missing modifier on line 3 detected. Claim flagged for correction before submission.",workflow:0},
-    {id:1,label:"Verify NPI matches payer credentialing file",node:"credentialing",domain:"billing",riskDelta:-12,strat:"NPI mismatch resolved. Provider now active in payer network. Denial risk reduced.",workflow:0},
-    {id:2,label:"Check timely filing window for each payer",node:"denial-lab",domain:"denials",riskDelta:-15,strat:"Timely filing window: 90 days. 14 days remaining. Escalate to AR immediately.",workflow:1},
-    {id:3,label:"Submit via clearinghouse and monitor 277CA",node:"coding-review",domain:"coding",riskDelta:-20,strat:"277CA accepted. Claim in payer queue. Expected adjudication: 21 days.",workflow:2},
-    {id:4,label:"Post ERA payments and reconcile against fee schedule",node:"ar-followup",domain:"payments",riskDelta:-17,strat:"ERA posted. Variance of $42.10 identified. Secondary payer coordination initiated.",workflow:3}
-  ]},
   denials:{title:"Resolve active denial before appeal deadline",domain:"DENIALS / AR",objectives:[
     {id:0,label:"Identify denial reason code (CO/PR/OA)",node:"denial-lab",domain:"denials",riskDelta:-10,strat:"CO-197: Timely filing exceeded. Exception documentation required within 5 days.",workflow:0},
     {id:1,label:"Pull clinical documentation for medical necessity",node:"medical-node",domain:"medical",riskDelta:-14,strat:"Clinical docs attached. Medical necessity criteria partially met — query physician.",workflow:0},
@@ -722,6 +714,10 @@ window.openNode = openNode;
 </script>
 
 <!-- jsPDF -->
+<script src="/healthcare/js/mission-bridge.js"></script>
+<script src="/healthcare/js/mission-panel.js"></script>
+<script src="/healthcare/js/hc-universal-tab-ai.js"></script>
+<script src="/healthcare/js/hc-node-mission.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <!-- ═══════════════════════════════════════════════════
@@ -1335,6 +1331,5 @@ window.addEventListener('load', function () {
   setTimeout(() => GuidedMission.init(), 800);
 });
 </script>
-<script src="js/tsm-mission-queue.js"></script>
 </body>
 </html>
