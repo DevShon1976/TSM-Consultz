@@ -80,6 +80,29 @@
     </div>`;
   }
 
+  // ── WRITE MISSION TO QUEUE ─────────────────────────────────────────────────
+  function writeMission(key, d, narrativeTxt) {
+    const mission = {
+      id: 'mission_' + key + '_' + Date.now(),
+      node: key,
+      status: 'active',
+      created: new Date().toISOString(),
+      completion_pct: 0,
+      progression_steps: d.queue.map((item, i) => ({
+        label: 'Step ' + (i + 1),
+        detail: item,
+        status: 'pending'
+      }))
+    };
+    localStorage.setItem('tsm_active_mission', JSON.stringify(mission));
+    const queue = JSON.parse(localStorage.getItem('tsm_mission_queue') || '[]');
+    const idx = queue.findIndex(q => q.node === key && q.status === 'active');
+    if(idx === -1) queue.push(mission);
+    else queue[idx] = mission;
+    localStorage.setItem('tsm_mission_queue', JSON.stringify(queue));
+    console.log('[HC-TAB-AI] Mission written:', mission.id);
+  }
+
   // ── GENERATE FULL NARRATIVE via API ───────────────────────────────────────
   window.generateNodeNarrative = function(key) {
     const d = NODE_DATA[key] || NODE_DATA.operations;
@@ -102,9 +125,12 @@
     .then(data => {
       const txt = data.reply || data.content || data.message || d.ai;
       if(el) el.textContent = txt;
+      writeMission(key, d, txt);
     })
     .catch(() => {
-      if(el) el.textContent = d.ai + '\n\n[Strategist relay: resolve ' + d.queue[0] + ' within SLA window. Owner: ' + d.owner + '. CONFIDENCE: 94%]';
+      const fallback = d.ai + '\n\n[Strategist relay: resolve ' + d.queue[0] + ' within SLA window. Owner: ' + d.owner + '. CONFIDENCE: 94%]';
+      if(el) el.textContent = fallback;
+      writeMission(key, d, fallback);
     });
   };
 
