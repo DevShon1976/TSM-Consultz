@@ -166,8 +166,7 @@ const GuidedMission = (function () {
         1: { node: 'billing', instruction: 'A claim for CPT 99215 was denied PR-96 (non-covered charge — patient responsibility). Review the EOB and identify the correct next action.', fields: [{ label: 'CPT', value: '99215 — E/M Level 5', editable: false }, { label: 'Payer', value: 'UnitedHealthcare Choice Plus', editable: false }, { label: 'Denial Code', value: 'PR-96', editable: false }, { label: 'Denial Reason', value: 'Non-covered charge — patient responsibility', editable: false }, { label: 'Correct Action', value: '', editable: true, correct: 'Bill patient directly — PR codes are patient responsibility, not payer liability', hint: 'What does a PR denial code mean for collections?' }], action: { label: 'Submit Patient Bill', validates: true }, success: 'Patient statement generated for $248. Claim correctly closed as patient responsibility.', learn: 'PR (Patient Responsibility) denial codes mean the payer has processed the claim correctly — the balance is owed by the patient, not the payer. Never appeal a PR denial. Generate a patient statement and route to patient collections.' }
       }
     },
-
-  operations: {
+    operations: {
       patient: null,
       claim: null,
       objectives: {
