@@ -113,12 +113,8 @@
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
-        sector: 'HEALTHCARE',
-        node: key.toUpperCase(),
-        context: 'Generate WIP executive narrative, HITL BNCA, owner lane, strategist relay, and CFO-ready next actions.',
-        queue: d.queue,
-        risk: d.risk,
-        owner: d.owner
+        message: `Generate WIP executive narrative for ${key.toUpperCase()} node. Queue: ${d.queue.join(', ')}. Risk: ${d.risk}. Owner: ${d.owner}. Include HITL BNCA, owner lane, strategist relay, and CFO-ready next actions.`,
+        system: 'You are a healthcare operations AI for TSM Command. Be precise and data-driven.'
       })
     })
     .then(r => r.json())
