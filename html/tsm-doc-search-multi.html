@@ -462,6 +462,16 @@ body::before {
 
 mark { background: rgba(30,232,182,0.2); color: var(--accent); border-radius: 2px; padding: 0 1px; }
  
+.defect-row {
+  display: flex; flex-wrap: wrap; gap: 5px; align-items: center;
+  margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border);
+}
+.defect-chip {
+  font-family: var(--mono); font-size: 9px; padding: 2px 8px;
+  border-radius: 4px; white-space: nowrap; letter-spacing: .04em;
+  background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.25);
+}
+ 
 /* ─── DOC ROUTER UPLOAD ──────────────────────────── */
 .upload-zone {
   border: 2px dashed var(--border-hi);
@@ -728,20 +738,20 @@ const VERTICALS = {
     storageKey: "tsm_doc_index_re",
     searchPlaceholder: "Search by property, listing #, escrow, address, agent...",
     nodes: {
-      "re-uploader":   { label:"Doc Uploader",     route:"/html/reo-pro/reo-doc-uploader.html"     },
-      "re-war-room":   { label:"War Room",         route:"/html/reo-pro/reo-war-room.html"         },
-      "re-strategist": { label:"Strategist",       route:"/html/reo-pro/reo-strategist.html"       },
-      "re-exec":       { label:"Executive Portal", route:"/html/reo-pro/reo-executive-portal.html" },
-      "re-guide":      { label:"User Guide",       route:"/html/reo-pro/re-guide.html"             },
-      "strategist":    { label:"Strategist",       route:null },
-      "bnca-engine":   { label:"BNCA Escalated",   route:null },
+      "re-finance":     { label:"Finance Node",   route:"/html/real-estate/re-war-room.html"    },
+      "re-market":      { label:"Market Intel",   route:"/html/real-estate/re-war-room.html"    },
+      "re-strategist":  { label:"Strategist",     route:"/html/real-estate/re-strategist.html"  },
+      "re-exec":        { label:"Exec Portal",    route:"/html/real-estate/re-exec-portal.html" },
+      "re-doc-command": { label:"Doc Command",    route:"/html/real-estate/re-doc-command.html" },
+      "strategist":     { label:"Strategist",     route:null },
+      "bnca-engine":    { label:"BNCA Escalated", route:null },
     },
     seed: [
-      { fileName:"Listing_Agreement_123Maple.record",  documentType:"CONTRACT",       vendor:"Keller Williams",      invoiceNo:"LST-0091", exclusionCode:"",       amount:0,      sourceNode:"re-uploader",   routing:["re-uploader","re-war-room","strategist"],            timestamp:Date.now()-1*3600000, _ext:{client:"Maple St Holdings", ref:"LST-0091"} },
-      { fileName:"Title_Report_OakRidge.record",       documentType:"TITLE DOCUMENT", vendor:"First American Title", invoiceNo:"TTL-4471", exclusionCode:"LIEN-2", amount:0,      sourceNode:"re-war-room",   routing:["re-war-room","strategist","bnca-engine"],            timestamp:Date.now()-3*3600000, _ext:{client:"Oak Ridge Estates", ref:"TTL-4471"} },
-      { fileName:"Closing_Disclosure_Unit12B.record",  documentType:"DOCUMENT REPORT",vendor:"Premier Escrow Co",    invoiceNo:"CD-12B",   exclusionCode:"",       amount:412000, sourceNode:"re-strategist", routing:["re-strategist","strategist"],                        timestamp:Date.now()-1*86400000,_ext:{client:"Unit 12B Buyer",   ref:"CD-12B"} },
-      { fileName:"BNCA_Title_OakRidge.report",         documentType:"ESCALATION",     vendor:"First American Title", invoiceNo:"TTL-4471", exclusionCode:"LIEN-2", amount:0,      sourceNode:"re-war-room",   routing:["re-war-room","strategist","bnca-engine"],            timestamp:Date.now()-4*3600000, _ext:{client:"Oak Ridge Estates", ref:"ESC-TTL4471"} },
-      { fileName:"Inspection_Report_456Cedar.record",  documentType:"DOCUMENT REPORT",vendor:"AZ Home Inspections",  invoiceNo:"INS-3320", exclusionCode:"COND-9", amount:0,      sourceNode:"re-uploader",   routing:["re-uploader","re-war-room","strategist"],            timestamp:Date.now()-2*86400000,_ext:{client:"456 Cedar Ave",    ref:"INS-3320"} },
+      { fileName:"Listing_Agreement_123Maple.record",  documentType:"CONTRACT",       vendor:"Keller Williams",      invoiceNo:"LST-0091", exclusionCode:"",       amount:0,      sourceNode:"re-doc-command",routing:["re-doc-command","re-strategist","strategist"],       timestamp:Date.now()-1*3600000, _ext:{client:"Maple St Holdings", ref:"LST-0091", defectFlags:[]} },
+      { fileName:"Title_Report_OakRidge.record",       documentType:"TITLE DOCUMENT", vendor:"First American Title", invoiceNo:"TTL-4471", exclusionCode:"LIEN-2", amount:0,      sourceNode:"re-strategist", routing:["re-strategist","strategist","bnca-engine"],          timestamp:Date.now()-3*3600000, _ext:{client:"Oak Ridge Estates", ref:"TTL-4471", defectFlags:["Title Defect"]} },
+      { fileName:"Closing_Disclosure_Unit12B.record",  documentType:"DOCUMENT REPORT",vendor:"Premier Escrow Co",    invoiceNo:"CD-12B",   exclusionCode:"",       amount:412000, sourceNode:"re-exec",       routing:["re-exec","strategist"],                              timestamp:Date.now()-1*86400000,_ext:{client:"Unit 12B Buyer",   ref:"CD-12B", defectFlags:[]} },
+      { fileName:"BNCA_Title_OakRidge.report",         documentType:"ESCALATION",     vendor:"First American Title", invoiceNo:"TTL-4471", exclusionCode:"LIEN-2", amount:0,      sourceNode:"re-strategist", routing:["re-strategist","strategist","bnca-engine"],          timestamp:Date.now()-4*3600000, _ext:{client:"Oak Ridge Estates", ref:"ESC-TTL4471", defectFlags:["Title Defect"]} },
+      { fileName:"Inspection_Report_456Cedar.record",  documentType:"DOCUMENT REPORT",vendor:"AZ Home Inspections",  invoiceNo:"INS-3320", exclusionCode:"COND-9", amount:0,      sourceNode:"re-doc-command", routing:["re-doc-command","re-strategist","strategist"],      timestamp:Date.now()-2*86400000,_ext:{client:"456 Cedar Ave",    ref:"INS-3320", defectFlags:["Inspection Issues"]} },
     ]
   },
   leg: {
@@ -804,6 +814,15 @@ const DOC_TYPE_COLORS = {
 };
 
 function dtColor(t) { return DOC_TYPE_COLORS[t] || { bg:"rgba(148,163,184,0.12)", text:"#94a3b8" }; }
+ 
+const DEFECT_FLAG_ICONS = {
+  "Financing Failure": "💰",
+  "Appraisal Gap":     "📐",
+  "Title Defect":      "📋",
+  "Inspection Issues": "🔍",
+  "UW Conditions":     "📄",
+  "Closing Delay":     "🏠",
+};
 
 /* ═══════════════════════════════════════════════════
    STATE
@@ -910,6 +929,10 @@ function renderCard(doc, query) {
   const dateStr = date.toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" });
   const timeStr = date.toLocaleTimeString("en-US", { hour:"2-digit", minute:"2-digit" });
   const ext     = doc._ext || {};
+  const defectFlags = ext.defectFlags || [];
+  const defectHtml  = defectFlags.length
+    ? `<div class="defect-row">${defectFlags.map(f => `<span class="defect-chip">${DEFECT_FLAG_ICONS[f] || "⚠️"} ${hl(f, query)}</span>`).join("")}</div>`
+    : "";
 
   const nodeTagsHtml = (doc.routing || []).map(nid => {
     const n   = def.nodes[nid] || VERTICALS.fo.nodes[nid] || { label: nid, color: "#94a3b8" };
@@ -943,6 +966,7 @@ function renderCard(doc, query) {
       <div class="meta-item"><span class="meta-label">Indexed:</span><span class="meta-val">${dateStr} ${timeStr}</span></div>
     </div>
     <div class="routing-row"><span class="routing-label">Routed to:</span>${nodeTagsHtml}</div>
+    ${defectHtml}
   </div>`;
 }
 
@@ -1176,10 +1200,11 @@ function routeDocument(fileName, classification) {
       sourceNode:    r.sourceNode || nodes[0] || "strategist",
       routing:       nodes,
       timestamp:     Date.now(),
-      _ext: {
-        client:  classification.client  || "",
-        ref:     classification.ref     || "",
-        summary: classification.summary || ""
+     _ext: {
+        client:      classification.client  || "",
+        ref:         classification.ref     || "",
+        summary:     classification.summary || "",
+        defectFlags: Array.isArray(classification.defectFlags) ? classification.defectFlags : []
       }
     };
  

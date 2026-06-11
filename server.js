@@ -649,7 +649,7 @@ const DOC_ROUTER_NODES = {
   ins: ['ins-az', 'ins-hub', 'ins-bpo', 'ins-pitch', 'ins-index', 'strategist'],
   con: ['con-hub', 'con-pitch', 'con-permits', 'con-strategist', 'con-bpo', 'con-demo', 'con-index', 'strategist'],
   bpo: ['bpo-cmd', 'bpo-int1', 'bpo-access', 'bpo-launch', 'bpo-sops', 'bpo-sales', 'bpo-services', 'bpo-website', 'strategist'],
-  re:  ['re-uploader', 're-war-room', 're-strategist', 're-exec', 're-guide', 'strategist'],
+  re:  ['re-finance', 're-market', 're-strategist', 're-exec', 're-doc-command', 'strategist'],
   leg: ['leg-index', 'leg-ediscovery', 'leg-strategist', 'leg-exec', 'strategist'],
   hc:  ['hc-denial', 'strategist'],
 };
@@ -679,6 +679,7 @@ Return JSON matching exactly this schema:
   "client": string or "",
   "ref": string or "",
   "summary": one short sentence describing the document,
+  "defectFlags": array of short strings — specific issues/exceptions found in the document. For vertical "re", choose ONLY from this fixed set when applicable: ["Financing Failure","Appraisal Gap","Title Defect","Inspection Issues","UW Conditions","Closing Delay"], and use them to inform routing.re.sourceNode (Financing Failure->re-finance, Appraisal Gap->re-market, Title Defect/UW Conditions->re-strategist, Closing Delay->re-exec, Inspection Issues->re-doc-command). For all other verticals, use concise 2-4 word freeform issue labels relevant to the content (e.g. "Coverage Gap", "Code Violation", "Late Filing"), or [] if no issues are present,
   "bnca": boolean — true ONLY if the document represents an anomaly, discrepancy, denial, dispute, or risk that should escalate to BNCA review
 }
 
@@ -687,7 +688,7 @@ fo:  ${DOC_ROUTER_NODES.fo.join(', ')}
 ins: ${DOC_ROUTER_NODES.ins.join(', ')}
 con: ${DOC_ROUTER_NODES.con.join(', ')}
 bpo: ${DOC_ROUTER_NODES.bpo.join(', ')}
-re:  ${DOC_ROUTER_NODES.re.join(', ')}
+re:  ${DOC_ROUTER_NODES.re.join(', ')}  — finance/dti/loan/mortgage->re-finance, appraisal/valuation/comps->re-market, title/lien/compliance/disclosure->re-strategist, closing/escrow/hoa/wire->re-exec, intake/upload/extract->re-doc-command
 leg: ${DOC_ROUTER_NODES.leg.join(', ')}
 hc:  ${DOC_ROUTER_NODES.hc.join(', ')}
 
