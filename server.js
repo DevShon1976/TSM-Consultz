@@ -189,6 +189,7 @@ app.post('/api/hc/query', async (req, res) => {
     var msg = body.message || body.question || body.query;
     if (!msg) return res.status(400).json({ ok: false, error: 'Query required' });
     var a = await groqChat(sys, msg, body.maxTokens || 1024);
+    console.log('[HC QUERY DEBUG] a =', JSON.stringify(a));
     return res.json({ ok: true, output: a, answer: a, createdAt: new Date().toISOString() });
   } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
