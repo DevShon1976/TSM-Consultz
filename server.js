@@ -34,8 +34,40 @@ app.use((req, res, next) => {
 
 // ── GROQ AI ENGINE ────────────────────────────────────────────────────────────
 // Primary: fetch-based (reliable on Railway)
+const GROQ_MODELS = [
+  'llama-3.3-70b-versatile',
+  'llama3-70b-8192',
+  'llama3-8b-8192',
+  'gemma2-9b-it'
+];
+
 async function groqChat(system, message, maxTokens) {
   const groqKey = process.env.GROQ_KEY || process.env.GROQ_API_KEY;
+  for (const model of GROQ_MODELS) {
+    try {
+      const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + groqKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model,
+          max_tokens: maxTokens,
+          messages: [{ role: 'system', content: system }, { role: 'user', content: message }]
+        })
+      });
+      if (!r.ok) {
+        const err = await r.text();
+        if (r.status === 429 || r.status === 503) continue;
+        throw new Error('Groq API error ' + r.status + ': ' + err);
+      }
+      const data = await r.json();
+      return data?.choices?.[0]?.message?.content || '';
+    } catch (e) {
+      if (e.message.includes('429') || e.message.includes('rate_limit')) continue;
+      throw e;
+    }
+  }
+  throw new Error('All Groq models rate limited. Try again later.');
+}
   // using fetch directly
   const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
