@@ -28,6 +28,9 @@
   --ins:  #a78bfa;  /* Insurance – violet */
   --con:  #fbbf24;  /* Construction – amber */
   --bpo:  #34d399;  /* BPO – emerald */
+  --reo:  #fb7185;  /* Real Estate – rose */
+  --leg:  #818cf8;  /* Legal – indigo */
+  --hc:   #fb923c;  /* Healthcare – orange */
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -166,6 +169,9 @@ body::before {
 .vtab.active[data-v="ins"] { background: rgba(167,139,250,0.08); color: var(--ins); border-bottom: 2px solid var(--ins); }
 .vtab.active[data-v="con"] { background: rgba(251,191,36,0.08);  color: var(--con); border-bottom: 2px solid var(--con); }
 .vtab.active[data-v="bpo"] { background: rgba(52,211,153,0.08);  color: var(--bpo); border-bottom: 2px solid var(--bpo); }
+.vtab.active[data-v="re"]  { background: rgba(251,113,133,0.08); color: var(--reo); border-bottom: 2px solid var(--reo); }
+.vtab.active[data-v="leg"] { background: rgba(129,140,248,0.08); color: var(--leg); border-bottom: 2px solid var(--leg); }
+.vtab.active[data-v="hc"]  { background: rgba(251,146,60,0.08);  color: var(--hc);  border-bottom: 2px solid var(--hc); }
 
 .vtab-dot {
   width: 6px; height: 6px;
@@ -176,6 +182,9 @@ body::before {
 .vtab[data-v="ins"] .vtab-dot { background: var(--ins); }
 .vtab[data-v="con"] .vtab-dot { background: var(--con); }
 .vtab[data-v="bpo"] .vtab-dot { background: var(--bpo); }
+.vtab[data-v="re"]  .vtab-dot { background: var(--reo); }
+.vtab[data-v="leg"] .vtab-dot { background: var(--leg); }
+.vtab[data-v="hc"]  .vtab-dot { background: var(--hc); }
 
 /* ─── NODE QUICK LINKS ───────────────────────────── */
 .node-links {
@@ -220,6 +229,12 @@ body::before {
 .node-link.con:hover { background: rgba(251,191,36,0.18); }
 .node-link.bpo { background: rgba(52,211,153,0.08);  color: var(--bpo); border: 1px solid rgba(52,211,153,0.2); }
 .node-link.bpo:hover { background: rgba(52,211,153,0.18); }
+.node-link.re  { background: rgba(251,113,133,0.08); color: var(--reo); border: 1px solid rgba(251,113,133,0.2); }
+.node-link.re:hover  { background: rgba(251,113,133,0.18); }
+.node-link.leg { background: rgba(129,140,248,0.08); color: var(--leg); border: 1px solid rgba(129,140,248,0.2); }
+.node-link.leg:hover { background: rgba(129,140,248,0.18); }
+.node-link.hc  { background: rgba(251,146,60,0.08);  color: var(--hc);  border: 1px solid rgba(251,146,60,0.2); }
+.node-link.hc:hover  { background: rgba(251,146,60,0.18); }
 
 /* ─── SEARCH BAR ─────────────────────────────────── */
 .search-bar { display: flex; gap: 10px; margin-bottom: 14px; align-items: center; }
@@ -446,6 +461,47 @@ body::before {
 .empty-state .empty-title { color: var(--muted); font-size: 13px; margin-bottom: 4px; }
 
 mark { background: rgba(30,232,182,0.2); color: var(--accent); border-radius: 2px; padding: 0 1px; }
+ 
+/* ─── DOC ROUTER UPLOAD ──────────────────────────── */
+.upload-zone {
+  border: 2px dashed var(--border-hi);
+  border-radius: 10px;
+  padding: 22px;
+  text-align: center;
+  margin-bottom: 16px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+  font-family: var(--mono);
+}
+.upload-zone:hover, .upload-zone.dragover {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+.upload-zone .uz-title { color: var(--text); font-size: 13px; margin-bottom: 4px; }
+.upload-zone .uz-sub   { color: var(--dim); font-size: 10px; }
+#doc-file-input { display: none; }
+ 
+.upload-queue { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.uq-item {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; font-family: var(--mono); font-size: 11px;
+  animation: fadeSlideIn .18s ease-out;
+}
+.uq-name { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 260px; }
+.uq-status { color: var(--dim); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.uq-status.ok  { color: var(--accent); }
+.uq-status.err { color: var(--danger); }
+.uq-badge {
+  font-size: 9px; padding: 2px 8px; border-radius: 4px;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.uq-spinner {
+  width: 10px; height: 10px; border: 2px solid var(--border);
+  border-top-color: var(--accent); border-radius: 50%;
+  animation: uq-spin .7s linear infinite; display: inline-block;
+}
+@keyframes uq-spin { to { transform: rotate(360deg); } }
 
 @keyframes fadeSlideIn {
   from { opacity: 0; transform: translateY(-5px); }
@@ -459,6 +515,7 @@ mark { background: rgba(30,232,182,0.2); color: var(--accent); border-radius: 2p
   .doc-card-top { flex-direction: column; }
 }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.js"></script>
 </head>
 <body>
 <div class="page">
@@ -476,12 +533,25 @@ mark { background: rgba(30,232,182,0.2); color: var(--accent); border-radius: 2p
     </div>
   </div>
 
+  <!-- DOC ROUTER UPLOAD -->
+  <div class="upload-zone" id="upload-zone" onclick="document.getElementById('doc-file-input').click()">
+    <div class="uz-title">⬆ Drop files here or click to upload</div>
+    <div class="uz-sub">PDF · images · text/CSV — auto-classified &amp; routed to the right war room(s)</div>
+    <input type="file" id="doc-file-input" multiple accept=".pdf,.txt,.csv,.png,.jpg,.jpeg,.webp">
+  </div>
+  <div class="upload-queue" id="upload-queue"></div>
+ 
   <!-- VERTICAL TABS -->
   <div class="vertical-tabs">
     <button class="vtab active" data-v="fo"  onclick="switchVertical('fo')"><span class="vtab-dot"></span>FinOps</button>
     <button class="vtab"        data-v="ins" onclick="switchVertical('ins')"><span class="vtab-dot"></span>Insurance</button>
     <button class="vtab"        data-v="con" onclick="switchVertical('con')"><span class="vtab-dot"></span>Construction</button>
     <button class="vtab"        data-v="bpo" onclick="switchVertical('bpo')"><span class="vtab-dot"></span>BPO Internal</button>
+    <button class="vtab"        data-v="re" onclick="switchVertical('re')"><span class="vtab-dot"></span>Real Estate</button>
+    <button class="vtab"        data-v="leg" onclick="switchVertical('leg')"><span class="vtab-dot"></span>Legal</button>
+    <button class="vtab"        data-v="hc"  onclick="switchVertical('hc')"><span class="vtab-dot"></span>Healthcare</button>
+
+
   </div>
 
   <!-- NODE QUICK LINKS (dynamic) -->
@@ -648,8 +718,73 @@ const VERTICALS = {
       { fileName:"Invoice_ClientServices_Jul.record", documentType:"VENDOR INVOICE",  vendor:"BPO Services",    invoiceNo:"INV-BPO-0774",exclusionCode:"AP-14",   amount:22500,  sourceNode:"bpo-cmd",  routing:["bpo-cmd","strategist"],                  timestamp:Date.now()-5*3600000, _ext:{client:"BPO Services",   ref:"INV-0774"} },
       { fileName:"BNCA_SLA_Acme_June.report",        documentType:"ESCALATION",      vendor:"Acme Corp",        invoiceNo:"SLA-06-24",   exclusionCode:"SLA-BRK", amount:0,      sourceNode:"bpo-cmd",  routing:["bpo-cmd","strategist","bnca-engine"],     timestamp:Date.now()-6*3600000, _ext:{client:"Acme Corp",      ref:"ESC-SLA"} },
       { fileName:"SOP_Document_CallHandling_v3.record",documentType:"POLICY",        vendor:"Internal",         invoiceNo:"SOP-CH-003",  exclusionCode:"",        amount:0,      sourceNode:"bpo-sops", routing:["bpo-sops","strategist"],                  timestamp:Date.now()-1*86400000,_ext:{client:"Internal",      ref:"SOP-003"} },
+    { fileName:"SOP_Document_CallHandling_v3.record",documentType:"POLICY",        vendor:"Internal",         invoiceNo:"SOP-CH-003",  exclusionCode:"",        amount:0,      sourceNode:"bpo-sops", routing:["bpo-sops","strategist"],                  timestamp:Date.now()-1*86400000,_ext:{client:"Internal",      ref:"SOP-003"} },
     ]
-  }
+  },
+  re: {
+    label: "Real Estate",
+    color: "#fb7185",
+    cls:   "re",
+    storageKey: "tsm_doc_index_re",
+    searchPlaceholder: "Search by property, listing #, escrow, address, agent...",
+    nodes: {
+      "re-uploader":   { label:"Doc Uploader",     route:"/html/reo-pro/reo-doc-uploader.html"     },
+      "re-war-room":   { label:"War Room",         route:"/html/reo-pro/reo-war-room.html"         },
+      "re-strategist": { label:"Strategist",       route:"/html/reo-pro/reo-strategist.html"       },
+      "re-exec":       { label:"Executive Portal", route:"/html/reo-pro/reo-executive-portal.html" },
+      "re-guide":      { label:"User Guide",       route:"/html/reo-pro/re-guide.html"             },
+      "strategist":    { label:"Strategist",       route:null },
+      "bnca-engine":   { label:"BNCA Escalated",   route:null },
+    },
+    seed: [
+      { fileName:"Listing_Agreement_123Maple.record",  documentType:"CONTRACT",       vendor:"Keller Williams",      invoiceNo:"LST-0091", exclusionCode:"",       amount:0,      sourceNode:"re-uploader",   routing:["re-uploader","re-war-room","strategist"],            timestamp:Date.now()-1*3600000, _ext:{client:"Maple St Holdings", ref:"LST-0091"} },
+      { fileName:"Title_Report_OakRidge.record",       documentType:"TITLE DOCUMENT", vendor:"First American Title", invoiceNo:"TTL-4471", exclusionCode:"LIEN-2", amount:0,      sourceNode:"re-war-room",   routing:["re-war-room","strategist","bnca-engine"],            timestamp:Date.now()-3*3600000, _ext:{client:"Oak Ridge Estates", ref:"TTL-4471"} },
+      { fileName:"Closing_Disclosure_Unit12B.record",  documentType:"DOCUMENT REPORT",vendor:"Premier Escrow Co",    invoiceNo:"CD-12B",   exclusionCode:"",       amount:412000, sourceNode:"re-strategist", routing:["re-strategist","strategist"],                        timestamp:Date.now()-1*86400000,_ext:{client:"Unit 12B Buyer",   ref:"CD-12B"} },
+      { fileName:"BNCA_Title_OakRidge.report",         documentType:"ESCALATION",     vendor:"First American Title", invoiceNo:"TTL-4471", exclusionCode:"LIEN-2", amount:0,      sourceNode:"re-war-room",   routing:["re-war-room","strategist","bnca-engine"],            timestamp:Date.now()-4*3600000, _ext:{client:"Oak Ridge Estates", ref:"ESC-TTL4471"} },
+      { fileName:"Inspection_Report_456Cedar.record",  documentType:"DOCUMENT REPORT",vendor:"AZ Home Inspections",  invoiceNo:"INS-3320", exclusionCode:"COND-9", amount:0,      sourceNode:"re-uploader",   routing:["re-uploader","re-war-room","strategist"],            timestamp:Date.now()-2*86400000,_ext:{client:"456 Cedar Ave",    ref:"INS-3320"} },
+    ]
+  },
+  leg: {
+    label: "Legal",
+    color: "#818cf8",
+    cls:   "leg",
+    storageKey: "tsm_doc_index_leg",
+    searchPlaceholder: "Search by matter, case #, client, filing, exhibit...",
+    nodes: {
+      "leg-index":      { label:"Suite Index",      route:"/html/legal-pro/index.html"                },
+      "leg-ediscovery": { label:"eDiscovery",       route:"/html/legal-pro/ep1.html"                  },
+      "leg-strategist": { label:"Main Strategist",  route:"/html/legal-pro/legal-main-strategist.html"},
+      "leg-exec":       { label:"Executive Portal", route:"/html/legal-pro/legal-executive-portal.html"},
+      "strategist":     { label:"Strategist",       route:null },
+      "bnca-engine":    { label:"BNCA Escalated",   route:null },
+    },
+    seed: [
+      { fileName:"Complaint_Doe_v_Acme.record",        documentType:"FILING",         vendor:"Superior Court",   invoiceNo:"CV-2024-0091", exclusionCode:"",       amount:0,    sourceNode:"leg-index",      routing:["leg-index","leg-strategist","strategist"],                 timestamp:Date.now()-1*3600000, _ext:{client:"Jane Doe",   ref:"CV-2024-0091"} },
+      { fileName:"Discovery_Production_Set1.record",   documentType:"DOCUMENT REPORT",vendor:"",                 invoiceNo:"DSC-001",      exclusionCode:"PRIV-3", amount:0,    sourceNode:"leg-ediscovery", routing:["leg-ediscovery","leg-strategist","strategist","bnca-engine"],timestamp:Date.now()-3*3600000, _ext:{client:"Acme Corp",  ref:"DSC-001"} },
+      { fileName:"Engagement_Agreement_Reyes.record",  documentType:"CONTRACT",       vendor:"",                 invoiceNo:"EA-0042",      exclusionCode:"",       amount:0,    sourceNode:"leg-index",      routing:["leg-index","strategist"],                                  timestamp:Date.now()-1*86400000,_ext:{client:"Carlos Reyes", ref:"EA-0042"} },
+      { fileName:"BNCA_Discovery_Set1.report",         documentType:"ESCALATION",     vendor:"",                 invoiceNo:"DSC-001",      exclusionCode:"PRIV-3", amount:0,    sourceNode:"leg-ediscovery", routing:["leg-ediscovery","leg-strategist","strategist","bnca-engine"],timestamp:Date.now()-4*3600000, _ext:{client:"Acme Corp",  ref:"ESC-DSC001"} },
+      { fileName:"Invoice_OutsideCounsel_Jul.record",  documentType:"VENDOR INVOICE", vendor:"Smith & Park LLP", invoiceNo:"INV-SP-771",   exclusionCode:"AP-9",   amount:18500,sourceNode:"leg-strategist", routing:["leg-strategist","strategist"],                             timestamp:Date.now()-2*86400000,_ext:{client:"Internal",   ref:"INV-771"} },
+    ]
+  },
+  hc: {
+    label: "Healthcare",
+    color: "#fb923c",
+    cls:   "hc",
+    storageKey: "tsm_doc_index_hc",
+    searchPlaceholder: "Search by patient, claim #, payer, CPT/denial code...",
+    nodes: {
+      "hc-denial":   { label:"Denial War Room", route:"/html/hc-denial-war-room.html" },
+      "strategist":  { label:"Strategist",      route:null },
+      "bnca-engine": { label:"BNCA Escalated",  route:null },
+    },
+    seed: [
+      { fileName:"Denial_CLM-HC-7731.record",       documentType:"DENIAL",       vendor:"Aetna",  invoiceNo:"CLM-HC-7731", exclusionCode:"CO-50",  amount:8200,  sourceNode:"hc-denial", routing:["hc-denial","strategist"],                  timestamp:Date.now()-1*3600000, _ext:{client:"Patient #4471", ref:"CLM-HC-7731"} },
+      { fileName:"Appeal_Letter_CLM-HC-7731.record",documentType:"CLAIM APPEAL", vendor:"Aetna",  invoiceNo:"CLM-HC-7731", exclusionCode:"CO-50",  amount:8200,  sourceNode:"hc-denial", routing:["hc-denial","strategist","bnca-engine"],    timestamp:Date.now()-2*3600000, _ext:{client:"Patient #4471", ref:"APL-7731"} },
+      { fileName:"BNCA_Denial_CLM-HC-7731.report",  documentType:"ESCALATION",   vendor:"Aetna",  invoiceNo:"CLM-HC-7731", exclusionCode:"CO-50",  amount:8200,  sourceNode:"hc-denial", routing:["hc-denial","strategist","bnca-engine"],    timestamp:Date.now()-3*3600000, _ext:{client:"Patient #4471", ref:"ESC-7731"} },
+      { fileName:"EOB_BCBS_July.record",            documentType:"REMITTANCE",   vendor:"BCBS",   invoiceNo:"EOB-07-24",   exclusionCode:"",       amount:15600, sourceNode:"hc-denial", routing:["hc-denial","strategist"],                  timestamp:Date.now()-1*86400000,_ext:{client:"Multi-patient",  ref:"EOB-07"} },
+      { fileName:"Prior_Auth_Request_MRI.record",   documentType:"DOCUMENT REPORT",vendor:"UnitedHealthcare",invoiceNo:"PA-3309", exclusionCode:"PA-PEND",amount:0,    sourceNode:"hc-denial", routing:["hc-denial","strategist"],                  timestamp:Date.now()-2*86400000,_ext:{client:"Patient #2218",  ref:"PA-3309"} },
+    ]
+  },
 };
 
 const DOC_TYPE_COLORS = {
@@ -662,6 +797,10 @@ const DOC_TYPE_COLORS = {
   "REMITTANCE":       { bg:"rgba(34,211,160,0.12)",  text:"#22d3a0" },
   "DOCUMENT REPORT":  { bg:"rgba(148,163,184,0.12)", text:"#94a3b8" },
   "ESCALATION":       { bg:"rgba(248,113,113,0.12)", text:"#f87171" },
+  "CONTRACT":         { bg:"rgba(129,140,248,0.12)", text:"#818cf8" },
+  "FILING":           { bg:"rgba(251,113,133,0.12)", text:"#fb7185" },
+  "TITLE DOCUMENT":   { bg:"rgba(45,212,191,0.12)",  text:"#2dd4bf" },
+  "DENIAL":           { bg:"rgba(251,146,60,0.12)",  text:"#fb923c" },
 };
 
 function dtColor(t) { return DOC_TYPE_COLORS[t] || { bg:"rgba(148,163,184,0.12)", text:"#94a3b8" }; }
@@ -930,6 +1069,192 @@ window.addEventListener("storage", e => {
 /* ═══════════════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════
+   DOC ROUTER — UPLOAD / EXTRACT / CLASSIFY / ROUTE
+═══════════════════════════════════════════════════ */
+if (window.pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.js';
+}
+ 
+const DOC_ROUTER_ENDPOINT = '/api/doc-router/classify';
+ 
+function loadIndexFor(v) {
+  try { return JSON.parse(localStorage.getItem(VERTICALS[v].storageKey) || "[]"); } catch(e) { return []; }
+}
+function saveIndexFor(v, docs) {
+  try { localStorage.setItem(VERTICALS[v].storageKey, JSON.stringify(docs)); } catch(e) {}
+}
+ 
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload  = () => resolve(r.result.split(",")[1]);
+    r.onerror = () => reject(new Error("read_failed"));
+    r.readAsDataURL(file);
+  });
+}
+ 
+function fileToText(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload  = () => resolve(r.result);
+    r.onerror = () => reject(new Error("read_failed"));
+    r.readAsText(file);
+  });
+}
+ 
+async function extractPdf(file) {
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  let text = "";
+  const maxPages = Math.min(pdf.numPages, 5);
+  for (let i = 1; i <= maxPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map(it => it.str).join(" ") + "\n";
+  }
+  if (text.trim().length > 50) return { type: "text", value: text };
+ 
+  // Scanned PDF fallback — render page 1 to image for vision model
+  const page = await pdf.getPage(1);
+  const viewport = page.getViewport({ scale: 1.5 });
+  const canvas = document.createElement("canvas");
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  await page.render({ canvasContext: canvas.getContext("2d"), viewport }).promise;
+  return { type: "image", value: canvas.toDataURL("image/png").split(",")[1], mime: "image/png" };
+}
+ 
+async function extractFile(file) {
+  const ext = (file.name.split(".").pop() || "").toLowerCase();
+  if (["png","jpg","jpeg","webp"].includes(ext)) {
+    return { type: "image", value: await fileToBase64(file), mime: file.type || "image/png" };
+  }
+  if (ext === "pdf") return await extractPdf(file);
+  return { type: "text", value: await fileToText(file) };
+}
+ 
+async function classifyExtraction(fileName, extraction) {
+  const body = { fileName };
+  if (extraction.type === "image") {
+    body.imageBase64 = extraction.value;
+    body.mimeType    = extraction.mime;
+  } else {
+    body.textContent = extraction.value;
+  }
+  const res = await fetch(DOC_ROUTER_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || ("classify_failed_" + res.status));
+  }
+  return res.json();
+}
+ 
+function routeDocument(fileName, classification) {
+  const verticals = classification.verticals || [];
+  const routedTo  = [];
+ 
+  verticals.forEach((v, idx) => {
+    if (!VERTICALS[v]) return;
+    const r = (classification.routing && classification.routing[v]) || {};
+    let nodes = Array.isArray(r.nodes) ? [...r.nodes] : [];
+    if (!nodes.includes("strategist")) nodes.push("strategist");
+    if (classification.bnca && !nodes.includes("bnca-engine")) nodes.push("bnca-engine");
+ 
+    const doc = {
+      id:            "DOC-" + v.toUpperCase() + "-" + Date.now() + "-" + idx,
+      fileName:      classification.fileName || fileName,
+      documentType:  classification.documentType || "DOCUMENT REPORT",
+      vendor:        classification.vendor || "",
+      invoiceNo:     classification.invoiceNo || "",
+      exclusionCode: classification.exclusionCode || "",
+      amount:        Number(classification.amount) || 0,
+      sourceNode:    r.sourceNode || nodes[0] || "strategist",
+      routing:       nodes,
+      timestamp:     Date.now(),
+      _ext: {
+        client:  classification.client  || "",
+        ref:     classification.ref     || "",
+        summary: classification.summary || ""
+      }
+    };
+ 
+    const docs = loadIndexFor(v);
+    docs.unshift(doc);
+    if (docs.length > 500) docs.splice(500);
+    saveIndexFor(v, docs);
+ 
+    // Auto-load into war room — same relay mechanism as redispatch()
+    try { localStorage.setItem("tsm_bridge_mesh_relay_" + v, JSON.stringify({ ts: Date.now(), payload: doc })); } catch(e) {}
+    window.dispatchEvent(new CustomEvent("document_processed_" + v, { detail: doc }));
+ 
+    routedTo.push({ vertical: v, label: VERTICALS[v].label, color: VERTICALS[v].color });
+  });
+ 
+  return routedTo;
+}
+ 
+function uqAdd(file) {
+  const id = "uq-" + Date.now() + "-" + Math.random().toString(36).slice(2,7);
+  const el = document.createElement("div");
+  el.className = "uq-item";
+  el.id = id;
+  el.innerHTML = `<span class="uq-name" title="${file.name}">${file.name}</span><span class="uq-status"><span class="uq-spinner"></span> Extracting...</span>`;
+  document.getElementById("upload-queue").prepend(el);
+  return id;
+}
+ 
+function uqStatus(id, html, cls) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const status = el.querySelector(".uq-status");
+  status.className = "uq-status" + (cls ? " " + cls : "");
+  status.innerHTML  = html;
+}
+ 
+async function processFile(file) {
+  const qid = uqAdd(file);
+  try {
+    const extraction = await extractFile(file);
+    uqStatus(qid, '<span class="uq-spinner"></span> Classifying...');
+    const classification = await classifyExtraction(file.name, extraction);
+    const routed = routeDocument(file.name, classification);
+ 
+    if (routed.length === 0) {
+      uqStatus(qid, "No vertical matched — not routed", "err");
+      return;
+    }
+ 
+    const badges = routed.map(r =>
+      `<span class="uq-badge" style="background:${r.color}1f;color:${r.color};border:1px solid ${r.color}40;">${r.label}</span>`
+    ).join("");
+    uqStatus(qid, `${classification.documentType || "Routed"} → ${badges}`, "ok");
+ 
+    if (routed.some(r => r.vertical === currentVertical)) {
+      runSearch();
+      refreshTotalCount();
+    }
+  } catch (err) {
+    console.error("Doc router error:", err);
+    uqStatus(qid, "Failed: " + err.message, "err");
+  }
+}
+ 
+function handleFiles(fileList) {
+  Array.from(fileList).forEach(processFile);
+}
+ 
+const dropZone  = document.getElementById("upload-zone");
+const fileInput = document.getElementById("doc-file-input");
+fileInput.addEventListener("change", e => { handleFiles(e.target.files); fileInput.value = ""; });
+["dragenter","dragover"].forEach(evt => dropZone.addEventListener(evt, e => { e.preventDefault(); dropZone.classList.add("dragover"); }));
+["dragleave","drop"].forEach(evt => dropZone.addEventListener(evt, e => { e.preventDefault(); dropZone.classList.remove("dragover"); }));
+dropZone.addEventListener("drop", e => { handleFiles(e.dataTransfer.files); });
+ 
 switchVertical("fo");
 </script>
 </body>

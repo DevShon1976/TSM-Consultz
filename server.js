@@ -630,6 +630,153 @@ app.get('/', (_req, res) => {
   });
 });
 
+/* ════════════════════════════════════════════════════════════════
+   DOC ROUTER — paste this block into server.js
+   Placement: anywhere after `const app = express()` and after
+   `app.use(express.json(...))`, before `app.listen(...)`.
+   Requires: process.env.GROQ_API_KEY already set (same as other nodes).
+   Requires: Node 18+ for global fetch (already a project requirement).
+════════════════════════════════════════════════════════════════ */
+
+// Models — verify current availability in Groq console if these change
+const GROQ_TEXT_MODEL   = 'llama-3.3-70b-versatile';
+const GROQ_VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
+
+// Valid node IDs per vertical — keep in sync with VERTICALS in
+// tsm-document-search.html if you add/rename nodes.
+const DOC_ROUTER_NODES = {
+  fo:  ['fo-financial', 'fo-accounting', 'fo-pitch', 'fo-bpo', 'fo-demo', 'fo-index', 'strategist'],
+  ins: ['ins-az', 'ins-hub', 'ins-bpo', 'ins-pitch', 'ins-index', 'strategist'],
+  con: ['con-hub', 'con-pitch', 'con-permits', 'con-strategist', 'con-bpo', 'con-demo', 'con-index', 'strategist'],
+  bpo: ['bpo-cmd', 'bpo-int1', 'bpo-access', 'bpo-launch', 'bpo-sops', 'bpo-sales', 'bpo-services', 'bpo-website', 'strategist'],
+  re:  ['re-uploader', 're-war-room', 're-strategist', 're-exec', 're-guide', 'strategist'],
+  leg: ['leg-index', 'leg-ediscovery', 'leg-strategist', 'leg-exec', 'strategist'],
+  hc:  ['hc-denial', 'strategist'],
+};
+
+const DOC_ROUTER_DOC_TYPES = [
+  'CLAIM', 'CLAIM APPEAL', 'POLICY', 'VENDOR INVOICE', 'LEDGER',
+  'PERMIT', 'REMITTANCE', 'DOCUMENT REPORT', 'ESCALATION',
+  'CONTRACT', 'FILING', 'TITLE DOCUMENT', 'DENIAL',
+];
+
+const DOC_ROUTER_PROMPT = `You are TSM's document routing classifier. Analyze the document content (and filename) and return ONLY valid JSON — no markdown fences, no preamble, no commentary.
+
+Return JSON matching exactly this schema:
+{
+  "documentType": one of ${JSON.stringify(DOC_ROUTER_DOC_TYPES)},
+  "verticals": array, subset of ["fo","ins","con","bpo","re","leg","hc"] — include MULTIPLE verticals if the content is genuinely relevant to more than one (e.g. a vendor invoice tied to a construction project may be relevant to both "con" and "fo"; a property sale with a legal dispute may be relevant to both "re" and "leg"; a claim denial with financial exposure may be relevant to both "hc" and "fo"),
+  "primaryVertical": one value from "verticals",
+  "routing": {
+    "<vertical>": { "sourceNode": "<one valid node id for that vertical>", "nodes": ["<valid node ids...>"] }
+    ... one entry for EACH vertical listed in "verticals"
+  },
+  "fileName": suggested filename ending in ".record",
+  "vendor": string or "",
+  "invoiceNo": string or "",
+  "exclusionCode": string or "",
+  "amount": number — dollar exposure/value, 0 if none applicable,
+  "client": string or "",
+  "ref": string or "",
+  "summary": one short sentence describing the document,
+  "bnca": boolean — true ONLY if the document represents an anomaly, discrepancy, denial, dispute, or risk that should escalate to BNCA review
+}
+
+Valid node IDs per vertical:
+fo:  ${DOC_ROUTER_NODES.fo.join(', ')}
+ins: ${DOC_ROUTER_NODES.ins.join(', ')}
+con: ${DOC_ROUTER_NODES.con.join(', ')}
+bpo: ${DOC_ROUTER_NODES.bpo.join(', ')}
+re:  ${DOC_ROUTER_NODES.re.join(', ')}
+leg: ${DOC_ROUTER_NODES.leg.join(', ')}
+hc:  ${DOC_ROUTER_NODES.hc.join(', ')}
+
+Rules:
+- Always include "strategist" in routing.<vertical>.nodes for every vertical listed.
+- If "bnca" is true, also append "bnca-engine" to routing.<vertical>.nodes for every vertical listed.
+- "sourceNode" must be the node most directly responsible for this document type (not "strategist" unless nothing else fits).
+- If the document doesn't clearly belong anywhere, return "verticals": [] and leave "routing" as {}.
+- Be conservative with "bnca" — only flag genuine anomalies, denials, disputes, code violations, SLA breaches, or financial exposure outliers.`;
+
+// crude in-memory rate limit: 20 requests / 5 min / IP
+const docRouterHits = new Map();
+function docRouterRateOk(ip) {
+  const now = Date.now();
+  const hits = (docRouterHits.get(ip) || []).filter(t => now - t < 5 * 60 * 1000);
+  if (hits.length >= 20) return false;
+  hits.push(now);
+  docRouterHits.set(ip, hits);
+  return true;
+}
+
+app.post('/api/doc-router/classify', async (req, res) => {
+  try {
+    if (!docRouterRateOk(req.ip)) {
+      return res.status(429).json({ error: 'Rate limit exceeded — try again shortly.' });
+    }
+
+    const { fileName, mimeType, textContent, imageBase64 } = req.body || {};
+    if (!textContent && !imageBase64) {
+      return res.status(400).json({ error: 'No content provided.' });
+    }
+
+    let userContent;
+    let model;
+
+    if (imageBase64) {
+      model = GROQ_VISION_MODEL;
+      userContent = [
+        { type: 'text', text: `Filename: ${fileName || 'unknown'}\n\n${DOC_ROUTER_PROMPT}` },
+        { type: 'image_url', image_url: { url: `data:${mimeType || 'image/png'};base64,${imageBase64}` } },
+      ];
+    } else {
+      model = GROQ_TEXT_MODEL;
+      userContent = `Filename: ${fileName || 'unknown'}\n\nDocument content:\n${String(textContent).slice(0, 12000)}\n\n${DOC_ROUTER_PROMPT}`;
+    }
+
+    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: 'Respond with ONLY valid JSON. No markdown fences, no preamble, no trailing text.' },
+          { role: 'user', content: userContent },
+        ],
+        temperature: 0.2,
+        response_format: { type: 'json_object' },
+      }),
+    });
+
+    if (!groqRes.ok) {
+      const errText = await groqRes.text();
+      console.error('[doc-router] Groq error:', groqRes.status, errText);
+      return res.status(502).json({ error: 'Classification service error.' });
+    }
+
+    const data = await groqRes.json();
+    let parsed;
+    try {
+      parsed = JSON.parse(data.choices[0].message.content);
+    } catch (e) {
+      console.error('[doc-router] Bad JSON from model:', data.choices?.[0]?.message?.content);
+      return res.status(502).json({ error: 'Invalid classification response.' });
+    }
+
+    res.json(parsed);
+  } catch (err) {
+    console.error('[doc-router] error:', err);
+    res.status(500).json({ error: 'Internal error.' });
+  }
+});
+
+/* ════════════════════════════════════════════════════════════════
+   END DOC ROUTER BLOCK
+════════════════════════════════════════════════════════════════ */
+
 // ── START ─────────────────────────────────────────────────────────────────────
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`TSM Platform Core Engine listening on port ${PORT}`);
