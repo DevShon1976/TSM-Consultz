@@ -29,7 +29,7 @@ const NODE_MAP = {
   "grants-node":     "grants"
 };
 
-const MISSIONS = {
+const STATIC_MISSIONS = {
   billing: {
     title: "Prevent denial before payer adjudication",
     domain: "BILLING / CLAIMS",
@@ -170,7 +170,7 @@ class MissionPanel {
       ? document.getElementById(container)
       : container;
     this.missionKey = missionKey;
-    this.mission = MISSIONS[missionKey] || MISSIONS.billing;
+    this.mission = STATIC_MISSIONS[missionKey] || MISSIONS.billing;
 
     // Load saved progress from MissionBridge
     const saved = (typeof MissionBridge !== "undefined") ? MissionBridge.get() : {};
@@ -187,7 +187,7 @@ class MissionPanel {
 
   setMission(missionKey) {
     this.missionKey = missionKey;
-    this.mission = MISSIONS[missionKey] || MISSIONS.billing;
+    this.mission = STATIC_MISSIONS[missionKey] || MISSIONS.billing;
 
     // Load saved progress for this mission
     const saved = (typeof MissionBridge !== "undefined") ? MissionBridge.get() : {};

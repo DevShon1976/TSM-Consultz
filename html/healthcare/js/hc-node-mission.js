@@ -1,22 +1,52 @@
 window.addEventListener('load', function () {
-  if (typeof GuidedMission === 'undefined') return;
   const node = (window.location.pathname.split('/').find(p => p.startsWith('hc-')) || '').replace('hc-', '');
   if (!node) return;
-  const data = GuidedMission.getData();
-  const sector = data[node] || data.insurance;
-  const objectives = sector.objectives;
-  const patient = sector.patient;
-  const claim = sector.claim;
+  const activeMission =
+  JSON.parse(
+    localStorage.getItem(
+      'tsm_active_mission'
+    ) || 'null'
+  );
+
+if(!activeMission) return;
+
+const objectives = {};
+
+activeMission.progression_steps
+  .forEach((step,i)=>{
+
+    objectives[i] = {
+
+      node,
+
+      instruction: step.detail,
+
+      success:
+        step.label + ' complete',
+
+      learn:
+        'Mission progress updated',
+
+      action:{
+        label:'COMPLETE STEP'
+      },
+
+      fields:[{
+        label:'Status',
+        value:step.status,
+        editable:false
+      }]
+
+    };
+
+});
+  
   const steps = Object.entries(objectives).filter(([, o]) => o.node === node);
   if (!steps.length) return;
   let html = `
     <div id="tsm-mission" style="margin-top:16px;border-top:1px solid #0f4;padding-top:12px;">
       <div style="font-size:10px;letter-spacing:2px;color:#0f4;margin-bottom:8px;">MISSION OBJECTIVES · ${node.toUpperCase()}</div>
-      ${!['operations','financial','legal','vendors','tax','grants','staffing'].some(n => node.includes(n)) ? `<div style="font-size:11px;color:#aaa;margin-bottom:12px;">
-        Patient: <strong style="color:#0f4">${patient.name}</strong> &nbsp;·&nbsp;
-        Claim: <strong style="color:#0f4">${claim.cpt}</strong> &nbsp;·&nbsp;
-        Payer: <strong style="color:#0f4">${patient.payer}</strong>
-      </div>` : ''}`;
+  `;
   steps.forEach(([idx, obj], i) => {
     html += `
       <div id="ms-${idx}" style="background:#0a1a0a;border:1px solid #1a3a1a;border-radius:4px;padding:10px;margin-bottom:8px;${i > 0 ? 'opacity:0.4;pointer-events:none;' : ''}">
@@ -59,7 +89,58 @@ window.addEventListener('load', function () {
       done.innerHTML = `<div style="font-size:12px;color:#0f4;font-weight:700;letter-spacing:1px;">✓ MISSION COMPLETE · ${node.toUpperCase()}</div><div style="font-size:11px;color:#aaa;margin-top:4px;">All objectives resolved. Ready for BNCA or Strategist relay.</div>`;
       panel.appendChild(done);
       document.querySelectorAll('.hc-guide-btn, .hc-guide-run').forEach(b => b.style.display = '');
-      localStorage.setItem('tsm-mission-' + node, 'complete');
+      const mission =
+  JSON.parse(
+    localStorage.getItem(
+      'tsm_active_mission'
+    )
+  );
+
+if(mission){
+
+  const queue =
+    JSON.parse(
+      localStorage.getItem(
+        'tsm_mission_queue'
+      ) || '[]'
+    );
+
+  const record =
+    queue.find(
+      q => q.id === mission.id
+    );
+
+  if(record){
+
+    record.progression_steps[idx]
+      .status = 'complete';
+
+    const completed =
+      record.progression_steps
+      .filter(
+        x => x.status === 'complete'
+      ).length;
+
+    record.completion_pct =
+      Math.round(
+        completed /
+        record.progression_steps.length
+        * 100
+      )
+
+    if(
+      record.completion_pct === 100
+    ){
+      record.status =
+        'complete';
+    }
+
+    localStorage.setItem(
+      'tsm_mission_queue',
+      JSON.stringify(queue)
+    );
+  }
+}
     }
   };
 });
