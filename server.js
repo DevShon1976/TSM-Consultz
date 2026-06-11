@@ -68,13 +68,7 @@ async function groqChat(system, message, maxTokens) {
   }
   throw new Error('All Groq models rate limited. Try again later.');
 }
-  // using fetch directly
-  const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': 'Bearer ' + groqKey,
-      'Content-Type': 'application/json'
-    },
+  
     body: JSON.stringify({
       model: 'llama-3.3-70b-versatile',
       max_tokens: maxTokens,
@@ -164,7 +158,7 @@ const suites = [
 ];
 
 // ── HEALTH & STUB ROUTES ──────────────────────────────────────────────────────
-app.get('/health', (req, res) => res.json({ status: 'ok' }));
+app.get('/health', (req, res) => res.json({ status: 'ok', v: 2 }));
 app.post('/api/bpo/query', (req, res) => res.json({ reply: 'ok' }));
 app.post('/api/wip/sector-ai', (req, res) => res.json({ content: 'ok' }));
 
