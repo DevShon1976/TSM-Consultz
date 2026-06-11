@@ -89,10 +89,11 @@
       created: new Date().toISOString(),
       completion_pct: 0,
       progression_steps: d.queue.map((item, i) => ({
-        label: 'Step ' + (i + 1),
-        detail: item,
-        status: 'pending'
-      }))
+      label: 'Step ' + (i + 1),
+      detail: item,
+      hint: 'Review ' + item.toLowerCase() + ' and document your findings before marking complete.',
+      status: 'pending'
+   }))
     };
     localStorage.setItem('tsm_active_mission', JSON.stringify(mission));
     const queue = JSON.parse(localStorage.getItem('tsm_mission_queue') || '[]');

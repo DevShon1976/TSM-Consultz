@@ -31,11 +31,18 @@ activeMission.progression_steps
         label:'COMPLETE STEP'
       },
 
-      fields:[{
-        label:'Status',
-        value:step.status,
-        editable:false
-      }]
+      fields:[
+  {
+    label:'Status',
+    value:step.status,
+    editable:false
+  },
+  {
+    label:'Next Action',
+    value:step.hint || 'Review and complete this step.',
+    editable:false
+  }
+]
 
     };
 
