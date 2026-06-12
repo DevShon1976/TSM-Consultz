@@ -1021,9 +1021,10 @@ function launchRescuePack(node) {
   };
   const pack = packMap[node] || 'deal-killer';
   const feed = document.getElementById('intelligenceFeed');
-  const relayText = feed ? feed.innerText : '';
+  const relayText = feed ? feed.innerText.slice(0, 2000) : '';
+  const moduleLabel = document.querySelector('#intelligenceFeed .feed-module-label, #intelligenceFeed strong')?.textContent || node;
   sessionStorage.setItem('TSM_RE_WAR_RELAY', JSON.stringify({
-    node, analysis: relayText, timestamp: Date.now()
+    node, moduleLabel, analysis: relayText, timestamp: Date.now()
   }));
   window.open(`/reo-pro/pack-engine.html?pack=${pack}`, '_blank');
 }
@@ -1043,6 +1044,7 @@ function renderRemPath(text, node) {
     </button>`
   ).join('');
 
+  const rescuePack = ({"Appraisal Gap Rescue":"APPRAISAL GAP","Underwriting Conditions":"UW CONDITIONS","Loan Denial Rescue":"LOAN DENIAL","Contract & Offer Mgmt":"CONTRACT RISK","Closing Delay Rescue":"CLOSING PROBABILITY","Closing Readiness":"CTC FAST TRACK","RESPA / TRID Audit":"TRID RESCUE","FinCEN / AML Audit":"HMDA AUDIT","Pipeline Velocity":"MORTGAGE OPS","BPO / Valuation Engine":"DEAL KILLER","Phoenix Market Analysis":"DSCR INVESTOR","Investment Criteria":"DSCR INVESTOR"})[node] || 'DEAL KILLER';
   const panel = document.getElementById('remPathPanel');
   panel.innerHTML = `
     <div class="rp-bar">
@@ -1061,7 +1063,7 @@ function renderRemPath(text, node) {
   </div>
   <div style="margin-top:10px;padding-top:10px;border-top:1px solid #1a3a1a;">
     <button onclick="launchRescuePack('${node}')" style="width:100%;background:#001a00;border:1px solid #00ff88;color:#00ff88;padding:8px;font-size:10px;letter-spacing:1px;cursor:pointer;font-family:monospace;">
-      ⚡ OPEN RESCUE PACK → ${node.toUpperCase()}
+      ⚡ OPEN RESCUE PACK → ${rescuePack}
     </button>
   </div>
 </div>
