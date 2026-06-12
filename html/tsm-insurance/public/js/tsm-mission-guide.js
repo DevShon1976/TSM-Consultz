@@ -312,7 +312,7 @@
             'tax document missing','W-9 gap','1099 not issued','tax filing issue',
             'tax compliance anomaly','healthcare tax classification','IRS reporting gap',
             'tax liability undocumented','year-end tax prep gap','tax audit risk',
-            'nonprofit tax filing gap','5
+            'nonprofit tax filing gap'
     legal: {
       systemRole: 'legal operations and case management AI',
       anomalyLabel: 'Issue Type',
