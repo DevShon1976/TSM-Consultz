@@ -149,6 +149,7 @@
     <h3>SCAN CATEGORIES</h3>
     <div class="cat-list" id="catList"></div>
     <div class="relay-status" id="relayStatus">Checking relay data...</div>
+    <button class="back-btn" id="loadSampleBtn" style="width:100%;margin-top:10px;" onclick="loadSample()">📄 LOAD SAMPLE DOCUMENT</button>
     <button class="run-btn" id="runBtn" onclick="runPack()">⚡ RUN ANALYSIS</button>
   </div>
 
@@ -158,6 +159,7 @@
 </div>
 
 <script src="pack-configs.js"></script>
+<script src="sample-docs.js"></script>
 <script>
 // ---- Resolve pack from query string ----
 const params = new URLSearchParams(window.location.search);
@@ -189,9 +191,26 @@ if (!config) {
   });
 }
 
-// ---- Relay data: try sessionStorage relay key, fall back to opener's docPaste ----
+let loadedSample = null;
+
+function loadSample(){
+  const sample = (typeof TSM_SAMPLE_DOCS !== 'undefined') ? TSM_SAMPLE_DOCS[packKey] : null;
+  if(!sample){
+    relayStatus.textContent = '⚠ No sample document defined for this pack';
+    relayStatus.classList.remove('ok');
+    relayStatus.classList.add('warn');
+    return;
+  }
+  loadedSample = sample;
+  relayStatus.textContent = '✓ Sample loaded: ' + sample.fileName;
+  relayStatus.classList.remove('warn');
+  relayStatus.classList.add('ok');
+}
+
+// ---- Relay data: sample override > sessionStorage > opener docPaste ----
 const RELAY_KEYS = ['TSM_RE_WAR_RELAY', 'TSM_CONSTRUCTION_WAR_RELAY', 'TSM_INS_WAR_RELAY'];
 function getRelayData(){
+  if(loadedSample) return loadedSample;
   for(const k of RELAY_KEYS){
     try{
       const raw = sessionStorage.getItem(k);
