@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TSM Mortgage Rescue Pack Library</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#070b10;--panel:#0e151c;--panel-border:#1c2a35;
+    --cyan:#00e5ff;--gold:#ffc857;--amber:#ff9f43;--red:#ff5470;--green:#3ddc97;
+    --text:#cfe8ee;--dim:#5d7a87;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:radial-gradient(circle at top, #0c1620 0%, #060a0e 70%);
+    color:var(--text);font-family:'Rajdhani',sans-serif;padding:24px;min-height:100vh;
+  }
+  .header{text-align:center;margin-bottom:28px;}
+  .header h1{
+    font-family:'Orbitron',sans-serif;font-size:24px;letter-spacing:3px;
+    color:var(--cyan);text-shadow:0 0 16px rgba(0,229,255,.4);
+  }
+  .header p{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--dim);margin-top:8px;}
+
+  .tier{margin-bottom:30px;max-width:1200px;margin-left:auto;margin-right:auto;}
+  .tier-label{
+    font-family:'Orbitron',sans-serif;font-size:12px;letter-spacing:2px;
+    color:var(--gold);margin-bottom:12px;padding-bottom:6px;
+    border-bottom:1px solid var(--panel-border);
+  }
+  .grid{
+    display:grid;grid-template-columns:repeat(auto-fill, minmax(190px, 1fr));gap:12px;
+  }
+  .card{
+    background:var(--panel);border:1px solid var(--panel-border);border-radius:10px;
+    padding:14px;cursor:pointer;transition:.2s;text-decoration:none;color:var(--text);
+    display:flex;flex-direction:column;gap:6px;
+  }
+  .card:hover{border-color:var(--cyan);box-shadow:0 0 16px rgba(0,229,255,.2);transform:translateY(-2px);}
+  .card.exec{border-color:rgba(255,200,87,.4);}
+  .card.exec:hover{border-color:var(--gold);box-shadow:0 0 16px rgba(255,200,87,.25);}
+  .card .icon{font-size:26px;}
+  .card .label{font-family:'Orbitron',sans-serif;font-size:12px;letter-spacing:1px;color:var(--text);}
+  .card .sub{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim);}
+  .badge{
+    font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--gold);
+    border:1px solid rgba(255,200,87,.4);border-radius:4px;padding:1px 6px;
+    align-self:flex-start;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>⚡ MORTGAGE RESCUE PACK LIBRARY</h1>
+  <p>24 packs · click any card to run analysis</p>
+</div>
+
+<div id="tiers"></div>
+
+<script src="pack-configs.js"></script>
+<script>
+const TIERS = [
+  { label: 'TIER 2 — MORTGAGE OPERATIONS RESCUE PACKS', keys: ['loan-denial','credit-event','employment-change','asset-sourcing','income-stability','fraud-investigation'] },
+  { label: 'TIER 3 — PRODUCT-SPECIFIC RESCUE PACKS', keys: ['fha-rescue','va-rescue','usda-rescue','jumbo-rescue','dscr-investor','condo-rescue','new-construction'] },
+  { label: 'TIER 4 — COMPLIANCE RESCUE PACKS', keys: ['trid-rescue','respa-rescue','hmda-audit'] },
+  { label: 'TIER 6 — REAL ESTATE TRANSACTION PACKS', keys: ['hoa-risk','seller-risk','contract-risk'] },
+  { label: 'TIER 7 — CLOSING & SECONDARY MARKET PACKS', keys: ['ctc-fast-track','postclose-audit'] },
+  { label: 'TIER 8 — EXECUTIVE AI PACKS', keys: ['deal-killer','transaction-autopsy','closing-probability','mortgage-ops-scorecard'] },
+];
+
+const container = document.getElementById('tiers');
+
+TIERS.forEach(tier => {
+  const tierDiv = document.createElement('div');
+  tierDiv.className = 'tier';
+  tierDiv.innerHTML = `<div class="tier-label">${tier.label}</div>`;
+  const grid = document.createElement('div');
+  grid.className = 'grid';
+
+  tier.keys.forEach(key => {
+    const cfg = TSM_PACK_CONFIGS[key];
+    if(!cfg) return;
+    const a = document.createElement('a');
+    a.href = 'pack-engine.html?pack=' + key;
+    a.className = 'card' + (cfg.isExecutive ? ' exec' : '');
+    a.innerHTML = `
+      <div class="icon">${cfg.icon}</div>
+      <div class="label">${cfg.title}</div>
+      <div class="sub">${cfg.subtitle}</div>
+      ${cfg.isExecutive ? '<div class="badge">EXECUTIVE</div>' : ''}
+    `;
+    grid.appendChild(a);
+  });
+
+  tierDiv.appendChild(grid);
+  container.appendChild(tierDiv);
+});
+</script>
+
+</body>
+</html>
