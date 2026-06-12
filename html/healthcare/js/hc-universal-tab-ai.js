@@ -82,26 +82,21 @@
 
   // ── WRITE MISSION TO QUEUE ─────────────────────────────────────────────────
   function writeMission(key, d, narrativeTxt) {
-    const mission = {
-      id: 'mission_' + key + '_' + Date.now(),
-      node: key,
-      status: 'active',
-      created: new Date().toISOString(),
-      completion_pct: 0,
-      progression_steps: d.queue.map((item, i) => ({
-      label: 'Step ' + (i + 1),
-      detail: item,
-      hint: 'Review ' + item.toLowerCase() + ' and document your findings before marking complete.',
-      status: 'pending'
-   }))
-    };
-    localStorage.setItem('tsm_active_mission', JSON.stringify(mission));
-    const queue = JSON.parse(localStorage.getItem('tsm_mission_queue') || '[]');
-    const idx = queue.findIndex(q => q.node === key && q.status === 'active');
-    if(idx === -1) queue.push(mission);
-    else queue[idx] = mission;
-    localStorage.setItem('tsm_mission_queue', JSON.stringify(queue));
-    console.log('[HC-TAB-AI] Mission written:', mission.id);
+    const steps = d.queue.map((item, i) => 'Step ' + (i + 1) + ': ' + item);
+    const label = key.charAt(0).toUpperCase() + key.slice(1);
+    if (window.TSMMission) {
+      TSMMission.setActiveMission(key, label, steps);
+    } else {
+      // Fallback if TSMMission not loaded
+      const mission = { vertical: key, label, progression_steps: steps, generated_at: Date.now() };
+      localStorage.setItem('tsm_active_mission', JSON.stringify(mission));
+      const queue = JSON.parse(localStorage.getItem('tsm_mission_queue') || '[]');
+      const idx = queue.findIndex(q => q.vertical === key);
+      const entry = { id: 'tsm-' + key + '-' + Date.now(), vertical: key, label, status: 'active', step_index: 0, completion_pct: 0 };
+      if (idx === -1) queue.push(entry); else queue[idx] = entry;
+      localStorage.setItem('tsm_mission_queue', JSON.stringify(queue));
+    }
+    console.log('[HC-TAB-AI] Mission written for vertical:', key);
   }
 
   // ── GENERATE FULL NARRATIVE via API ───────────────────────────────────────
