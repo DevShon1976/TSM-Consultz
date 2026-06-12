@@ -408,4 +408,4 @@ class MissionPanel {
 
 // Expose globally
 window.MissionPanel = MissionPanel;
-window.TSM_MISSIONS = MISSIONS;
+window.TSM_MISSIONS = STATIC_MISSIONS;

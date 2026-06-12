@@ -73,7 +73,6 @@
             nodeLabel: node.label,
             nodeColor: node.color,
             bnca: bnacText.substring(0, 800) || 'BNCA analysis complete. Node objectives resolved.',
-            TSMMissionQueue.addMission()
             missionComplete,
             completedSteps,
             timestamp: Date.now(),
