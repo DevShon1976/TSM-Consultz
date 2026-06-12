@@ -266,10 +266,19 @@ function markCategoriesDone(){
 function parseAndRender(text){
   resultsPanel.innerHTML = '';
 
-  // Extract score line
-  let scoreMatch = text.match(/SCORE:\s*(.+)/i);
-  let scoreValue = scoreMatch ? scoreMatch[1].trim() : '—';
-  let body = text.replace(/SCORE:\s*(.+)/i, '').trim();
+  // Normalize literal backslash-n sequences into real newlines
+  text = text.replace(/\\n/g, '\n');
+
+  // Find the LAST "SCORE:" line, capture only a short value (number/percent + few words)
+  const scoreMatches = [...text.matchAll(/SCORE:\s*([^\n]{1,40})/gi)];
+  let scoreValue = '—';
+  let body = text;
+  if(scoreMatches.length){
+    const last = scoreMatches[scoreMatches.length - 1];
+    scoreValue = last[1].trim().replace(/[—\-–]\s*$/, '').trim();
+    body = text.slice(0, last.index) + text.slice(last.index + last[0].length);
+  }
+  body = body.trim();
 
   const banner = document.createElement('div');
   banner.className = 'score-banner';
