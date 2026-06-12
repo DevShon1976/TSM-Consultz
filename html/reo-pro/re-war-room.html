@@ -1004,6 +1004,30 @@ function scoreTools(text) {
   }).filter(t => t.score > 0).sort((a,b) => b.score - a.score);
 }
 
+function launchRescuePack(node) {
+  const packMap = {
+    'Appraisal Gap Rescue': 'deal-killer',
+    'Underwriting Conditions': 'ctc-fast-track',
+    'Loan Denial Rescue': 'loan-denial',
+    'Contract & Offer Mgmt': 'contract-risk',
+    'Closing Delay Rescue': 'closing-probability',
+    'Closing Readiness': 'ctc-fast-track',
+    'RESPA / TRID Audit': 'trid-rescue',
+    'FinCEN / AML Audit': 'hmda-audit',
+    'Pipeline Velocity': 'mortgage-ops-scorecard',
+    'BPO / Valuation Engine': 'deal-killer',
+    'Phoenix Market Analysis': 'dscr-investor',
+    'Investment Criteria': 'dscr-investor'
+  };
+  const pack = packMap[node] || 'deal-killer';
+  const feed = document.getElementById('intelligenceFeed');
+  const relayText = feed ? feed.innerText : '';
+  sessionStorage.setItem('re_war_room_relay', JSON.stringify({
+    node, analysis: relayText, timestamp: Date.now()
+  }));
+  window.open(`/reo-pro/pack-engine.html?pack=${pack}`, '_blank');
+}
+
 function renderRemPath(text, node) {
   const ranked = scoreTools(text);
   if (!ranked.length) return; // no keywords matched — don't render
@@ -1035,8 +1059,8 @@ function renderRemPath(text, node) {
       </div>
       ${rest.length ? `<div class="rp-arrow">→</div><div class="rp-steps">${stepBtns}</div>` : ''}
   </div>
-  <div style="margin-top:10px;padding-top:10px;border-top:1px solid #1a2a1a;">
-    <button class="rp-best" onclick="launchRescuePack('${node}')" style="width:100%;background:#001a00;border:1px solid #00ff88;color:#00ff88;padding:8px;font-size:10px;letter-spacing:1px;cursor:pointer;">
+  <div style="margin-top:10px;padding-top:10px;border-top:1px solid #1a3a1a;">
+    <button onclick="launchRescuePack('${node}')" style="width:100%;background:#001a00;border:1px solid #00ff88;color:#00ff88;padding:8px;font-size:10px;letter-spacing:1px;cursor:pointer;font-family:monospace;">
       ⚡ OPEN RESCUE PACK → ${node.toUpperCase()}
     </button>
   </div>
