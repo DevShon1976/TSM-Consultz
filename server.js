@@ -57,7 +57,10 @@ async function groqChat(system, message, maxTokens, clientKey) {
       });
       if (!r.ok) {
         const err = await r.text();
-        if (r.status === 429 || r.status === 503) continue;
+        if (r.status === 429 || r.status === 503 || r.status === 500 || r.status === 502) {
+          await new Promise(res => setTimeout(res, 3000));
+          continue;
+        }
         throw new Error('Groq API error ' + r.status + ': ' + err);
       }
       const data = await r.json();
