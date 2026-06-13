@@ -489,7 +489,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 
     <div class="section-label">AI Configuration</div>
 
-    <div class="config-block">
+    <div class="config-block" style="display:none">
       <div class="config-label">Groq API Key</div>
       <input class="config-input" type="password" id="groqKey" placeholder="gsk_••••••••••••••••••••" value="">
     </div>
@@ -1175,10 +1175,11 @@ function showRelayToast(msg){
       if(el) el.textContent = `[WAR ROOM RELAY — ${brief.docType}]\nRisk: ${brief.snapshot?.risk} · Exposure: ${brief.snapshot?.exposure}\n\n${ctx.slice(0,800)}`;
       relaySource='warroom';
     };
+    // Auto-inject on load
+    setTimeout(() => window.injectFinOpsContext(), 600);
 
     window.runFinOpsIssuePack = function(){
-      const groqKeyVal = document.getElementById('groqKey')?.value || localStorage.getItem('tsm_groq_key') || '';
-      if(!groqKeyVal){ alert('Enter your Groq API key first.'); return; }
+      const groqKeyVal = localStorage.getItem('tsm_groq_key') || 'server';
 
       let panel = document.getElementById('tsm-finops-issue-panel');
       if(!panel){

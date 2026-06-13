@@ -853,6 +853,7 @@ function buildAppDispatch(e6text) {
       <div class="app-card-name" style="${isTop ? 'color:var(--gold)' : ''}">${name}</div>
       <div class="app-card-how">${howto}</div>
       <button class="app-card-btn" onclick="launchApp('${url}', ${JSON.stringify({name:name,how:howto,tags:[]})})" style="${isTop ? 'border-color:rgba(255,196,0,.4);color:var(--gold)' : ''}">OPEN ${name.toUpperCase()} →</button>
+      <button class="app-card-btn" onclick="finopsQuickMission('${name}','${url}','${howto.replace(/'/g,"\\'")}')" style="margin-top:6px;border-color:rgba(0,212,170,.3);color:var(--cyan);">⚡ LAUNCH WITH MISSION GUIDE</button>
     `;
     dispatch.appendChild(card);
   });
@@ -882,6 +883,34 @@ function launchApp(href, appMeta){
     window.open('/html/finops-suite/' + href, '_blank');
   }
 }
+async function finopsQuickMission(appName, appUrl, howto) {
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  modal.innerHTML = `
+    <div style="background:#0d1117;border:1px solid rgba(0,212,170,.3);border-radius:6px;padding:24px;max-width:480px;width:90%;font-family:'Share Tech Mono',monospace;">
+      <div style="color:#00d4aa;font-size:11px;letter-spacing:2px;margin-bottom:8px;">⚡ MISSION BRIEFING</div>
+      <div style="color:#7a8898;font-size:10px;margin-bottom:16px;">${appName} — GENERATING PLAN...</div>
+      <div id="finops-modal-body" style="min-height:60px;color:#e4eaf4;font-size:10px;line-height:1.7;">
+        <div style="color:rgba(0,212,170,.5);font-size:9px;letter-spacing:1px;">⬡ CONNECTING TO TSM NEURAL CORE...</div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="padding:8px 16px;background:transparent;border:1px solid #333;color:#666;font-family:inherit;font-size:9px;cursor:pointer;letter-spacing:1px;">CANCEL</button>
+        <button id="finops-modal-launch" onclick="window.open('${appUrl}','_blank');this.closest('div[style*=fixed]').remove()" style="padding:8px 16px;background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.3);color:#00d4aa;font-family:inherit;font-size:9px;cursor:pointer;letter-spacing:1px;display:none;">LAUNCH WITH GUIDE →</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+
+  const anomaly = `App: ${appName}\nHow to use: ${howto}\nDoc type: ${selectedDocType}`;
+  const mission = await finopsGenerateMissionSteps(anomaly, docText);
+  const body = document.getElementById('finops-modal-body');
+  if (body) {
+    body.innerHTML = `<div style="color:#00d4aa;font-size:10px;font-weight:700;margin-bottom:8px;">${mission.missionTitle}</div><div style="color:#7a8898;font-size:9px;line-height:1.6;">${mission.summary}</div><div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:4px;">${(mission.steps||[]).map((s,i)=>`<span style="font-size:8px;padding:2px 8px;border:1px solid rgba(0,212,170,.2);color:rgba(0,212,170,.6);">${i+1}. ${s.appName}</span>`).join('')}</div>`;
+    sessionStorage.setItem('TSM_FINOPS_MISSION', JSON.stringify(mission));
+    const btn = document.getElementById('finops-modal-launch');
+    if (btn) btn.style.display = 'block';
+  }
+}
+
 function storeRelay(e) {
   const payload = {
     doc: docText,
