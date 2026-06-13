@@ -1174,6 +1174,29 @@ function showRelayToast(msg){
       const el = document.getElementById('stratOutput');
       el.textContent = `[WAR ROOM RELAY — ${brief.selectedDocType}]\n\n${ctx.slice(0,800)}`;
       relaySource='warroom';
+
+      // Live-update ticker / relay bar / risk snapshot from real relay data
+      try {
+        const e1 = brief.engineOutputs?.[1] || '';
+        const e3 = brief.engineOutputs?.[3] || '';
+        const e2 = brief.engineOutputs?.[2] || '';
+        const riskM = (e1+' '+e3).match(/(?:FINANCIAL RISK SCORE|DOCUMENT RISK SCORE)[:\s]+(\d+)/i);
+        const expM = e3.match(/TOTAL EXPOSURE[:\s]+([^\n]+)/i);
+        const excM = e2.match(/EXCEPTION COUNT[:\s]+([^\n]+)/i);
+
+        if (riskM) document.querySelectorAll('.ticker-item .val.warn').forEach(el=>{ if(el.textContent.includes('/100')) el.textContent = riskM[1]+'/100'; });
+        if (expM) {
+          const expVal = expM[1].trim().slice(0,20);
+          document.querySelectorAll('.ticker-item .val.hot').forEach(el=>{ if(el.textContent.includes('$')) el.textContent = expVal; });
+          const rc2 = document.getElementById('rc-n2'); if(rc2) rc2.textContent = expVal.slice(0,8);
+          document.querySelectorAll('.risk-val.hot').forEach(el=>{ if(el.textContent.includes('$')) el.textContent = expVal; });
+        }
+        if (excM) {
+          const excVal = excM[1].trim().match(/\d+/)?.[0] || excM[1].trim();
+          const rc3 = document.getElementById('rc-n3'); if(rc3) rc3.textContent = excVal;
+          document.querySelectorAll('.risk-val.warn').forEach(el=>{ if(el.textContent.includes('flagged')) el.textContent = excVal+' flagged'; });
+        }
+      } catch(relayUpdateErr) { console.warn('Relay number update error:', relayUpdateErr); }
     };
     // Auto-inject on load
     setTimeout(() => window.injectFinOpsContext(), 600);
@@ -1263,14 +1286,14 @@ PRIORITY ACTIONS:
 RECOVERY PROBABILITY: [%] — [rationale]
 CFO ESCALATION: [Yes/No] — [reason]`;
 
-      fetch('https://api.groq.com/openai/v1/chat/completions',{
+      fetch('/api/financial/query',{
         method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKeyVal},
-        body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:700,temperature:0.2,messages:[{role:'user',content:prompt}]})
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({question:prompt, maxTokens:700})
       })
       .then(r=>r.json())
       .then(d=>{
-        const txt=d.choices?.[0]?.message?.content||'';
+        const txt=d.answer||d.response||'';
         if(!txt) throw new Error('Empty response');
         document.getElementById('fip-spinner').style.display='none';
         document.getElementById('fip-output').style.display='block';

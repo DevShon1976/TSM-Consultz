@@ -998,6 +998,28 @@ async function getAppPrompt(appKey) {
 async function fireAll() {
   groqKey = groqKey || 'server';
   const docText = serializeDoc();
+
+  const cacheKey = 'TSM_ACCT_CACHE_' + currentDoc + '_' + docText.length + '_' + docText.slice(0,80);
+  try {
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+      const c = JSON.parse(cached);
+      if (confirm('This exact document was already processed this session. Use cached results instead of re-running 4 engines?')) {
+        [1,2,3,4].forEach(n => {
+          outputs[n] = c.outputs[n] || '';
+          document.getElementById('body'+n).innerHTML = '<div class="app-output">' + outputs[n] + '</div>';
+          document.getElementById('badge'+n).className = 'app-badge badge-done';
+          document.getElementById('badge'+n).textContent = 'COMPLETE';
+          document.getElementById('tok'+n).textContent = Math.ceil(outputs[n].length / 4) + ' tokens';
+        });
+        document.getElementById('global-progress').textContent = '✓ Loaded cached results — tokens conserved';
+        document.getElementById('apps-active').textContent = '4 / 4 Complete';
+        toast('✓ Cached results loaded — no engines re-fired');
+        return;
+      }
+    }
+  } catch(err) {}
+
   // Pre-warm all prompts to avoid race condition
   await Promise.all([1,2,3,4].map(n => getAppPrompt('app'+n)));
 
@@ -1026,6 +1048,8 @@ async function fireAll() {
   document.getElementById('global-progress').textContent = '✓ All 4 engines complete';
   document.getElementById('apps-active').textContent = '4 / 4 Complete';
   toast('✓ Document processed — all 4 engines complete');
+
+  try { sessionStorage.setItem(cacheKey, JSON.stringify({ outputs })); } catch(err) {}
 }
 
 async function runEngine(num, docText) {
@@ -1039,6 +1063,8 @@ async function runEngine(num, docText) {
   outDiv.className = 'app-output';
   bodyEl.appendChild(outDiv);
 
+  const MAXT = { 1: 450, 2: 450, 3: 600, 4: 600 };
+
   let full = '', tokens = 0;
   try {
     outDiv.textContent = '⬡ Processing...';
@@ -1048,7 +1074,7 @@ async function runEngine(num, docText) {
       body: JSON.stringify({
         system: prompt.system,
         question: prompt.user(docText),
-        maxTokens: 700
+        maxTokens: MAXT[num] || 700
       })
     });
     if (!resp.ok) throw new Error('API ' + resp.status);
