@@ -525,46 +525,32 @@ app.post('/api/ai/query', async (req, res) => {
   } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
 
+app.post('/api/prompt', async (req, res) => {
+  try {
+    const { key, context } = req.body || {};
+    const prompts = {
+      doc_controller: 'You are a financial document controller AI. Analyze accounting documents for errors, missing data, and compliance issues. Be precise and actionable.',
+      doc_cfo: 'You are a CFO-level financial AI. Provide executive-level analysis of financial documents with strategic recommendations and risk assessment.',
+      doc_variance: 'You are a variance analysis AI. Identify budget variances, anomalies, and financial discrepancies. Quantify impact and recommend corrective actions.',
+      doc_triage: 'You are a financial document triage AI. Classify document type, extract key fields, flag critical items, and route to appropriate workflow.'
+    };
+    const prompt = prompts[key] || 'You are a financial operations AI assistant.';
+    return res.json({ ok: true, prompt, context: context || '' });
+  } catch(e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
 app.post('/api/financial/query', async (req, res) => {
   try {
-    const authHeader = req.headers.authorization || '';
-    const clientKey = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
-    const groqKey = process.env.GROQ_KEY || process.env.GROQ_API_KEY || clientKey;
-    if (!groqKey) return res.status(500).json({ ok: false, error: 'No Groq API key available' });
-
-    const { model, messages, max_tokens, stream } = req.body || {};
-
-    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + groqKey },
-      body: JSON.stringify({
-        model: model || 'llama-3.3-70b-versatile',
-        max_tokens: max_tokens || 1024,
-        messages: messages || [],
-        stream: !!stream
-      })
-    });
-
-    if (!groqRes.ok) {
-      const errText = await groqRes.text();
-      console.error('[FINANCIAL QUERY ERROR]', groqRes.status, errText);
-      if (!res.headersSent) return res.status(502).json({ ok: false, error: 'Groq error ' + groqRes.status + ': ' + errText });
-      return;
-    }
-
-    if (stream) {
-      res.setHeader('Content-Type', 'text/event-stream');
-      res.setHeader('Cache-Control', 'no-cache');
-      res.setHeader('Connection', 'keep-alive');
-      const { Readable } = require('stream');
-      Readable.fromWeb(groqRes.body).pipe(res);
-    } else {
-      const data = await groqRes.json();
-      return res.json({ ok: true, answer: data?.choices?.[0]?.message?.content || '', createdAt: new Date().toISOString() });
-    }
-  } catch (e) {
-    console.error('[FINANCIAL QUERY ERROR]', e.message);
-    if (!res.headersSent) return res.status(500).json({ ok: false, error: e.message });
+    const { system, message, question, query, maxTokens } = req.body || {};
+    const msg = message || question || query || '';
+    if (!msg) return res.status(400).json({ ok: false, error: 'message required' });
+    const sys = system || SP.financial;
+    var a = await groqChat(sys, msg, Math.min(maxTokens || 1024, 1024));
+    return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() });
+  }
+  catch (e) { 
+    console.error('FINANCIAL QUERY ERROR:', e.message);
+    return res.status(500).json({ ok: false, error: e.message }); 
   }
 });
 
