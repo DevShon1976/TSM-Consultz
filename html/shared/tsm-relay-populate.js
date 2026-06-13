@@ -83,7 +83,9 @@
     setTimeout(() => {
       const fireBtn = [...document.querySelectorAll('button')]
         .find(b => cfg.fireBtnText.some(t => b.textContent.includes(t)));
-      if (fireBtn && !fireBtn.disabled) fireBtn.click();
+      // Auto-fire disabled — user must click manually
+      // if (fireBtn && !fireBtn.disabled) fireBtn.click();
+      if (banner) banner.querySelector('span').textContent = `⚡ WAR ROOM RELAY ACTIVE — ${relay.selectedDocType||'Document'} · fields populated · click PROCESS to run`;
     }, 2000);
   }, 400);
 })();
