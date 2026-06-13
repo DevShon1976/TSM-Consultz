@@ -541,11 +541,18 @@ app.post('/api/prompt', async (req, res) => {
 
 app.post('/api/financial/query', async (req, res) => {
   try {
-    const { system, message, question, query, maxTokens } = req.body || {};
-    const msg = message || question || query || '';
+    const { system, message, question, query, maxTokens, messages } = req.body || {};
+    let msg, sys;
+    if (messages && Array.isArray(messages)) {
+      sys = messages.find(m => m.role === 'system')?.content || SP.financial;
+      msg = messages.find(m => m.role === 'user')?.content || '';
+    } else {
+      msg = message || question || query || '';
+      sys = system || SP.financial;
+    }
     if (!msg) return res.status(400).json({ ok: false, error: 'message required' });
-    const sys = system || SP.financial;
-    var a = await groqChat(sys, msg, Math.min(maxTokens || 1024, 1024));
+    msg = msg.slice(0, 3000);
+    var a = await groqChat(sys, msg, Math.min(maxTokens || 700, 700));
     return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() });
   }
   catch (e) { 
