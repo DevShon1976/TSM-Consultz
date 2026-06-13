@@ -307,7 +307,7 @@
         },
         {
           name: 'Legal Intelligence',
-          url: '/html/legal-pro/legal-intelligence.html',
+          url: '/html/legal-pro/legal-analyst-pro.html',
           solves: [
             'legal intelligence gap','matter portfolio review','legal risk assessment',
             'contract analysis needed','legal document review','clause extraction',
