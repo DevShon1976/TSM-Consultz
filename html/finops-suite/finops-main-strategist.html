@@ -1148,13 +1148,13 @@ function showRelayToast(msg){
       <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 16px;background:rgba(0,212,255,.06);border-bottom:1px solid rgba(0,212,255,.12);">
         <div style="display:flex;align-items:center;gap:10px;">
           <span style="background:#00d4ff;color:#000;font-size:9px;font-weight:bold;padding:2px 7px;letter-spacing:1px;">⚡ WAR ROOM BRIEF</span>
-          <span style="color:#555;font-size:10px;">${brief.docType||'Document'} · ${brief.timestamp?new Date(brief.timestamp).toLocaleTimeString():''}</span>
+          <span style="color:#555;font-size:10px;">${brief.selectedDocType||'Document'} · ${brief.timestamp?new Date(brief.timestamp).toLocaleTimeString():''}</span>
           <span style="background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);color:#00d4ff;font-size:9px;padding:2px 8px;letter-spacing:1px;">ESCALATED TO FINOPS STRATEGIST</span>
         </div>
-        <span style="color:#00d4ff;font-size:10px;">RISK: ${brief.snapshot?.risk||'—'} · EXP: ${brief.snapshot?.exposure||'—'}</span>
+        <span style="color:#00d4ff;font-size:10px;">RISK: — · EXP: —</span>
       </div>
       <div style="padding:10px 16px;border-bottom:1px solid rgba(0,212,255,.08);font-size:10px;color:#aaa;line-height:1.7;">
-        ${(brief.engines?.e2||brief.engines?.e3||brief.engines?.e1||'No engine data received').slice(0,300)}
+        ${(brief.engineOutputs?.[2]||brief.engineOutputs?.[3]||brief.engineOutputs?.[1]||'No engine data received').slice(0,300)}
       </div>
       <div style="padding:8px 16px;display:flex;gap:8px;flex-wrap:wrap;">
         <button onclick="window.runFinOpsIssuePack()" style="padding:6px 14px;background:rgba(0,212,255,.1);border:1px solid #00d4ff;color:#00d4ff;font-family:monospace;font-size:9px;cursor:pointer;letter-spacing:.5px;"
@@ -1170,7 +1170,7 @@ function showRelayToast(msg){
     target.insertBefore(banner, target.firstChild);
 
     window.injectFinOpsContext = function(){
-      const ctx = Object.entries(brief.engines||{}).map(([k,v])=>`${k}: ${v.slice(0,300)}`).join('\n');
+      const ctx = Object.entries(brief.engineOutputs||{}).map(([k,v])=>`${k}: ${v.slice(0,300)}`).join('\n');
       const el = document.getElementById('stratOutput');
       if(el) el.textContent = `[WAR ROOM RELAY — ${brief.docType}]\nRisk: ${brief.snapshot?.risk} · Exposure: ${brief.snapshot?.exposure}\n\n${ctx.slice(0,800)}`;
       relaySource='warroom';
