@@ -526,8 +526,46 @@ app.post('/api/ai/query', async (req, res) => {
 });
 
 app.post('/api/financial/query', async (req, res) => {
-  try { var a = await groqChat(SP.financial, req.body.question || req.body.query || '', req.body.maxTokens || 1024, req.body.groqKey); return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() }); }
-  catch (e) { console.error('[FINANCIAL QUERY ERROR]', e.message); return res.status(500).json({ ok: false, error: e.message }); }
+  try {
+    const authHeader = req.headers.authorization || '';
+    const clientKey = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+    const groqKey = process.env.GROQ_KEY || process.env.GROQ_API_KEY || clientKey;
+    if (!groqKey) return res.status(500).json({ ok: false, error: 'No Groq API key available' });
+
+    const { model, messages, max_tokens, stream } = req.body || {};
+
+    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + groqKey },
+      body: JSON.stringify({
+        model: model || 'llama-3.3-70b-versatile',
+        max_tokens: max_tokens || 1024,
+        messages: messages || [],
+        stream: !!stream
+      })
+    });
+
+    if (!groqRes.ok) {
+      const errText = await groqRes.text();
+      console.error('[FINANCIAL QUERY ERROR]', groqRes.status, errText);
+      if (!res.headersSent) return res.status(502).json({ ok: false, error: 'Groq error ' + groqRes.status + ': ' + errText });
+      return;
+    }
+
+    if (stream) {
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      const { Readable } = require('stream');
+      Readable.fromWeb(groqRes.body).pipe(res);
+    } else {
+      const data = await groqRes.json();
+      return res.json({ ok: true, answer: data?.choices?.[0]?.message?.content || '', createdAt: new Date().toISOString() });
+    }
+  } catch (e) {
+    console.error('[FINANCIAL QUERY ERROR]', e.message);
+    if (!res.headersSent) return res.status(500).json({ ok: false, error: e.message });
+  }
 });
 
 app.post('/api/mortgage/query', async (req, res) => {
