@@ -7,11 +7,11 @@ window.TSM = {
   launcher: {
     registry: {},
     register(name, fn){ this.registry[name] = fn; },
-    run(action, argsStr){
+    run(action, argsStr, el){
       const fn = this.registry[action] || window[action];
       if(typeof fn === 'function'){
         try{
-          const args = argsStr ? eval('['+argsStr+']') : [];
+          const args = argsStr ? (function(){ return eval('['+argsStr+']'); }).call(el) : [];
           fn(...args);
         }catch(e){ console.warn('[TSM] Error running',action,e); }
       } else {
@@ -52,8 +52,3 @@ document.addEventListener('click', e=>{
   const el = e.target.closest('[data-tsm-action]');
   if(!el) return;
   const action = el.getAttribute('data-tsm-action');
-  const args = el.getAttribute('data-tsm-args') || '';
-  TSM.launcher.run(action, args);
-});
-
-console.log('[TSM SHARED] v2.0 loaded');
