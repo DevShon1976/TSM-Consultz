@@ -1313,5 +1313,40 @@ document.addEventListener('click', function(e){
 <script src="/finops-suite/js/finops-mission-workflow.js"></script>
 <script src="/finops-suite/js/finops-node-mission.js"></script>
 <script src="/js/tsm-mission-guide.js"></script>
+<script>
+(function(){
+  try {
+    const raw = sessionStorage.getItem('TSM_FINOPS_WAR_RELAY') || localStorage.getItem('tsm_finops_war_relay');
+    if (!raw) return;
+    const relay = JSON.parse(raw);
+    if (!relay.doc && !relay.docType) return;
+
+    // Show relay banner
+    const banner = document.createElement('div');
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9000;background:rgba(0,180,100,.12);border-bottom:1px solid rgba(0,180,100,.3);padding:8px 20px;font-family:"Share Tech Mono",monospace;font-size:10px;color:#00d4aa;letter-spacing:1px;display:flex;justify-content:space-between;align-items:center;';
+    banner.innerHTML = `<span>⚡ WAR ROOM RELAY ACTIVE — ${relay.docType||'FINANCIAL DOCUMENT'} · ${relay.doc ? relay.doc.length + ' chars' : ''} loaded</span><button onclick="this.parentElement.remove()" style="background:none;border:none;color:#00d4aa;cursor:pointer;font-size:14px;">✕</button>`;
+    document.body.prepend(banner);
+
+    // Auto-select matching doc type tab
+    const docTypeMap = {
+      'AP Aging': 'invoice', 'GL Extract': 'gl', 'Bank Recon': 'bank',
+      'Invoice Audit': 'invoice', 'Budget Var.': 'budget', 'ERA Batch': 'era',
+      'Cash Flow': 'cashflow', 'Vendor Rpt': 'vendor', 'Tax / 1099': 'tax'
+    };
+    const matchedDoc = docTypeMap[relay.docType] || 'invoice';
+    const tabBtn = document.querySelector(`[data-tsm-action="setDoc"][data-tsm-args*="${matchedDoc}"]`);
+    if (tabBtn) tabBtn.click();
+
+    // Pre-fill notes with war room context
+    setTimeout(() => {
+      const notes = document.getElementById('inv-notes') || document.querySelector('.textarea-field');
+      if (notes && relay.engines) {
+        notes.value = `[WAR ROOM RELAY — ${relay.docType}]\n\nRISK: ${relay.snapshot?.risk||'—'} | EXPOSURE: ${relay.snapshot?.exposure||'—'} | EXCEPTIONS: ${relay.snapshot?.exceptions||'—'}\n\nE2 RISK SUMMARY:\n${(relay.engines.e2||'').slice(0,400)}\n\nE3 FINANCIAL IMPACT:\n${(relay.engines.e3||'').slice(0,400)}`;
+      }
+    }, 500);
+
+  } catch(e) { console.warn('Relay load error:', e); }
+})();
+</script>
 </body>
 </html>
