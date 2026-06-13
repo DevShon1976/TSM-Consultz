@@ -36,7 +36,7 @@ app.use((req, res, next) => {
 // Primary: fetch-based (reliable on Railway)
 const GROQ_MODELS = [
   'llama-3.3-70b-versatile',
-  'llama3-70b-8192',
+  'llama-3.1-8b-instant',
   'llama3-8b-8192',
   'gemma2-9b-it'
 ];
