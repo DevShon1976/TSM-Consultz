@@ -278,24 +278,28 @@ function nav(page) { window.location.href = '/html/finops-suite/' + page; }
 // LOAD RELAY
 // ═══════════════════════════════════════════════════
 function loadRelay() {
-  const raw = sessionStorage.getItem('TSM_FINOPS_STRATEGIST_RELAY') ||
-              localStorage.getItem('tsm_finops_strategist_output') ||
-              sessionStorage.getItem('TSM_FINOPS_WAR_RELAY') ||
-              localStorage.getItem('tsm_finops_war_relay');
+  const raw = localStorage.getItem('tsm_strategist_relay') ||
+            sessionStorage.getItem('TSM_FINOPS_WAR_RELAY') ||
+            localStorage.getItem('tsm_finops_war_relay');
   if (!raw) return false;
   try { populateFromRelay(JSON.parse(raw)); return true; } catch(e) { console.warn('Relay error:', e); return false; }
 }
 
 function populateFromRelay(d) {
-  const snap = d.snapshot || {};
-  const engines = d.engines || {};
-  const summary = d.summary || engines.e6 || '';
+  const snap = {
+  docType: d.selectedDocType || (d.source === 'warroom' ? 'War Room' : 'Strategist Report'),
+  risk: d.riskScore || '—',
+  exposure: d.exposure || '—'
+};
+const eo = d.engineOutputs || [];
+const engines = { e1:eo[1]||'', e2:eo[2]||'', e3:eo[3]||'', e4:eo[4]||'', e5:eo[5]||'', e6:eo[6]||'' };
+const summary = d.summary || engines.e6 || '';
 
   // Alert bar
   document.getElementById('alertBar').style.background = 'rgba(0,255,198,.04)';
   document.getElementById('alertBar').style.borderBottomColor = 'rgba(0,255,198,.12)';
   document.getElementById('alertText').style.color = 'var(--green)';
-  document.getElementById('alertText').textContent = 'EXECUTIVE PORTAL — RELAY RECEIVED — ' + (d.docType||'MATTER').toUpperCase() + ' — REVIEW & AUTHORIZE';
+  document.getElementById('alertText').textContent = 'EXECUTIVE PORTAL — RELAY RECEIVED — ' + (snap.docType||'MATTER').toUpperCase() + ' — REVIEW & AUTHORIZE';
 
   // Relay panel
   document.getElementById('relayDot').classList.add('live');
@@ -340,7 +344,7 @@ function populateFromRelay(d) {
   populateDecisions(engines.e5||'', engines.e3||'', d);
   populateBNCA(summary, engines, snap);
 
-  document.getElementById('sbRelay').textContent = (d.docType||'Matter') + ' · Relay active';
+  document.getElementById('sbRelay').textContent = (snap.docType||'MATTER') + ' · Relay active';
   document.getElementById('syncLabel').textContent = 'Synced ' + new Date().toLocaleTimeString('en-US',{hour12:false});
   document.getElementById('bncaStamp').textContent = 'Last run ' + new Date().toLocaleTimeString('en-US',{hour12:false});
 }
