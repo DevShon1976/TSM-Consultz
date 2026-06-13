@@ -1012,9 +1012,12 @@ async function callGroq(messages, onChunk){
   return {text:full,tokens,speed:Math.round(tokens/((Date.now()-start)/1000))};
 }
 
-// ===== STRATEGIST REPORT =====
 function buildStrategistPrompt(){
-  const ctx = relayContexts[relaySource];
+  let ctx = relayContexts[relaySource];
+  if (relaySource === 'warroom') {
+    const live = document.getElementById('stratOutput')?.textContent || '';
+    if (live && live.includes('WAR ROOM ANOMALY')) ctx = live;
+  }
   return `You are the TSM FinOps Main Strategist — a senior financial operations AI system synthesizing War Room and Executive Portal intelligence.
 
 ${ctx}
@@ -1171,8 +1174,19 @@ function showRelayToast(msg){
 
     window.injectFinOpsContext = function(){
       const ctx = Object.entries(brief.engineOutputs||{}).map(([k,v])=>`${k}: ${v.slice(0,300)}`).join('\n');
+      let combined = `[WAR ROOM ANOMALY — ${brief.selectedDocType}]\n\n${ctx.slice(0,800)}`;
+
+      try {
+        const remRaw = localStorage.getItem('tsm_remediation_relay');
+        if (remRaw) {
+          const rem = JSON.parse(remRaw);
+          const remCtx = Object.entries(rem.outputs||{}).map(([k,v])=>`${k}: ${v.slice(0,300)}`).join('\n');
+          combined += `\n\n[${(rem.appName||'REMEDIATION').toUpperCase()} — ${rem.docType}]\n\n${remCtx.slice(0,800)}`;
+        }
+      } catch(err) {}
+
       const el = document.getElementById('stratOutput');
-      el.textContent = `[WAR ROOM RELAY — ${brief.selectedDocType}]\n\n${ctx.slice(0,800)}`;
+      el.textContent = combined;
       relaySource='warroom';
 
       // Live-update ticker / relay bar / risk snapshot from real relay data

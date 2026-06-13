@@ -1050,6 +1050,28 @@ async function fireAll() {
   toast('✓ Document processed — all 4 engines complete');
 
   try { sessionStorage.setItem(cacheKey, JSON.stringify({ outputs })); } catch(err) {}
+
+  try {
+    localStorage.setItem('tsm_remediation_relay', JSON.stringify({
+      appName: 'FinOps Accounting',
+      docType: currentDoc,
+      doc: docText,
+      outputs: { e1: outputs[1]||'', e2: outputs[2]||'', e3: outputs[3]||'', e4: outputs[4]||'' },
+      timestamp: Date.now(),
+      chainStep: 'remediation'
+    }));
+  } catch(err) {}
+}
+
+  try {
+    localStorage.setItem('tsm_acct_relay', JSON.stringify({
+      docType: currentDoc,
+      doc: docText,
+      outputs: { e1: outputs[1]||'', e2: outputs[2]||'', e3: outputs[3]||'', e4: outputs[4]||'' },
+      timestamp: Date.now(),
+      chainStep: 'accounting-remediation'
+    }));
+  } catch(err) {}
 }
 
 async function runEngine(num, docText) {
