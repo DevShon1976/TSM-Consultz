@@ -32,10 +32,7 @@
         vendor:     { selector: '#inv-vendor, input[placeholder*="Vendor name"]', extract: 'VENDOR|KEY PARTIES|VENDOR NAME|PAYER|PAYEE' },
       },
       notesSelector: '#inv-notes, .textarea-field, textarea',
-      fireBtnText: ['PROCESS DOCUMENT','FIRE ALL 4 ENGINES'],const extract = (label) => {
-  const m = e1.match(new RegExp('(?:' + label + ')[:\\s]+([^\\n]+)', 'i'));
-  return m ? m[1].trim() : '';
-};
+      fireBtnText: ['PROCESS DOCUMENT','FIRE ALL 4 ENGINES'],
     },
     'finops-operations.html': {
       docTypeMap: {}, // fill in once we know operations' tab labels
