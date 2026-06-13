@@ -566,7 +566,7 @@ app.post('/api/financial/query', async (req, res) => {
   }
   catch (e) {
     console.error('FINANCIAL QUERY ERROR:', e.message);
-    return res.status(500).json({ ok: false, error: e.message });
+    return res.status(500).json({ ok: false, error: e.message, detail: e.stack?.slice(0,200) });
   }
 });
 
