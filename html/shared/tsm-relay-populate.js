@@ -29,7 +29,7 @@
       fields: {
         invoiceNum: { selector: '#inv-number, input[placeholder*="INV-"]', extract: 'INVOICE\\s*#?|INVOICE NUMBER' },
         poNum:      { selector: '#inv-po, input[placeholder*="PO-"]', extract: 'PO\\s*#?|PURCHASE ORDER' },
-        vendor:     { selector: '#inv-vendor, input[placeholder*="Vendor name"]', extract: 'VENDOR|KEY PARTIES|VENDOR NAME|PAYER|PAYEE' },
+        vendor:     { selector: '#inv-vendor, input[placeholder*="Vendor name"]', extract: 'KEY PARTIES|VENDOR NAME|VENDOR(?! FLAGS)|PAYER|PAYEE' },
       },
       notesSelector: '#inv-notes, .textarea-field, textarea',
       fireBtnText: ['PROCESS DOCUMENT','FIRE ALL 4 ENGINES'],
