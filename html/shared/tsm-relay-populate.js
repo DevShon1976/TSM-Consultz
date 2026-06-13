@@ -27,7 +27,7 @@
     'finops-accounting.html': {
       docTypeMap: { 'AP Aging':'AP Invoice','GL Extract':'Journal Entry','Bank Recon':'Bank Recon','Invoice Audit':'AP Invoice','Budget Var.':'PnL','ERA Batch':'AR Invoice','Cash Flow':'PnL','Vendor Rpt':'AP Invoice','Tax / 1099':'Month-End Close' },
       fields: {
-        invoiceNum: { selector: '#inv-number, input[placeholder*="INV-"]', extract: 'INVOICE\\s*#?|INVOICE NUMBER' },
+        invoiceNum: { selector: '#inv-num', extract: 'INVOICE\\s*#?|INVOICE NUMBER' },
         poNum:      { selector: '#inv-po, input[placeholder*="PO-"]', extract: 'PO\\s*#?|PURCHASE ORDER' },
         vendor:     { selector: '#inv-vendor, input[placeholder*="Vendor name"]', extract: 'VENDOR|KEY PARTIES|VENDOR NAME|PAYER|PAYEE' },
       },
