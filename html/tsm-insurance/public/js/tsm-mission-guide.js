@@ -306,35 +306,9 @@
           ]
         },
         {
-          name: 'HC Tax Prep',
-          url: '/html/healthcare/hc-taxprep.html',
+          name: 'Legal Intelligence',
+          url: '/html/legal-pro/legal-intelligence.html',
           solves: [
-            'tax document missing','W-9 gap','1099 not issued','tax filing issue',
-            'tax compliance anomaly','healthcare tax classification','IRS reporting gap',
-            'tax liability undocumented','year-end tax prep gap','tax audit risk',
-            'nonprofit tax filing gap'
-    legal: {
-      systemRole: 'legal operations and case management AI',
-      anomalyLabel: 'Issue Type',
-      usesDenialIntel: false,
-      appPool: [
-        {
-          name: 'Legal Accounting',
-          url: '/html/legal-pro/legal-account.html',
-          solves: [
-            'legal billing error','trust account issue','IOLTA gap','client billing discrepancy',
-            'matter billing gap','invoice not generated','legal fee dispute','retainer issue',
-            'billing write-off needed','accounts receivable legal gap','legal cost overrun',
-            'matter budget variance','legal financial audit','billing rate error',
-            'time entry missing','disbursement gap','legal accounting reconciliation',
-            'client ledger discrepancy','billing compliance gap','legal expense error'
-          ]
-        },
-        {
-          name: 'Legal Analyst Pro',
-          url: '/html/legal-pro/legal-analyst-pro.html',
-          solves: [
-            'legal overview needed','multi-matter analysis','cross-domain legal issue',
             'legal intelligence gap','matter portfolio review','legal risk assessment',
             'contract analysis needed','legal document review','clause extraction',
             'legal pattern analysis','regulatory legal gap','legal research needed',
@@ -754,6 +728,7 @@
         },
       ],
     },
+  };
 
   function extractCode(text) {
     const m = (text || '').match(/\b(CO-\d+|PR-\d+|OA-\d+|PI-\d+)\b/i);
