@@ -784,7 +784,7 @@ async function fireEngines() {
 
   setTimeout(() => {
     try {
-      sessionStorage.setItem('TSM_CONSTRUCTION_WAR_RELAY', JSON.stringify({ docText, selectedDocType, engineOutputs: [e[1]||'',e[2]||'',e[3]||'',e[4]||'',e[5]||'',e[6]||''], timestamp: Date.now() }));
+      sessionStorage.setItem('TSM_FINOPS_WAR_RELAY', JSON.stringify({ docText, selectedDocType, engineOutputs: [e[1]||'',e[2]||'',e[3]||'',e[4]||'',e[5]||'',e[6]||''], timestamp: Date.now() }));
     } catch(err) {}
     showAnomalyAdvisorPanel([e[1]||'',e[2]||'',e[3]||'',e[4]||''], docText);
   }, 1200);
@@ -1046,7 +1046,7 @@ async function finopsGenerateMissionSteps(anomalyText, docText) {
   const msg=`Anomaly:\n"${anomalyText.slice(0,600)}"\n\nDoc context:\n${(docText||'').slice(0,400)}\n\nAvailable apps:\n${FINOPS_APPS}\n\nGenerate 4-6 steps. Return ONLY:\n{"missionTitle":"...","summary":"...","steps":[{"id":"step-1","title":"...","appName":"...","appUrl":"...","objective":"...","instructions":"...","expectedOutput":"...","completionCriteria":"..."}]}`;
  
   try {
-    const res=await fetch('/api/hc/query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sys,message:msg,apiKey:localStorage.getItem('tsm_groq_key')||''})});
+    const res=await fetch('/api/financial/query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:msg})});
     const data=await res.json();
     const raw=(data.response||data.content||'').replace(/```json|```/g,'').trim();
     const parsed=JSON.parse(raw);
