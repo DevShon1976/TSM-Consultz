@@ -41,8 +41,9 @@ const GROQ_MODELS = [
   'gemma2-9b-it'
 ];
 
-async function groqChat(system, message, maxTokens) {
-  const groqKey = process.env.GROQ_KEY || process.env.GROQ_API_KEY;
+async function groqChat(system, message, maxTokens, clientKey) {
+  const groqKey = process.env.GROQ_KEY || process.env.GROQ_API_KEY || clientKey;
+  if (!groqKey) throw new Error('No Groq API key configured (server env missing and no client key provided)');
   for (const model of GROQ_MODELS) {
     try {
       const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -525,8 +526,8 @@ app.post('/api/ai/query', async (req, res) => {
 });
 
 app.post('/api/financial/query', async (req, res) => {
-  try { var a = await groqChat(SP.financial, req.body.question || req.body.query || '', req.body.maxTokens || 1024); return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() }); }
-  catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  try { var a = await groqChat(SP.financial, req.body.question || req.body.query || '', req.body.maxTokens || 1024, req.body.groqKey); return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() }); }
+  catch (e) { console.error('[FINANCIAL QUERY ERROR]', e.message); return res.status(500).json({ ok: false, error: e.message }); }
 });
 
 app.post('/api/mortgage/query', async (req, res) => {
