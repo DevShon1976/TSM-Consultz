@@ -987,7 +987,7 @@ addLog('FinOps War Room initialized', '6 engines standing by — load financial 
     // Restore app dispatch
     if(s.e6text) buildAppDispatch(s.e6text);
     // Restore escalate bar
-    document.getElementById('escalSub').textContent = '6-engine analysis complete — ' + s.selectedDocType + ' · Ready to escalate to Construction Strategist.';
+    document.getElementById('escalSub').textContent = '6-engine analysis complete — ' + s.selectedDocType + ' · Ready to escalate to FinOps Strategist.';
     document.getElementById('escalateBar').classList.add('visible');
     addLog('War Room state restored', s.selectedDocType + ' analysis reloaded', 'p');
   } catch(err){ console.warn('State restore error:', err); }
@@ -1048,7 +1048,7 @@ async function finopsGenerateMissionSteps(anomalyText, docText) {
   try {
     const res=await fetch('/api/financial/query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:msg})});
     const data=await res.json();
-    const raw=(data.response||data.content||'').replace(/```json|```/g,'').trim();
+    const raw=(data.answer||data.response||data.content||'').replace(/```json|```/g,'').trim();
     const parsed=JSON.parse(raw);
     return {missionId:'FINOPS-'+Date.now(),...parsed,steps:(parsed.steps||[]).map((s,i)=>({...s,status:i===0?'active':'pending'}))};
   } catch(e) {
@@ -1059,7 +1059,7 @@ async function finopsGenerateMissionSteps(anomalyText, docText) {
         {id:'step-1',title:route.app,appName:route.app,appUrl:route.url,objective:route.reason,
           instructions:`Open ${route.app}. Load the financial document and review the flagged anomaly. Run the relevant analysis engine for this cost type.`,
           expectedOutput:'Anomaly root cause confirmed and remediation path identified',completionCriteria:'Findings documented',status:'active'},
-        {id:'step-2',title:'FinOps Strategist',appName:'FinOps Strategist',appUrl:'/html/finops/finops-strategist.html',
+        {id:'step-2',title:'FinOps Strategist',appName:'FinOps Strategist',appUrl:'/html/finops-suite/finops-main-strategist.html',
           objective:'Generate cost optimization brief',
           instructions:'Open FinOps Strategist. Relay the anomaly findings and generate a structured optimization brief with savings recommendations ranked by impact.',
           expectedOutput:'Optimization brief with ranked recommendations',completionCriteria:'Brief reviewed and actions assigned',status:'pending'}
@@ -1153,15 +1153,14 @@ function showAnomalyAdvisorPanel(outputs, docText) {
  
   let anomalyFullText='';
   let firstChunk=true;
-  groqStreamModel('llama-3.3-70b-versatile',sys,context,
-    (chunk)=>{
-      if(firstChunk){firstChunk=false;const s=document.getElementById('anomaly-scan-msg');if(s)s.remove();}
-      anomalyFullText+=chunk;
-      const span=document.createElement('span');
-      span.innerHTML=chunk.replace(/⚠/g,'<span style="color:#f59e0b">⚠</span>').replace(/—/g,'<span style="color:#1ee8b660"> — </span>');
-      body.appendChild(span);body.scrollTop=body.scrollHeight;
-    },
-    ()=>{
+  fetch('/api/financial/query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:context,system:sys,maxTokens:800})})
+    .then(r=>r.json())
+    .then(data=>{
+      const s=document.getElementById('anomaly-scan-msg');if(s)s.remove();
+      anomalyFullText=data.answer||data.response||'No anomalies detected.';
+      body.innerHTML=anomalyFullText
+        .replace(/⚠/g,'<span style="color:#f59e0b">⚠</span>')
+        .replace(/—/g,'<span style="color:#1ee8b660"> — </span>');
       const footer=document.createElement('div');
       footer.style.cssText='margin-top:14px;padding-top:10px;border-top:1px solid #1ee8b620;color:#1ee8b650;font-size:9px;letter-spacing:1px;';
       footer.textContent='⬡ SCAN COMPLETE — FINOPS ANOMALIES PACKAGED FOR STRATEGIST RELAY';
@@ -1169,10 +1168,8 @@ function showAnomalyAdvisorPanel(outputs, docText) {
       document.getElementById('finops-mission-btn-wrap').style.display='block';
       document.getElementById('finops-build-mission-btn').dataset.anomaly=anomalyFullText;
       document.getElementById('finops-build-mission-btn').dataset.doc=(docText||'').slice(0,600);
-    },
-    (err)=>{const e=document.createElement('div');e.style.color='#ef4444';e.textContent='[Advisor error: '+err+']';body.appendChild(e);},
-    600
-  );
+    })
+    .catch(err=>{const e=document.createElement('div');e.style.color='#ef4444';e.textContent='[Advisor error: '+err+']';body.appendChild(e);});
 }
  
 async function finopsLaunchMission(){
