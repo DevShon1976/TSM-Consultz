@@ -11,9 +11,9 @@
   const e1 = eo[1] || '';
 
   const extract = (label) => {
-    const m = e1.match(new RegExp('(?:' + label + ')[:\\s]+([^\\n]+)', 'i'));
-    return m ? m[1].trim() : '';
-  };
+  const m = e1.match(new RegExp('^(?:' + label + ')\\s*:\\s*([^\\n]+)', 'im'));
+  return m ? m[1].trim() : '';
+};
 
   const banner = document.createElement('div');
   banner.style.cssText = 'position:fixed;top:32px;left:0;right:0;z-index:9000;background:rgba(0,180,100,.12);border-bottom:1px solid rgba(0,180,100,.3);padding:8px 20px;font-family:"Share Tech Mono",monospace;font-size:10px;color:#00d4aa;letter-spacing:1px;display:flex;justify-content:space-between;align-items:center;';
@@ -29,15 +29,18 @@
       fields: {
         invoiceNum: { selector: '#inv-number, input[placeholder*="INV-"]', extract: 'INVOICE\\s*#?|INVOICE NUMBER' },
         poNum:      { selector: '#inv-po, input[placeholder*="PO-"]', extract: 'PO\\s*#?|PURCHASE ORDER' },
-        vendor:     { selector: '#inv-vendor, input[placeholder*="Vendor name"]', extract: 'KEY PARTIES|VENDOR NAME|VENDOR(?! FLAGS)|PAYER|PAYEE' },
+        vendor:     { selector: '#inv-vendor, input[placeholder*="Vendor name"]', extract: 'VENDOR|KEY PARTIES|VENDOR NAME|PAYER|PAYEE' },
       },
       notesSelector: '#inv-notes, .textarea-field, textarea',
-      fireBtnText: ['PROCESS DOCUMENT','FIRE ALL 4 ENGINES'],
+      fireBtnText: ['PROCESS DOCUMENT','FIRE ALL 4 ENGINES'],const extract = (label) => {
+  const m = e1.match(new RegExp('(?:' + label + ')[:\\s]+([^\\n]+)', 'i'));
+  return m ? m[1].trim() : '';
+};
     },
     'finops-operations.html': {
       docTypeMap: {}, // fill in once we know operations' tab labels
       fields: {
-        vendorName: { selector: '#op-vendor', extract: 'VENDOR|KEY PARTIES|VENDOR NAME' },
+        vendor:     { selector: '#inv-vendor, input[placeholder*="Vendor name"]', extract: 'VENDOR|KEY PARTIES|VENDOR NAME|PAYER|PAYEE' },
       },
       notesSelector: '#op-notes, textarea',
       fireBtnText: ['PROCESS','FIRE ALL'],
