@@ -1317,31 +1317,58 @@ document.addEventListener('click', function(e){
     const raw = localStorage.getItem('tsm_finops_war_relay') || sessionStorage.getItem('TSM_FINOPS_WAR_RELAY');
     if (!raw) return;
     const relay = JSON.parse(raw);
-    if (!relay.doc && !relay.docType) return;
+    if (!relay.docText && !relay.selectedDocType) return;
 
-    // Show relay banner
     const banner = document.createElement('div');
     banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9000;background:rgba(0,180,100,.12);border-bottom:1px solid rgba(0,180,100,.3);padding:8px 20px;font-family:"Share Tech Mono",monospace;font-size:10px;color:#00d4aa;letter-spacing:1px;display:flex;justify-content:space-between;align-items:center;';
-    banner.innerHTML = `<span>⚡ WAR ROOM RELAY ACTIVE — ${relay.docType||'FINANCIAL DOCUMENT'} · ${relay.doc ? relay.doc.length + ' chars' : ''} loaded</span><button onclick="this.parentElement.remove()" style="background:none;border:none;color:#00d4aa;cursor:pointer;font-size:14px;">✕</button>`;
+    banner.innerHTML = `<span>⚡ WAR ROOM RELAY ACTIVE — ${relay.selectedDocType||'FINANCIAL DOCUMENT'} · auto-populating fields…</span><button onclick="this.parentElement.remove()" style="background:none;border:none;color:#00d4aa;cursor:pointer;font-size:14px;">✕</button>`;
     document.body.prepend(banner);
 
-    // Auto-select matching doc type tab
+    const eo = relay.engineOutputs || [];
+    const e1 = eo[1] || '';
+
     const docTypeMap = {
-      'AP Aging': 'invoice', 'GL Extract': 'gl', 'Bank Recon': 'bank',
-      'Invoice Audit': 'invoice', 'Budget Var.': 'budget', 'ERA Batch': 'era',
-      'Cash Flow': 'cashflow', 'Vendor Rpt': 'vendor', 'Tax / 1099': 'tax'
+      'AP Aging': 'AP Invoice', 'GL Extract': 'Journal Entry', 'Bank Recon': 'Bank Recon',
+      'Invoice Audit': 'AP Invoice', 'Budget Var.': 'PnL', 'ERA Batch': 'AR Invoice',
+      'Cash Flow': 'PnL', 'Vendor Rpt': 'AP Invoice', 'Tax / 1099': 'Month-End Close'
     };
-    const matchedDoc = docTypeMap[relay.docType] || 'invoice';
-    const tabBtn = document.querySelector(`[data-tsm-action="setDoc"][data-tsm-args*="${matchedDoc}"]`);
+    const targetLabel = docTypeMap[relay.selectedDocType] || 'AP Invoice';
+
+    const tabBtns = [...document.querySelectorAll('button, [role="button"], .doc-type-btn')];
+    const tabBtn = tabBtns.find(b => b.textContent.trim().toUpperCase() === targetLabel.toUpperCase());
     if (tabBtn) tabBtn.click();
 
-    // Pre-fill notes with war room context
+    const extract = (label) => {
+      const m = e1.match(new RegExp(label + '[:\\s]+([^\\n]+)', 'i'));
+      return m ? m[1].trim() : '';
+    };
+
+    const vendor = extract('VENDOR|KEY PARTIES|VENDOR NAME') || extract('PAYER|PAYEE');
+    const invoiceNum = extract('INVOICE\\s*#?|INVOICE NUMBER');
+    const poNum = extract('PO\\s*#?|PURCHASE ORDER');
+
     setTimeout(() => {
-      const notes = document.getElementById('inv-notes') || document.querySelector('.textarea-field');
-      if (notes && relay.engines) {
-        notes.value = `[WAR ROOM RELAY — ${relay.docType}]\n\nRISK: ${relay.snapshot?.risk||'—'} | EXPOSURE: ${relay.snapshot?.exposure||'—'} | EXCEPTIONS: ${relay.snapshot?.exceptions||'—'}\n\nE2 RISK SUMMARY:\n${(relay.engines.e2||'').slice(0,400)}\n\nE3 FINANCIAL IMPACT:\n${(relay.engines.e3||'').slice(0,400)}`;
+      const invoiceField = document.querySelector('input[placeholder*="INV-"]') || document.getElementById('inv-number');
+      const poField = document.querySelector('input[placeholder*="PO-"]') || document.getElementById('inv-po');
+      const vendorField = document.querySelector('input[placeholder*="Vendor name"]') || document.getElementById('inv-vendor');
+
+      if (invoiceField && invoiceNum) invoiceField.value = invoiceNum;
+      if (poField && poNum) poField.value = poNum;
+      if (vendorField && vendor) vendorField.value = vendor;
+
+      const notes = document.getElementById('inv-notes') || document.querySelector('.textarea-field, textarea');
+      if (notes) {
+        notes.value = `[WAR ROOM RELAY — ${relay.selectedDocType}]\n\n${(relay.docText||'').slice(0,400)}\n\nE2 RISK:\n${(eo[2]||'').slice(0,300)}\n\nE3 IMPACT:\n${(eo[3]||'').slice(0,300)}`;
       }
-    }, 500);
+
+      banner.querySelector('span').textContent = `⚡ WAR ROOM RELAY ACTIVE — ${relay.selectedDocType} · fields populated · auto-firing engines in 2s…`;
+
+      setTimeout(() => {
+        const fireBtn = [...document.querySelectorAll('button')].find(b => b.textContent.includes('PROCESS DOCUMENT') || b.textContent.includes('FIRE ALL 4 ENGINES'));
+        if (fireBtn && !fireBtn.disabled) fireBtn.click();
+      }, 2000);
+
+    }, 400);
 
   } catch(e) { console.warn('Relay load error:', e); }
 })();
