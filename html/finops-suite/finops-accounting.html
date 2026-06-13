@@ -977,9 +977,18 @@ const APP_PROMPTS = {
   app3: { user: doc => `Generate a Controller Action Plan for this financial document:\n\n${doc}`, key: 'doc_controller' },
   app4: { user: doc => `Generate CFO executive intelligence from this financial document:\n\n${doc}`, key: 'doc_cfo' }
 };
+const FALLBACK_SYSTEMS = {
+  doc_triage: 'You are a financial document triage AI. Classify document type, extract key fields, flag critical items, and route to appropriate workflow.',
+  doc_variance: 'You are a variance analysis AI. Identify budget variances, anomalies, and discrepancies. Quantify impact and recommend corrective actions.',
+  doc_controller: 'You are a financial controller AI. Analyze accounting documents for errors, missing data, and compliance issues. Be precise and actionable.',
+  doc_cfo: 'You are a CFO-level financial AI. Provide executive-level analysis with strategic recommendations and risk assessment.'
+};
 async function getAppPrompt(appKey) {
   const p = APP_PROMPTS[appKey];
-  p.system = p.system || await getVaultPrompt(p.key);
+  if (!p.system) {
+    try { p.system = await getVaultPrompt(p.key); } catch(e) {}
+    p.system = p.system || FALLBACK_SYSTEMS[p.key] || 'You are a financial operations AI.';
+  }
   return p;
 }
 
@@ -987,7 +996,7 @@ async function getAppPrompt(appKey) {
 // FIRE ALL 4 ENGINES
 // ══════════════════════════════════════════════
 async function fireAll() {
-  if (!groqKey) { openModal(); return; }
+  groqKey = groqKey || 'server';
   const docText = serializeDoc();
 
   // Reset outputs
