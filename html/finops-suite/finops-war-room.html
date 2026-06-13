@@ -693,6 +693,25 @@ async function fireEngines() {
   if (!docText) { alert('Paste or load a financial document first.'); return; }
   if (!groqKey) { alert('Enter your Groq API key.'); return; }
 
+  const cacheKey = 'TSM_FINOPS_CACHE_' + selectedDocType + '_' + docText.length + '_' + docText.slice(0,80);
+  try {
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+      const c = JSON.parse(cached);
+      if (confirm('This exact document was already analyzed this session. Use cached results instead of re-running 6 engines?')) {
+        for (let i = 1; i <= 6; i++) { setEngBody(i, c.e[i] || ''); setEngState(i, 'done'); }
+        enginesComplete = 6;
+        document.getElementById('kpiEngines').textContent = '6/6';
+        document.getElementById('sbEngines').textContent = '6 / 6 Engines Complete';
+        buildAppDispatch(c.e[6] || '');
+        document.getElementById('escalSub').textContent = '6-engine analysis complete — ' + selectedDocType + ' · Ready to escalate to FinOps Strategist.';
+        document.getElementById('escalateBar').classList.add('visible');
+        addLog('Loaded cached analysis', 'No engines re-fired — tokens conserved', 'p');
+        return;
+      }
+    }
+  } catch(err) {}
+
   document.getElementById('fireBtn').disabled = true;
   document.getElementById('spinner').classList.add('active');
   document.getElementById('escalateBar').classList.remove('visible');
@@ -710,17 +729,13 @@ async function fireEngines() {
 
     let txt = '';
     try {
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      const MAXT = [400, 350, 600, 450, 600, 700];
+      const res = await fetch('/api/financial/query', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + groqKey },
-        body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
-          max_tokens: 550,
-          temperature: 0.3,
-          messages: [{ role: 'user', content: PROMPTS[i-1](docText, e) }]
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: PROMPTS[i-1](docText, e), maxTokens: MAXT[i-1] })
       });
-      if (res.ok) { const d = await res.json(); txt = d.choices?.[0]?.message?.content || ''; trackTokens(PROMPTS[i-1](docText, e), txt); }
+      if (res.ok) { const d = await res.json(); txt = d.answer || d.response || ''; }
       if (!txt.trim()) throw new Error('empty');
     } catch(err) {
       txt = FALLBACKS[i-1](docText, e);
@@ -781,6 +796,7 @@ async function fireEngines() {
   addLog('All 6 Engines Complete', 'Ready to escalate to FinOps Strategist', 'p');
 
   storeRelay(e);
+  try { sessionStorage.setItem(cacheKey, JSON.stringify({ e })); } catch(err) {}
 
   setTimeout(() => {
     try {
@@ -978,9 +994,10 @@ function clearAll() {
 
 addLog('FinOps War Room initialized', '6 engines standing by — load financial document to begin', 'g');
 
-// Restore persisted state on return navigation
+// Restore persisted state on return navigation — DISABLED per user request
 (function(){
   try {
+    return; // disabled: only respond to fresh FINOPS_DOC_RELAY or manual fire
     const raw = sessionStorage.getItem('TSM_WAR_ROOM_STATE');
     if(!raw) return;
     const s = JSON.parse(raw);

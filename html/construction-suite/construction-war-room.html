@@ -1015,16 +1015,14 @@ function esc(s){ return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&l
 // FIRE ALL 6 ENGINES
 // ═══════════════════════════════
 async function callGroq(prompt){
-  groqKey=document.getElementById('groqKey').value.trim();
-  if(!groqKey) throw new Error('No API key');
-  const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+  const r=await fetch('/api/construction/query',{
     method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
-    body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:700,temperature:0.3,messages:[{role:'user',content:prompt}]})
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({question:prompt})
   });
   if(!r.ok) throw new Error('API '+r.status);
   const d=await r.json();
-  return d.choices?.[0]?.message?.content||'';
+  return d.answer||d.response||'';
 }
 
 function buildDefectManifest(e) {
