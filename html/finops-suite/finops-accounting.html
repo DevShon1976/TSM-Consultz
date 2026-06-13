@@ -1030,27 +1030,20 @@ async function runEngine(num, docText) {
 
   let full = '', tokens = 0;
   try {
+    outDiv.textContent = '⬡ Processing...';
     const resp = await fetch('/api/financial/query', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + groqKey },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: groqModel, max_tokens: 700, stream: true,
-        messages: [{ role: 'system', content: prompt.system }, { role: 'user', content: prompt.user(docText) }]
+        system: prompt.system,
+        question: prompt.user(docText),
+        maxTokens: 700
       })
     });
-    const reader = resp.body.getReader(), dec = new TextDecoder();
-    while (true) {
-      const { done, value } = await reader.read(); if (done) break;
-      for (const line of dec.decode(value).split('\n')) {
-        if (!line.startsWith('data: ') || line.includes('[DONE]')) continue;
-        try {
-          const chunk = JSON.parse(line.slice(6)).choices?.[0]?.delta?.content || '';
-          full += chunk; tokens++;
-          outDiv.textContent = full + '▌';
-          bodyEl.scrollTop = bodyEl.scrollHeight;
-        } catch {}
-      }
-    }
+    if (!resp.ok) throw new Error('API ' + resp.status);
+    const data = await resp.json();
+    full = data.answer || data.response || '';
+    tokens = Math.ceil(full.length / 4);
     outDiv.textContent = full;
     outputs[num] = full;
     badgeEl.className = 'app-badge badge-done';
