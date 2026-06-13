@@ -52,3 +52,8 @@ document.addEventListener('click', e=>{
   const el = e.target.closest('[data-tsm-action]');
   if(!el) return;
   const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args') || '';
+  TSM.launcher.run(action, args, el);
+});
+
+console.log('[TSM SHARED] v2.0 loaded');
