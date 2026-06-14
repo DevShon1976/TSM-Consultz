@@ -384,7 +384,44 @@ body::before {
 
 .doc-card-actions { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; }
 
-.btn-redispatch {
+.btn-warroom {
+  font-family: var(--mono); font-size: 9px; padding: 4px 10px;
+  border-radius: 6px; border: 1px solid rgba(251,191,36,0.25);
+  background: rgba(251,191,36,0.06); color: #fbbf24; cursor: pointer;
+  letter-spacing: .05em; text-transform: uppercase; white-space: nowrap;
+  transition: background .15s; display: inline-flex; align-items: center; gap: 4px;
+}
+.btn-warroom:hover { background: rgba(251,191,36,0.14); }
+
+.wr-modal-overlay {
+  position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;
+  display:flex;align-items:center;justify-content:center;
+}
+.wr-modal {
+  background:#0d1a20;border:1px solid rgba(30,232,182,.2);border-radius:12px;
+  padding:24px;min-width:320px;max-width:480px;font-family:var(--mono);
+}
+.wr-modal-title {
+  font-size:10px;letter-spacing:2px;color:var(--accent);margin-bottom:6px;
+}
+.wr-modal-file {
+  font-size:11px;color:var(--text);margin-bottom:16px;
+  border-bottom:1px solid var(--border);padding-bottom:10px;
+}
+.wr-option {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 12px;border:1px solid var(--border);border-radius:8px;
+  margin-bottom:6px;cursor:pointer;transition:background .15s;
+}
+.wr-option:hover { background:rgba(30,232,182,.06);border-color:rgba(30,232,182,.3); }
+.wr-option-label { font-size:10px;color:var(--text);letter-spacing:1px; }
+.wr-option-arrow { font-size:12px;color:var(--accent); }
+.wr-modal-cancel {
+  margin-top:12px;width:100%;background:transparent;border:1px solid var(--border);
+  color:var(--dim);font-family:var(--mono);font-size:9px;letter-spacing:1px;
+  padding:7px;cursor:pointer;border-radius:6px;
+}
+.wr-modal-cancel:hover { color:var(--text); }
   font-family: var(--mono); font-size: 9px; padding: 4px 10px;
   border-radius: 6px; border: 1px solid rgba(30,232,182,0.25);
   background: var(--accent-dim); color: var(--accent); cursor: pointer;
@@ -929,6 +966,7 @@ function renderCard(doc, query) {
       </div>
       <div class="doc-card-actions">
         ${openNodeRoute ? `<a class="btn-open-node" href="${openNodeRoute}" target="_blank">↗ Open Node</a>` : ""}
+        <button class="btn-warroom" onclick="openWarRoomPicker('${doc.id}')">⚡ Send to War Room</button>
         <button class="btn-redispatch" onclick="redispatch('${doc.id}')">↻ Re-dispatch</button>
         <button class="btn-remove" onclick="removeDoc('${doc.id}')">✕ Remove</button>
       </div>
@@ -990,6 +1028,73 @@ function confirmClearAll() {
     runSearch();
     refreshTotalCount();
   }
+}
+
+const WAR_ROOM_ROUTES = {
+  'fo-war-room':  { label:'FinOps War Room',        url:'/html/finops-suite/finops-war-room.html',           relayKey:'tsm_finops_war_relay',          docKey:'finopsWarRoomDoc' },
+  'ins-war-room': { label:'Insurance War Room',      url:'/html/tsm-insurance/insurance-war-room.html',       relayKey:'TSM_INS_WAR_RELAY',             docKey:'insuranceWarRoomDoc' },
+  'con-war-room': { label:'Construction War Room',   url:'/html/construction-suite/construction-war-room.html',relayKey:'TSM_CONSTRUCTION_WAR_RELAY',   docKey:'constructionWarRoomDoc' },
+  'bpo-war-room': { label:'BPO War Room',            url:'/html/bpo/bpo-war-room.html',                       relayKey:'TSM_BPO_WAR_RELAY',             docKey:'bpoWarRoomDoc' },
+  're-war-room':  { label:'Real Estate War Room',    url:'/html/reo-pro/re-war-room.html',                    relayKey:'TSM_RE_WAR_RELAY',              docKey:'reWarRoomDoc' },
+  'leg-war-room': { label:'Legal War Room',          url:'/html/legal-pro/legal-war-room.html',               relayKey:'TSM_LEGAL_WAR_RELAY',           docKey:'legalWarRoomDoc' },
+  'hc-war-room':  { label:'HC Denial War Room',      url:'/html/hc-denial-war-room.html',                     relayKey:'TSM_HC_WAR_RELAY',              docKey:'hcWarRoomDoc' },
+};
+
+function openWarRoomPicker(id) {
+  const doc = loadIndex().find(d => d.id === id);
+  if (!doc) return;
+  const warRooms = (doc.routing || []).filter(r => WAR_ROOM_ROUTES[r]);
+  if (!warRooms.length) { alert('No war room routes found for this document.'); return; }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'wr-modal-overlay';
+  overlay.innerHTML = `
+    <div class="wr-modal">
+      <div class="wr-modal-title">⚡ SELECT WAR ROOM</div>
+      <div class="wr-modal-file">${doc.fileName}</div>
+      ${warRooms.map(r => `
+        <div class="wr-option" onclick="launchWarRoom('${id}','${r}');this.closest('.wr-modal-overlay').remove()">
+          <span class="wr-option-label">${WAR_ROOM_ROUTES[r].label}</span>
+          <span class="wr-option-arrow">→</span>
+        </div>`).join('')}
+      <button class="wr-modal-cancel" onclick="this.closest('.wr-modal-overlay').remove()">CANCEL</button>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+function launchWarRoom(id, roomKey) {
+  const doc = loadIndex().find(d => d.id === id);
+  if (!doc) return;
+  const room = WAR_ROOM_ROUTES[roomKey];
+  if (!room) return;
+  const payload = JSON.stringify({
+    docText:  doc._ext?.docText || doc._ext?.summary || doc.fileName,
+    docType:  doc.documentType,
+    fileName: doc.fileName,
+    client:   doc._ext?.client || '',
+    ref:      doc._ext?.ref || '',
+    source:   'doc-search',
+    timestamp: Date.now()
+  });
+  try {
+    sessionStorage.setItem(room.relayKey, payload);
+    localStorage.setItem(room.relayKey, payload);
+    sessionStorage.setItem(room.docKey, doc._ext?.docText || doc._ext?.summary || '');
+  } catch(e) {}
+  window.location.href = room.url;
+}
+
+function launchWarRoomDirect(roomKey, payloadJson) {
+  const room = WAR_ROOM_ROUTES[roomKey];
+  if (!room) return;
+  try {
+    const payload = JSON.parse(decodeURIComponent(payloadJson));
+    const raw = JSON.stringify({ ...payload, source: 'doc-search', timestamp: Date.now() });
+    sessionStorage.setItem(room.relayKey, raw);
+    localStorage.setItem(room.relayKey, raw);
+    sessionStorage.setItem(room.docKey, payload.docText || '');
+    window.location.href = room.url;
+  } catch(e) { console.error('Launch error:', e); }
 }
 
 function redispatch(id) {
@@ -1390,15 +1495,28 @@ async function processFile(file) {
       return;
     }
  
+    
     const badges = routed.map(r =>
       `<span class="uq-badge" style="background:${r.color}1f;color:${r.color};border:1px solid ${r.color}40;">${r.label}</span>`
     ).join("");
-    uqStatus(qid, `${classification.documentType || "Routed"} → ${badges}`, "ok");
- 
+
+    // Find the doc just saved to get its id
+    const savedDoc = loadIndexFor(routed[0]?.vertical)?.find(d => d.fileName === (classification.fileName || file.name));
+
+    const warRoomBtns = routed.map(r => {
+      const roomKey = r.vertical + '-war-room';
+      const room = WAR_ROOM_ROUTES[roomKey];
+      if (!room) return '';
+      return `<span class="uq-badge" onclick="launchWarRoomDirect('${roomKey}','${encodeURIComponent(JSON.stringify({docText:classification.summary||'',docType:classification.documentType||'DOCUMENT',fileName:classification.fileName||file.name,client:classification.client||'',ref:classification.ref||''}))}');event.stopPropagation()" style="background:${r.color}1f;color:${r.color};border:1px solid ${r.color}40;cursor:pointer;" title="Open in ${room.label}">⚡ ${room.label}</span>`;
+    }).filter(Boolean).join("");
+
+    uqStatus(qid, `${classification.documentType || "Routed"} → ${badges}${warRoomBtns ? '<br><span style="font-size:8px;color:var(--dim);margin-right:4px;">OPEN IN:</span>' + warRoomBtns : ''}`, "ok");
+
     if (routed.some(r => r.vertical === currentVertical)) {
       runSearch();
       refreshTotalCount();
     }
+
   } catch (err) {
     console.error("Doc router error:", err);
     uqStatus(qid, "Failed: " + err.message, "err");
