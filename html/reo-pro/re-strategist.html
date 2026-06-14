@@ -463,7 +463,9 @@ let stratPayload = {};
 // LOAD WAR ROOM PAYLOAD
 function loadPayload() {
   try {
-    const raw = localStorage.getItem('tsm_re_warroom_payload');
+    const raw = localStorage.getItem('TSM_RE_WAR_RELAY')
+             || sessionStorage.getItem('TSM_RE_WAR_RELAY')
+             || localStorage.getItem('tsm_re_warroom_payload');
     if (raw) {
       warRoomPayload = JSON.parse(raw);
       applyPayload();
@@ -696,8 +698,10 @@ function buildStratPayload() {
 function escalateToExec() {
   const payload = buildStratPayload();
   try {
+    localStorage.setItem('TSM_RE_WAR_RELAY', JSON.stringify(payload));
+    sessionStorage.setItem('TSM_RE_WAR_RELAY', JSON.stringify(payload));
     localStorage.setItem('tsm_re_strat_payload', JSON.stringify(payload));
-    window.open('re-exec-portal.html', '_blank');
+    window.location.href = 're-exec-portal.html';
   } catch(e) {
     alert('Payload saved. Open re-exec-portal.html to continue.');
   }

@@ -2573,12 +2573,13 @@ Use ► section headers. Be specific with dollar amounts, party names, and actio
         return;
       }
       try {
-        localStorage.setItem('tsm_re_warroom_payload', JSON.stringify(payload));
-        window.open('re-strategist.html', '_blank');
-      } catch (e) {
-        alert('Session saved. Open re-strategist.html to continue.');
-      }
-    }
+    const payload = buildWarRoomPayload();
+    localStorage.setItem('TSM_RE_WAR_RELAY', JSON.stringify(payload));
+    sessionStorage.setItem('TSM_RE_WAR_RELAY', JSON.stringify(payload));
+    window.location.href = 're-strategist.html';
+  } catch (e) {
+    alert('Session saved. Open re-strategist.html to continue.');
+  }
 
     // ─── EXPORT ───────────────────────────────────────────────────────────────────
     function exportSession() {
@@ -2724,6 +2725,59 @@ Use ► section headers. Be specific with dollar amounts, party names, and actio
       }
     }
   </script>
+
+<script>
+// ── DOC SEARCH → WAR ROOM RELAY READER ──────────────────
+(function(){
+  try {
+    const raw = sessionStorage.getItem('TSM_RE_WAR_RELAY') 
+             || sessionStorage.getItem('TSM_WAR_ROOM_RELAY')
+             || localStorage.getItem('TSM_RE_WAR_RELAY');
+    if (!raw) return;
+    const relay = JSON.parse(raw);
+    if (!relay.docText) return;
+
+    // Clear relay so it doesn't re-fire on refresh
+    sessionStorage.removeItem('TSM_RE_WAR_RELAY');
+    sessionStorage.removeItem('TSM_WAR_ROOM_RELAY');
+    localStorage.removeItem('TSM_RE_WAR_RELAY');
+
+    // Populate docPaste
+    const docPaste = document.getElementById('docPaste');
+    if (docPaste) {
+      docPaste.value = relay.docText;
+      docPaste.dataset.autoFilled = 'true';
+      docPaste.dispatchEvent(new Event('input'));
+    }
+
+    // Show relay banner
+    const banner = document.createElement('div');
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:rgba(0,180,100,.12);border-bottom:1px solid rgba(0,180,100,.3);padding:7px 20px;font-family:"Share Tech Mono",monospace;font-size:10px;color:#00d4aa;letter-spacing:1px;display:flex;justify-content:space-between;align-items:center;';
+    const docType = relay.meta?.docType || relay.docType || 'DOCUMENT';
+    const engines = relay.enginesRun || 0;
+    banner.innerHTML = `<span>⚡ DOC SEARCH RELAY ACTIVE — ${docType} · ${relay.docText.length} chars · ${engines} engines pre-run · select a node to analyze</span><button onclick="this.parentElement.remove()" style="background:none;border:none;color:#00d4aa;cursor:pointer;font-size:14px;">✕</button>`;
+    document.body.prepend(banner);
+
+    // Auto-activate matching node based on doc type
+    const typeNodeMap = {
+      'purchase': 'REA', 'offer': 'REA', 'contract': 'REA',
+      'mortgage': 'REAF', 'loan': 'REAF', 'application': 'REAF', 'underwriting': 'REAF',
+      'title': 'REAT', 'escrow': 'REAT', 'closing': 'REAX', 'hud': 'REAX',
+      'compliance': 'REAC', 'trid': 'REAC', 'hmda': 'REAC',
+      'market': 'REAI', 'appraisal': 'REAI', 'bpo': 'REAI',
+      'pipeline': 'REAM', 'reo': 'REAM'
+    };
+    const docLower = (docType + ' ' + relay.docText.slice(0, 200)).toLowerCase();
+    const matchedNode = Object.entries(typeNodeMap).find(([k]) => docLower.includes(k))?.[1] || 'REAM';
+    
+    setTimeout(() => {
+      const nodeBtn = document.querySelector(`[onclick*="activateNode('${matchedNode}'"]`);
+      if (nodeBtn) nodeBtn.click();
+    }, 500);
+
+  } catch(e) { console.warn('RE War Room relay error:', e); }
+})();
+</script>
 
   <!-- ═══════════════════════════════════════════════════
      TSM TOUR ENGINE — RE WAR ROOM (clean single copy)
