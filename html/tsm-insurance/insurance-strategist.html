@@ -492,22 +492,18 @@ async function runStrategist(){
     document.getElementById('spinLabel').textContent='Node '+i+' — '+labels[i-1]+'...';
     let txt='';
     try{
-      const res = await fetch('/api/hc/query', {
+      const res = await fetch('/api/insurance/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: prompt,
-          system: `You are TSM Neural Core, an expert insurance operations AI. 
-You generate precise, step-by-step guided instructions for insurance staff to resolve anomalies using specific apps.
-Respond ONLY with valid JSON — no markdown, no explanation, no code fences.`,
-          model: 'llama-3.3-70b-versatile',
-          max_tokens: 1200
+          message: NODE_PROMPTS[i-1](ctx,n),
+          maxTokens: 700
         })
       });
       if (!res.ok) throw new Error('API ' + res.status);
       const data = await res.json();
-      const text = (data.result || data.response || data.content || '').replace(/```json|```/g, '').trim();
-      if(!txt.trim()) throw new Error('empty');
+      txt = (data.answer || data.response || '').trim();
+      if(!txt) throw new Error('empty');
     }catch(err){
       txt=NODE_FALLBACKS[i-1](ctx,n);
     }
