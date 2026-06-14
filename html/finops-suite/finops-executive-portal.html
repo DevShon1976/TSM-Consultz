@@ -288,8 +288,12 @@ function loadRelay() {
 function populateFromRelay(d) {
   const snap = {
   docType: d.selectedDocType || (d.source === 'warroom' ? 'War Room' : 'Strategist Report'),
-  risk: d.riskScore || '—',
-  exposure: d.exposure || '—'
+  risk: d.riskScore || null,
+  exposure: d.exposure || null,
+  exceptions: d.exceptions || null,
+  compliance: d.compliance || null,
+  recovery: d.missingPO || null,
+  cfo: d.unapprovedVendors || null
 };
 const eo = d.engineOutputs || [];
 const engines = { e1:eo[1]||'', e2:eo[2]||'', e3:eo[3]||'', e4:eo[4]||'', e5:eo[5]||'', e6:eo[6]||'' };
@@ -323,14 +327,22 @@ const summary = d.summary || engines.e6 || '';
   const recM = e3.match(/RECOVERABLE AMOUNT[:\s]+([^\n]+)/i);
   const cfoM = e5.match(/CFO MEMO REQUIRED[:\s]+([^\n]+)/i);
 
-  // Direct relay fields take priority over regex
-  const _exp = d.exposure || (expM && expM[1]) || '—';
-  const _risk = d.riskScore || (riskM && riskM[1]) || '—';
-  const _exc = d.exceptions || (excM && excM[1]) || (d.duplicatePayments ? '3 items' : '—');
-  const _comp = d.compliance || (compM && compM[1]) || '—';
-  const _rec = d.missingPO || (recM && recM[1]) || '—';
-  const _cfo = d.unapprovedVendors || (cfoM && cfoM[1]) || '—';
+  // Parse directly from summary text (most reliable source)
+    const _txt = d.summary || '';
+    const _expR  = _txt.match(/(?:TOTAL AMOUNT|TOTAL EXPOSURE)[:\s]+(\$[\d,]+(?:[–\-]\$[\d,]+)?)/i);
+    const _riskR = _txt.match(/(?:DOCUMENT RISK SCORE|RISK SCORE)[:\s]+([\d]+)/i);
+    const _dupR  = _txt.match(/Duplicate Payments?[:\s]+(\$[\d,]+)/i);
+    const _vendR = _txt.match(/Unapproved Vendors?[:\s]+(\$[\d,]+)/i);
+    const _poR   = _txt.match(/Missing PO[^:\n]*[:\s]+(\$[\d,]+)/i);
+    const _perR  = _txt.match(/PERIOD[:\s]+([^\n]+)/i);
 
+    // Direct relay fields take priority over regex
+    const _exp  = (_expR  && _expR[1])  || d.exposure    || (expM  && expM[1])  || '—';
+    const _risk = (_riskR && (_riskR[1].includes('/') ? _riskR[1] : _riskR[1]+'/100')) || d.riskScore || (riskM && riskM[1]) || '—';
+    const _exc  = (_dupR  && _dupR[1])  || d.exceptions  || (excM  && excM[1])  || '—';
+    const _comp = (_perR  && _perR[1].trim().slice(0,10)) || d.compliance || (compM && compM[1]) || '—';
+    const _rec  = (_poR   && _poR[1])   || d.missingPO   || (recM  && recM[1])  || '—';
+    const _cfo  = (_vendR && _vendR[1]) || d.unapprovedVendors || (cfoM && cfoM[1]) || '—';
   document.getElementById('kpiRisk').textContent = _risk;
   document.getElementById('kpiExposure').textContent = _exp.slice(0,16);
   document.getElementById('kpiExceptions').textContent = _exc.slice(0,8);
