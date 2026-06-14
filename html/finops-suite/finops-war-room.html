@@ -392,6 +392,19 @@ body::before{content:'';position:fixed;top:0;right:0;width:500px;height:500px;ba
 // STATE
 // ═══════════════════════════════════════════════════
 let docText = '';
+
+// Doc Search relay — populate from redispatch
+(function(){
+  try {
+    const raw = localStorage.getItem('tsm_fo_docsearch_relay');
+    if (!raw) return;
+    const relay = JSON.parse(raw);
+    if (!relay.summary) return;
+    localStorage.removeItem('tsm_fo_docsearch_relay');
+    const ta = document.getElementById('docPaste');
+    if (ta) ta.value = relay.summary;
+  } catch(e) { console.warn('Doc search relay error:', e); }
+})();
 let selectedDocType = 'AP Aging';
 let engOut = {};
 let enginesComplete = 0;

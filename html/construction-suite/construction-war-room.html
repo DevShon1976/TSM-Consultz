@@ -425,7 +425,20 @@ document.addEventListener('DOMContentLoaded',function(){
 // STATE
 // ═══════════════════════════════
 let docText='', selectedDocType='Change Order', engOut={}, enginesComplete=0;
-let groqKey=localStorage.getItem('tsm_groq_key')||'';
+let groqKey = localStorage.getItem('tsm_groq_key') || '';
+
+// Doc Search relay — populate from redispatch
+(function(){
+  try {
+    const raw = localStorage.getItem('tsm_con_docsearch_relay');
+    if (!raw) return;
+    const relay = JSON.parse(raw);
+    if (!relay.summary) return;
+    localStorage.removeItem('tsm_con_docsearch_relay');
+    const ta = document.getElementById('docPaste');
+    if (ta) ta.value = relay.summary;
+  } catch(e) { console.warn('Doc search relay error:', e); }
+})();
 if(groqKey) document.getElementById('groqKey').value=groqKey;
 
 setInterval(()=>{ document.getElementById('navClock').textContent=new Date().toLocaleTimeString('en-US',{hour12:false}); },1000);

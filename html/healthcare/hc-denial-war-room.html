@@ -2360,7 +2360,33 @@ async function hcGenerateMissionSteps(anomalyText, docText) {
   try {
     const res = await fetch('/api/hc/query', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ system: sys, message: msg, apiKey: localStorage.getItem('tsm_groq_key')||'' })
+      body: JSON.stringify({ system: sys, message: msg, apiKey: let groqKey = localStorage.getItem('tsm_groq_key') || '';
+
+// Doc Search relay — populate from redispatch
+(function(){
+  try {
+    const raw = localStorage.getItem('tsm_legal_docsearch_relay');
+    if (!raw) return;
+    const relay = JSON.parse(raw);
+    if (!relay.summary) return;
+    localStorage.removeItem('tsm_legal_docsearch_relay');
+    const ta = document.getElementById('docPaste');
+    if (ta) ta.value = relay.summary;
+  } catch(e) { console.warn('Doc search relay error:', e); }
+})();
+
+// Doc Search relay — populate from redispatch
+(function(){
+  try {
+    const raw = localStorage.getItem('tsm_hc_docsearch_relay');
+    if (!raw) return;
+    const relay = JSON.parse(raw);
+    if (!relay.summary) return;
+    localStorage.removeItem('tsm_hc_docsearch_relay');
+    const ta = document.getElementById('docPaste');
+    if (ta) ta.value = relay.summary;
+  } catch(e) { console.warn('Doc search relay error:', e); }
+})();
     });
     const data = await res.json();
     const raw = (data.response||data.content||'').replace(/```json|```/g,'').trim();

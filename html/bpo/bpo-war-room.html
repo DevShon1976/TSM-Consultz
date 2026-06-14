@@ -537,8 +537,18 @@ async function bpoWRGenerateMissionSteps(rawText) {
   const sys = `You are TSM Neural Core. Generate a cross-domain BPO remediation mission. Respond ONLY with valid JSON. No markdown.`;
   const msg = `Engine 06 dispatch output:\n"${rawText.slice(0,600)}"\n\nAvailable apps:\n${BPO_APPS}\n\nGenerate 4-6 steps. Return ONLY:\n{"missionTitle":"...","summary":"...","steps":[{"id":"step-1","title":"...","appName":"...","appUrl":"...","objective":"...","instructions":"...","expectedOutput":"...","completionCriteria":"..."}]}`;
  
+  // Doc Search relay — populate from redispatch
+(function(){
   try {
-    const k = localStorage.getItem('GROQ_KEY')||localStorage.getItem('tsm_groq_key')||'';
+    const raw = localStorage.getItem('tsm_bpo_docsearch_relay');
+    if (!raw) return;
+    const relay = JSON.parse(raw);
+    if (!relay.summary) return;
+    localStorage.removeItem('tsm_bpo_docsearch_relay');
+    const ta = document.getElementById('docPaste');
+    if (ta) ta.value = relay.summary;
+  } catch(e) { console.warn('Doc search relay error:', e); }
+})();
     const res = await fetch('/api/hc/query', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ system:sys, message:msg, apiKey:k })

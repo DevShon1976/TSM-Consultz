@@ -1000,23 +1000,18 @@ function redispatch(id) {
     setTimeout(() => { btn.textContent = orig; btn.style.color = ""; }, 2000);
   }
 
-  if (currentVertical === "insurance") {
-    const lines = [`DOCUMENT: ${doc.fileName || 'Unknown'}`, `TYPE: ${doc.documentType || 'Unknown'}`];
-    if (doc._ext?.client) lines.push(`CLIENT: ${doc._ext.client}`);
-    if (doc.invoiceNo) lines.push(`REF/CLAIM #: ${doc.invoiceNo}`);
-    if (doc.vendor) lines.push(`CARRIER/VENDOR: ${doc.vendor}`);
-    if (doc.exclusionCode) lines.push(`CODE: ${doc.exclusionCode}`);
-    if (doc.amount) lines.push(`EXPOSURE: $${doc.amount.toLocaleString()}`);
-    if (doc._ext?.ref) lines.push(`REF: ${doc._ext.ref}`);
-    const summary = lines.join('\n');
-    try {
-      localStorage.setItem("tsm_ins_docsearch_relay", JSON.stringify({ ts: Date.now(), summary, doc }));
-    } catch(e) {}
-    setTimeout(() => { window.location.href = '/html/tsm-insurance/insurance-war-room.html'; }, 600);
-  }
-}
+  const DOCSEARCH_ROUTES = {
+    insurance:    { key: 'tsm_ins_docsearch_relay',    path: '/html/tsm-insurance/insurance-war-room.html' },
+    finops:       { key: 'tsm_fo_docsearch_relay',     path: '/html/finops-suite/finops-war-room.html' },
+    healthcare:   { key: 'tsm_hc_docsearch_relay',     path: '/html/healthcare/hc-denial-war-room.html' },
+    legal:        { key: 'tsm_legal_docsearch_relay',  path: '/html/legal-pro/legal-war-room.html' },
+    construction: { key: 'tsm_con_docsearch_relay',    path: '/html/construction-suite/construct-war2.html' },
+    realestate:   { key: 'tsm_re_docsearch_relay',     path: '/html/reo-pro/re-war-room.html' },
+    bpo:          { key: 'tsm_bpo_docsearch_relay',    path: '/html/bpo/bpo-war-room.html' }
+  };
 
-  if (currentVertical === "insurance") {
+  const route = DOCSEARCH_ROUTES[currentVertical];
+  if (route) {
     const lines = [`DOCUMENT: ${doc.fileName || 'Unknown'}`, `TYPE: ${doc.documentType || 'Unknown'}`];
     if (doc._ext?.client) lines.push(`CLIENT: ${doc._ext.client}`);
     if (doc.invoiceNo) lines.push(`REF/CLAIM #: ${doc.invoiceNo}`);
@@ -1026,9 +1021,9 @@ function redispatch(id) {
     if (doc._ext?.ref) lines.push(`REF: ${doc._ext.ref}`);
     const summary = lines.join('\n');
     try {
-      localStorage.setItem("tsm_ins_docsearch_relay", JSON.stringify({ ts: Date.now(), summary, doc }));
+      localStorage.setItem(route.key, JSON.stringify({ ts: Date.now(), summary, doc }));
     } catch(e) {}
-    setTimeout(() => { window.location.href = '/html/tsm-insurance/insurance-war-room.html'; }, 600);
+    setTimeout(() => { window.location.href = route.path; }, 600);
   }
 }
 
