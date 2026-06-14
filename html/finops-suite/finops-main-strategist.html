@@ -1073,13 +1073,26 @@ async function generateReport(){
       document.getElementById('outputMeta').textContent = result.tokens+' tokens · '+result.speed+' tok/s · '+new Date().toLocaleTimeString();
       document.getElementById('relayBanner').style.display = 'flex';
       // Save for executive portal relay
-      localStorage.setItem('tsm_strategist_relay', JSON.stringify({
-        summary: result.text,
-        source: relaySource,
-        timestamp: Date.now(),
-        exposure: '$91,800–$112,200',
-        riskScore: '70/100'
-      }));
+    const _txt = result.text;
+    const _expM = _txt.match(/(?:TOTAL AMOUNT|TOTAL EXPOSURE|TOTAL AT RISK)[:\s]+(\$[\d,]+(?:[–\-]\$[\d,]+)?)/i);
+    const _riskM = _txt.match(/(?:RISK SCORE|OVERALL RISK)[:\s]+([\d]+(?:\/100)?)/i);
+    const _dupM = _txt.match(/Duplicate Payments?[:\s]+(\$[\d,]+)/i);
+    const _vendM = _txt.match(/Unapproved Vendors?[:\s]+(\$[\d,]+)/i);
+    const _poM = _txt.match(/Missing PO[^:\n]*[:\s]+(\$[\d,]+)/i);
+    const _excM = _txt.match(/(?:EXCEPTION COUNT|CRITICAL ITEMS)[:\s]+(\d+)/i);
+    const _compM = _txt.match(/(?:COMPLIANCE|PERIOD)[:\s]+([^\n]+)/i);
+    localStorage.setItem('tsm_strategist_relay', JSON.stringify({
+      summary: _txt,
+      source: relaySource,
+      timestamp: Date.now(),
+      exposure: _expM ? _expM[1] : '$91,800–$112,200',
+      riskScore: _riskM ? _riskM[1] : '70/100',
+      duplicatePayments: _dupM ? _dupM[1] : null,
+      unapprovedVendors: _vendM ? _vendM[1] : null,
+      missingPO: _poM ? _poM[1] : null,
+      exceptions: _excM ? _excM[1] : null,
+      compliance: _compM ? _compM[1].trim().slice(0,12) : null
+    }));
       animateFeed();
       showRelayToast('BNCA synthesis complete. Ready to relay to Executive Portal.');
     }

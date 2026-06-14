@@ -323,20 +323,28 @@ const summary = d.summary || engines.e6 || '';
   const recM = e3.match(/RECOVERABLE AMOUNT[:\s]+([^\n]+)/i);
   const cfoM = e5.match(/CFO MEMO REQUIRED[:\s]+([^\n]+)/i);
 
-  if (snap.risk || riskM) document.getElementById('kpiRisk').textContent = snap.risk || (riskM[1] + '/100');
-  if (snap.exposure || expM) document.getElementById('kpiExposure').textContent = (snap.exposure || expM[1]).slice(0,16);
-  if (snap.exceptions || excM) document.getElementById('kpiExceptions').textContent = (snap.exceptions || excM[1]).slice(0,8);
-  if (snap.compliance || compM) document.getElementById('kpiCompliance').textContent = (snap.compliance || compM[1]).slice(0,10);
-  if (recM) document.getElementById('kpiRecovery').textContent = recM[1].trim().slice(0,12);
-  if (cfoM) document.getElementById('kpiCFO').textContent = cfoM[1].trim().slice(0,10);
+  // Direct relay fields take priority over regex
+  const _exp = d.exposure || (expM && expM[1]) || '—';
+  const _risk = d.riskScore || (riskM && riskM[1]) || '—';
+  const _exc = d.exceptions || (excM && excM[1]) || (d.duplicatePayments ? '3 items' : '—');
+  const _comp = d.compliance || (compM && compM[1]) || '—';
+  const _rec = d.missingPO || (recM && recM[1]) || '—';
+  const _cfo = d.unapprovedVendors || (cfoM && cfoM[1]) || '—';
+
+  document.getElementById('kpiRisk').textContent = _risk;
+  document.getElementById('kpiExposure').textContent = _exp.slice(0,16);
+  document.getElementById('kpiExceptions').textContent = _exc.slice(0,8);
+  document.getElementById('kpiCompliance').textContent = _comp.slice(0,10);
+  document.getElementById('kpiRecovery').textContent = _rec.slice(0,12);
+  document.getElementById('kpiCFO').textContent = _cfo.slice(0,12);
 
   // Ticker
-  const exp = expM ? expM[1].trim().slice(0,14) : (snap.exposure||'—');
-  const risk = riskM ? riskM[1]+'/100' : (snap.risk||'—');
-  ['tk1','tk1b'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=exp; });
-  ['tk2','tk2b'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=risk; });
-  ['tk3','tk3b'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=(snap.exceptions||excM?.[1]||'—'); });
-  ['tk4','tk4b'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=(snap.compliance||compM?.[1]?.slice(0,8)||'—'); });
+  ['tk1','tk1b'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=_exp.slice(0,14);});
+  ['tk2','tk2b'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=_risk;});
+  ['tk3','tk3b'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=_exc.slice(0,8);});
+  ['tk4','tk4b'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=_comp.slice(0,8);});
+  ['tk5'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=_cfo.slice(0,10);});
+  ['tk6'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=_rec.slice(0,10);});
 
   // Risk matrix from engines
   populateRiskMatrix(engines);
