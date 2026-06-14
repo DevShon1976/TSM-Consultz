@@ -370,7 +370,7 @@ body::before{content:'';position:fixed;top:0;right:0;width:600px;height:600px;ba
     <div class="sb-sec" id="pasteSection">
       <div class="sb-lbl">PASTE DOCUMENT TEXT</div>
       <textarea class="paste-area" id="docPaste" placeholder="Paste claim denial, policy document, ERA batch, DME claim, AP aging, underwriting submission, or any insurance document..."></textarea>
-      <div class="samples" id="samplesRow">
+        <div class="samples" id="samplesRow">
         <button class="sample-chip" onclick="loadSample('claims')">Claims</button>
         <button class="sample-chip" onclick="loadSample('dme')">DME Denial</button>
         <button class="sample-chip" onclick="loadSample('policy')">Policy Gap</button>
@@ -554,6 +554,19 @@ let engOut = {};
 let enginesComplete = 0;
 let groqKey = localStorage.getItem('tsm_groq_key') || '';
 if (groqKey) document.getElementById('groqKey').value = groqKey;
+
+// Doc Search relay — populate from redispatch
+(function(){
+  try {
+    const raw = localStorage.getItem('tsm_ins_docsearch_relay');
+    if (!raw) return;
+    const relay = JSON.parse(raw);
+    if (!relay.summary) return;
+    localStorage.removeItem('tsm_ins_docsearch_relay');
+    const ta = document.getElementById('docPaste');
+    if (ta) ta.value = relay.summary;
+  } catch(e) { console.warn('Doc search relay error:', e); }
+})();
 let totalTokensIn = 0, totalTokensOut = 0;
 
 function trackTokens(prompt, response){

@@ -999,6 +999,21 @@ function redispatch(id) {
     btn.style.color = "#1ee8b6";
     setTimeout(() => { btn.textContent = orig; btn.style.color = ""; }, 2000);
   }
+
+  if (currentVertical === "insurance") {
+    const lines = [`DOCUMENT: ${doc.fileName || 'Unknown'}`, `TYPE: ${doc.documentType || 'Unknown'}`];
+    if (doc._ext?.client) lines.push(`CLIENT: ${doc._ext.client}`);
+    if (doc.invoiceNo) lines.push(`REF/CLAIM #: ${doc.invoiceNo}`);
+    if (doc.vendor) lines.push(`CARRIER/VENDOR: ${doc.vendor}`);
+    if (doc.exclusionCode) lines.push(`CODE: ${doc.exclusionCode}`);
+    if (doc.amount) lines.push(`EXPOSURE: $${doc.amount.toLocaleString()}`);
+    if (doc._ext?.ref) lines.push(`REF: ${doc._ext.ref}`);
+    const summary = lines.join('\n');
+    try {
+      localStorage.setItem("tsm_ins_docsearch_relay", JSON.stringify({ ts: Date.now(), summary, doc }));
+    } catch(e) {}
+    setTimeout(() => { window.location.href = '/html/tsm-insurance/insurance-war-room.html'; }, 600);
+  }
 }
 
 function toggleFilters() {
