@@ -571,6 +571,7 @@ mark { background: rgba(30,232,182,0.2); color: var(--accent); border-radius: 2p
   <div class="demo-banner" id="demo-banner">
     <p>No records indexed for this vertical. Use <span>Set Mission from Client Data</span> in any node to auto-index, or seed demo records below.</p>
     <button class="btn-seed" id="seed-btn" onclick="seedDemoData()">⚡ Seed Demo Records</button>
+    <button class="btn-seed" id="seed-all-btn" onclick="seedAllVerticals()" style="background:rgba(251,191,36,0.08);border-color:rgba(251,191,36,0.35);color:#fbbf24;">⚡ Seed All Verticals</button>
   </div>
 
   <!-- SEARCH -->
@@ -1044,14 +1045,85 @@ function resetFilters() {
   runSearch();
 }
 
+const DEMO_DOCS = [
+  { id:'dd-fo-gl',    verticals:['fo'],        fileName:'GL_Extract_Q1_2026.csv',           documentType:'LEDGER',         vendor:'Internal',           invoiceNo:'GL-Q1-2026',   exclusionCode:'VAR-12',  amount:41200,  sourceNodes:{fo:'fo-accounting'},                  routing:{fo:['fo-accounting','strategist']},                                                          _ext:{client:'Apex Corp',          ref:'GLR-001', defectFlags:[]}, tags:['general ledger','accounts payable','reconciliation','gl'] },
+  { id:'dd-fo-inv',   verticals:['fo','leg'],  fileName:'Vendor_Invoice_Duplicate_Apex.pdf', documentType:'VENDOR INVOICE', vendor:'Apex Supply Co',     invoiceNo:'INV-8801',     exclusionCode:'DUP-AP',  amount:12400,  sourceNodes:{fo:'fo-accounting',leg:'leg-index'},  routing:{fo:['fo-accounting','strategist','bnca-engine'],leg:['leg-index','strategist']},              _ext:{client:'Apex Supply Co',     ref:'AP-8801',  defectFlags:[]}, tags:['invoice','accounts payable','duplicate','vendor'] },
+  { id:'dd-fo-ar',    verticals:['fo'],        fileName:'AR_Aging_90day_Q1.pdf',             documentType:'LEDGER',         vendor:'',                   invoiceNo:'AR-9024',      exclusionCode:'AR-90',   amount:87400,  sourceNodes:{fo:'fo-financial'},                   routing:{fo:['fo-financial','strategist','bnca-engine']},                                             _ext:{client:'Multi-client',       ref:'ARR-004',  defectFlags:[]}, tags:['accounts receivable','aging','ar','ledger'] },
+  { id:'dd-fo-era',   verticals:['fo','hc'],   fileName:'ERA_Batch_835_July.txt',            documentType:'REMITTANCE',     vendor:'Aetna',              invoiceNo:'ERA-07-24',    exclusionCode:'',        amount:22600,  sourceNodes:{fo:'fo-accounting',hc:'hc-denial'},   routing:{fo:['fo-accounting','strategist'],hc:['hc-denial','strategist']},                             _ext:{client:'Multi-payer',        ref:'ERA-07',   defectFlags:[]}, tags:['835','era','remittance','eob','claim','reconciliation'] },
+  { id:'dd-ins-claim',verticals:['ins'],       fileName:'Auto_Claim_CLM-INS-4412.pdf',       documentType:'CLAIM',          vendor:'State Farm',         invoiceNo:'CLM-INS-4412', exclusionCode:'CO-4',    amount:15400,  sourceNodes:{ins:'ins-az'},                        routing:{ins:['ins-az','ins-hub','strategist']},                                                      _ext:{client:'Luis Ramirez',       ref:'POL-SF-9944',defectFlags:[]}, tags:['claim','policyholder','adjuster','coverage','auto claim'] },
+  { id:'dd-ins-pol',  verticals:['ins'],       fileName:'Commercial_Policy_Glendale.pdf',    documentType:'POLICY',         vendor:'Nationwide',         invoiceNo:'POL-7721',     exclusionCode:'E&O-17',  amount:210000, sourceNodes:{ins:'ins-hub'},                       routing:{ins:['ins-hub','strategist','bnca-engine']},                                                 _ext:{client:'Glendale LLC',       ref:'NW-7721',  defectFlags:[]}, tags:['policy','policyholder','coverage','commercial','insurance'] },
+  { id:'dd-ins-eob',  verticals:['ins','hc'],  fileName:'EOB_BCBS_Denial_July.pdf',          documentType:'REMITTANCE',     vendor:'BCBS',               invoiceNo:'EOB-07-24',    exclusionCode:'',        amount:15600,  sourceNodes:{ins:'ins-hub',hc:'hc-denial'},        routing:{ins:['ins-hub','strategist'],hc:['hc-denial','strategist']},                                 _ext:{client:'Multi-patient',      ref:'EOB-07',   defectFlags:[]}, tags:['eob','835','claim denial','medical','insurance','remittance'] },
+  { id:'dd-con-co',   verticals:['con'],       fileName:'Change_Order_07_Foundation.pdf',    documentType:'DOCUMENT REPORT',vendor:'',                   invoiceNo:'CO-07',        exclusionCode:'CO-7',    amount:17200,  sourceNodes:{con:'con-hub'},                       routing:{con:['con-hub','strategist']},                                                               _ext:{client:'Scottsdale Dev',     ref:'COR-07',   defectFlags:[]}, tags:['change order','subcontractor','rfi','construction','lien waiver'] },
+  { id:'dd-con-sub',  verticals:['con','fo'],  fileName:'Subcontractor_Invoice_Drywall.pdf', documentType:'VENDOR INVOICE', vendor:'AZ Drywall LLC',     invoiceNo:'SUB-0912',     exclusionCode:'AP-7',    amount:28600,  sourceNodes:{con:'con-hub',fo:'fo-accounting'},    routing:{con:['con-hub','strategist'],fo:['fo-accounting','strategist']},                             _ext:{client:'Desert Ridge Plaza', ref:'SUB-0912', defectFlags:[]}, tags:['subcontractor','invoice','construction','accounts payable','vendor'] },
+  { id:'dd-con-pmt',  verticals:['con'],       fileName:'Permit_Application_Mesa_88B.pdf',   documentType:'PERMIT',         vendor:'City of Mesa',       invoiceNo:'PMT-88B',      exclusionCode:'COD-14',  amount:4800,   sourceNodes:{con:'con-permits'},                   routing:{con:['con-permits','strategist']},                                                           _ext:{client:'Horizon Build Co',   ref:'PMT-88B',  defectFlags:[]}, tags:['permit','construction','rfi','municipal','subcontractor'] },
+  { id:'dd-con-lien', verticals:['con','leg'], fileName:'Lien_Waiver_Foundation_Co.pdf',     documentType:'CONTRACT',       vendor:'Foundation Co',      invoiceNo:'LW-2024-03',   exclusionCode:'',        amount:0,      sourceNodes:{con:'con-hub',leg:'leg-index'},       routing:{con:['con-hub','strategist'],leg:['leg-index','leg-strategist','strategist']},               _ext:{client:'Foundation Co',      ref:'LW-2024-03',defectFlags:[]}, tags:['lien waiver','construction','contract','subcontractor','agreement'] },
+  { id:'dd-leg-dem',  verticals:['leg'],       fileName:'Demand_Letter_Doe_v_Acme.pdf',      documentType:'FILING',         vendor:'Superior Court',     invoiceNo:'CV-2024-0091', exclusionCode:'',        amount:0,      sourceNodes:{leg:'leg-index'},                     routing:{leg:['leg-index','leg-strategist','strategist']},                                            _ext:{client:'Jane Doe',           ref:'CV-2024-0091',defectFlags:[]}, tags:['plaintiff','defendant','litigation','demand','legal'] },
+  { id:'dd-leg-ctr',  verticals:['leg','re'],  fileName:'Purchase_Contract_Oak_Ridge.pdf',   documentType:'CONTRACT',       vendor:'',                   invoiceNo:'PC-OAK-01',    exclusionCode:'',        amount:412000, sourceNodes:{leg:'leg-index',re:'re-doc-command'}, routing:{leg:['leg-index','leg-strategist','strategist'],re:['re-doc-command','re-strategist','strategist']}, _ext:{client:'Oak Ridge Estates',  ref:'PC-OAK-01',defectFlags:[]}, tags:['contract','agreement','purchase','real estate','litigation'] },
+  { id:'dd-leg-disc', verticals:['leg'],       fileName:'Discovery_Production_Set1.pdf',     documentType:'DOCUMENT REPORT',vendor:'',                   invoiceNo:'DSC-001',      exclusionCode:'PRIV-3',  amount:0,      sourceNodes:{leg:'leg-ediscovery'},                routing:{leg:['leg-ediscovery','leg-strategist','strategist','bnca-engine']},                         _ext:{client:'Acme Corp',          ref:'DSC-001',  defectFlags:[]}, tags:['plaintiff','defendant','litigation','discovery','exhibit'] },
+  { id:'dd-re-cd',    verticals:['re'],        fileName:'Closing_Disclosure_Unit12B.pdf',    documentType:'DOCUMENT REPORT',vendor:'Premier Escrow Co',  invoiceNo:'CD-12B',       exclusionCode:'',        amount:412000, sourceNodes:{re:'re-exec'},                        routing:{re:['re-exec','re-strategist','strategist']},                                                _ext:{client:'Unit 12B Buyer',     ref:'CD-12B',   defectFlags:[]}, tags:['closing disclosure','mortgage','escrow','real estate','borrower'] },
+  { id:'dd-re-title', verticals:['re','leg'],  fileName:'Title_Report_OakRidge_Lien.pdf',    documentType:'TITLE DOCUMENT', vendor:'First American Title',invoiceNo:'TTL-4471',    exclusionCode:'LIEN-2',  amount:0,      sourceNodes:{re:'re-strategist',leg:'leg-index'},  routing:{re:['re-strategist','strategist','bnca-engine'],leg:['leg-index','leg-strategist','strategist']}, _ext:{client:'Oak Ridge Estates',  ref:'TTL-4471', defectFlags:['Title Defect']}, tags:['title','lien','real estate','closing disclosure','contract'] },
+  { id:'dd-re-1003',  verticals:['re','fo'],   fileName:'1003_Loan_Application.pdf',         documentType:'DOCUMENT REPORT',vendor:'',                   invoiceNo:'1003-2024-07', exclusionCode:'',        amount:380000, sourceNodes:{re:'re-doc-command',fo:'fo-financial'},routing:{re:['re-doc-command','re-strategist','strategist'],fo:['fo-financial','strategist']},         _ext:{client:'Borrower #4471',     ref:'1003-2024-07',defectFlags:[]}, tags:['1003','borrower','mortgage','loan estimate','fannie mae','appraisal'] },
+  { id:'dd-re-insp',  verticals:['re'],        fileName:'Inspection_Report_456Cedar.pdf',    documentType:'DOCUMENT REPORT',vendor:'AZ Home Inspections', invoiceNo:'INS-3320',    exclusionCode:'COND-9',  amount:0,      sourceNodes:{re:'re-doc-command'},                 routing:{re:['re-doc-command','re-strategist','strategist']},                                         _ext:{client:'456 Cedar Ave',      ref:'INS-3320', defectFlags:['Inspection Issues']}, tags:['inspection','real estate','appraisal','condition'] },
+  { id:'dd-hc-denial',verticals:['hc'],        fileName:'Denial_CLM-HC-7731_Aetna.pdf',      documentType:'DENIAL',         vendor:'Aetna',              invoiceNo:'CLM-HC-7731',  exclusionCode:'CO-50',   amount:8200,   sourceNodes:{hc:'hc-denial'},                      routing:{hc:['hc-denial','strategist']},                                                              _ext:{client:'Patient #4471',      ref:'CLM-HC-7731',defectFlags:[]}, tags:['claim denial','cpt','icd','eob','medical necessity','denial'] },
+  { id:'dd-hc-appeal',verticals:['hc'],        fileName:'Appeal_Letter_CLM-HC-7731.pdf',     documentType:'CLAIM APPEAL',   vendor:'Aetna',              invoiceNo:'CLM-HC-7731',  exclusionCode:'CO-50',   amount:8200,   sourceNodes:{hc:'hc-denial'},                      routing:{hc:['hc-denial','strategist','bnca-engine']},                                                _ext:{client:'Patient #4471',      ref:'APL-7731',  defectFlags:[]}, tags:['claim denial','appeal','medical necessity','eob','cpt'] },
+  { id:'dd-hc-pa',    verticals:['hc','ins'],  fileName:'Prior_Auth_MRI_Request.pdf',        documentType:'DOCUMENT REPORT',vendor:'UnitedHealthcare',   invoiceNo:'PA-3309',      exclusionCode:'PA-PEND', amount:0,      sourceNodes:{hc:'hc-denial',ins:'ins-hub'},        routing:{hc:['hc-denial','strategist'],ins:['ins-hub','strategist']},                                 _ext:{client:'Patient #2218',      ref:'PA-3309',  defectFlags:[]}, tags:['prior auth','medical necessity','icd','cpt','insurance','coverage'] },
+  { id:'dd-hc-835',   verticals:['hc','fo'],   fileName:'835_Remittance_BCBS_July.txt',      documentType:'REMITTANCE',     vendor:'BCBS',               invoiceNo:'835-07-24',    exclusionCode:'',        amount:44800,  sourceNodes:{hc:'hc-denial',fo:'fo-accounting'},   routing:{hc:['hc-denial','strategist'],fo:['fo-accounting','strategist']},                             _ext:{client:'Multi-patient',      ref:'835-07',   defectFlags:[]}, tags:['835','era','remittance','eob','reconciliation','medical'] },
+  { id:'dd-bpo-sop',  verticals:['bpo'],       fileName:'SOP_CallHandling_v3.pdf',           documentType:'POLICY',         vendor:'Internal',           invoiceNo:'SOP-CH-003',   exclusionCode:'',        amount:0,      sourceNodes:{bpo:'bpo-sops'},                      routing:{bpo:['bpo-sops','strategist']},                                                              _ext:{client:'Internal',           ref:'SOP-003',  defectFlags:[]}, tags:['sop','process','bpo','call handling','policy'] },
+  { id:'dd-bpo-sla',  verticals:['bpo','fo'],  fileName:'SLA_Report_Acme_June.pdf',          documentType:'DOCUMENT REPORT',vendor:'Acme Corp',          invoiceNo:'SLA-06-24',    exclusionCode:'SLA-BRK', amount:0,      sourceNodes:{bpo:'bpo-cmd',fo:'fo-financial'},     routing:{bpo:['bpo-cmd','strategist'],fo:['fo-financial','strategist']},                              _ext:{client:'Acme Corp',          ref:'SLA-24-06',defectFlags:[]}, tags:['sla','bpo','service level','reporting','accounts'] },
+  { id:'dd-bpo-onb',  verticals:['bpo'],       fileName:'Onboarding_Checklist_TechFirm.pdf', documentType:'DOCUMENT REPORT',vendor:'TechFirm Inc',       invoiceNo:'OBD-TF-01',    exclusionCode:'',        amount:0,      sourceNodes:{bpo:'bpo-launch'},                    routing:{bpo:['bpo-launch','bpo-sops','strategist']},                                                 _ext:{client:'TechFirm Inc',       ref:'OBD-01',   defectFlags:[]}, tags:['onboarding','bpo','checklist','client','process'] },
+];
+
 function seedDemoData() {
-  const samples = vDef().seed.map((s, i) => ({
-    ...s, id: "DOC-SEED-" + currentVertical + "-" + (Date.now() - i)
+  // Seed current vertical from DEMO_DOCS
+  const now = Date.now();
+  const forThisVertical = DEMO_DOCS.filter(d => d.verticals.includes(currentVertical));
+  const samples = forThisVertical.map((doc, i) => ({
+    id:            doc.id + '-' + now + '-' + i,
+    fileName:      doc.fileName,
+    documentType:  doc.documentType,
+    vendor:        doc.vendor,
+    invoiceNo:     doc.invoiceNo,
+    exclusionCode: doc.exclusionCode,
+    amount:        doc.amount,
+    sourceNode:    doc.sourceNodes[currentVertical] || 'strategist',
+    routing:       doc.routing[currentVertical] || ['strategist'],
+    timestamp:     now - i * 3600000,
+    _ext:          doc._ext || {},
   }));
   const merged = [...samples, ...loadIndex()].slice(0, 500);
   saveIndex(merged);
   runSearch();
   refreshTotalCount();
+}
+
+function seedAllVerticals() {
+  const now = Date.now();
+  DEMO_DOCS.forEach((doc, i) => {
+    doc.verticals.forEach(v => {
+      if (!VERTICALS[v]) return;
+      const existing = loadIndexFor(v);
+      if (existing.some(d => d.id && d.id.startsWith(doc.id))) return; // skip dupes
+      existing.unshift({
+        id:            doc.id + '-' + now + '-' + i,
+        fileName:      doc.fileName,
+        documentType:  doc.documentType,
+        vendor:        doc.vendor,
+        invoiceNo:     doc.invoiceNo,
+        exclusionCode: doc.exclusionCode,
+        amount:        doc.amount,
+        sourceNode:    doc.sourceNodes[v] || 'strategist',
+        routing:       doc.routing[v] || ['strategist'],
+        timestamp:     now - i * 3600000,
+        _ext:          doc._ext || {},
+      });
+      if (existing.length > 500) existing.splice(500);
+      saveIndexFor(v, existing);
+    });
+  });
+  runSearch();
+  refreshTotalCount();
+  const btn = document.getElementById('seed-all-btn');
+  if (btn) { btn.textContent = '✓ All Verticals Seeded'; btn.style.color = 'var(--accent)'; setTimeout(() => { btn.textContent = '⚡ Seed All Verticals'; btn.style.color = ''; }, 3000); }
 }
 
 /* ═══════════════════════════════════════════════════
