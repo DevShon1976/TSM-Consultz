@@ -2335,6 +2335,7 @@ Always use ► section headers. Include specific dollar amounts, timelines, and 
         card.querySelector('.nc-status').textContent = '✓ COMPLETE';
         card.querySelector('.nc-status').style.color = 'var(--green)';
         renderRemPath(text, node);
+        document.dispatchEvent(new CustomEvent('tsm-node-complete', { detail: { node, title } }));
       } catch (e) {
         feed.innerHTML = `<span style="color:var(--red)">[ERROR] ${e.message}</span>`;
         document.getElementById('feedMeta').textContent = 'ERROR';
@@ -2359,6 +2360,7 @@ Always use ► section headers. Include specific dollar amounts, timelines, and 
         feed.scrollTop = 0;
         autoSave('Quick Fire', text);
         document.getElementById('feedMeta').textContent = '✓ Quick analysis complete';
+        document.dispatchEvent(new CustomEvent('tsm-quickfire-complete', { detail: { text } }));
       } catch (e) {
         feed.innerHTML = `<span style="color:var(--red)">[ERROR] ${e.message}</span>`;
       }
@@ -2482,6 +2484,7 @@ Use ► section headers. Be specific with dollar amounts, party names, and actio
         sessionPayload.rescuePack = { address, price, score, risk, analysis: text, scenarios };
         autoSave('Deal Rescue · ' + address, text);
         updateHealthScore(score);
+        document.dispatchEvent(new CustomEvent('tsm-rescue-complete', { detail: { address, score, risk } }));
 
       } catch (e) {
         results.innerHTML = `<div style="color:var(--red);font-family:var(--mono);font-size:.52rem">[RESCUE ERROR] ${e.message}</div>`;
@@ -2549,6 +2552,7 @@ Use ► section headers. Be specific with dollar amounts, party names, and actio
         document.getElementById('feedMeta').textContent = '✓ Synthesis complete';
         autoSave('Synthesis Report', text);
         sessionPayload.synthesis = text;
+        document.dispatchEvent(new CustomEvent('tsm-synthesis-complete', { detail: { text } }));
       } catch (e) {
         feed.innerHTML = `<span style="color:var(--red)">[ERROR] ${e.message}</span>`;
       }
@@ -2576,6 +2580,7 @@ Use ► section headers. Be specific with dollar amounts, party names, and actio
         return;
       }
       try {
+        document.dispatchEvent(new CustomEvent('tsm-escalate-clicked', { detail: payload }));
         sessionStorage.setItem('TSM_RE_RESCUE_RESULTS_CACHE', document.getElementById('rescueResults').innerHTML);
         const remPanel = document.getElementById('remPathPanel');
         if (remPanel) sessionStorage.setItem('TSM_RE_REMPATH_CACHE', remPanel.innerHTML);
@@ -2616,6 +2621,7 @@ Use ► section headers. Be specific with dollar amounts, party names, and actio
 
     // ─── UI HELPERS ───────────────────────────────────────────────────────────────
     function showView(name, btn) {
+      document.dispatchEvent(new CustomEvent('tsm-view-changed', { detail: { name } }));
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
       document.getElementById('view-' + name)?.classList.add('active');
       document.querySelectorAll('.vtab').forEach(t => t.classList.remove('active'));
@@ -3222,28 +3228,32 @@ Use ► section headers. Be specific with dollar amounts, party names, and actio
         actionHint: null
       },
       {
-        id: 'nodes', title: 'STEP 1 · THE 7 NODES', type: 'action',
-        target: 'nodeGrid', autoMs: 7000,
-        narration: `The war room has <span class='hl'>7 specialized nodes</span> visible in the grid. <span class='cmd'>REA</span> = Acquisition · <span class='cmd'>REAF</span> = Finance · <span class='cmd'>REAT</span> = Transaction · <span class='cmd'>REAM</span> = Mortgage Ops · <span class='cmd'>REAC</span> = Compliance · <span class='cmd'>REAI</span> = Market Intel · <span class='cmd'>REAX</span> = Closing. Click any node card to run that analysis. Each card has a pre-built prompt targeting its specialty.`,
-        actionHint: 'Click any node card in the grid to run that node\'s analysis'
+        id: 'nodes', title: 'STEP 1 · RUN A NODE', type: 'action',
+        target: 'nodeGrid', autoMs: 0,
+        waitFor: 'tsm-node-complete',
+        narration: `The war room has <span class='hl'>7 specialized nodes</span> visible in the grid. <span class='cmd'>REA</span> = Acquisition · <span class='cmd'>REAF</span> = Finance · <span class='cmd'>REAT</span> = Transaction · <span class='cmd'>REAM</span> = Mortgage Ops · <span class='cmd'>REAC</span> = Compliance · <span class='cmd'>REAI</span> = Market Intel · <span class='cmd'>REAX</span> = Closing. <span class='warn'>Click any node card now</span> to run that analysis — the tour will continue once results stream in.`,
+        actionHint: 'Click any node card in the grid — NEXT unlocks when analysis completes'
       },
       {
         id: 'quickfire', title: 'STEP 2 · QUICK FIRE SIDEBAR', type: 'action',
-        target: 'feedBody', autoMs: 6000,
-        narration: `The <span class='hl'>Quick Fire prompts</span> in the left sidebar give you one-click answers to the most common RE ops questions: Full Synthesis, Highest Risk Deal, Compliance Sweep, REO Portfolio Status, and Market Update. Click any prompt — the output streams to the Intelligence Feed below the grid. <span class='warn'>No setup required</span> — just click and read.`,
-        actionHint: 'Click any Quick Fire prompt in the left sidebar'
+        target: 'feedBody', autoMs: 0,
+        waitFor: 'tsm-quickfire-complete',
+        narration: `The <span class='hl'>Quick Fire prompts</span> in the left sidebar give you one-click answers to the most common RE ops questions: Full Synthesis, Highest Risk Deal, Compliance Sweep, REO Portfolio Status, and Market Update. <span class='warn'>Click any prompt now</span> — output streams to the Intelligence Feed below.`,
+        actionHint: 'Click any Quick Fire prompt — NEXT unlocks when it finishes'
       },
       {
-        id: 'rescue', title: 'STEP 3 · DEAL RESCUE PACK', type: 'action',
-        target: 'vtab-rescue', autoMs: 8000,
-        narration: `Click <span class='hl'>⚡ DEAL RESCUE PACK</span> in the tab bar or topbar. This is TSM's transaction rescue system — fill in the deal address, contract price, loan type, and closing date. Select all rescue scenarios that apply: <span class='cmd'>Financing Failure, Appraisal Gap, Title Defect, Inspection Issues, UW Conditions, Closing Delay</span>. Then fire the pack for a complete remediation plan with a Transaction Health Score.`,
-        actionHint: 'Click the ⚡ DEAL RESCUE PACK tab to open the rescue form'
+        id: 'rescue', title: 'STEP 3 · OPEN DEAL RESCUE PACK', type: 'action',
+        target: 'vtab-rescue', autoMs: 0,
+        waitFor: 'tsm-view-changed',
+        narration: `Click <span class='hl'>⚡ DEAL RESCUE PACK</span> in the tab bar. This is TSM's transaction rescue system — fill in the deal address, contract price, loan type, and closing date, then select rescue scenarios: <span class='cmd'>Financing Failure, Appraisal Gap, Title Defect, Inspection Issues, UW Conditions, Closing Delay</span>.`,
+        actionHint: 'Click the ⚡ DEAL RESCUE PACK tab — NEXT unlocks once it opens'
       },
       {
         id: 'rescuefire', title: 'STEP 4 · FIRE THE RESCUE PACK', type: 'action',
-        target: 'rescueBtn', autoMs: 7000,
-        narration: `Once the rescue form is filled, click <span class='hl'>⚡ RUN TRANSACTION RESCUE PACK</span>. TSM routes the deal data across all relevant nodes and returns: a <span class='cmd'>Transaction Health Score</span> (0–100), risk level (LOW/MEDIUM/HIGH/CRITICAL), all issues found with dollar impact, a prioritized remediation plan per scenario, and a projected closing delay in days.`,
-        actionHint: 'Fill the rescue form then click ⚡ RUN TRANSACTION RESCUE PACK'
+        target: 'rescueBtn', autoMs: 0,
+        waitFor: 'tsm-rescue-complete',
+        narration: `Fill in the deal details (or leave defaults) and select at least one rescue scenario, then click <span class='hl'>⚡ RUN TRANSACTION RESCUE PACK</span>. TSM returns a <span class='cmd'>Transaction Health Score</span> (0–100), risk level, all issues with dollar impact, and a prioritized remediation plan.`,
+        actionHint: 'Select a scenario and click ⚡ RUN TRANSACTION RESCUE PACK — NEXT unlocks on completion'
       },
       {
         id: 'healthscore', title: 'STEP 5 · TRANSACTION HEALTH SCORE', type: 'demo',
@@ -3259,9 +3269,10 @@ Use ► section headers. Be specific with dollar amounts, party names, and actio
       },
       {
         id: 'synthesis', title: 'STEP 7 · SYNTHESIZE ALL NODES', type: 'action',
-        target: 'rptContent', autoMs: 7000,
-        narration: `After running multiple node analyses, click <span class='hl'>⚡ SYNTHESIZE ALL NODES</span> on the right panel. This sends all saved outputs back through TSM Neural Core to produce a unified strategic recommendation — key findings across all nodes, critical risks ranked by dollar impact, immediate actions, and a 30-day roadmap. The synthesis output populates the report textarea for export.`,
-        actionHint: 'Save some node outputs then click ⚡ SYNTHESIZE ALL NODES'
+        target: 'rptContent', autoMs: 0,
+        waitFor: 'tsm-synthesis-complete',
+        narration: `You've saved outputs from earlier steps in Report History. Click <span class='hl'>⚡ SYNTHESIZE ALL NODES</span> on the right panel. This produces a unified strategic recommendation — key findings, critical risks ranked by dollar impact, immediate actions, and a 30-day roadmap.`,
+        actionHint: 'Click ⚡ SYNTHESIZE ALL NODES — NEXT unlocks when synthesis completes'
       },
       {
         id: 'nodeviewer', title: 'STEP 8 · NODE VIEWER', type: 'demo',
@@ -3271,9 +3282,10 @@ Use ► section headers. Be specific with dollar amounts, party names, and actio
       },
       {
         id: 'escalate', title: 'STEP 9 · ESCALATE TO RE STRATEGIST', type: 'action',
-        target: 'feedBody', autoMs: 8000,
-        narration: `Final step: click <span class='hl'>↗ ESCALATE → STRATEGIST</span> in the topbar. This saves the full session payload — all node outputs, rescue pack results, synthesis — to localStorage and opens <span class='cmd'>re-strategist.html</span>. The Strategist receives the complete context and auto-generates a strategic brief. From there, escalate again to the <span class='cmd'>RE Exec Portal</span> for board-ready reporting.`,
-        actionHint: 'Click ↗ ESCALATE → STRATEGIST in the topbar to advance the chain'
+        target: 'feedBody', autoMs: 0,
+        waitFor: 'tsm-escalate-clicked',
+        narration: `Final step: click <span class='hl'>↗ ESCALATE → STRATEGIST</span> in the topbar. This saves the full session payload — all node outputs, rescue results, synthesis — and opens <span class='cmd'>re-strategist.html</span> with full context. <span class='warn'>Clicking this will navigate away from the War Room.</span>`,
+        actionHint: 'Click ↗ ESCALATE → STRATEGIST — this ends the tour and advances the chain'
       },
       {
         id: 'done', title: 'TOUR COMPLETE · WAR ROOM READY', type: 'info',
@@ -3285,10 +3297,32 @@ Use ► section headers. Be specific with dollar amounts, party names, and actio
 
     /* ════ SHARED TOUR + SPEECH ENGINE (single copy) ════ */
     let tourActive = false, tourStep = 0, autoMode = false, autoTimer = null, autoMs = 6000;
-    function spotlightEl(id) { const sp = document.getElementById('tourSpotlight'); if (!id) { sp.style.display = 'none'; return; } const el = document.getElementById(id); if (!el) { sp.style.display = 'none'; return; } const r = el.getBoundingClientRect(), p = 8; sp.style.display = 'block'; sp.style.top = (r.top - p) + 'px'; sp.style.left = (r.left - p) + 'px'; sp.style.width = (r.width + p * 2) + 'px'; sp.style.height = (r.height + p * 2) + 'px'; el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+let tourWaitHandler = null;
+
+function clearTourWait() {
+  if (tourWaitHandler) {
+    document.removeEventListener(tourWaitHandler.event, tourWaitHandler.fn);
+    tourWaitHandler = null;
+  }
+}
+
+function armTourWait(eventName) {
+  clearTourWait();
+  if (!eventName) return;
+  const fn = () => {
+    if (!tourActive) return;
+    const nb = document.getElementById('hudNextBtn');
+    if (nb) { nb.disabled = false; nb.classList.add('ready'); nb.textContent = tourStep === TOUR_SLIDES.length - 1 ? 'END TOUR ✓' : 'NEXT ▶'; }
+    const hi = document.getElementById('hudActionHint');
+    if (hi) hi.style.borderColor = 'rgba(0,255,136,.5)';
+    if (autoMode) startAutoTimer(TOUR_SLIDES[tourStep].autoMs || 6000);
+  };
+  tourWaitHandler = { event: eventName, fn };
+  document.addEventListener(eventName, fn, { once: true });
+}
+    let tourWaitHandler = null;    function spotlightEl(id) { const sp = document.getElementById('tourSpotlight'); if (!id) { sp.style.display = 'none'; return; } const el = document.getElementById(id); if (!el) { sp.style.display = 'none'; return; } const r = el.getBoundingClientRect(), p = 8; sp.style.display = 'block'; sp.style.top = (r.top - p) + 'px'; sp.style.left = (r.left - p) + 'px'; sp.style.width = (r.width + p * 2) + 'px'; sp.style.height = (r.height + p * 2) + 'px'; el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
     function buildPips() { const prog = document.getElementById('hudProgress'); prog.innerHTML = ''; TOUR_SLIDES.forEach((s, i) => { const pip = document.createElement('div'); pip.className = 'hud-pip' + (i < tourStep ? ' done' : i === tourStep ? ' active' : ''); prog.appendChild(pip); }); }
-    function renderSlide(idx) { speechStop(); const s = TOUR_SLIDES[idx]; document.getElementById('hudBadge').textContent = String(idx + 1).padStart(2, '0') + ' / ' + TOUR_SLIDES.length; document.getElementById('hudTitle').textContent = s.title; document.getElementById('hudNarration').innerHTML = s.narration; const te = document.getElementById('hudSlideType'); te.textContent = s.type.toUpperCase(); te.className = 'hud-slide-type ' + s.type; const hi = document.getElementById('hudActionHint'); if (s.actionHint) { hi.style.display = 'flex'; document.getElementById('hudActionText').textContent = s.actionHint; } else hi.style.display = 'none'; document.getElementById('hudPrevBtn').disabled = idx === 0; const nb = document.getElementById('hudNextBtn'); if (idx === TOUR_SLIDES.length - 1) { nb.textContent = 'END TOUR ✓'; nb.onclick = endTour; } else { nb.textContent = 'NEXT ▶'; nb.onclick = tourNext; } buildPips(); spotlightEl(s.target); if (autoMode) startAutoTimer(s.autoMs || 6000); }
-    function startAutoTimer(ms) { clearAutoTimer(); if (!ms || ms === 0) { stopAuto(); return; } const fill = document.getElementById('timerFill'); fill.style.transition = 'none'; fill.style.width = '100%'; requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.transition = `width ${ms}ms linear`; fill.style.width = '0%'; })); autoTimer = setTimeout(() => { if (tourStep < TOUR_SLIDES.length - 1) tourNext(); else endTour(); }, ms); }
+    function renderSlide(idx) { speechStop(); clearTourWait(); const s = TOUR_SLIDES[idx]; document.getElementById('hudBadge').textContent = String(idx + 1).padStart(2, '0') + ' / ' + TOUR_SLIDES.length; document.getElementById('hudTitle').textContent = s.title; document.getElementById('hudNarration').innerHTML = s.narration; const te = document.getElementById('hudSlideType'); te.textContent = s.type.toUpperCase(); te.className = 'hud-slide-type ' + s.type; const hi = document.getElementById('hudActionHint'); if (s.actionHint) { hi.style.display = 'flex'; document.getElementById('hudActionText').textContent = s.actionHint; hi.style.borderColor = ''; } else hi.style.display = 'none'; document.getElementById('hudPrevBtn').disabled = idx === 0; const nb = document.getElementById('hudNextBtn'); nb.classList.remove('ready'); if (idx === TOUR_SLIDES.length - 1) { nb.textContent = 'END TOUR ✓'; nb.onclick = endTour; } else { nb.textContent = 'NEXT ▶'; nb.onclick = tourNext; } if (s.waitFor) { nb.disabled = true; armTourWait(s.waitFor); } else { nb.disabled = (idx === 0 ? false : document.getElementById('hudPrevBtn').disabled = idx === 0); } buildPips(); spotlightEl(s.target); if (autoMode && !s.waitFor) startAutoTimer(s.autoMs || 6000); }    function startAutoTimer(ms) { clearAutoTimer(); if (!ms || ms === 0) { stopAuto(); return; } const fill = document.getElementById('timerFill'); fill.style.transition = 'none'; fill.style.width = '100%'; requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.transition = `width ${ms}ms linear`; fill.style.width = '0%'; })); autoTimer = setTimeout(() => { if (tourStep < TOUR_SLIDES.length - 1) tourNext(); else endTour(); }, ms); }
     function clearAutoTimer() { if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; } const fill = document.getElementById('timerFill'); if (fill) { fill.style.transition = 'none'; fill.style.width = '100%'; } }
     function toggleAuto() { autoMode = !autoMode; document.getElementById('autoToggle').classList.toggle('on', autoMode); document.getElementById('autoStepLbl').style.display = autoMode ? 'inline' : 'none'; if (autoMode) startAutoTimer(TOUR_SLIDES[tourStep].autoMs || 6000); else clearAutoTimer(); }
     function stopAuto() { autoMode = false; const t = document.getElementById('autoToggle'), l = document.getElementById('autoStepLbl'); if (t) t.classList.remove('on'); if (l) l.style.display = 'none'; clearAutoTimer(); }
