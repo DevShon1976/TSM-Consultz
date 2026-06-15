@@ -711,7 +711,7 @@ MATERIAL FACTS:
 5. [Fact]`,
 
 (doc,e)=>`You are a Construction FieldOps + Job Cost Analyst.
-ENGINE 01 FACTS: ${e[1]}
+ENGINE 01: ${compressed[1]}
 
 ENGINE 02 — FIELDOPS ANALYSIS
 SCHEDULE IMPACT: [X days — reason]
@@ -723,8 +723,8 @@ CRITICAL PATH: [Yes/No — one reason]
 FIELDOPS RISK: [Low/Medium/High/Critical]`,
 
 (doc,e)=>`You are a Construction Financial Analyst with GAAP expertise.
-ENGINE 01 FACTS: ${e[1]}
-ENGINE 02 FIELDOPS: ${e[2]}
+ENGINE 01: ${compressed[1]}
+ENGINE 02 FIELDOPS: ${compressed[2]}
 
 ENGINE 03 — FINANCIAL IMPACT · GAAP
 EXPOSURE: [$low-$high]
@@ -738,8 +738,8 @@ RESERVE: [$amount]
 RESTATEMENT: [Yes/No]`,
 
 (doc,e)=>`You are a Construction Legal Analyst.
-ENGINE 01 FACTS: ${e[1]}
-ENGINE 03 FINANCIAL: ${e[3]}
+ENGINE 01: ${compressed[1]}
+ENGINE 03: ${compressed[3]}
 
 ENGINE 04 — LEGAL COMMAND
 LEGAL RISK: [one line]
@@ -752,8 +752,8 @@ ACTION: [Respond/Contest/File/Negotiate/Cure/Restate]
 LEGAL RISK LEVEL: [Low/Medium/High/Critical]`,
 
 (doc,e)=>`You are a Construction Compliance + Payroll Officer.
-ENGINE 01 FACTS: ${e[1]}
-ENGINE 02 FIELDOPS: ${e[2]}
+ENGINE 01: ${compressed[1]}
+ENGINE 02 FIELDOPS: ${compressed[2]}
 
 ENGINE 05 — COMPLIANCE SHIELD
 OSHA: [$penalty estimate]
@@ -784,7 +784,7 @@ Write HOW_TO_USE as numbered steps:
 3. Select [option] because [specific reason tied to a defect above]
 4. Click [action] — this generates [specific output needed]
 Do NOT write generic instructions. Every step must reference a specific defect, amount, date, or party from this document.
-ENGINE 03 FINANCIAL: ${e[3]}
+ENGINE 03: ${compressed[3]}
 ENGINE 04 LEGAL: ${e[4]}
 ENGINE 05 COMPLIANCE: ${e[5]}
 
@@ -1014,16 +1014,17 @@ function launchApp(href, appMeta){
   }
 }
 
+const ENGINE_TOKENS=[0,400,200,200,180,180,600];
 function esc(s){ return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
 // ═══════════════════════════════
 // FIRE ALL 6 ENGINES
 // ═══════════════════════════════
-async function callGroq(prompt){
+async function callGroq(prompt,engIdx){
   const r=await fetch('/api/construction/query',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({question:prompt})
+    body:JSON.stringify({question:prompt,maxTokens:ENGINE_TOKENS[engIdx]||350})
   });
   if(!r.ok) throw new Error('API '+r.status);
   const d=await r.json();
