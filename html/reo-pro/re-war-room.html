@@ -2204,9 +2204,8 @@ Always use ► section headers. Include specific dollar amounts, timelines, and 
       const msg = `Anomaly detected:\n"${anomalyText.slice(0, 600)}"\n\nAvailable apps:\n${RE_APPS}\n\nGenerate 4-6 steps. Return ONLY:\n{"missionTitle":"...","summary":"...","steps":[{"id":"step-1","title":"...","appName":"...","appUrl":"...","objective":"...","instructions":"...","expectedOutput":"...","completionCriteria":"..."}]}`;
 
       try {
-        const res = await fetch('/api/hc/query', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ system: sys, message: msg, apiKey: let groqKey = localStorage.getItem('tsm_groq_key') || '';
-
-const data = await res.json();
+        const res = await fetch('/api/hc/query', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ system: sys, message: msg, apiKey: localStorage.getItem('tsm_groq_key') || '' }) });
+        const data = await res.json();
         const raw = (data.response || data.content || '').replace(/```json|```/g, '').trim();
         const parsed = JSON.parse(raw);
         return { missionId: 'RE-' + Date.now(), ...parsed, steps: (parsed.steps || []).map((s, i) => ({ ...s, status: i === 0 ? 'active' : 'pending' })) };
