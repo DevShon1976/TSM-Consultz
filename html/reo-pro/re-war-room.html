@@ -1363,6 +1363,9 @@
       width: 320px;
       font-family: var(--mono)
     }
+    body.tour-active .rescue-widget {
+      display: none
+    }
 
     .rw-toggle {
       background: var(--s1);
@@ -3353,8 +3356,21 @@ function armTourWait(eventName) {
     function stopAuto() { autoMode = false; const t = document.getElementById('autoToggle'), l = document.getElementById('autoStepLbl'); if (t) t.classList.remove('on'); if (l) l.style.display = 'none'; clearAutoTimer(); }
     function tourNext() { if (tourStep < TOUR_SLIDES.length - 1) { tourStep++; renderSlide(tourStep); } }
     function tourPrev() { if (tourStep > 0) { tourStep--; renderSlide(tourStep); } }
-    function startTour() { tourActive = true; tourStep = 0; document.getElementById('tourOverlay').classList.add('active'); document.getElementById('tourHUD').classList.add('active'); const lb = document.getElementById('tourLaunchBtn'); if (lb) lb.textContent = '■ TOUR ACTIVE'; renderSlide(0); }
-    function endTour() { tourActive = false; speechStop(); stopAuto(); document.getElementById('tourOverlay').classList.remove('active'); document.getElementById('tourHUD').classList.remove('active'); document.getElementById('tourSpotlight').style.display = 'none'; const lb = document.getElementById('tourLaunchBtn'); if (lb) lb.textContent = '▶ GUIDED TOUR'; }
+    function startTour() {
+      tourActive = true;
+      let resumeStep = 0;
+      if (runCount > 0) resumeStep = Math.max(resumeStep, 2);
+      if (sessionPayload.rescuePack) resumeStep = Math.max(resumeStep, 5);
+      if (sessionPayload.synthesis) resumeStep = Math.max(resumeStep, 8);
+      tourStep = Math.min(resumeStep, TOUR_SLIDES.length - 1);
+      document.getElementById('tourOverlay').classList.add('active');
+      document.getElementById('tourHUD').classList.add('active');
+      document.body.classList.add('tour-active');
+      const lb = document.getElementById('tourLaunchBtn');
+      if (lb) lb.textContent = '■ TOUR ACTIVE';
+      renderSlide(tourStep);
+    }
+    function endTour() { tourActive = false; document.body.classList.remove('tour-active'); speechStop(); stopAuto(); document.getElementById('tourOverlay').classList.remove('active'); document.getElementById('tourHUD').classList.remove('active'); document.getElementById('tourSpotlight').style.display = 'none'; const lb = document.getElementById('tourLaunchBtn'); if (lb) lb.textContent = '▶ GUIDED TOUR'; }
     window.addEventListener('resize', () => { if (tourActive) spotlightEl(TOUR_SLIDES[tourStep].target); });
     (document.querySelector('.main') || document.body).addEventListener('scroll', () => { if (tourActive) spotlightEl(TOUR_SLIDES[tourStep].target); });
     const RV_VOICES = ['US English Male', 'US English Female', 'UK English Male', 'UK English Female', 'Australian Female', 'Australian Male'];
