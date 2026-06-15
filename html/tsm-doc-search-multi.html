@@ -966,10 +966,11 @@ function renderCard(doc, query) {
         <span class="doc-filename" title="${doc.fileName}">${hl(doc.fileName, query)}</span>
       </div>
       <div class="doc-card-actions">
-        ${openNodeRoute ? `<a class="btn-open-node" href="${openNodeRoute}" target="_blank">↗ Open Node</a>` : ""}
-        <button class="btn-warroom" onclick="openWarRoomPicker('${doc.id}')">⚡ Send to War Room</button>
-        <button class="btn-remove" onclick="removeDoc('${doc.id}')">✕ Remove</button>
-      </div>
+      ${openNodeRoute ? `<a class="btn-open-node" href="${openNodeRoute}" target="_blank">↗ Open Node</a>` : ""}
+      <button class="btn-view" onclick="viewDocument('${doc.id}')">👁 View</button>
+      <button class="btn-warroom" onclick="openWarRoomPicker('${doc.id}')">⚡ Send to War Room</button>
+      <button class="btn-remove" onclick="removeDoc('${doc.id}')">✕ Remove</button>
+    </div>
     </div>
     <div class="doc-meta-row">
       ${ext.client ? `<div class="meta-item"><span class="meta-label">Client:</span><span class="meta-val">${hl(ext.client, query)}</span></div>` : ""}
@@ -983,6 +984,44 @@ function renderCard(doc, query) {
     <div class="routing-row"><span class="routing-label">Routed to:</span>${nodeTagsHtml}</div>
     ${defectHtml}
   </div>`;
+}
+
+function viewDocument(id){
+  const docs = JSON.parse(localStorage.getItem('tsm_docs') || '[]');
+  const doc = docs.find(d => d.id === id);
+
+  if(!doc){
+    alert('Document not found');
+    return;
+  }
+
+  const ext = doc._ext || {};
+
+  document.getElementById('viewerTitle').textContent =
+    doc.fileName || doc.documentType || 'Document';
+
+  document.getElementById('viewerBody').innerHTML = `
+    <div class="viewer-meta">
+      <p><strong>Document Type:</strong> ${doc.documentType || ''}</p>
+      <p><strong>Client:</strong> ${ext.client || ''}</p>
+      <p><strong>Reference:</strong> ${doc.invoiceNo || ''}</p>
+      <p><strong>Node:</strong> ${doc.sourceNode || ''}</p>
+    </div>
+
+    <hr>
+
+    <pre class="viewer-text">${
+      ext.docText ||
+      ext.summary ||
+      JSON.stringify(doc,null,2)
+    }</pre>
+  `;
+
+  document.getElementById('viewerModal').style.display='flex';
+}
+
+function closeViewer(){
+  document.getElementById('viewerModal').style.display='none';
 }
 
 function runSearch() {
