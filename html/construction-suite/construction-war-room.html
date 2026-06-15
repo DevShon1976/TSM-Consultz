@@ -1058,6 +1058,33 @@ function buildDefectManifest(e) {
   return lines.slice(0, 12).map((d, i) => `DEFECT ${i+1}: ${d}`).join('\n') || 'No structured defects extracted — use Engine 01-05 output directly.';
 }
 
+function buildDefectManifest(e) {
+  const lines = [];
+  const src = [e[2]||'', e[3]||'', e[4]||'', e[5]||''].join('\n');
+  const patterns = [
+    /DEFECT[:\s]+([^\n]+)/gi,
+    /OSHA[:\s]+([^\n]+)/gi,
+    /LIEN[:\s]+([^\n]+)/gi,
+    /BREACH[:\s]+([^\n]+)/gi,
+    /COST OVERRUN[:\s]+([^\n]+)/gi,
+    /AP GAPS[:\s]+([^\n]+)/gi,
+    /ABATEMENT[:\s]+([^\n]+)/gi,
+    /RESTATEMENT[:\s]+([^\n]+)/gi,
+    /CRITICAL PATH[:\s]+([^\n]+)/gi,
+    /DEADLINE 1[:\s]+([^\n]+)/i,
+    /ACTION 1[:\s]+([^\n]+)/i,
+    /LEGAL RISK[:\s]+([^\n]+)/gi,
+  ];
+  patterns.forEach(p => {
+    let m;
+    while ((m = p.exec(src)) !== null) {
+      const line = m[1].trim();
+      if (line.length > 10 && !lines.includes(line)) lines.push(line);
+    }
+  });
+  return lines.slice(0, 12).map((d, i) => `DEFECT ${i+1}: ${d}`).join('\n') || 'No structured defects extracted — use Engine 01-05 output directly.';
+}
+
 async function fireEngines() {
   docText=document.getElementById('docPaste').value.trim();
   if(!docText){alert('Load or paste a construction document first.');return;}
@@ -1074,7 +1101,6 @@ async function fireEngines() {
 
   function compress(i,raw){
     if(i===1){
-      // Extract only the structured fields, drop prose
       const fields=['DOC TYPE','PARTIES','PROJECT','KEY AMOUNTS','CRITICAL DEADLINES','GAAP IMPACT','DISPUTE STATUS','RISK SCORE'];
       return fields.map(f=>{
         const m=raw.match(new RegExp(f+':[\\s]*([^\\n]+)'));
@@ -1096,14 +1122,14 @@ async function fireEngines() {
       }).filter(Boolean).join('\n');
     }
     if(i===4){
-      const fields=['PRIMARY LEGAL RISK','LIEN EXPOSURE','BOND CLAIM STATUS','CONTRACT BREACH RISK','RECOMMENDED LEGAL ACTION','LEGAL RISK LEVEL'];
+      const fields=['LEGAL RISK','LIEN','BOND','BREACH','DEADLINE 1','DEADLINE 2','ACTION','LEGAL RISK LEVEL'];
       return fields.map(f=>{
         const m=raw.match(new RegExp(f+':[\\s]*([^\\n]+)'));
         return m?f+': '+m[1].trim():'';
       }).filter(Boolean).join('\n');
     }
     if(i===5){
-      const fields=['OSHA EXPOSURE','DAVIS-BACON / PREVAILING WAGE','1099 / WORKER CLASSIFICATION','PAYROLL COMPLIANCE','ABATEMENT REQUIRED','COMPLIANCE RISK LEVEL'];
+      const fields=['OSHA','DAVIS-BACON','1099 RISK','PAYROLL','PERMIT','ABATEMENT','COMPLIANCE RISK'];
       return fields.map(f=>{
         const m=raw.match(new RegExp(f+':[\\s]*([^\\n]+)'));
         return m?f+': '+m[1].trim():'';
@@ -1137,6 +1163,39 @@ async function fireEngines() {
     addLog('Engine 0'+i+' complete',labels[i-1]+' · '+new Date().toLocaleTimeString(),'g');
     await new Promise(r=>setTimeout(r,250));
   }
+
+  buildDispatch(e[6]||'');
+
+  const combined=(e[1]||'')+(e[3]||'')+(e[6]||'');
+  const riskM=combined.match(/(?:OVERALL RISK SCORE|RISK SCORE)[:\s*]+(\d+)/i);
+  const expM=combined.match(/EXPOSURE[:\s]+([^\n]+)/i);
+  const dlM=combined.match(/(?:CRITICAL DEADLINES?|DEADLINE 1)[\s\S]*?([^\n]+)/i);
+  const safetyM=combined.match(/FIELDOPS RISK[:\s]+([^\n]+)/i);
+  const compM=combined.match(/COMPLIANCE RISK[:\s]+([^\n]+)/i);
+
+  if(riskM){
+    const r=parseInt(riskM[1]);
+    document.getElementById('kpiRisk').textContent=r;
+    document.getElementById('snapRisk').textContent=r+'/100';
+    document.getElementById('riskFill').style.width=r+'%';
+    document.getElementById('riskFill').style.background=r>70?'var(--red)':r>40?'var(--gold)':'var(--green)';
+  }
+  if(expM){const x=expM[1].trim().slice(0,20);document.getElementById('kpiExposure').textContent=x;document.getElementById('snapExposure').textContent=x;}
+  if(dlM) document.getElementById('snapDeadline').textContent=dlM[1].trim().slice(0,16);
+  if(safetyM) document.getElementById('kpiSafety').textContent=safetyM[1].trim().slice(0,12);
+  if(compM) document.getElementById('kpiCompliance').textContent=compM[1].trim().slice(0,12);
+  document.getElementById('snapType').textContent=selectedDocType.slice(0,12);
+  document.getElementById('sbDoc').textContent=selectedDocType+' · '+docText.length+' chars loaded';
+
+  document.getElementById('alertText').textContent='6-ENGINE ANALYSIS COMPLETE — '+selectedDocType.toUpperCase()+' — ESCALATE TO STRATEGIST';
+  document.getElementById('alertDot').style.background='var(--green)';
+  document.getElementById('escalSub').textContent='6-engine assessment complete — '+selectedDocType+' · Route to top app or escalate to Construction Strategist.';
+  document.getElementById('escalateBar').classList.add('visible');
+  document.getElementById('spinner').classList.remove('active');
+  document.getElementById('fireBtn').disabled=false;
+  addLog('All 6 Engines Complete','App dispatch ready — escalate to Strategist','p');
+  storeSession(e);
+}
 
   // Build app dispatch from E6
   buildDispatch(e[6]||'');
