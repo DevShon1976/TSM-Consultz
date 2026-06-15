@@ -2164,12 +2164,22 @@ Always use ► section headers. Include specific dollar amounts, timelines, and 
       ).join('');
 
       const rescuePack = ({ "Appraisal Gap Rescue": "APPRAISAL GAP", "Underwriting Conditions": "UW CONDITIONS", "Loan Denial Rescue": "LOAN DENIAL", "Contract & Offer Mgmt": "CONTRACT RISK", "Closing Delay Rescue": "CLOSING PROBABILITY", "Closing Readiness": "CTC FAST TRACK", "RESPA / TRID Audit": "TRID RESCUE", "FinCEN / AML Audit": "HMDA AUDIT", "Pipeline Velocity": "MORTGAGE OPS", "BPO / Valuation Engine": "DEAL KILLER", "Phoenix Market Analysis": "DSCR INVESTOR", "Investment Criteria": "DSCR INVESTOR" })[node] || 'DEAL KILLER';
+      const t = text.toLowerCase();
+      const matchedKeywords = best.keys.filter(k => t.includes(k)).slice(0, 4);
+      const anomalyLabel = matchedKeywords.length
+        ? matchedKeywords.map(k => k.charAt(0).toUpperCase() + k.slice(1)).join(', ')
+        : 'General transaction risk';
+
       const panel = document.getElementById('remPathPanel');
       panel.innerHTML = `
     <div class="rp-bar">
       <span class="rp-hdr-lbl">⚡ RECOMMENDED REMEDIATION PATH</span>
       <span class="rp-node-lbl">${node} analysis detected ${ranked.length} tool match${ranked.length > 1 ? 'es' : ''}</span>
       <button class="rp-dismiss" onclick="document.getElementById('remPathPanel').innerHTML=''">✕</button>
+    </div>
+    <div style="padding:6px 10px;font-family:var(--mono);font-size:.46rem;color:var(--muted);border-bottom:1px solid rgba(245,158,11,.08);margin-bottom:6px">
+      <span style="color:#f59e0b">DETECTED:</span> ${anomalyLabel}
+      <span style="margin-left:10px;color:#f59e0b">→ CURES VIA:</span> ${best.label} — ${best.desc}
     </div>
     <div class="rp-flow">
       <div class="rp-best" onclick="if(window.TSMCureConductor){window.TSMCureConductor.launch('${best.url}',{name:'${best.label}',how:'${best.desc}',tags:[]},{docText:document.getElementById('docPaste')?.value||'',vertical:'Real Estate'});}else{loadNodeTile('${best.url}');}" title="${best.desc}">
