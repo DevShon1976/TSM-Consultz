@@ -2474,9 +2474,9 @@ Use ► section headers. Be specific with dollar amounts, party names, and actio
         const text = await callAI(prompt);
 
         // Parse health score from response
-        const scoreMatch = text.match(/(\d{1,3})\s*(?:\/\s*100)?.*?(?:score|health)/i) ||
-          text.match(/health[^\d]*(\d{1,3})/i);
-        const score = scoreMatch ? Math.min(100, parseInt(scoreMatch[1])) : 62;
+        const scoreMatch = text.match(/health score[^0-9]*(\d+)/i) || text.match(/score of (\d+)/i) || text.match(/(\d+)\/100/i) || text.match(/score[^0-9]*(\d+)/i);
+        const rawScore = scoreMatch ? parseInt(scoreMatch[1]) : 62;
+        const score = (rawScore > 0 && rawScore <= 100) ? rawScore : 62;
 
         const riskMatch = text.match(/overall risk[:\s]+(\w+)/i);
         const risk = riskMatch ? riskMatch[1].toUpperCase() : 'MEDIUM';
