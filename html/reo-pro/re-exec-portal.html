@@ -1159,6 +1159,13 @@ async function generateBrief(mode = 'standard') {
   if (placeholder) placeholder.style.display = 'none';
   briefText.style.display = 'block';
 
+  const relay = JSON.parse(sessionStorage.getItem('TSM_RE_WAR_RELAY') || '{}');
+  const existingBrief = relay?.stratPayload?.fullBrief;
+  if (existingBrief && mode === 'standard') {
+    briefText.innerHTML = existingBrief.replace(/\n/g, '<br>');
+    return;
+  }
+
   const payload = state.warPayload ? JSON.stringify(state.warPayload).slice(0, 800) : '';
   const prompt = mode === 'rescue'
     ? `You are an executive AI for a real estate and mortgage company. Generate a DEAL RESCUE executive brief. Format with clear sections: CRITICAL DEALS AT RISK, IMMEDIATE ACTIONS (24-48hr), COMPLIANCE EXPOSURE, RECOMMENDED RESCUE STRATEGY. Be specific with dollar amounts, loan numbers, and timelines. Pipeline: $18.4M, 22 loans, 68% pull-through, 5 closings this week. Critical issues: Appraisal gap 123 Maple St ($26K gap), TRID violation Loan #2847 ($1,247 cure), 2 AML holds, REO portfolio $2.1M. Phoenix market. ${payload ? 'War room data: ' + payload : ''}`
