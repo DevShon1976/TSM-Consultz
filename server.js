@@ -584,7 +584,7 @@ app.post('/api/legal/query', async (req, res) => {
 });
 
 app.post('/api/construction/query', async (req, res) => {
-  try { var a = await groqChat(SP.construction, req.body.question || req.body.query || '', req.body.maxTokens || 1024); return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() }); }
+  try { var a = await groqChat(SP.construction, req.body.question || req.body.query || '', req.body.maxTokens || 400); return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() }); }
   catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
 
