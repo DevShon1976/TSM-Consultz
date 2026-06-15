@@ -2761,7 +2761,7 @@ Use ► section headers. Be specific with dollar amounts, party names, and actio
 
 <script>
 // ── DOC SEARCH → WAR ROOM RELAY READER ──────────────────
-((function(){
+(function(){
   if (!localStorage.getItem('TSM_RE_TOUR_SEEN')) {
     localStorage.setItem('TSM_RE_TOUR_SEEN', '1');
     setTimeout(() => startTour(), 800);
@@ -3345,7 +3345,7 @@ function armTourWait(eventName) {
   tourWaitHandler = { event: eventName, fn };
   document.addEventListener(eventName, fn, { once: true });
 }
-    let tourWaitHandler = null;    function spotlightEl(id) { const sp = document.getElementById('tourSpotlight'); if (!id) { sp.style.display = 'none'; return; } const el = document.getElementById(id); if (!el) { sp.style.display = 'none'; return; } const r = el.getBoundingClientRect(), p = 8; sp.style.display = 'block'; sp.style.top = (r.top - p) + 'px'; sp.style.left = (r.left - p) + 'px'; sp.style.width = (r.width + p * 2) + 'px'; sp.style.height = (r.height + p * 2) + 'px'; el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    function spotlightEl(id) {
     function buildPips() { const prog = document.getElementById('hudProgress'); prog.innerHTML = ''; TOUR_SLIDES.forEach((s, i) => { const pip = document.createElement('div'); pip.className = 'hud-pip' + (i < tourStep ? ' done' : i === tourStep ? ' active' : ''); prog.appendChild(pip); }); }
     function renderSlide(idx) { speechStop(); clearTourWait(); const s = TOUR_SLIDES[idx]; document.getElementById('hudBadge').textContent = String(idx + 1).padStart(2, '0') + ' / ' + TOUR_SLIDES.length; document.getElementById('hudTitle').textContent = s.title; document.getElementById('hudNarration').innerHTML = s.narration; const te = document.getElementById('hudSlideType'); te.textContent = s.type.toUpperCase(); te.className = 'hud-slide-type ' + s.type; const hi = document.getElementById('hudActionHint'); if (s.actionHint) { hi.style.display = 'flex'; document.getElementById('hudActionText').textContent = s.actionHint; hi.style.borderColor = ''; } else hi.style.display = 'none'; document.getElementById('hudPrevBtn').disabled = idx === 0; const nb = document.getElementById('hudNextBtn'); nb.classList.remove('ready'); if (idx === TOUR_SLIDES.length - 1) { nb.textContent = 'END TOUR ✓'; nb.onclick = endTour; } else { nb.textContent = 'NEXT ▶'; nb.onclick = tourNext; } if (s.waitFor) { nb.disabled = true; armTourWait(s.waitFor); } else { nb.disabled = (idx === 0 ? false : document.getElementById('hudPrevBtn').disabled = idx === 0); } buildPips(); spotlightEl(s.target); if (autoMode && !s.waitFor) startAutoTimer(s.autoMs || 6000); }    function startAutoTimer(ms) { clearAutoTimer(); if (!ms || ms === 0) { stopAuto(); return; } const fill = document.getElementById('timerFill'); fill.style.transition = 'none'; fill.style.width = '100%'; requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.transition = `width ${ms}ms linear`; fill.style.width = '0%'; })); autoTimer = setTimeout(() => { if (tourStep < TOUR_SLIDES.length - 1) tourNext(); else endTour(); }, ms); }
     function clearAutoTimer() { if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; } const fill = document.getElementById('timerFill'); if (fill) { fill.style.transition = 'none'; fill.style.width = '100%'; } }
