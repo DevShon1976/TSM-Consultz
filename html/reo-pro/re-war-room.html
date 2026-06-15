@@ -507,20 +507,20 @@
 
     /* NODE GRID */
     .node-grid-wrap {
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      border-right: 1px solid var(--border)
-    }
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  border-right: 1px solid var(--border)
+}
 
     .node-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1px;
-      background: var(--border);
-      overflow-y: auto;
-      flex: 1
-    }
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border);
+  overflow-y: visible;
+  flex: 0 0 auto
+}
 
     .node-grid::-webkit-scrollbar {
       width: 2px
@@ -2570,21 +2570,22 @@ Use ► section headers. Be specific with dollar amounts, party names, and actio
     }
 
     function escalateToStrategist() {
-  const payload = buildWarRoomPayload();
-  sessionStorage.setItem('TSM_RE_RESCUE_RESULTS_CACHE', document.getElementById('rescueResults').innerHTML);
+      const payload = buildWarRoomPayload();
       if (!payload.savedOutputs && !payload.rescuePack) {
         alert('Run some analyses before escalating.');
         return;
       }
       try {
-    const payload = buildWarRoomPayload();
-    localStorage.setItem('TSM_RE_WAR_RELAY', JSON.stringify(payload));
-    sessionStorage.setItem('TSM_RE_WAR_RELAY', JSON.stringify(payload));
-    window.location.href = 're-strategist.html';
-  } catch (e) {
-    alert('Session saved. Open re-strategist.html to continue.');
-  }
-}
+        sessionStorage.setItem('TSM_RE_RESCUE_RESULTS_CACHE', document.getElementById('rescueResults').innerHTML);
+        const remPanel = document.getElementById('remPathPanel');
+        if (remPanel) sessionStorage.setItem('TSM_RE_REMPATH_CACHE', remPanel.innerHTML);
+        localStorage.setItem('TSM_RE_WAR_RELAY', JSON.stringify(payload));
+        sessionStorage.setItem('TSM_RE_WAR_RELAY', JSON.stringify(payload));
+        window.location.href = 're-strategist.html';
+      } catch (e) {
+        alert('Session saved. Open re-strategist.html to continue.');
+      }
+    }
 
     // ─── EXPORT ───────────────────────────────────────────────────────────────────
     function exportSession() {
