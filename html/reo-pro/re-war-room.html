@@ -1564,16 +1564,10 @@
 
       <!-- ═══ WAR ROOM VIEW ═══ -->
       <div id="view-warroom" class="view active">
-        <div class="warroom-layout">
+        <div class="warroom-layout">    
 
-          <!-- DOC UPLOAD ZONE -->
-<div id="docUploadBar" style="margin-bottom:.6rem;border:1px dashed rgba(30,232,182,.25);border-radius:4px;background:rgba(30,232,182,.03)">
-  <div onclick="document.getElementById('docUploadExpand').style.display=document.getElementById('docUploadExpand').style.display==='none'?'block':'none'" style="padding:.4rem .8rem;cursor:pointer;font-family:var(--mono);font-size:.45rem;color:var(--cyan);letter-spacing:.08em;display:flex;justify-content:space-between;align-items:center">
-    <span>⚡ UPLOAD DOCUMENT — auto-extract & inject into nodes</span>
-    <span style="color:var(--muted)">▼</span>
-  </div>
   <div id="docUploadExpand" style="display:none;padding:.6rem .8rem;border-top:1px solid rgba(30,232,182,.1)">
-    <div id="reDropZone" onclick="document.getElementById('reFileInput').click()" style="border:1px dashed rgba(30,232,182,.3);border-radius:3px;padding:1rem;text-align:center;cursor:pointer;font-family:var(--mono);font-size:.45rem;color:var(--muted)">
+    <div id="reDropZone" onclick="document.getElementById('reFileInput').click()" style="border:1px dashed rgba(30,232,182,.3);border-radius:3px;padding:.3rem;text-align:center;cursor:pointer;font-family:var(--mono);font-size:.42rem;color:var(--muted)">
       Drop PDF · image · text here or click to upload
     </div>
     <input type="file" id="reFileInput" multiple accept=".pdf,.png,.jpg,.jpeg,.txt,.csv" style="display:none">
@@ -1796,6 +1790,16 @@
               <button class="rp-btn g" onclick="exportSession()">&#8595; EXPORT (.TXT)</button>
               <button class="rp-btn p" onclick="escalateToStrategist()">&#8599; ESCALATE → RE STRATEGIST</button>
               <button class="rp-btn r" onclick="clearReport()">&#10005; CLEAR SESSION</button>
+            </div>
+
+            <div class="rp-block">
+              <div class="rp-hdr">DOC UPLOAD</div>
+              <div id="rpDropZone" onclick="document.getElementById('rpFileInput').click()" 
+                style="border:1px dashed rgba(30,232,182,.3);border-radius:3px;padding:.5rem;text-align:center;cursor:pointer;font-family:var(--mono);font-size:.42rem;color:var(--muted);margin-bottom:.3rem;transition:border-color .2s">
+                ⚡ Drop doc or click to upload
+              </div>
+              <input type="file" id="rpFileInput" multiple accept=".pdf,.png,.jpg,.jpeg,.txt,.csv" style="display:none">
+              <div id="rpUploadQueue" style="display:flex;flex-direction:column;gap:.2rem;max-height:80px;overflow-y:auto"></div>
             </div>
 
             <div class="rp-block">
@@ -3417,6 +3421,30 @@ function armTourWait(eventName) {
   <style>#tsm-mission-guide-panel { display: none !important; }</style>
 
   <script>
+    // ——— RIGHT PANEL DOC UPLOAD
+document.getElementById('rpFileInput').addEventListener('change', function(e) {
+  Array.from(e.target.files).forEach(async file => {
+    const q = document.getElementById('rpUploadQueue');
+    const item = document.createElement('div');
+    item.style.cssText = 'font-family:var(--mono);font-size:.42rem;color:var(--muted);padding:.2rem .4rem;background:rgba(255,255,255,.03);border-radius:2px';
+    item.textContent = '⟳ ' + file.name;
+    q.prepend(item);
+    try {
+      const text = await file.text();
+      window.__docRelayContext = `\n\nDOC CONTEXT: File: ${file.name} | ${text.slice(0,400)}`;
+      item.style.color = 'var(--cyan)';
+      item.textContent = '✓ ' + file.name + ' — injected';
+    } catch(err) {
+      item.style.color = 'var(--red)';
+      item.textContent = '✗ ' + file.name;
+    }
+  });
+  e.target.value = '';
+});
+const rpDropZone = document.getElementById('rpDropZone');
+['dragenter','dragover'].forEach(ev => rpDropZone.addEventListener(ev, e => { e.preventDefault(); rpDropZone.style.borderColor='var(--cyan)'; }));
+['dragleave','drop'].forEach(ev => rpDropZone.addEventListener(ev, e => { e.preventDefault(); rpDropZone.style.borderColor=''; }));
+rpDropZone.addEventListener('drop', e => { document.getElementById('rpFileInput').files = e.dataTransfer.files; document.getElementById('rpFileInput').dispatchEvent(new Event('change')); });
   // ——— DOC UPLOAD HANDLER
 document.getElementById('reFileInput').addEventListener('change', function(e) {
   Array.from(e.target.files).forEach(async file => {
