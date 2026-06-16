@@ -1792,6 +1792,11 @@
               <button class="rp-btn r" onclick="clearReport()">&#10005; CLEAR SESSION</button>
             </div>
 
+            <div class="rp-block" id="docRelayBlock" style="display:none">
+               <div class="rp-hdr">LOADED DOCUMENT</div>
+               <div id="docRelayPreview" style="font-family:var(--mono);font-size:.42rem;color:var(--muted);background:#050810;border:1px solid rgba(255,255,255,.07);border-radius:3px;padding:.5rem;max-height:120px;overflow-y:auto;white-space:pre-wrap;line-height:1.6"></div>
+            </div>
+
             <div class="rp-block">
               <div class="rp-hdr">DOC UPLOAD</div>
               <div id="rpDropZone" onclick="document.getElementById('rpFileInput').click()" 
@@ -2815,6 +2820,10 @@ Dollar amounts and party names required.`;
     if (!docText && !relay.fileName) return;
     window.__docRelayContext = `\n\nDOC CONTEXT: File: ${relay.fileName||'Unknown'} | Type: ${relay.docType||'N/A'} | Client: ${relay.client||'N/A'} | Ref: ${relay.ref||'N/A'} | ${docText.slice(0,300)}`;
     window.__docRelayBanner = `⚡ DOC LOADED — ${relay.fileName||'Document'} · ${relay.docType||''}`;
+    const block = document.getElementById('docRelayBlock');
+    const preview = document.getElementById('docRelayPreview');
+    if (block && preview) { block.style.display='block'; preview.textContent = docText.slice(0,500); }
+
     // Clear relay so it doesn't re-fire on refresh
     sessionStorage.removeItem('TSM_RE_WAR_RELAY');
     sessionStorage.removeItem('TSM_WAR_ROOM_RELAY');
@@ -2849,9 +2858,9 @@ Dollar amounts and party names required.`;
     const matchedNode = Object.entries(typeNodeMap).find(([k]) => docLower.includes(k))?.[1] || 'REAM';
     
     setTimeout(() => {
-      const nodeBtn = document.querySelector(`[onclick*="activateNode('${matchedNode}'"]`);
+      const nodeBtn = document.querySelector(`[data-node="${matchedNode}"]`);
       if (nodeBtn) nodeBtn.click();
-    }, 500);
+    }, 800);
 
   } catch(e) { console.warn('RE War Room relay error:', e); }
 })();

@@ -422,6 +422,28 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 <script>
 const GROQ = '/api/hc/query';
 let docText='', selectedSector='', selectedDocType='', engOut=['','','','','',''], e={};
+// Doc Search relay
+(function(){
+  try {
+    const raw = sessionStorage.getItem('TSM_BPO_WAR_RELAY') || localStorage.getItem('TSM_BPO_WAR_RELAY');
+    if (!raw) return;
+    const relay = JSON.parse(raw);
+    if (!relay.docText) return;
+    docText = relay.docText;
+    setTimeout(() => {
+      const el = document.getElementById('docPaste') || document.getElementById('docPreview');
+      if (el) { el.value ? el.value = docText : el.textContent = docText.slice(0,400); }
+      const btn = document.getElementById('fireBtn');
+      if (btn) btn.disabled = false;
+      const banner = document.createElement('div');
+      banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:rgba(0,180,100,.12);border-bottom:1px solid rgba(0,180,100,.3);padding:7px 20px;font-family:"Share Tech Mono",monospace;font-size:10px;color:#00d4aa;letter-spacing:1px;display:flex;justify-content:space-between';
+      banner.innerHTML = `<span>⚡ DOC RELAY — ${relay.docType||'DOCUMENT'} · ${docText.length} chars · loaded</span><button onclick="this.parentElement.remove()" style="background:none;border:none;color:#00d4aa;cursor:pointer">✕</button>`;
+      document.body.prepend(banner);
+      sessionStorage.removeItem('TSM_BPO_WAR_RELAY');
+      localStorage.removeItem('TSM_BPO_WAR_RELAY');
+    }, 500);
+  } catch(e) {}
+})();
 
 // ── LOAD FROM UPLOADER ──
 (function(){
