@@ -282,5 +282,228 @@ TIERS.forEach(tier => {
   container.appendChild(tierDiv);
 });
 </script>
+<!-- ═══════════════════════════════════════════════════
+     TSM MLO EXAM PREP — paste above </body> in pack-index.html
+     Replace everything between the two ═══ comment lines
+════════════════════════════════════════════════════ -->
+<div id="mlo-exam-section" style="max-width:1200px;margin:3rem auto 2rem;padding:0 1.5rem">
+  <div style="font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:700;color:#1ee8b6;letter-spacing:.15rem;margin-bottom:.25rem">⚡ SAFE MLO EXAM PREP</div>
+  <div style="font-family:'Share Tech Mono',monospace;font-size:.55rem;color:#607070;letter-spacing:.1rem;margin-bottom:1.5rem">20 FLASHCARDS · 8 SCENARIOS · 20 QUIZ QUESTIONS · AZ STATE LAW INCLUDED</div>
+
+  <div style="display:flex;gap:8px;margin-bottom:1.5rem;flex-wrap:wrap">
+    <button class="mlo-tab active" onclick="mloTab('flash',this)">FLASHCARDS</button>
+    <button class="mlo-tab" onclick="mloTab('scenario',this)">SCENARIOS</button>
+    <button class="mlo-tab" onclick="mloTab('quiz',this)">QUIZ</button>
+  </div>
+
+  <div id="mlo-flash" class="mlo-section active">
+    <div id="mloCard" onclick="document.getElementById('mloCardInner').classList.toggle('flipped')" style="perspective:900px;height:180px;cursor:pointer;margin-bottom:1rem">
+      <div id="mloCardInner" style="position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .4s">
+        <div style="position:absolute;width:100%;height:100%;backface-visibility:hidden;background:#080c14;border:1px solid rgba(30,232,182,.2);border-radius:6px;padding:1.25rem;display:flex;flex-direction:column;justify-content:center">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:.45rem;color:#1ee8b6;letter-spacing:.12rem;margin-bottom:.5rem">TERM — CLICK TO FLIP</div>
+          <div id="mloFront" style="font-family:'Orbitron',monospace;font-size:1rem;font-weight:700;color:#e4eaf4"></div>
+        </div>
+        <div style="position:absolute;width:100%;height:100%;backface-visibility:hidden;transform:rotateY(180deg);background:#050810;border:1px solid rgba(30,232,182,.15);border-radius:6px;padding:1.25rem;display:flex;flex-direction:column;justify-content:center">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:.45rem;color:#607070;letter-spacing:.12rem;margin-bottom:.5rem">DEFINITION</div>
+          <div id="mloBack" style="font-family:'Share Tech Mono',monospace;font-size:.58rem;color:#a0b0b0;line-height:1.8"></div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="mlo-btn" onclick="mloMove(-1)">◀ PREV</button>
+      <span id="mloCounter" style="font-family:'Share Tech Mono',monospace;font-size:.52rem;color:#607070;flex:1;text-align:center"></span>
+      <button class="mlo-btn" onclick="mloMove(1)">NEXT ▶</button>
+    </div>
+  </div>
+
+  <div id="mlo-scenario" class="mlo-section"></div>
+
+  <div id="mlo-quiz" class="mlo-section">
+    <div style="display:flex;align-items:center;gap:16px;padding:10px 16px;background:#080c14;border:1px solid rgba(30,232,182,.15);border-radius:6px;margin-bottom:1.5rem">
+      <span style="font-family:'Share Tech Mono',monospace;font-size:.48rem;color:#607070">SCORE</span>
+      <span id="mloScore" style="font-family:'Orbitron',monospace;font-size:1.2rem;font-weight:700;color:#1ee8b6">0</span>
+      <span style="font-family:'Share Tech Mono',monospace;font-size:.48rem;color:#607070">/ 20</span>
+      <button class="mlo-btn" onclick="mloResetQuiz()" style="margin-left:auto">RESET</button>
+    </div>
+    <div id="mloQuizList"></div>
+  </div>
+</div>
+
+<style>
+.mlo-tab{font-family:'Share Tech Mono',monospace;font-size:.48rem;letter-spacing:.1rem;padding:.3rem .75rem;background:transparent;border:1px solid rgba(30,232,182,.2);color:#607070;cursor:pointer;transition:all .12s}
+.mlo-tab.active{color:#1ee8b6;border-color:#1ee8b6;background:rgba(30,232,182,.06)}
+.mlo-section{display:none}
+.mlo-section.active{display:block}
+.mlo-btn{font-family:'Share Tech Mono',monospace;font-size:.45rem;letter-spacing:.08rem;padding:.3rem .65rem;background:transparent;border:1px solid rgba(30,232,182,.25);color:#1ee8b6;cursor:pointer;transition:all .12s}
+.mlo-btn:hover{background:rgba(30,232,182,.08)}
+.mlo-sc{background:#080c14;border:1px solid rgba(255,255,255,.06);border-radius:6px;padding:1rem 1.1rem;margin-bottom:.75rem}
+.mlo-sc-title{font-family:'Orbitron',monospace;font-size:.58rem;font-weight:700;color:#e4eaf4;margin-bottom:.4rem}
+.mlo-sc-desc{font-family:'Share Tech Mono',monospace;font-size:.52rem;color:#8090a0;line-height:1.8;margin-bottom:.75rem}
+.mlo-sc-reveal{width:100%;background:transparent;border:1px solid rgba(245,158,11,.3);color:#f59e0b;font-family:'Share Tech Mono',monospace;font-size:.45rem;letter-spacing:.08rem;padding:.3rem;cursor:pointer;transition:all .12s}
+.mlo-sc-reveal:hover{background:rgba(245,158,11,.06)}
+.mlo-sc-answer{display:none;margin-top:.75rem;padding:.75rem;background:#050810;border-left:2px solid #ef4444;font-family:'Share Tech Mono',monospace;font-size:.5rem;color:#8090a0;line-height:1.9}
+.mlo-sc-answer span{color:#ef4444}
+.mlo-qblock{background:#080c14;border:1px solid rgba(255,255,255,.06);border-radius:6px;padding:1rem 1.1rem;margin-bottom:.75rem}
+.mlo-qtext{font-family:'Share Tech Mono',monospace;font-size:.55rem;color:#e4eaf4;line-height:1.7;margin-bottom:.65rem}
+.mlo-choice{display:block;width:100%;text-align:left;padding:.35rem .65rem;margin-bottom:.3rem;background:transparent;border:1px solid rgba(255,255,255,.06);color:#8090a0;font-family:'Share Tech Mono',monospace;font-size:.48rem;cursor:pointer;transition:all .12s;border-radius:3px}
+.mlo-choice:hover{border-color:rgba(30,232,182,.3);color:#e4eaf4}
+.mlo-choice.correct{background:rgba(0,255,136,.08);border-color:rgba(0,255,136,.4);color:#00ff88}
+.mlo-choice.wrong{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.4);color:#ef4444}
+.mlo-explain{display:none;margin-top:.5rem;padding:.5rem .65rem;background:#050810;border-left:2px solid rgba(30,232,182,.4);font-family:'Share Tech Mono',monospace;font-size:.46rem;color:#607070;line-height:1.8}
+#mloCardInner.flipped{transform:rotateY(180deg)}
+</style>
+
+<script>
+(function(){
+const MLO_CARDS=[
+  {f:"RESPA",b:"Real Estate Settlement Procedures Act (Reg X, CFPB). Bans kickbacks and referral fees, restricts escrow overages, standardizes HUD-1 settlement costs."},
+  {f:"TILA",b:"Truth in Lending Act (Reg Z, CFPB). Mandates cost-of-credit disclosures, governs advertising, Right of Rescission on refinances, and loan originator compensation."},
+  {f:"ECOA",b:"Equal Credit Opportunity Act (Reg B, CFPB). Bars discrimination on 9 protected classes; requires Notice of Adverse Action within 30 days."},
+  {f:"FCRA",b:"Fair Credit Reporting Act (Reg V, FTC/CFPB). Governs credit reporting agencies; grants consumers access and dispute rights."},
+  {f:"FACTA",b:"Fair & Accurate Credit Transactions Act — amends FCRA. Identity theft prevention, secure document shredding, Red Flags Rule for financial institutions."},
+  {f:"HMDA",b:"Home Mortgage Disclosure Act (Reg C, CFPB). Requires lenders to file LAR data used to detect predatory lending, redlining, and fair lending violations."},
+  {f:"MAP Rule",b:"Mortgage Acts and Practices Rule (Reg N, CFPB). Prohibits deceptive or misleading mortgage advertising practices."},
+  {f:"HPA",b:"Homeowners Protection Act. Requires automatic PMI cancellation when LTV reaches 78% on conventional loans; borrower-requested cancellation at 80%."},
+  {f:"GLBA",b:"Gramm-Leach-Bliley Act. Safeguards nonpublic personal information via the Safeguards Rule (FTC) and Privacy Rule (annual privacy notices)."},
+  {f:"BSA / AML",b:"Bank Secrecy Act / Anti-Money Laundering. Requires SARs for suspicious activity, CTRs for cash transactions over $10,000, and CIP procedures."},
+  {f:"PITI",b:"Principal, Interest, Taxes, and Insurance — the full monthly housing obligation used in qualifying ratios."},
+  {f:"Front-end ratio",b:"PITI divided by gross monthly income. FHA guideline: 31%; conventional: 28%."},
+  {f:"Back-end ratio",b:"PITI plus all long-term monthly debts, divided by gross monthly income. FHA: 43%; conventional: 36–45%."},
+  {f:"Qualified Mortgage (QM)",b:"No negative amortization, no interest-only, term ≤30 years, points and fees ≤3%. Carries safe-harbor protection from ability-to-repay liability."},
+  {f:"ATR Rule",b:"Ability-to-Repay Rule (Reg Z). Lenders must make a good-faith determination that a borrower can repay before originating a residential mortgage."},
+  {f:"Par Rate",b:"The baseline interest rate at which the lender neither charges discount points nor offers lender credits."},
+  {f:"Discount Points",b:"Prepaid interest paid at closing to permanently lower the note rate. 1 point = 1% of loan amount. Each point typically reduces rate by 0.125–0.25%."},
+  {f:"YSP / Lender Credit",b:"Yield Spread Premium / Lender Credit — a credit toward closing costs in exchange for the borrower accepting a higher interest rate."},
+  {f:"AZ Record Retention",b:"Arizona mortgage licensees must retain all books, accounts, and records for 5 years from final entry or loan closing date."},
+  {f:"AZ Felony Bar",b:"A felony conviction within 7 years disqualifies an AZ MLO applicant. Felonies involving fraud, breach of trust, dishonesty, or money laundering are a permanent bar."},
+  {f:"NMLS",b:"Nationwide Multistate Licensing System. All MLOs must register and maintain a unique identifier displayed on all loan documents and advertising."},
+  {f:"SAFE Act",b:"Secure and Fair Enforcement for Mortgage Licensing Act. Established federal minimum standards for MLO licensing and the NMLS system."},
+  {f:"Changed Circumstance",b:"A valid event allowing re-disclosure of a revised Loan Estimate. Includes natural disasters, new information about the borrower, or borrower-requested changes."},
+  {f:"3-7-3 Rule (TRID)",b:"Loan Estimate must be delivered within 3 business days of application; closing cannot occur until 7 business days after LE delivery; CD must be delivered 3 business days before closing."},
+  {f:"Zero Tolerance Bucket",b:"TRID fees that cannot increase at all between LE and CD: lender charges, transfer taxes, and fees for required services where the borrower used the lender's list."},
+  {f:"10% Tolerance Bucket",b:"TRID fees that may increase up to 10% cumulatively: recording fees and charges for required services where the borrower chose their own provider."},
+  {f:"Right of Rescission",b:"TILA right allowing borrowers to cancel a non-purchase refinance on their primary residence within 3 business days of consummation or disclosure delivery."},
+  {f:"DSCR",b:"Debt Service Coverage Ratio. Annual NOI divided by annual debt service. DSCR ≥1.25x is typically required for investment property loans."},
+  {f:"LTV",b:"Loan-to-Value Ratio. Loan amount divided by appraised value or purchase price (whichever is lower). Determines PMI requirements, pricing, and max loan eligibility."},
+  {f:"DTI",b:"Debt-to-Income Ratio. Total monthly debt obligations divided by gross monthly income. Primary qualification metric for all residential mortgage programs."},
+  {f:"AZ Advertising Rule",b:"Every AZ-targeted ad must show company name, license number, and NMLS Unique Identifier. Ad samples must be retained for 2 years from last publication."},
+  {f:"FHA MIP",b:"Mortgage Insurance Premium. FHA requires upfront MIP (1.75% of loan) plus annual MIP (0.15–0.75% depending on LTV and term) for the life of the loan if LTV >90%."},
+  {f:"VA Funding Fee",b:"One-time fee charged by VA in lieu of mortgage insurance. Ranges from 1.25% to 3.3% based on down payment, loan type, and whether first use or subsequent use."},
+  {f:"USDA Guarantee Fee",b:"USDA Rural Development charges 1% upfront guarantee fee plus 0.35% annual fee. No down payment required; income and geographic eligibility limits apply."},
+  {f:"Prepayment Penalty",b:"A fee charged when a borrower pays off a loan early. QM loans cannot have prepayment penalties beyond 3 years. High-cost loans cannot have them at all."},
+  {f:"Red Flags Rule",b:"FACTA requirement for financial institutions to implement an Identity Theft Prevention Program to detect, prevent, and mitigate identity theft in covered accounts."},
+  {f:"GFE vs. LE",b:"Good Faith Estimate was the pre-TRID disclosure (before Oct 2015). It was replaced by the Loan Estimate, which uses standardized format and strict tolerance rules."},
+  {f:"HUD-1 vs. CD",b:"HUD-1 Settlement Statement was replaced by the Closing Disclosure in Oct 2015 under TRID. CD must be delivered 3 business days before consummation."},
+  {f:"Adverse Action Notice",b:"Required under ECOA and FCRA within 30 days of a completed application. Must state specific reasons for denial and credit score disclosure if a score was used."},
+  {f:"BRRRR Strategy",b:"Buy, Rehab, Rent, Refinance, Repeat — an investment strategy using a cash-out refinance after stabilization to recycle capital into the next acquisition."}
+];
+
+const MLO_SCENARIOS=[
+  {title:"Title insurance referral check",desc:"A seller insists they will only sell the house to the buyer if the buyer agrees to use Mesa Elite Title Services. The seller has an indirect ownership interest in this title firm.",violation:"RESPA Section 9 — title steering violation",action:"A seller cannot condition a sale on use of a specific title company unless the seller pays 100% of both the owner's and lender's title insurance policies. Flag as non-compliant immediately.",penalty:"Treble damages — 3× the cost of all title charges — as civil liability to the buyer."},
+  {title:"Closing disclosure fee tolerance breach",desc:"Comparing the final Closing Disclosure to the original Loan Estimate reveals the lender-controlled processing fee increased by $250 at final settlement due to extra file handling.",violation:"Zero tolerance fee violation (TRID)",action:"Lender-controlled fees are in the zero tolerance bucket — they cannot increase. Issue a cure or refund for the full $250 overage within 60 days of consummation.",penalty:"Lender restitution for the full variance amount; potential CFPB examination findings."},
+  {title:"Suspicious deposit verification",desc:"A self-employed borrower provides two months of bank statements. A $15,000 cash deposit appears exactly 3 days before the application date with no identifiable source or paper trail.",violation:"Asset seasoning / potential straw buyer or mortgage fraud flag",action:"Trigger a file freeze. Require a fully documented gift letter with donor bank trail, or exclude the $15,000 entirely from qualifying reserves. File a SAR if fraud is suspected.",penalty:"SAFE Act civil penalty of $25,000–$30,000+ per occurrence; potential criminal referral."},
+  {title:"AZ record retention failure",desc:"An Arizona mortgage broker closes its physical office and migrates historical file archives to encrypted offline storage, scheduling auto-deletion 36 months after closing.",violation:"Arizona DIFI record retention breach",action:"Extend the retention schedule to 60 months minimum. Arizona mandates 5 years of retention for all mortgage transaction logs and customer files from the date of final entry.",penalty:"State administrative fines, civil penalties, or suspension/revocation of license."},
+  {title:"Referral fee arrangement",desc:"A real estate agent refers all her buyer clients to a specific lender in exchange for $200 gift cards provided after each closed loan.",violation:"RESPA Section 8(a) — anti-kickback / thing-of-value violation",action:"Any item of value exchanged for a referral of mortgage business is illegal under RESPA unless it is payment for actual services rendered at fair market value. Both parties are exposed.",penalty:"Criminal fines up to $10,000 and up to 1 year imprisonment per violation."},
+  {title:"Adverse action timing failure",desc:"A borrower submits a complete mortgage application on March 1. The lender issues a denial letter on April 5 citing insufficient income.",violation:"ECOA adverse action timing violation",action:"ECOA requires adverse action notice within 30 days of a complete application. April 5 is 35 days after March 1 — the lender is 5 days late and must immediately issue a corrected notice with FCRA score disclosure.",penalty:"ECOA actual damages, punitive damages up to $10,000, plus attorney fees in individual actions."},
+  {title:"NMLS identifier omission",desc:"A licensed MLO runs a social media ad for a 30-year fixed rate offer. The ad shows the company logo and phone number but omits the MLO's NMLS Unique Identifier.",violation:"SAFE Act / MAP Rule NMLS disclosure violation",action:"All mortgage advertising — including social media — must display the MLO's NMLS Unique Identifier. Remove the non-compliant ad immediately and republish with the required identifier.",penalty:"State regulatory fine; potential NMLS license condition or suspension."},
+  {title:"PMI cancellation denial",desc:"A conventional loan borrower reaches 80% LTV through regular payments and formally requests PMI cancellation in writing. The servicer denies the request, citing 'internal policy.'",violation:"Homeowners Protection Act (HPA) violation",action:"Under HPA, the servicer must cancel PMI upon a borrower's written request when LTV reaches 80% based on original value, provided the borrower has good payment history and no subordinate liens. Denial is a HPA violation.",penalty:"Actual damages, statutory damages, court costs, and attorney fees under HPA."}
+];
+
+const MLO_QUIZ=[
+  {q:"A mortgage broker pays 50% of a referral partner's ad budget regardless of leads generated. This most likely violates:",choices:["RESPA Section 8 (anti-kickback)","TILA advertising rules","ECOA adverse action rules","HMDA reporting rules"],a:0,ex:"Covering a partner's overhead without fair-market-value exchange for actual services rendered is a thing-of-value violation under RESPA Section 8 — fines up to $10,000 and up to 1 year imprisonment per violation."},
+  {q:"Under TRID, what is the minimum number of business days between delivery of the initial Loan Estimate and consummation?",choices:["3","4","7","10"],a:2,ex:"The 3-7-3 rule requires at least 7 business days between initial LE delivery and consummation."},
+  {q:"A valid Changed Circumstance occurs after the initial LE is sent. Within how many business days must the revised LE be issued?",choices:["1","3","5","7"],a:1,ex:"Revised Loan Estimates must be delivered within 3 business days of a valid Changed Circumstance event."},
+  {q:"Under ECOA, what is the maximum window to notify an applicant of a credit decision after a completed application?",choices:["10 days","20 days","30 days","45 days"],a:2,ex:"ECOA requires adverse action or approval notice within 30 days of receiving a completed application."},
+  {q:"A lender fails to deliver the Notice of Right to Cancel to a co-owner on a primary residence refinance. The 3-day rescission window:",choices:["Stays the same","Extends to 30 days","Extends to 1 year","Extends to 3 years"],a:3,ex:"Failure to deliver required rescission notices or material disclosures extends the rescission window to 3 years under TILA."},
+  {q:"Which feature would disqualify a loan from Qualified Mortgage (QM) status?",choices:["15-year term","Interest-only payments","Fixed interest rate","Escrowed property taxes"],a:1,ex:"QM loans cannot have interest-only payments, negative amortization, balloon payments (with limited exceptions), terms over 30 years, or points and fees over 3%."},
+  {q:"Under the Homeowners Protection Act, when must a servicer automatically cancel PMI on a conventional loan?",choices:["When LTV reaches 80%","When LTV reaches 78%","At the midpoint of the loan term","After 5 years of on-time payments"],a:1,ex:"HPA requires automatic PMI cancellation when the principal balance is scheduled to reach 78% of the original property value — not 80%, which is the borrower-requested threshold."},
+  {q:"Arizona mortgage licensees must retain books, accounts, and records for a minimum of:",choices:["2 years","3 years","5 years","7 years"],a:2,ex:"Arizona law mandates 5 years of record retention from the date of final entry or loan closing."},
+  {q:"Under Arizona MLO licensing rules, a felony conviction involving fraud or dishonesty results in:",choices:["A 2-year wait","A 7-year wait","A permanent bar","No impact if fully disclosed"],a:2,ex:"Arizona permanently bars individuals with felony convictions involving fraud, breach of trust, dishonesty, or money laundering from obtaining an MLO license."},
+  {q:"One discount point equals what percentage of the loan amount?",choices:["0.1%","0.5%","1%","5%"],a:2,ex:"One discount point equals 1% of the total loan amount, prepaid at closing to permanently buy down the interest rate."},
+  {q:"PITI stands for:",choices:["Principal, Interest, Taxes, Insurance","Principal, Interest, Term, Income","Payment, Interest, Tax, Investment","Principal, Income, Tax, Insurance"],a:0,ex:"PITI — Principal, Interest, Taxes, and Insurance — represents the full monthly housing obligation used to calculate the front-end qualifying ratio."},
+  {q:"What is the FHA upfront Mortgage Insurance Premium (MIP) rate for most borrowers?",choices:["0.55%","1.0%","1.75%","2.25%"],a:2,ex:"FHA charges an upfront MIP of 1.75% of the base loan amount, which can be financed into the loan. Annual MIP varies by LTV and term."},
+  {q:"The Ability-to-Repay (ATR) rule requires lenders to consider how many specific financial factors?",choices:["4","6","8","10"],a:2,ex:"The ATR rule under Reg Z requires consideration of 8 factors: income, assets, employment, payment amount, other obligations, credit history, DTI, and mortgage-related obligations."},
+  {q:"Under the BSA, a Cash Transaction Report (CTR) must be filed for cash transactions exceeding:",choices:["$5,000","$8,000","$10,000","$25,000"],a:2,ex:"The Bank Secrecy Act requires filing a CTR for any cash transaction exceeding $10,000 in a single business day, even if conducted in multiple transactions."},
+  {q:"HMDA data is primarily used to:",choices:["Calculate a borrower's DTI ratio","Detect redlining and fair lending violations","Set conforming loan limits","Determine PMI cancellation timing"],a:1,ex:"HMDA requires lenders to collect and report LAR data so regulators can identify patterns of redlining, predatory lending, and fair lending law violations."},
+  {q:"A borrower requests PMI cancellation in writing when their LTV reaches 80%. Under HPA, the servicer must:",choices:["Cancel PMI immediately upon request","Cancel PMI if the borrower has a good payment history and no subordinate liens","Deny the request and wait for automatic cancellation at 78%","Require a new appraisal before cancellation"],a:1,ex:"Under HPA, the servicer must cancel PMI on a written request at 80% LTV if the borrower has a good payment history, is current on the loan, and has no subordinate liens."},
+  {q:"The MAP Rule (Reg N) prohibits:",choices:["Negative amortization on QM loans","Deceptive or misleading mortgage advertising","Kickbacks for referral of settlement services","PMI on loans above 80% LTV"],a:1,ex:"The Mortgage Acts and Practices Rule (Reg N, CFPB) specifically prohibits deceptive, misleading, or false representations in mortgage advertising across all media."},
+  {q:"Which loan type charges a Guarantee Fee instead of mortgage insurance?",choices:["FHA","VA","USDA","Jumbo"],a:2,ex:"USDA Rural Development loans charge a 1% upfront guarantee fee and 0.35% annual fee in lieu of traditional mortgage insurance. No down payment is required."},
+  {q:"Under FCRA, how long does negative credit information (other than bankruptcy) remain on a consumer credit report?",choices:["3 years","5 years","7 years","10 years"],a:2,ex:"Most negative credit information remains on a consumer credit report for 7 years under FCRA. Chapter 7 bankruptcy may remain for 10 years."},
+  {q:"The SAFE Act established which system for MLO licensing?",choices:["CFPB","NMLS","RESPA","HMDA"],a:1,ex:"The Secure and Fair Enforcement for Mortgage Licensing Act established federal minimum standards for state MLO licensing and created the Nationwide Multistate Licensing System (NMLS)."}
+];
+
+let mloIdx=0, mloScore=0, mloAnswered=[];
+
+function mloTab(t,btn){
+  document.querySelectorAll('.mlo-section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.mlo-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('mlo-'+t).classList.add('active');
+  btn.classList.add('active');
+}
+
+function mloShowCard(){
+  const c=MLO_CARDS[mloIdx];
+  document.getElementById('mloFront').textContent=c.f;
+  document.getElementById('mloBack').textContent=c.b;
+  document.getElementById('mloCounter').textContent=(mloIdx+1)+' / '+MLO_CARDS.length;
+  document.getElementById('mloCardInner').classList.remove('flipped');
+}
+
+function mloMove(d){
+  mloIdx=(mloIdx+d+MLO_CARDS.length)%MLO_CARDS.length;
+  mloShowCard();
+}
+
+function mloBuilScenarios(){
+  document.getElementById('mlo-scenario').innerHTML=MLO_SCENARIOS.map((s,i)=>`
+    <div class="mlo-sc">
+      <div class="mlo-sc-title">${s.title.toUpperCase()}</div>
+      <div class="mlo-sc-desc">${s.desc}</div>
+      <button class="mlo-sc-reveal" onclick="mloReveal(${i})">▶ REVEAL ANALYSIS</button>
+      <div class="mlo-sc-answer" id="msa${i}">
+        <span>VIOLATION:</span> ${s.violation}<br><br>
+        <span>CORRECT ACTION:</span> ${s.action}<br><br>
+        <span>PENALTY EXPOSURE:</span> ${s.penalty}
+      </div>
+    </div>`).join('');
+}
+
+function mloReveal(i){
+  const el=document.getElementById('msa'+i);
+  el.style.display=el.style.display==='block'?'none':'block';
+}
+
+function mloBuildQuiz(){
+  document.getElementById('mloQuizList').innerHTML=MLO_QUIZ.map((q,i)=>`
+    <div class="mlo-qblock">
+      <div class="mlo-qtext">${i+1}. ${q.q}</div>
+      ${q.choices.map((c,j)=>`<button class="mlo-choice" id="mc${i}_${j}" onclick="mloAnswer(${i},${j})">${c}</button>`).join('')}
+      <div class="mlo-explain" id="mex${i}">${q.ex}</div>
+    </div>`).join('');
+}
+
+function mloAnswer(qi,ci){
+  if(mloAnswered.includes(qi))return;
+  mloAnswered.push(qi);
+  const q=MLO_QUIZ[qi];
+  document.getElementById('mc'+qi+'_'+ci).classList.add(ci===q.a?'correct':'wrong');
+  if(ci!==q.a)document.getElementById('mc'+qi+'_'+q.a).classList.add('correct');
+  document.getElementById('mex'+qi).style.display='block';
+  if(ci===q.a){mloScore++;document.getElementById('mloScore').textContent=mloScore;}
+  document.querySelectorAll('[id^="mc'+qi+'_"]').forEach(b=>b.disabled=true);
+}
+
+function mloResetQuiz(){
+  mloScore=0;mloAnswered=[];
+  document.getElementById('mloScore').textContent=0;
+  mloBuildQuiz();
+}
+
+mloShowCard();
+mloBuilScenarios();
+mloBuildQuiz();
+})();
+</script>
+<!-- ═══════════════════════════════════════════════════ END MLO EXAM BLOCK ═══ -->
 </body>
 </html>
