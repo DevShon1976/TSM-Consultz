@@ -160,6 +160,7 @@
 
 <script src="pack-configs.js"></script>
 <script src="sample-docs.js"></script>
+<script src="mlo-regulatory-context.js"></script>
 <script>
 // ---- Resolve pack from query string ----
 const params = new URLSearchParams(window.location.search);
@@ -347,7 +348,7 @@ async function runPack(){
   resultsPanel.innerHTML = `<div class="loading-text"><div class="spinner"></div>Running ${config.title}...</div>`;
 
   try{
-    const result = await callAI(config.systemPrompt, buildUserPrompt());
+    const result = await callAI(config.systemPrompt + '\n\n' + getRegulatoryContext(packKey, { includeAZ: true }), buildUserPrompt());
     parseAndRender(result);
   }catch(err){
     resultsPanel.innerHTML = `<div class="error-block">⚠ ${escapeHtml(err.message)}<br><br>Check that the /api/mortgage/query endpoint is reachable.</div>`;

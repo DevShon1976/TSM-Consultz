@@ -151,26 +151,54 @@ const TIERS = [
 const container = document.getElementById('tiers');
 
 // ——— ACTIVE DOC RELAY ———
-// Mirrors getRelayData() in pack-engine.html: this library lives under the
-// Real Estate vertical (pack-engine.html uses APP='realestate' and falls
-// back to re-war-room.html), so it reads the same TSM_RE_WAR_RELAY key,
-// then falls back to a window.opener 'docPaste' field if nothing is stored.
-// ⚠️ If pack-engine.html's full getRelayData() checks something else above
-// the window.opener fallback (its top half wasn't visible to me), swap the
-// sessionStorage key/parsing below to match exactly.
+
+const RELAY_KEYS = [
+  'TSM_RE_WAR_RELAY',
+  'TSM_CONSTRUCTION_WAR_RELAY',
+  'TSM_INS_WAR_RELAY'
+];
+
 function getRelayData(){
+
+  // Check all relay storage keys first
+  for(const k of RELAY_KEYS){
+
+    try{
+
+      const raw = sessionStorage.getItem(k);
+
+      if(raw){
+
+        try{
+          return JSON.parse(raw);
+        }catch(e){
+          // Handle plain text values
+          return { docText: raw };
+        }
+
+      }
+
+    }catch(e){}
+
+  }
+
+  // Fall back to opener document
   try{
-    const raw = sessionStorage.getItem('TSM_RE_WAR_RELAY');
-    if(raw){
-      const parsed = JSON.parse(raw);
-      if(parsed) return parsed;
-    }
+
     if(window.opener && window.opener.document){
+
       const dp = window.opener.document.getElementById('docPaste');
-      if(dp && dp.value) return { docText: dp.value };
+
+      if(dp && dp.value){
+        return { docText: dp.value };
+      }
+
     }
+
   }catch(e){}
+
   return null;
+
 }
 
 // ——— DOC VIEWER ———
