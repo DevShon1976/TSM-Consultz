@@ -1566,7 +1566,22 @@
       <div id="view-warroom" class="view active">
         <div class="warroom-layout">
 
-          <!-- NODE GRID + FEED -->
+          <!-- DOC UPLOAD ZONE -->
+<div id="docUploadBar" style="margin-bottom:.6rem;border:1px dashed rgba(30,232,182,.25);border-radius:4px;background:rgba(30,232,182,.03)">
+  <div onclick="document.getElementById('docUploadExpand').style.display=document.getElementById('docUploadExpand').style.display==='none'?'block':'none'" style="padding:.4rem .8rem;cursor:pointer;font-family:var(--mono);font-size:.45rem;color:var(--cyan);letter-spacing:.08em;display:flex;justify-content:space-between;align-items:center">
+    <span>⚡ UPLOAD DOCUMENT — auto-extract & inject into nodes</span>
+    <span style="color:var(--muted)">▼</span>
+  </div>
+  <div id="docUploadExpand" style="display:none;padding:.6rem .8rem;border-top:1px solid rgba(30,232,182,.1)">
+    <div id="reDropZone" onclick="document.getElementById('reFileInput').click()" style="border:1px dashed rgba(30,232,182,.3);border-radius:3px;padding:1rem;text-align:center;cursor:pointer;font-family:var(--mono);font-size:.45rem;color:var(--muted)">
+      Drop PDF · image · text here or click to upload
+    </div>
+    <input type="file" id="reFileInput" multiple accept=".pdf,.png,.jpg,.jpeg,.txt,.csv" style="display:none">
+    <div id="reUploadQueue" style="margin-top:.5rem;display:flex;flex-direction:column;gap:.3rem"></div>
+  </div>
+</div>
+
+<!-- NODE GRID + FEED -->
           <div class="node-grid-wrap">
             <div class="node-grid" id="nodeGrid">
 
@@ -3398,6 +3413,35 @@ function armTourWait(eventName) {
   <script src="/html/tsm-mission-orchestrator.js"></script>
   <script src="pack-configs.js"></script>
   <style>#tsm-mission-guide-panel { display: none !important; }</style>
+
+  <script>
+  // ——— DOC UPLOAD HANDLER
+document.getElementById('reFileInput').addEventListener('change', function(e) {
+  Array.from(e.target.files).forEach(async file => {
+    const q = document.getElementById('reUploadQueue');
+    const item = document.createElement('div');
+    item.style.cssText = 'font-family:var(--mono);font-size:.44rem;color:var(--muted);padding:.3rem .5rem;background:rgba(255,255,255,.03);border-radius:3px';
+    item.textContent = '⟳ ' + file.name + ' — extracting...';
+    q.prepend(item);
+    try {
+      const text = await file.text();
+      window.__docRelayContext = `\n\nDOC CONTEXT: File: ${file.name} | ${text.slice(0, 400)}`;
+      item.style.color = 'var(--cyan)';
+      item.textContent = '✓ ' + file.name + ' — injected into all nodes';
+    } catch(err) {
+      item.style.color = 'var(--red)';
+      item.textContent = '✗ ' + file.name + ' — ' + err.message;
+    }
+  });
+  e.target.value = '';
+});
+
+const reDropZone = document.getElementById('reDropZone');
+['dragenter','dragover'].forEach(ev => reDropZone.addEventListener(ev, e => { e.preventDefault(); reDropZone.style.borderColor='var(--cyan)'; }));
+['dragleave','drop'].forEach(ev => reDropZone.addEventListener(ev, e => { e.preventDefault(); reDropZone.style.borderColor=''; }));
+reDropZone.addEventListener('drop', e => { document.getElementById('reFileInput').files = e.dataTransfer.files; document.getElementById('reFileInput').dispatchEvent(new Event('change')); });
+  </script>
+// ——— FORMAT OUTPUT
   <script>
     (function hideMissionGuide(){
       const el = document.getElementById('tsm-mission-guide-panel');
