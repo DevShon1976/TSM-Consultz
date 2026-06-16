@@ -284,6 +284,9 @@
 
 <div class="toast-container" id="toastContainer"></div>
 
+<!-- ZIP support -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
 <script>
 (function(){
 'use strict';
@@ -470,51 +473,296 @@ function getVertical(id){return VERTICALS.filter(function(v){return v.id===id;})
 function dateStamp(){return new Date().toISOString().slice(0,10);}
 
 /* -------- file drop ingestion -------- */
-function processFileList(files){
-  var htmlFiles=Array.from(files).filter(function(f){return /\.html?$/i.test(f.name);});
-  if(!htmlFiles.length){showToast('No HTML files found.','amber');return;}
-  showToast('Reading '+htmlFiles.length+' file(s)…','gray');
-  var done=0;
-  var newApps=[];
-  htmlFiles.forEach(function(file){
-    var reader=new FileReader();
-    reader.onload=function(e){
-      var html=e.target.result||'';
-      var name=file.name;
-      var exists=state.apps.find(function(a){return a.name===name;});
-      if(!exists){
-        var caps=detectCaps(html);
-        var comp=detectCompletion(html,caps);
-        var strategic=detectStrategic(name);
-        var uniqueness=Math.min(3+caps.length*8,10);
-        var compScore=Math.round(((uniqueness*34+(comp/10)*33+strategic*33)/100)*10)/10;
-        var bkt=bucketFromScores(name,comp,compScore);
-        var app={
-          id:uid(),name:name,
-          vertical:detectVertical(name),
-          status:'Active',purpose:'',
-          capabilities:caps,
-          scores:{uniqueness:uniqueness,completion:Math.round(comp/10),strategicValue:strategic},
-          completionPct:comp,
-          dropBucket:bkt.bucket,
-          aiPending:!isDiscard(name),
-          createdAt:Date.now(),updatedAt:Date.now(),
-          _rawSnippet:html.slice(0,8000)
+async function processFileList(files) {
+
+    var htmlFiles = [];
+
+    for (const file of Array.from(files)) {
+
+        /* ZIP uploads */
+        if (/\.zip$/i.test(file.name)) {
+
+            if (typeof JSZip === 'undefined') {
+
+                showToast(
+                    'ZIP support unavailable.',
+                    'red'
+                );
+
+                continue;
+            }
+
+            try {
+
+                const zip =
+                    await JSZip.loadAsync(file);
+
+                for (const path in zip.files) {
+
+                    const entry =
+                        zip.files[path];
+
+                    if (
+                        !entry.dir &&
+                        /\.(html|htm)$/i.test(path)
+                    ) {
+
+                        const html =
+                            await entry.async(
+                                'string'
+                            );
+
+                        htmlFiles.push(
+                            new File(
+                                [html],
+                                path
+                                    .split('/')
+                                    .pop(),
+                                {
+                                    type:
+                                        'text/html'
+                                }
+                            )
+                        );
+                    }
+                }
+
+            } catch (e) {
+
+                console.error(e);
+
+                showToast(
+                    'Failed to read ZIP: ' +
+                    file.name,
+                    'red'
+                );
+            }
+        }
+
+        /* Direct HTML uploads */
+        else if (
+            /\.(html|htm)$/i.test(
+                file.name
+            )
+        ) {
+
+            htmlFiles.push(file);
+        }
+    }
+
+    if (!htmlFiles.length) {
+
+        showToast(
+            'No HTML or HTM files found.',
+            'amber'
+        );
+
+        return;
+    }
+
+    showToast(
+        'Reading ' +
+        htmlFiles.length +
+        ' file(s)…',
+        'gray'
+    );
+
+    var done = 0;
+
+    var newApps = [];
+
+    htmlFiles.forEach(function (file) {
+
+        var reader =
+            new FileReader();
+
+        reader.onload = function (e) {
+
+            var html =
+                e.target.result || '';
+
+            var name =
+                file.name;
+
+            var exists =
+                state.apps.find(
+                    function (a) {
+
+                        return (
+                            a.name === name
+                        );
+                    }
+                );
+
+            if (!exists) {
+
+                var caps =
+                    detectCaps(html);
+
+                var comp =
+                    detectCompletion(
+                        html,
+                        caps
+                    );
+
+                var strategic =
+                    detectStrategic(
+                        name
+                    );
+
+                var uniqueness =
+                    Math.min(
+                        3 +
+                            caps.length *
+                                8,
+                        10
+                    );
+
+                var compScore =
+                    Math.round(
+                        (
+                            uniqueness *
+                                34 +
+                            (comp / 10) *
+                                33 +
+                            strategic *
+                                33
+                        ) /
+                            100 *
+                            10
+                    ) / 10;
+
+                var bkt =
+                    bucketFromScores(
+                        name,
+                        comp,
+                        compScore
+                    );
+
+                var app = {
+
+                    id: uid(),
+
+                    name: name,
+
+                    vertical:
+                        detectVertical(
+                            name
+                        ),
+
+                    status: 'Active',
+
+                    purpose: '',
+
+                    capabilities:
+                        caps,
+
+                    scores: {
+
+                        uniqueness:
+                            uniqueness,
+
+                        completion:
+                            Math.round(
+                                comp / 10
+                            ),
+
+                        strategicValue:
+                            strategic
+                    },
+
+                    completionPct:
+                        comp,
+
+                    dropBucket:
+                        bkt.bucket,
+
+                    aiPending:
+                        !isDiscard(
+                            name
+                        ),
+
+                    createdAt:
+                        Date.now(),
+
+                    updatedAt:
+                        Date.now(),
+
+                    _rawSnippet:
+                        html.slice(
+                            0,
+                            8000
+                        )
+                };
+
+                newApps.push(app);
+
+                if (
+                    !isDiscard(name)
+                ) {
+
+                    aiQueue.push(
+                        app.id
+                    );
+                }
+            }
+
+            done++;
+
+            if (
+                done ===
+                htmlFiles.length
+            ) {
+
+                newApps.forEach(
+                    function (a) {
+
+                        state.apps.push(
+                            a
+                        );
+                    }
+                );
+
+                saveState();
+
+                renderAll();
+
+                showToast(
+                    'Ingested ' +
+                        newApps.length +
+                        ' new app(s). AI enrichment queued.',
+                    'green'
+                );
+
+                drainAIQueue();
+            }
         };
-        newApps.push(app);
-        if(!isDiscard(name)) aiQueue.push(app.id);
-      }
-      done++;
-      if(done===htmlFiles.length){
-        newApps.forEach(function(a){state.apps.push(a);});
-        saveState();
-        renderAll();
-        showToast('Ingested '+newApps.length+' new app(s). AI enrichment queued.','green');
-        drainAIQueue();
-      }
-    };
-    reader.readAsText(file);
-  });
+
+        reader.onerror =
+            function () {
+
+                done++;
+
+                console.error(
+                    'Failed to read:',
+                    file.name
+                );
+
+                if (
+                    done ===
+                    htmlFiles.length
+                ) {
+
+                    saveState();
+
+                    renderAll();
+
+                    drainAIQueue();
+                }
+            };
+
+        reader.readAsText(file);
+    });
 }
 
 /* -------- AI enrichment queue -------- */
@@ -1044,5 +1292,6 @@ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded'
 else init();
 })();
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </body>
 </html>
