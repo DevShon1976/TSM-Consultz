@@ -1001,20 +1001,34 @@ function viewDocument(id){
     doc.fileName || doc.documentType || 'Document';
 
   document.getElementById('viewerBody').innerHTML = `
-    <div class="viewer-meta">
-      <p><strong>Document Type:</strong> ${doc.documentType || ''}</p>
-      <p><strong>Client:</strong> ${ext.client || ''}</p>
-      <p><strong>Reference:</strong> ${doc.invoiceNo || ''}</p>
-      <p><strong>Node:</strong> ${doc.sourceNode || ''}</p>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.8rem">
+      ${[
+        ['TYPE', doc.documentType || '—'],
+        ['CLIENT', ext.client || '—'],
+        ['REF', doc.invoiceNo || '—'],
+        ['NODE', doc.sourceNode || '—'],
+        ['VENDOR', doc.vendor || '—'],
+        ['CODE', doc.exclusionCode || '—'],
+        ['EXPOSURE', doc.amount ? '$'+Number(doc.amount).toLocaleString() : '—'],
+        ['INDEXED', doc.timestamp ? new Date(doc.timestamp).toLocaleDateString() : '—'],
+      ].map(([l,v]) => `
+        <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);padding:.4rem .6rem;border-radius:3px">
+          <div style="font-size:.38rem;color:#666;font-family:var(--mono);letter-spacing:.08em;margin-bottom:.2rem">${l}</div>
+          <div style="font-size:.48rem;color:#e2e8f0;font-family:var(--mono)">${v}</div>
+        </div>`).join('')}
     </div>
-
-    <hr>
-
-    <pre class="viewer-text">${
-      ext.docText ||
-      ext.summary ||
-      JSON.stringify(doc,null,2)
-    }</pre>
+    ${(ext.defectFlags||[]).length ? `
+    <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.8rem">
+      ${ext.defectFlags.map(f=>`<span style="background:rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.3);padding:.2rem .6rem;border-radius:3px;font-family:var(--mono);font-size:.42rem;letter-spacing:.06em">⚠ ${f}</span>`).join('')}
+    </div>` : ''}
+    <div style="background:#050810;border:1px solid rgba(255,255,255,.07);border-radius:4px;padding:.8rem;max-height:420px;overflow-y:auto">
+      <div style="font-size:.38rem;color:#666;font-family:var(--mono);letter-spacing:.08em;margin-bottom:.5rem">DOCUMENT CONTENT</div>
+      <pre style="font-family:var(--mono);font-size:.46rem;color:#94a3b8;white-space:pre-wrap;margin:0;line-height:1.7">${ext.docText || ext.summary || JSON.stringify(doc,null,2)}</pre>
+    </div>
+    <div style="display:flex;gap:.5rem;margin-top:.8rem">
+      <button onclick="openWarRoomPicker('${doc.id}')" style="flex:1;background:rgba(245,158,11,.1);color:var(--acc,#f59e0b);border:1px solid rgba(245,158,11,.3);padding:.5rem;border-radius:3px;font-family:var(--mono);font-size:.48rem;letter-spacing:.06em;cursor:pointer">⚡ SEND TO WAR ROOM</button>
+      <button onclick="document.getElementById('viewerModal').style.display='none'" style="background:rgba(255,255,255,.05);color:#666;border:1px solid rgba(255,255,255,.1);padding:.5rem 1rem;border-radius:3px;font-family:var(--mono);font-size:.48rem;cursor:pointer">✕ CLOSE</button>
+    </div>
   `;
 
   document.getElementById('viewerModal').style.display='flex';
