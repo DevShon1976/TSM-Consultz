@@ -2045,6 +2045,18 @@ Always use ► section headers. Include specific dollar amounts, timelines, and 
     // ─── STATE ────────────────────────────────────────────────────────────────────
     let savedOutputs = [];
     let runCount = 0;
+
+// Doc Search relay init
+(function(){
+  const docRelay = JSON.parse(sessionStorage.getItem('tsm_re_docsearch_relay') || localStorage.getItem('tsm_re_docsearch_relay') || 'null');
+  if (docRelay?.doc) {
+    const d = docRelay.doc; const ext = d._ext || {};
+    window.__docRelayContext = `\n\nDOC CONTEXT: File: ${d.fileName} | Type: ${d.documentType} | Client: ${ext.client||'N/A'} | Exposure: ${d.amount?'$'+d.amount.toLocaleString():'N/A'} | ${(ext.docText||'').slice(0,300)}`;
+    window.__docRelayBanner = `⚡ DOC LOADED — ${d.fileName} · ${d.documentType}`;
+    sessionStorage.removeItem('tsm_re_docsearch_relay');
+    localStorage.removeItem('tsm_re_docsearch_relay');
+  }
+})();
     let currentOutput = '';
     let selectedScenarios = new Set();
     let sessionPayload = {};
@@ -2056,7 +2068,7 @@ Always use ► section headers. Include specific dollar amounts, timelines, and 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           question: userMessage,
-          context: systemOverride || SYSTEM,
+          context: (systemOverride || SYSTEM) + (window.__docRelayContext || ''),
           app: APP,
           maxTokens: maxTok
         })
