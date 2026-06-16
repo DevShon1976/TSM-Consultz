@@ -33,6 +33,7 @@
     display:grid;grid-template-columns:repeat(auto-fill, minmax(190px, 1fr));gap:12px;
   }
   .card{
+    position:relative;
     background:var(--panel);border:1px solid var(--panel-border);border-radius:10px;
     padding:14px;cursor:pointer;transition:.2s;text-decoration:none;color:var(--text);
     display:flex;flex-direction:column;gap:6px;
@@ -48,6 +49,64 @@
     border:1px solid rgba(255,200,87,.4);border-radius:4px;padding:1px 6px;
     align-self:flex-start;
   }
+
+  /* ——— preview icon on each card ——— */
+  .card .preview-btn{
+    position:absolute;top:10px;right:10px;
+    width:22px;height:22px;border-radius:50%;
+    background:rgba(0,0,0,.35);border:1px solid var(--panel-border);
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;color:var(--dim);transition:.15s;
+  }
+  .card .preview-btn:hover{border-color:var(--cyan);color:var(--cyan);background:rgba(0,229,255,.08);}
+
+  /* ——— doc viewer modal ——— */
+  .doc-viewer-overlay{
+    position:fixed;inset:0;background:rgba(2,6,10,.78);
+    display:none;align-items:center;justify-content:center;z-index:999;padding:24px;
+  }
+  .doc-viewer-overlay.open{display:flex;}
+  .doc-viewer{
+    background:var(--panel);border:1px solid var(--panel-border);border-radius:10px;
+    max-width:680px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;
+    box-shadow:0 0 40px rgba(0,0,0,.5);
+  }
+  .doc-viewer-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--panel-border);}
+  .doc-viewer-head .title{font-family:'Share Tech Mono',monospace;font-size:14px;color:var(--text);}
+  .doc-viewer-head .close-top{
+    font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--red);
+    border:1px solid rgba(255,84,112,.4);border-radius:4px;padding:4px 10px;cursor:pointer;background:rgba(255,84,112,.06);
+  }
+  .doc-viewer-head .close-top:hover{background:rgba(255,84,112,.15);}
+
+  .doc-viewer-body{padding:18px 20px;overflow-y:auto;}
+
+  .field-grid{display:grid;grid-template-columns:repeat(4, 1fr);gap:10px;margin-bottom:16px;}
+  .field-cell{background:rgba(255,255,255,.02);border:1px solid var(--panel-border);border-radius:6px;padding:8px 10px;}
+  .field-cell .f-label{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--dim);text-transform:uppercase;margin-bottom:4px;}
+  .field-cell .f-value{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;color:var(--text);word-break:break-word;}
+
+  .content-label{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--dim);text-transform:uppercase;margin-bottom:6px;}
+  .content-box{
+    background:rgba(0,0,0,.25);border:1px solid var(--panel-border);border-radius:6px;padding:12px 14px;
+    font-family:'Share Tech Mono',monospace;font-size:11px;line-height:1.6;color:var(--text);
+    white-space:pre-wrap;max-height:240px;overflow-y:auto;
+  }
+  .doc-viewer-empty{color:var(--dim);text-align:center;padding:30px 10px;font-family:'Share Tech Mono',monospace;font-size:11px;}
+
+  .doc-viewer-actions{display:flex;gap:10px;padding:14px 20px;border-top:1px solid var(--panel-border);}
+  .doc-viewer-actions .primary-action{
+    flex:1;background:rgba(255,200,87,.1);border:1px solid var(--gold);color:var(--gold);
+    font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:1px;border-radius:6px;
+    padding:10px;cursor:pointer;text-align:center;transition:.15s;
+  }
+  .doc-viewer-actions .primary-action:hover{background:rgba(255,200,87,.2);}
+  .doc-viewer-actions .close-bottom{
+    background:rgba(255,255,255,.03);border:1px solid var(--panel-border);color:var(--dim);
+    font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:1px;border-radius:6px;
+    padding:10px 16px;cursor:pointer;
+  }
+  .doc-viewer-actions .close-bottom:hover{color:var(--text);border-color:var(--cyan);}
 </style>
 </head>
 <body>
@@ -58,6 +117,25 @@
 </div>
 
 <div id="tiers"></div>
+
+<!-- ——— doc viewer modal ——— -->
+<div class="doc-viewer-overlay" id="docViewerOverlay">
+  <div class="doc-viewer">
+    <div class="doc-viewer-head">
+      <span class="title" id="docViewerTitle">DOCUMENT PREVIEW</span>
+      <span class="close-top" id="docViewerCloseTop">× CLOSE</span>
+    </div>
+    <div class="doc-viewer-body">
+      <div class="field-grid" id="docViewerFields"></div>
+      <div class="content-label">DOCUMENT CONTENT</div>
+      <div class="content-box" id="docViewerBody"></div>
+    </div>
+    <div class="doc-viewer-actions">
+      <div class="primary-action" id="docViewerLaunch">⚡ RUN THIS PACK</div>
+      <div class="close-bottom" id="docViewerCloseBottom">× CLOSE</div>
+    </div>
+  </div>
+</div>
 
 <script src="pack-configs.js"></script>
 <script>
@@ -72,6 +150,78 @@ const TIERS = [
 
 const container = document.getElementById('tiers');
 
+// ——— ACTIVE DOC RELAY ———
+// Mirrors getRelayData() in pack-engine.html: this library lives under the
+// Real Estate vertical (pack-engine.html uses APP='realestate' and falls
+// back to re-war-room.html), so it reads the same TSM_RE_WAR_RELAY key,
+// then falls back to a window.opener 'docPaste' field if nothing is stored.
+// ⚠️ If pack-engine.html's full getRelayData() checks something else above
+// the window.opener fallback (its top half wasn't visible to me), swap the
+// sessionStorage key/parsing below to match exactly.
+function getRelayData(){
+  try{
+    const raw = sessionStorage.getItem('TSM_RE_WAR_RELAY');
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed) return parsed;
+    }
+    if(window.opener && window.opener.document){
+      const dp = window.opener.document.getElementById('docPaste');
+      if(dp && dp.value) return { docText: dp.value };
+    }
+  }catch(e){}
+  return null;
+}
+
+// ——— DOC VIEWER ———
+const docViewerOverlay = document.getElementById('docViewerOverlay');
+const docViewerTitle = document.getElementById('docViewerTitle');
+const docViewerFields = document.getElementById('docViewerFields');
+const docViewerBody = document.getElementById('docViewerBody');
+const docViewerLaunch = document.getElementById('docViewerLaunch');
+let pendingPackKey = null;
+
+function renderFieldGrid(relay){
+  const skip = ['docText','analysis'];
+  const entries = Object.entries(relay).filter(([k,v]) => !skip.includes(k) && v !== undefined && v !== null && v !== '');
+  docViewerFields.innerHTML = entries.slice(0,8).map(([k,v]) => `
+    <div class="field-cell">
+      <div class="f-label">${k}</div>
+      <div class="f-value">${v}</div>
+    </div>`).join('');
+}
+
+function openDocViewer(packKey){
+  pendingPackKey = packKey;
+  const cfg = TSM_PACK_CONFIGS[packKey];
+  const relay = getRelayData();
+
+  if(relay){
+    const label = relay.fileName || relay.docType || (relay.docText ? 'Document text from active session' : 'Active file');
+    docViewerTitle.textContent = label;
+    renderFieldGrid(relay);
+    docViewerBody.textContent = relay.docText || relay.analysis || JSON.stringify(relay, null, 2);
+  } else {
+    docViewerTitle.textContent = 'NO RELAY DATA';
+    docViewerFields.innerHTML = '';
+    docViewerBody.innerHTML = '<div class="doc-viewer-empty">⚠ No relay data found — pack will run on general inputs only</div>';
+  }
+
+  docViewerLaunch.textContent = '⚡ RUN ' + (cfg ? cfg.title.toUpperCase() : 'THIS PACK');
+  docViewerOverlay.classList.add('open');
+}
+
+function closeDocViewer(){
+  docViewerOverlay.classList.remove('open');
+  pendingPackKey = null;
+}
+
+document.getElementById('docViewerCloseTop').addEventListener('click', closeDocViewer);
+document.getElementById('docViewerCloseBottom').addEventListener('click', closeDocViewer);
+docViewerOverlay.addEventListener('click', e => { if (e.target === docViewerOverlay) closeDocViewer(); });
+docViewerLaunch.addEventListener('click', () => { if (pendingPackKey) window.location.href = 'pack-engine.html?pack=' + pendingPackKey; });
+
+// ——— CARD GRID ———
 TIERS.forEach(tier => {
   const tierDiv = document.createElement('div');
   tierDiv.className = 'tier';
@@ -90,7 +240,13 @@ TIERS.forEach(tier => {
       <div class="label">${cfg.title}</div>
       <div class="sub">${cfg.subtitle}</div>
       ${cfg.isExecutive ? '<div class="badge">EXECUTIVE</div>' : ''}
+      <span class="preview-btn" title="Preview active document">👁</span>
     `;
+    a.querySelector('.preview-btn').addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      openDocViewer(key);
+    });
     grid.appendChild(a);
   });
 
@@ -98,6 +254,5 @@ TIERS.forEach(tier => {
   container.appendChild(tierDiv);
 });
 </script>
-
 </body>
 </html>
