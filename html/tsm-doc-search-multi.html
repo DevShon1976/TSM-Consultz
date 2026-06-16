@@ -1023,7 +1023,16 @@ function viewDocument(id){
     </div>` : ''}
     <div style="background:#050810;border:1px solid rgba(255,255,255,.07);border-radius:4px;padding:.8rem;max-height:420px;overflow-y:auto">
       <div style="font-size:.38rem;color:#666;font-family:var(--mono);letter-spacing:.08em;margin-bottom:.5rem">DOCUMENT CONTENT</div>
-      <pre style="font-family:var(--mono);font-size:.46rem;color:#94a3b8;white-space:pre-wrap;margin:0;line-height:1.7">${ext.docText || ext.summary || JSON.stringify(doc,null,2)}</pre>
+      <pre style="font-family:var(--mono);font-size:.46rem;color:#94a3b8;white-space:pre-wrap;margin:0;line-height:1.7">${ext.docText || ext.summary || [
+  `FILE: ${doc.fileName}`,
+  `TYPE: ${doc.documentType}`,
+  `CLIENT: ${ext.client||'N/A'}`,
+  `REF: ${doc.invoiceNo||'N/A'}`,
+  `VENDOR: ${doc.vendor||'N/A'}`,
+  `EXPOSURE: ${doc.amount?'$'+Number(doc.amount).toLocaleString():'N/A'}`,
+  `TAGS: ${(doc.tags||[]).join(', ')||'N/A'}`,
+  `DEFECTS: ${(ext.defectFlags||[]).join(', ')||'None'}`
+].join('\n')}</pre>
     </div>
     <div style="display:flex;gap:.5rem;margin-top:.8rem">
       <button onclick="openWarRoomPicker('${doc.id}')" style="flex:1;background:rgba(245,158,11,.1);color:var(--acc,#f59e0b);border:1px solid rgba(245,158,11,.3);padding:.5rem;border-radius:3px;font-family:var(--mono);font-size:.48rem;letter-spacing:.06em;cursor:pointer">⚡ SEND TO WAR ROOM</button>
@@ -1323,10 +1332,11 @@ const DEMO_DOCS = [
 
 function cleanRouting(doc, v) {
   const wr = {fo:'fo-war-room',ins:'ins-war-room',con:'con-war-room',bpo:'bpo-war-room',re:'re-war-room',leg:'leg-war-room',hc:'hc-war-room'};
-  const nodes = [wr[v], 'strategist'];
+  const originalRouting = doc.routing?.[v] || [];
+  const nodes = originalRouting.length ? originalRouting : [wr[v], 'strategist'];
   const tags = doc.tags || [];
   const isBnca = tags.some(t => ['fraud','deal killer','escalation','bnca'].includes(t)) || (doc.documentType||'').includes('ESCALATION');
-  if (isBnca) nodes.push('bnca-engine');
+  if (isBnca && !nodes.includes('bnca-engine')) nodes.push('bnca-engine');
   return { sourceNode: wr[v], routing: nodes };
 }
 
@@ -1345,7 +1355,8 @@ function seedDemoData() {
     sourceNode:    cleanRouting(doc, currentVertical).sourceNode,
     routing:       cleanRouting(doc, currentVertical).routing,
     timestamp:     now - i * 3600000,
-    _ext:          doc._ext || {},
+    _ext:          { ...(doc._ext || {}), tags: doc.tags || [] },
+    tags:          doc.tags || [],
   }));
   const merged = [...samples, ...loadIndex()].slice(0, 500);
   saveIndex(merged);
@@ -1371,7 +1382,8 @@ function seedAllVerticals() {
         sourceNode:    cleanRouting(doc, v).sourceNode,
         routing:       cleanRouting(doc, v).routing,
         timestamp:     now - i * 3600000,
-        _ext:          doc._ext || {},
+        _ext:          { ...(doc._ext || {}), tags: doc.tags || [] },
+        tags:          doc.tags || [],
       });
       if (existing.length > 500) existing.splice(500);
       saveIndexFor(v, existing);
@@ -1593,7 +1605,8 @@ async function processFile(file) {
       const roomKey = r.vertical + '-war-room';
       const room = WAR_ROOM_ROUTES[roomKey];
       if (!room) return '';
-      return `<span class="uq-badge" onclick="launchWarRoomDirect('${roomKey}','${encodeURIComponent(JSON.stringify({docText:classification.summary||'',docType:classification.documentType||'DOCUMENT',fileName:classification.fileName||file.name,client:classification.client||'',ref:classification.ref||''}))}');event.stopPropagation()" style="background:${r.color}1f;color:${r.color};border:1px solid ${r.color}40;cursor:pointer;" title="Open in ${room.label}">⚡ ${room.label}</span>`;
+      const synth = [classification.summary||'',`TYPE:${classification.documentType||''}`,`CLIENT:${classification.client||''}`,`REF:${classification.ref||''}`].filter(Boolean).join('\n');
+return `<span class="uq-badge" onclick="launchWarRoomDirect('${roomKey}','${encodeURIComponent(JSON.stringify({docText:synth,docType:classification.documentType||'DOCUMENT',fileName:classification.fileName||file.name,client:classification.client||'',ref:classification.ref||''}))}');event.stopPropagation()" style="background:${r.color}1f;color:${r.color};border:1px solid ${r.color}40;cursor:pointer;" title="Open in ${room.label}">⚡ ${room.label}</span>`;
     }).filter(Boolean).join("");
 
     uqStatus(qid, `${classification.documentType || "Routed"} → ${badges}${warRoomBtns ? '<br><span style="font-size:8px;color:var(--dim);margin-right:4px;">OPEN IN:</span>' + warRoomBtns : ''}`, "ok");
