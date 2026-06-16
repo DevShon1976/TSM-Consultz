@@ -394,18 +394,61 @@ function bucketFromScores(name,comp,compScore){
 }
 
 /* -------- persistence -------- */
-var hasStorage=(typeof window.storage!=='undefined');
-function loadState(){
-  if(!hasStorage){document.getElementById('loadStatus').textContent='No persistent storage — changes last until page reload.';renderAll();return;}
-  window.storage.get(STORAGE_KEY,false).then(function(res){
-    if(res&&res.value){try{var p=JSON.parse(res.value);if(p&&Array.isArray(p.apps)){p._search=p._search||'';p._filterVertical=p._filterVertical||'all';if(!p.weights)p.weights={uniqueness:34,completion:33,strategicValue:33};state=p;}}catch(e){}}
-    document.getElementById('loadStatus').textContent='Auto-saved — data persists across sessions.';
+var hasStorage = typeof localStorage !== 'undefined';
+function loadState() {
+  if (!hasStorage) {
+    document.getElementById('loadStatus').textContent =
+      'No persistent storage available.';
     renderAll();
-  }).catch(function(){document.getElementById('loadStatus').textContent='Auto-saved.';renderAll();});
+    return;
+  }
+
+  try {
+    var saved = localStorage.getItem(STORAGE_KEY);
+
+    if (saved) {
+      var p = JSON.parse(saved);
+
+      if (p && Array.isArray(p.apps)) {
+        p._search = p._search || '';
+        p._filterVertical = p._filterVertical || 'all';
+
+        if (!p.weights) {
+          p.weights = {
+            uniqueness: 34,
+            completion: 33,
+            strategicValue: 33
+          };
+        }
+
+        state = p;
+      }
+    }
+
+    document.getElementById('loadStatus').textContent =
+      'Auto-saved — data persists across sessions.';
+  } catch (e) {
+    console.error(e);
+
+    document.getElementById('loadStatus').textContent =
+      'Failed to load saved data.';
+  }
+
+  renderAll();
 }
-function saveState(){
-  if(!hasStorage) return;
-  window.storage.set(STORAGE_KEY,JSON.stringify(state),false).catch(function(){showToast('Save failed.','red');});
+
+function saveState() {
+  if (!hasStorage) return;
+
+  try {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(state)
+    );
+  } catch (e) {
+    console.error(e);
+    showToast('Save failed.', 'red');
+  }
 }
 
 /* -------- DOM helper -------- */
