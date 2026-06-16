@@ -2807,8 +2807,10 @@ Dollar amounts and party names required.`;
              || localStorage.getItem('TSM_RE_WAR_RELAY');
     if (!raw) return;
     const relay = JSON.parse(raw);
-    if (!relay.docText) return;
-
+    const docText = relay.docText || relay.fileName || '';
+    if (!docText && !relay.fileName) return;
+    window.__docRelayContext = `\n\nDOC CONTEXT: File: ${relay.fileName||'Unknown'} | Type: ${relay.docType||'N/A'} | Client: ${relay.client||'N/A'} | Ref: ${relay.ref||'N/A'} | ${docText.slice(0,300)}`;
+    window.__docRelayBanner = `⚡ DOC LOADED — ${relay.fileName||'Document'} · ${relay.docType||''}`;
     // Clear relay so it doesn't re-fire on refresh
     sessionStorage.removeItem('TSM_RE_WAR_RELAY');
     sessionStorage.removeItem('TSM_WAR_ROOM_RELAY');
@@ -2827,7 +2829,7 @@ Dollar amounts and party names required.`;
     banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:rgba(0,180,100,.12);border-bottom:1px solid rgba(0,180,100,.3);padding:7px 20px;font-family:"Share Tech Mono",monospace;font-size:10px;color:#00d4aa;letter-spacing:1px;display:flex;justify-content:space-between;align-items:center;';
     const docType = relay.meta?.docType || relay.docType || 'DOCUMENT';
     const engines = relay.enginesRun || 0;
-    banner.innerHTML = `<span>⚡ DOC SEARCH RELAY ACTIVE — ${docType} · ${relay.docText.length} chars · ${engines} engines pre-run · select a node to analyze</span><button onclick="this.parentElement.remove()" style="background:none;border:none;color:#00d4aa;cursor:pointer;font-size:14px;">✕</button>`;
+    banner.innerHTML = `<span>⚡ DOC SEARCH RELAY ACTIVE — ${docType} · ${(relay.docText||'').length} chars · ${engines} engines pre-run · select a node to analyze</span><button onclick="this.parentElement.remove()" style="background:none;border:none;color:#00d4aa;cursor:pointer;font-size:14px;">✕</button>`;
     document.body.prepend(banner);
 
     // Auto-activate matching node based on doc type
