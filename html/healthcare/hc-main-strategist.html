@@ -896,7 +896,7 @@ function clearOut(){
 }
 
 // ── WAR ROOM BRIEF RECEIVER ──
-(function()
+(function(){
   const brief = readWarRoomBrief();
   if (!brief) return;
   const banner = document.createElement('div');
@@ -945,13 +945,12 @@ function clearOut(){
         </button>
       </div>
     </div>`;
-  // Insert into content area below the pack-row
+
   const content = document.querySelector('.content');
   const packRow = document.querySelector('.pack-row');
   if (content && packRow) packRow.insertAdjacentElement('afterend', banner);
   else if (content) content.insertBefore(banner, content.firstChild);
 
-  // Inject War Room context into strategist textarea + HC_CONTEXT
   window.injectWarRoomContext = function() {
     const warRoomSummary = Object.entries(brief.engineOutputs||{}).map(([k,v])=>`${k}: ${v.slice(0,300)}`).join('\n');
     const ctxEl = document.getElementById('strat-context');
@@ -960,23 +959,8 @@ function clearOut(){
     document.getElementById('hcs-banner-chevron').textContent = '▼';
   };
 
-  // Run a full denial pack pre-loaded with War Room data
   window.runWarRoomDenialPack = function() {
-    // ── Call HC Strategist server endpoint ───────────────────────────────────
-    fetch('/api/hc/query', {
-      method: 'POST',
-      headers: { 'Content-Type':'application/json' },
-      body: JSON.stringify({
-        system: HC_CONTEXT,
-        message: prompt
-      })
-    })
-    .then(r => r.json())
-    .then(d => {
-      const txt = d.output || '';
-      if(!txt) throw new Error('Empty response');
-
-    // ── Build or reuse dedicated Denial Pack panel ───────────────────────────
+    // 1. Build or reuse panel first so elements exist for updates
     let dpPanel = document.getElementById('tsm-denial-pack-panel');
     if (!dpPanel) {
       dpPanel = document.createElement('div');
@@ -1049,26 +1033,25 @@ function clearOut(){
         </div>
         <div id="dp-assign-tag" style="display:none;padding:6px 16px;background:rgba(0,255,100,.04);border-top:1px solid rgba(0,255,100,.12);font-size:9px;color:#00ffc6;letter-spacing:1px;"></div>
       `;
-      // Insert directly after the war room banner
       banner.insertAdjacentElement('afterend', dpPanel);
     }
 
-    // ── Pre-fill meta from war room data ────────────────────────────────────
+    // 2. Pre-fill metadata panels from the brief data
     const allText = Object.values(brief.engineOutputs||{}).join(' ');
     const claimM  = allText.match(/claim[:\s#-]+([A-Z0-9-]+)/i);
     const codeM   = allText.match(/denial codes?[:\s]+([A-Z0-9,\s-]+)/i);
-    const expM    = allText.match(/\$[\d,]+/);
+    const expM    = allText.match(/\$[\d,.]+[M|K]?/);
     if(claimM) document.getElementById('dp-claim-id').textContent  = claimM[1];
     if(codeM)  document.getElementById('dp-codes').textContent     = codeM[1].trim().slice(0,20);
     if(expM)   document.getElementById('dp-exposure').textContent  = expM[0];
 
-    // ── Show spinner, hide old output ────────────────────────────────────────
+    // 3. Reset visual panel components
     document.getElementById('dp-spinner').style.display = 'flex';
     document.getElementById('dp-output').style.display  = 'none';
     document.getElementById('dp-error').style.display   = 'none';
     dpPanel.scrollIntoView({ behavior:'smooth', block:'nearest' });
 
-    // ── Build prompt ─────────────────────────────────────────────────────────
+    // 4. Construct prompt variable in chronological safety
     const warRoomData = Object.entries(brief.engineOutputs||{})
       .map(([k,v])=>`${k}:\n${v.slice(0,400)}`).join('\n\n');
 
@@ -1099,33 +1082,33 @@ PRIORITY ACTIONS:
 RECOVERY PROBABILITY: [%] — [rationale]
 PATTERN MATCH: [does this match active HonorHealth denial patterns CO-4/CO-11/CO-29/PR-96? Yes/No — detail]`;
 
-    // ── Call Groq directly (no dependency on callClaude signature) ───────────
-  fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+groqKey },
-    body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
-      max_tokens: 700,
-      temperature: 0.2,
-      messages: [{ role:'user', content: prompt }]
+    // 5. Fire Groq endpoint inside clean linear scope
+    fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+groqKey },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 700,
+        temperature: 0.2,
+        messages: [{ role:'user', content: prompt }]
+      })
     })
-  })
-  .then(r => r.json())
-  .then(d => {
-    const txt = d.choices?.[0]?.message?.content || '';
-    if(!txt) throw new Error('Empty response');
-    document.getElementById('dp-spinner').style.display = 'none';
-    document.getElementById('dp-output').style.display  = 'block';
-    document.getElementById('dp-output').textContent    = txt;
-  })
-  .catch(err => {
+    .then(r => r.json())
+    .then(d => {
+      const txt = d.choices?.[0]?.message?.content || '';
+      if(!txt) throw new Error('Empty response');
+      document.getElementById('dp-spinner').style.display = 'none';
+      document.getElementById('dp-output').style.display  = 'block';
+      document.getElementById('dp-output').textContent    = txt;
+    })
+    .catch(err => {
       document.getElementById('dp-spinner').style.display = 'none';
       document.getElementById('dp-error').style.display   = 'block';
       document.getElementById('dp-error').textContent     = '✗ Denial pack failed: ' + err.message;
     });
   };
 
-})(); // Safely closes the outer WAR ROOM BRIEF RECEIVER wrapper scope
+})();
 
 // ── INIT: auto-load score ──
 (async()=>{
