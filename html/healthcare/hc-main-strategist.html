@@ -50,7 +50,7 @@ main {
 body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;height:100vh;overflow:hidden;display:flex;flex-direction:column}
 body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.025) 3px,rgba(0,0,0,0.025) 4px);pointer-events:none;z-index:9999}
 
-/* ── TOPBAR ── */
+/*  TOPBAR  */
 .topbar{height:46px;background:var(--bg2);border-bottom:1px solid var(--border2);display:flex;align-items:center;padding:0 16px;gap:0;flex-shrink:0;position:relative}
 .topbar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--purple),transparent);opacity:.3}
 .tb-brand{display:flex;align-items:center;gap:10px;margin-right:20px}
@@ -896,7 +896,7 @@ function clearOut(){
 }
 
 // ── WAR ROOM BRIEF RECEIVER ──
-(function(){
+(function()
   const brief = readWarRoomBrief();
   if (!brief) return;
   const banner = document.createElement('div');
@@ -1100,31 +1100,32 @@ RECOVERY PROBABILITY: [%] — [rationale]
 PATTERN MATCH: [does this match active HonorHealth denial patterns CO-4/CO-11/CO-29/PR-96? Yes/No — detail]`;
 
     // ── Call Groq directly (no dependency on callClaude signature) ───────────
-    fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+groqKey },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        max_tokens: 700,
-        temperature: 0.2,
-        messages: [{ role:'user', content: prompt }]
-      })
+  fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+groqKey },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      max_tokens: 700,
+      temperature: 0.2,
+      messages: [{ role:'user', content: prompt }]
     })
-    .then(r => r.json())
-    .then(d => {
-      const txt = d.choices?.[0]?.message?.content || '';
-      if(!txt) throw new Error('Empty response');
-      document.getElementById('dp-spinner').style.display = 'none';
-      document.getElementById('dp-output').style.display  = 'block';
-      document.getElementById('dp-output').textContent    = txt;
-    })
-    .catch(err => {
+  })
+  .then(r => r.json())
+  .then(d => {
+    const txt = d.choices?.[0]?.message?.content || '';
+    if(!txt) throw new Error('Empty response');
+    document.getElementById('dp-spinner').style.display = 'none';
+    document.getElementById('dp-output').style.display  = 'block';
+    document.getElementById('dp-output').textContent    = txt;
+  })
+  .catch(err => {
       document.getElementById('dp-spinner').style.display = 'none';
       document.getElementById('dp-error').style.display   = 'block';
       document.getElementById('dp-error').textContent     = '✗ Denial pack failed: ' + err.message;
     });
-  }); // Fixed: Clean completion of the inner .then wrapper chain
-}; // Fixed: Clean closure of window.runWarRoomDenialPack function block
+  };
+
+})(); // Safely closes the outer WAR ROOM BRIEF RECEIVER wrapper scope
 
 // ── INIT: auto-load score ──
 (async()=>{
