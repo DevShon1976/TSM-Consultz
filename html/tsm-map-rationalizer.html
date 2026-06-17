@@ -283,6 +283,7 @@ var editingApp=null;
 var editingCapabilities=[];
 var aiQueue=[];
 var aiRunning=false;
+var rawSnippetCache={};
 
 var VERT_PREFIXES=[
   ['hc-','hc'],['hc_','hc'],['hc/','hc'],
@@ -377,16 +378,24 @@ function loadState(){
         p._filterVertical=p._filterVertical||'all';
         if(!p.weights) p.weights={uniqueness:34,completion:33,strategicValue:33};
         state=p;
+        state.apps.forEach(function(a){if(a.aiPending&&aiQueue.indexOf(a.id)===-1)aiQueue.push(a.id);});
       }
     }
     document.getElementById('loadStatus').textContent='Auto-saved — data persists across sessions.';
   }catch(e){console.error(e);document.getElementById('loadStatus').textContent='Failed to load saved data.';}
   renderAll();
+  if(aiQueue.length){showToast('Resuming AI enrichment for '+aiQueue.length+' app(s)…','cyan');drainAIQueue();}
 }
 function saveState(){
   if(!hasStorage) return;
   try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
-  catch(e){console.error(e);showToast('Save failed.','red');}
+  catch(e){
+    console.error(e);
+    var stripped=false;
+    state.apps.forEach(function(a){if(a._rawSnippet){delete a._rawSnippet;stripped=true;}});
+    if(stripped){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));return;}catch(e2){console.error(e2);}}
+    showToast('Save failed.','red');
+  }
 }
 
 function h(tag,props,children){
@@ -430,10 +439,10 @@ function _ingestHTMLFiles(htmlFiles){
           completionPct:comp,dropBucket:bkt.bucket,
           aiPending:!isDiscard(name),
           createdAt:Date.now(),updatedAt:Date.now(),
-          _rawSnippet:html.slice(0,8000)
+          _rawSnippet:html.slice(0,1200)
         };
+        if(!isDiscard(name)){rawSnippetCache[app.id]=html.slice(0,8000);aiQueue.push(app.id);}
         newApps.push(app);
-        if(!isDiscard(name)) aiQueue.push(app.id);
       }
       done++;
       if(done===htmlFiles.length){
@@ -507,7 +516,7 @@ function enrichApp(app,cb){
   existingTags=existingTags.slice(0,40);
   var prompt='You are classifying an internal business application for a multi-vertical SaaS portfolio rationalization.\n\n'+
     'App name: '+app.name+'\nVertical guess: '+getVertical(app.vertical).name+'\nStructural signals already detected: '+(app.capabilities||[]).join(', ')+'\n\n'+
-    'Code/content excerpt:\n"""\n'+(app._rawSnippet||'').slice(0,5000)+'\n"""\n\n'+
+    'Code/content excerpt:\n"""\n'+(rawSnippetCache[app.id]||app._rawSnippet||'').slice(0,5000)+'\n"""\n\n'+
     'Existing capability tags in portfolio (reuse exact names where applicable): '+(existingTags.join(', ')||'(none yet)')+'\n\n'+
     'Return ONLY valid JSON, no markdown fences:\n'+
     '{"purpose":"one sentence","capabilities":["3 to 8 Title Case tags"],"uniqueness_score":1,"completion_score":1,"strategic_value_score":1,"rationale":"one sentence"}';
@@ -532,8 +541,9 @@ function enrichApp(app,cb){
     if(parsed.completion_score) app.scores.completion=parsed.completion_score;
     if(parsed.strategic_value_score) app.scores.strategicValue=parsed.strategic_value_score;
     app.aiPending=false;app.updatedAt=Date.now();
+    delete rawSnippetCache[app.id];
     cb();
-  }).catch(function(e){console.error('AI enrichment failed for',app.name,e);app.aiPending=false;cb();});
+  }).catch(function(e){console.error('AI enrichment failed for',app.name,e);app.aiPending=false;delete rawSnippetCache[app.id];cb();});
 }
 
 /* -------- recommendations -------- */
@@ -636,13 +646,31 @@ function renderDropZone(container){
   dz.addEventListener('drop',function(e){
     e.preventDefault();dz.classList.remove('over');
     var files=[];
-    function readEntry(entry){
-      if(entry.isFile){entry.file(function(f){files.push(f);});}
-      else if(entry.isDirectory){var r=entry.createReader();r.readEntries(function(ents){ents.forEach(function(en){readEntry(en);});});}
+    var pending=0;
+    function maybeFinish(){if(pending===0)processFileList(files);}
+    function drainReader(reader,cb){
+      reader.readEntries(function(ents){
+        if(!ents.length){cb();return;}
+        ents.forEach(walk);
+        drainReader(reader,cb); // browsers cap entries per call (~100) — keep reading until it returns empty
+      },function(){cb();});
+    }
+    function walk(entry){
+      if(entry.isFile){
+        pending++;
+        entry.file(function(f){files.push(f);pending--;maybeFinish();},function(){pending--;maybeFinish();});
+      }else if(entry.isDirectory){
+        pending++;
+        drainReader(entry.createReader(),function(){pending--;maybeFinish();});
+      }
     }
     if(e.dataTransfer.items){
-      Array.from(e.dataTransfer.items).forEach(function(item){var en=item.webkitGetAsEntry?item.webkitGetAsEntry():null;if(en)readEntry(en);else if(item.kind==='file')files.push(item.getAsFile());});
-      setTimeout(function(){processFileList(files);},350);
+      Array.from(e.dataTransfer.items).forEach(function(item){
+        var en=item.webkitGetAsEntry?item.webkitGetAsEntry():null;
+        if(en) walk(en);
+        else if(item.kind==='file'){var f=item.getAsFile();if(f)files.push(f);}
+      });
+      maybeFinish();
     } else processFileList(e.dataTransfer.files);
   });
   container.appendChild(dz);
