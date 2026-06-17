@@ -962,8 +962,19 @@ function clearOut(){
 
   // Run a full denial pack pre-loaded with War Room data
   window.runWarRoomDenialPack = function() {
-  const groqKey = localStorage.getItem('tsm_groq_key') || window.groqKey || '';
-  if (!groqKey) { alert('Enter your Groq API key first — click the key icon in the topbar.'); return; }
+  // ── Call HC Strategist server endpoint ───────────────────────────────────
+  fetch('/api/hc/query', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify({
+      system: HC_CONTEXT,
+      message: prompt
+    })
+  })
+  .then(r => r.json())
+  .then(d => {
+    const txt = d.output || '';
+    if(!txt) throw new Error('Empty response');
 
   // ── Build or reuse dedicated Denial Pack panel ───────────────────────────
   let dpPanel = document.getElementById('tsm-denial-pack-panel');
