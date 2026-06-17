@@ -381,7 +381,12 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
         <button class="pack-btn" onclick="runPack('denial')"><span class="pack-icon">⚡</span>Pull Denial Recovery</button>
         <button class="pack-btn" onclick="runPack('auth')"><span class="pack-icon">◎</span>Pull Auth Friction</button>
         <button class="pack-btn" onclick="runPack('compliance')"><span class="pack-icon">▲</span>Pull Compliance Sweep</button>
-        <button class="pack-btn" onclick="runPack('executive')"><span class="pack-icon">◆</span>Pull Executive Brief</button>
+        <button class="pack-btn" onclick="runPack('executive')">
+  <span class="pack-icon">◈</span> PULL EXECUTIVE BRIEF
+</button>
+<button class="pack-btn" onclick="escalateToExecPortal()">
+  <span class="pack-icon">⇢</span> ESCALATE / RELAY TO EXEC
+</button>
       </div>
 
       <!-- ══ EXEC BRIEF TAB ══ -->
@@ -823,6 +828,33 @@ async function runPack(packId){
   document.querySelector('.pack-btn[onclick="runPack(\''+packId+'\')"]')?.classList.add('running');
   await callClaude(PACKS[packId], document.getElementById('strat-out'), document.getElementById('thinking-bar'), document.getElementById('strat-err'));
   document.querySelectorAll('.pack-btn').forEach(b=>b.classList.remove('running'));
+}
+
+// ── EXEC PORTAL RELAY WRITER + NAVIGATE ──
+async function escalateToExecPortal(){
+  const btn = document.querySelector('.pack-btn[onclick="escalateToExecPortal()"]');
+  if (btn) { btn.classList.add('running'); btn.dataset.origLabel = btn.innerHTML; btn.innerHTML = '<span class="pack-icon">◈</span> SYNCING...'; }
+  try {
+    const resp = await fetch('/api/hc/query', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        system: 'You are HC-Strategist for HonorHealth. Return ONLY a JSON object, no markdown, matching this exact shape: {"kpi":{"totalAtRisk":"$2.8M","monthlyCollected":"$4.2M","denialRate":"18.4%","dso":"52d","appealWinRate":"68%","netCollection":"94.1%"},"bnca":{"revenuePosition":"short paragraph","denialIntel":"short paragraph","strategistSummary":"short paragraph"},"alerts":{"decisions":[{"urgency":"SIGN NOW|ESCALATE|APPROVE|REVIEW|MONITOR","action":"short description","value":"$XXK","deadline":"e.g. Today · FRI or 72 hrs"}],"urgent":["short alert string"]}}. Use realistic values based on the message data.',
+        message: 'Current HonorHealth data: denial rate 18.4% (target <8%), $2.8M total revenue at risk, $4.2M collected this month (+8% MoM), DSO 52 days (benchmark 45d), appeal win rate 68% ($187K recovered last 90d), net collection rate 94.1% (target 95%). Mesa 22.1% denial CRITICAL, CLM-0334 48hr deadline $5.7K. PR-96 $21.6K, CO-4 $13.4K, CO-11 $8.1K, CO-29 URGENT $5.7K. CMS §482.13 Patient Rights response due today, $24K penalty. Payer relations call needed re: BCBS AZ/Aetna/UHC auth pattern, $48K stalled, 72hrs. HRSA grant submissions $2.9M at risk, 72hrs overdue. Generate the JSON.'
+      })
+    });
+    const data = await resp.json();
+    const txt = (data.output||'').replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(txt);
+    const payload = { ts: Date.now(), enriched: true, ...parsed };
+    sessionStorage.setItem('TSM_EXEC_RELAY', JSON.stringify(payload));
+    window.location.href = 'executive-portal.html';
+  } catch(e) {
+    console.warn('Exec relay sync failed:', e);
+    if (btn) { btn.classList.remove('running'); btn.innerHTML = btn.dataset.origLabel || '⇢ ESCALATE / RELAY TO EXEC'; }
+    alert('Relay sync failed: ' + e.message + ' — navigating without fresh data.');
+    window.location.href = 'executive-portal.html';
+  }
 }
 
 // ── LOAD SIGNALS ──
