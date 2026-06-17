@@ -911,6 +911,7 @@ function clearOut(){
     <span style="display:inline-flex;align-items:center;background:rgba(236,72,153,0.1);border:1px solid rgba(236,72,153,0.3);color:#ec4899;font-size:10px;padding:3px 8px;border-radius:2px;margin:3px;">
       #${Number(r.rank)+1} ${r.appName}
     </span>`).join('');
+
   banner.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:rgba(236,72,153,0.08);border-bottom:1px solid #2a1a2a;cursor:pointer;"
       onclick="const b=this.nextElementSibling;const c=document.getElementById('hcs-banner-chevron');b.style.display=b.style.display==='none'?'block':'none';c.textContent=b.style.display==='none'?'▶':'▼';">
@@ -960,7 +961,6 @@ function clearOut(){
   };
 
   window.runWarRoomDenialPack = function() {
-    // 1. Build or reuse panel first so elements exist for updates
     let dpPanel = document.getElementById('tsm-denial-pack-panel');
     if (!dpPanel) {
       dpPanel = document.createElement('div');
@@ -1036,7 +1036,6 @@ function clearOut(){
       banner.insertAdjacentElement('afterend', dpPanel);
     }
 
-    // 2. Pre-fill metadata panels from the brief data
     const allText = Object.values(brief.engineOutputs||{}).join(' ');
     const claimM  = allText.match(/claim[:\s#-]+([A-Z0-9-]+)/i);
     const codeM   = allText.match(/denial codes?[:\s]+([A-Z0-9,\s-]+)/i);
@@ -1045,13 +1044,11 @@ function clearOut(){
     if(codeM)  document.getElementById('dp-codes').textContent     = codeM[1].trim().slice(0,20);
     if(expM)   document.getElementById('dp-exposure').textContent  = expM[0];
 
-    // 3. Reset visual panel components
     document.getElementById('dp-spinner').style.display = 'flex';
     document.getElementById('dp-output').style.display  = 'none';
     document.getElementById('dp-error').style.display   = 'none';
     dpPanel.scrollIntoView({ behavior:'smooth', block:'nearest' });
 
-    // 4. Construct prompt variable in chronological safety
     const warRoomData = Object.entries(brief.engineOutputs||{})
       .map(([k,v])=>`${k}:\n${v.slice(0,400)}`).join('\n\n');
 
@@ -1082,7 +1079,6 @@ PRIORITY ACTIONS:
 RECOVERY PROBABILITY: [%] — [rationale]
 PATTERN MATCH: [does this match active HonorHealth denial patterns CO-4/CO-11/CO-29/PR-96? Yes/No — detail]`;
 
-    // 5. Fire Groq endpoint inside clean linear scope
     fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+groqKey },
@@ -1108,7 +1104,7 @@ PATTERN MATCH: [does this match active HonorHealth denial patterns CO-4/CO-11/CO
     });
   };
 
-})();
+})(); // Cleans up the singular wrapper level completely
 
 // ── INIT: auto-load score ──
 (async()=>{
