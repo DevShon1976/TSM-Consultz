@@ -1101,6 +1101,7 @@ function loadStratRelay() {
       'Gross Denial Rate': 'denialRate', 'Days Sales Outstanding': 'dso',
       'Appeal Win Rate': 'appealWinRate', 'Net Collection Rate': 'netCollection'
     };
+    const verifiedLabels = { 'totalAtRisk': 'Total Revenue At Risk', 'denialRate': 'Gross Denial Rate' };
     document.querySelectorAll('.kpi').forEach(el => {
       const label = el.querySelector('.kpi-label')?.textContent?.trim();
       const cfg = kpiMap[label];
@@ -1109,6 +1110,18 @@ function loadStratRelay() {
       const deltaEl = el.querySelector('.kpi-delta');
       if (valEl) { valEl.textContent = cfg.val; valEl.className = `kpi-val ${cfg.cls}`; }
       if (deltaEl) { deltaEl.textContent = cfg.delta; }
+      const isVerified = (label === verifiedLabels.totalAtRisk && d.verifiedFields?.includes('totalAtRisk'))
+                       || (label === verifiedLabels.denialRate && d.verifiedFields?.includes('denialRate'));
+      let tag = el.querySelector('.kpi-source-tag');
+      if (!tag) {
+        tag = document.createElement('div');
+        tag.className = 'kpi-source-tag';
+        tag.style.cssText = 'font-size:7px;letter-spacing:0.5px;margin-top:3px;color:#00e676;';
+        el.appendChild(tag);
+      }
+      tag.style.display = isVerified ? 'block' : 'none';
+      tag.textContent = '● LIVE · STRATEGIST CONFIRMED';
+    });
       const fieldKey = kpiFieldMap[label];
       const isVerified = d.verifiedFields?.includes(fieldKey);
       let tag = el.querySelector('.kpi-source-tag');
