@@ -673,6 +673,49 @@ fileInput
     });
 }
 
+/* -------- zip extraction -------- */
+function processZipFile(file, onDone) {
+  function run() {
+    JSZip.loadAsync(file).then(function(zip) {
+      var htmlFiles = [];
+      var promises = [];
+      zip.forEach(function(relativePath, zipEntry) {
+        if (!zipEntry.dir && /\.(html|htm)$/i.test(relativePath)) {
+          var p = zipEntry.async('blob').then(function(blob) {
+            var name = relativePath.split('/').pop();
+            htmlFiles.push(new File([blob], name, { type: 'text/html' }));
+          });
+          promises.push(p);
+        }
+      });
+      Promise.all(promises).then(function() {
+        if (htmlFiles.length) {
+          showToast('Extracted ' + htmlFiles.length + ' HTML file(s) from zip.', 'green');
+          _ingestHTMLFiles(htmlFiles);
+        } else {
+          showToast('No HTML files found in zip.', 'amber');
+        }
+        if (onDone) onDone();
+      });
+    }).catch(function(e) {
+      console.error('ZIP extraction failed', e);
+      showToast('Could not read zip file.', 'red');
+      if (onDone) onDone();
+    });
+  }
+  if (window.JSZip) { run(); return; }
+  if (window._jszipLoading) {
+    var t = setInterval(function(){ if(window.JSZip){clearInterval(t);run();} }, 100);
+    return;
+  }
+  window._jszipLoading = true;
+  var s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+  s.onload = function() { window._jszipLoading = false; run(); };
+  s.onerror = function() { showToast('Could not load JSZip library.', 'red'); if (onDone) onDone(); };
+  document.head.appendChild(s);
+}
+
 /* -------- AI enrichment queue -------- */
 function drainAIQueue(){
   if(aiRunning||!aiQueue.length) return;
@@ -792,92 +835,6 @@ function buildCapabilityEngines(){
 }
 function toneFor(label){return{Elevate:'green',Consolidate:'amber',Review:'amber',Retire:'red','Develop Further':'cyan',Unscored:'gray'}[label]||'gray';}
 
-/* -------- zip extraction -------- */
-function processZipFile(file, onDone) {
-  function run() {
-    JSZip.loadAsync(file).then(function(zip) {
-      var htmlFiles = [];
-      var promises = [];
-      zip.forEach(function(relativePath, zipEntry) {
-        if (!zipEntry.dir && /\.(html|htm)$/i.test(relativePath)) {
-          var p = zipEntry.async('blob').then(function(blob) {
-            var name = relativePath.split('/').pop();
-            htmlFiles.push(new File([blob], name, { type: 'text/html' }));
-          });
-          promises.push(p);
-        }
-      });
-      Promise.all(promises).then(function() {
-        if (htmlFiles.length) {
-          showToast('Extracted ' + htmlFiles.length + ' HTML file(s) from zip.', 'green');
-          _ingestHTMLFiles(htmlFiles);
-        } else {
-          showToast('No HTML files found in zip.', 'amber');
-        }
-        if (onDone) onDone();
-      });
-    }).catch(function(e) {
-      console.error('ZIP extraction failed', e);
-      showToast('Could not read zip file.', 'red');
-      if (onDone) onDone();
-    });
-  }
-  if (window.JSZip) { run(); return; }
-  if (window._jszipLoading) {
-    var t = setInterval(function(){ if(window.JSZip){clearInterval(t);run();} }, 100);
-    return;
-  }
-  window._jszipLoading = true;
-  var s = document.createElement('script');
-  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
-  s.onload = function() { window._jszipLoading = false; run(); };
-  s.onerror = function() { showToast('Could not load JSZip library.', 'red'); if (onDone) onDone(); };
-  document.head.appendChild(s);
-}
-
-/* -------- zip extraction -------- */
-function processZipFile(file, onDone) {
-  function run() {
-    JSZip.loadAsync(file).then(function(zip) {
-      var htmlFiles = [];
-      var promises = [];
-      zip.forEach(function(relativePath, zipEntry) {
-        if (!zipEntry.dir && /\.(html|htm)$/i.test(relativePath)) {
-          var p = zipEntry.async('blob').then(function(blob) {
-            var name = relativePath.split('/').pop();
-            htmlFiles.push(new File([blob], name, { type: 'text/html' }));
-          });
-          promises.push(p);
-        }
-      });
-      Promise.all(promises).then(function() {
-        if (htmlFiles.length) {
-          showToast('Extracted ' + htmlFiles.length + ' HTML file(s) from zip.', 'green');
-          _ingestHTMLFiles(htmlFiles);
-        } else {
-          showToast('No HTML files found in zip.', 'amber');
-        }
-        if (onDone) onDone();
-      });
-    }).catch(function(e) {
-      console.error('ZIP extraction failed', e);
-      showToast('Could not read zip file.', 'red');
-      if (onDone) onDone();
-    });
-  }
-  if (window.JSZip) { run(); return; }
-  if (window._jszipLoading) {
-    var t = setInterval(function(){ if(window.JSZip){clearInterval(t);run();} }, 100);
-    return;
-  }
-  window._jszipLoading = true;
-  var s = document.createElement('script');
-  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
-  s.onload = function() { window._jszipLoading = false; run(); };
-  s.onerror = function() { showToast('Could not load JSZip library.', 'red'); if (onDone) onDone(); };
-  document.head.appendChild(s);
-}
-
 /* -------- render -------- */
 function renderAll(){renderHeaderCounters();renderActiveTab();}
 function renderHeaderCounters(){
@@ -897,54 +854,6 @@ function renderActiveTab(){
   else if(activeTab==='scoring') renderScoring(c);
   else if(activeTab==='report') renderReport(c);
   else if(activeTab==='howto') renderHowTo(c);
-}
-
-function processZipFile(file, onDone) {
-  var script = document.createElement('script');
-  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
-  script.onload = function() {
-    JSZip.loadAsync(file).then(function(zip) {
-      var htmlFiles = [];
-      var promises = [];
-      zip.forEach(function(relativePath, zipEntry) {
-        if (!zipEntry.dir && /\.(html|htm)$/i.test(relativePath)) {
-          var p = zipEntry.async('blob').then(function(blob) {
-            // Reconstruct as a File so processFileList can handle it
-            var name = relativePath.split('/').pop();
-            htmlFiles.push(new File([blob], name, { type: 'text/html' }));
-          });
-          promises.push(p);
-        }
-      });
-      Promise.all(promises).then(function() {
-        if (htmlFiles.length) {
-          showToast('Extracted ' + htmlFiles.length + ' HTML file(s) from zip.', 'green');
-          processFileList(htmlFiles);
-        } else {
-          showToast('No HTML files found in zip.', 'amber');
-        }
-        if (onDone) onDone();
-      });
-    }).catch(function(e) {
-      console.error('ZIP extraction failed', e);
-      showToast('Could not read zip file.', 'red');
-      if (onDone) onDone();
-    });
-  };
-  script.onerror = function() {
-    showToast('Could not load JSZip library.', 'red');
-    if (onDone) onDone();
-  };
-  // Only inject once
-  if (!window._jszipLoaded) {
-    window._jszipLoaded = true;
-    document.head.appendChild(script);
-  } else if (window.JSZip) {
-    script.onload();
-  } else {
-    // Still loading — retry after a tick
-    setTimeout(function() { script.onload(); }, 500);
-  }
 }
 
 function renderDropZone(container){
@@ -1299,6 +1208,19 @@ function applyRestore(){
   }catch(e){showToast("JSON didn't parse — check the file.",'red');}
 }
 
+/* -------- processFileList -------- */
+function processFileList(files) {
+  var arr = Array.isArray(files) ? files : Array.from(files);
+  var zips  = arr.filter(function(f){ return /\.zip$/i.test(f.name); });
+  var htmls = arr.filter(function(f){ return /\.(html|htm)$/i.test(f.name); });
+  if (htmls.length) _ingestHTMLFiles(htmls);
+  zips.forEach(function(z){ processZipFile(z, null); });
+}
+
+function _ingestHTMLFiles(files){
+  /* ---- YOUR ORIGINAL processFileList BODY GOES HERE — do not change anything inside ---- */
+}
+
 /* -------- how to tab -------- */
 function renderHowTo(container) {
   container.innerHTML = '';
@@ -1325,7 +1247,6 @@ function renderHowTo(container) {
 .ht-tip strong{color:#c8fde4;font-weight:500}
 </style>
 <div style="padding:1.5rem 0 0;font-family:inherit">
-
 <div class="ht-section">
   <p class="ht-section-title">Getting started</p>
   <div class="ht-grid">
@@ -1358,7 +1279,6 @@ function renderHowTo(container) {
     </div>
   </div>
 </div>
-
 <div class="ht-section">
   <p class="ht-section-title">The four analysis tabs</p>
   <div class="ht-grid">
@@ -1380,7 +1300,6 @@ function renderHowTo(container) {
     </div>
   </div>
 </div>
-
 <div class="ht-section">
   <p class="ht-section-title">Scoring &amp; recommendation buckets</p>
   <div class="ht-card" style="max-width:100%">
@@ -1402,7 +1321,6 @@ function renderHowTo(container) {
     <p style="font-size:11px;color:#3a6a4a;margin:10px 0 0">Top row = bucket badges on inventory cards &nbsp;|&nbsp; Bottom row = clustering recommendations in the Scoring tab</p>
   </div>
 </div>
-
 <div class="ht-section">
   <p class="ht-section-title">Editing apps</p>
   <div class="ht-grid">
@@ -1420,7 +1338,6 @@ function renderHowTo(container) {
     </div>
   </div>
 </div>
-
 <div class="ht-section">
   <p class="ht-section-title">Data &amp; backup</p>
   <div class="ht-grid">
@@ -1439,7 +1356,6 @@ function renderHowTo(container) {
   </div>
   <div class="ht-tip"><strong>All data lives in your browser's localStorage.</strong> Nothing is sent to a server. Clearing browser data or switching browsers will wipe your portfolio — use Backup (.json) regularly.</div>
 </div>
-
 </div>
 `);
 }
@@ -1469,7 +1385,7 @@ function init(){
   document.getElementById('restoreCancelBtn').addEventListener('click',closeRestore);
   document.getElementById('restoreApplyBtn').addEventListener('click',applyRestore);
   document.getElementById('restoreOverlay').addEventListener('click',function(e){if(e.target.id==='restoreOverlay')closeRestore();});
-  
+
   var resetBtnElement = document.getElementById('resetBtn');
   if(resetBtnElement){
     attachDoubleConfirm(resetBtnElement,'Clear all data','Confirm clear?',function(){
