@@ -798,9 +798,21 @@ const VERTICALS = {
     storageKey: "tsm_doc_index_hc",
     searchPlaceholder: "Search by patient, claim #, payer, CPT/denial code...",
     nodes: {
-      "hc-war-room":  { label:"HC War Room",    route:"/html/hc-denial-war-room.html" },
-      "strategist":   { label:"Strategist",     route:null },
-      "bnca-engine":  { label:"BNCA Escalated", route:null },
+      "hc-war-room":  { label:"HC War Room",      route:"/html/healthcare/hc-denial-war-room.html" },
+      "hc-command":   { label:"HC Command Chain",  route:"/html/healthcare/index.html" },
+      "operations":   { label:"Operations",        route:"/html/healthcare/hc-operations/index.html" },
+      "medical":      { label:"Medical",           route:"/html/healthcare/hc-medical/index.html" },
+      "pharmacy":     { label:"Pharmacy",          route:"/html/healthcare/hc-pharmacy/index.html" },
+      "financial":    { label:"Financial",         route:"/html/healthcare/hc-financial/index.html" },
+      "legal":        { label:"Legal",             route:"/html/healthcare/hc-legal/index.html" },
+      "vendors":      { label:"Vendors",           route:"/html/healthcare/hc-vendors/index.html" },
+      "compliance":   { label:"Compliance",        route:"/html/healthcare/hc-compliance/index.html" },
+      "billing":      { label:"Billing",           route:"/html/healthcare/hc-billing/index.html" },
+      "taxprep":      { label:"Tax Prep",          route:"/html/healthcare/hc-taxprep/index.html" },
+      "grants":       { label:"Grants",            route:"/html/healthcare/hc-grants/index.html" },
+      "insurance":    { label:"Insurance",         route:"/html/healthcare/hc-insurance/index.html" },
+      "strategist":   { label:"Strategist",        route:null },
+      "bnca-engine":  { label:"BNCA Escalated",    route:null },
     },
     seed: [
       { fileName:"Denial_CLM-HC-7731.record",       documentType:"DENIAL",       vendor:"Aetna",  invoiceNo:"CLM-HC-7731", exclusionCode:"CO-50",  amount:8200,  sourceNode:"hc-denial", routing:["hc-denial","strategist"],                  timestamp:Date.now()-1*3600000, _ext:{client:"Patient #4471", ref:"CLM-HC-7731"} },
@@ -1644,5 +1656,313 @@ switchVertical("fo");
     <div id="viewerBody"></div>
   </div>
 </div>
+// ═══════════════════════════════════════════════════════════════════════════
+// PATCH: tsm-doc-search-multi.html
+// ADD THIS SCRIPT BLOCK just before </body> (after existing scripts)
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── HC DOC-TYPE → NODE PAGE ROUTING ───────────────────────────────────────
+// Maps document characteristics to the most relevant HC node page.
+// Used by openHcNodeWithDoc() below.
+const HC_DOC_NODE_ROUTES = {
+  // documentType → primaryNodeId
+  'DENIAL':          'billing',
+  'CLAIM APPEAL':    'billing',
+  'REMITTANCE':      'billing',
+  'PRIOR AUTH':      'insurance',
+  'DOCUMENT REPORT': 'operations',   // generic — operations is the catch-all
+  'CLINICAL':        'medical',
+  'MEDICAL RECORD':  'medical',
+  'AUDIT':           'compliance',
+  'POLICY':          'compliance',
+  'PHARMACY':        'pharmacy',
+  'RX':              'pharmacy',
+  'VENDOR INVOICE':  'vendor',
+  'GRANT':           'grants',
+  'TAX':             'tax',
+  'FILING':          'legal',
+  'CONTRACT':        'legal',
+  'ESCALATION':      'billing',      // BNCA escalations default to billing
+};
+
+// exclusionCode prefix → nodeId override
+const HC_CODE_NODE_MAP = [
+  { prefix:'CO-',    node:'billing' },
+  { prefix:'PR-',    node:'insurance' },
+  { prefix:'OA-',    node:'financial' },
+  { prefix:'PA-',    node:'insurance' },
+  { prefix:'LIEN',   node:'legal' },
+  { prefix:'PRIV',   node:'legal' },
+  { prefix:'AKS',    node:'legal' },
+  { prefix:'SLA-',   node:'operations' },
+  { prefix:'AR-',    node:'financial' },
+  { prefix:'COD-',   node:'compliance' },
+];
+
+// Node ID → Analysis Hub intel key (matches healthcare/index.html NODE_INTELLIGENCE keys)
+const HC_NODE_TO_INTEL_KEY = {
+  'billing':    'billing',
+  'compliance': 'compliance',
+  'medical':    'medical',
+  'insurance':  'insurance',
+  'operations': 'operations',
+  'pharmacy':   'pharmacy',
+  'financial':  'financial',
+  'legal':      'legal',
+  'vendor':     'vendor',
+  'tax':        'tax',
+  'grants':     'grants',
+};
+
+// War room URL for HC (used in banner CTA)
+const HC_WAR_ROOM_URL = '/html/healthcare/hc-denial-war-room.html';
+
+// ── OPEN HC NODE WITH DOC ANOMALY CONTEXT ─────────────────────────────────
+// Called by the "↗ Open Node" button on HC vertical doc cards.
+// 1. Resolves which HC node page best matches this doc
+// 2. Derives anomaly payload from doc metadata
+// 3. Writes to localStorage key 'tsm-doc-anomaly' (picked up by bridge script)
+// 4. Opens the node page in a new tab
+function openHcNodeWithDoc(docId) {
+  // Find doc across all verticals
+  const allDocs = (() => {
+    const vKeys = Object.keys(window.VERTICALS || {});
+    let found = null;
+    for (const v of vKeys) {
+      const list = (() => { try { return JSON.parse(localStorage.getItem(window.VERTICALS[v]?.storageKey)||'[]'); } catch(e){return[];} })();
+      found = list.find(d => d.id === docId);
+      if (found) break;
+    }
+    // Also check dual-vertical docs
+    if (!found && window.DUAL_DOCS) {
+      found = window.DUAL_DOCS.find(d => d.id === docId);
+    }
+    return found;
+  })();
+
+  const doc = allDocs;
+  if (!doc) { console.warn('TSM: doc not found for id', docId); return; }
+
+  // ── Resolve target node ──────────────────────────────────────────────
+  let nodeId = 'billing'; // fallback
+  const docType   = (doc.documentType || '').toUpperCase();
+  const excCode   = (doc.exclusionCode || '').toUpperCase();
+  const fileName  = (doc.fileName || '').toUpperCase();
+
+  // 1. Try exclusionCode prefix match
+  for (const { prefix, node } of HC_CODE_NODE_MAP) {
+    if (excCode.startsWith(prefix) || fileName.includes(prefix)) { nodeId = node; break; }
+  }
+  // 2. Try documentType match (only if code didn't match)
+  if (nodeId === 'billing') {
+    for (const [key, node] of Object.entries(HC_DOC_NODE_ROUTES)) {
+      if (docType.includes(key)) { nodeId = node; break; }
+    }
+  }
+  // 3. sourceNode hint (e.g. "hc-insurance" → "insurance")
+  if (doc.sourceNode && doc.sourceNode.startsWith('hc-')) {
+    const fromSource = doc.sourceNode.replace(/^hc-/,'');
+    if (HC_NODE_TO_INTEL_KEY[fromSource]) nodeId = fromSource;
+  }
+
+  // ── Build anomaly payload ────────────────────────────────────────────
+  // Pull NODE_INTELLIGENCE from the HC hub if available in this tab's
+  // scope (it won't be — this is multi.html). So we build a lightweight
+  // payload from the doc itself. The bridge will use this to render the
+  // banner; it doesn't need the full Analysis Hub intel.
+  const hasAnomaly = !!(doc.exclusionCode || (doc._ext && doc._ext.defectFlags && doc._ext.defectFlags.length));
+  const defectFlags = (doc._ext && doc._ext.defectFlags) || [];
+  const amount = Number(doc.amount) || 0;
+
+  // Derive checkStatus from exclusion code and doc type
+  function deriveCheckStatus(excCode, docType) {
+    if (excCode.startsWith('CO-197') || docType.includes('PRIOR AUTH') || excCode.startsWith('PA-')) return 'AUTH_BLOCK';
+    if (excCode.startsWith('CO-') || docType.includes('DENIAL') || docType.includes('CLAIM APPEAL')) return 'DENIAL_RISK';
+    if (excCode.startsWith('PR-') || excCode.startsWith('OA-')) return 'PAYMENT_BLOCK';
+    if (excCode.startsWith('LIEN') || excCode.startsWith('PRIV') || excCode.startsWith('AKS')) return 'LEGAL_HOLD';
+    if (excCode.startsWith('PA-')) return 'AUTH_BLOCK';
+    if (docType.includes('AUDIT') || docType.includes('HIPAA') || docType.includes('POLICY')) return 'COMPLIANCE_BLOCK';
+    if (docType.includes('ESCALATION')) return 'DENIAL_RISK';
+    if (defectFlags.length) return 'DOCUMENTATION_BLOCK';
+    return 'ACTIVE';
+  }
+
+  // Derive human-readable narrative
+  function buildNarrative(doc, nodeId, checkStatus) {
+    const ref    = doc.invoiceNo || doc._ext?.ref || '—';
+    const vendor = doc.vendor || 'payer';
+    const client = doc._ext?.client || 'patient';
+    const code   = doc.exclusionCode || doc.documentType || 'anomaly';
+    const amt    = amount > 0 ? ` ($${amount.toLocaleString()} exposure)` : '';
+    switch(checkStatus) {
+      case 'DENIAL_RISK':
+        return `Denial detected on ${ref} from ${vendor} for ${client}${amt}. Code: ${code}. Immediate billing review required — do not resubmit without resolution.`;
+      case 'AUTH_BLOCK':
+        return `Prior authorization issue on ${ref}${amt}. Procedures must NOT proceed — denial risk is 100% without resolved auth. Contact ${vendor} payer line.`;
+      case 'PAYMENT_BLOCK':
+        return `Payment processing anomaly on ${ref} from ${vendor}${amt}. ERA/remittance requires manual reconciliation before posting.`;
+      case 'COMPLIANCE_BLOCK':
+        return `Compliance flag on document ${ref}${amt}. Documentation gaps or authorization issues must be resolved before billing can proceed.`;
+      case 'LEGAL_HOLD':
+        return `Legal anomaly detected on ${ref}. Code ${code} requires legal review before any further action on this account.`;
+      case 'DOCUMENTATION_BLOCK':
+        return `Documentation defects found in ${doc.fileName || ref}: ${defectFlags.join(', ')}. Clinical records must be corrected before billing release.`;
+      default:
+        return `Anomaly detected on ${doc.fileName || ref} routed from Document Search${amt}. Review and resolve before proceeding.`;
+    }
+  }
+
+  // Derive remediation steps from doc type + code
+  function buildSteps(nodeId, checkStatus, doc) {
+    const ref  = doc.invoiceNo || '—';
+    const code = doc.exclusionCode || '';
+    const stepSets = {
+      'DENIAL_RISK': [
+        `Pull full EOB/ERA for ${ref} — identify exact CARC/RARC denial reason codes`,
+        `Verify claim was submitted correctly — check CPT/ICD-10 pairing and modifier alignment`,
+        `Determine appeal window — timely filing deadline must be confirmed before proceeding`,
+        `Draft appeal letter with medical necessity documentation attached`,
+        `Submit via payer portal and log tracking number in AR system`,
+      ],
+      'AUTH_BLOCK': [
+        `Verify current prior auth status for all procedures on ${ref}`,
+        `Contact payer prior auth line — escalate if wait exceeds 2 hours`,
+        `Do NOT perform or bill procedure until auth is confirmed and on file`,
+        `Document auth number in claim header before submission`,
+        `Set follow-up reminder at 48-hour intervals until resolved`,
+      ],
+      'PAYMENT_BLOCK': [
+        `Manually pull ${ref} ERA/835 file and compare posted amounts to contracted rate`,
+        `Flag any variance exceeding 5% as an underpayment — initiate appeal`,
+        `Check for payer hold notification — contact payer relations if hold is active`,
+        `Post clean items and quarantine disputed amounts pending resolution`,
+        `Escalate unresolved ERA failures to financial analyst within 24 hours`,
+      ],
+      'COMPLIANCE_BLOCK': [
+        `Halt billing on ${ref} until all compliance flags are cleared`,
+        `Obtain updated HIPAA authorization if expired — do not release claim without it`,
+        `Verify OIG exclusion list for all providers on this account`,
+        `Complete documentation checklist before releasing to billing queue`,
+        `File compliance resolution memo and update compliance score tracker`,
+      ],
+      'LEGAL_HOLD': [
+        `Escalate ${ref} to legal counsel immediately — do not take further action without review`,
+        `Document chain of custody for all files related to this account`,
+        `Suspend any vendor payments pending legal clearance`,
+        `Prepare regulatory defense memo if requested by counsel`,
+        `Set 48-hour check-in cadence with legal team until hold is lifted`,
+      ],
+      'DOCUMENTATION_BLOCK': [
+        `Identify specific defects: ${(defectFlags.join(', ')) || 'see findings above'}`,
+        `Send provider query with 24-hour response expectation`,
+        `Block claim release for all encounters with missing documentation`,
+        `Route corrected records back to medical coding for ICD-10 validation`,
+        `Re-submit to billing queue only after defects are fully resolved`,
+      ],
+    };
+    return stepSets[checkStatus] || [
+      `Review ${doc.fileName || ref} for anomalies`,
+      `Escalate to appropriate node specialist`,
+      `Document findings and resolution in AR system`,
+      `Follow up within 48 hours`,
+    ];
+  }
+
+  const checkStatus = hasAnomaly ? deriveCheckStatus(excCode, docType) : 'ACTIVE';
+  const narrative   = buildNarrative(doc, nodeId, checkStatus);
+  const steps       = buildSteps(nodeId, checkStatus, doc);
+
+  // Findings from defectFlags or derived from code
+  const findings = defectFlags.length
+    ? defectFlags.map(f => `❌ ${f}`)
+    : (excCode
+        ? [`❌ ${excCode} — ${doc.documentType || 'Document anomaly'} on ${doc.invoiceNo || doc.fileName || 'this record'}`,
+           `❌ Source: ${doc.vendor || 'Unknown vendor'} · Client: ${doc._ext?.client || '—'}`,
+           `❌ Routed from: Document Search · Node origin: ${doc.sourceNode || 'hc'}`]
+        : [`⚠️ Document routed with flags — review before action`]);
+
+  const anomalyPayload = {
+    // Core anomaly fields
+    checkStatus,
+    severity:         checkStatus.includes('CRITICAL') || ['DENIAL_RISK','AUTH_BLOCK','PAYMENT_BLOCK','LEGAL_HOLD','COMPLIANCE_BLOCK'].includes(checkStatus) ? 'CRITICAL' : 'HIGH',
+    narrative,
+    findings,
+    steps,
+    financialImpact:  amount,
+    risk:             amount > 50000 ? 82 : amount > 10000 ? 68 : 55,
+
+    // Doc identity
+    fileName:         doc.fileName || '',
+    documentType:     doc.documentType || '',
+    docType:          doc.documentType || '',
+    ref:              doc.invoiceNo || doc._ext?.ref || '',
+    client:           doc._ext?.client || '',
+    exclusionCode:    doc.exclusionCode || '',
+    vendor:           doc.vendor || '',
+
+    // Routing context
+    nodeId,
+    targetNodeIds:    [nodeId],    // bridge affinity override
+    source:           'doc-search',
+    warRoomUrl:       HC_WAR_ROOM_URL,
+
+    // Timestamps
+    ts:               Date.now(),
+    timestamp:        new Date().toISOString(),
+  };
+
+  // ── Write to localStorage ────────────────────────────────────────────
+  try {
+    localStorage.setItem('tsm-doc-anomaly', JSON.stringify(anomalyPayload));
+    // Also mirror into tsm-last-analysis so HC hub Analysis Hub can see it
+    localStorage.setItem('tsm-last-analysis', JSON.stringify({
+      ...anomalyPayload,
+      missionKey: nodeId,
+      type:       nodeId,
+    }));
+  } catch(e) {
+    console.warn('TSM: localStorage write failed', e);
+  }
+
+  // ── Open node page ───────────────────────────────────────────────────
+  const nodeUrl = `/html/healthcare/hc-${nodeId}/index.html`;
+  window.open(nodeUrl, '_blank');
+}
+
+// Expose globally
+window.openHcNodeWithDoc = openHcNodeWithDoc;
+
+// ── PATCH: override the card "↗ Open Node" link for HC vertical ─────────
+// The existing renderDocCard() builds openNodeRoute from def.nodes[sourceNode].route.
+// For HC docs, that resolves to hc-denial-war-room — not the node pages.
+// We monkey-patch the card insertion to replace HC open-node links.
+(function patchHcOpenNode() {
+  const _origInsert = Element.prototype.insertAdjacentHTML;
+  // Instead of patching DOM insertion (fragile), we attach a delegated click
+  // handler that intercepts "↗ Open Node" links inside HC tab doc cards.
+  document.addEventListener('click', function(e) {
+    const link = e.target.closest('.btn-open-node');
+    if (!link) return;
+    // Only intercept if we're on the HC vertical tab
+    const activeTab = document.querySelector('.tab-btn.active, .vertical-tab.active, [data-v].active');
+    const isHC = (
+      (activeTab && (activeTab.dataset.v === 'hc' || activeTab.textContent.includes('HEALTHCARE'))) ||
+      document.querySelector('.tab-btn[data-v="hc"].active') !== null ||
+      // Fallback: check if the card is in an HC section
+      link.closest('[data-vertical="hc"]') !== null ||
+      link.closest('#tab-hc') !== null
+    );
+    if (!isHC) return;
+    // Get doc id from closest card
+    const card = link.closest('[data-id]');
+    if (!card) return;
+    e.preventDefault();
+    openHcNodeWithDoc(card.dataset.id);
+  }, true);
+})();
+
+// ═══════════════════════════════════════════════════════════════════════════
+// END PATCH
+// ═══════════════════════════════════════════════════════════════════════════
 </body>
 </html>
