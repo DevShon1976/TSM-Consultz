@@ -1221,6 +1221,70 @@ PATTERN MATCH: [does this match active HonorHealth denial patterns CO-4/CO-11/CO
     }
   },800);
 })();
+
+// === Exec Feedback Reader (sibling to War Room Brief Receiver) ===
+(function(){
+  function getExecFeedback(){
+    try {
+      const s = JSON.parse(sessionStorage.getItem('TSM_EXEC_FEEDBACK') || 'null');
+      if (s && s.length) return s;
+    } catch(e){}
+    try { return JSON.parse(localStorage.getItem('TSM_EXEC_FEEDBACK') || '[]'); }
+    catch(e){ return []; }
+  }
+
+  function setExecFeedback(arr){
+    sessionStorage.setItem('TSM_EXEC_FEEDBACK', JSON.stringify(arr));
+    localStorage.setItem('TSM_EXEC_FEEDBACK', JSON.stringify(arr));
+  }
+
+  function renderExecFeedback(){
+    const feedback = getExecFeedback();
+    let panel = document.getElementById('exec-feedback-panel');
+
+    if (!feedback.length) { if (panel) panel.remove(); return; }
+
+    if (!panel) {
+      panel = document.createElement('div');
+      panel.id = 'exec-feedback-panel';
+      panel.style.cssText = 'position:fixed;bottom:20px;left:20px;width:340px;max-height:60vh;overflow-y:auto;background:#0a0e16;border:1px solid rgba(255,193,7,0.4);border-radius:4px;box-shadow:0 4px 20px rgba(0,0,0,0.6);z-index:9999;font-family:monospace;';
+      document.body.appendChild(panel);
+    }
+
+    panel.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #222;cursor:pointer;" onclick="const l=document.getElementById('exec-feedback-list');l.style.display=l.style.display==='none'?'block':'none';">
+        <span style="color:#ffc107;font-size:10px;letter-spacing:2px;font-weight:bold;">⚡ EXEC FEEDBACK (${feedback.length})</span>
+        <span style="color:#888;font-size:9px;">▼</span>
+      </div>
+      <div id="exec-feedback-list" style="padding:8px;">
+        ${feedback.slice().reverse().map((f, idx) => {
+          const realIdx = feedback.length - 1 - idx;
+          return `
+          <div style="background:#0d1320;border:1px solid #222;border-radius:2px;padding:8px;margin-bottom:6px;font-size:10px;">
+            <div style="color:#ffc107;font-size:9px;letter-spacing:1px;margin-bottom:3px;">${f.officeManager}</div>
+            <div style="color:#ccc;margin-bottom:4px;">${f.decisionAction}</div>
+            <div style="color:#aaa;background:#080b12;padding:6px;border-left:2px solid #00e5ff;margin-bottom:4px;">${f.note}</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="color:#666;font-size:8px;">${new Date(f.ts).toLocaleString('en-US',{hour12:false})} · ${f.from}</span>
+              <button onclick="dismissExecFeedback(${realIdx})" style="background:none;border:1px solid #333;color:#666;font-size:8px;padding:2px 8px;cursor:pointer;border-radius:2px;">DISMISS</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+  }
+
+  window.dismissExecFeedback = function(i){
+    const feedback = getExecFeedback();
+    feedback.splice(i, 1);
+    setExecFeedback(feedback);
+    renderExecFeedback();
+  };
+
+  renderExecFeedback();
+  window.addEventListener('storage', function(e){
+    if (e.key === 'TSM_EXEC_FEEDBACK') renderExecFeedback();
+  });
+})();
 </script>
 </body>
 </html>
