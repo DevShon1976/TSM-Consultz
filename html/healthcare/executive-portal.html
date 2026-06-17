@@ -1159,6 +1159,7 @@ function loadStratRelay() {
                 <button onclick="sendExecFeedback(${i}, '${dec.action.replace(/'/g,"\\'")}', '${dec.value}')" style="background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.3);color:#00e676;font-family:monospace;font-size:9px;letter-spacing:1px;padding:5px 14px;cursor:pointer;border-radius:2px;">SEND TO STRATEGIST</button>
                 <span id="respond-status-${i}" style="font-size:9px;color:#00e676;"></span>
               </div>
+              <div id="sent-log-${i}"></div>
             </div>
           </div>`).join('');
 
@@ -1167,8 +1168,22 @@ function loadStratRelay() {
           if (box) box.style.display = box.style.display === 'none' ? 'block' : 'none';
         };
 
+        window.renderSentLog = function(i, action){
+          const log = document.getElementById('sent-log-'+i);
+          if (!log) return;
+          let feedback = [];
+          try { feedback = JSON.parse(sessionStorage.getItem('TSM_EXEC_FEEDBACK')||localStorage.getItem('TSM_EXEC_FEEDBACK')||'[]'); } catch(e){ feedback = []; }
+          const matches = feedback.filter(f => f.decisionAction === action).sort((a,b)=>b.ts-a.ts);
+          if (!matches.length) { log.innerHTML = ''; return; }
+          log.innerHTML = '<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #222;font-size:8px;color:#666;letter-spacing:1px;">SENT (' + matches.length + ')</div>' +
+            matches.map(f => `<div style="background:#0a0e16;border-left:2px solid #00e676;padding:6px 8px;margin-top:4px;color:#aaa;font-size:10px;">${f.note}<div style="color:#555;font-size:8px;margin-top:3px;">${new Date(f.ts).toLocaleString('en-US',{hour12:false})}</div></div>`).join('');
+        };
+
+        d.alerts.decisions.forEach((dec, i) => renderSentLog(i, dec.action));
+
         window.sendExecFeedback = function(i, action, value){
-          const text = document.getElementById('respond-text-'+i)?.value?.trim();
+          const textEl = document.getElementById('respond-text-'+i);
+          const text = textEl?.value?.trim();
           if (!text) { alert('Enter a note before sending.'); return; }
           const om = action.match(/Mesa/i) ? 'Mesa Family Practice OM'
                    : action.match(/Scottsdale/i) ? 'Scottsdale Primary Care OM'
@@ -1182,6 +1197,8 @@ function loadStratRelay() {
           localStorage.setItem('TSM_EXEC_FEEDBACK', JSON.stringify(existing));
           const status = document.getElementById('respond-status-'+i);
           if (status) status.textContent = '✓ Sent to strategist';
+          if (textEl) textEl.value = '';
+          renderSentLog(i, action);
         };
       }
     }
