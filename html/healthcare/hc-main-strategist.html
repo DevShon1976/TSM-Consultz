@@ -1079,19 +1079,17 @@ PRIORITY ACTIONS:
 RECOVERY PROBABILITY: [%] — [rationale]
 PATTERN MATCH: [does this match active HonorHealth denial patterns CO-4/CO-11/CO-29/PR-96? Yes/No — detail]`;
 
-    fetch('https://api.groq.com/openai/v1/chat/completions', {
+    fetch('/api/hc/query', {
       method: 'POST',
-      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+groqKey },
+      headers: { 'Content-Type':'application/json' },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        max_tokens: 700,
-        temperature: 0.2,
-        messages: [{ role:'user', content: prompt }]
+        system: 'You are the HC Strategist Denial Pack engine for HonorHealth. Follow the requested output format exactly.',
+        message: prompt
       })
     })
     .then(r => r.json())
     .then(d => {
-      const txt = d.choices?.[0]?.message?.content || '';
+      const txt = d.output || '';
       if(!txt) throw new Error('Empty response');
       document.getElementById('dp-spinner').style.display = 'none';
       document.getElementById('dp-output').style.display  = 'block';
