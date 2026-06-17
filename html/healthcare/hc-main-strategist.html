@@ -1119,14 +1119,22 @@ PATTERN MATCH: [does this match active HonorHealth denial patterns CO-4/CO-11/CO
         })
       });
       const data = await resp.json();
+      console.log('strat-score raw response:', data);
       if(data.output){
         const txt = data.output.replace(/```json|```/g,'').trim();
         const parsed = JSON.parse(txt);
         document.getElementById('strat-score').textContent=parsed.score;
         document.getElementById('strat-score').className='kpi-v '+(parsed.score<60?'vr':parsed.score<75?'va':'vg');
         document.getElementById('strat-score-sub').textContent=parsed.label;
+      } else {
+        document.getElementById('strat-score').textContent='ERR';
+        document.getElementById('strat-score-sub').textContent='no data.output';
       }
-    } catch(e){}
+    } catch(e){
+      console.error('strat-score fetch failed:', e);
+      document.getElementById('strat-score').textContent='ERR';
+      document.getElementById('strat-score-sub').textContent=e.message;
+    }
   },800);
 })();
 </script>
