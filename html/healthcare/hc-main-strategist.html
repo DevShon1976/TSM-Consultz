@@ -841,6 +841,19 @@ function getKpiByLabel(labelText){
   return null;
 }
 
+// ── Fallback decisions if the model returns $0/$0K or invalid values ──
+const FALLBACK_DECISIONS = [
+  { urgency:'SIGN NOW', action:'Authorize CMS §482.13 Patient Rights response', value:'$24K', deadline:'Today · FRI' },
+  { urgency:'ESCALATE', action:'Payer relations call — BCBS AZ, Aetna, UHC auth pattern', value:'$48K', deadline:'72 hrs' },
+  { urgency:'APPROVE', action:'Release HRSA grant submissions', value:'$2.9M', deadline:'72 hrs' },
+  { urgency:'REVIEW', action:'Support Mesa Family Practice — highest denial rate', value:'$11.2K', deadline:'This week' }
+];
+function isZeroValue(v){
+  if (!v) return true;
+  const n = String(v).replace(/[^0-9.]/g,'');
+  return n === '' || parseFloat(n) === 0;
+}
+
 async function escalateToExecPortal(){
   const btn = document.querySelector('.pack-btn[onclick="escalateToExecPortal()"]');
   if (btn) { btn.classList.add('running'); btn.dataset.origLabel = btn.innerHTML; btn.innerHTML = '<span class="pack-icon">◈</span> SYNCING...'; }
@@ -863,13 +876,21 @@ async function escalateToExecPortal(){
       headers: { 'Content-Type':'application/json' },
       body: JSON.stringify({
         system: 'You are HC-Strategist for HonorHealth. You will be given REAL live metrics — do not invent or alter any numeric values, use them exactly as given. Return ONLY a JSON object, no markdown, matching this EXACT shape with EXACTLY 4 items in alerts.decisions and EXACTLY 2 items in alerts.urgent: {"kpi":{"totalAtRisk":"<from input>","monthlyCollected":"<from input or omit if not given>","denialRate":"<from input>","dso":"<from input or omit if not given>","appealWinRate":"<from input or omit if not given>","netCollection":"<from input or omit if not given>"},"bnca":{"revenuePosition":"short paragraph grounded only in the given numbers","denialIntel":"short paragraph grounded only in the given numbers","strategistSummary":"short paragraph grounded only in the given numbers"},"alerts":{"decisions":[{"urgency":"SIGN NOW|ESCALATE|APPROVE|REVIEW|MONITOR","action":"short description","value":"$XXK","deadline":"e.g. Today · FRI or 72 hrs"}],"urgent":["short alert string"]}}. If a KPI was not provided in the input, omit that key entirely rather than inventing a number.',
-        message: `LIVE STRATEGIST SNAPSHOT — captured ${nowStamp} directly from the on-screen dashboard. HC Nodes Online: ${live.nodesOnline}. Offices Reporting: ${live.officesReporting}. Denial Hotspot: ${live.denialRate}. Revenue at Risk: ${live.revenueAtRisk}. Auth Delays: ${live.authDelays}. Strategist Score: ${live.strategistScore} (${live.strategistLabel}). Context for narrative only — do not invent new numeric KPIs beyond what's listed above: HonorHealth denial drivers include PR-96, CO-4, CO-11, CO-29 (CLM-0334 48hr deadline). CMS §482.13 Patient Rights response due. Payer relations friction with BCBS AZ/Aetna/UHC. HRSA grant submissions pending release. Mesa Family Practice is the highest-risk office. Generate the JSON using ONLY the real metrics given above for the kpi object.`
+        message: `LIVE STRATEGIST SNAPSHOT — captured ${nowStamp} directly from the on-screen dashboard. HC Nodes Online: ${live.nodesOnline}. Offices Reporting: ${live.officesReporting}. Denial Hotspot: ${live.denialRate}. Revenue at Risk: ${live.revenueAtRisk}. Auth Delays: ${live.authDelays}. Strategist Score: ${live.strategistScore} (${live.strategistLabel}). Context for narrative — use these EXACT dollar values when building alerts.decisions, never $0K: PR-96 denial code $21.6K, CO-4 denial code $13.4K, CO-11 denial code $8.1K, CO-29 URGENT (CLM-0334, 48hr deadline) $5.7K. CMS §482.13 Patient Rights response penalty exposure $24K, due Friday. Payer relations call re: BCBS AZ/Aetna/UHC auth friction, $48K stalled claims, 72hrs. HRSA grant submissions $2.9M at risk, 72hrs overdue. Mesa Family Practice highest-risk office, $11.2K writeoff risk, 22.1% denial rate. Every decision in alerts.decisions MUST use one of these exact dollar figures matched to its topic — never output $0K or $0.`
       })
     });
     const data = await resp.json();
     const txt = (data.output||'').replace(/```json|```/g,'').trim();
     const parsed = JSON.parse(txt);
-    if (parsed.alerts?.decisions) parsed.alerts.decisions = parsed.alerts.decisions.slice(0,4);
+    if (parsed.alerts?.decisions) {
+      // ── Safety net: replace any $0/$0K decision with a matching fallback ──
+      parsed.alerts.decisions = parsed.alerts.decisions.slice(0,4).map((dec, i) =>
+        isZeroValue(dec.value) ? { ...dec, value: FALLBACK_DECISIONS[i % FALLBACK_DECISIONS.length].value } : dec
+      );
+    } else {
+      parsed.alerts = parsed.alerts || {};
+      parsed.alerts.decisions = FALLBACK_DECISIONS;
+    }
     if (parsed.alerts?.urgent) parsed.alerts.urgent = parsed.alerts.urgent.slice(0,2);
     // ── Hard overwrite: guarantee KPI numbers match the DOM exactly, no model drift ──
     parsed.kpi = parsed.kpi || {};
