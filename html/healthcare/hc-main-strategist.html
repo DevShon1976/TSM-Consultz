@@ -831,22 +831,55 @@ async function runPack(packId){
 }
 
 // ── EXEC PORTAL RELAY WRITER + NAVIGATE ──
+// ── Read a KPI tile's value by its label text ──
+function getKpiByLabel(labelText){
+  const tiles = document.querySelectorAll('.kpi-row .kpi');
+  for (const tile of tiles){
+    const label = tile.querySelector('.kpi-l')?.textContent?.trim();
+    if (label === labelText) return tile.querySelector('.kpi-v')?.textContent?.trim() || null;
+  }
+  return null;
+}
+
 async function escalateToExecPortal(){
   const btn = document.querySelector('.pack-btn[onclick="escalateToExecPortal()"]');
   if (btn) { btn.classList.add('running'); btn.dataset.origLabel = btn.innerHTML; btn.innerHTML = '<span class="pack-icon">◈</span> SYNCING...'; }
+
+  // ── Pull REAL values straight off the live strategist DOM, no fallback fakes ──
+  const live = {
+    nodesOnline:    getKpiByLabel('HC Nodes Online'),
+    officesReporting: getKpiByLabel('Offices Reporting'),
+    denialRate:     getKpiByLabel('Denial Hotspot'),
+    revenueAtRisk:  getKpiByLabel('Revenue at Risk'),
+    authDelays:     getKpiByLabel('Auth Delays'),
+    strategistScore: document.getElementById('strat-score')?.textContent?.trim() || null,
+    strategistLabel: document.getElementById('strat-score-sub')?.textContent?.trim() || null
+  };
+  const nowStamp = new Date().toLocaleString();
+
   try {
     const resp = await fetch('/api/hc/query', {
       method: 'POST',
       headers: { 'Content-Type':'application/json' },
       body: JSON.stringify({
-        system: 'You are HC-Strategist for HonorHealth. Return ONLY a JSON object, no markdown, matching this exact shape: {"kpi":{"totalAtRisk":"$2.8M","monthlyCollected":"$4.2M","denialRate":"18.4%","dso":"52d","appealWinRate":"68%","netCollection":"94.1%"},"bnca":{"revenuePosition":"short paragraph","denialIntel":"short paragraph","strategistSummary":"short paragraph"},"alerts":{"decisions":[{"urgency":"SIGN NOW|ESCALATE|APPROVE|REVIEW|MONITOR","action":"short description","value":"$XXK","deadline":"e.g. Today · FRI or 72 hrs"}],"urgent":["short alert string"]}}. Use realistic values based on the message data.',
-        message: 'Current HonorHealth data: denial rate 18.4% (target <8%), $2.8M total revenue at risk, $4.2M collected this month (+8% MoM), DSO 52 days (benchmark 45d), appeal win rate 68% ($187K recovered last 90d), net collection rate 94.1% (target 95%). Mesa 22.1% denial CRITICAL, CLM-0334 48hr deadline $5.7K. PR-96 $21.6K, CO-4 $13.4K, CO-11 $8.1K, CO-29 URGENT $5.7K. CMS §482.13 Patient Rights response due today, $24K penalty. Payer relations call needed re: BCBS AZ/Aetna/UHC auth pattern, $48K stalled, 72hrs. HRSA grant submissions $2.9M at risk, 72hrs overdue. Generate the JSON.'
+        system: 'You are HC-Strategist for HonorHealth. You will be given REAL live metrics — do not invent or alter any numeric values, use them exactly as given. Return ONLY a JSON object, no markdown, matching this EXACT shape with EXACTLY 4 items in alerts.decisions and EXACTLY 2 items in alerts.urgent: {"kpi":{"totalAtRisk":"<from input>","monthlyCollected":"<from input or omit if not given>","denialRate":"<from input>","dso":"<from input or omit if not given>","appealWinRate":"<from input or omit if not given>","netCollection":"<from input or omit if not given>"},"bnca":{"revenuePosition":"short paragraph grounded only in the given numbers","denialIntel":"short paragraph grounded only in the given numbers","strategistSummary":"short paragraph grounded only in the given numbers"},"alerts":{"decisions":[{"urgency":"SIGN NOW|ESCALATE|APPROVE|REVIEW|MONITOR","action":"short description","value":"$XXK","deadline":"e.g. Today · FRI or 72 hrs"}],"urgent":["short alert string"]}}. If a KPI was not provided in the input, omit that key entirely rather than inventing a number.',
+        message: `LIVE STRATEGIST SNAPSHOT — captured ${nowStamp} directly from the on-screen dashboard. HC Nodes Online: ${live.nodesOnline}. Offices Reporting: ${live.officesReporting}. Denial Hotspot: ${live.denialRate}. Revenue at Risk: ${live.revenueAtRisk}. Auth Delays: ${live.authDelays}. Strategist Score: ${live.strategistScore} (${live.strategistLabel}). Context for narrative only — do not invent new numeric KPIs beyond what's listed above: HonorHealth denial drivers include PR-96, CO-4, CO-11, CO-29 (CLM-0334 48hr deadline). CMS §482.13 Patient Rights response due. Payer relations friction with BCBS AZ/Aetna/UHC. HRSA grant submissions pending release. Mesa Family Practice is the highest-risk office. Generate the JSON using ONLY the real metrics given above for the kpi object.`
       })
     });
     const data = await resp.json();
     const txt = (data.output||'').replace(/```json|```/g,'').trim();
     const parsed = JSON.parse(txt);
-    const payload = { ts: Date.now(), enriched: true, ...parsed };
+    if (parsed.alerts?.decisions) parsed.alerts.decisions = parsed.alerts.decisions.slice(0,4);
+    if (parsed.alerts?.urgent) parsed.alerts.urgent = parsed.alerts.urgent.slice(0,2);
+    // ── Hard overwrite: guarantee KPI numbers match the DOM exactly, no model drift ──
+    parsed.kpi = parsed.kpi || {};
+    if (live.revenueAtRisk) parsed.kpi.totalAtRisk = live.revenueAtRisk;
+    if (live.denialRate) parsed.kpi.denialRate = live.denialRate;
+    // ── Track which KPI fields are verified-live vs AI-narrated ──
+    const verifiedFields = [];
+    if (live.revenueAtRisk) verifiedFields.push('totalAtRisk');
+    if (live.denialRate) verifiedFields.push('denialRate');
+    const payload = { ts: Date.now(), enriched: true, sourceSnapshot: live, verifiedFields, ...parsed };
     sessionStorage.setItem('TSM_EXEC_RELAY', JSON.stringify(payload));
     window.location.href = 'executive-portal.html';
   } catch(e) {

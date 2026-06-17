@@ -1096,6 +1096,11 @@ function loadStratRelay() {
       'Appeal Win Rate':          { val: d.kpi.appealWinRate,     cls: 'cyan',  delta: `↑ 4% vs Q1`,            sub: '$187K recovered last 90d' },
       'Net Collection Rate':      { val: d.kpi.netCollection,     cls: 'text',  delta: `↓ 0.9% vs target`,      sub: 'target 95% · 2 nodes lagging' }
     };
+    const kpiFieldMap = {
+      'Total Revenue At Risk': 'totalAtRisk', 'Monthly Revenue Collected': 'monthlyCollected',
+      'Gross Denial Rate': 'denialRate', 'Days Sales Outstanding': 'dso',
+      'Appeal Win Rate': 'appealWinRate', 'Net Collection Rate': 'netCollection'
+    };
     document.querySelectorAll('.kpi').forEach(el => {
       const label = el.querySelector('.kpi-label')?.textContent?.trim();
       const cfg = kpiMap[label];
@@ -1104,6 +1109,22 @@ function loadStratRelay() {
       const deltaEl = el.querySelector('.kpi-delta');
       if (valEl) { valEl.textContent = cfg.val; valEl.className = `kpi-val ${cfg.cls}`; }
       if (deltaEl) { deltaEl.textContent = cfg.delta; }
+      const fieldKey = kpiFieldMap[label];
+      const isVerified = d.verifiedFields?.includes(fieldKey);
+      let tag = el.querySelector('.kpi-source-tag');
+      if (!tag) {
+        tag = document.createElement('div');
+        tag.className = 'kpi-source-tag';
+        tag.style.cssText = 'font-size:7px;letter-spacing:0.5px;margin-top:3px;';
+        el.appendChild(tag);
+      }
+      if (isVerified) {
+        tag.style.color = '#00e676';
+        tag.textContent = '● LIVE · STRATEGIST CONFIRMED';
+      } else {
+        tag.style.color = '#888';
+        tag.textContent = '○ AI ESTIMATE';
+      }
     });
 
     // ── Update BNCA strip ──
