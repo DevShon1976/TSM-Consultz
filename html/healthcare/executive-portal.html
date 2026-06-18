@@ -1073,6 +1073,9 @@ const html = TICKS.map(t =>
 ).join('');
 inner.innerHTML = html + html;
 // ── STRATEGIST RELAY READER ──
+function escRelay(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
 function loadStratRelay() {
   try {
     const raw = sessionStorage.getItem('TSM_EXEC_RELAY');
@@ -1088,39 +1091,39 @@ function loadStratRelay() {
     if (lr) lr.textContent = `strategist sync ${freshLabel}`;
 
     // ── Update KPI row values ──
+    // NOTE: the HC Strategist relay (escalateToExecPortal in hc-main-strategist.html)
+    // only ever populates kpi.totalAtRisk and kpi.denialRate — it has no concept of
+    // monthlyCollected / dso / appealWinRate / netCollection. Those four were getting
+    // blindly overwritten with the literal string "undefined" on every relay sync.
+    // Fixed: only touch a tile when the relay actually shipped a value for it.
     const kpiMap = {
-      'Total Revenue At Risk':    { val: d.kpi.totalAtRisk,      cls: 'red',   delta: `↑ $340K vs last month`, sub: 'denial + DSO + DIR + litigation' },
+      'Total Revenue At Risk':    { val: d.kpi.totalAtRisk,       cls: 'red',   delta: `↑ $340K vs last month`, sub: 'denial + DSO + DIR + litigation' },
       'Monthly Revenue Collected':{ val: d.kpi.monthlyCollected,  cls: 'green', delta: `↑ +8% MoM`,             sub: 'vs $3.9M prior month' },
       'Gross Denial Rate':        { val: d.kpi.denialRate,        cls: 'red',   delta: `↑ 3.1% vs target`,      sub: 'target <8% · 47 claims this cycle' },
       'Days Sales Outstanding':   { val: d.kpi.dso,               cls: 'amber', delta: `↑ 7d vs benchmark`,     sub: 'industry benchmark: 45d' },
       'Appeal Win Rate':          { val: d.kpi.appealWinRate,     cls: 'cyan',  delta: `↑ 4% vs Q1`,            sub: '$187K recovered last 90d' },
       'Net Collection Rate':      { val: d.kpi.netCollection,     cls: 'text',  delta: `↓ 0.9% vs target`,      sub: 'target 95% · 2 nodes lagging' }
     };
-    const kpiFieldMap = {
-      'Total Revenue At Risk': 'totalAtRisk', 'Monthly Revenue Collected': 'monthlyCollected',
-      'Gross Denial Rate': 'denialRate', 'Days Sales Outstanding': 'dso',
-      'Appeal Win Rate': 'appealWinRate', 'Net Collection Rate': 'netCollection'
-    };
-    const verifiedLabels = { 'totalAtRisk': 'Total Revenue At Risk', 'denialRate': 'Gross Denial Rate' };
+    // Labels the Strategist relay is actually allowed to confirm as "live" right now.
+    const verifiedLabels = new Set(['Total Revenue At Risk', 'Gross Denial Rate']);
     document.querySelectorAll('.kpi').forEach(el => {
       const label = el.querySelector('.kpi-label')?.textContent?.trim();
       const cfg = kpiMap[label];
-      if (!cfg) return;
+      if (!cfg || cfg.val === undefined || cfg.val === null || cfg.val === '') return; // relay didn't send this field — leave the static tile alone
       const valEl = el.querySelector('.kpi-val');
       const deltaEl = el.querySelector('.kpi-delta');
       if (valEl) { valEl.textContent = cfg.val; valEl.className = `kpi-val ${cfg.cls}`; }
       if (deltaEl) { deltaEl.textContent = cfg.delta; }
-      const isVerified = (label === verifiedLabels.totalAtRisk && d.verifiedFields?.includes('totalAtRisk'))
-                       || (label === verifiedLabels.denialRate && d.verifiedFields?.includes('denialRate'));
-      let tag = el.querySelector('.kpi-source-tag');
-      if (!tag) {
-        tag = document.createElement('div');
-        tag.className = 'kpi-source-tag';
-        tag.style.cssText = 'font-size:7px;letter-spacing:0.5px;margin-top:3px;color:#00e676;';
-        el.appendChild(tag);
+      if (verifiedLabels.has(label)) {
+        let tag = el.querySelector('.kpi-source-tag');
+        if (!tag) {
+          tag = document.createElement('div');
+          tag.className = 'kpi-source-tag';
+          tag.style.cssText = 'font-size:7px;letter-spacing:0.5px;margin-top:3px;color:#00e676;';
+          el.appendChild(tag);
+        }
+        tag.textContent = '● LIVE · STRATEGIST CONFIRMED';
       }
-      tag.style.display = isVerified ? 'block' : 'none';
-      tag.textContent = '● LIVE · STRATEGIST CONFIRMED';
     });
 
     // ── Update BNCA strip ──
@@ -1143,63 +1146,16 @@ function loadStratRelay() {
       const deadlineClass = { 'SIGN NOW':'hot','ESCALATE':'hot','APPROVE':'hot','REVIEW':'warn','MONITOR':'' };
       const container = document.querySelector('.decisions');
       if (container) {
-        container.innerHTML = d.alerts.decisions.map((dec, i) => `
-          <div class="decision-item" style="flex-wrap:wrap;">
-            <div class="d-urgency ${urgencyClass[dec.urgency]||'d-u3'}">${dec.urgency}</div>
+        container.innerHTML = d.alerts.decisions.map(dec => `
+          <div class="decision-item">
+            <div class="d-urgency ${urgencyClass[dec.urgency]||'d-u3'}">${escRelay(dec.urgency)}</div>
             <div>
-              <div class="d-action">${dec.action}</div>
+              <div class="d-action">${escRelay(dec.action)}</div>
               <div class="d-context">Relayed from HC Strategist · ${new Date(d.ts).toLocaleTimeString('en-US',{hour12:false})}</div>
             </div>
-            <div class="d-value" style="color:${valueColor[dec.urgency]||'var(--cyan)'}">${dec.value}</div>
-            <div class="d-deadline ${deadlineClass[dec.urgency]||''}">${dec.deadline}</div>
-            <button onclick="toggleRespondBox(${i})" style="background:none;border:1px solid #444;color:#888;font-family:monospace;font-size:8px;letter-spacing:1px;padding:3px 10px;cursor:pointer;border-radius:2px;">RESPOND</button>
-            <div id="respond-box-${i}" style="display:none;width:100%;margin-top:8px;padding-top:8px;border-top:1px solid #222;">
-              <textarea id="respond-text-${i}" placeholder="Note for HC Strategist / Office Manager..." style="width:100%;background:#0a0e16;border:1px solid #333;color:#ccc;font-family:monospace;font-size:10px;padding:8px;border-radius:2px;min-height:50px;resize:vertical;"></textarea>
-              <div style="display:flex;gap:8px;margin-top:6px;align-items:center;">
-                <button onclick="sendExecFeedback(${i}, '${dec.action.replace(/'/g,"\\'")}', '${dec.value}')" style="background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.3);color:#00e676;font-family:monospace;font-size:9px;letter-spacing:1px;padding:5px 14px;cursor:pointer;border-radius:2px;">SEND TO STRATEGIST</button>
-                <span id="respond-status-${i}" style="font-size:9px;color:#00e676;"></span>
-              </div>
-              <div id="sent-log-${i}"></div>
-            </div>
+            <div class="d-value" style="color:${valueColor[dec.urgency]||'var(--cyan)'}">${escRelay(dec.value)}</div>
+            <div class="d-deadline ${deadlineClass[dec.urgency]||''}">${escRelay(dec.deadline)}</div>
           </div>`).join('');
-
-        window.toggleRespondBox = function(i){
-          const box = document.getElementById('respond-box-'+i);
-          if (box) box.style.display = box.style.display === 'none' ? 'block' : 'none';
-        };
-
-        window.renderSentLog = function(i, action){
-          const log = document.getElementById('sent-log-'+i);
-          if (!log) return;
-          let feedback = [];
-          try { feedback = JSON.parse(sessionStorage.getItem('TSM_EXEC_FEEDBACK')||localStorage.getItem('TSM_EXEC_FEEDBACK')||'[]'); } catch(e){ feedback = []; }
-          const matches = feedback.filter(f => f.decisionAction === action).sort((a,b)=>b.ts-a.ts);
-          if (!matches.length) { log.innerHTML = ''; return; }
-          log.innerHTML = '<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #222;font-size:8px;color:#666;letter-spacing:1px;">SENT (' + matches.length + ')</div>' +
-            matches.map(f => `<div style="background:#0a0e16;border-left:2px solid #00e676;padding:6px 8px;margin-top:4px;color:#aaa;font-size:10px;">${f.note}<div style="color:#555;font-size:8px;margin-top:3px;">${new Date(f.ts).toLocaleString('en-US',{hour12:false})}</div></div>`).join('');
-        };
-
-        d.alerts.decisions.forEach((dec, i) => renderSentLog(i, dec.action));
-
-        window.sendExecFeedback = function(i, action, value){
-          const textEl = document.getElementById('respond-text-'+i);
-          const text = textEl?.value?.trim();
-          if (!text) { alert('Enter a note before sending.'); return; }
-          const om = action.match(/Mesa/i) ? 'Mesa Family Practice OM'
-                   : action.match(/Scottsdale/i) ? 'Scottsdale Primary Care OM'
-                   : action.match(/Tempe/i) ? 'Tempe Multispecialty OM'
-                   : action.match(/North Mountain/i) ? 'North Mountain Clinic OM'
-                   : 'Unassigned / RCM Manager';
-          const feedback = { ts: Date.now(), decisionAction: action, decisionValue: value, officeManager: om, note: text, from: 'Executive' };
-          const existing = JSON.parse(sessionStorage.getItem('TSM_EXEC_FEEDBACK')||localStorage.getItem('TSM_EXEC_FEEDBACK')||'[]');
-          existing.push(feedback);
-          sessionStorage.setItem('TSM_EXEC_FEEDBACK', JSON.stringify(existing));
-          localStorage.setItem('TSM_EXEC_FEEDBACK', JSON.stringify(existing));
-          const status = document.getElementById('respond-status-'+i);
-          if (status) status.textContent = '✓ Sent to strategist';
-          if (textEl) textEl.value = '';
-          renderSentLog(i, action);
-        };
       }
     }
 
@@ -1207,7 +1163,7 @@ function loadStratRelay() {
     if (d.alerts?.urgent?.length) {
       const tickerEl = document.getElementById('ticker-inner');
       if (tickerEl) {
-        const items = d.alerts.urgent.map(u => `◈ ${u.toUpperCase()}`).join(' &nbsp;&nbsp;&nbsp; ');
+        const items = d.alerts.urgent.map(u => `◈ ${escRelay(u).toUpperCase()}`).join(' &nbsp;&nbsp;&nbsp; ');
         tickerEl.innerHTML = items + ' &nbsp;&nbsp;&nbsp; ' + tickerEl.innerHTML;
       }
     }
