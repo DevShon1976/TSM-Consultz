@@ -1427,36 +1427,67 @@ PATTERN MATCH: [does this match active HonorHealth denial patterns CO-4/CO-11/CO
 
 })(); // Cleans up the singular wrapper level completely
 
-// ── INIT: auto-load score ──
-(async()=>{
-  setTimeout(async()=>{
-    try{
-      const resp = await fetch('/api/hc/query',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          system:'You are HC-Strategist for HonorHealth. Return ONLY a JSON object: {"score":NUMBER,"label":"SHORT_LABEL"} — score 0-100 representing overall revenue cycle health. No other text.',
-          message:'Current data: denial rate 18.4% (threshold 15%), $48K at risk, clean claim rate 94.2% vs 97% target, 231 denied claims, Mesa 22.1% denial CRITICAL, CLM-0334 48hr deadline. Score the overall revenue cycle health.'
-        })
-      });
-      const data = await resp.json();
-      console.log('strat-score raw response:', data);
-      if(data.output){
-        const txt = data.output.replace(/```json|```/g,'').trim();
-        const parsed = JSON.parse(txt);
-        document.getElementById('strat-score').textContent=parsed.score;
-        document.getElementById('strat-score').className='kpi-v '+(parsed.score<60?'vr':parsed.score<75?'va':'vg');
-        document.getElementById('strat-score-sub').textContent=parsed.label;
-      } else {
-        document.getElementById('strat-score').textContent='ERR';
-        document.getElementById('strat-score-sub').textContent='no data.output';
+// ── INIT: local strategist score (DOM-calculated — no server call) ──
+(function(){
+  setTimeout(function(){
+    try {
+      // Read live KPI tiles from DOM
+      const kpiTiles = document.querySelectorAll('.kpi');
+      function kpiVal(labelText) {
+        for (const tile of kpiTiles) {
+          const lbl = tile.querySelector('.kpi-l')?.textContent?.trim() || '';
+          if (lbl.toLowerCase().includes(labelText.toLowerCase()))
+            return tile.querySelector('.kpi-v')?.textContent?.trim() || '';
+        }
+        return '';
       }
-    } catch(e){
-      console.error('strat-score fetch failed:', e);
-      document.getElementById('strat-score').textContent='ERR';
-      document.getElementById('strat-score-sub').textContent=e.message;
+
+      const denialStr  = kpiVal('Denial');      // e.g. "18.4%"
+      const riskStr    = kpiVal('Revenue at Risk'); // e.g. "$48K"
+      const authStr    = kpiVal('Auth Delay');   // e.g. "65"
+      const nodesStr   = kpiVal('Nodes');        // e.g. "10/10"
+      const officesStr = kpiVal('Offices');      // e.g. "4/4"
+
+      // Parse values
+      const denialPct  = parseFloat(denialStr)  || 18.4;
+      const authCount  = parseInt(authStr)       || 0;
+      const nodesRatio = nodesStr.includes('/') ? parseInt(nodesStr)/parseInt(nodesStr.split('/')[1]) : 1;
+      const offRatio   = officesStr.includes('/') ? parseInt(officesStr)/parseInt(officesStr.split('/')[1]) : 1;
+      const riskK      = parseInt((riskStr||'').replace(/[^0-9]/g,'')) || 0;
+
+      // Weighted score (100 = perfect):
+      // denial rate  → threshold 15%; penalty per point over
+      // auth delays  → penalty per 10 delays
+      // nodes online → reward full uptime
+      // risk amount  → penalty per $10K at risk
+      let score = 100;
+      if (denialPct > 15)  score -= Math.min(25, (denialPct - 15) * 3.5);  // max -25
+      if (authCount > 0)   score -= Math.min(15, authCount * 0.2);           // max -15
+      if (nodesRatio < 1)  score -= Math.round((1 - nodesRatio) * 20);       // max -20
+      if (offRatio < 1)    score -= Math.round((1 - offRatio) * 10);         // max -10
+      if (riskK > 0)       score -= Math.min(20, Math.floor(riskK / 5));     // max -20
+      score = Math.max(0, Math.min(100, Math.round(score)));
+
+      // Label
+      const label = score >= 85 ? 'Revenue Cycle Healthy'
+                  : score >= 70 ? 'Monitor — Action Needed'
+                  : score >= 55 ? 'At Risk — Escalate'
+                  :               'Critical — Immediate Action';
+
+      const el    = document.getElementById('strat-score');
+      const elSub = document.getElementById('strat-score-sub');
+      if (el) {
+        el.textContent  = score;
+        el.className    = 'kpi-v ' + (score < 60 ? 'vr' : score < 75 ? 'va' : 'vg');
+      }
+      if (elSub) elSub.textContent = label;
+      console.log('[strat-score] local calc:', score, label);
+    } catch(e) {
+      console.warn('[strat-score] local calc failed:', e.message);
+      const el = document.getElementById('strat-score');
+      if (el) { el.textContent = '—'; el.className = 'kpi-v'; }
     }
-  },800);
+  }, 900);
 })();
 
 // === Exec Feedback Reader (sibling to War Room Brief Receiver) ===

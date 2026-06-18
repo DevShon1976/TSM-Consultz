@@ -1862,6 +1862,7 @@ function buildStratBriefTab() {
       <button class="sb-tab" data-tab="denialpack" onclick="switchSbTab('denialpack')" style="background:none;border:none;border-right:1px solid rgba(255,255,255,0.07);border-bottom:2px solid transparent;color:#5a6f90;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1.5px;padding:8px 18px;cursor:pointer;text-transform:uppercase;">⚡ DENIAL PACK</button>
       <button class="sb-tab" data-tab="stratengine" onclick="switchSbTab('stratengine')" style="background:none;border:none;border-right:1px solid rgba(255,255,255,0.07);border-bottom:2px solid transparent;color:#5a6f90;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1.5px;padding:8px 18px;cursor:pointer;text-transform:uppercase;">◎ STRATEGIC ENGINE</button>
       <button class="sb-tab" data-tab="respondnotes" onclick="switchSbTab('respondnotes')" style="background:none;border:none;border-right:1px solid rgba(255,255,255,0.07);border-bottom:2px solid transparent;color:#5a6f90;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1.5px;padding:8px 18px;cursor:pointer;text-transform:uppercase;">✎ RESPOND / NOTES</button>
+      <button class="sb-tab" data-tab="stratreports" onclick="switchSbTab('stratreports')" style="background:none;border:none;border-right:1px solid rgba(255,255,255,0.07);border-bottom:2px solid transparent;color:#5a6f90;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1.5px;padding:8px 18px;cursor:pointer;text-transform:uppercase;">◈ STRATEGIST REPORTS</button>
     </div>
 
     <!-- TAB: WAR ROOM BRIEF -->
@@ -1961,6 +1962,14 @@ function buildStratBriefTab() {
       </div>
     </div>
 
+    <!-- TAB: STRATEGIST REPORTS -->
+    <div id="sb-tab-stratreports" class="sb-tab-panel" style="background:#06091a;border:1px solid rgba(255,255,255,0.07);padding:20px;display:none;">
+      <div style="font-size:7.5px;letter-spacing:2px;text-transform:uppercase;color:#5a6f90;margin-bottom:16px;">◈ STRATEGIST REPORTS &mdash; LAST RELAY PAYLOAD</div>
+      <div id="strat-reports-content" style="display:flex;flex-direction:column;gap:16px;">
+        <div style="font-size:8px;color:#2a3a52;">No relay data loaded yet. Run a strategist session and escalate to exec.</div>
+      </div>
+    </div>
+
     <!-- TAB: RESPOND / NOTES -->
     <div id="sb-tab-respondnotes" class="sb-tab-panel" style="background:#06091a;border:1px solid rgba(255,255,255,0.07);padding:20px;display:none;">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
@@ -2034,6 +2043,215 @@ function clearExecNotes() {
   if (hist) hist.innerHTML = '<div style="font-size:8px;color:#2a3a52;">No notes yet.</div>';
 }
 
+function buildStratReportsTab() {
+  const container = document.getElementById('strat-reports-content');
+  if (!container) return;
+  const raw = sessionStorage.getItem('TSM_EXEC_RELAY') || localStorage.getItem('TSM_EXEC_RELAY');
+  if (!raw) {
+    container.innerHTML = '<div style="font-size:8px;color:#2a3a52;padding:20px 0;">No relay data found. Run a strategist session and click ⇢ Escalate / Relay to Exec.</div>';
+    return;
+  }
+  let d;
+  try { d = JSON.parse(raw); } catch(e) {
+    container.innerHTML = '<div style="font-size:8px;color:#ff3d57;">Failed to parse relay data.</div>';
+    return;
+  }
+
+  const ts = d.ts ? new Date(d.ts).toLocaleString('en-US',{hour12:false,month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+  const esc = t => (t||'').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\*\*(.+?)\*\*/g,'<strong style="color:#dde5f4;">$1</strong>');
+  const escRaw = t => (t||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  // ── Parse strat analysis into sections ──
+  const fullAnalysis = d.stratAnalysis || d.warRoomBrief || '';
+  const sections = parseAnalysisSections(fullAnalysis);
+
+  // ── KPI row ──
+  const kpi = d.kpi || {};
+  const kpiItems = [
+    { label:'AT RISK', val: kpi.totalAtRisk || d.sourceSnapshot?.revenueAtRisk, color:'#ff3d57' },
+    { label:'DENIAL RATE', val: kpi.denialRate || d.sourceSnapshot?.denialRate, color:'#ff8c00' },
+    { label:'DSO', val: kpi.dso, color:'#ffb300' },
+    { label:'APPEAL WIN', val: kpi.appealWinRate, color:'#00e676' },
+    { label:'NET COLL', val: kpi.netCollection, color:'#00e5ff' },
+    { label:'CLEAN CLAIM', val: kpi.cleanClaimRate, color:'#a78bfa' },
+  ].filter(k => k.val);
+
+  const kpiHtml = kpiItems.length ? `
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;">
+      ${kpiItems.map(k => `
+        <div style="background:#03060d;border:1px solid rgba(255,255,255,0.07);padding:8px 14px;min-width:90px;">
+          <div style="font-size:6.5px;letter-spacing:1.5px;color:#5a6f90;text-transform:uppercase;margin-bottom:4px;">${k.label}</div>
+          <div style="font-size:13px;font-weight:700;color:${k.color};font-family:'JetBrains Mono',monospace;">${escRaw(String(k.val))}</div>
+        </div>`).join('')}
+    </div>` : '';
+
+  // ── Live signals ──
+  const signals = d.liveSignals || [];
+  const sevColor = s => s==='URGENT'?'#ff3d57':s==='CRIT'?'#ff8c00':s==='HIGH'?'#ffb300':'#00e676';
+  const signalsHtml = signals.length ? `
+    <div style="margin-bottom:20px;">
+      <div style="font-size:7px;letter-spacing:2px;color:#ffb300;text-transform:uppercase;margin-bottom:10px;">⚡ LIVE SIGNALS · ${signals.length} ACTIVE</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;">
+        ${signals.map(s => `
+          <div style="background:#03060d;border:1px solid rgba(255,255,255,0.06);border-left:2px solid ${sevColor(s.severity)};padding:10px 12px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+              <span style="font-size:6.5px;color:${sevColor(s.severity)};font-weight:700;letter-spacing:1.5px;background:${sevColor(s.severity)}18;padding:2px 6px;">${escRaw(s.severity)}</span>
+              <span style="font-size:8.5px;color:#dde5f4;font-weight:600;">${escRaw(s.title||'')}</span>
+            </div>
+            <div style="font-size:7.5px;color:#5a6f90;padding-left:2px;">${escRaw(s.sub||'')} · <span style="color:#2a3a52;">${escRaw(s.source||'')}</span></div>
+          </div>`).join('')}
+      </div>
+    </div>` : '';
+
+  // ── Strategist Analysis summary card ──
+  const analysisHtml = fullAnalysis.trim().length > 20 ? `
+    <div style="margin-bottom:20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="font-size:7px;letter-spacing:2px;color:#a78bfa;text-transform:uppercase;">◈ STRATEGIST ANALYSIS REPORT${d.analysisMode ? ' · ' + escRaw(d.analysisMode) : ''}</div>
+        <button onclick="toggleStratFullText()" id="strat-toggle-btn" style="background:none;border:1px solid rgba(255,255,255,0.1);color:#5a6f90;font-family:'JetBrains Mono',monospace;font-size:7px;padding:3px 10px;cursor:pointer;letter-spacing:1px;">▼ EXPAND FULL</button>
+      </div>
+
+      ${sections.topIssue ? `
+      <div style="background:#03060d;border:1px solid rgba(255,100,0,0.2);border-left:3px solid #ff8c00;padding:14px 16px;margin-bottom:10px;">
+        <div style="font-size:6.5px;letter-spacing:1.5px;color:#ff8c00;text-transform:uppercase;margin-bottom:6px;">TOP ISSUE</div>
+        <div style="font-size:9.5px;color:#dde5f4;line-height:1.7;">${esc(sections.topIssue)}</div>
+      </div>` : ''}
+
+      ${sections.immediateActions.length ? `
+      <div style="background:#03060d;border:1px solid rgba(0,229,255,0.1);padding:14px 16px;margin-bottom:10px;">
+        <div style="font-size:6.5px;letter-spacing:1.5px;color:#00e5ff;text-transform:uppercase;margin-bottom:10px;">IMMEDIATE ACTIONS · ${sections.immediateActions.length} STEPS</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${sections.immediateActions.map((step, i) => `
+            <div style="display:flex;gap:10px;align-items:flex-start;">
+              <div style="min-width:20px;height:20px;background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.2);display:flex;align-items:center;justify-content:center;font-size:8px;color:#00e5ff;font-weight:700;flex-shrink:0;">${i+1}</div>
+              <div style="font-size:9px;color:#8a9fc0;line-height:1.7;">${esc(step)}</div>
+            </div>`).join('')}
+        </div>
+      </div>` : ''}
+
+      ${sections.primaryActor ? `
+      <div style="background:#03060d;border:1px solid rgba(0,230,118,0.1);padding:10px 14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-size:6.5px;letter-spacing:1.5px;color:#00e676;text-transform:uppercase;margin-bottom:3px;">PRIMARY ACTOR</div>
+          <div style="font-size:9px;color:#dde5f4;">${esc(sections.primaryActor)}</div>
+        </div>
+        ${d.sessionId ? `<div style="font-size:7px;color:#2a3a52;text-align:right;"><div style="color:#5a6f90;margin-bottom:2px;">${d.sessionId}</div><div>${ts}</div></div>` : ''}
+      </div>` : ''}
+
+      <div id="strat-full-text" style="display:none;margin-top:10px;">
+        <div style="font-size:7px;letter-spacing:2px;color:#5a6f90;text-transform:uppercase;margin-bottom:8px;">FULL ANALYSIS OUTPUT</div>
+        <div style="background:#03060d;border:1px solid rgba(255,255,255,0.06);padding:14px 16px;font-size:8.5px;color:#8a9fc0;line-height:1.9;white-space:pre-wrap;font-family:'JetBrains Mono',monospace;max-height:400px;overflow-y:auto;">${escRaw(fullAnalysis)}</div>
+      </div>
+    </div>` : '<div style="font-size:8px;color:#2a3a52;margin-bottom:20px;">No analysis text in relay. Run HC Strategist Analysis before escalating.</div>';
+
+  // ── Denial analysis block ──
+  const denialAnalysisHtml = d.denialAnalysis && d.denialAnalysis.trim().length > 20 ? `
+    <div style="margin-bottom:20px;">
+      <div style="font-size:7px;letter-spacing:2px;color:#ff3d57;text-transform:uppercase;margin-bottom:10px;">⚡ DENIAL ANALYSIS REPORT</div>
+      <div style="background:#03060d;border:1px solid rgba(255,61,87,0.15);border-left:2px solid #ff3d57;padding:14px 16px;font-size:8.5px;color:#8a9fc0;line-height:1.9;white-space:pre-wrap;font-family:'JetBrains Mono',monospace;max-height:280px;overflow-y:auto;">${escRaw(d.denialAnalysis)}</div>
+    </div>` : '';
+
+  // ── BNCA block ──
+  const bnca = d.bnca || {};
+  const bncaRows = [
+    { label:'REVENUE POSITION', val: bnca.revenuePosition, color:'#00e5ff' },
+    { label:'DENIAL INTELLIGENCE', val: bnca.denialIntel, color:'#ff8c00' },
+    { label:'BEST NEXT ACTION', val: bnca.bestNextAction, color:'#00e676' },
+    { label:'ESCALATION PATH', val: bnca.escalationPath, color:'#a78bfa' },
+  ].filter(r => r.val && r.val.trim().length > 5);
+
+  const bncaHtml = bncaRows.length ? `
+    <div>
+      <div style="font-size:7px;letter-spacing:2px;color:#5a6f90;text-transform:uppercase;margin-bottom:10px;">BNCA INTELLIGENCE BLOCK</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        ${bncaRows.map(r => `
+          <div style="background:#03060d;border:1px solid rgba(255,255,255,0.06);border-left:2px solid ${r.color}55;padding:12px 14px;">
+            <div style="font-size:6.5px;letter-spacing:1.5px;color:${r.color};text-transform:uppercase;margin-bottom:6px;">${r.label}</div>
+            <div style="font-size:8.5px;color:#8a9fc0;line-height:1.7;">${esc(r.val)}</div>
+          </div>`).join('')}
+      </div>
+    </div>` : '';
+
+  container.innerHTML = kpiHtml + signalsHtml + analysisHtml + denialAnalysisHtml + bncaHtml;
+
+  // Async: fetch node reports from server and append
+  fetchNodeReports(container);
+}
+
+async function fetchNodeReports(container) {
+  try {
+    const resp = await fetch('/api/hc/node-reports');
+    if (!resp.ok) return;
+    const ct = resp.headers.get('content-type') || '';
+    if (!ct.includes('application/json')) return;
+    const data = await resp.json();
+    if (!data.reports || !data.reports.length) return;
+
+    const esc = t => (t||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const sevColor = s => s==='URGENT'?'#ff3d57':s==='CRIT'?'#ff8c00':s==='HIGH'?'#ffb300':s==='MED'?'#00e5ff':'#5a6f90';
+
+    const nodeHtml = `
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.05);margin:20px 0;">
+      <div style="font-size:7px;letter-spacing:2px;color:#00e5ff;text-transform:uppercase;margin-bottom:12px;">◈ HC NODE REPORTS · RECOMMENDED BY STRATEGIST · ${data.reports.length} NODES</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;">
+        ${data.reports.map(r => {
+          const age = Math.round((Date.now() - r.ts) / 60000);
+          const ageLabel = age < 60 ? age + 'm ago' : Math.round(age/60) + 'h ago';
+          return `
+          <div style="background:#03060d;border:1px solid rgba(255,255,255,0.06);border-left:3px solid ${sevColor(r.severity)};padding:12px 14px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+              <div>
+                <span style="font-size:6.5px;color:${sevColor(r.severity)};font-weight:700;letter-spacing:1.5px;background:${sevColor(r.severity)}18;padding:2px 6px;margin-right:6px;">${esc(r.severity)}</span>
+                <span style="font-size:9px;color:#dde5f4;font-weight:700;">${esc(r.nodeLabel)}</span>
+              </div>
+              <span style="font-size:7px;color:#2a3a52;">${ageLabel}</span>
+            </div>
+            ${r.report ? `<div style="font-size:8.5px;color:#8a9fc0;line-height:1.7;border-left:1px solid rgba(255,255,255,0.08);padding-left:8px;margin-top:6px;">${esc(r.report.slice(0,280))}${r.report.length>280?'…':''}</div>` : ''}
+          </div>`;
+        }).join('')}
+      </div>`;
+
+    container.insertAdjacentHTML('beforeend', nodeHtml);
+  } catch(e) { console.warn('fetchNodeReports failed:', e.message); }
+}
+
+function parseAnalysisSections(text) {
+  const result = { topIssue: '', immediateActions: [], primaryActor: '' };
+  if (!text) return result;
+
+  // Top Issue — look for "Top Issue:" line
+  const topMatch = text.match(/\*?\*?Top Issue\*?\*?[:\s]+(.+?)(?=\n\n|\n\*\*|$)/si);
+  if (topMatch) result.topIssue = topMatch[1].trim().replace(/\n/g,' ');
+
+  // Immediate Actions — numbered list under "Immediate Actions"
+  const actionsMatch = text.match(/\*?\*?Immediate Actions\*?\*?[:\s]*\n([\s\S]+?)(?=\n\n\*\*[A-Z]|Primary Actor|$)/i);
+  if (actionsMatch) {
+    const lines = actionsMatch[1].split('\n').filter(l => /^\d+\./.test(l.trim()));
+    result.immediateActions = lines.map(l => l.replace(/^\d+\.\s*/, '').trim()).filter(Boolean).slice(0,5);
+  }
+
+  // If no structured actions found, try generic numbered list
+  if (!result.immediateActions.length) {
+    const numbered = [...text.matchAll(/^\d+\.\s+(.+)/gm)].map(m => m[1].trim());
+    result.immediateActions = numbered.slice(0,5);
+  }
+
+  // Primary Actor
+  const actorMatch = text.match(/\*?\*?Primary Actor\*?\*?[:\s]+(.+?)(?=\n|$)/i);
+  if (actorMatch) result.primaryActor = actorMatch[1].trim();
+
+  return result;
+}
+
+function toggleStratFullText() {
+  const el = document.getElementById('strat-full-text');
+  const btn = document.getElementById('strat-toggle-btn');
+  if (!el) return;
+  const showing = el.style.display !== 'none';
+  el.style.display = showing ? 'none' : 'block';
+  if (btn) btn.textContent = showing ? '▼ EXPAND FULL' : '▲ COLLAPSE';
+}
+
 function switchSbTab(tab) {
   document.querySelectorAll('.sb-tab-panel').forEach(p => p.style.display = 'none');
   const target = document.getElementById('sb-tab-' + tab);
@@ -2044,6 +2262,7 @@ function switchSbTab(tab) {
     btn.style.color = active ? '#00e5ff' : '#5a6f90';
     btn.style.background = active ? 'rgba(0,229,255,0.08)' : 'none';
   });
+  if (tab === 'stratreports') { buildStratReportsTab(); }
   if (tab === 'respondnotes') {
     const hist = document.getElementById('exec-note-history');
     if (hist) hist.innerHTML = renderNoteHistory();

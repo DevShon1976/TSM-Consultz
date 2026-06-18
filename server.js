@@ -209,6 +209,53 @@ app.post('/api/hc/query', async (req, res) => {
 
 const clientUsage = {}; // v3
 
+// ── HC NODE REPORT STORE ──────────────────────────────────────────────────────
+// In-memory store for node reports relayed from war rooms → strategist → exec
+const hcNodeReports = {}; // keyed by node id
+
+app.post('/api/hc/node-report', (req, res) => {
+  try {
+    const { nodeId, nodeLabel, report, analysisText, denialCodes, claimIds, severity, kpi, ts } = req.body || {};
+    if (!nodeId) return res.status(400).json({ ok: false, error: 'nodeId required' });
+    hcNodeReports[nodeId] = {
+      nodeId,
+      nodeLabel: nodeLabel || nodeId,
+      report: report || '',
+      analysisText: analysisText || '',
+      denialCodes: denialCodes || [],
+      claimIds: claimIds || [],
+      severity: severity || 'INFO',
+      kpi: kpi || {},
+      ts: ts || Date.now(),
+      receivedAt: Date.now()
+    };
+    console.log('[HC NODE REPORT] stored:', nodeId, 'severity:', severity);
+    return res.json({ ok: true, nodeId, stored: true });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+app.get('/api/hc/node-reports', (req, res) => {
+  try {
+    const reports = Object.values(hcNodeReports).sort((a, b) => b.ts - a.ts);
+    return res.json({ ok: true, reports, count: reports.length });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+app.delete('/api/hc/node-reports', (req, res) => {
+  const { nodeId } = req.body || req.query || {};
+  if (nodeId) {
+    delete hcNodeReports[nodeId];
+    return res.json({ ok: true, cleared: nodeId });
+  }
+  Object.keys(hcNodeReports).forEach(k => delete hcNodeReports[k]);
+  return res.json({ ok: true, cleared: 'all' });
+});
+
+
 app.post('/api/hc/stream', async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -799,6 +846,13 @@ app.post('/api/doc-router/classify', async (req, res) => {
    END DOC ROUTER BLOCK
 ════════════════════════════════════════════════════════════════ */
 
+// ── GLOBAL ERROR HANDLER — prevents HTML error pages from crashing JSON API routes ──
+app.use((err, req, res, next) => {
+  console.error('[TSM GLOBAL ERROR]', err.message, err.stack);
+  if (res.headersSent) return next(err);
+  res.status(500).json({ ok: false, error: err.message || 'Internal server error' });
+});
+
 // ── START ─────────────────────────────────────────────────────────────────────
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`TSM Platform Core Engine listening on port ${PORT}`);
@@ -807,6 +861,3 @@ const server = app.listen(PORT, '0.0.0.0', () => {
 server.on('error', (err) => {
   console.error('💥 SERVER ERROR:', err.message, err.stack);
 });
-
-
-
