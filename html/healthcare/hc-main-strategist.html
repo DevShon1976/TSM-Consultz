@@ -990,15 +990,12 @@ async function escalateToExecPortal(){
       const dispatch = findSection(sections, ['DISPATCH','SUMMARY','NARRATIVE']);
 
       // ── Pick distinct sections per cell so cells never repeat the same text
-      // when the model used different headers than expected (e.g. a single
-      // combined "DENIAL PACK OUTPUT" block instead of separate FINANCIAL/
-      // ROOT CAUSE headers) ──
+      // when the model used different headers than expected ──
       const used = new Set();
       const pickUnique = (...candidates) => {
         for (const c of candidates){
           if (c && !used.has(c)) { used.add(c); return c; }
         }
-        // last resort: any unused section in document order
         const fallback = sections.find(s => !used.has(s));
         if (fallback) used.add(fallback);
         return fallback;
@@ -1006,9 +1003,6 @@ async function escalateToExecPortal(){
 
       const revenueSection = pickUnique(financial, dispatch, sections[0]);
       const denialSection = pickUnique(rootCause, dispatch);
-      // actions/priority content is the most important thing to show in the
-      // "what needs you" cell — allow reusing it even if another cell already
-      // claimed it, rather than leaving this cell blank on sparse input
       const actionSection = pickUnique(actions, sections[sections.length - 1], dispatch) || actions || denialSection;
 
       bnca = {
@@ -1032,8 +1026,7 @@ async function escalateToExecPortal(){
         denialRate: live.denialRate || undefined
       };
     } else {
-      // ── COLD START PATH: no pack has been run yet this session, fall back
-      // to a single synthesis call grounded only in the live DOM metrics ──
+      // ── COLD START PATH: no pack has been run yet this session ──
       const nowStamp = new Date().toLocaleString();
       const resp = await fetch('/api/hc/query', {
         method: 'POST',
@@ -1045,7 +1038,21 @@ async function escalateToExecPortal(){
       });
       const data = await resp.json();
       const txt = (data.output||'').replace(/```json|```/g,'').trim();
-      const parsed = JSON.parse(txt);
+      let parsed = {};
+      try {
+        parsed = JSON.parse(txt);
+      } catch(parseErr) {
+        console.warn('Cold-start JSON parse failed, using fallbacks:', parseErr.message);
+        parsed = {
+          bnca: {
+            revenuePosition: `Revenue at risk: ${live.revenueAtRisk || 'unspecified'}. Denial hotspot: ${live.denialRate || 'unspecified'}.`,
+            denialIntel: `Denial hotspot ${live.denialRate || 'unspecified'} — run a pack for detail.`,
+            strategistSummary: `${live.strategistScore || ''} ${live.strategistLabel || ''}`.trim()
+          },
+          alerts: { decisions: [], urgent: [] },
+          kpi: {}
+        };
+      }
       bnca = parsed.bnca || {};
       decisions = (parsed.alerts?.decisions || []).slice(0,4).map((dec,i) =>
         isZeroValue(dec.value) ? { ...dec, value: FALLBACK_DECISIONS[i % FALLBACK_DECISIONS.length].value } : dec
@@ -1107,23 +1114,60 @@ async function escalateToExecPortal(){
 // ── LOAD SIGNALS ──
 async function loadSignals(){
   const out = document.getElementById('signals-out');
-  out.innerHTML='<div style="font-size:9px;color:var(--purple);padding:8px">◈ Refreshing HC signals...</div>';
-  const tmpOut = {classList:{add:()=>{},remove:()=>{}},textContent:''};
-  try{
-    const resp = await fetch('/api/hc/query',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        system: HC_CONTEXT,
-        message:'List the top 4 live strategic signals for HonorHealth right now. For each: signal title, source (which office/node), sub-detail, and urgency level (URGENT/HIGH/MED/INFRA). Focus on revenue cycle, denials, auth, and coding issues only. Return as a simple numbered list.'
+  if (!out) return;
+  out.innerHTML = '<div style="font-size:9px;color:var(--purple);padding:8px">◈ Refreshing HC signals...</div>';
+  
+  try {
+    const resp = await fetch('/api/hc/query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system: typeof HC_CONTEXT !== 'undefined' ? HC_CONTEXT : 'You are TSM Anomaly Advisor core engine.',
+        message: 'List the top 4 live strategic signals for HonorHealth right now. For each: signal title, source (which office/node), sub-detail, and urgency level (URGENT/HIGH/MED/INFRA). Focus on revenue cycle, denials, auth, and coding issues only. Return as a simple numbered list.'
       })
     });
+    
     const data = await resp.json();
-    if(data.output){
-      out.innerHTML='<pre style="font-size:9px;color:var(--text);white-space:pre-wrap">'+data.output+'</pre>';
+    const rawOutput = data.output || data.response || data.content || '';
+    
+    if (rawOutput) {
+      out.innerHTML = `<pre style="font-size:9px;color:var(--text);white-space:pre-wrap;margin:0;font-family:inherit;">${rawOutput}</pre>`;
+    } else {
+      out.innerHTML = '<div style="font-size:9px;color:var(--red)">No live signals returned</div>';
     }
-  } catch(e){
-    out.innerHTML='<div style="font-size:9px;color:var(--red)">Signal refresh failed</div>';
+  } catch(e) {
+    console.warn('Signal stream fetch failed:', e);
+    out.innerHTML = '<div style="font-size:9px;color:var(--red)">Signal refresh failed</div>';
+  }
+}
+
+// ── LOAD SIGNALS ──
+async function loadSignals(){
+  const out = document.getElementById('signals-out');
+  if (!out) return;
+  out.innerHTML = '<div style="font-size:9px;color:var(--purple);padding:8px">◈ Refreshing HC signals...</div>';
+  
+  try {
+    const resp = await fetch('/api/hc/query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system: typeof HC_CONTEXT !== 'undefined' ? HC_CONTEXT : 'You are TSM Anomaly Advisor core engine.',
+        message: 'List the top 4 live strategic signals for HonorHealth right now. For each: signal title, source (which office/node), sub-detail, and urgency level (URGENT/HIGH/MED/INFRA). Focus on revenue cycle, denials, auth, and coding issues only. Return as a simple numbered list.'
+      })
+    });
+    
+    const data = await resp.json();
+    const rawOutput = data.output || data.response || data.content || '';
+    
+    if (rawOutput) {
+      out.innerHTML = `<pre style="font-size:9px;color:var(--text);white-space:pre-wrap;margin:0;font-family:inherit;">${rawOutput}</pre>`;
+    } else {
+      out.innerHTML = '<div style="font-size:9px;color:var(--red)">No live signals returned</div>';
+    }
+  } catch(e) {
+    console.warn('Signal stream fetch failed:', e);
+    out.innerHTML = '<div style="font-size:9px;color:var(--red)">Signal refresh failed</div>';
   }
 }
 
