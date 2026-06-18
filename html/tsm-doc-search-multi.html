@@ -1762,6 +1762,7 @@ function openHcNodeWithDoc(docId) {
 }
 window.openHcNodeWithDoc = openHcNodeWithDoc;
 </script>
+
 <div id="viewerModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100000;align-items:center;justify-content:center">
   <div style="width:90%;max-width:1100px;max-height:88vh;overflow-y:auto;background:#080c14;border:1px solid rgba(30,232,182,.2);border-radius:6px;padding:1.2rem">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem">
@@ -1771,313 +1772,356 @@ window.openHcNodeWithDoc = openHcNodeWithDoc;
     <div id="viewerBody"></div>
   </div>
 </div>
-// ═══════════════════════════════════════════════════════════════════════════
-// PATCH: tsm-doc-search-multi.html
-// ADD THIS SCRIPT BLOCK just before </body> (after existing scripts)
-// ═══════════════════════════════════════════════════════════════════════════
 
-// ── HC DOC-TYPE → NODE PAGE ROUTING ───────────────────────────────────────
-// Maps document characteristics to the most relevant HC node page.
-// Used by openHcNodeWithDoc() below.
-const HC_DOC_NODE_ROUTES = {
-  // documentType → primaryNodeId
-  'DENIAL':          'billing',
-  'CLAIM APPEAL':    'billing',
-  'REMITTANCE':      'billing',
-  'PRIOR AUTH':      'insurance',
-  'DOCUMENT REPORT': 'operations',   // generic — operations is the catch-all
-  'CLINICAL':        'medical',
-  'MEDICAL RECORD':  'medical',
-  'AUDIT':           'compliance',
-  'POLICY':          'compliance',
-  'PHARMACY':        'pharmacy',
-  'RX':              'pharmacy',
-  'VENDOR INVOICE':  'vendor',
-  'GRANT':           'grants',
-  'TAX':             'tax',
-  'FILING':          'legal',
-  'CONTRACT':        'legal',
-  'ESCALATION':      'billing',      // BNCA escalations default to billing
+<script>
+// ── HC DENIAL APP ROUTING ────────────────────────────────────
+const HC_APP_ROUTES = {
+  'CO-50': { app:'HC Insurance Node', url:'/html/healthcare/hc-nodes.html', reason:'Medical necessity denial requires insurance review' },
+  'CO-4':  { app:'HC Insurance Node', url:'/html/healthcare/hc-nodes.html', reason:'Medical necessity appeal' },
+  'CO-16': { app:'HC Billing Command', url:'/html/healthcare/hc-billing.html', reason:'Claim lacks info — billing correction needed' },
+  'CO-97': { app:'HC Billing Command', url:'/html/healthcare/hc-billing.html', reason:'Claim bundling/unbundling issue' },
+  'CO-22': { app:'HC Insurance Node', url:'/html/healthcare/hc-nodes.html', reason:'COB dispute — coordination of benefits review' },
+  'PR-96': { app:'HC Financial Node', url:'/html/healthcare/hc-financial.html', reason:'Patient liability — financial review needed' },
 };
-
-// exclusionCode prefix → nodeId override
-const HC_CODE_NODE_MAP = [
-  { prefix:'CO-',    node:'billing' },
-  { prefix:'PR-',    node:'insurance' },
-  { prefix:'OA-',    node:'financial' },
-  { prefix:'PA-',    node:'insurance' },
-  { prefix:'LIEN',   node:'legal' },
-  { prefix:'PRIV',   node:'legal' },
-  { prefix:'AKS',    node:'legal' },
-  { prefix:'SLA-',   node:'operations' },
-  { prefix:'AR-',    node:'financial' },
-  { prefix:'COD-',   node:'compliance' },
-];
-
-// Node ID → Analysis Hub intel key (matches healthcare/index.html NODE_INTELLIGENCE keys)
-const HC_NODE_TO_INTEL_KEY = {
-  'billing':    'billing',
-  'compliance': 'compliance',
-  'medical':    'medical',
-  'insurance':  'insurance',
-  'operations': 'operations',
-  'pharmacy':   'pharmacy',
-  'financial':  'financial',
-  'legal':      'legal',
-  'vendor':     'vendor',
-  'tax':        'tax',
-  'grants':     'grants',
-};
-
-// War room URL for HC (used in banner CTA)
-const HC_WAR_ROOM_URL = '/html/healthcare/hc-denial-war-room.html';
-
-// ── OPEN HC NODE WITH DOC ANOMALY CONTEXT ─────────────────────────────────
-// Called by the "↗ Open Node" button on HC vertical doc cards.
-// 1. Resolves which HC node page best matches this doc
-// 2. Derives anomaly payload from doc metadata
-// 3. Writes to localStorage key 'tsm-doc-anomaly' (picked up by bridge script)
-// 4. Opens the node page in a new tab
-function openHcNodeWithDoc(docId) {
-  // Find doc across all verticals
-  const allDocs = (() => {
-    const vKeys = Object.keys(window.VERTICALS || {});
-    let found = null;
-    for (const v of vKeys) {
-      const list = (() => { try { return JSON.parse(localStorage.getItem(window.VERTICALS[v]?.storageKey)||'[]'); } catch(e){return[];} })();
-      found = list.find(d => d.id === docId);
-      if (found) break;
-    }
-    // Also check dual-vertical docs
-    if (!found && window.DUAL_DOCS) {
-      found = window.DUAL_DOCS.find(d => d.id === docId);
-    }
-    return found;
-  })();
-
-  const doc = allDocs;
-  if (!doc) { console.warn('TSM: doc not found for id', docId); return; }
-
-  // ── Resolve target node ──────────────────────────────────────────────
-  let nodeId = 'billing'; // fallback
-  const docType   = (doc.documentType || '').toUpperCase();
-  const excCode   = (doc.exclusionCode || '').toUpperCase();
-  const fileName  = (doc.fileName || '').toUpperCase();
-
-  // 1. Try exclusionCode prefix match
-  for (const { prefix, node } of HC_CODE_NODE_MAP) {
-    if (excCode.startsWith(prefix) || fileName.includes(prefix)) { nodeId = node; break; }
+ 
+function hcResolveApp(docText) {
+  const t = (docText||'').toLowerCase();
+  const codeMatch = (docText||'').match(/\b(CO-\d+|PR-\d+|OA-\d+|PI-\d+)\b/i);
+  if (codeMatch) {
+    const route = HC_APP_ROUTES[codeMatch[1].toUpperCase()];
+    if (route) return route;
   }
-  // 2. Try documentType match (only if code didn't match)
-  if (nodeId === 'billing') {
-    for (const [key, node] of Object.entries(HC_DOC_NODE_ROUTES)) {
-      if (docType.includes(key)) { nodeId = node; break; }
-    }
-  }
-  // 3. sourceNode hint (e.g. "hc-insurance" → "insurance")
-  if (doc.sourceNode && doc.sourceNode.startsWith('hc-')) {
-    const fromSource = doc.sourceNode.replace(/^hc-/,'');
-    if (HC_NODE_TO_INTEL_KEY[fromSource]) nodeId = fromSource;
-  }
-
-  // ── Build anomaly payload ────────────────────────────────────────────
-  // Pull NODE_INTELLIGENCE from the HC hub if available in this tab's
-  // scope (it won't be — this is multi.html). So we build a lightweight
-  // payload from the doc itself. The bridge will use this to render the
-  // banner; it doesn't need the full Analysis Hub intel.
-  const hasAnomaly = !!(doc.exclusionCode || (doc._ext && doc._ext.defectFlags && doc._ext.defectFlags.length));
-  const defectFlags = (doc._ext && doc._ext.defectFlags) || [];
-  const amount = Number(doc.amount) || 0;
-
-  // Derive checkStatus from exclusion code and doc type
-  function deriveCheckStatus(excCode, docType) {
-    if (excCode.startsWith('CO-197') || docType.includes('PRIOR AUTH') || excCode.startsWith('PA-')) return 'AUTH_BLOCK';
-    if (excCode.startsWith('CO-') || docType.includes('DENIAL') || docType.includes('CLAIM APPEAL')) return 'DENIAL_RISK';
-    if (excCode.startsWith('PR-') || excCode.startsWith('OA-')) return 'PAYMENT_BLOCK';
-    if (excCode.startsWith('LIEN') || excCode.startsWith('PRIV') || excCode.startsWith('AKS')) return 'LEGAL_HOLD';
-    if (excCode.startsWith('PA-')) return 'AUTH_BLOCK';
-    if (docType.includes('AUDIT') || docType.includes('HIPAA') || docType.includes('POLICY')) return 'COMPLIANCE_BLOCK';
-    if (docType.includes('ESCALATION')) return 'DENIAL_RISK';
-    if (defectFlags.length) return 'DOCUMENTATION_BLOCK';
-    return 'ACTIVE';
-  }
-
-  // Derive human-readable narrative
-  function buildNarrative(doc, nodeId, checkStatus) {
-    const ref    = doc.invoiceNo || doc._ext?.ref || '—';
-    const vendor = doc.vendor || 'payer';
-    const client = doc._ext?.client || 'patient';
-    const code   = doc.exclusionCode || doc.documentType || 'anomaly';
-    const amt    = amount > 0 ? ` ($${amount.toLocaleString()} exposure)` : '';
-    switch(checkStatus) {
-      case 'DENIAL_RISK':
-        return `Denial detected on ${ref} from ${vendor} for ${client}${amt}. Code: ${code}. Immediate billing review required — do not resubmit without resolution.`;
-      case 'AUTH_BLOCK':
-        return `Prior authorization issue on ${ref}${amt}. Procedures must NOT proceed — denial risk is 100% without resolved auth. Contact ${vendor} payer line.`;
-      case 'PAYMENT_BLOCK':
-        return `Payment processing anomaly on ${ref} from ${vendor}${amt}. ERA/remittance requires manual reconciliation before posting.`;
-      case 'COMPLIANCE_BLOCK':
-        return `Compliance flag on document ${ref}${amt}. Documentation gaps or authorization issues must be resolved before billing can proceed.`;
-      case 'LEGAL_HOLD':
-        return `Legal anomaly detected on ${ref}. Code ${code} requires legal review before any further action on this account.`;
-      case 'DOCUMENTATION_BLOCK':
-        return `Documentation defects found in ${doc.fileName || ref}: ${defectFlags.join(', ')}. Clinical records must be corrected before billing release.`;
-      default:
-        return `Anomaly detected on ${doc.fileName || ref} routed from Document Search${amt}. Review and resolve before proceeding.`;
-    }
-  }
-
-  // Derive remediation steps from doc type + code
-  function buildSteps(nodeId, checkStatus, doc) {
-    const ref  = doc.invoiceNo || '—';
-    const code = doc.exclusionCode || '';
-    const stepSets = {
-      'DENIAL_RISK': [
-        `Pull full EOB/ERA for ${ref} — identify exact CARC/RARC denial reason codes`,
-        `Verify claim was submitted correctly — check CPT/ICD-10 pairing and modifier alignment`,
-        `Determine appeal window — timely filing deadline must be confirmed before proceeding`,
-        `Draft appeal letter with medical necessity documentation attached`,
-        `Submit via payer portal and log tracking number in AR system`,
-      ],
-      'AUTH_BLOCK': [
-        `Verify current prior auth status for all procedures on ${ref}`,
-        `Contact payer prior auth line — escalate if wait exceeds 2 hours`,
-        `Do NOT perform or bill procedure until auth is confirmed and on file`,
-        `Document auth number in claim header before submission`,
-        `Set follow-up reminder at 48-hour intervals until resolved`,
-      ],
-      'PAYMENT_BLOCK': [
-        `Manually pull ${ref} ERA/835 file and compare posted amounts to contracted rate`,
-        `Flag any variance exceeding 5% as an underpayment — initiate appeal`,
-        `Check for payer hold notification — contact payer relations if hold is active`,
-        `Post clean items and quarantine disputed amounts pending resolution`,
-        `Escalate unresolved ERA failures to financial analyst within 24 hours`,
-      ],
-      'COMPLIANCE_BLOCK': [
-        `Halt billing on ${ref} until all compliance flags are cleared`,
-        `Obtain updated HIPAA authorization if expired — do not release claim without it`,
-        `Verify OIG exclusion list for all providers on this account`,
-        `Complete documentation checklist before releasing to billing queue`,
-        `File compliance resolution memo and update compliance score tracker`,
-      ],
-      'LEGAL_HOLD': [
-        `Escalate ${ref} to legal counsel immediately — do not take further action without review`,
-        `Document chain of custody for all files related to this account`,
-        `Suspend any vendor payments pending legal clearance`,
-        `Prepare regulatory defense memo if requested by counsel`,
-        `Set 48-hour check-in cadence with legal team until hold is lifted`,
-      ],
-      'DOCUMENTATION_BLOCK': [
-        `Identify specific defects: ${(defectFlags.join(', ')) || 'see findings above'}`,
-        `Send provider query with 24-hour response expectation`,
-        `Block claim release for all encounters with missing documentation`,
-        `Route corrected records back to medical coding for ICD-10 validation`,
-        `Re-submit to billing queue only after defects are fully resolved`,
-      ],
-    };
-    return stepSets[checkStatus] || [
-      `Review ${doc.fileName || ref} for anomalies`,
-      `Escalate to appropriate node specialist`,
-      `Document findings and resolution in AR system`,
-      `Follow up within 48 hours`,
-    ];
-  }
-
-  const checkStatus = hasAnomaly ? deriveCheckStatus(excCode, docType) : 'ACTIVE';
-  const narrative   = buildNarrative(doc, nodeId, checkStatus);
-  const steps       = buildSteps(nodeId, checkStatus, doc);
-
-  // Findings from defectFlags or derived from code
-  const findings = defectFlags.length
-    ? defectFlags.map(f => `❌ ${f}`)
-    : (excCode
-        ? [`❌ ${excCode} — ${doc.documentType || 'Document anomaly'} on ${doc.invoiceNo || doc.fileName || 'this record'}`,
-           `❌ Source: ${doc.vendor || 'Unknown vendor'} · Client: ${doc._ext?.client || '—'}`,
-           `❌ Routed from: Document Search · Node origin: ${doc.sourceNode || 'hc'}`]
-        : [`⚠️ Document routed with flags — review before action`]);
-
-  const anomalyPayload = {
-    // Core anomaly fields
-    checkStatus,
-    severity:         checkStatus.includes('CRITICAL') || ['DENIAL_RISK','AUTH_BLOCK','PAYMENT_BLOCK','LEGAL_HOLD','COMPLIANCE_BLOCK'].includes(checkStatus) ? 'CRITICAL' : 'HIGH',
-    narrative,
-    findings,
-    steps,
-    financialImpact:  amount,
-    risk:             amount > 50000 ? 82 : amount > 10000 ? 68 : 55,
-
-    // Doc identity
-    fileName:         doc.fileName || '',
-    documentType:     doc.documentType || '',
-    docType:          doc.documentType || '',
-    ref:              doc.invoiceNo || doc._ext?.ref || '',
-    client:           doc._ext?.client || '',
-    exclusionCode:    doc.exclusionCode || '',
-    vendor:           doc.vendor || '',
-
-    // Routing context
-    nodeId,
-    targetNodeIds:    [nodeId],    // bridge affinity override
-    source:           'doc-search',
-    warRoomUrl:       HC_WAR_ROOM_URL,
-
-    // Timestamps
-    ts:               Date.now(),
-    timestamp:        new Date().toISOString(),
-  };
-
-  // ── Write to localStorage ────────────────────────────────────────────
+  if (/prior auth|authorization/.test(t)) return { app:'HC Insurance Node', url:'/html/healthcare/hc-nodes.html', reason:'Prior auth issue requires insurance review' };
+  if (/hipaa|compliance|audit/.test(t)) return { app:'HC Compliance Node', url:'/html/healthcare/hc-anomaly-advisor.html', reason:'Compliance flag detected' };
+  if (/vendor|clearinghouse/.test(t)) return { app:'HC Vendor Node', url:'/html/healthcare/hc-vendors.html', reason:'Vendor/clearinghouse issue' };
+  if (/ar aging|dso|collection|write.?off/.test(t)) return { app:'HC Financial Node', url:'/html/healthcare/hc-financial.html', reason:'Financial exposure requires review' };
+  return { app:'HC Denial War Room', url:'/html/healthcare/hc-denial-war-room.html', reason:'General RCM denial — re-run with full context' };
+}
+ 
+async function hcGenerateMissionSteps(anomalyText, docText) {
+  const route = hcResolveApp(docText);
+  const HC_APPS = [
+    'HC Billing Command | /html/healthcare/hc-billing.html',
+    'HC Insurance Node | /html/healthcare/hc-nodes.html',
+    'HC Financial Node | /html/healthcare/hc-financial.html',
+    'HC Compliance Node | /html/healthcare/hc-anomaly-advisor.html',
+    'HC Vendor Node | /html/healthcare/hc-vendors.html',
+    'HC Strategist | /html/healthcare/hc-strategist.html',
+  ].join('\n');
+ 
+  const sys = `You are TSM Neural Core. Generate a step-by-step RCM remediation mission for a healthcare denial anomaly. Respond ONLY with valid JSON. No markdown, no explanation.`;
+  const msg = `Anomaly detected:\n"${anomalyText.slice(0,600)}"\n\nDocument context:\n${(docText||'').slice(0,400)}\n\nAvailable apps:\n${HC_APPS}\n\nGenerate 4-6 steps. Return ONLY:\n{"missionTitle":"...","summary":"...","steps":[{"id":"step-1","title":"...","appName":"...","appUrl":"...","objective":"...","instructions":"...","expectedOutput":"...","completionCriteria":"..."}]}`;
+ 
   try {
-    localStorage.setItem('tsm-doc-anomaly', JSON.stringify(anomalyPayload));
-    // Also mirror into tsm-last-analysis so HC hub Analysis Hub can see it
-    localStorage.setItem('tsm-last-analysis', JSON.stringify({
-      ...anomalyPayload,
-      missionKey: nodeId,
-      type:       nodeId,
-    }));
+    const res = await fetch('/api/hc/query', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ system: sys, message: msg })
+    });
+    const data = await res.json();
+    const raw = (data.response||data.content||'').replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(raw);
+    return { missionId:'HC-'+Date.now(), ...parsed, steps:(parsed.steps||[]).map((s,i)=>({...s,status:i===0?'active':'pending'})) };
   } catch(e) {
-    console.warn('TSM: localStorage write failed', e);
+    return {
+      missionId:'HC-'+Date.now(), missionTitle:'HC Denial Remediation',
+      summary:'Resolve the flagged healthcare denial using the recommended workflow.',
+      steps:[
+        { id:'step-1', title:route.app, appName:route.app, appUrl:route.url, objective:route.reason,
+          instructions:`Open ${route.app}. Load the denial document and review the flagged anomaly. Run the relevant engine or workflow for this denial type.`,
+          expectedOutput:'Denial root cause confirmed and appeal path identified', completionCriteria:'Root cause documented', status:'active' },
+        { id:'step-2', title:'HC Strategist Review', appName:'HC Strategist', appUrl:'/html/healthcare/hc-strategist.html',
+          objective:'Synthesize findings into appeal strategy',
+          instructions:'Open HC Strategist. Review the engine output from the previous step. Run the strategist chain to generate a complete appeal package with documentation checklist.',
+          expectedOutput:'Appeal strategy and documentation checklist', completionCriteria:'Appeal package ready for submission', status:'pending' }
+      ]
+    };
   }
-
-  // ── Open node page ───────────────────────────────────────────────────
-  const nodeUrl = `/html/healthcare/hc-${nodeId}/index.html`;
-  window.open(nodeUrl, '_blank');
+}
+ 
+function renderHCMissionGuide(mission, container) {
+  function completeStep(stepId) {
+    const idx = mission.steps.findIndex(s=>s.id===stepId);
+    if (idx<0) return;
+    mission.steps[idx].status='complete';
+    if (idx+1<mission.steps.length) mission.steps[idx+1].status='active';
+    renderGuide();
+    if (mission.steps.every(s=>s.status==='complete')) {
+      setTimeout(()=>{
+        const done=document.createElement('div');
+        done.style.cssText='margin-top:10px;padding:10px;background:rgba(30,232,182,.08);border:1px solid rgba(30,232,182,.3);color:#1ee8b6;font-size:9px;letter-spacing:1px;text-align:center;';
+        done.textContent='⬡ MISSION COMPLETE — ALL STEPS RESOLVED';
+        container.appendChild(done);
+      },300);
+    }
+  }
+  window._hcMissionComplete = completeStep;
+ 
+  function renderGuide() {
+    const step = mission.steps.find(s=>s.status==='active');
+    const done = mission.steps.filter(s=>s.status==='complete').length;
+    const pct = Math.round((done/mission.steps.length)*100);
+    container.innerHTML = `
+      <div style="border-top:1px solid #1ee8b620;margin-top:10px;padding-top:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="color:#1ee8b6;font-size:9px;letter-spacing:1px;font-weight:700;">⚡ REMEDIATION MISSION</span>
+          <span style="color:#1ee8b650;font-size:9px;">${done}/${mission.steps.length} · ${pct}%</span>
+        </div>
+        <div style="height:2px;background:#1ee8b615;margin-bottom:10px;"><div style="height:100%;width:${pct}%;background:#1ee8b6;transition:width .3s;"></div></div>
+        <div style="font-size:10px;color:#7a9a8a;margin-bottom:10px;line-height:1.5;">${mission.summary||''}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">
+          ${mission.steps.map((s,i)=>`<span style="font-size:8px;padding:2px 7px;border-radius:2px;background:${s.status==='complete'?'rgba(30,232,182,.15)':s.status==='active'?'rgba(30,232,182,.08)':'rgba(255,255,255,.03)'};border:1px solid ${s.status==='complete'?'rgba(30,232,182,.3)':s.status==='active'?'rgba(30,232,182,.2)':'rgba(255,255,255,.06)'};color:${s.status==='complete'?'#1ee8b6':s.status==='active'?'#c0e8d0':'#556655'};">${s.status==='complete'?'✓ ':s.status==='active'?'▶ ':`${i+1}. `}${s.appName}</span>`).join('')}
+        </div>
+        ${step ? `
+        <div style="background:#0d1a0d;border:1px solid #1ee8b620;border-radius:4px;padding:10px;margin-bottom:8px;">
+          <div style="font-size:8px;color:#1ee8b660;letter-spacing:1px;margin-bottom:4px;">STEP ${mission.steps.indexOf(step)+1} OF ${mission.steps.length}</div>
+          <div style="font-size:11px;color:#e0f0e0;font-weight:700;margin-bottom:8px;">${step.title}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(30,232,182,.05);border:1px solid rgba(30,232,182,.12);border-radius:3px;padding:7px 10px;margin-bottom:8px;">
+            <div><div style="font-size:8px;color:#1ee8b660;margin-bottom:2px;">APP</div><div style="font-size:10px;color:#1ee8b6;font-weight:700;">${step.appName}</div><div style="font-size:8px;color:#446644;">${step.appUrl}</div></div>
+            <a href="${step.appUrl}" target="_blank" style="background:#1ee8b6;color:#000;font-size:9px;font-weight:700;padding:6px 10px;text-decoration:none;letter-spacing:1px;border-radius:3px;white-space:nowrap;">OPEN ↗</a>
+          </div>
+          <div style="font-size:9px;color:#7a9a8a;margin-bottom:6px;line-height:1.6;"><span style="color:#1ee8b660;font-size:8px;display:block;margin-bottom:2px;">OBJECTIVE</span>${step.objective}</div>
+          <div style="background:#0a0f0a;border:1px solid rgba(255,255,255,.06);border-radius:3px;padding:8px;margin-bottom:8px;font-size:9px;color:#7a9a8a;line-height:1.7;white-space:pre-wrap;"><span style="color:#1ee8b660;font-size:8px;display:block;margin-bottom:3px;">ACTIONS</span>${step.instructions}</div>
+          <div style="border-left:2px solid rgba(30,232,182,.3);padding:5px 8px;margin-bottom:8px;font-size:9px;color:#7a9a8a;"><span style="color:#1ee8b660;font-size:8px;display:block;margin-bottom:2px;">EXPECTED OUTPUT</span>${step.expectedOutput}</div>
+          <button onclick="window._hcMissionComplete('${step.id}')" style="width:100%;background:rgba(30,232,182,.1);border:1px solid rgba(30,232,182,.25);color:#1ee8b6;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1px;padding:9px;cursor:pointer;text-transform:uppercase;" onmouseover="this.style.background='rgba(30,232,182,.2)'" onmouseout="this.style.background='rgba(30,232,182,.1)'">✓ COMPLETE STEP ${mission.steps.indexOf(step)+1}</button>
+        </div>` : ''}
+      </div>`;
+  }
+  renderGuide();
+}
+ 
+function showAnomalyAdvisorPanel(outputs, docText) {
+  const existing = document.getElementById('anomaly-slide-panel');
+  if (existing) existing.remove();
+ 
+  const panel = document.createElement('div');
+  panel.id = 'anomaly-slide-panel';
+  panel.style.cssText = `
+    position:fixed; bottom:0; right:0; width:420px; max-height:75vh;
+    background:#0a0f0a; border-top:2px solid #1ee8b6; border-left:2px solid #1ee8b6;
+    z-index:300; display:flex; flex-direction:column;
+    transform:translateY(100%); transition:transform 0.4s cubic-bezier(0.16,1,0.3,1);
+    font-family:'JetBrains Mono',monospace;
+  `;
+ 
+  panel.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #1ee8b633;background:#0d1a0d;">
+      <span style="color:#1ee8b6;font-size:11px;font-weight:700;letter-spacing:2px;">⬡ ANOMALY ADVISOR — FIELD DEFECT SCAN</span>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button onclick="window.open('hc-anomaly-advisor.html','_blank')" style="background:#1ee8b620;border:1px solid #1ee8b6;color:#1ee8b6;font-size:9px;padding:3px 8px;cursor:pointer;font-family:inherit;letter-spacing:1px;">FULL REPORT ↗</button>
+        <button onclick="document.getElementById('anomaly-slide-panel').remove()" style="background:transparent;border:none;color:#666;font-size:16px;cursor:pointer;line-height:1;padding:0 2px;">✕</button>
+      </div>
+    </div>
+    <div id="anomaly-panel-body" style="flex:1;overflow-y:auto;padding:12px 14px;font-size:11px;line-height:1.8;color:#a0b8a0;">
+      <div id="anomaly-scan-msg" style="color:#1ee8b6;font-size:10px;letter-spacing:1px;">⬡ SCANNING ENGINE OUTPUTS FOR FIELD-LEVEL DEFECTS...</div>
+    </div>
+    <div id="hc-mission-container" style="padding:0 14px;"></div>
+    <div id="hc-mission-btn-wrap" style="display:none;padding:0 14px 14px;">
+      <button id="hc-build-mission-btn" onclick="hcLaunchMission()" style="width:100%;background:rgba(30,232,182,.1);border:1px solid rgba(30,232,182,.35);color:#1ee8b6;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1px;padding:10px;cursor:pointer;text-transform:uppercase;">⚡ BUILD REMEDIATION MISSION</button>
+    </div>
+  `;
+ 
+  document.body.appendChild(panel);
+  requestAnimationFrame(() => { panel.style.transform = 'translateY(0)'; });
+ 
+  const body = document.getElementById('anomaly-panel-body');
+  const context = `ENGINE 1 (DOCUMENT INTEL):\n${(outputs[0]||'').slice(0,400)}\n\nENGINE 2 (ROOT CAUSE):\n${(outputs[1]||'').slice(0,400)}\n\nENGINE 3 (FINANCIAL):\n${(outputs[2]||'').slice(0,300)}\n\nENGINE 4 (RECOVERY):\n${(outputs[3]||'').slice(0,300)}\n\nDOC SAMPLE:\n${(docText||'').slice(0,500)}`;
+  const sys = `You are TSM Anomaly Advisor, a field-level defect detection engine for healthcare RCM documents. Analyze the engine outputs and identify specific actionable document defects. Output ONLY a numbered list. Each item must follow this exact format:
+⚠ [FIELD NAME] — what is wrong — exact fix instruction (which tab, which field, what to enter or change).
+Maximum 8 items. No preamble. No headers. No summary. Start immediately with item 1.`;
+ 
+  let anomalyFullText = '';
+  let firstChunk = true;
+  groqStreamModel(
+    'llama-3.3-70b-versatile', sys, context,
+    (chunk) => {
+      if (firstChunk) { firstChunk = false; const s=document.getElementById('anomaly-scan-msg'); if(s) s.remove(); }
+      anomalyFullText += chunk;
+      const span = document.createElement('span');
+      span.innerHTML = chunk.replace(/⚠/g,'<span style="color:#f59e0b">⚠</span>').replace(/—/g,'<span style="color:#1ee8b660"> — </span>');
+      body.appendChild(span);
+      body.scrollTop = body.scrollHeight;
+    },
+    () => {
+      const footer = document.createElement('div');
+      footer.style.cssText = 'margin-top:14px;padding-top:10px;border-top:1px solid #1ee8b620;color:#1ee8b650;font-size:9px;letter-spacing:1px;';
+      footer.textContent = '⬡ SCAN COMPLETE — ANOMALY REPORT PACKAGED FOR STRATEGIST RELAY';
+      body.appendChild(footer);
+      document.getElementById('hc-mission-btn-wrap').style.display = 'block';
+      document.getElementById('hc-build-mission-btn').dataset.anomaly = anomalyFullText;
+      document.getElementById('hc-build-mission-btn').dataset.doc = (docText||'').slice(0,600);
+    },
+    (err) => { const e=document.createElement('div'); e.style.color='#ef4444'; e.textContent='[Advisor error: '+err+']'; body.appendChild(e); },
+    600
+  );
+}
+ 
+async function hcLaunchMission() {
+  const btn = document.getElementById('hc-build-mission-btn');
+  const container = document.getElementById('hc-mission-container');
+  if (!btn || !container) return;
+  document.getElementById('hc-mission-btn-wrap').style.display = 'none';
+  container.innerHTML = '<div style="padding:10px 0;color:#1ee8b660;font-size:9px;letter-spacing:1px;text-align:center;">⬡ BUILDING REMEDIATION MISSION...</div>';
+  const anomalyText = btn.dataset.anomaly || '';
+  const docCtx = btn.dataset.doc || '';
+  const mission = await hcGenerateMissionSteps(anomalyText, docCtx);
+  renderHCMissionGuide(mission, container);
+  hcWriteAnomalyRelay(anomalyText, docCtx, mission);
 }
 
-// Expose globally
-window.openHcNodeWithDoc = openHcNodeWithDoc;
+function hcWriteAnomalyRelay(anomalyText, docCtx, mission) {
+  try {
+    const route = hcResolveApp(docCtx || anomalyText);
+    const nodeMatch = (route.url || '').match(/hc-([^\.]+)\.html/);
+    const nodeId = nodeMatch ? nodeMatch[1] : 'billing';
+    const codeMatch = (docCtx || anomalyText || '').match(/\b(CO-\d+|PR-\d+|OA-\d+|PI-\d+)\b/i);
+    const excCode = codeMatch ? codeMatch[1].toUpperCase() : '';
+    const amountMatch = (docCtx || anomalyText || '').match(/\$[\d,]+(\.\d{2})?/);
+    const amount = amountMatch ? Number(amountMatch[0].replace(/[$,]/g, '')) : undefined;
+    const steps = (mission.steps || []).map(s => `${s.title}${s.instructions ? ' — ' + s.instructions : ''}`);
+    const findings = [
+      excCode ? '❌ ' + excCode + ' — denial code detected on this record' : '⚠️ Denial anomaly flagged by War Room',
+      '❌ Routed from HC Denial War Room · Recommended: ' + route.app,
+    ];
+    const payload = {
+      checkStatus: 'DENIAL_RISK',
+      narrative: mission.summary || (anomalyText.slice(0, 300) || 'Denial anomaly detected — review required.'),
+      findings, steps,
+      financialImpact: amount, risk: amount > 50000 ? 82 : amount > 10000 ? 68 : 55,
+      fileName: '', documentType: excCode || 'DENIAL',
+      docType: excCode || 'DENIAL', ref: '', client: '', exclusionCode: excCode,
+      nodeId, targetNodeIds: [nodeId],
+      source: 'war-room', warRoomUrl: '/html/healthcare/hc-denial-war-room.html',
+      ts: Date.now(), timestamp: new Date().toISOString(),
+    };
+    localStorage.setItem('tsm-doc-anomaly', JSON.stringify(payload));
+  } catch (e) { console.warn('War room anomaly relay write failed:', e); }
+}
+</script>
 
-// ── PATCH: override the card "↗ Open Node" link for HC vertical ─────────
-// The existing renderDocCard() builds openNodeRoute from def.nodes[sourceNode].route.
-// For HC docs, that resolves to hc-denial-war-room — not the node pages.
-// We monkey-patch the card insertion to replace HC open-node links.
-(function patchHcOpenNode() {
-  const _origInsert = Element.prototype.insertAdjacentHTML;
-  // Instead of patching DOM insertion (fragile), we attach a delegated click
-  // handler that intercepts "↗ Open Node" links inside HC tab doc cards.
-  document.addEventListener('click', function(e) {
-    const link = e.target.closest('.btn-open-node');
-    if (!link) return;
-    // Only intercept if we're on the HC vertical tab
-    const activeTab = document.querySelector('.tab-btn.active, .vertical-tab.active, [data-v].active');
-    const isHC = (
-      (activeTab && (activeTab.dataset.v === 'hc' || activeTab.textContent.includes('HEALTHCARE'))) ||
-      document.querySelector('.tab-btn[data-v="hc"].active') !== null ||
-      // Fallback: check if the card is in an HC section
-      link.closest('[data-vertical="hc"]') !== null ||
-      link.closest('#tab-hc') !== null
-    );
-    if (!isHC) return;
-    // Get doc id from closest card
-    const card = link.closest('[data-id]');
-    if (!card) return;
-    e.preventDefault();
-    openHcNodeWithDoc(card.dataset.id);
-  }, true);
-})();
+<div class="tour-overlay" id="tourOverlay">
+  <div class="tour-card">
+    <button class="tour-close" onclick="tourClose()">✕</button>
+    <div class="tour-pip-row" id="tourPips"></div>
+    <div class="tour-step-label" id="tourStepLabel"></div>
+    <div class="tour-title" id="tourTitle"></div>
+    <div class="tour-body" id="tourBody"></div>
+    <div class="tour-actions">
+      <button class="tour-btn" id="tourBack" onclick="tourNav(-1)">← BACK</button>
+      <button class="tour-btn primary" id="tourNext" onclick="tourNav(1)">NEXT →</button>
+    </div>
+  </div>
+</div>
 
-// ═══════════════════════════════════════════════════════════════════════════
-// END PATCH
-// ═══════════════════════════════════════════════════════════════════════════
+<div class="howto-overlay" id="howtoOverlay">
+  <div class="howto-card">
+    <h2>⚡ HOW TO USE — HC DENIAL WAR ROOM</h2>
+    <div class="howto-section">
+      <h3>STEP 1 — LOAD YOUR DOCUMENT</h3>
+      <ul>
+        <li>Drop a PDF, DOCX, or image into the intake zone — or paste raw text into the text area.</li>
+        <li>Use a sample (Denial / Prior Auth / Compliance) to demo the system instantly.</li>
+      </ul>
+    </div>
+    <div class="howto-section">
+      <h3>STEP 2 — CONFIGURE API KEY</h3>
+      <ul>
+        <li>Enter your Groq API key in the key field and hit Test. A green dot = connected.</li>
+        <li>Key is saved to localStorage — you only need to do this once per browser.</li>
+      </ul>
+    </div>
+    <div class="howto-section">
+      <h3>STEP 3 — FIRE ALL 5 ENGINES</h3>
+      <ul>
+        <li><strong style="color:var(--cyan)">E1 · DOCUMENT INTEL</strong> — Extracts claim ID, CPT, denial codes, payer, amounts.</li>
+        <li><strong style="color:var(--cyan)">E2 · ROOT CAUSE</strong> — Identifies denial reason, policy violation, coding error.</li>
+        <li><strong style="color:var(--cyan)">E3 · FINANCIAL IMPACT</strong> — Calculates revenue at risk, timely filing exposure.</li>
+        <li><strong style="color:var(--cyan)">E4 · RECOVERY PLAN</strong> — Builds step-by-step appeal plan with deadlines.</li>
+        <li><strong style="color:var(--cyan)">E5 · RECOVERY NAVIGATOR</strong> — Routes next steps to the right staff roles.</li>
+      </ul>
+    </div>
+    <div class="howto-section">
+      <h3>STEP 4 — DOWNSTREAM WORKFLOW</h3>
+      <ul>
+        <li>Engine output feeds into the <strong style="color:var(--amber)">HC Strategist</strong> and <strong style="color:var(--amber)">Executive Portal</strong> via sessionStorage relay.</li>
+        <li>Navigate using the Ecosystem panel to route to other TSM suites.</li>
+      </ul>
+    </div>
+    <button class="howto-close-btn" onclick="document.getElementById('howtoOverlay').classList.remove('active')">CLOSE</button>
+  </div>
+</div>
+
+<button class="manifest-btn" onclick="document.getElementById('manifestOverlay').classList.add('active')">⚠ DEFECT MANIFEST</button>
+<div class="manifest-overlay" id="manifestOverlay">
+  <div class="manifest-card">
+    <h2>⚠ HC DENIAL WAR ROOM — DEFECT MANIFEST</h2>
+    <table class="manifest-table">
+      <thead><tr><th>#</th><th>COMPONENT</th><th>DEFECT</th><th>SEV</th><th>STATUS</th></tr></thead>
+      <tbody>
+        <tr><td>D-01</td><td>Engine E3</td><td>Financial calc uses LARGE model — may time out on slow Groq keys; no retry logic</td><td class="sev-crit">CRIT</td><td>OPEN</td></tr>
+        <tr><td>D-02</td><td>File Drop Zone</td><td>PDF/DOCX extraction dependent on browser FileReader; binary formats may silently fail</td><td class="sev-crit">CRIT</td><td>OPEN</td></tr>
+        <tr><td>D-03</td><td>Engine E5</td><td>Nav container used as outId — clear() wipes nav HTML on re-run</td><td class="sev-med">MED</td><td>OPEN</td></tr>
+        <tr><td>D-04</td><td>API Key</td><td>Key stored in localStorage plaintext; no expiry or rotation mechanism</td><td class="sev-med">MED</td><td>ACCEPTED</td></tr>
+        <tr><td>D-05</td><td>Timely Filing</td><td>Deadline calculation is narrative only — no date math against actual service date</td><td class="sev-med">MED</td><td>OPEN</td></tr>
+        <tr><td>D-06</td><td>clearAll()</td><td>Does not reset E5 nav-container output — stale nav persists on re-run</td><td class="sev-med">MED</td><td>OPEN</td></tr>
+        <tr><td>D-07</td><td>Mobile Layout</td><td>Engine output panels overflow viewport on screens &lt;768px</td><td class="sev-low">LOW</td><td>OPEN</td></tr>
+        <tr><td>D-08</td><td>Sample Data</td><td>BCBS AZ sample uses future date (Apr 2026) — may confuse timely filing engine</td><td class="sev-low">LOW</td><td>OPEN</td></tr>
+      </tbody>
+    </table>
+    <button class="manifest-close-btn" onclick="document.getElementById('manifestOverlay').classList.remove('active')">CLOSE</button>
+  </div>
+</div>
+
+<script>
+// ── GUIDED TOUR ENGINE ────────────────────────────────────────────
+const HC_TOUR_STEPS = [
+  { title: 'HC DENIAL WAR ROOM', body: 'This is the Healthcare Revenue Cycle command center. 5 AI engines process your denial documents in sequence — from raw extraction to a full recovery plan. This tour takes 60 seconds.' },
+  { title: 'E1 · DOCUMENT INTEL', body: 'The first engine ingests your claim document and extracts structured data: Claim ID, CPT codes, denial codes (CO-50, CO-4, PR-96), payer, billed amount, and denial reason — in under 10 seconds.' },
+  { title: 'E2 · ROOT CAUSE ANALYST', body: 'Feeds off E1 output. Identifies the exact denial root cause: payer policy violated, documentation gap, or coding error. This is what you\'d normally spend 2 hours researching manually.' },
+  { title: 'E3 · FINANCIAL IMPACT', body: 'Calculates total revenue at risk, timely filing deadline exposure, and dollar amounts per denial. Uses the LARGE model (llama-3.3-70b) for accuracy. Output feeds the HC Strategist.' },
+  { title: 'E4 · RECOVERY PLAN', body: 'Builds a step-by-step appeal plan: documents required, appeal letter talking points, payer portal instructions, and submission deadline. Ready to hand off to your billing team.' },
+  { title: 'E5 · RECOVERY NAVIGATOR', body: 'Final engine. Routes next actions to the correct staff roles — Billing Coordinator, Office Manager, or Appeals Specialist — with escalation path and priority order.' },
+  { title: 'DOWNSTREAM WORKFLOW', body: 'Engine output is relayed via sessionStorage to the HC Strategist and Executive Portal. Use the Ecosystem nav at the bottom of the page to route to other TSM suites or escalate to leadership.' },
+  { title: 'YOU\'RE READY', body: 'Load a denial document (or hit a sample), enter your Groq key, and fire all 5 engines. For a full walkthrough of controls, hit the HOW TO button in the toolbar.' },
+];
+
+let tourIdx = 0;
+function tourOpen() { tourIdx = 0; tourRender(); document.getElementById('tourOverlay').classList.add('active'); }
+function tourClose() { document.getElementById('tourOverlay').classList.remove('active'); }
+function tourNav(dir) {
+  const total = HC_TOUR_STEPS.length;
+  if (dir === 1 && tourIdx === total - 1) { tourClose(); return; }
+  tourIdx = Math.max(0, Math.min(total - 1, tourIdx + dir));
+  tourRender();
+}
+function tourRender() {
+  const s = HC_TOUR_STEPS[tourIdx];
+  const total = HC_TOUR_STEPS.length;
+  document.getElementById('tourStepLabel').textContent = 'STEP ' + (tourIdx + 1) + ' OF ' + total;
+  document.getElementById('tourTitle').textContent = s.title;
+  document.getElementById('tourBody').textContent = s.body;
+  document.getElementById('tourBack').style.display = tourIdx === 0 ? 'none' : '';
+  document.getElementById('tourNext').textContent = tourIdx === total - 1 ? 'FINISH' : 'NEXT →';
+  const pips = document.getElementById('tourPips');
+  pips.innerHTML = '';
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('div');
+    d.className = 'tour-pip' + (i < tourIdx ? ' done' : i === tourIdx ? ' active' : '');
+    pips.appendChild(d);
+  }
+}
+window.addEventListener('DOMContentLoaded', () => {
+  const tb = document.getElementById('tour-btn') || document.getElementById('tourBtn');
+  if (tb) tb.addEventListener('click', tourOpen);
+  const hb = document.getElementById('howto-btn') || document.getElementById('howtoBtn');
+  if (hb) hb.addEventListener('click', () => document.getElementById('howtoOverlay').classList.add('active'));
+  if (!localStorage.getItem('hc_denial_tour_done')) {
+    setTimeout(tourOpen, 800);
+    localStorage.setItem('hc_denial_tour_done', '1');
+  }
+});
+window.tourOpen = tourOpen;
+window.howtoOpen = () => document.getElementById('howtoOverlay').classList.add('active');
+</script>
+<script src="/html/tsm-mission-orchestrator.js"></script>
 </body>
 </html>
