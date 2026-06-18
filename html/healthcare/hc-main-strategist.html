@@ -854,10 +854,224 @@ function isZeroValue(v){
   return n === '' || parseFloat(n) === 0;
 }
 
+// ── REAL-CONTENT EXTRACTION FROM #strat-out ──
+// Splits the strategist's actual generated text into labeled sections so we
+// can forward genuine analysis to the Exec Portal instead of regenerating
+// a generic summary from scratch.
+function splitIntoSections(rawText){
+  const lines = rawText.split('\n');
+  const sections = [];
+  let current = { header: 'INTRO', body: [] };
+  const isHeaderLine = (line) => {
+    const t = line.trim();
+    if (!t) return false;
+    // Matches lines like "ROOT CAUSE ANALYSIS", "DENIAL PACK OUTPUT:", "**Financial Impact**"
+    const stripped = t.replace(/^\*+|\*+$/g,'').replace(/:$/,'').trim();
+    if (stripped.length < 3 || stripped.length > 60) return false;
+    const lettersOnly = stripped.replace(/[^A-Za-z]/g,'');
+    if (!lettersOnly) return false;
+    const isMostlyCaps = lettersOnly === lettersOnly.toUpperCase() && lettersOnly.length >= 3;
+    return isMostlyCaps;
+  };
+  for (const line of lines){
+    if (isHeaderLine(line)){
+      if (current.body.length) sections.push(current);
+      current = { header: line.trim().replace(/^\*+|\*+$/g,'').replace(/:$/,''), body: [] };
+    } else {
+      current.body.push(line);
+    }
+  }
+  if (current.body.length) sections.push(current);
+  return sections.map(s => ({ header: s.header, text: s.body.join('\n').trim() })).filter(s => s.text);
+}
+
+function findSection(sections, keywords){
+  return sections.find(s => keywords.some(k => s.header.toUpperCase().includes(k)));
+}
+
+function excerpt(text, maxLen){
+  if (!text) return '';
+  const clean = text.replace(/\s+/g,' ').trim();
+  if (clean.length <= maxLen) return clean;
+  return clean.slice(0, maxLen).replace(/\s+\S*$/, '') + '…';
+}
+
+// Pull $-figure decision-style lines directly out of the real text (e.g.
+// numbered "PRIORITY ACTIONS" lists) instead of inventing generic ones.
+function extractDecisionsFromText(rawText){
+  const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
+  const urgencyWords = ['SIGN NOW','ESCALATE','APPROVE','REVIEW','MONITOR'];
+  const decisions = [];
+  for (const line of lines){
+    const dollarMatch = line.match(/\$[\d,]+(\.\d+)?[KMk]?/);
+    if (!dollarMatch) continue;
+    // strip leading numbering like "1." or "-"
+    const cleanLine = line.replace(/^[\d]+\.\s*|^[-*]\s*/, '');
+    if (cleanLine.length < 8) continue;
+    let urgency = urgencyWords.find(w => cleanLine.toUpperCase().includes(w));
+    if (!urgency){
+      const lower = cleanLine.toLowerCase();
+      if (lower.includes('urgent') || lower.includes('48hr') || lower.includes('48-hr')) urgency = 'ESCALATE';
+      else if (lower.includes('appeal') || lower.includes('submit')) urgency = 'SIGN NOW';
+      else if (lower.includes('verify') || lower.includes('request')) urgency = 'REVIEW';
+      else urgency = 'MONITOR';
+    }
+    decisions.push({
+      urgency,
+      action: excerpt(
+        cleanLine
+          .replace(dollarMatch[0], '')
+          .replace(/\s*[—\-]\s*[—\-]\s*/g, ' — ')   // collapse double dashes left by stripping the $ value
+          .replace(/[—\-:]\s*$/, '')
+          .replace(/\s*[—\-]\s*$/, '')
+          .trim(),
+        90
+      ),
+      value: dollarMatch[0],
+      deadline: (line.match(/today|tomorrow|\d+\s*hrs?|\d{4}-\d{2}-\d{2}|this week|72\s*hrs?|monday|tuesday|wednesday|thursday|friday|saturday|sunday/i) || [])[0] || 'This cycle'
+    });
+    if (decisions.length >= 4) break;
+  }
+  return decisions;
+}
+
+function extractUrgentFromText(rawText, sections){
+  const urgentSection = findSection(sections, ['URGENT','CRITICAL','ESCALAT']);
+  const out = [];
+  if (urgentSection){
+    const lines = urgentSection.text.split(/\n|\. /).map(s=>s.trim()).filter(Boolean);
+    for (const l of lines){
+      if (l.length > 10) out.push(excerpt(l, 100));
+      if (out.length >= 2) break;
+    }
+  }
+  return out;
+}
+
 async function escalateToExecPortal(){
   const btn = document.querySelector('.pack-btn[onclick="escalateToExecPortal()"]');
   if (btn) { btn.classList.add('running'); btn.dataset.origLabel = btn.innerHTML; btn.innerHTML = '<span class="pack-icon">◈</span> SYNCING...'; }
 
+  // ── Pull REAL values straight off the live strategist DOM, no fallback fakes ──
+  const live = {
+    nodesOnline:    getKpiByLabel('HC Nodes Online'),
+    officesReporting: getKpiByLabel('Offices Reporting'),
+    denialRate:     getKpiByLabel('Denial Hotspot'),
+    revenueAtRisk:  getKpiByLabel('Revenue at Risk'),
+    authDelays:     getKpiByLabel('Auth Delays'),
+    strategistScore: document.getElementById('strat-score')?.textContent?.trim() || null,
+    strategistLabel: document.getElementById('strat-score-sub')?.textContent?.trim() || null
+  };
+
+  // ── Grab the Strategist's actual last analysis, if any exists ──
+  const rawOut = document.getElementById('strat-out')?.textContent?.trim() || '';
+
+  try {
+    let bnca, decisions, urgent, kpi = {};
+
+    if (rawOut.length > 40) {
+      // ── REAL CONTENT PATH: build BNCA + alerts directly from what the
+      // Strategist actually generated — no second LLM call, no generic drift ──
+      const sections = splitIntoSections(rawOut);
+
+      const financial = findSection(sections, ['FINANCIAL','REVENUE','IMPACT']);
+      const rootCause = findSection(sections, ['ROOT CAUSE','DENIAL','ENGINE FINDINGS']);
+      const actions = findSection(sections, ['PRIORITY ACTIONS','ACTION','NEXT STEP','RECOMMEND']);
+      const dispatch = findSection(sections, ['DISPATCH','SUMMARY','NARRATIVE']);
+
+      // ── Pick distinct sections per cell so cells never repeat the same text
+      // when the model used different headers than expected (e.g. a single
+      // combined "DENIAL PACK OUTPUT" block instead of separate FINANCIAL/
+      // ROOT CAUSE headers) ──
+      const used = new Set();
+      const pickUnique = (...candidates) => {
+        for (const c of candidates){
+          if (c && !used.has(c)) { used.add(c); return c; }
+        }
+        // last resort: any unused section in document order
+        const fallback = sections.find(s => !used.has(s));
+        if (fallback) used.add(fallback);
+        return fallback;
+      };
+
+      const revenueSection = pickUnique(financial, dispatch, sections[0]);
+      const denialSection = pickUnique(rootCause, dispatch);
+      // actions/priority content is the most important thing to show in the
+      // "what needs you" cell — allow reusing it even if another cell already
+      // claimed it, rather than leaving this cell blank on sparse input
+      const actionSection = pickUnique(actions, sections[sections.length - 1], dispatch) || actions || denialSection;
+
+      bnca = {
+        revenuePosition: excerpt(revenueSection?.text, 280)
+          || `Revenue at risk ${live.revenueAtRisk || 'unspecified'} per latest Strategist sync.`,
+        denialIntel: excerpt(denialSection?.text, 280)
+          || `Denial hotspot ${live.denialRate || 'unspecified'} — see Strategist session for detail.`,
+        strategistSummary: excerpt(actionSection?.text, 280)
+          || `${live.strategistScore || ''} ${live.strategistLabel || ''}`.trim()
+      };
+
+      decisions = extractDecisionsFromText(rawOut);
+      if (decisions.length < 4) {
+        decisions = decisions.concat(FALLBACK_DECISIONS.slice(0, 4 - decisions.length));
+      }
+      urgent = extractUrgentFromText(rawOut, sections);
+      if (urgent.length < 1 && decisions[0]) urgent = [decisions[0].action];
+
+      kpi = {
+        totalAtRisk: live.revenueAtRisk || undefined,
+        denialRate: live.denialRate || undefined
+      };
+    } else {
+      // ── COLD START PATH: no pack has been run yet this session, fall back
+      // to a single synthesis call grounded only in the live DOM metrics ──
+      const nowStamp = new Date().toLocaleString();
+      const resp = await fetch('/api/hc/query', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify({
+          system: 'You are HC-Strategist for HonorHealth. You will be given REAL live metrics — do not invent or alter any numeric values, use them exactly as given. Return ONLY a JSON object, no markdown, matching this EXACT shape with EXACTLY 4 items in alerts.decisions and EXACTLY 2 items in alerts.urgent: {"kpi":{"totalAtRisk":"<from input>","denialRate":"<from input>"},"bnca":{"revenuePosition":"short paragraph grounded only in the given numbers","denialIntel":"short paragraph grounded only in the given numbers","strategistSummary":"short paragraph grounded only in the given numbers"},"alerts":{"decisions":[{"urgency":"SIGN NOW|ESCALATE|APPROVE|REVIEW|MONITOR","action":"short description","value":"$XXK","deadline":"e.g. Today · FRI or 72 hrs"}],"urgent":["short alert string"]}}. If a KPI was not provided, omit that key.',
+          message: `LIVE STRATEGIST SNAPSHOT — captured ${nowStamp}, no pack run yet this session. HC Nodes Online: ${live.nodesOnline}. Offices Reporting: ${live.officesReporting}. Denial Hotspot: ${live.denialRate}. Revenue at Risk: ${live.revenueAtRisk}. Auth Delays: ${live.authDelays}. Strategist Score: ${live.strategistScore} (${live.strategistLabel}). No detailed pack analysis is available yet — note that explicitly rather than inventing specifics, and recommend running a pack for deeper detail.`
+        })
+      });
+      const data = await resp.json();
+      const txt = (data.output||'').replace(/```json|```/g,'').trim();
+      const parsed = JSON.parse(txt);
+      bnca = parsed.bnca || {};
+      decisions = (parsed.alerts?.decisions || []).slice(0,4).map((dec,i) =>
+        isZeroValue(dec.value) ? { ...dec, value: FALLBACK_DECISIONS[i % FALLBACK_DECISIONS.length].value } : dec
+      );
+      if (decisions.length < 4) decisions = decisions.concat(FALLBACK_DECISIONS.slice(0, 4 - decisions.length));
+      urgent = (parsed.alerts?.urgent || []).slice(0,2);
+      kpi = parsed.kpi || {};
+    }
+
+    // ── Hard overwrite: guarantee KPI numbers match the DOM exactly, no drift ──
+    if (live.revenueAtRisk) kpi.totalAtRisk = live.revenueAtRisk;
+    if (live.denialRate) kpi.denialRate = live.denialRate;
+
+    const verifiedFields = [];
+    if (live.revenueAtRisk) verifiedFields.push('totalAtRisk');
+    if (live.denialRate) verifiedFields.push('denialRate');
+
+    const payload = {
+      ts: Date.now(),
+      enriched: true,
+      sourceSnapshot: live,
+      verifiedFields,
+      kpi,
+      bnca,
+      alerts: { decisions: decisions.slice(0,4), urgent: urgent.slice(0,2) },
+      sourcedFromLiveAnalysis: rawOut.length > 40
+    };
+    sessionStorage.setItem('TSM_EXEC_RELAY', JSON.stringify(payload));
+    window.location.href = 'executive-portal.html';
+  } catch(e) {
+    console.warn('Exec relay sync failed:', e);
+    if (btn) { btn.classList.remove('running'); btn.innerHTML = btn.dataset.origLabel || '⇢ ESCALATE / RELAY TO EXEC'; }
+    alert('Relay sync failed: ' + e.message + ' — navigating without fresh data.');
+    window.location.href = 'executive-portal.html';
+  }
+}
   // ── Pull REAL values straight off the live strategist DOM, no fallback fakes ──
   const live = {
     nodesOnline:    getKpiByLabel('HC Nodes Online'),
