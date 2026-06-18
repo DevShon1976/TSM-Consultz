@@ -1282,17 +1282,32 @@ function loadStratRelay() {
       const deadlineClass = { 'SIGN NOW':'hot','ESCALATE':'hot','APPROVE':'hot','REVIEW':'warn','MONITOR':'' };
       const container = document.querySelector('.decisions');
       if (container) {
-        container.innerHTML = d.alerts.decisions.map(dec => `
-          <div class="decision-item">
-            <div class="d-urgency ${urgencyClass[dec.urgency]||'d-u3'}">${escRelay(dec.urgency)}</div>
-            <div>
-              <div class="d-action">${escRelay(dec.action)}</div>
-              <div class="d-context">Relayed from HC Strategist · ${new Date(d.ts).toLocaleTimeString('en-US',{hour12:false})}</div>
+        container.innerHTML = d.alerts.decisions.map((dec, i) => {
+            const key = 'dec-relay-' + i;
+            return `
+          <div class="decision-item" data-note-key="${key}">
+            <div class="d-main">
+              <div class="d-urgency ${urgencyClass[dec.urgency]||'d-u3'}">${escRelay(dec.urgency)}</div>
+              <div style="flex:1">
+                <div class="d-action">${escRelay(dec.action)}</div>
+                <div class="d-context">Relayed from HC Strategist · ${new Date(d.ts).toLocaleTimeString('en-US',{hour12:false})}</div>
+              </div>
+              <div class="d-value" style="color:${valueColor[dec.urgency]||'var(--cyan)'}">${escRelay(dec.value)}</div>
+              <div class="d-deadline ${deadlineClass[dec.urgency]||''}">${escRelay(dec.deadline)}</div>
+              <button class="d-note-btn" onclick="toggleNote(this)">+ NOTE</button>
             </div>
-            <div class="d-value" style="color:${valueColor[dec.urgency]||'var(--cyan)'}">${escRelay(dec.value)}</div>
-            <div class="d-deadline ${deadlineClass[dec.urgency]||''}">${escRelay(dec.deadline)}</div>
-          </div>`).join('');
-      }
+            <div class="d-note-wrap">
+              <div class="d-note-label">Executive Response / Respond-By Note</div>
+              <textarea class="d-note-textarea" placeholder="Add your response or decision note..."></textarea>
+              <div class="d-note-footer">
+                <button class="d-note-save" onclick="saveNote(this)">SAVE NOTE</button>
+                <span class="d-note-saved-tag">✓ SAVED</span>
+              </div>
+            </div>
+          </div>`;
+          }).join('');
+          loadSavedNotes();
+      }futy
     }
 
     // ── Update ticker with strategist alerts ──
