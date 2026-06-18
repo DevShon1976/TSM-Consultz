@@ -1185,6 +1185,493 @@ function loadStratRelay() {
 // ── Poll for relay updates every 15s ──
 loadStratRelay();
 setInterval(loadStratRelay, 15000);
+
+// ── ESCALATION BRIEF MODAL ──
+function buildEscalationModal(d) {
+  const existing = document.getElementById('esc-modal-overlay');
+  if (existing) existing.remove();
+
+  const ts = new Date(d.ts).toLocaleTimeString('en-US',{hour12:false});
+  const sessionId = d.sessionId || 'REL-' + Math.random().toString(36).substr(2,8).toUpperCase();
+
+  const warRoomBrief = d.warRoomBrief || d.enriched || '';
+  const denialPack = d.denialPack || '';
+  const stratAnalysis = d.stratAnalysis || d.bnca?.revenuePosition || '';
+  const claimId = d.claimId || d.kpi?.claimId || 'EOB0724';
+  const atRisk = d.kpi?.totalAtRisk || '$15,600';
+
+  const overlay = document.createElement('div');
+  overlay.id = 'esc-modal-overlay';
+  overlay.style.cssText = `
+    position:fixed;inset:0;z-index:9999;
+    background:rgba(3,6,13,0.92);backdrop-filter:blur(8px);
+    display:flex;align-items:flex-start;justify-content:center;
+    padding:20px 16px 40px;overflow-y:auto;
+  `;
+
+  overlay.innerHTML = `
+    <div style="width:100%;max-width:1100px;display:flex;flex-direction:column;gap:0;">
+
+      <!-- MODAL HEADER -->
+      <div style="
+        background:#06091a;border:1px solid rgba(255,61,87,0.4);
+        border-bottom:none;padding:12px 20px;
+        display:flex;align-items:center;justify-content:space-between;
+      ">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="
+            font-size:7px;letter-spacing:2px;text-transform:uppercase;
+            color:#ff3d57;border:1px solid rgba(255,61,87,0.5);
+            padding:3px 9px;background:rgba(255,61,87,0.08);
+            animation:blink 1.4s step-end infinite;
+          ">ESCALATED TO EXEC</div>
+          <div style="font-size:9px;letter-spacing:1.5px;color:#dde5f4;font-weight:700;">
+            HC STRATEGIST ESCALATION BRIEF
+          </div>
+          <div style="font-size:8px;color:#5a6f90;">Session ${escRelay(sessionId)} · ${ts}</div>
+        </div>
+        <button onclick="document.getElementById('esc-modal-overlay').remove()" style="
+          background:none;border:1px solid rgba(255,255,255,0.1);color:#5a6f90;
+          font-family:'JetBrains Mono',monospace;font-size:10px;
+          padding:4px 12px;cursor:pointer;letter-spacing:1px;
+        ">✕ DISMISS</button>
+      </div>
+
+      <!-- TABS -->
+      <div style="
+        background:#06091a;border:1px solid rgba(255,255,255,0.07);
+        border-bottom:none;display:flex;gap:0;
+      " id="esc-tab-bar">
+        <button class="esc-tab active" data-tab="warroom" onclick="switchEscTab('warroom')" style="
+          background:rgba(0,229,255,0.08);border:none;border-right:1px solid rgba(255,255,255,0.07);
+          border-bottom:2px solid #00e5ff;color:#00e5ff;
+          font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1.5px;
+          padding:9px 20px;cursor:pointer;text-transform:uppercase;
+        ">◈ WAR ROOM BRIEF</button>
+        <button class="esc-tab" data-tab="denialpack" onclick="switchEscTab('denialpack')" style="
+          background:none;border:none;border-right:1px solid rgba(255,255,255,0.07);
+          border-bottom:2px solid transparent;color:#5a6f90;
+          font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1.5px;
+          padding:9px 20px;cursor:pointer;text-transform:uppercase;
+        ">⚡ DENIAL PACK</button>
+        <button class="esc-tab" data-tab="stratengine" onclick="switchEscTab('stratengine')" style="
+          background:none;border:none;border-right:1px solid rgba(255,255,255,0.07);
+          border-bottom:2px solid transparent;color:#5a6f90;
+          font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1.5px;
+          padding:9px 20px;cursor:pointer;text-transform:uppercase;
+        ">◎ STRATEGIC ENGINE</button>
+      </div>
+
+      <!-- ── TAB 1: WAR ROOM BRIEF ── -->
+      <div id="esc-tab-warroom" class="esc-tab-panel" style="
+        background:#06091a;border:1px solid rgba(255,255,255,0.07);
+        padding:20px;display:block;
+      ">
+        <div style="font-size:7.5px;letter-spacing:2px;text-transform:uppercase;color:#5a6f90;margin-bottom:14px;">
+          DISPATCH NARRATIVE
+        </div>
+        <div style="
+          border-left:2px solid rgba(0,229,255,0.3);padding-left:16px;
+          font-size:9.5px;line-height:1.9;color:#8a9fc0;
+        " id="esc-warroom-content">${escRelay(warRoomBrief) || '<span style="color:#2a3a52">No war room brief in relay. Run a War Room analysis and escalate.</span>'}</div>
+
+        <!-- ENGINE FINDINGS -->
+        <div style="
+          margin-top:20px;border-top:1px solid rgba(255,255,255,0.055);
+          padding-top:16px;
+        ">
+          <div style="font-size:7.5px;letter-spacing:2px;text-transform:uppercase;color:#5a6f90;margin-bottom:12px;">
+            ENGINE FINDINGS SUMMARY
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div style="background:#0a0f22;border:1px solid rgba(255,255,255,0.055);padding:12px 14px;">
+              <div style="font-size:7px;letter-spacing:1.5px;color:#00e5ff;margin-bottom:6px;font-weight:700;">DASH</div>
+              <div style="font-size:8.5px;color:#8a9fc0;line-height:1.7;" id="esc-dash-content">
+                ${escRelay(d.dashSummary || d.bnca?.denialIntel || 'Awaiting DASH engine output...')}
+              </div>
+            </div>
+            <div style="background:#0a0f22;border:1px solid rgba(255,255,255,0.055);padding:12px 14px;">
+              <div style="font-size:7px;letter-spacing:1.5px;color:#00e676;margin-bottom:6px;font-weight:700;">AI</div>
+              <div style="font-size:8.5px;color:#8a9fc0;line-height:1.7;" id="esc-ai-content">
+                ${escRelay(d.aiSummary || d.bnca?.revenuePosition || 'Awaiting AI synthesis output...')}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div style="display:flex;gap:10px;margin-top:18px;">
+          <button onclick="switchEscTab('denialpack')" style="
+            background:rgba(0,229,255,0.08);border:1px solid rgba(0,229,255,0.3);
+            color:#00e5ff;font-family:'JetBrains Mono',monospace;font-size:8px;
+            letter-spacing:1px;padding:8px 18px;cursor:pointer;text-transform:uppercase;
+          ">◈ INJECT INTO STRATEGIST CONTEXT</button>
+          <button onclick="switchEscTab('denialpack')" style="
+            background:rgba(255,179,0,0.08);border:1px solid rgba(255,179,0,0.3);
+            color:#ffb300;font-family:'JetBrains Mono',monospace;font-size:8px;
+            letter-spacing:1px;padding:8px 18px;cursor:pointer;text-transform:uppercase;
+          ">⚡ RUN DENIAL PACK ON WAR ROOM DATA</button>
+        </div>
+      </div>
+
+      <!-- ── TAB 2: DENIAL PACK ── -->
+      <div id="esc-tab-denialpack" class="esc-tab-panel" style="
+        background:#06091a;border:1px solid rgba(255,255,255,0.07);
+        padding:20px;display:none;
+      ">
+        <!-- CLAIM HEADER ROW -->
+        <div style="
+          display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;
+          background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.07);
+          margin-bottom:20px;
+        ">
+          <div style="background:#0a0f22;padding:12px 16px;">
+            <div style="font-size:7px;letter-spacing:2px;color:#5a6f90;margin-bottom:5px;text-transform:uppercase;">Claim ID</div>
+            <div style="font-size:14px;font-weight:700;color:#dde5f4;" id="dp-claim-id">${escRelay(claimId)}</div>
+          </div>
+          <div style="background:#0a0f22;padding:12px 16px;">
+            <div style="font-size:7px;letter-spacing:2px;color:#5a6f90;margin-bottom:5px;text-transform:uppercase;">Denial Codes</div>
+            <div style="font-size:14px;font-weight:700;color:#ff3d57;" id="dp-denial-codes">${escRelay(d.denialCodes || d.kpi?.denialCodes || '—')}</div>
+          </div>
+          <div style="background:#0a0f22;padding:12px 16px;">
+            <div style="font-size:7px;letter-spacing:2px;color:#5a6f90;margin-bottom:5px;text-transform:uppercase;">At Risk</div>
+            <div style="font-size:14px;font-weight:700;color:#ff3d57;" id="dp-at-risk">${escRelay(atRisk)}</div>
+          </div>
+        </div>
+
+        <div style="font-size:7.5px;letter-spacing:2px;text-transform:uppercase;color:#5a6f90;margin-bottom:12px;">
+          DENIAL PACK OUTPUT
+        </div>
+
+        <!-- DENIAL PACK CONTENT — populated from relay or Groq -->
+        <div id="dp-content" style="font-size:9.5px;line-height:1.85;color:#8a9fc0;">
+          ${escRelay(denialPack) || `
+            <div style="color:#5a6f90;font-size:9px;">Generating denial pack from war room relay data...</div>
+          `}
+        </div>
+
+        <!-- GROQ GENERATE BUTTON if no pack -->
+        <div style="margin-top:16px;" id="dp-generate-wrap">
+          <button onclick="generateDenialPack()" style="
+            background:rgba(255,61,87,0.08);border:1px solid rgba(255,61,87,0.3);
+            color:#ff3d57;font-family:'JetBrains Mono',monospace;font-size:8px;
+            letter-spacing:1px;padding:9px 20px;cursor:pointer;text-transform:uppercase;
+          ">⚡ GENERATE / REFRESH DENIAL PACK</button>
+        </div>
+      </div>
+
+      <!-- ── TAB 3: STRATEGIC ENGINE ── -->
+      <div id="esc-tab-stratengine" class="esc-tab-panel" style="
+        background:#06091a;border:1px solid rgba(255,255,255,0.07);
+        padding:20px;display:none;
+      ">
+        <div style="display:grid;grid-template-columns:1fr 320px;gap:16px;">
+
+          <!-- LEFT: ANALYSIS ENGINE -->
+          <div>
+            <div style="
+              background:#0a0f22;border:1px solid rgba(0,229,255,0.15);
+              padding:16px;margin-bottom:14px;
+            ">
+              <div style="
+                display:flex;align-items:center;gap:8px;
+                font-size:8px;letter-spacing:1.5px;color:#00e5ff;
+                margin-bottom:12px;text-transform:uppercase;
+              ">
+                <div style="width:5px;height:5px;background:#00e5ff;transform:rotate(45deg);"></div>
+                Strategic Recommendation Engine
+              </div>
+
+              <div style="margin-bottom:10px;">
+                <div style="font-size:7px;letter-spacing:1.5px;color:#5a6f90;margin-bottom:5px;text-transform:uppercase;">Analysis Mode</div>
+                <select id="strat-mode" style="
+                  width:100%;background:#03060d;color:#dde5f4;
+                  border:1px solid rgba(255,255,255,0.1);
+                  font-family:'JetBrains Mono',monospace;font-size:9px;
+                  padding:8px 10px;cursor:pointer;
+                ">
+                  <option value="priority">Priority Action Plan — What needs to happen NOW</option>
+                  <option value="denial">Denial Reduction Strategy — Root cause + fix</option>
+                  <option value="revenue">Revenue Recovery — DSO + AR + collections</option>
+                  <option value="board">Board Brief — Executive summary for leadership</option>
+                  <option value="payer">Payer Strategy — Contract + auth + appeals</option>
+                </select>
+              </div>
+
+              <div style="margin-bottom:12px;">
+                <div style="font-size:7px;letter-spacing:1.5px;color:#5a6f90;margin-bottom:5px;text-transform:uppercase;">Additional Context</div>
+                <textarea id="strat-context" placeholder="e.g. Focus on Mesa denial spike + CLM-0334 CO-29 deadline. Board meeting Friday — need framing..." style="
+                  width:100%;background:#03060d;color:#8a9fc0;
+                  border:1px solid rgba(255,255,255,0.08);
+                  font-family:'JetBrains Mono',monospace;font-size:8.5px;
+                  padding:10px;resize:vertical;min-height:70px;line-height:1.6;
+                "></textarea>
+              </div>
+
+              <button onclick="runStratEngine()" style="
+                width:100%;background:rgba(0,229,255,0.06);
+                border:1px solid rgba(0,229,255,0.3);
+                color:#00e5ff;font-family:'JetBrains Mono',monospace;
+                font-size:9px;letter-spacing:1.5px;padding:11px;
+                cursor:pointer;text-transform:uppercase;
+              ">◈ RUN HC STRATEGIST ANALYSIS</button>
+            </div>
+
+            <!-- OUTPUT -->
+            <div id="strat-output" style="
+              background:#03060d;border:1px solid rgba(255,255,255,0.055);
+              padding:16px;min-height:120px;
+              font-size:9.5px;line-height:1.85;color:#8a9fc0;
+            ">${escRelay(stratAnalysis) || '<span style="color:#2a3a52">Run analysis to generate strategic recommendations...</span>'}</div>
+          </div>
+
+          <!-- RIGHT: LIVE SIGNALS + QUICK ASKS -->
+          <div style="display:flex;flex-direction:column;gap:12px;">
+
+            <!-- LIVE SIGNALS -->
+            <div style="background:#0a0f22;border:1px solid rgba(255,255,255,0.07);padding:14px;">
+              <div style="
+                display:flex;align-items:center;justify-content:space-between;
+                margin-bottom:10px;
+              ">
+                <div style="
+                  display:flex;align-items:center;gap:6px;
+                  font-size:7.5px;letter-spacing:1.5px;color:#dde5f4;text-transform:uppercase;
+                ">
+                  <div style="width:4px;height:4px;background:#00e5ff;transform:rotate(45deg);flex-shrink:0;"></div>
+                  Live Signals
+                </div>
+                <button onclick="loadStratRelay()" style="
+                  background:rgba(0,229,255,0.06);border:1px solid rgba(0,229,255,0.2);
+                  color:#00e5ff;font-family:'JetBrains Mono',monospace;font-size:7px;
+                  padding:3px 8px;cursor:pointer;letter-spacing:1px;
+                ">↻ REFRESH</button>
+              </div>
+
+              <div id="live-signals-list" style="display:flex;flex-direction:column;gap:8px;">
+                ${buildLiveSignals(d)}
+              </div>
+            </div>
+
+            <!-- QUICK ASKS -->
+            <div style="background:#0a0f22;border:1px solid rgba(255,255,255,0.07);padding:14px;">
+              <div style="font-size:7.5px;letter-spacing:1.5px;color:#dde5f4;text-transform:uppercase;margin-bottom:10px;">
+                Quick Asks
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;" id="quick-asks-grid">
+                ${['Draft CO-29 Appeal','Mesa Denial Spike','Denial Reduction Plan','Board Brief','Payer Strategy','99215 Defense','Site Variance Analysis','Recovery Roadmap'].map(q =>
+                  `<button onclick="quickAsk('${q}')" style="
+                    background:#03060d;border:1px solid rgba(255,255,255,0.07);
+                    color:#8a9fc0;font-family:'JetBrains Mono',monospace;
+                    font-size:7.5px;padding:7px 8px;cursor:pointer;
+                    text-align:left;letter-spacing:0.5px;line-height:1.3;
+                    transition:border-color 0.15s,color 0.15s;
+                  " onmouseover="this.style.borderColor='rgba(0,229,255,0.3)';this.style.color='#00e5ff'"
+                     onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.color='#8a9fc0'"
+                  ">${q}</button>`
+                ).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  // Close on overlay click (not modal click)
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.remove();
+  });
+
+  // Auto-generate denial pack if relay has claim data but no pack
+  if (!denialPack && (d.warRoomBrief || d.enriched)) {
+    setTimeout(generateDenialPack, 800);
+  }
+}
+
+function buildLiveSignals(d) {
+  const signals = d.liveSignals || [];
+  if (!signals.length) {
+    // Build from relay data
+    const fallback = [];
+    if (d.alerts?.urgent?.[0]) fallback.push({ severity:'URGENT', title: d.alerts.urgent[0], sub: 'From War Room relay', source: 'HC-Billing' });
+    if (d.kpi?.denialRate) fallback.push({ severity:'CRIT', title:`Denial rate ${d.kpi.denialRate} — above portfolio average`, sub:'PR-96 surge detected', source: 'HC-Insurance' });
+    if (!fallback.length) fallback.push({ severity:'MED', title:'Relay data loaded — run analysis for live signals', sub:'', source: 'HC-Strategist' });
+    signals.push(...fallback);
+  }
+  const colors = { URGENT:'#ff3d57', CRIT:'#ff3d57', HIGH:'#ffb300', MED:'#ffb300', LOW:'#00e5ff' };
+  return signals.map(s => `
+    <div style="
+      background:#03060d;border:1px solid rgba(255,255,255,0.055);
+      padding:8px 10px;border-left:2px solid ${colors[s.severity]||'#5a6f90'};
+    ">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;">
+        <div style="font-size:8.5px;color:#dde5f4;font-weight:600;line-height:1.4;">${escRelay(s.title)}</div>
+        <div style="
+          font-size:6.5px;letter-spacing:1px;padding:2px 6px;border:1px solid;flex-shrink:0;
+          color:${colors[s.severity]||'#5a6f90'};border-color:${colors[s.severity]||'#5a6f90'};
+        ">${escRelay(s.severity)}</div>
+      </div>
+      ${s.sub ? `<div style="font-size:7.5px;color:#5a6f90;margin-top:3px;">${escRelay(s.sub)}</div>` : ''}
+      ${s.source ? `<div style="font-size:7px;color:#2a3a52;margin-top:2px;">SOURCE: ${escRelay(s.source)}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+function switchEscTab(tab) {
+  document.querySelectorAll('.esc-tab-panel').forEach(p => p.style.display = 'none');
+  document.getElementById('esc-tab-' + tab).style.display = 'block';
+  document.querySelectorAll('.esc-tab').forEach(btn => {
+    const active = btn.dataset.tab === tab;
+    btn.style.borderBottom = active ? '2px solid #00e5ff' : '2px solid transparent';
+    btn.style.color = active ? '#00e5ff' : '#5a6f90';
+    btn.style.background = active ? 'rgba(0,229,255,0.08)' : 'none';
+  });
+}
+
+async function generateDenialPack() {
+  const btn = document.getElementById('dp-generate-wrap');
+  const content = document.getElementById('dp-content');
+  if (content) content.innerHTML = '<span style="color:#5a6f90;font-size:9px;animation:blink 1s infinite;">⚡ Generating denial pack via Groq...</span>';
+
+  try {
+    const raw = sessionStorage.getItem('TSM_EXEC_RELAY');
+    const d = raw ? JSON.parse(raw) : {};
+    const context = d.warRoomBrief || d.enriched || 'No war room data available';
+
+    const res = await fetch('/api/groq', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 900,
+        messages: [{
+          role: 'user',
+          content: `You are an RCM denial pack generator. Based on this war room data, produce a structured denial pack.
+
+WAR ROOM DATA:
+${context}
+
+Output in this exact format (no markdown, plain text, label each section in ALL CAPS):
+
+CLAIM SUMMARY: [claim id, CPT code, payer, amount, issue]
+DENIAL CODES: [code] - [what this code means]
+ROOT CAUSE: [specific root cause]
+APPEAL DEADLINE: [timeframe and consequence]
+APPEAL STRATEGY: [specific approach for this payer]
+APPEAL LETTER OPENING:
+[2-3 sentence opening for the appeal letter]
+DOCUMENTATION CHECKLIST:
+1. [item]
+2. [item]
+3. [item]
+PRIORITY ACTIONS:
+1. [action] — [who] — [timeline] — [dollar amount at stake]
+2. [action] — [who] — [timeline] — [dollar amount at stake]`
+        }]
+      })
+    });
+
+    const data = await res.json();
+    const text = data.choices?.[0]?.message?.content || data.content?.[0]?.text || 'No output generated';
+    if (content) {
+      content.innerHTML = text.split('\n').map(line => {
+        if (!line.trim()) return '<br>';
+        if (line.match(/^[A-Z\s\/]+:/)) {
+          return `<div style="margin-top:12px;"><span style="color:#dde5f4;font-weight:700;font-size:9px;">${escRelay(line)}</span></div>`;
+        }
+        if (line.match(/^\d+\./)) {
+          return `<div style="padding-left:12px;color:#8a9fc0;">${escRelay(line)}</div>`;
+        }
+        return `<div style="color:#8a9fc0;">${escRelay(line)}</div>`;
+      }).join('');
+    }
+  } catch(e) {
+    if (content) content.innerHTML = `<span style="color:#ff3d57;font-size:9px;">Generation failed: ${e.message}. Check /api/groq endpoint.</span>`;
+  }
+}
+
+async function runStratEngine() {
+  const output = document.getElementById('strat-output');
+  const mode = document.getElementById('strat-mode')?.value;
+  const ctx = document.getElementById('strat-context')?.value;
+  if (output) output.innerHTML = '<span style="color:#5a6f90;font-size:9px;animation:blink 1s infinite;">◈ Running HC Strategist Analysis...</span>';
+
+  const modePrompts = {
+    priority: 'Create a priority action plan. List the top 3 immediate actions required, who acts first, dollar impact, and 48-hour deadline items.',
+    denial: 'Analyze denial patterns and provide a denial reduction strategy. Identify root causes, top denial codes, and a specific fix for each.',
+    revenue: 'Generate a revenue recovery plan. Address DSO drift, AR aging, and collection gaps with specific recovery steps.',
+    board: 'Write an executive board brief. Summarize financial position, top risks, and 3 recommended executive decisions in plain language.',
+    payer: 'Develop a payer strategy. Address auth friction, contract issues, appeal ROI, and recommended payer-specific actions.'
+  };
+
+  try {
+    const raw = sessionStorage.getItem('TSM_EXEC_RELAY');
+    const d = raw ? JSON.parse(raw) : {};
+    const context = d.warRoomBrief || d.enriched || '';
+
+    const res = await fetch('/api/groq', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 900,
+        messages: [{
+          role: 'user',
+          content: `You are the TSM HC Strategist Neural Core — an AI Revenue Cycle strategist.
+
+WAR ROOM RELAY DATA:
+${context}
+
+ADDITIONAL CONTEXT: ${ctx || 'None provided'}
+
+ANALYSIS MODE: ${modePrompts[mode] || modePrompts.priority}
+
+Be specific, use the actual numbers from the relay data, name specific claims/codes/payers where relevant. Format with bold labels using ** for key points. Keep under 400 words.`
+        }]
+      })
+    });
+
+    const data = await res.json();
+    let text = data.choices?.[0]?.message?.content || data.content?.[0]?.text || 'No output generated';
+    // render **bold** as styled spans
+    text = text.replace(/\*\*(.+?)\*\*/g, '<span style="color:#dde5f4;font-weight:700;">$1</span>');
+    if (output) output.innerHTML = text.split('\n').map(l =>
+      l.trim() ? `<div style="margin-bottom:6px;">${l}</div>` : '<br>'
+    ).join('');
+  } catch(e) {
+    if (output) output.innerHTML = `<span style="color:#ff3d57;">Analysis failed: ${e.message}</span>`;
+  }
+}
+
+function quickAsk(question) {
+  const ctx = document.getElementById('strat-context');
+  if (ctx) ctx.value = question;
+  switchEscTab('stratengine');
+  runStratEngine();
+}
+
+// ── SHOW MODAL WHEN FRESH RELAY DETECTED ──
+function checkForFreshRelay() {
+  try {
+    const raw = sessionStorage.getItem('TSM_EXEC_RELAY');
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    if (!d || !d.ts) return;
+    const ageMin = (Date.now() - new Date(d.ts)) / 1000 / 60;
+    const shown = sessionStorage.getItem('TSM_EXEC_RELAY_SHOWN');
+    // Show modal if relay is <10 minutes old and hasn't been shown yet this session
+    if (ageMin < 10 && shown !== d.ts) {
+      sessionStorage.setItem('TSM_EXEC_RELAY_SHOWN', d.ts);
+      buildEscalationModal(d);
+    }
+  } catch(e) {}
+}
+
+checkForFreshRelay();
 </script>
 </body>
 </html>

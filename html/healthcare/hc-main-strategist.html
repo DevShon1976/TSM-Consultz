@@ -1063,6 +1063,18 @@ async function escalateToExecPortal(){
     if (live.revenueAtRisk) verifiedFields.push('totalAtRisk');
     if (live.denialRate) verifiedFields.push('denialRate');
 
+    // ── Build live signals for exec modal ──
+    const liveSignals = [];
+    if (urgent[0]) liveSignals.push({ severity:'URGENT', title: urgent[0], sub: 'CO-29 timely filing · assign immediately', source:'HC-Billing · Scottsdale DM' });
+    if (live.denialRate) liveSignals.push({ severity:'CRIT', title:`Denial spike — ${live.denialRate} above portfolio average`, sub:'PR-96 surge detected across offices', source:'Mesa DM · HC-Insurance' });
+    if (live.authDelays) liveSignals.push({ severity:'HIGH', title:`Auth delays — ${live.authDelays}`, sub:'Modifier 25 review backlog', source:'Scottsdale DM' });
+    if (live.revenueAtRisk) liveSignals.push({ severity:'MED', title:`${live.revenueAtRisk} revenue at risk · CPT upcoding audit`, sub:'Coder education required before Friday', source:'HC-Compliance · HC-Billing' });
+
+    // ── Grab engine finding panels for modal tabs ──
+    const dashEl  = document.querySelector('#dash-out, #engine-dash-out, [data-engine="dash"] .out, .dash-out');
+    const aiEl    = document.querySelector('#ai-out, #engine-ai-out, [data-engine="ai"] .out, .ai-out');
+    const briefEl = document.querySelector('#tsm-war-room-banner .war-room-narrative, #tsm-war-room-banner [style*="border-left:2px solid #ec4899"]');
+
     const payload = {
       ts: Date.now(),
       enriched: true,
@@ -1071,7 +1083,16 @@ async function escalateToExecPortal(){
       kpi,
       bnca,
       alerts: { decisions: decisions.slice(0,4), urgent: urgent.slice(0,2) },
-      sourcedFromLiveAnalysis: rawOut.length > 40
+      sourcedFromLiveAnalysis: rawOut.length > 40,
+      // ── NEW: fields for exec portal escalation modal ──
+      sessionId:    'REL-' + Date.now().toString(36).toUpperCase(),
+      warRoomBrief: briefEl?.textContent?.trim() || rawOut.slice(0, 1200) || '',
+      dashSummary:  dashEl?.textContent?.trim()  || bnca.denialIntel    || '',
+      aiSummary:    aiEl?.textContent?.trim()    || bnca.revenuePosition || '',
+      denialPack:   '',
+      denialCodes:  document.getElementById('dp-codes')?.textContent?.trim() || '',
+      claimId:      document.getElementById('dp-claim-id')?.textContent?.trim() || '',
+      liveSignals
     };
     sessionStorage.setItem('TSM_EXEC_RELAY', JSON.stringify(payload));
     window.location.href = 'executive-portal.html';
