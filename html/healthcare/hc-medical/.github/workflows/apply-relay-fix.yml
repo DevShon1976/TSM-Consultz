@@ -1,0 +1,20 @@
+name: Apply HC Relay Fix
+on:
+  workflow_dispatch:
+
+jobs:
+  run-fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run relay fix script
+        run: python3 apply_relay_fix.py
+
+      - name: Commit changes
+        run: |
+          git config user.name "TSM Bot"
+          git config user.email "bot@tsm-shell"
+          git add html/healthcare/*/index.html
+          git diff --cached --quiet || git commit -m "fix: inject relayToStrategist() across 9 HC nodes, fix strategist URLs"
+          git push
