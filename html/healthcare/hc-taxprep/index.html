@@ -457,7 +457,7 @@ tr:hover td{background:#0f1f0f}
     <div style="font-size:9px;color:#556655;line-height:1.5;margin-bottom:8px">Both taxprep node evaluations completed. Choose your next action path:</div>
     <div style="display:flex;flex-direction:column;gap:5px">
       <button onclick="Q('Run full BNCA for HC TAX PREP COMMAND: combine schedule exceptions and asset reconciliation records into a unified tax compliance risk ledger','hc-guide-run','guide-output')" style="width:100%;padding:6px;background:#003322;border:1px solid var(--g);color:var(--g);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px">⚡ RE-RUN BNCA WITH FINDINGS</button>
-      <button onclick="window.open('/healthcare/hc-main-strategist/index.html','_blank')" style="width:100%;padding:6px;background:#001133;border:1px solid var(--b);color:var(--b);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px">🔗 ESCALATE TO STRATEGIST</button>
+      <button onclick="relayToStrategist('HC TAXPREP');window.open('/html/healthcare/hc-main-strategist.html','_blank')" style="width:100%;padding:6px;background:#001133;border:1px solid var(--b);color:var(--b);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px">🔗 ESCALATE TO STRATEGIST</button>
       <button onclick="Q('Export tax prep session summary detailing client '+document.getElementById('tax-client').placeholder+', status '+document.getElementById('tax-status').placeholder+', compliance '+document.getElementById('tax-compliance').placeholder+', exposure '+document.getElementById('tax-risk').placeholder+': step configurations and risk mitigation logs','hc-guide-run','guide-output')" style="width:100%;padding:6px;background:#221100;border:1px solid var(--a);color:var(--a);font-family:'Courier New',monospace;font-size:9px;font-weight:700;border-radius:3px;cursor:pointer;letter-spacing:1px">📋 EXPORT SESSION SUMMARY</button>
     </div>
   </div>
@@ -468,7 +468,7 @@ tr:hover td{background:#0f1f0f}
   <div class="fn">🧾 TAXPREP NODE &nbsp; Ready — run analysis or relay to Strategist</div>
   <div class="fbtns">
     <button class="fbtn fbnca" data-tsm-action="fillAndRun" data-tsm-args="'dash-inp','dash-btn','dash-res','Run a full BNCA for HC TAX PREP COMMAND: top risks, compliance gaps, priority actions');switchTab('dash',document.querySelector('.nav-btn')">⚡ RUN BNCA</button>
-    <button class="fbtn frelay" onclick="window.location.href='/healthcare/hc-main-strategist/index.html'">🔗 RELAY TO STRATEGIST</button>
+    <button class="fbtn frelay" onclick="relayToStrategist('HC TAXPREP');window.location.href='/html/healthcare/hc-main-strategist.html'">🔗 RELAY TO STRATEGIST</button>
   </div>
 </div>
 
@@ -606,5 +606,123 @@ document.addEventListener('click', function(e){
 <script src="/js/tsm-mission-system.js"></script>
 <script src="/js/tsm-mission-objectives.js"></script>
 <script src="../js/tsm-doc-anomaly-bridge.js"></script>
+<script>
+
+// ── TSM RELAY-TO-STRATEGIST (generic across HC nodes) ──
+
+function relayToStrategist(nodeLabel) {
+
+  try {
+
+    var engineOutputs = {};
+
+    document.querySelectorAll('.ai-res').forEach(function(el){
+
+      var text = (el.textContent || '').trim();
+
+      if (!text) return;
+
+      if (/^>?\s*(ai|intel workbench|enterprise bnca|leadership brief|report studio)\b.*ready\.?$/i.test(text)) return;
+
+      if (/processing\.\.\.$/i.test(text)) return;
+
+      var label = (el.id || 'AI OUTPUT').replace(/-res$/i,'').replace(/[-_]/g,' ').toUpperCase();
+
+      engineOutputs[label] = text;
+
+    });
+
+
+
+    var alerts = [];
+
+    document.querySelectorAll('.alert-row').forEach(function(row){
+
+      var pri = row.querySelector('.pri');
+
+      var txt = row.querySelector('.alert-txt');
+
+      var imp = row.querySelector('.alert-imp');
+
+      if (txt) alerts.push('[' + (pri ? pri.textContent.trim() : '\u2014') + '] ' + txt.textContent.trim() + (imp ? ' (' + imp.textContent.trim() + ')' : ''));
+
+    });
+
+
+
+    var kpis = [];
+
+    document.querySelectorAll('.kpi').forEach(function(k){
+
+      var val = k.querySelector('.kpi-val');
+
+      var lbl = k.querySelector('.kpi-lbl');
+
+      var sub = k.querySelector('.kpi-sub');
+
+      if (val && lbl) kpis.push(lbl.textContent.trim() + ': ' + val.textContent.trim() + (sub ? ' \u2014 ' + sub.textContent.trim() : ''));
+
+    });
+
+
+
+    var clientLine = '';
+
+    if (typeof clientData !== 'undefined' && clientData) {
+
+      try { clientLine = JSON.stringify(clientData).slice(0, 400); } catch (e) {}
+
+    }
+
+
+
+    var narrativeParts = [];
+
+    if (kpis.length) narrativeParts.push('KPIs \u2014 ' + kpis.join(' \u00b7 '));
+
+    if (alerts.length) narrativeParts.push('Active alerts \u2014 ' + alerts.slice(0, 5).join(' | '));
+
+    if (clientLine) narrativeParts.push('Client/claim context \u2014 ' + clientLine);
+
+    var narrative = narrativeParts.join('\n\n') || (nodeLabel + ' relay \u2014 no live findings captured at time of relay.');
+
+
+
+    if (!Object.keys(engineOutputs).length) engineOutputs[nodeLabel] = narrative;
+
+
+
+    var payload = {
+
+      sessionId: 'REL-' + Date.now().toString(36).toUpperCase(),
+
+      timestamp: new Date().toISOString(),
+
+      engineOutputs: engineOutputs,
+
+      engine06: { narrative: narrative, recommendations: [] },
+
+      documentMeta: { ingestType: nodeLabel, charCount: narrative.length }
+
+    };
+
+
+
+    sessionStorage.setItem('TSM_WAR_ROOM_BRIEF', JSON.stringify(payload));
+
+  } catch (e) {
+
+    console.error('[' + nodeLabel + '] relayToStrategist failed:', e);
+
+  }
+
+}
+
+</script>
+
+<script>
+// updateGuide stub — node guide is static; tab context handled by switchTab
+function updateGuide(id) {}
+</script>
 </body>
 </html>
