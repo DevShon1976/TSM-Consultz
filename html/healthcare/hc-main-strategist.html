@@ -1386,6 +1386,9 @@ PATTERN MATCH: [does this match active HonorHealth denial patterns CO-4/CO-11/CO
 
 // === Exec Feedback Reader (sibling to War Room Brief Receiver) ===
 (function(){
+  function escFeedback(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
   function getExecFeedback(){
     try {
       const s = JSON.parse(sessionStorage.getItem('TSM_EXEC_FEEDBACK') || 'null');
@@ -1423,11 +1426,11 @@ PATTERN MATCH: [does this match active HonorHealth denial patterns CO-4/CO-11/CO
           const realIdx = feedback.length - 1 - idx;
           return `
           <div style="background:#0d1320;border:1px solid #222;border-radius:2px;padding:8px;margin-bottom:6px;font-size:10px;">
-            <div style="color:#ffc107;font-size:9px;letter-spacing:1px;margin-bottom:3px;">${f.officeManager}</div>
-            <div style="color:#ccc;margin-bottom:4px;">${f.decisionAction}</div>
-            <div style="color:#aaa;background:#080b12;padding:6px;border-left:2px solid #00e5ff;margin-bottom:4px;">${f.note}</div>
+            <div style="color:#ffc107;font-size:9px;letter-spacing:1px;margin-bottom:3px;">${escFeedback(f.officeManager)}</div>
+            <div style="color:#ccc;margin-bottom:4px;">${escFeedback(f.decisionAction)}</div>
+            <div style="color:#aaa;background:#080b12;padding:6px;border-left:2px solid #00e5ff;margin-bottom:4px;">${escFeedback(f.note)}</div>
             <div style="display:flex;justify-content:space-between;align-items:center;">
-              <span style="color:#666;font-size:8px;">${new Date(f.ts).toLocaleString('en-US',{hour12:false})} · ${f.from}</span>
+              <span style="color:#666;font-size:8px;">${new Date(f.ts).toLocaleString('en-US',{hour12:false})} · ${escFeedback(f.from)}</span>
               <button onclick="dismissExecFeedback(${realIdx})" style="background:none;border:1px solid #333;color:#666;font-size:8px;padding:2px 8px;cursor:pointer;border-radius:2px;">DISMISS</button>
             </div>
           </div>`;
