@@ -210,6 +210,42 @@ body::after {
 .d-deadline.hot { color: var(--red); font-weight: 600; }
 .d-deadline.warn { color: var(--amber); font-weight: 600; }
 
+/* ── EXEC RESPOND-BY NOTES ── */
+.d-note-wrap {
+width: 100%; background: var(--bg3); border-top: 1px solid var(--border);
+padding: 8px 18px 10px; display: none;
+}
+.d-note-wrap.open { display: block; }
+.d-note-label {
+font-size: 7px; letter-spacing: 1.2px; color: var(--muted); text-transform: uppercase; margin-bottom: 4px;
+}
+.d-note-textarea {
+width: 100%; background: var(--bg4); border: 1px solid var(--border2); color: var(--text);
+font-family: var(--mono); font-size: 10px; padding: 8px 10px; resize: vertical;
+min-height: 52px; box-sizing: border-box; outline: none; border-radius: 2px;
+}
+.d-note-textarea:focus { border-color: var(--cyan); }
+.d-note-footer {
+display: flex; align-items: center; gap: 10px; margin-top: 6px;
+}
+.d-note-save {
+font-size: 8px; letter-spacing: 1px; color: var(--cyan); border: 1px solid rgba(0,229,255,.35);
+background: var(--c2); padding: 3px 10px; cursor: pointer; font-family: var(--mono); border-radius: 2px;
+}
+.d-note-save:hover { background: rgba(0,229,255,.12); }
+.d-note-saved-tag {
+font-size: 8px; color: var(--green,#00e676); letter-spacing: .5px; display: none;
+}
+.d-note-btn {
+font-size: 8px; letter-spacing: 1px; color: var(--muted); border: 1px solid var(--border);
+background: transparent; padding: 3px 8px; cursor: pointer; font-family: var(--mono);
+border-radius: 2px; flex-shrink: 0; white-space: nowrap;
+}
+.d-note-btn:hover { color: var(--cyan); border-color: rgba(0,229,255,.35); }
+.d-note-btn.has-note { color: var(--cyan); border-color: rgba(0,229,255,.35); }
+.decision-item { flex-wrap: wrap; }
+.decision-item .d-main { display: flex; align-items: center; gap: 16px; width: 100%; }
+
 /* ── KPI ROW ────────────────────────────────────────────────────────────── */
 .kpi-row {
   display: grid; grid-template-columns: repeat(6, 1fr);
@@ -549,51 +585,106 @@ body::after {
   <div class="sec red-sec" style="margin-top:0">
     <div class="sec-label">Decisions Required Today</div>
   </div>
-  <div class="decisions">
-    <div class="decision-item">
-      <div class="d-urgency d-u1">SIGN NOW</div>
-      <div>
-        <div class="d-action">Authorize CMS Penalty Response — §482.13 Patient Rights</div>
-        <div class="d-context">2 active CMS penalties · Compliance Officer has package ready · missing exec signature</div>
+  <div class="decisions" id="decisions-container">
+    <div class="decision-item" data-note-key="dec-cms-penalty">
+      <div class="d-main">
+        <div class="d-urgency d-u1">SIGN NOW</div>
+        <div style="flex:1">
+          <div class="d-action">Authorize CMS Penalty Response — §482.13 Patient Rights</div>
+          <div class="d-context">2 active CMS penalties · Compliance Officer has package ready · missing exec signature</div>
+        </div>
+        <div class="d-value" style="color:var(--red)">$24K</div>
+        <div class="d-deadline hot">Today · FRI</div>
+        <button class="d-note-btn" onclick="toggleNote(this)">+ NOTE</button>
       </div>
-      <div class="d-value" style="color:var(--red)">$24K</div>
-      <div class="d-deadline hot">Today · FRI</div>
+      <div class="d-note-wrap">
+        <div class="d-note-label">Executive Response / Respond-By Note</div>
+        <textarea class="d-note-textarea" placeholder="e.g. Signed — forwarded to compliance 14:22. Follow up Monday."></textarea>
+        <div class="d-note-footer">
+          <button class="d-note-save" onclick="saveNote(this)">SAVE NOTE</button>
+          <span class="d-note-saved-tag">✓ SAVED</span>
+        </div>
+      </div>
     </div>
-    <div class="decision-item">
-      <div class="d-urgency d-u1">ESCALATE</div>
-      <div>
-        <div class="d-action">Payer Relations Call — BCBS AZ, Aetna, UHC Auth Pattern</div>
-        <div class="d-context">18.4% denial rate across 3 payers · $48K stalled · systemic auth friction confirmed</div>
+    <div class="decision-item" data-note-key="dec-payer-call">
+      <div class="d-main">
+        <div class="d-urgency d-u1">ESCALATE</div>
+        <div style="flex:1">
+          <div class="d-action">Payer Relations Call — BCBS AZ, Aetna, UHC Auth Pattern</div>
+          <div class="d-context">18.4% denial rate across 3 payers · $48K stalled · systemic auth friction confirmed</div>
+        </div>
+        <div class="d-value" style="color:var(--red)">$48K</div>
+        <div class="d-deadline hot">72 hrs</div>
+        <button class="d-note-btn" onclick="toggleNote(this)">+ NOTE</button>
       </div>
-      <div class="d-value" style="color:var(--red)">$48K</div>
-      <div class="d-deadline hot">72 hrs</div>
+      <div class="d-note-wrap">
+        <div class="d-note-label">Executive Response / Respond-By Note</div>
+        <textarea class="d-note-textarea" placeholder="e.g. Called BCBS — escalation case opened. Riya to follow up Wed."></textarea>
+        <div class="d-note-footer">
+          <button class="d-note-save" onclick="saveNote(this)">SAVE NOTE</button>
+          <span class="d-note-saved-tag">✓ SAVED</span>
+        </div>
+      </div>
     </div>
-    <div class="decision-item">
-      <div class="d-urgency d-u1">APPROVE</div>
-      <div>
-        <div class="d-action">Release HRSA Grant Submissions — 3 Reports Overdue</div>
-        <div class="d-context">Grants pipeline $2.9M at risk · all 3 draft reports complete · pending exec release</div>
+    <div class="decision-item" data-note-key="dec-hrsa-grants">
+      <div class="d-main">
+        <div class="d-urgency d-u1">APPROVE</div>
+        <div style="flex:1">
+          <div class="d-action">Release HRSA Grant Submissions — 3 Reports Overdue</div>
+          <div class="d-context">Grants pipeline $2.9M at risk · all 3 draft reports complete · pending exec release</div>
+        </div>
+        <div class="d-value" style="color:var(--amber)">$2.9M</div>
+        <div class="d-deadline hot">72 hrs</div>
+        <button class="d-note-btn" onclick="toggleNote(this)">+ NOTE</button>
       </div>
-      <div class="d-value" style="color:var(--amber)">$2.9M</div>
-      <div class="d-deadline hot">72 hrs</div>
+      <div class="d-note-wrap">
+        <div class="d-note-label">Executive Response / Respond-By Note</div>
+        <textarea class="d-note-textarea" placeholder="e.g. Approved — grants team notified. Deadline confirmed with finance."></textarea>
+        <div class="d-note-footer">
+          <button class="d-note-save" onclick="saveNote(this)">SAVE NOTE</button>
+          <span class="d-note-saved-tag">✓ SAVED</span>
+        </div>
+      </div>
     </div>
-    <div class="decision-item">
-      <div class="d-urgency d-u2">REVIEW</div>
-      <div>
-        <div class="d-action">Authorize Overtime — Auth Call Center · 312 hrs/mo labor bleed</div>
-        <div class="d-context">$9,360/month in manual auth calls · automation proposal on desk · decision deferred 3 weeks</div>
+    <div class="decision-item" data-note-key="dec-overtime-auth">
+      <div class="d-main">
+        <div class="d-urgency d-u2">REVIEW</div>
+        <div style="flex:1">
+          <div class="d-action">Authorize Overtime — Auth Call Center · 312 hrs/mo labor bleed</div>
+          <div class="d-context">$9,360/month in manual auth calls · automation proposal on desk · decision deferred 3 weeks</div>
+        </div>
+        <div class="d-value" style="color:var(--amber)">$112K</div>
+        <div class="d-deadline warn">This week</div>
+        <button class="d-note-btn" onclick="toggleNote(this)">+ NOTE</button>
       </div>
-      <div class="d-value" style="color:var(--amber)">$112K</div>
-      <div class="d-deadline warn">This week</div>
+      <div class="d-note-wrap">
+        <div class="d-note-label">Executive Response / Respond-By Note</div>
+        <textarea class="d-note-textarea" placeholder="e.g. Reviewing automation proposal — decision by EOD Friday."></textarea>
+        <div class="d-note-footer">
+          <button class="d-note-save" onclick="saveNote(this)">SAVE NOTE</button>
+          <span class="d-note-saved-tag">✓ SAVED</span>
+        </div>
+      </div>
     </div>
-    <div class="decision-item">
-      <div class="d-urgency d-u3">MONITOR</div>
-      <div>
-        <div class="d-action">Timely Filing Watch — $43K aging past 120 days</div>
-        <div class="d-context">Claims approaching hard filing limits across 2 payers · AR team aware · no escalation yet</div>
+    <div class="decision-item" data-note-key="dec-timely-filing">
+      <div class="d-main">
+        <div class="d-urgency d-u3">MONITOR</div>
+        <div style="flex:1">
+          <div class="d-action">Timely Filing Watch — $43K aging past 120 days</div>
+          <div class="d-context">Claims approaching hard filing limits across 2 payers · AR team aware · no escalation yet</div>
+        </div>
+        <div class="d-value" style="color:var(--cyan)">$43K</div>
+        <div class="d-deadline">14 days left</div>
+        <button class="d-note-btn" onclick="toggleNote(this)">+ NOTE</button>
       </div>
-      <div class="d-value" style="color:var(--cyan)">$43K</div>
-      <div class="d-deadline">14 days left</div>
+      <div class="d-note-wrap">
+        <div class="d-note-label">Executive Response / Respond-By Note</div>
+        <textarea class="d-note-textarea" placeholder="e.g. AR team confirmed aware — check status Monday."></textarea>
+        <div class="d-note-footer">
+          <button class="d-note-save" onclick="saveNote(this)">SAVE NOTE</button>
+          <span class="d-note-saved-tag">✓ SAVED</span>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1072,6 +1163,51 @@ const html = TICKS.map(t =>
   `<span class="t-item">${t.l}&nbsp;<span class="t-val ${t.c}">${t.v}</span></span>`
 ).join('');
 inner.innerHTML = html + html;
+// ── EXEC RESPOND-BY NOTES ──
+const NOTE_NS = 'TSM_EXEC_NOTES_';
+
+function toggleNote(btn) {
+const item = btn.closest('.decision-item');
+const wrap = item.querySelector('.d-note-wrap');
+const key  = item.dataset.noteKey;
+const open = wrap.classList.toggle('open');
+btn.textContent = open ? '− NOTE' : '+ NOTE';
+if (open) {
+const saved = sessionStorage.getItem(NOTE_NS + key);
+if (saved) {
+const ta = wrap.querySelector('.d-note-textarea');
+if (ta && !ta.value) ta.value = saved;
+}
+wrap.querySelector('.d-note-textarea')?.focus();
+}
+}
+
+function saveNote(btn) {
+const wrap = btn.closest('.d-note-wrap');
+const item = wrap.closest('.decision-item');
+const key  = item.dataset.noteKey;
+const ta   = wrap.querySelector('.d-note-textarea');
+const text = (ta?.value || '').trim();
+sessionStorage.setItem(NOTE_NS + key, text);
+const noteBtn = item.querySelector('.d-note-btn');
+if (noteBtn) noteBtn.classList.toggle('has-note', text.length > 0);
+noteBtn.textContent = text.length ? '✎ NOTE' : '+ NOTE';
+const tag = wrap.querySelector('.d-note-saved-tag');
+if (tag) { tag.style.display = 'inline'; setTimeout(() => tag.style.display = 'none', 2000); }
+}
+
+function loadSavedNotes() {
+document.querySelectorAll('.decision-item[data-note-key]').forEach(item => {
+const key  = item.dataset.noteKey;
+const text = sessionStorage.getItem(NOTE_NS + key) || '';
+const btn  = item.querySelector('.d-note-btn');
+const ta   = item.querySelector('.d-note-textarea');
+if (text && btn) { btn.classList.add('has-note'); btn.textContent = '✎ NOTE'; }
+if (text && ta)  { ta.value = text; }
+});
+}
+window.addEventListener('DOMContentLoaded', loadSavedNotes);
+
 // ── STRATEGIST RELAY READER ──
 function escRelay(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
