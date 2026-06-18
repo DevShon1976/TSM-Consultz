@@ -1072,58 +1072,6 @@ async function escalateToExecPortal(){
     window.location.href = 'executive-portal.html';
   }
 }
-  // ── Pull REAL values straight off the live strategist DOM, no fallback fakes ──
-  const live = {
-    nodesOnline:    getKpiByLabel('HC Nodes Online'),
-    officesReporting: getKpiByLabel('Offices Reporting'),
-    denialRate:     getKpiByLabel('Denial Hotspot'),
-    revenueAtRisk:  getKpiByLabel('Revenue at Risk'),
-    authDelays:     getKpiByLabel('Auth Delays'),
-    strategistScore: document.getElementById('strat-score')?.textContent?.trim() || null,
-    strategistLabel: document.getElementById('strat-score-sub')?.textContent?.trim() || null
-  };
-  const nowStamp = new Date().toLocaleString();
-
-  try {
-    const resp = await fetch('/api/hc/query', {
-      method: 'POST',
-      headers: { 'Content-Type':'application/json' },
-      body: JSON.stringify({
-        system: 'You are HC-Strategist for HonorHealth. You will be given REAL live metrics — do not invent or alter any numeric values, use them exactly as given. Return ONLY a JSON object, no markdown, matching this EXACT shape with EXACTLY 4 items in alerts.decisions and EXACTLY 2 items in alerts.urgent: {"kpi":{"totalAtRisk":"<from input>","monthlyCollected":"<from input or omit if not given>","denialRate":"<from input>","dso":"<from input or omit if not given>","appealWinRate":"<from input or omit if not given>","netCollection":"<from input or omit if not given>"},"bnca":{"revenuePosition":"short paragraph grounded only in the given numbers","denialIntel":"short paragraph grounded only in the given numbers","strategistSummary":"short paragraph grounded only in the given numbers"},"alerts":{"decisions":[{"urgency":"SIGN NOW|ESCALATE|APPROVE|REVIEW|MONITOR","action":"short description","value":"$XXK","deadline":"e.g. Today · FRI or 72 hrs"}],"urgent":["short alert string"]}}. If a KPI was not provided in the input, omit that key entirely rather than inventing a number.',
-        message: `LIVE STRATEGIST SNAPSHOT — captured ${nowStamp} directly from the on-screen dashboard. HC Nodes Online: ${live.nodesOnline}. Offices Reporting: ${live.officesReporting}. Denial Hotspot: ${live.denialRate}. Revenue at Risk: ${live.revenueAtRisk}. Auth Delays: ${live.authDelays}. Strategist Score: ${live.strategistScore} (${live.strategistLabel}). Context for narrative — use these EXACT dollar values when building alerts.decisions, never $0K: PR-96 denial code $21.6K, CO-4 denial code $13.4K, CO-11 denial code $8.1K, CO-29 URGENT (CLM-0334, 48hr deadline) $5.7K. CMS §482.13 Patient Rights response penalty exposure $24K, due Friday. Payer relations call re: BCBS AZ/Aetna/UHC auth friction, $48K stalled claims, 72hrs. HRSA grant submissions $2.9M at risk, 72hrs overdue. Mesa Family Practice highest-risk office, $11.2K writeoff risk, 22.1% denial rate. Every decision in alerts.decisions MUST use one of these exact dollar figures matched to its topic — never output $0K or $0.`
-      })
-    });
-    const data = await resp.json();
-    const txt = (data.output||'').replace(/```json|```/g,'').trim();
-    const parsed = JSON.parse(txt);
-    if (parsed.alerts?.decisions) {
-      // ── Safety net: replace any $0/$0K decision with a matching fallback ──
-      parsed.alerts.decisions = parsed.alerts.decisions.slice(0,4).map((dec, i) =>
-        isZeroValue(dec.value) ? { ...dec, value: FALLBACK_DECISIONS[i % FALLBACK_DECISIONS.length].value } : dec
-      );
-    } else {
-      parsed.alerts = parsed.alerts || {};
-      parsed.alerts.decisions = FALLBACK_DECISIONS;
-    }
-    if (parsed.alerts?.urgent) parsed.alerts.urgent = parsed.alerts.urgent.slice(0,2);
-    // ── Hard overwrite: guarantee KPI numbers match the DOM exactly, no model drift ──
-    parsed.kpi = parsed.kpi || {};
-    if (live.revenueAtRisk) parsed.kpi.totalAtRisk = live.revenueAtRisk;
-    if (live.denialRate) parsed.kpi.denialRate = live.denialRate;
-    // ── Track which KPI fields are verified-live vs AI-narrated ──
-    const verifiedFields = [];
-    if (live.revenueAtRisk) verifiedFields.push('totalAtRisk');
-    if (live.denialRate) verifiedFields.push('denialRate');
-    const payload = { ts: Date.now(), enriched: true, sourceSnapshot: live, verifiedFields, ...parsed };
-    sessionStorage.setItem('TSM_EXEC_RELAY', JSON.stringify(payload));
-    window.location.href = 'executive-portal.html';
-  } catch(e) {
-    console.warn('Exec relay sync failed:', e);
-    if (btn) { btn.classList.remove('running'); btn.innerHTML = btn.dataset.origLabel || '⇢ ESCALATE / RELAY TO EXEC'; }
-    alert('Relay sync failed: ' + e.message + ' — navigating without fresh data.');
-    window.location.href = 'executive-portal.html';
-  }
-}
 
 // ── LOAD SIGNALS ──
 async function loadSignals(){
