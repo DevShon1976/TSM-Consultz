@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -741,6 +740,24 @@ let currentMode = 'denial';
       localStorage.removeItem('TSM_HC_WAR_RELAY');
     }, 500);
   } catch(e) {}
+})();
+// Doc Search relay — populate from redispatch (legal or HC docsearch handoff)
+(function(){
+  try {
+    const raw = localStorage.getItem('tsm_legal_docsearch_relay') || localStorage.getItem('tsm_hc_docsearch_relay');
+    if (!raw) return;
+    const relay = JSON.parse(raw);
+    if (!relay.summary) return;
+    localStorage.removeItem('tsm_legal_docsearch_relay');
+    localStorage.removeItem('tsm_hc_docsearch_relay');
+    docText = relay.summary;
+    setTimeout(() => {
+      const ta = document.getElementById('doc-text');
+      if (ta) { ta.value = relay.summary; ta.dispatchEvent(new Event('input')); }
+      const btn = document.getElementById('fire-btn');
+      if (btn) btn.disabled = false;
+    }, 500);
+  } catch(e) { console.warn('Doc search relay error:', e); }
 })();
 let completedCount = 0;
 let navRawText = '';
@@ -1956,7 +1973,7 @@ Keep response under 120 words. Plain text only, no markdown.`
           ` : ''}
 
           <!-- Launch button -->
-          <a href="${app.url}" target="_blank" onclick="if(window.TSMCureConductor){event.preventDefault();window.TSMCureConductor.launch(app.url,{name:app.appName,how:app.howTo||'',tags:[]},{docText:document.getElementById('docPaste')?.value||'',vertical:'Healthcare'});}" style="
+          <a href="${app.url}" target="_blank" onclick="if(window.TSMCureConductor){event.preventDefault();window.TSMCureConductor.launch(app.url,{name:app.appName,how:app.howTo||'',tags:[]},{docText:document.getElementById('doc-text')?.value||'',vertical:'Healthcare'});}" style="
             display: inline-flex; align-items: center; gap: 6px;
             padding: 8px 14px;
             background: transparent;
@@ -2360,7 +2377,7 @@ function hcResolveApp(docText) {
   }
   if (/prior auth|authorization/.test(t)) return { app:'HC Insurance Node', url:'/html/healthcare/hc-insurance/index.html', reason:'Prior auth issue requires insurance review' };
   if (/hipaa|compliance|audit/.test(t)) return { app:'HC Compliance Node', url:'/html/healthcare/hc-compliance/index.html', reason:'Compliance flag detected' };
-  if (/vendor|clearinghouse/.test(t)) return { app:'HC Vendor Node', url:'/html/healthcare/hc-vendor/index.html', reason:'Vendor/clearinghouse issue' };
+  if (/vendor|clearinghouse/.test(t)) return { app:'HC Vendor Node', url:'/html/healthcare/hc-vendors/index.html', reason:'Vendor/clearinghouse issue' };
   if (/ar aging|dso|collection|write.?off/.test(t)) return { app:'HC Financial Node', url:'/html/healthcare/hc-financial/index.html', reason:'Financial exposure requires review' };
   return { app:'HC Denial War Room', url:'/html/healthcare/hc-denial-war-room.html', reason:'General RCM denial — re-run with full context' };
 }
@@ -2372,7 +2389,7 @@ async function hcGenerateMissionSteps(anomalyText, docText) {
     'HC Insurance Node | /html/healthcare/hc-insurance/index.html',
     'HC Financial Node | /html/healthcare/hc-financial/index.html',
     'HC Compliance Node | /html/healthcare/hc-compliance/index.html',
-    'HC Vendor Node | /html/healthcare/hc-vendor/index.html',
+    'HC Vendor Node | /html/healthcare/hc-vendors/index.html',
     'HC Strategist | /html/healthcare/hc-strategist.html',
   ].join('\n');
  
@@ -2382,33 +2399,7 @@ async function hcGenerateMissionSteps(anomalyText, docText) {
   try {
     const res = await fetch('/api/hc/query', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ system: sys, message: msg, apiKey: let groqKey = localStorage.getItem('tsm_groq_key') || '';
-
-// Doc Search relay — populate from redispatch
-(function(){
-  try {
-    const raw = localStorage.getItem('tsm_legal_docsearch_relay');
-    if (!raw) return;
-    const relay = JSON.parse(raw);
-    if (!relay.summary) return;
-    localStorage.removeItem('tsm_legal_docsearch_relay');
-    const ta = document.getElementById('docPaste');
-    if (ta) ta.value = relay.summary;
-  } catch(e) { console.warn('Doc search relay error:', e); }
-})();
-
-// Doc Search relay — populate from redispatch
-(function(){
-  try {
-    const raw = localStorage.getItem('tsm_hc_docsearch_relay');
-    if (!raw) return;
-    const relay = JSON.parse(raw);
-    if (!relay.summary) return;
-    localStorage.removeItem('tsm_hc_docsearch_relay');
-    const ta = document.getElementById('docPaste');
-    if (ta) ta.value = relay.summary;
-  } catch(e) { console.warn('Doc search relay error:', e); }
-})();
+      body: JSON.stringify({ system: sys, message: msg })
     });
     const data = await res.json();
     const raw = (data.response||data.content||'').replace(/```json|```/g,'').trim();
@@ -2554,8 +2545,42 @@ async function hcLaunchMission() {
   if (!btn || !container) return;
   document.getElementById('hc-mission-btn-wrap').style.display = 'none';
   container.innerHTML = '<div style="padding:10px 0;color:#1ee8b660;font-size:9px;letter-spacing:1px;text-align:center;">⬡ BUILDING REMEDIATION MISSION...</div>';
-  const mission = await hcGenerateMissionSteps(btn.dataset.anomaly||'', btn.dataset.doc||'');
+  const anomalyText = btn.dataset.anomaly || '';
+  const docCtx = btn.dataset.doc || '';
+  const mission = await hcGenerateMissionSteps(anomalyText, docCtx);
   renderHCMissionGuide(mission, container);
+  hcWriteAnomalyRelay(anomalyText, docCtx, mission);
+}
+
+// Relay the war room's analysis to the recommended HC node so its
+// anomaly bridge banner lights up pre-filled when the user clicks through.
+function hcWriteAnomalyRelay(anomalyText, docCtx, mission) {
+  try {
+    const route = hcResolveApp(docCtx || anomalyText);
+    const nodeMatch = (route.url || '').match(/hc-([^\/]+)\//);
+    const nodeId = nodeMatch ? nodeMatch[1] : 'billing';
+    const codeMatch = (docCtx || anomalyText || '').match(/\b(CO-\d+|PR-\d+|OA-\d+|PI-\d+)\b/i);
+    const excCode = codeMatch ? codeMatch[1].toUpperCase() : '';
+    const amountMatch = (docCtx || anomalyText || '').match(/\$[\d,]+(\.\d{2})?/);
+    const amount = amountMatch ? Number(amountMatch[0].replace(/[$,]/g, '')) : undefined;
+    const steps = (mission.steps || []).map(s => `${s.title}${s.instructions ? ' — ' + s.instructions : ''}`);
+    const findings = [
+      excCode ? '❌ ' + excCode + ' — denial code detected on this record' : '⚠️ Denial anomaly flagged by War Room',
+      '❌ Routed from HC Denial War Room · Recommended: ' + route.app,
+    ];
+    const payload = {
+      checkStatus: 'DENIAL_RISK',
+      narrative: mission.summary || (anomalyText.slice(0, 300) || 'Denial anomaly detected — review required.'),
+      findings, steps,
+      financialImpact: amount, risk: amount > 50000 ? 82 : amount > 10000 ? 68 : 55,
+      fileName: '', documentType: excCode || 'DENIAL',
+      docType: excCode || 'DENIAL', ref: '', client: '', exclusionCode: excCode,
+      nodeId, targetNodeIds: [nodeId],
+      source: 'war-room', warRoomUrl: '/html/healthcare/hc-denial-war-room.html',
+      ts: Date.now(), timestamp: new Date().toISOString(),
+    };
+    localStorage.setItem('tsm-doc-anomaly', JSON.stringify(payload));
+  } catch (e) { console.warn('War room anomaly relay write failed:', e); }
 }
 </script>
 
@@ -2689,4 +2714,3 @@ window.howtoOpen = () => document.getElementById('howtoOverlay').classList.add('
 <script src="/html/tsm-mission-orchestrator.js"></script>
 </body>
 </html>
-
