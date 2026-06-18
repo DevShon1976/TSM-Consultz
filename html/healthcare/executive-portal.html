@@ -1426,27 +1426,27 @@ function buildEscalationModal(d) {
           font-size:9.5px;line-height:1.9;color:#8a9fc0;
         " id="esc-warroom-content">${escRelay(warRoomBrief) || '<span style="color:#2a3a52">No war room brief in relay. Run a War Room analysis and escalate.</span>'}</div>
 
-        <!-- ENGINE FINDINGS -->
-        <div style="
-          margin-top:20px;border-top:1px solid rgba(255,255,255,0.055);
-          padding-top:16px;
-        ">
+        <!-- ENGINE FINDINGS — dynamic grid from all engines that ran -->
+        <div style="margin-top:20px;border-top:1px solid rgba(255,255,255,0.055);padding-top:16px;">
           <div style="font-size:7.5px;letter-spacing:2px;text-transform:uppercase;color:#5a6f90;margin-bottom:12px;">
             ENGINE FINDINGS SUMMARY
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-            <div style="background:#0a0f22;border:1px solid rgba(255,255,255,0.055);padding:12px 14px;">
-              <div style="font-size:7px;letter-spacing:1.5px;color:#00e5ff;margin-bottom:6px;font-weight:700;">DASH</div>
-              <div style="font-size:8.5px;color:#8a9fc0;line-height:1.7;" id="esc-dash-content">
-                ${escRelay(d.dashSummary || d.bnca?.denialIntel || 'Awaiting DASH engine output...')}
-              </div>
-            </div>
-            <div style="background:#0a0f22;border:1px solid rgba(255,255,255,0.055);padding:12px 14px;">
-              <div style="font-size:7px;letter-spacing:1.5px;color:#00e676;margin-bottom:6px;font-weight:700;">AI</div>
-              <div style="font-size:8.5px;color:#8a9fc0;line-height:1.7;" id="esc-ai-content">
-                ${escRelay(d.aiSummary || d.bnca?.revenuePosition || 'Awaiting AI synthesis output...')}
-              </div>
-            </div>
+          <div id="esc-engine-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">
+            ${(()=>{
+              const outputs = d.engineOutputs || {};
+              const entries = Object.entries(outputs).filter(([,v]) => v && v.length > 10);
+              if (!entries.length) {
+                return '<div style="color:#2a3a52;font-size:9px;padding:12px">No engine outputs captured — run a pack on the strategist before escalating.</div>';
+              }
+              const COLORS = ['#00e5ff','#00e676','#ffb300','#ff3d57','#a855f7','#ec4899','#00bcd4','#8bc34a'];
+              return entries.map(([label, text], i) => `
+                <div style="background:#0a0f22;border:1px solid rgba(255,255,255,0.055);padding:12px 14px;">
+                  <div style="font-size:7px;letter-spacing:1.5px;color:${COLORS[i % COLORS.length]};margin-bottom:6px;font-weight:700;">${escRelay(label)}</div>
+                  <div style="font-size:8.5px;color:#8a9fc0;line-height:1.7;max-height:120px;overflow:hidden;position:relative;">
+                    ${escRelay(text.slice(0, 400))}${text.length > 400 ? '<span style="color:#2a3a52">…</span>' : ''}
+                  </div>
+                </div>`).join('');
+            })()}
           </div>
         </div>
 
