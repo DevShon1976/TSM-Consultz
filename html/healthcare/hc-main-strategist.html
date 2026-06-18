@@ -905,8 +905,16 @@ function extractDecisionsFromText(rawText){
   for (const line of lines){
     const dollarMatch = line.match(/\$[\d,]+(\.\d+)?[KMk]?/);
     if (!dollarMatch) continue;
-    // strip leading numbering like "1." or "-"
-    const cleanLine = line.replace(/^[\d]+\.\s*|^[-*]\s*/, '');
+    // Skip pure header/label lines — these are markdown section titles or
+    // narrative labels like "**Top Issue:**" or "**Dollar Impact:**"
+    const stripped = line.replace(/\*\*/g,'').replace(/^\s*[-*#>\d.]+\s*/,'').trim();
+    const isLabel = /^(top issue|dollar impact|root cause|appeal strategy|priority|action item|summary|narrative|impact|finding|recommendation|documentation|what|who|when|why|appeal deadline|appeal letter|claim summary|denial code|denial pack)[\s:]/i.test(stripped);
+    if (isLabel) continue;
+    // Must have meaningful action content beyond just a label + dollar figure
+    const withoutDollar = stripped.replace(dollarMatch[0],'').replace(/\*\*/g,'').trim();
+    if (withoutDollar.length < 12) continue;
+    // strip leading numbering like "1." or "-" and markdown bold
+    const cleanLine = line.replace(/^[\d]+\.\s*|^[-*]\s*/, '').replace(/\*\*/g,'').replace(/\*/g,'');
     if (cleanLine.length < 8) continue;
     let urgency = urgencyWords.find(w => cleanLine.toUpperCase().includes(w));
     if (!urgency){
@@ -921,7 +929,9 @@ function extractDecisionsFromText(rawText){
       action: excerpt(
         cleanLine
           .replace(dollarMatch[0], '')
-          .replace(/\s*[—\-]\s*[—\-]\s*/g, ' — ')   // collapse double dashes left by stripping the $ value
+          .replace(/\*\*/g, '')
+          .replace(/\*/g, '')
+          .replace(/\s*[—\-]\s*[—\-]\s*/g, ' — ')
           .replace(/[—\-:]\s*$/, '')
           .replace(/\s*[—\-]\s*$/, '')
           .trim(),
