@@ -643,7 +643,6 @@ function toggleIntake(show) {
 }
 
 function applyPharmMission() {
-
   function val(id){
     var el = document.getElementById(id);
     if(!el) return '';
@@ -671,24 +670,6 @@ function applyPharmMission() {
       'Issue: <span style="color:#99cc99">' + issue + '</span>';
   }
 
-  toggleIntake(false);
-}
-  var patient = document.getElementById('pharm-patient').value || document.getElementById('pharm-patient').placeholder;
-  var claim = document.getElementById('pharm-claim').value || document.getElementById('pharm-claim').placeholder;
-  var payer = document.getElementById('pharm-payer').value || document.getElementById('pharm-payer').placeholder;
-  var compliance = document.getElementById('pharm-compliance').value || document.getElementById('pharm-compliance').placeholder;
-  var pending = document.getElementById('pharm-pending').value || document.getElementById('pharm-pending').placeholder;
-  var revenue = document.getElementById('pharm-revenue').value || document.getElementById('pharm-revenue').placeholder;
-  var issue = document.getElementById('pharm-issue').value || document.getElementById('pharm-issue').placeholder;
-
-  var meta = document.getElementById('guide-meta');
-  if (meta) {
-    meta.innerHTML = 'Patient: <span style="color:var(--g)">' + patient + '</span> · Claim: <span style="color:var(--g)">' + claim +
-      '</span> · Payer: <span style="color:var(--g)">' + payer + '</span><br>' +
-      'Compliance: <span style="color:var(--g)">' + compliance + '</span> · Pending: <span style="color:var(--a)">' + pending +
-      '</span> · Revenue at Risk: <span style="color:var(--r)">' + revenue + '</span><br>' +
-      'Issue: <span style="color:#99cc99">' + issue + '</span>';
-  }
   toggleIntake(false);
 }
 
@@ -738,9 +719,9 @@ async function runGuide(prompt) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-       switchTab('dash', document.querySelector('.nav-btn'));
-       if (window.TSMMissionObj) TSMMissionObj.render ? TSMMissionObj.render() : null;
-    });
+   switchTab('dash', document.querySelector('.nav-btn'));
+   if (window.TSMMissionObj) TSMMissionObj.render ? TSMMissionObj.render() : null;
+});
 </script>
 <script src="/shared/tsm-operational-mesh.js?v=mesh1"></script>
 <script src="/shared/tsm-relay-bus.js?v=relay2"></script>
@@ -751,19 +732,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
 <script>(function(){
 document.addEventListener('click', function(e){
-
   const el = e.target.closest('[data-tsm-action]');
   if(!el) return;
-
   const action = el.getAttribute('data-tsm-action');
   const args = el.getAttribute('data-tsm-args');
-
   if(window.TSM && TSM.launcher && TSM.launcher.run){
     TSM.launcher.run(action, args);
   } else {
     console.warn('[TSM] launcher missing:', action, args);
   }
-
 });
 })();</script>
 <script src="/healthcare/tsm-launcher.js"></script>
@@ -774,59 +751,32 @@ document.addEventListener('click', function(e){
 <script>
 
 // ── TSM RELAY-TO-STRATEGIST (generic across HC nodes) ──
-
 function relayToStrategist(nodeLabel) {
-
   try {
-
     var engineOutputs = {};
-
     document.querySelectorAll('.ai-res').forEach(function(el){
-
       var text = (el.textContent || '').trim();
-
       if (!text) return;
-
       if (/^>?\s*(ai|intel workbench|enterprise bnca|leadership brief|report studio)\b.*ready\.?$/i.test(text)) return;
-
       if (/processing\.\.\.$/i.test(text)) return;
-
       var label = (el.id || 'AI OUTPUT').replace(/-res$/i,'').replace(/[-_]/g,' ').toUpperCase();
-
       engineOutputs[label] = text;
-
     });
-
-
 
     var alerts = [];
-
     document.querySelectorAll('.alert-row').forEach(function(row){
-
       var pri = row.querySelector('.pri');
-
       var txt = row.querySelector('.alert-txt');
-
       var imp = row.querySelector('.alert-imp');
-
       if (txt) alerts.push('[' + (pri ? pri.textContent.trim() : '\u2014') + '] ' + txt.textContent.trim() + (imp ? ' (' + imp.textContent.trim() + ')' : ''));
-
     });
 
-
-
     var kpis = [];
-
     document.querySelectorAll('.kpi').forEach(function(k){
-
       var val = k.querySelector('.kpi-val');
-
       var lbl = k.querySelector('.kpi-lbl');
-
       var sub = k.querySelector('.kpi-sub');
-
       if (val && lbl) kpis.push(lbl.textContent.trim() + ': ' + val.textContent.trim() + (sub ? ' \u2014 ' + sub.textContent.trim() : ''));
-
     });
 
 
