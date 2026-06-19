@@ -1413,20 +1413,6 @@ function buildEscalationModal(d) {
         ">◎ STRATEGIC ENGINE</button>
       </div>
 
-      <!-- MESH STATUS -->
-      <div style="
-        background:#06091a;border:1px solid rgba(255,255,255,0.07);
-        border-top:none;border-bottom:1px solid rgba(255,255,255,0.07);
-        padding:6px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
-      ">
-        <span style="font-size:7px;letter-spacing:2px;color:#3d4f68;text-transform:uppercase;">MESH</span>
-        <span style="font-size:8px;letter-spacing:.5px;color:#00e676;">◈ OPERATIONS</span>
-        <span style="font-size:8px;letter-spacing:.5px;color:#00e676;">◈ RELAYS</span>
-        <span style="font-size:8px;letter-spacing:.5px;color:#ffb300;" title="Cross-session pattern memory not yet wired to live data">◐ MEMORY · WIP</span>
-        <span style="font-size:8px;letter-spacing:.5px;color:#00e676;">◈ EXECUTIVE</span>
-        <span style="font-size:8px;letter-spacing:.5px;color:#ffb300;" title="Autonomous resolution drafting not yet implemented">◐ AUTONOMOUS · WIP</span>
-      </div>
-
       <!-- ── TAB 1: WAR ROOM BRIEF ── -->
       <div id="esc-tab-warroom" class="esc-tab-panel" style="
         background:#06091a;border:1px solid rgba(255,255,255,0.07);
@@ -1508,14 +1494,14 @@ function buildEscalationModal(d) {
           DENIAL PACK OUTPUT
         </div>
 
-        <!-- DENIAL PACK CONTENT — populated from relay or Groq -->
+        <!-- DENIAL PACK CONTENT — populated from relay or TSM Neural Core -->
         <div id="dp-content" style="font-size:9.5px;line-height:1.85;color:#8a9fc0;">
           ${escRelay(denialPack) || `
             <div style="color:#5a6f90;font-size:9px;">Generating denial pack from war room relay data...</div>
           `}
         </div>
 
-        <!-- GROQ GENERATE BUTTON if no pack -->
+        <!-- TSM NEURAL CORE GENERATE BUTTON if no pack -->
         <div style="margin-top:16px;" id="dp-generate-wrap">
           <button onclick="generateDenialPack()" style="
             background:rgba(255,61,87,0.08);border:1px solid rgba(255,61,87,0.3);
@@ -1700,7 +1686,7 @@ function switchEscTab(tab) {
 async function generateDenialPack() {
   const btn = document.getElementById('dp-generate-wrap');
   const content = document.getElementById('dp-content');
-  if (content) content.innerHTML = '<span style="color:#5a6f90;font-size:9px;animation:blink 1s infinite;">⚡ Generating denial pack via Groq...</span>';
+  if (content) content.innerHTML = '<span style="color:#5a6f90;font-size:9px;animation:blink 1s infinite;">⚡ Generating denial pack via TSM Neural Core...</span>';
 
   try {
     const raw = sessionStorage.getItem('TSM_EXEC_RELAY');
@@ -1908,7 +1894,7 @@ function buildStratBriefTab() {
       <button class="sb-tab" data-tab="stratengine" onclick="switchSbTab('stratengine')" style="background:none;border:none;border-right:1px solid rgba(255,255,255,0.07);border-bottom:2px solid transparent;color:#5a6f90;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1.5px;padding:8px 18px;cursor:pointer;text-transform:uppercase;">◎ STRATEGIC ENGINE</button>
       <button class="sb-tab" data-tab="respondnotes" onclick="switchSbTab('respondnotes')" style="background:none;border:none;border-right:1px solid rgba(255,255,255,0.07);border-bottom:2px solid transparent;color:#5a6f90;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1.5px;padding:8px 18px;cursor:pointer;text-transform:uppercase;">✎ RESPOND / NOTES</button>
       <button class="sb-tab" data-tab="stratreports" onclick="switchSbTab('stratreports')" style="background:none;border:none;border-right:1px solid rgba(255,255,255,0.07);border-bottom:2px solid transparent;color:#5a6f90;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1.5px;padding:8px 18px;cursor:pointer;text-transform:uppercase;">◈ STRATEGIST REPORTS</button>
-      <button class="sb-tab" data-tab="continuity" onclick="switchSbTab('continuity')" style="background:none;border:none;border-right:1px solid rgba(255,255,255,0.07);border-bottom:2px solid transparent;color:#5a6f90;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1.5px;padding:8px 18px;cursor:pointer;text-transform:uppercase;">◎ OPERATIONAL CONTINUITY</button>
+      <button class="sb-tab" data-tab="continuity" onclick="switchSbTab('continuity')" style="background:none;border:none;border-right:1px solid rgba(255,255,255,0.07);border-bottom:2px solid transparent;color:#5a6f90;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1.5px;padding:8px 18px;cursor:pointer;text-transform:uppercase;">◈ MESH CONTINUITY</button>
     </div>
 
     <!-- TAB: WAR ROOM BRIEF -->
@@ -2017,6 +2003,13 @@ function buildStratBriefTab() {
       <div style="font-size:7.5px;letter-spacing:2px;text-transform:uppercase;color:#5a6f90;margin-bottom:16px;">◈ STRATEGIST REPORTS &mdash; LAST RELAY PAYLOAD</div>
       <div id="strat-reports-content" style="display:flex;flex-direction:column;gap:16px;">
         <div style="font-size:8px;color:#2a3a52;">No relay data loaded yet. Run a strategist session and escalate to exec.</div>
+      </div>
+    </div>
+
+    <!-- TAB: MESH CONTINUITY -->
+    <div id="sb-tab-continuity" class="sb-tab-panel" style="background:#06091a;border:1px solid rgba(255,255,255,0.07);padding:20px;display:none;">
+      <div id="sb-continuity-content">
+        <div style="font-size:8px;color:#2a3a52;letter-spacing:1px;">◈ Loading continuity data...</div>
       </div>
     </div>
 
@@ -2313,6 +2306,7 @@ function switchSbTab(tab) {
     btn.style.background = active ? 'rgba(0,229,255,0.08)' : 'none';
   });
   if (tab === 'stratreports') { buildStratReportsTab(); }
+  if (tab === 'continuity') { buildContinuityTab(); }
   if (tab === 'respondnotes') {
     const hist = document.getElementById('exec-note-history');
     if (hist) hist.innerHTML = renderNoteHistory();
@@ -2403,6 +2397,135 @@ function checkForFreshRelay() {
 }
 
 checkForFreshRelay();
+// ── MESH CONTINUITY TAB ─────────────────────────────────────────────────────
+async function buildContinuityTab() {
+  const mount = document.getElementById('sb-continuity-content');
+  if (!mount) return;
+  mount.innerHTML = '<div style="font-size:8px;color:#2a3a52;letter-spacing:1px;">◈ Loading continuity data...</div>';
+
+  // ── helpers ──
+  function row(icon, time, label, color) {
+    return `<div style="display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid #080d1c;">
+      <span style="color:${color};font-size:11px;min-width:14px;">${icon}</span>
+      <span style="color:#2a3a52;font-size:9px;white-space:nowrap;min-width:48px;">${time}</span>
+      <span style="color:#8a9fc0;font-size:9px;line-height:1.5;">${label}</span>
+    </div>`;
+  }
+  function kpi(label, val, color) {
+    return `<div style="background:#0a0f22;border:1px solid ${color}22;padding:12px 14px;border-left:3px solid ${color};">
+      <div style="font-size:7px;letter-spacing:2px;color:${color}99;margin-bottom:4px;text-transform:uppercase;">${label}</div>
+      <div style="font-size:18px;font-weight:700;color:${color};">${val}</div>
+    </div>`;
+  }
+  function sector(name, status, color, detail) {
+    return `<div style="background:#06091a;border:1px solid ${color}22;border-radius:4px;padding:10px 14px;display:flex;gap:12px;align-items:center;">
+      <span style="font-size:9px;color:${color};font-weight:700;min-width:90px;">${name}</span>
+      <span style="background:${color}18;border:1px solid ${color}33;border-radius:999px;padding:2px 10px;font-size:8px;color:${color};">${status}</span>
+      <span style="font-size:8px;color:#4a5a70;">${detail}</span>
+    </div>`;
+  }
+
+  // ── 1. Memory Timeline from localStorage ──
+  let timelineRows = '';
+  try {
+    const raw = localStorage.getItem('TSM_HC_MEMORY');
+    const store = raw ? JSON.parse(raw) : null;
+    const events = Array.isArray(store?.events) ? store.events : [];
+    const icons = { war_room_engine_run:'⚙', war_room_relay:'⚡', app_dispatch:'→', node_relay:'◈', strategist_relay:'⬆', exec_portal_open:'★', exec_feedback:'↩', mission_complete:'✓', anomaly_detected:'⚠', user_note:'✎' };
+    const colors = { info:'#38bdf8', success:'#00ffc6', warn:'#f59e0b', error:'#ef4444' };
+    const recent = events.slice().reverse().slice(0, 20);
+    timelineRows = recent.length
+      ? recent.map(e => {
+          const t = new Date(e.ts).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+          return row(icons[e.type] || '·', t, e.label, colors[e.severity] || colors.info);
+        }).join('')
+      : '<div style="font-size:8px;color:#2a3a52;padding:10px 0;">No session events recorded yet. Run war room engines or escalate to strategist to populate this timeline.</div>';
+  } catch (_) {
+    timelineRows = '<div style="font-size:8px;color:#2a3a52;padding:8px 0;">Unable to read session memory.</div>';
+  }
+
+  // ── 2. Relay impact KPIs from relay keys ──
+  let relayAge = '—', warRoomEngines = '—', execRelayAge = '—';
+  try {
+    const wr = JSON.parse(sessionStorage.getItem('TSM_WAR_ROOM_BRIEF') || localStorage.getItem('TSM_WAR_ROOM_BRIEF') || 'null');
+    if (wr?._ts) {
+      const mins = Math.round((Date.now() - wr._ts) / 60000);
+      relayAge = mins < 60 ? mins + 'm ago' : Math.round(mins/60) + 'h ago';
+      warRoomEngines = String(Object.keys(wr.engineOutputs || {}).length);
+    }
+    const er = JSON.parse(sessionStorage.getItem('TSM_EXEC_RELAY') || localStorage.getItem('TSM_EXEC_RELAY') || 'null');
+    if (er?._ts) {
+      const mins = Math.round((Date.now() - er._ts) / 60000);
+      execRelayAge = mins < 60 ? mins + 'm ago' : Math.round(mins/60) + 'h ago';
+    }
+  } catch (_) {}
+
+  // ── 3. Multi-sector context (static honest state) ──
+  const sectors = [
+    { name:'HEALTHCARE', status:'ACTIVE', color:'#00ffc6', detail:'Denial war room + strategist chain live' },
+    { name:'FINOPS',     status:'STANDBY', color:'#38bdf8', detail:'War room built · exec portal relay wired' },
+    { name:'INSURANCE',  status:'STANDBY', color:'#a78bfa', detail:'War room built · strategist pending' },
+    { name:'CONSTRUCTION',status:'STANDBY',color:'#f59e0b', detail:'War room built · strategist wired' },
+    { name:'LEGAL',      status:'STANDBY', color:'#fb7185', detail:'War room built · chief strategist wired' },
+    { name:'REAL ESTATE',status:'STANDBY', color:'#34d399', detail:'War room built · mortgage rescue packs live' },
+    { name:'BPO',        status:'STANDBY', color:'#60a5fa', detail:'War room built · node chain pending' },
+  ];
+
+  // ── 4. Autonomous queue (static readiness) ──
+  const autoItems = [
+    { label:'Generate Appeal Letter from denial context', ready:true },
+    { label:'Generate Documentation Checklist',           ready:true },
+    { label:'Generate Missing Data Request',              ready:true },
+    { label:'Assign Owner Lane from decision item',       ready:false },
+    { label:'Cross-sector anomaly propagation',           ready:false },
+    { label:'Auto-relay to executive without trigger',    ready:false },
+  ];
+
+  mount.innerHTML = `
+    <!-- SECTION: RELAY IMPACT KPIs -->
+    <div style="margin-bottom:20px;">
+      <div style="font-size:7.5px;letter-spacing:2px;text-transform:uppercase;color:#5a6f90;margin-bottom:10px;">◈ RELAY CHAIN STATUS</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+        ${kpi('WAR ROOM BRIEF AGE', relayAge, '#00ffc6')}
+        ${kpi('ENGINES IN BRIEF', warRoomEngines, '#38bdf8')}
+        ${kpi('EXEC RELAY AGE', execRelayAge, '#a78bfa')}
+      </div>
+    </div>
+
+    <!-- SECTION: MEMORY TIMELINE -->
+    <div style="margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="font-size:7.5px;letter-spacing:2px;text-transform:uppercase;color:#5a6f90;">◈ OPERATIONAL MEMORY TIMELINE</div>
+        <button onclick="localStorage.removeItem('TSM_HC_MEMORY');buildContinuityTab();" style="background:none;border:1px solid rgba(255,255,255,0.07);color:#2a3a52;font-family:'JetBrains Mono',monospace;font-size:7px;padding:2px 8px;cursor:pointer;letter-spacing:1px;">CLEAR</button>
+      </div>
+      <div style="background:#03060d;border:1px solid rgba(255,255,255,0.05);border-radius:4px;padding:10px 14px;max-height:200px;overflow-y:auto;">
+        ${timelineRows}
+      </div>
+    </div>
+
+    <!-- SECTION: MULTI-SECTOR CONTEXT -->
+    <div style="margin-bottom:20px;">
+      <div style="font-size:7.5px;letter-spacing:2px;text-transform:uppercase;color:#5a6f90;margin-bottom:10px;">◈ OPERATIONAL MESH — SECTOR STATUS</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        ${sectors.map(s => sector(s.name, s.status, s.color, s.detail)).join('')}
+      </div>
+    </div>
+
+    <!-- SECTION: AUTONOMOUS EXECUTION QUEUE -->
+    <div>
+      <div style="font-size:7.5px;letter-spacing:2px;text-transform:uppercase;color:#5a6f90;margin-bottom:10px;">◈ AUTONOMOUS EXECUTION — READINESS QUEUE</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        ${autoItems.map(item => `
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#03060d;border:1px solid rgba(255,255,255,0.05);border-radius:3px;">
+            <span style="font-size:10px;color:${item.ready ? '#00ffc6' : '#2a3a52'};">${item.ready ? '✓' : '○'}</span>
+            <span style="font-size:8.5px;color:${item.ready ? '#8a9fc0' : '#2a3a52'};">${item.label}</span>
+            <span style="margin-left:auto;font-size:7px;letter-spacing:1px;color:${item.ready ? '#00ffc6' : '#2a3a52'};border:1px solid ${item.ready ? '#00ffc622' : 'transparent'};padding:1px 6px;border-radius:3px;">${item.ready ? 'READY' : 'PHASE 2'}</span>
+          </div>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
 buildStratBriefTab();
 setInterval(buildStratBriefTab, 30000);
 </script>
@@ -2415,5 +2538,8 @@ setInterval(buildStratBriefTab, 30000);
   <div id="strat-brief-panel" style="min-height:120px;"></div>
 </div>
 
+<script src="/html/healthcare/js/relay.engine.js"></script>
+<script src="/html/healthcare/js/memory.engine.js"></script>
+<script src="/html/healthcare/js/relay-card.component.js"></script>
 </body>
 </html>

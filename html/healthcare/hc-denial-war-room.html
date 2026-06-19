@@ -464,7 +464,7 @@ textarea::placeholder{color:var(--faint)}
       </div>
       <div class="key-row">
         <div class="key-dot" id="key-dot"></div>
-        <div class="key-label">Groq API Key</div>
+        <div class="key-label">Neural Core Access Key</div>
         <input class="key-input" id="api-key" type="password" placeholder="gsk_..." oninput="onKeyInput(this.value)">
         <button class="btn-ghost btn" style="padding:3px 10px;font-size:7px" onclick="testKey()">Test</button>
         <span class="key-status" id="key-status"></span>
@@ -706,7 +706,7 @@ textarea::placeholder{color:var(--faint)}
   <span style="color:var(--border2)">·</span>
   <span id="ingest-type" style="color:var(--cyan)"></span>
   <span style="color:var(--border2)" id="ingest-sep" style="display:none">·</span>
-  <span id="model-txt" style="color:var(--amber)">Groq: not connected</span>
+  <span id="model-txt" style="color:var(--amber)">TSM Neural Core: not connected</span>
   <div class="s-right">
     <span id="global-prog"></span>
     <button class="btn" style="font-size:7px;padding:3px 12px;color:var(--red);border-color:var(--red);background:var(--red2)" onclick="fireAll()">⚡ FIRE ALL</button>
@@ -766,7 +766,7 @@ let pipelineRunning = false;
 if(GROQ_KEY){
   document.getElementById('api-key').value = GROQ_KEY;
   document.getElementById('key-dot').classList.add('ok');
-  document.getElementById('model-txt').textContent = 'Groq: ' + GROQ_MODEL;
+  document.getElementById('model-txt').textContent = 'TSM Neural Core: ' + GROQ_MODEL;
   document.getElementById('model-txt').style.color = 'var(--green)';
 }
 
@@ -984,7 +984,7 @@ function loadLib(url, globalKey){
 // ── PDF IMAGE OCR (scanned / image-only PDFs) ────────────────────────────
 async function pdfImageOCR(pdf, filename){
   if(!GROQ_KEY){
-    return '[Scanned PDF detected — enter Groq API key to enable Vision OCR extraction]';
+    return '[Scanned PDF detected — enter TSM Neural Core key to enable Vision OCR extraction]';
   }
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
@@ -1028,10 +1028,10 @@ async function pdfImageOCR(pdf, filename){
   return result + extra;
 }
 
-// ── IMAGE OCR via Groq Vision ─────────────────────────────────────────────
+// ── IMAGE OCR via TSM Neural Core Vision ─────────────────────────────────────────────
 async function imageOCR(file){
   if(!GROQ_KEY){
-    return '[Image uploaded — enter Groq API key to enable Vision OCR extraction]';
+    return '[Image uploaded — enter TSM Neural Core key to enable Vision OCR extraction]';
   }
   const b64 = await new Promise((res, rej) => {
     const r = new FileReader();
@@ -1348,7 +1348,7 @@ async function testKey(){
       }
       const modelTxt = document.getElementById('model-txt');
       if (modelTxt) {
-        modelTxt.textContent = 'Groq: ' + GROQ_MODEL;
+        modelTxt.textContent = 'TSM Neural Core: ' + GROQ_MODEL;
         modelTxt.style.color = 'var(--green)';
       }
       const fireBtn = document.getElementById('fire-btn');
@@ -1367,7 +1367,7 @@ async function testKey(){
   }
 }
 
-// ── GROQ STREAM ────────────────────────────────────────────────────────────
+// ── TSM NEURAL CORE STREAM ────────────────────────────────────────────────────────────
 async function groqStreamModel(model, sys, user, onChunk, onDone, onError, maxTok=700){
   try {
     const res = await fetch('/api/hc/stream', {
@@ -1400,7 +1400,7 @@ async function groqStream(sys, user, onChunk, onDone, onError, maxTok=700){
         messages: [{ role: 'system', content: sys }, { role: 'user', content: user }]
       })
     });
-    if(!res.ok){ const e = await res.json(); onError(e.error?.message || 'Groq error ' + res.status); return; }
+    if(!res.ok){ const e = await res.json(); onError(e.error?.message || 'TSM Neural Core error ' + res.status); return; }
     const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = '', total = 0;
     while(true){
       const { done, value } = await reader.read(); if(done){ onDone(total); break; }
@@ -1973,7 +1973,7 @@ Keep response under 120 words. Plain text only, no markdown.`
           ` : ''}
 
           <!-- Launch button -->
-          <a href="${app.url}" target="_blank" onclick="if(window.TSMCureConductor){event.preventDefault();window.TSMCureConductor.launch(app.url,{name:app.appName,how:app.howTo||'',tags:[]},{docText:document.getElementById('doc-text')?.value||'',vertical:'Healthcare'});}" style="
+          <a href="${app.url}" target="_blank" onclick="event.preventDefault();if(window.TSMRelay){const _doc=document.getElementById('doc-text')?.value||'';const _sums=['out1','out2','out3','out4'].map(function(id){const el=document.getElementById(id);return el?el.textContent.trim():'';}).filter(Boolean);window.TSMRelay.dispatchToApp(app,_doc,_sums);}else{window.open(app.url,'_blank');}" style="
             display: inline-flex; align-items: center; gap: 6px;
             padding: 8px 14px;
             background: transparent;
@@ -2080,6 +2080,154 @@ function dispatchSessionPayload(payload, targetUrl) {
 
 // ─── STRATEGIST BRIEFING AUTO-PACK ───────────────────────────────────────────
 function escalateToStrategist() {
+  if (window.TSMMemory) TSMMemory.push(TSMMemory.EVENT_TYPES.WAR_ROOM_RELAY, 'War Room relayed to HC Main Strategist', {}, 'success');
+  const btn = document.getElementById('escalate-strategist-btn');
+  const targetUrl = '/html/healthcare/hc-main-strategist.html';
+  if (btn) {
+    btn.style.background = 'rgba(236,72,153,0.3)';
+    btn.innerHTML = '⟳ PACKING BRIEFING...';
+    btn.style.pointerEvents = 'none';
+  }
+  const payload = buildWarRoomPayload();
+  const steps = [
+    { msg: '⟳ BUNDLING ENGINE OUTPUTS...', delay: 0 },
+    { msg: '⟳ ATTACHING BNCA RECOMMENDATIONS...', delay: 400 },
+    { msg: '⟳ SEALING STRATEGIST BRIEF...', delay: 850 },
+    { msg: '✓ BRIEF COMMITTED — ROUTING...', delay: 1250 },
+  ];
+  steps.forEach(({ msg, delay }) => {
+    setTimeout(() => { if (btn) btn.innerHTML = msg; }, delay);
+  });
+  setTimeout(() => {
+    const url = dispatchSessionPayload(payload, targetUrl);
+    window.open(url, '_blank');
+    if (btn) {
+      btn.innerHTML = '⚡ ESCALATE TO HC MAIN STRATEGIST →';
+      btn.style.background = 'rgba(236,72,153,0.12)';
+      btn.style.pointerEvents = 'auto';
+    }
+  }, 1600);
+}
+
+// ─── DOWNSTREAM RECEIVER (also used by HC Strategist + FinOps) ───────────────
+function readWarRoomBrief() {
+  const key = 'TSM_WAR_ROOM_BRIEF';
+  try {
+    const stored = sessionStorage.getItem(key);
+    if (stored) {
+      const payload = JSON.parse(stored);
+      const age = Date.now() - new Date(payload.timestamp).getTime();
+      if (age < 7200000) return payload;
+    }
+  } catch (e) {}
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const b64 = params.get('tsm_brief');
+    if (b64) return JSON.parse(decodeURIComponent(escape(atob(b64))));
+  } catch (e) {}
+  return null;
+}
+
+// ─── WAR ROOM BANNER INJECTOR (paste into downstream apps) ───────────────────
+function injectWarRoomBanner(payload, containerId) {
+  if (!payload) return;
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const topFindings = Object.entries(payload.engineOutputs || {}).slice(0, 3).map(([label, text]) => `
+    <div style="margin-bottom:8px;">
+      <div style="font-size:9px;color:#ec4899;letter-spacing:1px;margin-bottom:3px;">${label.toUpperCase()}</div>
+      <div style="font-size:11px;color:#aaa;line-height:1.6;">${text.slice(0,180)}...</div>
+    </div>`).join('');
+  const recList = (payload.engine06?.recommendations || []).slice(0,3).map(r => `
+    <span style="display:inline-flex;align-items:center;gap:5px;background:rgba(236,72,153,0.1);border:1px solid rgba(236,72,153,0.3);color:#ec4899;font-size:10px;padding:3px 8px;border-radius:2px;margin:3px;">
+      #${Number(r.rank)+1} ${r.appName}
+    </span>`).join('');
+  const banner = document.createElement('div');
+  banner.id = 'tsm-war-room-banner';
+  banner.style.cssText = 'background:rgba(10,14,22,0.97);border:1px solid #ec4899;border-radius:4px;font-family:monospace;margin-bottom:16px;box-shadow:0 0 20px rgba(236,72,153,0.1);overflow:hidden;animation:fadeIn 0.4s ease;';
+  banner.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:rgba(236,72,153,0.08);border-bottom:1px solid #2a1a2a;cursor:pointer;"
+      onclick="const b=document.getElementById('tsm-banner-body');const c=document.getElementById('tsm-banner-chevron');b.style.display=b.style.display==='none'?'block':'none';c.textContent=b.style.display==='none'?'▶':'▼';">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="background:#ec4899;color:#000;font-size:9px;font-weight:bold;padding:2px 7px;border-radius:2px;letter-spacing:1px;">WAR ROOM BRIEF</span>
+        <span style="color:#888;font-size:10px;">Session ${payload.sessionId} · ${new Date(payload.timestamp).toLocaleTimeString()}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="color:#555;font-size:10px;">${payload.documentMeta?.ingestType||'DOCUMENT'} · ${payload.documentMeta?.charCount||0} chars</span>
+        <span id="tsm-banner-chevron" style="color:#ec4899;font-size:11px;">▼</span>
+      </div>
+    </div>
+    <div id="tsm-banner-body" style="padding:14px 16px;">
+      <div style="margin-bottom:12px;">
+        <div style="font-size:9px;color:#666;letter-spacing:1px;margin-bottom:6px;">DISPATCH NARRATIVE</div>
+        <div style="font-size:12px;color:#ccc;line-height:1.7;border-left:2px solid #ec4899;padding-left:10px;">${payload.engine06?.narrative||'No narrative captured.'}</div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <div style="font-size:9px;color:#666;letter-spacing:1px;margin-bottom:6px;">ENGINE FINDINGS SUMMARY</div>
+        ${topFindings}
+      </div>
+      ${recList ? `<div><div style="font-size:9px;color:#666;letter-spacing:1px;margin-bottom:6px;">ENGINE 06 RECOMMENDED APPS</div><div>${recList}</div></div>` : ''}
+    </div>`;
+  container.insertBefore(banner, container.firstChild);
+}
+
+// ─── SESSION PAYLOAD BUILDER ─────────────────────────────────────────────────
+function buildWarRoomPayload() {
+  const engineOutputs = {};
+  const engineLabels = {
+    'out1': 'Document Intelligence',
+    'out2': 'Root Cause Analysis',
+    'out3': 'Financial Impact',
+    'out4': 'Recovery Plan + Appeal',
+    'nav-container': 'Recovery Navigator'
+  };
+  Object.entries(engineLabels).forEach(([id, label]) => {
+    const el = document.getElementById(id);
+    if (el && el.textContent.trim()) engineOutputs[label] = el.textContent.trim().slice(0, 800);
+  });
+  const appCards = document.querySelectorAll('#e6-cards [data-app-name]');
+  const recommendations = Array.from(appCards).map(card => ({
+    appName: card.dataset.appName,
+    suite: card.dataset.appSuite,
+    rank: card.dataset.appRank,
+    howTo: card.dataset.appHowto
+  }));
+  const narrativeEl = document.getElementById('e6-narrative');
+  const narrative = narrativeEl ? narrativeEl.innerText.replace('AI DISPATCH NARRATIVE','').trim() : '';
+  const docInput = document.getElementById('doc-text')?.value || '';
+  const ingestType = document.getElementById('ingest-type')?.textContent || '';
+  return {
+    source: 'TSM_DENIAL_WAR_ROOM',
+    version: '2.0',
+    timestamp: new Date().toISOString(),
+    sessionId: 'WR-' + Date.now(),
+    documentMeta: { ingestType, charCount: docInput.length, preview: docInput.slice(0, 300) },
+    engineOutputs,
+    engine06: { narrative, recommendations }
+  };
+}
+
+// ─── SESSION PAYLOAD DISPATCHER ──────────────────────────────────────────────
+function dispatchSessionPayload(payload, targetUrl) {
+  const key = 'TSM_WAR_ROOM_BRIEF';
+  const json = JSON.stringify(payload);
+  try {
+    sessionStorage.setItem(key, json);
+    return targetUrl;
+  } catch (e) {
+    try {
+      const b64 = btoa(unescape(encodeURIComponent(json.slice(0, 4000))));
+      const separator = targetUrl.includes('?') ? '&' : '?';
+      return `${targetUrl}${separator}tsm_brief=${b64}`;
+    } catch (e2) {
+      return targetUrl;
+    }
+  }
+}
+
+// ─── STRATEGIST BRIEFING AUTO-PACK ───────────────────────────────────────────
+function escalateToStrategist() {
+  if (window.TSMMemory) TSMMemory.push(TSMMemory.EVENT_TYPES.WAR_ROOM_RELAY, 'War Room relayed to HC Main Strategist', {}, 'success');
   const btn = document.getElementById('escalate-strategist-btn');
   const targetUrl = '/html/healthcare/hc-main-strategist.html';
   if (btn) {
@@ -2467,7 +2615,7 @@ function hcWriteAnomalyRelay(anomalyText, docCtx, mission) {
     <div class="howto-section">
       <h3>STEP 2 — CONFIGURE API KEY</h3>
       <ul>
-        <li>Enter your Groq API key in the key field and hit Test. A green dot = connected.</li>
+        <li>Enter your TSM Neural Core key in the key field and hit Test. A green dot = connected.</li>
         <li>Key is saved to localStorage — you only need to do this once per browser.</li>
       </ul>
     </div>
@@ -2500,7 +2648,7 @@ function hcWriteAnomalyRelay(anomalyText, docCtx, mission) {
     <table class="manifest-table">
       <thead><tr><th>#</th><th>COMPONENT</th><th>DEFECT</th><th>SEV</th><th>STATUS</th></tr></thead>
       <tbody>
-        <tr><td>D-01</td><td>Engine E3</td><td>Financial calc uses LARGE model — may time out on slow Groq keys; no retry logic</td><td class="sev-crit">CRIT</td><td>OPEN</td></tr>
+        <tr><td>D-01</td><td>Engine E3</td><td>Financial calc uses LARGE model — may time out on slow TSM Neural Core keys; no retry logic</td><td class="sev-crit">CRIT</td><td>OPEN</td></tr>
         <tr><td>D-02</td><td>File Drop Zone</td><td>PDF/DOCX extraction dependent on browser FileReader; binary formats may silently fail</td><td class="sev-crit">CRIT</td><td>OPEN</td></tr>
         <tr><td>D-03</td><td>Engine E5</td><td>Nav container used as outId — clear() wipes nav HTML on re-run</td><td class="sev-med">MED</td><td>OPEN</td></tr>
         <tr><td>D-04</td><td>API Key</td><td>Key stored in localStorage plaintext; no expiry or rotation mechanism</td><td class="sev-med">MED</td><td>ACCEPTED</td></tr>
@@ -2524,7 +2672,7 @@ const HC_TOUR_STEPS = [
   { title: 'E4 · RECOVERY PLAN', body: 'Builds a step-by-step appeal plan: documents required, appeal letter talking points, payer portal instructions, and submission deadline. Ready to hand off to your billing team.' },
   { title: 'E5 · RECOVERY NAVIGATOR', body: 'Final engine. Routes next actions to the correct staff roles — Billing Coordinator, Office Manager, or Appeals Specialist — with escalation path and priority order.' },
   { title: 'DOWNSTREAM WORKFLOW', body: 'Engine output is relayed via sessionStorage to the HC Strategist and Executive Portal. Use the Ecosystem nav at the bottom of the page to route to other TSM suites or escalate to leadership.' },
-  { title: 'YOU\'RE READY', body: 'Load a denial document (or hit a sample), enter your Groq key, and fire all 5 engines. For a full walkthrough of controls, hit the HOW TO button in the toolbar.' },
+  { title: 'YOU\'RE READY', body: 'Load a denial document (or hit a sample), enter your TSM Neural Core key, and fire all 5 engines. For a full walkthrough of controls, hit the HOW TO button in the toolbar.' },
 ];
 
 let tourIdx = 0;
@@ -2566,5 +2714,7 @@ window.tourOpen = tourOpen;
 window.howtoOpen = () => document.getElementById('howtoOverlay').classList.add('active');
 </script>
 <script src="/html/tsm-mission-orchestrator.js"></script>
+<script src="/html/healthcare/js/relay.engine.js"></script>
+<script src="/html/healthcare/js/memory.engine.js"></script>
 </body>
 </html>
