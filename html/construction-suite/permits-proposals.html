@@ -1747,9 +1747,9 @@ async function callAPI(prompt) {
   const groqKey = localStorage.getItem('tsm_groq_key');
   if (groqKey) {
     try {
-      const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${groqKey}` },
+      const r = await fetch('/api/war-room/stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'llama-3.3-70b-versatile',
           max_tokens: 600,
@@ -1759,8 +1759,13 @@ async function callAPI(prompt) {
           ]
         })
       });
-      const d = await r.json();
-      return d.choices?.[0]?.message?.content || null;
+      const reader = r.body.getReader(); const dec = new TextDecoder(); let out = '';
+while(true){ const{done,value}=await reader.read(); if(done)break;
+  dec.decode(value).split('\n').forEach(line=>{ if(line.startsWith('data: ')&&line!=='data: [DONE]'){
+    try{out+=(JSON.parse(line.slice(6)).choices?.[0]?.delta?.content||'');}catch(e){}
+  }});
+}
+return out || null;
     } catch(e) { /* fall through */ }
   }
 
