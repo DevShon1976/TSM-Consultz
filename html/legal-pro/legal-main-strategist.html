@@ -687,14 +687,18 @@ EXECUTIVE DECISION REQUIRED: [1-2 sentences on exactly what the Chief Strategist
 Keep it sharp, actionable, and executive-ready. No legal jargon overload. Dollar figures, deadlines, probabilities wherever possible.`;
 
   try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const res = await fetch('/api/war-room/stream', {
       method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':`Bearer ${getGroqKey()}`},
+      headers:{'Content-Type':'application/json'},
       body: JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],temperature:0.4,max_tokens:800})
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    synthesisText = data.choices?.[0]?.message?.content || '';
+    const reader=res.body.getReader();const dec=new TextDecoder();synthesisText='';
+    while(true){const{done,value}=await reader.read();if(done)break;
+      dec.decode(value).split('\n').forEach(line=>{if(line.startsWith('data: ')&&line!=='data: [DONE]'){
+        try{synthesisText+=(JSON.parse(line.slice(6)).choices?.[0]?.delta?.content||'');}catch(e){}
+      }});
+    }
     renderSynthesis(synthesisText);
     generateActions(synthesisText);
   } catch(err) {

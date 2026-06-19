@@ -679,18 +679,22 @@ PRIORITY ACTIONS:
 RECOVERY PROBABILITY: [%] — [rationale]
 PRINCIPAL ESCALATION: [Yes/No] — [reason]`;
 
-      fetch('https://api.groq.com/openai/v1/chat/completions',{
+      fetch('/api/war-room/stream',{
         method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKeyVal},
+        headers:{'Content-Type':'application/json'},
         body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:700,temperature:0.2,messages:[{role:'user',content:prompt}]})
       })
-      .then(r=>r.json())
-      .then(d=>{
-        const txt=d.choices?.[0]?.message?.content||'';
-        if(!txt) throw new Error('Empty response');
+      .then(async r=>{
+        const reader=r.body.getReader();const dec=new TextDecoder();let txt='';
         document.getElementById('iip-spinner').style.display='none';
         document.getElementById('iip-output').style.display='block';
-        document.getElementById('iip-output').textContent=txt;
+        while(true){const{done,value}=await reader.read();if(done)break;
+          const chunk=dec.decode(value);
+          chunk.split('\n').forEach(line=>{if(line.startsWith('data: ')&&line!=='data: [DONE]'){
+            try{const d=JSON.parse(line.slice(6));txt+=(d.choices?.[0]?.delta?.content||'');
+            document.getElementById('iip-output').textContent=txt;}catch(e){}}});
+        }
+        if(!txt) throw new Error('Empty response');
       })
       .catch(err=>{
         document.getElementById('iip-spinner').style.display='none';

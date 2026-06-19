@@ -635,9 +635,9 @@ async function runBNCA() {
   const usr = `Cross-app state:\n${mods}\n\nGenerate a BNCA with 4 bullet points. Format: bold action verb, specific metric or name, clear next step. Cover: (1) highest risk, (2) financial/legal exposure, (3) security/compliance, (4) schedule impact.`;
 
   try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const res = await fetch('https/api/war-room/stream://api.groq.com/openai/v1/chat/completions', {
       method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
+      headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
         model:'llama-3.3-70b-versatile', max_tokens:600, temperature:0.4, stream:true,
         messages:[{role:'system',content:sys},{role:'user',content:usr}]
@@ -770,7 +770,7 @@ async function runConstructionBNCA(){
   const ctx=CONSTRUCTION_SCENARIOS[mission.scenarioId]||'Full construction portfolio review';
   out.textContent='Generating BNCA...';
   try{
-    const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:1024,messages:[{role:'user',content:'Construction strategist BNCA for: '+ctx+'\n\nFormat: CONTROLLER PRIORITY ACTIONS (numbered, dollar-quantified, owner assigned) then BNCA — BEST NEXT COURSE OF ACTION (one paragraph).'}]})});
+    const r=await fetch('/api/war-room/stream',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:1024,messages:[{role:'user',content:'Construction strategist BNCA for: '+ctx+'\n\nFormat: CONTROLLER PRIORITY ACTIONS (numbered, dollar-quantified, owner assigned) then BNCA — BEST NEXT COURSE OF ACTION (one paragraph).'}]})});
     const d=await r.json();
     out.style.whiteSpace='pre-wrap';
     out.textContent=d.choices?.[0]?.message?.content||'No response';
@@ -886,7 +886,7 @@ ENGINE 06 — BNCA EXEC: ${engines.e6||''}
   const usr = `War Room Data:\n${ctx}\n\nGenerate:\n\nCONTROLLER PRIORITY ACTIONS (4 actions, numbered, dollar-quantified, owner assigned, deadline):\n\nAPP ROUTING GUIDANCE (for each Construction Suite app — AuditOps, Financial, Legal, Compliance — give 2-3 sentences of specific step-by-step instruction on what tab to open, what data to enter, and what output to produce for THIS specific document and issue):\n\nBNCA — BEST NEXT COURSE OF ACTION (one paragraph, most important 72-hour action sequence):\n\nESCALATION TRIGGER (condition for immediate executive involvement):`;
  
   try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const res = await fetch('/api/war-room/stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + groqKeyVal },
       body: JSON.stringify({
@@ -1117,9 +1117,9 @@ PRIORITY ACTIONS:
 RECOVERY PROBABILITY: [%] — [rationale]
 EXECUTIVE ESCALATION: [Yes/No] — [reason]`;
 
-      fetch('https://api.groq.com/openai/v1/chat/completions',{
+      fetch('/api/war-room/stream',{
         method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKeyVal},
+        headers:{'Content-Type':'application/json',Val},
         body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:700,temperature:0.2,messages:[{role:'user',content:prompt}]})
       })
       .then(r=>r.json())
