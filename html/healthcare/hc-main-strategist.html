@@ -1078,9 +1078,9 @@ async function escalateToExecPortal(){
     if (live.revenueAtRisk) liveSignals.push({ severity:'MED', title:`${live.revenueAtRisk} revenue at risk · CPT upcoding audit`, sub:'Coder education required before Friday', source:'HC-Compliance · HC-Billing' });
 
     // ── Grab engine finding panels for modal tabs ──
-    const dashEl  = document.querySelector('#dash-out, #engine-dash-out, [data-engine="dash"] .out, .dash-out');
-    const aiEl    = document.querySelector('#ai-out, #engine-ai-out, [data-engine="ai"] .out, .ai-out');
-    const briefEl = document.querySelector('#tsm-war-room-banner .war-room-narrative, #tsm-war-room-banner [style*="border-left:2px solid #ec4899"]');
+    const dashEl  = document.querySelector('#strat-out');
+    const aiEl    = document.querySelector('#strat-out');
+    const briefEl = document.querySelector('#tsm-war-room-banner [style*="border-left:2px solid #ec4899"], #tsm-war-room-banner .dispatch-narrative');
 
     const payload = {
       ts: Date.now(),
@@ -1093,9 +1093,17 @@ async function escalateToExecPortal(){
       sourcedFromLiveAnalysis: rawOut.length > 40,
       // ── NEW: fields for exec portal escalation modal ──
       sessionId:    'REL-' + Date.now().toString(36).toUpperCase(),
-      warRoomBrief: briefEl?.textContent?.trim() || rawOut.slice(0, 1200) || '',
-      dashSummary:  dashEl?.textContent?.trim()  || bnca.denialIntel    || '',
-      aiSummary:    aiEl?.textContent?.trim()    || bnca.revenuePosition || '',
+      warRoomBrief: rawOut.slice(0, 1500) || briefEl?.textContent?.trim() || bnca.revenuePosition || '',
+      dashSummary:  bnca.denialIntel || dashEl?.textContent?.trim() || '',
+      aiSummary:    rawOut.slice(0, 800) || bnca.revenuePosition || '',
+      stratReports: {
+        executiveBrief:  rawOut.slice(0, 2000),
+        denialSweep:     document.querySelector('#denial-analysis-out, .denial-out')?.textContent?.trim() || '',
+        authFriction:    document.querySelector('#auth-out, .auth-out')?.textContent?.trim() || '',
+        codingDrift:     document.querySelector('#coding-out, .coding-out')?.textContent?.trim() || '',
+        siteVariance:    document.querySelector('#site-out, .site-out')?.textContent?.trim() || '',
+        complianceHeat:  document.querySelector('#compliance-out, .compliance-out')?.textContent?.trim() || '',
+      },
       denialPack:   '',
       denialCodes:  document.getElementById('dp-codes')?.textContent?.trim() || '',
       claimId:      document.getElementById('dp-claim-id')?.textContent?.trim() || '',

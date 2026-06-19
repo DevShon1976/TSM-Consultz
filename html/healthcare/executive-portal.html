@@ -1839,6 +1839,37 @@ function buildStratBriefTab() {
   const panel = document.getElementById('strat-brief-panel');
   if (!panel) return;
 
+  // Populate strategist reports tab
+  const reports = d.stratReports || {};
+  const reportLabels = {
+    executiveBrief: 'EXECUTIVE BRIEF · STRATEGIC ENGINE',
+    denialSweep:    'DENIAL SWEEP',
+    authFriction:   'AUTH FRICTION',
+    codingDrift:    'CODING DRIFT',
+    siteVariance:   'SITE VARIANCE',
+    complianceHeat: 'COMPLIANCE HEAT'
+  };
+
+  setTimeout(() => {
+    const rc = document.getElementById('sb-stratreports-content');
+    if (!rc) return;
+    const entries = Object.entries(reportLabels).filter(([k]) => reports[k]?.trim());
+    if (!entries.length) {
+      rc.innerHTML = '<div style="color:#2a3a52;font-size:9px;">No report tabs captured in this relay. Run a pack analysis on the Strategist before escalating.</div>';
+      return;
+    }
+    rc.innerHTML = entries.map(([k, label]) => `
+      <div style="background:#0a0f22;border:1px solid rgba(255,255,255,0.07);overflow:hidden;">
+        <div style="padding:8px 14px;border-bottom:1px solid rgba(255,255,255,0.055);display:flex;align-items:center;justify-content:space-between;cursor:pointer;"
+          onclick="const b=this.nextElementSibling;b.style.display=b.style.display==='none'?'block':'none';">
+          <div style="font-size:7.5px;letter-spacing:1.5px;color:#00e5ff;text-transform:uppercase;">${label}</div>
+          <div style="font-size:8px;color:#2a3a52;">▼</div>
+        </div>
+        <div style="padding:14px;font-size:9px;line-height:1.85;color:#8a9fc0;white-space:pre-wrap;">${escRelay(reports[k])}</div>
+      </div>
+    `).join('');
+  }, 50);
+
   panel.innerHTML = `
     <!-- RELAY HEADER -->
     <div style="
@@ -1964,6 +1995,10 @@ function buildStratBriefTab() {
 
     <!-- TAB: STRATEGIST REPORTS -->
     <div id="sb-tab-stratreports" class="sb-tab-panel" style="background:#06091a;border:1px solid rgba(255,255,255,0.07);padding:20px;display:none;">
+      <div style="font-size:7.5px;letter-spacing:2px;text-transform:uppercase;color:#5a6f90;margin-bottom:16px;">STRATEGIST REPORTS · FROM LAST ESCALATION</div>
+      <div id="sb-stratreports-content" style="display:flex;flex-direction:column;gap:12px;">
+        <div style="color:#2a3a52;font-size:9px;">Loading strategist reports...</div>
+      </div>
       <div style="font-size:7.5px;letter-spacing:2px;text-transform:uppercase;color:#5a6f90;margin-bottom:16px;">◈ STRATEGIST REPORTS &mdash; LAST RELAY PAYLOAD</div>
       <div id="strat-reports-content" style="display:flex;flex-direction:column;gap:16px;">
         <div style="font-size:8px;color:#2a3a52;">No relay data loaded yet. Run a strategist session and escalate to exec.</div>
