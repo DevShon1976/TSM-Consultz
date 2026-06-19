@@ -704,6 +704,228 @@
   </div>
 </section>
 
+<!-- ═══════════════════════════════ ZIP UPLOAD + AI CATEGORIZER ═══════════════════════════════ -->
+<section id="doc-categorizer" style="background:var(--deep);">
+  <hr class="section-divider">
+  <div class="section-wrap section-pad">
+    <div style="text-align:center; max-width:640px; margin:0 auto 2rem;">
+      <div class="eyebrow">Intelligence Upload</div>
+      <h2 class="section-title" style="margin-bottom:.75rem;">Document Portfolio Analyzer</h2>
+      <p class="section-desc" style="margin:0 auto;">Upload a zip of your operational documents. The TSM AI will parse, categorize, and assign each file to the correct vertical with remediation priority.</p>
+    </div>
+
+    <div id="dca-dropzone" style="
+      border: 2px dashed var(--border2); border-radius: 8px;
+      padding: 3rem 2rem; text-align: center; cursor: pointer;
+      background: rgba(0,150,204,0.04); transition: border-color .2s, background .2s;
+      max-width: 640px; margin: 0 auto 2rem;
+    " onclick="document.getElementById('dca-file-input').click()"
+       ondragover="event.preventDefault();this.style.borderColor='var(--cyan)';this.style.background='rgba(0,200,255,0.07)'"
+       ondragleave="this.style.borderColor='var(--border2)';this.style.background='rgba(0,150,204,0.04)'"
+       ondrop="dcaHandleDrop(event)">
+      <input type="file" id="dca-file-input" accept=".zip" style="display:none" onchange="dcaHandleFile(this.files[0])">
+      <div style="font-size:2.5rem; margin-bottom:1rem; opacity:.5;">📦</div>
+      <div style="color:var(--cyan); font-family:monospace; font-size:.75rem; letter-spacing:.12em; margin-bottom:.5rem;">DROP ZIP HERE OR CLICK TO BROWSE</div>
+      <div style="color:var(--dim); font-size:.75rem;">.zip containing PDFs, DOCXs, XLSXs, TXTs</div>
+    </div>
+
+    <div id="dca-status" style="display:none; max-width:640px; margin:0 auto 1.5rem; padding:.75rem 1rem; background:rgba(0,150,204,0.08); border:1px solid rgba(0,150,204,0.2); border-radius:4px; font-family:monospace; font-size:.72rem; color:var(--cyan); letter-spacing:.06em;"></div>
+
+    <div id="dca-results" style="display:none; max-width:960px; margin:0 auto;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+        <div style="font-family:monospace; font-size:.72rem; letter-spacing:.1em; color:var(--muted);">
+          AI CATEGORIZATION RESULTS — <span id="dca-file-count">0</span> FILES
+        </div>
+        <div style="display:flex; gap:.5rem;">
+          <button onclick="dcaExportCSV()" style="font-family:monospace; font-size:.68rem; letter-spacing:.08em; padding:.4rem .9rem; background:rgba(0,150,204,0.1); border:1px solid rgba(0,150,204,0.3); color:var(--cyan); border-radius:3px; cursor:pointer;">EXPORT CSV</button>
+          <button onclick="dcaReset()" style="font-family:monospace; font-size:.68rem; letter-spacing:.08em; padding:.4rem .9rem; background:transparent; border:1px solid var(--border2); color:var(--dim); border-radius:3px; cursor:pointer;">RESET</button>
+        </div>
+      </div>
+      <div id="dca-tabs" style="display:flex; gap:.25rem; flex-wrap:wrap; margin-bottom:1rem;"></div>
+      <div id="dca-cards" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1rem;"></div>
+    </div>
+  </div>
+</section>
+
+<script>
+(function(){
+  'use strict';
+  var DCA = {
+    files: [],
+    activeTab: 'ALL',
+    VERTICALS: {
+      'Healthcare RCM': { color: '#00c070' },
+      'Insurance':      { color: '#00c8ff' },
+      'FinOps':         { color: '#f59e0b' },
+      'Legal':          { color: '#a855f7' },
+      'Construction':   { color: '#f97316' },
+      'Real Estate':    { color: '#14b8a6' },
+      'BPO':            { color: '#60a5fa' },
+      'General':        { color: '#7a98b8' }
+    },
+    PRIORITY_COLOR: { HIGH: '#ff4444', MEDIUM: '#f59e0b', LOW: '#00c070' }
+  };
+
+  window.dcaHandleDrop = function(e) {
+    e.preventDefault();
+    var dz = document.getElementById('dca-dropzone');
+    dz.style.borderColor = 'var(--border2)';
+    dz.style.background  = 'rgba(0,150,204,0.04)';
+    if (e.dataTransfer.files[0]) dcaHandleFile(e.dataTransfer.files[0]);
+  };
+
+  window.dcaHandleFile = function(file) {
+    if (!file || !file.name.endsWith('.zip')) { dcaSetStatus('⚠ Please upload a .zip file.', '#f59e0b'); return; }
+    dcaSetStatus('⬡ Reading zip: ' + file.name + ' (' + Math.round(file.size/1024) + ' KB)…', 'var(--cyan)');
+    document.getElementById('dca-results').style.display = 'none';
+    if (typeof JSZip === 'undefined') {
+      var s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+      s.onload = function() { dcaProcessZip(file); };
+      s.onerror = function() { dcaFallbackNameOnly(file); };
+      document.head.appendChild(s);
+    } else { dcaProcessZip(file); }
+  };
+
+  function dcaProcessZip(file) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      JSZip.loadAsync(e.target.result).then(function(zip) {
+        var entries = [];
+        zip.forEach(function(path, entry) {
+          if (!entry.dir && /\.(pdf|docx|xlsx|txt|csv|html|md)$/i.test(path))
+            entries.push({ name: path.split('/').pop(), entry: entry });
+        });
+        if (!entries.length) { dcaSetStatus('⚠ No readable files found.', '#f59e0b'); return; }
+        dcaSetStatus('⬡ Extracted ' + entries.length + ' files — reading content…', 'var(--cyan)');
+        var reads = entries.slice(0, 50).map(function(e) {
+          return e.entry.async('string').then(function(text) { return { name: e.name, text: text.slice(0, 3000) }; }).catch(function() { return { name: e.name, text: '' }; });
+        });
+        Promise.all(reads).then(function(fileData) { dcaRunAI(fileData); });
+      }).catch(function(err) { dcaSetStatus('⚠ Could not parse zip: ' + err.message, '#ff4444'); });
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function dcaFallbackNameOnly(file) {
+    dcaSetStatus('⬡ JSZip unavailable — categorizing by filename only…', '#f59e0b');
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var arr = new Uint8Array(e.target.result), names = [];
+      for (var i = 0; i < arr.length - 4; i++) {
+        if (arr[i]===80 && arr[i+1]===75 && arr[i+2]===3 && arr[i+3]===4) {
+          var fnLen = arr[i+26] | (arr[i+27]<<8), fn = '';
+          for (var j = 0; j < fnLen; j++) fn += String.fromCharCode(arr[i+30+j]);
+          if (fn && !/\/$/.test(fn)) names.push(fn.split('/').pop());
+          i += 30 + fnLen;
+        }
+      }
+      if (!names.length) { dcaSetStatus('⚠ Could not extract filenames.', '#ff4444'); return; }
+      dcaRunAI(names.slice(0,50).map(function(n){ return {name:n, text:''}; }));
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function dcaRunAI(fileData) {
+    dcaSetStatus('⬡ Sending ' + fileData.length + ' files to TSM AI…', 'var(--cyan)');
+    var verticalList = Object.keys(DCA.VERTICALS).join(', ');
+    var fileList = fileData.map(function(f, i) {
+      return (i+1) + '. FILE: ' + f.name + (f.text ? '\nPREVIEW: ' + f.text.slice(0,400) : '');
+    }).join('\n\n');
+    var prompt = 'You are a TSM document intelligence system. Categorize each file.\n\n' +
+      'VERTICALS: ' + verticalList + '\n\n' +
+      'Return a JSON array only. Each object: { "name": "<filename>", "vertical": "<vertical>", "priority": "HIGH|MEDIUM|LOW", "summary": "<1 sentence>", "tags": ["<tag>"] }\n\n' +
+      'Rules: assign by filename+content. If unclear use General. HIGH=compliance/financial/legal risk. MEDIUM=operational. LOW=reference.\n\nReturn ONLY valid JSON array, no markdown.\n\nFILES:\n' + fileList;
+    fetch('/api/hc/query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: prompt, maxTokens: 1800 })
+    }).then(function(r) {
+      if (!r.ok) throw new Error('API ' + r.status);
+      return r.json();
+    }).then(function(data) {
+      var raw = (data.answer || data.response || data.text || '').trim().replace(/^```json|^```|```$/g,'').trim();
+      DCA.files = JSON.parse(raw);
+      dcaRender();
+    }).catch(function(err) {
+      DCA.files = fileData.map(function(f) { return dcaHeuristic(f); });
+      dcaRender();
+      dcaSetStatus('⬡ AI unavailable — heuristic applied. ' + err.message, '#f59e0b');
+    });
+  }
+
+  function dcaHeuristic(f) {
+    var n = f.name.toLowerCase(), v = 'General';
+    if (/claim|denial|rcm|billing|ub04|cms1500|eob|era|cpt|icd/.test(n)) v = 'Healthcare RCM';
+    else if (/policy|insur|coverage|premium/.test(n)) v = 'Insurance';
+    else if (/invoice|ap|gl|journal|ledger|finops|reconcil|budget/.test(n)) v = 'FinOps';
+    else if (/contract|legal|complaint|motion|brief|litigation/.test(n)) v = 'Legal';
+    else if (/permit|osha|lien|subcontract|change.?order|rfi|draw/.test(n)) v = 'Construction';
+    else if (/deed|escrow|title|mortgage|property|closing/.test(n)) v = 'Real Estate';
+    else if (/bpo|staffing|workforce|outsourc|vendor|sop/.test(n)) v = 'BPO';
+    return { name: f.name, vertical: v, priority: /urgent|critical|overdue|violation|penalty/.test(n)?'HIGH':'MEDIUM', summary: 'Auto-categorized by filename.', tags: [] };
+  }
+
+  function dcaRender() {
+    document.getElementById('dca-results').style.display = 'block';
+    document.getElementById('dca-file-count').textContent = DCA.files.length;
+    dcaSetStatus('✓ ' + DCA.files.length + ' files categorized.', '#00ff88');
+    dcaBuildTabs(); dcaBuildCards(DCA.activeTab);
+  }
+
+  function dcaBuildTabs() {
+    var counts = { ALL: DCA.files.length };
+    DCA.files.forEach(function(f) { counts[f.vertical] = (counts[f.vertical]||0)+1; });
+    var tabs = ['ALL'].concat(Object.keys(DCA.VERTICALS).filter(function(v){ return counts[v]; }));
+    document.getElementById('dca-tabs').innerHTML = tabs.map(function(t) {
+      var color = (DCA.VERTICALS[t] && DCA.VERTICALS[t].color) || 'var(--cyan)';
+      var active = DCA.activeTab === t;
+      return '<button onclick="dcaSwitchTab(\'' + t + '\')" style="font-family:monospace;font-size:.65rem;letter-spacing:.08em;padding:.35rem .8rem;border-radius:3px;cursor:pointer;border:1px solid ' + color + '40;background:' + (active?color+'22':'transparent') + ';color:' + (active?color:'var(--muted)') + ';">' + t + ' <span style="opacity:.6">(' + (counts[t]||0) + ')</span></button>';
+    }).join('');
+  }
+
+  window.dcaSwitchTab = function(v) { DCA.activeTab = v; dcaBuildTabs(); dcaBuildCards(v); };
+
+  function dcaBuildCards(filter) {
+    var visible = filter === 'ALL' ? DCA.files : DCA.files.filter(function(f){ return f.vertical===filter; });
+    var el = document.getElementById('dca-cards');
+    if (!visible.length) { el.innerHTML = '<div style="color:var(--dim);font-size:.8rem;padding:1rem;">No files in this vertical.</div>'; return; }
+    el.innerHTML = visible.map(function(f) {
+      var vc = DCA.VERTICALS[f.vertical] || DCA.VERTICALS['General'];
+      var pc = DCA.PRIORITY_COLOR[f.priority] || '#7a98b8';
+      var tags = (f.tags||[]).map(function(t){ return '<span style="font-size:.6rem;padding:.2rem .5rem;border-radius:2px;background:rgba(255,255,255,0.04);color:var(--muted);border:1px solid var(--border);">' + t + '</span>'; }).join('');
+      return '<div style="background:var(--panel);border:1px solid var(--border);border-left:3px solid '+vc.color+';border-radius:4px;padding:1rem;display:flex;flex-direction:column;gap:.5rem;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;"><div style="font-family:monospace;font-size:.72rem;color:var(--text);word-break:break-all;flex:1;">'+f.name+'</div>' +
+        '<span style="font-family:monospace;font-size:.6rem;letter-spacing:.06em;padding:.2rem .5rem;border-radius:2px;background:'+pc+'22;color:'+pc+';border:1px solid '+pc+'44;white-space:nowrap;">'+(f.priority||'—')+'</span></div>' +
+        '<div style="font-size:.65rem;letter-spacing:.08em;color:'+vc.color+';">'+f.vertical+'</div>' +
+        '<div style="font-size:.72rem;color:var(--muted);line-height:1.5;">'+(f.summary||'')+'</div>' +
+        (tags?'<div style="display:flex;flex-wrap:wrap;gap:.25rem;">'+tags+'</div>':'') +
+      '</div>';
+    }).join('');
+  }
+
+  window.dcaExportCSV = function() {
+    var rows = ['Name,Vertical,Priority,Summary,Tags'];
+    DCA.files.forEach(function(f){ rows.push(['"'+(f.name||'').replace(/"/g,'""')+'"','"'+(f.vertical||'')+'"','"'+(f.priority||'')+'"','"'+(f.summary||'').replace(/"/g,'""')+'"','"'+(f.tags||[]).join('; ')+'"'].join(',')); });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv'}));
+    a.download = 'TSM-Doc-Categories.csv'; a.click();
+  };
+
+  window.dcaReset = function() {
+    DCA.files = []; DCA.activeTab = 'ALL';
+    document.getElementById('dca-results').style.display = 'none';
+    document.getElementById('dca-status').style.display = 'none';
+    document.getElementById('dca-file-input').value = '';
+  };
+
+  function dcaSetStatus(msg, color) {
+    var el = document.getElementById('dca-status');
+    el.style.display = 'block'; el.style.color = color||'var(--cyan)'; el.textContent = msg;
+  }
+})();
+</script>
+
 <!-- ═══════════════════════════════ WAR ROOMS ═══════════════════════════════ -->
 <section id="demos">
   <hr class="section-divider">

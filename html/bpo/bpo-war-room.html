@@ -500,10 +500,21 @@ function buildDefectManifest(engines){
 function launchApp(href, appMeta){
   if(appMeta && window.TSMCureConductor){
     window.TSMCureConductor.launch(href, appMeta, {
-      docText: document.getElementById('docPaste')?.value||'',
+      docText: (document.getElementById('docPaste') && document.getElementById('docPaste').value) || '',
       vertical: 'BPO'
     });
   } else {
+    try {
+      var _dp = document.getElementById('docPaste');
+      localStorage.setItem('TSM_CURE_RELAY', JSON.stringify({
+        docText: (_dp && _dp.value) || '',
+        vertical: 'BPO',
+        appName: (appMeta && appMeta.name) || '',
+        appHowTo: (appMeta && appMeta.how) || '',
+        anomalies: (appMeta && appMeta.tags) || [],
+        timestamp: Date.now()
+      }));
+    } catch(e) {}
     window.open(href.startsWith('/')?href:'/bpo/'+href, '_blank');
   }
 }
@@ -553,13 +564,7 @@ function bpoWRResolveApp(text) {
   return { app:'Financial', url:'financial.html', reason:'General BPO anomaly — financial review recommended' };
 }
  
-async function bpoWRGenerateMissionSteps(rawText) {
-  const route = bpoWRResolveApp(rawText);
-  const BPO_APPS = BPO_WR_APP_ROUTES.map(r=>`${r.app} | ${r.url}`).join('\n');
-  const sys = `You are TSM Neural Core. Generate a cross-domain BPO remediation mission. Respond ONLY with valid JSON. No markdown.`;
-  const msg = `Engine 06 dispatch output:\n"${rawText.slice(0,600)}"\n\nAvailable apps:\n${BPO_APPS}\n\nGenerate 4-6 steps. Return ONLY:\n{"missionTitle":"...","summary":"...","steps":[{"id":"step-1","title":"...","appName":"...","appUrl":"...","objective":"...","instructions":"...","expectedOutput":"...","completionCriteria":"..."}]}`;
- 
-  // Doc Search relay — populate from redispatch
+// Doc Search relay — populate from redispatch
 (function(){
   try {
     const raw = localStorage.getItem('tsm_bpo_docsearch_relay');
@@ -571,9 +576,16 @@ async function bpoWRGenerateMissionSteps(rawText) {
     if (ta) ta.value = relay.summary;
   } catch(e) { console.warn('Doc search relay error:', e); }
 })();
+
+async function bpoWRGenerateMissionSteps(rawText) {
+  const route = bpoWRResolveApp(rawText);
+  const BPO_APPS = BPO_WR_APP_ROUTES.map(r=>`${r.app} | ${r.url}`).join('\n');
+  const sys = `You are TSM Neural Core. Generate a cross-domain BPO remediation mission. Respond ONLY with valid JSON. No markdown.`;
+  const msg = `Engine 06 dispatch output:\n"${rawText.slice(0,600)}"\n\nAvailable apps:\n${BPO_APPS}\n\nGenerate 4-6 steps. Return ONLY:\n{"missionTitle":"...","summary":"...","steps":[{"id":"step-1","title":"...","appName":"...","appUrl":"...","objective":"...","instructions":"...","expectedOutput":"...","completionCriteria":"..."}]}`;
+  try {
     const res = await fetch('/api/hc/query', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ system:sys, message:msg, apiKey:k })
+      body: JSON.stringify({ system:sys, message:msg })
     });
     const data = await res.json();
     const raw2 = (data.response||data.content||'').replace(/```json|```/g,'').trim();
@@ -927,4 +939,3 @@ function speechSetState(state){const pb=document.getElementById('speechPlayBtn')
 <script src="/html/tsm-mission-orchestrator.js"></script>
 </body>
 </html>
-

@@ -114,12 +114,31 @@
   // ── Build field schema from DOM if not provided ───────────────────────────────
   function gatherFields() {
     if (window.TSM_CURE_FIELDS && window.TSM_CURE_FIELDS.length) return window.TSM_CURE_FIELDS;
+    const seen = new Set();
     const fields = [];
-    document.querySelectorAll('input.field, textarea.field, select.field, .field[id]').forEach(el => {
-      if (!el.id) return;
-      const lbl = el.closest('.field-group')?.querySelector('.field-lbl')?.textContent?.trim()
-               || el.placeholder || el.id;
-      if (lbl && lbl.length < 60) fields.push({ id: el.id, label: lbl, type: el.tagName.toLowerCase() });
+    const SKIP_IDS = /groq|key|password|api|token|model|theme|tab|btn|button|toggle|nav|search|filter/i;
+    const SKIP_TYPES = /password|file|hidden|submit|reset|button|checkbox|radio/i;
+
+    // Broad selector: catches .fi, .form-input, .fi-ta, .field, textarea/input/select with id
+    const candidates = document.querySelectorAll(
+      'input[id], textarea[id], select[id], ' +
+      'input.fi, textarea.fi-ta, select.fi, ' +
+      'input.form-input, textarea.form-input, ' +
+      'input.field, textarea.field, select.field'
+    );
+    candidates.forEach(el => {
+      if (!el.id || seen.has(el.id)) return;
+      if (SKIP_IDS.test(el.id)) return;
+      if (SKIP_TYPES.test(el.type || '')) return;
+      seen.add(el.id);
+      // Label resolution: .flbl, .field-lbl, .form-label siblings, then placeholder, then id
+      const fg = el.closest('.field-group, .form-group, .fi-row, .field-wrap');
+      const lbl = (fg?.querySelector('.flbl, .field-lbl, .form-label, label')?.textContent?.trim())
+               || el.getAttribute('placeholder')
+               || el.id.replace(/[-_]/g, ' ');
+      if (lbl && lbl.length < 80) {
+        fields.push({ id: el.id, label: lbl, type: el.tagName.toLowerCase() });
+      }
     });
     return fields;
   }
