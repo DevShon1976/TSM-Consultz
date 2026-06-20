@@ -982,12 +982,10 @@ function setRelaySource(src, btn){
 
 // ===== GROQ CALL =====
 async function callGroq(messages, onChunk){
-  const key = document.getElementById('groqKey').value.trim();
   const model = document.getElementById('modelSel').value;
-  if(!key){ alert('Enter your Groq API key first.'); return null; }
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+  const res = await fetch('/api/war-room/stream',{
     method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    headers:{'Content-Type':'application/json'},
     body:JSON.stringify({model, messages, max_tokens:1800, stream:true, temperature:0.4})
   });
   if(!res.ok){ const e=await res.text(); throw new Error('Groq: '+e); }
@@ -1457,8 +1455,6 @@ function buildEnginePrompts(doc){
 }
 
 async function fireAllEngines(){
-  const key=document.getElementById('groqKey').value.trim();
-  if(!key){ alert('Enter your Groq API key in the Strategist tab first.'); switchTab('strategist',document.querySelectorAll('.tab-btn')[0]); return; }
   const doc=currentDoc;
   const prompts=buildEnginePrompts(doc);
   docCompleteCount=0;
@@ -1476,9 +1472,9 @@ async function fireAllEngines(){
     document.getElementById('output-'+p.num).innerHTML='<div class="engine-loading"><div class="spinner"></div> Running '+p.name+'...</div>';
     document.getElementById('bottomMsg').textContent='Engine '+p.num+': '+p.name+'...';
     try{
-      const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      const res=await fetch('/api/war-room/stream',{
         method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+        headers:{'Content-Type':'application/json'},
         body:JSON.stringify({model,messages:[{role:'user',content:p.prompt}],max_tokens:900,stream:true,temperature:0.4})
       });
       if(!res.ok) throw new Error(await res.text());
