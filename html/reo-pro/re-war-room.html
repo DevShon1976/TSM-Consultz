@@ -1803,8 +1803,21 @@
             <div class="rp-block">
               <div class="rp-hdr">DOC UPLOAD</div>
               <div class="rp-block">
-  <div class="rp-hdr">DOC UPLOAD</div>
-  <div style="display:flex;gap:4px;margin-bottom:.35rem;">
+  <div class="rp-hdr">DOC INPUT</div>
+  <div style="display:flex;gap:4px;margin-bottom:6px;">
+    <button id="btnPaste" onclick="switchDocMode('paste')" style="flex:1;padding:6px;font-size:11px;font-family:var(--mono);background:rgba(30,232,182,.2);border:1px solid var(--acc);color:var(--acc);cursor:pointer;letter-spacing:.05em;">⌨ PASTE TEXT</button>
+    <button id="btnUpload" onclick="switchDocMode('upload')" style="flex:1;padding:6px;font-size:11px;font-family:var(--mono);background:transparent;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.4);cursor:pointer;letter-spacing:.05em;">↑ UPLOAD FILE</button>
+  </div>
+  <div id="rpPasteWrap" style="display:block;">
+    <textarea id="rpPasteInput" placeholder="Paste property doc, RFI, contract, title report, appraisal..." style="width:100%;height:120px;background:#050810;border:1px solid rgba(30,232,182,.3);color:#e0f0e8;font-family:var(--mono);font-size:11px;padding:8px;resize:vertical;line-height:1.7;margin-bottom:6px;box-sizing:border-box;"></textarea>
+    <button onclick="loadPasteDoc()" style="width:100%;padding:8px;font-size:11px;font-family:var(--mono);background:rgba(30,232,182,.15);border:1px solid var(--acc);color:var(--acc);cursor:pointer;letter-spacing:.08em;">⚡ LOAD DOC INTO SESSION</button>
+  </div>
+  <div id="rpUploadWrap" style="display:none;">
+    <div id="rpDropZone" onclick="document.getElementById('rpFileInput').click()" style="border:1px dashed rgba(30,232,182,.3);padding:16px;text-align:center;cursor:pointer;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.4);margin-bottom:6px;">⚡ Drop doc or click to upload</div>
+    <input type="file" id="rpFileInput" multiple accept=".pdf,.png,.jpg,.jpeg,.txt,.csv" style="display:none">
+  </div>
+  <div id="rpUploadQueue" style="display:flex;flex-direction:column;gap:4px;max-height:80px;overflow-y:auto;font-size:11px;"></div>
+</div>
     <button onclick="this.classList.add('active');document.getElementById('rpPasteWrap').style.display='block';document.getElementById('rpDropZone').style.display='none';this.nextElementSibling.classList.remove('active')" style="flex:1;font-size:.42rem;padding:3px;background:rgba(30,232,182,.15);border:1px solid var(--acc);color:var(--acc);font-family:var(--mono);cursor:pointer;">PASTE TEXT</button>
     <button onclick="this.classList.add('active');document.getElementById('rpDropZone').style.display='block';document.getElementById('rpPasteWrap').style.display='none';this.previousElementSibling.classList.remove('active')" style="flex:1;font-size:.42rem;padding:3px;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:var(--mono);cursor:pointer;">UPLOAD FILE</button>
   </div>
@@ -3514,6 +3527,7 @@ document.getElementById('docPaste').addEventListener('input', function() {
   q.innerHTML = `<div style="font-family:var(--mono);font-size:.44rem;color:var(--cyan)">✓ Pasted doc — ${text.length} chars — injected into all nodes</div>`;
 });
   </script>
+  
 // ——— FORMAT OUTPUT
   <script>
     (function hideMissionGuide(){
@@ -3525,6 +3539,25 @@ document.getElementById('docPaste').addEventListener('input', function() {
       });
       obs.observe(document.body, { childList: true, subtree: true });
     })();
+    function switchDocMode(mode) {
+  document.getElementById('rpPasteWrap').style.display = mode==='paste' ? 'block' : 'none';
+  document.getElementById('rpUploadWrap').style.display = mode==='upload' ? 'block' : 'none';
+  document.getElementById('btnPaste').style.background = mode==='paste' ? 'rgba(30,232,182,.2)' : 'transparent';
+  document.getElementById('btnPaste').style.color = mode==='paste' ? 'var(--acc)' : 'rgba(255,255,255,.4)';
+  document.getElementById('btnPaste').style.borderColor = mode==='paste' ? 'var(--acc)' : 'rgba(255,255,255,.15)';
+  document.getElementById('btnUpload').style.background = mode==='upload' ? 'rgba(30,232,182,.2)' : 'transparent';
+  document.getElementById('btnUpload').style.color = mode==='upload' ? 'var(--acc)' : 'rgba(255,255,255,.4)';
+  document.getElementById('btnUpload').style.borderColor = mode==='upload' ? 'var(--acc)' : 'rgba(255,255,255,.15)';
+}
+
+function loadPasteDoc() {
+  const t = document.getElementById('rpPasteInput').value.trim();
+  if (!t) return;
+  window.__docRelayContext = '\n\nDOC CONTEXT: Pasted text | ' + t.slice(0, 400);
+  document.getElementById('rpUploadQueue').innerHTML = '<div style="color:var(--acc);font-family:var(--mono);font-size:11px;padding:4px 0;">✓ ' + t.length + ' chars loaded into session</div>';
+  const stat = document.getElementById('statSaved');
+  if (stat) stat.textContent = parseInt(stat.textContent || 0) + 1;
+}
   </script>
 </body>
 </html>
