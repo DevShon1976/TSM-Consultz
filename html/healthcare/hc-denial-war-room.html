@@ -777,6 +777,30 @@ function updateStatus(){
   const ok = docText.length > 20;
   document.getElementById('fire-btn').disabled = !ok;
   document.getElementById('doc-status').textContent = ok ? docText.length + ' chars loaded' : 'No document loaded';
+
+  // ── Reactive paste detection ──────────────────────────────
+  const docPasteEl = document.getElementById('docPaste');
+  if (docPasteEl && !docPasteEl.__hcPasteWired) {
+    docPasteEl.__hcPasteWired = true;
+    docPasteEl.addEventListener('input', function() {
+      const text = this.value.trim();
+      const status = document.getElementById('doc-status');
+      const ingestType = document.getElementById('ingest-type');
+      if (!text) {
+        if (status) status.textContent = 'No document loaded';
+        if (ingestType) ingestType.textContent = '—';
+        return;
+      }
+      if (status) status.textContent = text.length + ' chars loaded';
+      let type = 'DOCUMENT';
+      if (/denial|co-|pr-|carc|remark|eob|remit/i.test(text))       type = 'DENIAL / EOB';
+      else if (/prior auth|pa request|authorization/i.test(text))     type = 'PRIOR AUTH';
+      else if (/claim|cpt|icd|dx|procedure/i.test(text))              type = 'CLAIM';
+      else if (/audit|compliance|hipaa|cms/i.test(text))              type = 'COMPLIANCE';
+      else if (/appeal|reconsider|overturn/i.test(text))              type = 'APPEAL';
+      if (ingestType) ingestType.textContent = type;
+    });
+  }
   document.getElementById('process-info').textContent = ok ? '✓ Ready · ' + docText.split(/\s+/).length + ' words' : 'Load a document to begin';
 }
 
@@ -2671,7 +2695,14 @@ function tourOpen() { tourIdx = 0; tourRender(); document.getElementById('tourOv
 function tourClose() { document.getElementById('tourOverlay').classList.remove('active'); }
 function tourNav(dir) {
   const total = HC_TOUR_STEPS.length;
-  if (dir === 1 && tourIdx === total - 1) { tourClose(); return; }
+  if (dir === 1 && tourIdx === total - 1) {
+    tourClose();
+    if (window.__TSM_CHAIN_ASSISTANT__) {
+      localStorage.setItem('tsm_chain_state', JSON.stringify({ stepId: 'bnca', ts: Date.now() }));
+      if (typeof window.__TSM_CA_RENDER__ === 'function') window.__TSM_CA_RENDER__();
+    }
+    return;
+  }
   tourIdx = Math.max(0, Math.min(total - 1, tourIdx + dir));
   tourRender();
 }
@@ -2703,8 +2734,10 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 window.tourOpen = tourOpen;
 window.howtoOpen = () => document.getElementById('howtoOverlay').classList.add('active');
+window.__TSM_CA_RENDER__ = null; // set by tsm-chain-assistant.js after load
 </script>
 <script src="/html/healthcare/js/relay.engine.js"></script>
 <script src="/html/healthcare/js/memory.engine.js"></script>
+<script src="/shared/tsm-chain-assistant.js"></script>
 </body>
 </html>
