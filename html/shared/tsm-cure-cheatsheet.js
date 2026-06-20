@@ -259,4 +259,95 @@ Only include fields with a concrete value from the document. Return ONLY a valid
     const footer = panel.querySelector('#tsm-cure-footer');
 
     if (!mappings.length) {
-      body.innerHTML = '<div class="cs-error">No field matches found
+      body.innerHTML = '<div class="cs-error">No field matches found in this document for the current page.</div>';
+      return;
+    }
+
+    const preview = (relay.docText || (relay.documentMeta && relay.documentMeta.preview) || '').slice(0, 140);
+    body.innerHTML = preview
+      ? '<div class="cs-context-row">' + preview.replace(/</g, '&lt;') + (preview.length >= 140 ? '…' : '') + '</div>'
+      : '';
+
+    mappings.forEach(m => {
+      const row = document.createElement('div');
+      row.className = 'cs-field-row';
+      row.innerHTML =
+        '<div class="cs-field-header">' +
+          '<div class="cs-field-label">' + (m.label || m.id) + '</div>' +
+          '<button class="cs-fill-btn">FILL</button>' +
+        '</div>' +
+        '<div class="cs-field-value">' + String(m.value || '').replace(/</g, '&lt;') + '</div>' +
+        (m.reason ? '<div class="cs-field-reason">' + m.reason.replace(/</g, '&lt;') + '</div>' : '');
+      const btn = row.querySelector('.cs-fill-btn');
+      btn.onclick = () => fillField(m.id, m.value, btn);
+      body.appendChild(row);
+    });
+
+    footer.style.display = 'flex';
+    panel.querySelector('#tsm-cure-fill-all').onclick = () => {
+      body.querySelectorAll('.cs-fill-btn:not(.filled)').forEach(btn => btn.click());
+    };
+    panel.querySelector('#tsm-cure-clear').onclick = () => {
+      panel.remove();
+      localStorage.removeItem(RELAY_KEY);
+    };
+  }
+
+  // ── Make a panel draggable by its header ─────────────────────────────────────
+  function makeDraggable(panel, handle) {
+    let dragging = false, offsetX = 0, offsetY = 0;
+    handle.addEventListener('mousedown', (e) => {
+      dragging = true;
+      panel.classList.add('dragging');
+      const rect = panel.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+      panel.style.right = 'auto';
+      panel.style.bottom = 'auto';
+      e.preventDefault();
+    });
+    document.addEventListener('mousemove', (e) => {
+      if (!dragging) return;
+      panel.style.left = (e.clientX - offsetX) + 'px';
+      panel.style.top  = (e.clientY - offsetY) + 'px';
+    });
+    document.addEventListener('mouseup', () => {
+      dragging = false;
+      panel.classList.remove('dragging');
+    });
+  }
+
+  // ── Entry point ─────────────────────────────────────────────────────────────
+  async function init() {
+    let relay;
+    try {
+      relay = JSON.parse(localStorage.getItem(RELAY_KEY) || 'null');
+    } catch (e) {
+      relay = null;
+    }
+    if (!relay) return;
+
+    injectStyle();
+    const panel  = buildPanel(relay);
+    const fields = gatherFields();
+
+    if (!fields.length) {
+      renderMappings(panel, relay, []);
+      return;
+    }
+
+    try {
+      const mappings = await getFieldMappings(relay, fields);
+      renderMappings(panel, relay, Array.isArray(mappings) ? mappings : []);
+    } catch (e) {
+      panel.querySelector('#tsm-cure-body').innerHTML =
+        '<div class="cs-error">Could not map fields: ' + String(e.message || 'unknown error').replace(/</g, '&lt;') + '</div>';
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
