@@ -1062,9 +1062,7 @@ function loadWarPayload() {
                   localStorage.getItem('TSM_RE_WAR_RELAY');
     if (relay) {
       state.warPayload = JSON.parse(relay);
-      document.getElementById('brief-mode-label').textContent =
-        'War room payload loaded — executive synthesis ready';
-      document.getElementById('brief-mode-label').style.color = 'var(--green)';
+      as
     }
   } catch(e) {}
 }
@@ -1159,17 +1157,35 @@ async function generateBrief(mode = 'standard') {
   if (placeholder) placeholder.style.display = 'none';
   briefText.style.display = 'block';
 
-  const relay = JSON.parse(sessionStorage.getItem('TSM_RE_WAR_RELAY') || '{}');
+  const relay = JSON.parse(
+    sessionStorage.getItem('TSM_RE_WAR_RELAY') ||
+    localStorage.getItem('TSM_RE_WAR_RELAY') || '{}'
+  );
   const existingBrief = relay?.stratPayload?.fullBrief;
   if (existingBrief && mode === 'standard') {
     briefText.innerHTML = existingBrief.replace(/\n/g, '<br>');
     return;
   }
 
-  const payload = state.warPayload ? JSON.stringify(state.warPayload).slice(0, 800) : '';
+  // ── Build context from real relay fields ──────────────────
+  const modulesRun   = relay.stratModulesRun ?? 0;
+  const reportTitle  = relay.reportTitle     ?? 'RE Strategic Analysis';
+  const reportBody   = relay.reportContent   ?? '';
+  const stratBrief   = relay.stratPayload?.brief       ?? '';
+  const rescuePlan   = relay.stratPayload?.rescuePlan  ?? '';
+  const fullBrief    = relay.stratPayload?.fullBrief   ?? '';
+  const savedCount   = Array.isArray(relay.stratSaved) ? relay.stratSaved.length : 0;
+  const warCtx       = relay.warRoomPayload
+                         ? JSON.stringify(relay.warRoomPayload).slice(0, 600)
+                         : '';
+  const hasRelay     = !!(stratBrief || reportBody || warCtx);
+  const dataBlock    = hasRelay
+    ? `LIVE RELAY DATA:\n- Report: ${reportTitle}\n- Modules run: ${modulesRun}\n- Saves: ${savedCount}\n- Strategic brief: ${stratBrief.slice(0,500)}\n- Report body: ${reportBody.slice(0,400)}\n- War room context: ${warCtx}`
+    : 'Note: No upstream relay data — generate from Phoenix RE market best practices.';
+
   const prompt = mode === 'rescue'
-    ? `You are an executive AI for a real estate and mortgage company. Generate a DEAL RESCUE executive brief. Format with clear sections: CRITICAL DEALS AT RISK, IMMEDIATE ACTIONS (24-48hr), COMPLIANCE EXPOSURE, RECOMMENDED RESCUE STRATEGY. Be specific with dollar amounts, loan numbers, and timelines. Pipeline: $18.4M, 22 loans, 68% pull-through, 5 closings this week. Critical issues: Appraisal gap 123 Maple St ($26K gap), TRID violation Loan #2847 ($1,247 cure), 2 AML holds, REO portfolio $2.1M. Phoenix market. ${payload ? 'War room data: ' + payload : ''}`
-    : `You are an executive AI for a real estate and mortgage company. Generate a concise EXECUTIVE INTELLIGENCE BRIEF. Sections: PORTFOLIO OVERVIEW, KEY PERFORMANCE INDICATORS, TOP RISKS (3), STRATEGIC RECOMMENDATIONS (3), 30-DAY OUTLOOK. Be specific with metrics and dollar amounts. Pipeline: $18.4M, 22 active loans, 68% pull-through (target 75%), 5 closings this week ($2.3M), REO portfolio $2.1M (6 assets), $47K risk exposure (3 violations), Phoenix AZ market focus. ${payload ? 'War room context: ' + payload : ''}`;
+    ? `You are an executive AI for a real estate and mortgage company. Generate a DEAL RESCUE executive brief using the live relay data below. Format with clear sections: CRITICAL DEALS AT RISK, IMMEDIATE ACTIONS (24-48hr), COMPLIANCE EXPOSURE, RECOMMENDED RESCUE STRATEGY. Use only data from the relay — do not invent loan numbers or dollar amounts not present in the relay.\n\n${dataBlock}\n${rescuePlan ? 'Rescue plan context: ' + rescuePlan.slice(0,400) : ''}`
+    : `You are an executive AI for a real estate and mortgage company. Generate a concise EXECUTIVE INTELLIGENCE BRIEF using the live relay data below. Sections: PORTFOLIO OVERVIEW, KEY PERFORMANCE INDICATORS, TOP RISKS (3), STRATEGIC RECOMMENDATIONS (3), 30-DAY OUTLOOK. Use only metrics from the relay — do not substitute demo numbers.\n\n${dataBlock}`;
 
   await callAI(prompt, briefText, 'LOADING EXECUTIVE BRIEF...');
 }
@@ -1177,7 +1193,12 @@ async function generateBrief(mode = 'standard') {
 async function generateActions() {
   const el = document.getElementById('actions-output');
   await callAI(
-    `You are a real estate and mortgage executive AI. Generate a prioritized ACTION ITEMS list with 5-7 items. Format each as: [PRIORITY P1/P2/P3] | [TITLE] | [DETAIL with specific steps] | [OWNER]. Current issues: TRID cure Loan #2847 $1,247 deadline 18hrs, appraisal gap 123 Maple St $26K seller negotiation needed, REO 6 assets $2.1M need disposition plan, pull-through 68% vs 75% target, 2 AML compliance holds, Phoenix market BPO review needed.`,
+    (() => {
+      const r = JSON.parse(sessionStorage.getItem('TSM_RE_WAR_RELAY') || localStorage.getItem('TSM_RE_WAR_RELAY') || '{}');
+      const ctx = r.stratPayload?.brief || r.reportContent || r.stratPayload?.fullBrief || '';
+      const war = r.warRoomPayload ? JSON.stringify(r.warRoomPayload).slice(0,500) : '';
+      return `You are a real estate and mortgage executive AI. Generate a prioritized ACTION ITEMS list with 5-7 items. Format each as: [PRIORITY P1/P2/P3] | [TITLE] | [DETAIL with specific steps] | [OWNER]. Base all items strictly on the relay data below — do not use placeholder loan numbers or demo figures.\n\nRELAY:\n${ctx.slice(0,600)}\nWAR ROOM: ${war}`;
+    })(),
     el, 'GENERATING ACTION ITEMS...'
   );
 }
@@ -1193,7 +1214,12 @@ async function generatePipeline() {
 async function generateBoard() {
   const el = document.getElementById('board-output');
   await callAI(
-    `You are a real estate executive AI preparing a BOARD REPORT. Generate a concise board-ready summary with: EXECUTIVE SUMMARY (2-3 sentences), FINANCIAL PERFORMANCE (key metrics), OPERATIONAL HIGHLIGHTS, RISK REGISTER (top 3), STRATEGIC INITIATIVES, Q3 OUTLOOK. Board audience only sees outcomes and decisions. Pipeline $18.4M (+12% QoQ), 68% pull-through, $276K est revenue, REO $2.1M portfolio, 5 closings this week, Phoenix AZ market. Keep it executive-level only.`,
+    (() => {
+      const r = JSON.parse(sessionStorage.getItem('TSM_RE_WAR_RELAY') || localStorage.getItem('TSM_RE_WAR_RELAY') || '{}');
+      const ctx = r.stratPayload?.fullBrief || r.reportContent || r.stratPayload?.brief || '';
+      const war = r.warRoomPayload ? JSON.stringify(r.warRoomPayload).slice(0,500) : '';
+      return `You are a real estate executive AI preparing a BOARD REPORT. Generate a concise board-ready summary with: EXECUTIVE SUMMARY (2-3 sentences), FINANCIAL PERFORMANCE (key metrics), OPERATIONAL HIGHLIGHTS, RISK REGISTER (top 3), STRATEGIC INITIATIVES, Q3 OUTLOOK. Use only the relay data below — do not use placeholder pipeline figures.\n\nRELAY:\n${ctx.slice(0,600)}\nWAR ROOM: ${war}`;
+    })(),
     el, 'GENERATING BOARD REPORT...'
   );
 }

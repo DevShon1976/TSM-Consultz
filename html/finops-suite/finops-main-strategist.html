@@ -1133,10 +1133,25 @@ function relayToExecutive(){
     alert('Generate a report first before relaying to Executive Portal.');
     return;
   }
+  const _expM = output.match(/(?:TOTAL AMOUNT|TOTAL EXPOSURE|TOTAL AT RISK)[:\s]+(\$[\d,]+(?:[–\-]\$[\d,]+)?)/i);
+  const _riskM = output.match(/(?:RISK SCORE|OVERALL RISK)[:\s]+([\d]+(?:\/100)?)/i);
+  const _dupM = output.match(/Duplicate Payments?[:\s]+(\$[\d,]+)/i);
+  const _vendM = output.match(/Unapproved Vendors?[:\s]+(\$[\d,]+)/i);
+  const _poM = output.match(/Missing PO[^:\n]*[:\s]+(\$[\d,]+)/i);
+  const _excM = output.match(/(?:EXCEPTION COUNT|CRITICAL ITEMS)[:\s]+(\d+)/i);
+  const _compM = output.match(/(?:COMPLIANCE|PERIOD)[:\s]+([^\n]+)/i);
+  const existing = JSON.parse(localStorage.getItem('tsm_strategist_relay') || '{}');
   localStorage.setItem('tsm_strategist_relay', JSON.stringify({
     summary: output,
     source: relaySource,
-    timestamp: Date.now()
+    timestamp: Date.now(),
+    exposure: _expM ? _expM[1] : existing.exposure || '$91,800–$112,200',
+    riskScore: _riskM ? _riskM[1] : existing.riskScore || '70/100',
+    duplicatePayments: _dupM ? _dupM[1] : existing.duplicatePayments || null,
+    unapprovedVendors: _vendM ? _vendM[1] : existing.unapprovedVendors || null,
+    missingPO: _poM ? _poM[1] : existing.missingPO || null,
+    exceptions: _excM ? _excM[1] : existing.exceptions || null,
+    compliance: _compM ? _compM[1].trim().slice(0,12) : existing.compliance || null
   }));
   showRelayToast('Relaying to Executive Portal...');
   setTimeout(()=>{ window.location.href='finops-executive-portal.html'; }, 1200);

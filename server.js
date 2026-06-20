@@ -662,7 +662,7 @@ app.post('/api/financial/query', async (req, res) => {
 });
 
 app.post('/api/mortgage/query', async (req, res) => {
-  try { var a = await groqChat(SP.mortgage, req.body.question || req.body.query || '', req.body.maxTokens || 1024); return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() }); }
+  try { var sys = req.body.context || req.body.system || SP.mortgage; var a = await groqChat(sys, req.body.question || req.body.query || '', req.body.maxTokens || 1024); return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() }); }
   catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
 
