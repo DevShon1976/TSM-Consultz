@@ -1741,48 +1741,28 @@ const ANALYSIS_MAP = {
   }
 };
 
-// ─── GROQ / CLAUDE API CALL ───
+// ─── GROQ API CALL (server-proxied) ───
 async function callAPI(prompt) {
-  // Try Groq first (matches existing construction suite pattern)
-  const groqKey = localStorage.getItem('tsm_groq_key');
-  if (groqKey) {
-    try {
-      const r = await fetch('/api/war-room/stream', {
+  try {
+    const r = await fetch('/api/war-room/stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
-          max_tokens: 600,
-          messages: [
-            { role: 'system', content: 'You are a construction operations intelligence engine. Output concise, dollar-specific analysis with permit, legal, and financial precision. Format with clear sections using ▸ bullets. Keep under 400 words.' },
-            { role: 'user', content: prompt }
-          ]
-        })
-      });
-      const reader = r.body.getReader(); const dec = new TextDecoder(); let out = '';
-while(true){ const{done,value}=await reader.read(); if(done)break;
-  dec.decode(value).split('\n').forEach(line=>{ if(line.startsWith('data: ')&&line!=='data: [DONE]'){
-    try{out+=(JSON.parse(line.slice(6)).choices?.[0]?.delta?.content||'');}catch(e){}
-  }});
-}
-return out || null;
-    } catch(e) { /* fall through */ }
-  }
-
-  // Try Anthropic API (Claude)
-  try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'llama-3.3-70b-versatile',
         max_tokens: 600,
-        system: 'You are a construction operations intelligence engine. Output concise, dollar-specific analysis for permit, proposal, RFI, and change order decisions. Format with clear labeled sections. Keep under 400 words.',
-        messages: [{ role: 'user', content: prompt }]
+        messages: [
+          { role: 'system', content: 'You are a construction operations intelligence engine. Output concise, dollar-specific analysis with permit, legal, and financial precision. Format with clear sections using ▸ bullets. Keep under 400 words.' },
+          { role: 'user', content: prompt }
+        ]
       })
     });
-    const d = await r.json();
-    return d.content?.[0]?.text || null;
+    const reader = r.body.getReader(); const dec = new TextDecoder(); let out = '';
+    while(true){ const{done,value}=await reader.read(); if(done)break;
+      dec.decode(value).split('\n').forEach(line=>{ if(line.startsWith('data: ')&&line!=='data: [DONE]'){
+        try{out+=(JSON.parse(line.slice(6)).choices?.[0]?.delta?.content||'');}catch(e){}
+      }});
+    }
+    return out || null;
   } catch(e) { return null; }
 }
 
@@ -1906,4 +1886,4 @@ function clearOutput() {
 </script>
 </body>
 </html>
-</html>
+
