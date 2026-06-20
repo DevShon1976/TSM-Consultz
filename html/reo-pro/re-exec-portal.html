@@ -1070,22 +1070,29 @@ function loadWarPayload() {
       state.warPayload = JSON.parse(relay);
       // ── Populate KPI tiles from relay ──────────────────────
       const wp = state.warPayload;
+      const ctxText = buildRelayContext(4000);
       const setKPI = (id, val, fallback) => {
         const el = document.getElementById(id);
         if (el && val) el.textContent = val;
         else if (el && fallback) el.textContent = fallback;
       };
-      setKPI('kpi-pipeline',    wp.pipelineVolume   || wp.warRoomPayload?.pipelineVolume,   '$—');
-      setKPI('kpi-pullthrough', wp.pullThrough       || wp.warRoomPayload?.pullThrough,       '—%');
-      setKPI('kpi-revenue',     wp.estRevenue        || wp.warRoomPayload?.estRevenue,        '$—');
-      setKPI('kpi-risk',        wp.riskExposure      || wp.warRoomPayload?.riskExposure,      '$—');
-      setKPI('kpi-reo',         wp.reoPortfolio      || wp.warRoomPayload?.reoPortfolio,      '$—');
-      setKPI('kpi-closings',    wp.closingsThisWeek  || wp.warRoomPayload?.closingsThisWeek,  '—');
+      const pipelineM    = ctxText.match(/Pipeline[:\s]+\$?([\d.,]+\s*[MKmk]?)/);
+      const pullThroughM = ctxText.match(/(?:Pull-?[Tt]hrough)[:\s]+(\d{1,3}%)/);
+      const revenueM     = ctxText.match(/(?:Est\.?\s*Revenue|Revenue)[:\s]+\$?([\d.,]+\s*[MKmk]?)/);
+      const riskM        = ctxText.match(/(?:Risk Exposure|Exposure)[:\s]+\$?([\d.,]+\s*[MKmk]?)/);
+      const reoM         = ctxText.match(/REO(?:\s*[Pp]ortfolio)?[:\s]+\$?([\d.,]+\s*[MKmk]?)/);
+      const closingsM    = ctxText.match(/Closings?(?:\s*[Tt]his\s*[Ww]eek)?[:\s]+(\d+)/);
+      setKPI('kpi-pipeline',    pipelineM    ? '$' + pipelineM[1]    : null, '$—');
+      setKPI('kpi-pullthrough', pullThroughM ? pullThroughM[1]       : null, '—%');
+      setKPI('kpi-revenue',     revenueM     ? '$' + revenueM[1]     : null, '$—');
+      setKPI('kpi-risk',        riskM        ? '$' + riskM[1]        : null, '$—');
+      setKPI('kpi-reo',         reoM         ? '$' + reoM[1]         : null, '$—');
+      setKPI('kpi-closings',    closingsM    ? closingsM[1]          : null, '—');
       // Sub-labels
       const psSub = document.getElementById('kpi-pipeline-sub');
-      if (psSub) psSub.textContent = wp.reportTitle ? 'from: ' + wp.reportTitle : 'live relay data';
+      if (psSub) psSub.textContent = wp.reportTitle ? 'from: ' + wp.reportTitle : (ctxText ? 'live relay data' : 'no relay data');
       const revSub = document.getElementById('kpi-revenue-sub');
-      if (revSub && wp.pullThrough) revSub.textContent = 'At ' + wp.pullThrough + ' PT';
+      if (revSub && pullThroughM) revSub.textContent = 'At ' + pullThroughM[1] + ' PT';
     }
   } catch(e) {}
 }
@@ -1333,6 +1340,5 @@ function exportBoard() {
   a.click();
 }
 </script>
-<script src="/shared/tsm-chain-assistant.js"></script>
 </body>
 </html>
