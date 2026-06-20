@@ -2610,13 +2610,14 @@ Dollar amounts and party names required.`;
 
     // ─── SYNTHESIS ────────────────────────────────────────────────────────────────
     async function buildSynthesis() {
-      if (!savedOutputs.length) { alert('Run analyses first.'); return; }
+      if (!savedOutputs.length && !window.__pastedDocFull) { alert('Run analyses first or load a document.'); return; }
       const feed = document.getElementById('feedBody');
       document.getElementById('feedMeta').textContent = 'Building synthesis...';
       feed.innerHTML = '<span style="color:var(--purple)">[SYNTHESIS]</span>\n\nCombining all node outputs...';
 
       const combined = savedOutputs.map(o => `=== ${o.title} ===\n${o.text}`).join('\n\n');
-      const prompt = `You are the TSM RE War Room Strategist. Synthesize the following intelligence from multiple nodes into one unified executive report:\n\n${combined}\n\nProvide:\n1. KEY FINDINGS across all nodes\n2. CRITICAL RISKS ranked by dollar impact\n3. IMMEDIATE ACTIONS (next 30 days)\n4. STRATEGIC RECOMMENDATION\n\nBe specific, dollar-focused, actionable.`;
+      const docContext = window.__pastedDocFull ? '\n\nPRIMARY DOCUMENT:\n' + window.__pastedDocFull + '\n\n' : '';
+      const prompt = `You are the TSM RE War Room Strategist. Synthesize the following intelligence from multiple nodes into one unified executive report:\n\n${combined}${docContext}\n\nProvide:\n1. KEY FINDINGS across all nodes\n2. CRITICAL RISKS ranked by dollar impact\n3. IMMEDIATE ACTIONS (next 30 days)\n4. STRATEGIC RECOMMENDATION\n\nBe specific, dollar-focused, actionable.`;
 
       try {
         const text = await callAI(prompt, null, 1200);
