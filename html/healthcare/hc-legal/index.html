@@ -716,5 +716,57 @@ document.addEventListener('DOMContentLoaded', function () {
 function relayToStrategist(nodeLabel){try{var engineOutputs={};document.querySelectorAll('.ai-res').forEach(function(el){var text=(el.textContent||'').trim();if(!text)return;if(/^>?\s*(ai|intel workbench|enterprise bnca|leadership brief|report studio)\b.*ready\.?$/i.test(text))return;if(/processing\.\.\.$/i.test(text))return;var label=(el.id||'AI OUTPUT').replace(/-res$/i,'').replace(/[-_]/g,' ').toUpperCase();engineOutputs[label]=text;});var alerts=[];document.querySelectorAll('.alert-row').forEach(function(row){var pri=row.querySelector('.pri');var txt=row.querySelector('.alert-txt');var imp=row.querySelector('.alert-imp');if(txt)alerts.push('['+(pri?pri.textContent.trim():'—')+'] '+txt.textContent.trim()+(imp?' ('+imp.textContent.trim()+')':''));});var kpis=[];document.querySelectorAll('.kpi').forEach(function(k){var val=k.querySelector('.kpi-val');var lbl=k.querySelector('.kpi-lbl');var sub=k.querySelector('.kpi-sub');if(val&&lbl)kpis.push(lbl.textContent.trim()+': '+val.textContent.trim()+(sub?' — '+sub.textContent.trim():''));});var narrativeParts=[];if(kpis.length)narrativeParts.push('KPIs — '+kpis.join(' · '));if(alerts.length)narrativeParts.push('Active alerts — '+alerts.slice(0,5).join(' | '));var narrative=narrativeParts.join('\n\n')||(nodeLabel+' relay — no live findings captured.');if(!Object.keys(engineOutputs).length)engineOutputs[nodeLabel]=narrative;var payload={sessionId:'REL-'+Date.now().toString(36).toUpperCase(),timestamp:new Date().toISOString(),engineOutputs:engineOutputs,engine06:{narrative:narrative,recommendations:[]},documentMeta:{ingestType:nodeLabel,charCount:narrative.length}};sessionStorage.setItem('TSM_WAR_ROOM_BRIEF',JSON.stringify(payload));localStorage.setItem('TSM_WAR_ROOM_BRIEF',JSON.stringify(payload));}catch(e){console.error('['+nodeLabel+'] relayToStrategist failed:',e);}}
 </script>
 <script src="/shared/tsm-cure-cheatsheet.js"></script>
+<!-- ── DOC ANOMALY BRIDGE ─────────────────────────────── -->
+<script>
+(function initAnomalyBridge() {
+  const raw = localStorage.getItem('tsm-doc-anomaly');
+  if (!raw) return;
+  let p;
+  try { p = JSON.parse(raw); } catch(e) { return; }
+
+  // Only fire if this payload targets this node
+  const thisNode = document.location.pathname.split('/').slice(-2,-1)[0]; // e.g. "hc-billing"
+  const nodeId   = thisNode.replace('hc-',''); // e.g. "billing"
+  if (p.targetNodeIds && p.targetNodeIds.length &&
+      !p.targetNodeIds.includes(nodeId) && !p.targetNodeIds.includes(thisNode)) return;
+
+  // Build banner
+  const banner = document.createElement('div');
+  banner.id = 'tsm-anomaly-bridge-banner';
+  banner.style.cssText = `
+    display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;
+    background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.3);
+    border-radius:6px; padding:16px 20px; margin:12px 16px 0;
+    font-family:var(--mono, monospace); font-size:.72rem;
+  `;
+
+  const findings = Array.isArray(p.findings) ? p.findings.join('<br>') : p.findings || '—';
+  const steps    = Array.isArray(p.steps)    ? p.steps.map((s,i)=>`${i+1}. ${s}`).join('<br>') : '—';
+  const appLabel = p.nodeId ? `HC ${p.nodeId.charAt(0).toUpperCase()+p.nodeId.slice(1)} Node` : 'This Node';
+
+  banner.innerHTML = `
+    <div>
+      <div style="color:var(--red,#ef4444);font-weight:700;margin-bottom:6px">⚠ WHAT'S WRONG</div>
+      <div style="color:var(--text,#e2e8f0);line-height:1.6">${p.narrative || findings}</div>
+      ${p.ref ? `<div style="margin-top:6px;color:var(--muted,#94a3b8)">Ref: ${p.ref} · ${p.client||''}</div>` : ''}
+    </div>
+    <div>
+      <div style="color:var(--amber,#f59e0b);font-weight:700;margin-bottom:6px">🔧 BEST APP TO CURE IT</div>
+      <div style="color:var(--text,#e2e8f0)">${appLabel}</div>
+      <div style="margin-top:4px;color:var(--muted,#94a3b8)">Status: ${p.checkStatus||'FLAGGED'}</div>
+      ${p.financialImpact ? `<div style="margin-top:4px;color:var(--red,#ef4444)">Exposure: $${Number(p.financialImpact).toLocaleString()}</div>` : ''}
+    </div>
+    <div>
+      <div style="color:var(--green,#4ade80);font-weight:700;margin-bottom:6px">📋 GUIDED REMEDIATION</div>
+      <div style="color:var(--text,#e2e8f0);line-height:1.8">${steps}</div>
+    </div>
+  `;
+
+  // Inject after first h1/topbar or at top of main content
+  const anchor = document.querySelector('.main, #main, .content, main, .topbar + *');
+  if (anchor) anchor.insertAdjacentElement('afterbegin', banner);
+  else document.body.insertAdjacentElement('afterbegin', banner);
+})();
+</script>
 </body>
 </html>
