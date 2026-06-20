@@ -15,11 +15,14 @@
       id: 'intake',
       label: 'STEP 1 OF 5',
       title: 'Paste Patient Scenario',
-      desc: 'Paste a patient, claim, or denial scenario into the node intake field to begin.',
+      desc: 'New here? Take the guided tour first. Then paste a denial, claim, or patient scenario into the intake field.',
       page: 'node',
       trigger: 'manual',
-      cta: 'I\'ve pasted the scenario',
-      ctaAction: () => advance('bnca'),
+      cta: 'Take the Tour →',
+      ctaAction: () => {
+        if (typeof window.tourOpen === 'function') window.tourOpen();
+        else advance('bnca');
+      },
     },
     {
       id: 'bnca',
