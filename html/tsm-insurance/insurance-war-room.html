@@ -688,9 +688,7 @@ const FALLBACKS = [
 
 async function fireEngines(){
   docText=document.getElementById('docPaste').value.trim();
-  groqKey=document.getElementById('groqKey').value.trim();
   if(!docText){alert('Paste or load an insurance document first.');return;}
-  if(!groqKey){alert('Enter your Groq API key.');return;}
 
   document.getElementById('fireBtn').disabled=true;
   document.getElementById('spinner').classList.add('active');
@@ -710,12 +708,12 @@ async function fireEngines(){
     let txt='';
     const prompt = PROMPTS[i-1](docText,e);
     try{
-      const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      const res=await fetch('/api/insurance/query',{
         method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
-        body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:550,temperature:0.3,messages:[{role:'user',content:prompt}]})
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({message:prompt,maxTokens:550})
       });
-      if(res.ok){const d=await res.json();txt=d.choices?.[0]?.message?.content||'';}
+      if(res.ok){const d=await res.json();txt=d.answer||'';}
       if(!txt.trim()) throw new Error('empty');
       trackTokens(prompt,txt);
     }catch(err){

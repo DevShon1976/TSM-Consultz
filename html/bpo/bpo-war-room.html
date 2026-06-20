@@ -304,6 +304,11 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
     </div>
 
     <div class="side-card">
+      <div class="section-label">PASTE DOCUMENT TEXT</div>
+      <textarea id="docPaste" placeholder="Paste the BPO defect doc, SLA report, contingency ticket, or any cross-vertical document..." style="width:100%;min-height:90px;background:var(--bg3);border:1px solid var(--border);color:var(--bright);font-family:var(--mono);font-size:.46rem;padding:.4rem;resize:vertical;outline:none;box-sizing:border-box"></textarea>
+    </div>
+
+    <div class="side-card">
       <div class="section-label">GROQ API KEY</div>
       <div style="display:flex;gap:4px;margin-bottom:.4rem;">
         <input type="password" id="groqKey" placeholder="gsk_..." style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--bright);font-family:var(--mono);font-size:.46rem;padding:.35rem .5rem;outline:none;">
@@ -422,6 +427,13 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 <script>
 const GROQ = '/api/hc/query';
 let docText='', selectedSector='', selectedDocType='', engOut=['','','','','',''], e={};
+document.getElementById('docPaste').addEventListener('input', function(){
+  docText = this.value.trim();
+  const dp = document.getElementById('docPreview');
+  if (dp) dp.textContent = docText ? docText.slice(0,400)+'...' : '// No document loaded';
+  const btn = document.getElementById('fireBtn');
+  if (btn) btn.disabled = !docText;
+});
 // Doc Search relay
 (function(){
   try {
@@ -858,7 +870,7 @@ async function fireEngines(){
       if(i===6){const dm=buildDefectManifest(e);prompt=PROMPTS[5](doc,e,selectedSector,dm);}
       else if(i===1){prompt=PROMPTS[0](doc,selectedDocType,selectedSector);}
       else{prompt=PROMPTS[i-1](doc,e,selectedSector);}
-      const res=await fetch(GROQ,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:prompt})});
+      const res=await fetch(GROQ,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:prompt,system:'You are a BPO operations intelligence AI for TSM Command. Expert in cross-vertical workforce operations, SLA management, contingency staffing, and defect triage/remediation routing across Healthcare RCM, Legal, FinOps, Real Estate, Construction, and Insurance verticals. Be direct and operational.'})});
       if(res.ok){const d=await res.json();txt=d.answer||d.response||d.text||'';}
       if(!txt.trim())throw new Error('empty');
     }catch(err){txt=FALLBACKS[i-1](doc,e);}

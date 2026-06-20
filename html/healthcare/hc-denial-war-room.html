@@ -1841,18 +1841,12 @@ async function injectPriorAuthGeneratorWidget(engineSummary) {
       `${i+1}. ${a.appName} (${a.suite})`
     ).join('\n');
 
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const response = await fetch('/api/hc/query', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${groqKey}`
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'llama-3.1-8b-instant',
-        max_tokens: 400,
-        messages: [{
-          role: 'system',
-          content: `You are Engine 06, the BNCA (Best Next Course of Action) dispatcher for the TSM War Room. 
+        maxTokens: 400,
+        system: `You are Engine 06, the BNCA (Best Next Course of Action) dispatcher for the TSM War Room. 
 Your job: read the 5-engine denial analysis below and write a 2-3 sentence executive narrative explaining:
 1. The primary issue identified
 2. Why the recommended apps below are the right tools to fix it
@@ -1863,16 +1857,13 @@ Be direct, clinical, and specific. Reference actual denial codes, dollar amounts
 Recommended apps:
 ${appListForPrompt}
 
-Keep response under 120 words. Plain text only, no markdown.`
-        }, {
-          role: 'user',
-          content: e6Summary.slice(0, 2000)
-        }]
+Keep response under 120 words. Plain text only, no markdown.`,
+        message: e6Summary.slice(0, 2000)
       })
     });
 
     const data = await response.json();
-    const narrative = data?.choices?.[0]?.message?.content || 'Analysis complete. Route to recommended apps below to begin remediation.';
+    const narrative = data?.content || data?.answer || 'Analysis complete. Route to recommended apps below to begin remediation.';
 
     // Update narrative
     const narrativeEl = document.getElementById('e6-narrative');
