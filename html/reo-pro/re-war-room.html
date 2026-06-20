@@ -1566,7 +1566,9 @@
       <div id="view-warroom" class="view active">
         <div class="warroom-layout">    
 
-  <div id="docUploadExpand" style="display:none;padding:.6rem .8rem;border-top:1px solid rgba(30,232,182,.1)">
+  <div id="docUploadExpand" style="padding:.6rem .8rem;border-top:1px solid rgba(30,232,182,.1)">
+    <div style="font-family:var(--mono);font-size:.42rem;color:var(--muted);letter-spacing:.05em;margin-bottom:.3rem">PASTE DOCUMENT TEXT</div>
+    <textarea id="docPaste" placeholder="Paste REO asset doc, BPO report, title commitment, HOA ledger, or any acquisition / finance / transaction document..." style="width:100%;min-height:90px;background:#050810;border:1px solid rgba(30,232,182,.2);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:.44rem;padding:.4rem;resize:vertical;outline:none;box-sizing:border-box;margin-bottom:.5rem"></textarea>
     <div id="reDropZone" onclick="document.getElementById('reFileInput').click()" style="border:1px dashed rgba(30,232,182,.3);border-radius:3px;padding:.3rem;text-align:center;cursor:pointer;font-family:var(--mono);font-size:.42rem;color:var(--muted)">
       Drop PDF · image · text here or click to upload
     </div>
@@ -3479,6 +3481,14 @@ const reDropZone = document.getElementById('reDropZone');
 ['dragenter','dragover'].forEach(ev => reDropZone.addEventListener(ev, e => { e.preventDefault(); reDropZone.style.borderColor='var(--cyan)'; }));
 ['dragleave','drop'].forEach(ev => reDropZone.addEventListener(ev, e => { e.preventDefault(); reDropZone.style.borderColor=''; }));
 reDropZone.addEventListener('drop', e => { document.getElementById('reFileInput').files = e.dataTransfer.files; document.getElementById('reFileInput').dispatchEvent(new Event('change')); });
+
+document.getElementById('docPaste').addEventListener('input', function() {
+  const text = this.value.trim();
+  const q = document.getElementById('reUploadQueue');
+  if (!text) { q.innerHTML=''; window.__docRelayContext=''; return; }
+  window.__docRelayContext = `\n\nDOC CONTEXT: Pasted text | ${text.slice(0, 400)}`;
+  q.innerHTML = `<div style="font-family:var(--mono);font-size:.44rem;color:var(--cyan)">✓ Pasted doc — ${text.length} chars — injected into all nodes</div>`;
+});
   </script>
 // ——— FORMAT OUTPUT
   <script>
