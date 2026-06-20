@@ -1150,6 +1150,21 @@ function formatOutput(text) {
   return `<div class="ai-output" style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.8;">${formatted}</div>`;
 }
 
+function buildRelayContext(maxLen = 1500) {
+  const wp = state.warPayload;
+  if (!wp) return '';
+  const parts = [];
+  if (wp.reportContent) parts.push(wp.reportContent);
+  else if (wp.stratPayload && wp.stratPayload.fullBrief) parts.push(wp.stratPayload.fullBrief);
+  else if (wp.warRoomPayload && wp.warRoomPayload.reportContent) parts.push(wp.warRoomPayload.reportContent);
+  else if (wp.warRoomPayload && Array.isArray(wp.warRoomPayload.outputs) && wp.warRoomPayload.outputs.length) {
+    parts.push(wp.warRoomPayload.outputs.map(o => (o.title||'')+': '+(o.text||'')).join('\n\n'));
+  }
+  const rp = wp.warRoomPayload && wp.warRoomPayload.rescuePack;
+  if (rp) parts.push('Rescue pack: ' + (rp.address||'') + ' score ' + (rp.score||'—') + ' risk ' + (rp.risk||'—'));
+  return parts.join('\n\n').slice(0, maxLen);
+}
+
 // ─── BRIEF ───────────────────────────────────────────────
 async function generateBrief(mode = 'standard') {
   const placeholder = document.getElementById('brief-placeholder');
@@ -1183,83 +1198,81 @@ async function generateBrief(mode = 'standard') {
     ? `LIVE RELAY DATA:\n- Report: ${reportTitle}\n- Modules run: ${modulesRun}\n- Saves: ${savedCount}\n- Strategic brief: ${stratBrief.slice(0,500)}\n- Report body: ${reportBody.slice(0,400)}\n- War room context: ${warCtx}`
     : 'Note: No upstream relay data — generate from Phoenix RE market best practices.';
 
+  const ctx = buildRelayContext();
   const prompt = mode === 'rescue'
-    ? `You are an executive AI for a real estate and mortgage company. Generate a DEAL RESCUE executive brief using the live relay data below. Format with clear sections: CRITICAL DEALS AT RISK, IMMEDIATE ACTIONS (24-48hr), COMPLIANCE EXPOSURE, RECOMMENDED RESCUE STRATEGY. Use only data from the relay — do not invent loan numbers or dollar amounts not present in the relay.\n\n${dataBlock}\n${rescuePlan ? 'Rescue plan context: ' + rescuePlan.slice(0,400) : ''}`
-    : `You are an executive AI for a real estate and mortgage company. Generate a concise EXECUTIVE INTELLIGENCE BRIEF using the live relay data below. Sections: PORTFOLIO OVERVIEW, KEY PERFORMANCE INDICATORS, TOP RISKS (3), STRATEGIC RECOMMENDATIONS (3), 30-DAY OUTLOOK. Use only metrics from the relay — do not substitute demo numbers.\n\n${dataBlock}`;
-
+    ? `You are an executive AI for a real estate and mortgage company. Generate a DEAL RESCUE executive brief. Format with clear sections: CRITICAL DEALS AT RISK, IMMEDIATE ACTIONS (24-48hr), COMPLIANCE EXPOSURE, RECOMMENDED RESCUE STRATEGY. Be specific with dollar amounts, loan numbers, and timelines.${ctx ? ' Base this entirely on the following real case data, citing specific figures and details from it: ' + ctx : ' No live case data is loaded — generate a representative illustrative example: Pipeline $18.4M, 22 loans, 68% pull-through, 5 closings this week. Critical issues: Appraisal gap 123 Maple St ($26K gap), TRID violation Loan #2847 ($1,247 cure), 2 AML holds, REO portfolio $2.1M. Phoenix market.'}`
+    : `You are an executive AI for a real estate and mortgage company. Generate a concise EXECUTIVE INTELLIGENCE BRIEF. Sections: PORTFOLIO OVERVIEW, KEY PERFORMANCE INDICATORS, TOP RISKS (3), STRATEGIC RECOMMENDATIONS (3), 30-DAY OUTLOOK. Be specific with metrics and dollar amounts.${ctx ? ' Base this entirely on the following real case data, citing specific figures and details from it: ' + ctx : ' No live case data is loaded — generate a representative illustrative example: Pipeline $18.4M, 22 active loans, 68% pull-through (target 75%), 5 closings this week ($2.3M), REO portfolio $2.1M (6 assets), $47K risk exposure (3 violations), Phoenix AZ market focus.'}`;
   await callAI(prompt, briefText, 'LOADING EXECUTIVE BRIEF...');
 }
 
 async function generateActions() {
   const el = document.getElementById('actions-output');
+  const ctx = buildRelayContext();
   await callAI(
-    (() => {
-      const r = JSON.parse(sessionStorage.getItem('TSM_RE_WAR_RELAY') || localStorage.getItem('TSM_RE_WAR_RELAY') || '{}');
-      const ctx = r.stratPayload?.brief || r.reportContent || r.stratPayload?.fullBrief || '';
-      const war = r.warRoomPayload ? JSON.stringify(r.warRoomPayload).slice(0,500) : '';
-      return `You are a real estate and mortgage executive AI. Generate a prioritized ACTION ITEMS list with 5-7 items. Format each as: [PRIORITY P1/P2/P3] | [TITLE] | [DETAIL with specific steps] | [OWNER]. Base all items strictly on the relay data below — do not use placeholder loan numbers or demo figures.\n\nRELAY:\n${ctx.slice(0,600)}\nWAR ROOM: ${war}`;
-    })(),
+    `You are a real estate and mortgage executive AI. Generate a prioritized ACTION ITEMS list with 5-7 items. Format each as: [PRIORITY P1/P2/P3] | [TITLE] | [DETAIL with specific steps] | [OWNER].${ctx ? ' Base this entirely on the following real case data, citing specific figures and details from it: ' + ctx : ' No live case data is loaded — generate a representative illustrative example: TRID cure Loan #2847 $1,247 deadline 18hrs, appraisal gap 123 Maple St $26K seller negotiation needed, REO 6 assets $2.1M need disposition plan, pull-through 68% vs 75% target, 2 AML compliance holds, Phoenix market BPO review needed.'}`,
     el, 'GENERATING ACTION ITEMS...'
   );
 }
 
 async function generatePipeline() {
   const el = document.getElementById('pipeline-body').parentElement.parentElement;
+  const ctx = buildRelayContext();
   await callAI(
-    `You are a real estate mortgage pipeline analyst. Analyze this pipeline and provide: PIPELINE HEALTH SCORE, TOP 3 AT-RISK LOANS with specific rescue steps, PULL-THROUGH OPTIMIZATION recommendations, CLOSING FORECAST for next 30 days. Pipeline: $18.4M, 22 loans, Conv 42% / FHA 28% / VA 18% / DSCR 12%, overall pull-through 68%. Critical: 123 Maple St (appraisal gap), Loan #2847 (TRID), 2200 Sunrise DSCR (conditions pending).`,
+    `You are a real estate mortgage pipeline analyst. Analyze this pipeline and provide: PIPELINE HEALTH SCORE, TOP 3 AT-RISK LOANS with specific rescue steps, PULL-THROUGH OPTIMIZATION recommendations, CLOSING FORECAST for next 30 days.${ctx ? ' Base this entirely on the following real case data, citing specific figures and details from it: ' + ctx : ' No live case data is loaded — generate a representative illustrative example: Pipeline $18.4M, 22 loans, Conv 42% / FHA 28% / VA 18% / DSCR 12%, overall pull-through 68%. Critical: 123 Maple St (appraisal gap), Loan #2847 (TRID), 2200 Sunrise DSCR (conditions pending).'}`,
     el, 'ANALYZING PIPELINE...'
   );
 }
 
 async function generateBoard() {
   const el = document.getElementById('board-output');
+  const ctx = buildRelayContext();
   await callAI(
-    (() => {
-      const r = JSON.parse(sessionStorage.getItem('TSM_RE_WAR_RELAY') || localStorage.getItem('TSM_RE_WAR_RELAY') || '{}');
-      const ctx = r.stratPayload?.fullBrief || r.reportContent || r.stratPayload?.brief || '';
-      const war = r.warRoomPayload ? JSON.stringify(r.warRoomPayload).slice(0,500) : '';
-      return `You are a real estate executive AI preparing a BOARD REPORT. Generate a concise board-ready summary with: EXECUTIVE SUMMARY (2-3 sentences), FINANCIAL PERFORMANCE (key metrics), OPERATIONAL HIGHLIGHTS, RISK REGISTER (top 3), STRATEGIC INITIATIVES, Q3 OUTLOOK. Use only the relay data below — do not use placeholder pipeline figures.\n\nRELAY:\n${ctx.slice(0,600)}\nWAR ROOM: ${war}`;
-    })(),
+    `You are a real estate executive AI preparing a BOARD REPORT. Generate a concise board-ready summary with: EXECUTIVE SUMMARY (2-3 sentences), FINANCIAL PERFORMANCE (key metrics), OPERATIONAL HIGHLIGHTS, RISK REGISTER (top 3), STRATEGIC INITIATIVES, Q3 OUTLOOK. Board audience only sees outcomes and decisions. Keep it executive-level only.${ctx ? ' Base this entirely on the following real case data, citing specific figures and details from it: ' + ctx : ' No live case data is loaded — generate a representative illustrative example: Pipeline $18.4M (+12% QoQ), 68% pull-through, $276K est revenue, REO $2.1M portfolio, 5 closings this week, Phoenix AZ market.'}`,
     el, 'GENERATING BOARD REPORT...'
   );
 }
 
 async function generateSnapshot() {
   const el = document.querySelector('#panel-snapshot .cards-grid');
+  const ctx = buildRelayContext();
   await callAI(
-    `You are a real estate deal analyst. Generate a DEAL SNAPSHOT analysis for top 5 active deals. For each: DEAL NAME, RISK LEVEL (HIGH/MEDIUM/LOW), STATUS, KEY ISSUE, RECOMMENDED ACTION. Deals: 1) 123 Maple St appraisal gap $26K, 2) Loan #2847 TRID violation, 3) REO 445 Pine Dr ready to list, 4) 2200 Sunrise DSCR conditions open, 5) 1010 Desert Rose VA on track. Be specific and actionable.`,
+    `You are a real estate deal analyst. Generate a DEAL SNAPSHOT analysis for the active deals. For each: DEAL NAME, RISK LEVEL (HIGH/MEDIUM/LOW), STATUS, KEY ISSUE, RECOMMENDED ACTION. Be specific and actionable.${ctx ? ' Base this entirely on the following real case data, citing specific figures and details from it: ' + ctx : ' No live case data is loaded — generate a representative illustrative example for 5 deals: 1) 123 Maple St appraisal gap $26K, 2) Loan #2847 TRID violation, 3) REO 445 Pine Dr ready to list, 4) 2200 Sunrise DSCR conditions open, 5) 1010 Desert Rose VA on track.'}`,
     el, 'ANALYZING DEALS...'
   );
 }
 
 async function generateCompliance() {
   const el = document.getElementById('compliance-output');
+  const ctx = buildRelayContext();
   await callAI(
-    `You are a real estate compliance officer AI. Run a COMPLIANCE SWEEP and generate findings with: VIOLATION SEVERITY, REGULATION (TRID/RESPA/AML/HMDA), SPECIFIC ISSUE, CURE STEPS, DEADLINE, DOLLAR EXPOSURE. Current flags: TRID CD tolerance Loan #2847 $1,247, AML beneficial ownership 2 loans pending, RESPA referral relationships 3 flagged for annual review, Title lien 445 Pine Dr $12,400 resolved. Format as compliance report.`,
+    `You are a real estate compliance officer AI. Run a COMPLIANCE SWEEP and generate findings with: VIOLATION SEVERITY, REGULATION (TRID/RESPA/AML/HMDA), SPECIFIC ISSUE, CURE STEPS, DEADLINE, DOLLAR EXPOSURE. Format as compliance report.${ctx ? ' Base this entirely on the following real case data, citing specific figures and details from it: ' + ctx : ' No live case data is loaded — generate a representative illustrative example: TRID CD tolerance Loan #2847 $1,247, AML beneficial ownership 2 loans pending, RESPA referral relationships 3 flagged for annual review, Title lien 445 Pine Dr $12,400 resolved.'}`,
     el, 'RUNNING COMPLIANCE SWEEP...'
   );
 }
 
 async function generateRescue() {
   const el = document.getElementById('rescue-output');
+  const ctx = buildRelayContext();
   await callAI(
-    `You are a real estate deal rescue specialist AI. Generate a DEAL RESCUE PACK for at-risk transactions. Include: TRIAGE (rank deals by rescue priority), RESCUE PLAYBOOK for each critical deal with step-by-step actions, TIMELINE (next 24hr, 48hr, 72hr), ESCALATION TRIGGERS, SUCCESS METRICS. Critical deals: 1) 123 Maple St appraisal gap $26K - seller negotiation needed, 2) Loan #2847 TRID cure 18hr window $1,247, 3) 2 AML holds blocking closing, 4) Pull-through at 68% vs 75% target with 3 loans at risk. Be tactical and specific.`,
+    `You are a real estate deal rescue specialist AI. Generate a DEAL RESCUE PACK for at-risk transactions. Include: TRIAGE (rank deals by rescue priority), RESCUE PLAYBOOK for each critical deal with step-by-step actions, TIMELINE (next 24hr, 48hr, 72hr), ESCALATION TRIGGERS, SUCCESS METRICS. Be tactical and specific.${ctx ? ' Base this entirely on the following real case data, citing specific figures and details from it: ' + ctx : ' No live case data is loaded — generate a representative illustrative example: 1) 123 Maple St appraisal gap $26K - seller negotiation needed, 2) Loan #2847 TRID cure 18hr window $1,247, 3) 2 AML holds blocking closing, 4) Pull-through at 68% vs 75% target with 3 loans at risk.'}`,
     el, 'LAUNCHING RESCUE PROTOCOLS...'
   );
 }
 
 async function generateREO() {
   const el = document.getElementById('reo-output');
+  const ctx = buildRelayContext();
   await callAI(
-    `You are a real estate REO disposition specialist AI. Generate a 60-DAY REO DISPOSITION PLAN for a portfolio of 6 assets ($2.1M total). Include: ASSET CLASSIFICATION (retail vs investor vs distressed), DISPOSITION STRATEGY by asset type, WEEK-BY-WEEK TIMELINE (Days 1-60), PRICING STRATEGY, BPO METHODOLOGY, REVENUE OPTIMIZATION. MLS Retail nets $1.85M, Investor Direct $1.68M, Bulk $1.37M. Phoenix AZ market - DOM trending up. Recommended: MLS for 4 assets, Investor Direct for 2 distressed. Net uplift vs bulk: $480K.`,
+    `You are a real estate REO disposition specialist AI. Generate a 60-DAY REO DISPOSITION PLAN. Include: ASSET CLASSIFICATION (retail vs investor vs distressed), DISPOSITION STRATEGY by asset type, WEEK-BY-WEEK TIMELINE (Days 1-60), PRICING STRATEGY, BPO METHODOLOGY, REVENUE OPTIMIZATION.${ctx ? ' Base this entirely on the following real case data, citing specific figures and details from it: ' + ctx : ' No live case data is loaded — generate a representative illustrative example: portfolio of 6 assets ($2.1M total). MLS Retail nets $1.85M, Investor Direct $1.68M, Bulk $1.37M. Phoenix AZ market - DOM trending up. Recommended: MLS for 4 assets, Investor Direct for 2 distressed. Net uplift vs bulk: $480K.'}`,
     el, 'GENERATING REO PLAN...'
   );
 }
 
 async function generateMortgage() {
   const el = document.getElementById('mortgage-output');
+  const ctx = buildRelayContext();
   await callAI(
-    `You are a mortgage portfolio analyst AI. Generate a MORTGAGE POSITION ANALYSIS with: PRODUCT MIX ASSESSMENT (Conv 42%/FHA 28%/VA 18%/DSCR 12%), PULL-THROUGH BY PRODUCT (VA 84%/FHA 74%/Conv 66%/DSCR 51%), VOLUME OPTIMIZATION recommendations, RATE ENVIRONMENT impact (Phoenix market), INVESTOR/DSCR pipeline risk assessment, 90-DAY ORIGINATION FORECAST. Total pipeline $18.4M, 22 loans, target pull-through 75% vs actual 68%. Provide specific loan officer and product mix recommendations.`,
+    `You are a mortgage portfolio analyst AI. Generate a MORTGAGE POSITION ANALYSIS with: PRODUCT MIX ASSESSMENT, PULL-THROUGH BY PRODUCT, VOLUME OPTIMIZATION recommendations, RATE ENVIRONMENT impact, INVESTOR/DSCR pipeline risk assessment, 90-DAY ORIGINATION FORECAST. Provide specific loan officer and product mix recommendations.${ctx ? ' Base this entirely on the following real case data, citing specific figures and details from it: ' + ctx : ' No live case data is loaded — generate a representative illustrative example: Conv 42%/FHA 28%/VA 18%/DSCR 12%, pull-through VA 84%/FHA 74%/Conv 66%/DSCR 51%, total pipeline $18.4M, 22 loans, target pull-through 75% vs actual 68%, Phoenix market.'}`,
     el, 'ANALYZING MORTGAGE POSITION...'
   );
 }
