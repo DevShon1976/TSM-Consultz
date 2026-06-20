@@ -304,6 +304,47 @@ app.post('/api/hc/stream', async (req, res) => {
   }
 });
 
+app.post('/api/war-room/stream', async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  const { model, messages, max_tokens, temperature } = req.body;
+  if (!Array.isArray(messages) || !messages.length) return res.status(400).json({ error: 'Missing messages' });
+
+  const groqKey = process.env.GROQ_KEY || process.env.GROQ_API_KEY;
+  if (!groqKey) return res.status(500).json({ error: 'GROQ_KEY not configured on server.' });
+
+  try {
+    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + groqKey
+      },
+      body: JSON.stringify({
+        model: model || 'llama-3.3-70b-versatile',
+        stream: true,
+        max_tokens: max_tokens || 600,
+        temperature: temperature ?? 0.4,
+        messages
+      })
+    });
+
+    if (!groqRes.ok) {
+      const err = await groqRes.json().catch(() => ({}));
+      return res.status(502).json({ error: err.error?.message || 'Groq error' });
+    }
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    const { Readable } = require('stream');
+    Readable.fromWeb(groqRes.body).pipe(res);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.post('/api/hc/ask', async (req, res) => {
   try {
     var body = req.body || {};
