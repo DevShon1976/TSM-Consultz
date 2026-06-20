@@ -427,6 +427,32 @@ let docText = '';
     if (ta) ta.value = relay.summary;
   } catch(e) { console.warn('Doc search relay error:', e); }
 })();
+// ── Reactive paste char count + doc-type detection ──────────
+(function wireFinOpsPaste() {
+  const ta = document.getElementById('docPaste');
+  if (!ta || ta.__finopsPasteWired) return;
+  ta.__finopsPasteWired = true;
+  let counter = document.getElementById('finops-paste-counter');
+  if (!counter) {
+    counter = document.createElement('div');
+    counter.id = 'finops-paste-counter';
+    counter.style.cssText = 'font-size:8px;letter-spacing:1px;margin-top:4px;min-height:14px;color:#00d4aa;';
+    ta.parentNode.insertBefore(counter, ta.nextSibling);
+  }
+  ta.addEventListener('input', function() {
+    const text = this.value.trim();
+    if (!text) { counter.textContent = ''; return; }
+    let type = 'DOCUMENT';
+    if (/ap aging|accounts payable|aging report/i.test(text))      type = 'AP AGING';
+    else if (/gl|general ledger|chart of accounts/i.test(text))    type = 'GL EXTRACT';
+    else if (/bank rec|reconciliation|statement/i.test(text))      type = 'BANK REC';
+    else if (/era|835|remit|payment advice/i.test(text))           type = 'ERA / 835';
+    else if (/invoice|vendor|purchase order/i.test(text))          type = 'INVOICE';
+    else if (/budget|variance|forecast/i.test(text))               type = 'BUDGET VARIANCE';
+    counter.textContent = '✓ ' + text.length + ' chars · detected: ' + type;
+  });
+})();
+
 let selectedDocType = 'AP Aging';
 let engOut = {};
 let enginesComplete = 0;
@@ -1455,5 +1481,6 @@ window.addEventListener('DOMContentLoaded', () => {
 window.startTour = startTour;
 window.howtoOpen = () => document.getElementById('howtoOverlay').classList.add('active');
 </script>
+<script src="/shared/tsm-chain-assistant.js"></script>
 </body>
 </html>
