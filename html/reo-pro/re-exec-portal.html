@@ -529,34 +529,34 @@
 <!-- KPI BAR -->
 <div id="kpi-bar">
   <div class="kpi">
-    <div class="kpi-val cyan">$18.4M</div>
+    <div class="kpi-val cyan" id="kpi-pipeline">—</div>
     <div class="kpi-label">Pipeline Volume</div>
-    <div class="kpi-sub pos">+12% QoQ</div>
+    <div class="kpi-sub pos" id="kpi-pipeline-sub">loading relay...</div>
   </div>
   <div class="kpi">
-    <div class="kpi-val amber">68%</div>
+    <div class="kpi-val amber" id="kpi-pullthrough">—</div>
     <div class="kpi-label">Pull-Through Rate</div>
     <div class="kpi-sub neg">Target: 75%</div>
   </div>
   <div class="kpi">
-    <div class="kpi-val green">$276K</div>
+    <div class="kpi-val green" id="kpi-revenue">—</div>
     <div class="kpi-label">Est. Revenue (Pipeline)</div>
-    <div class="kpi-sub pos">At 68% PT</div>
+    <div class="kpi-sub pos" id="kpi-revenue-sub">loading relay...</div>
   </div>
   <div class="kpi">
-    <div class="kpi-val red">$47K</div>
+    <div class="kpi-val red" id="kpi-risk">—</div>
     <div class="kpi-label">Dollar Risk Exposure</div>
-    <div class="kpi-sub neg">3 violations</div>
+    <div class="kpi-sub neg" id="kpi-risk-sub">loading relay...</div>
   </div>
   <div class="kpi">
-    <div class="kpi-val amber">$2.1M</div>
+    <div class="kpi-val amber" id="kpi-reo">—</div>
     <div class="kpi-label">REO Portfolio</div>
-    <div class="kpi-sub">6 assets</div>
+    <div class="kpi-sub" id="kpi-reo-sub">loading relay...</div>
   </div>
   <div class="kpi">
-    <div class="kpi-val green">5</div>
+    <div class="kpi-val green" id="kpi-closings">—</div>
     <div class="kpi-label">Closings This Week</div>
-    <div class="kpi-sub pos">$2.3M funding</div>
+    <div class="kpi-sub pos" id="kpi-closings-sub">loading relay...</div>
   </div>
 </div>
 
@@ -1068,6 +1068,24 @@ function loadWarPayload() {
                   localStorage.getItem('TSM_RE_WAR_RELAY');
     if (relay) {
       state.warPayload = JSON.parse(relay);
+      // ── Populate KPI tiles from relay ──────────────────────
+      const wp = state.warPayload;
+      const setKPI = (id, val, fallback) => {
+        const el = document.getElementById(id);
+        if (el && val) el.textContent = val;
+        else if (el && fallback) el.textContent = fallback;
+      };
+      setKPI('kpi-pipeline',    wp.pipelineVolume   || wp.warRoomPayload?.pipelineVolume,   '$—');
+      setKPI('kpi-pullthrough', wp.pullThrough       || wp.warRoomPayload?.pullThrough,       '—%');
+      setKPI('kpi-revenue',     wp.estRevenue        || wp.warRoomPayload?.estRevenue,        '$—');
+      setKPI('kpi-risk',        wp.riskExposure      || wp.warRoomPayload?.riskExposure,      '$—');
+      setKPI('kpi-reo',         wp.reoPortfolio      || wp.warRoomPayload?.reoPortfolio,      '$—');
+      setKPI('kpi-closings',    wp.closingsThisWeek  || wp.warRoomPayload?.closingsThisWeek,  '—');
+      // Sub-labels
+      const psSub = document.getElementById('kpi-pipeline-sub');
+      if (psSub) psSub.textContent = wp.reportTitle ? 'from: ' + wp.reportTitle : 'live relay data';
+      const revSub = document.getElementById('kpi-revenue-sub');
+      if (revSub && wp.pullThrough) revSub.textContent = 'At ' + wp.pullThrough + ' PT';
       as
     }
   } catch(e) {}
@@ -1316,5 +1334,6 @@ function exportBoard() {
   a.click();
 }
 </script>
+<script src="/shared/tsm-chain-assistant.js"></script>
 </body>
 </html>
