@@ -485,7 +485,7 @@ function applyPayload() {
   const t = new Date(p.timestamp);
 
   document.getElementById('ib-detail').textContent =
-    `War Room payload received · ${t.toLocaleTimeString()} · ${p.modulesRun || 0} modules run`;
+    `War Room payload received · ${t.toLocaleTimeString()} · ${p.modulesRun || 0} modules run${p.docText ? ' · Doc loaded' : ''}${p.feedText ? ' · Feed captured' : ''}`;
   document.getElementById('ib-modules').textContent = p.modulesRun || 0;
   document.getElementById('ib-saved').textContent = p.savedOutputs || 0;
   document.getElementById('ib-rescue').textContent = p.rescuePack ? '⚡ ACTIVE' : 'NONE';
@@ -532,7 +532,10 @@ async function generateAutoBrief() {
   brief.innerHTML = '<div class="loader">⟳ &nbsp;Generating strategic brief...</div>';
 
   let context = '';
-  if (warRoomPayload && warRoomPayload.outputs && warRoomPayload.outputs.length > 0) {
+  // Use outputs array if present, fall back to feedText/docText
+  const hasOutputs = warRoomPayload && Array.isArray(warRoomPayload.outputs) && warRoomPayload.outputs.length > 0;
+  const hasFeed = warRoomPayload && (warRoomPayload.feedText || warRoomPayload.docText);
+  if (hasOutputs) {
     context = warRoomPayload.outputs.slice(0, 5)
       .map(o => `=== ${o.title} ===\n${o.text.substring(0, 600)}`)
       .join('\n\n');
@@ -591,8 +594,10 @@ async function runStratModule(card) {
 
   // enrich prompt with payload context
   let enriched = prompt;
-  if (warRoomPayload && warRoomPayload.outputs && warRoomPayload.outputs.length > 0) {
-    const ctx = warRoomPayload.outputs.slice(0,3).map(o => o.title + ': ' + o.text.substring(0,200)).join('\n');
+  if (hasOutputs || hasFeed) {
+    const ctx = hasOutputs
+      ? warRoomPayload.outputs.slice(0,3).map(o => o.title + ': ' + o.text.substring(0,200)).join('\n')
+      : ((warRoomPayload.feedText || '') + '\n' + (warRoomPayload.docText || '')).slice(0,600);
     enriched = `WAR ROOM CONTEXT:\n${ctx}\n\nSTRATEGY REQUEST:\n${prompt}`;
   }
 
