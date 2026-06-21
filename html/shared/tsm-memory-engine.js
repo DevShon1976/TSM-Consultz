@@ -166,65 +166,97 @@
     st.id="tsm-memory-css";
 
     st.textContent=`
+      #tsm-memory-tab{
+        position:fixed;
+        right:18px;
+        bottom:18px;
+        z-index:600;
+        background:#00ffc6;
+        color:#001;
+        font-weight:900;
+        font-size:11px;
+        letter-spacing:.08em;
+        padding:10px 16px;
+        border-radius:999px;
+        cursor:pointer;
+        box-shadow:0 4px 18px rgba(0,255,198,.35);
+        font-family:Inter,system-ui;
+      }
+
       .tsm-memory-layer{
-        max-width:1280px;
-        margin:26px auto;
-        padding:18px;
+        position:fixed;
+        right:18px;
+        bottom:66px;
+        width:380px;
+        max-height:65vh;
+        overflow-y:auto;
+        padding:16px;
         background:rgba(5,12,20,.97);
         border:1px solid rgba(0,255,198,.14);
-        border-radius:18px;
+        border-radius:16px;
         color:#dff7ff;
         font-family:Inter,system-ui;
-        position:relative;
-        z-index:20;
+        z-index:550;
+        box-shadow:0 12px 40px rgba(0,0,0,.5);
+        opacity:0;
+        transform:translateY(16px) scale(.97);
+        pointer-events:none;
+        transition:opacity .18s ease, transform .18s ease;
+      }
+
+      .tsm-memory-layer.open{
+        opacity:1;
+        transform:translateY(0) scale(1);
+        pointer-events:auto;
       }
 
       .tsm-memory-layer h2{
         color:#00ffc6;
         margin:0 0 8px;
-        font-size:30px;
+        font-size:15px;
       }
 
       .memory-grid{
         display:grid;
-        grid-template-columns:repeat(4,1fr);
-        gap:12px;
-        margin-top:14px;
+        grid-template-columns:repeat(2,1fr);
+        gap:8px;
+        margin-top:12px;
       }
 
       .memory-card{
         background:#07131d;
         border:1px solid rgba(255,255,255,.08);
-        border-radius:14px;
-        padding:14px;
+        border-radius:10px;
+        padding:10px;
       }
 
       .memory-card small{
         display:block;
         color:#7c9aaa;
-        letter-spacing:.15em;
+        letter-spacing:.1em;
         text-transform:uppercase;
-        font-size:10px;
+        font-size:9px;
       }
 
       .memory-card b{
         display:block;
         color:#00ffc6;
-        margin-top:8px;
-        font-size:24px;
+        margin-top:6px;
+        font-size:15px;
       }
 
       .memory-actions{
         display:flex;
-        gap:10px;
+        gap:8px;
         flex-wrap:wrap;
-        margin:18px 0;
+        margin:14px 0;
       }
 
       .memory-actions button{
         border:0;
         border-radius:999px;
-        padding:11px 16px;
+        padding:8px 12px;
+        font-size:11px;
         background:#00ffc6;
         color:#001;
         font-weight:900;
@@ -238,28 +270,30 @@
       }
 
       .memory-panel{
-        margin-top:16px;
+        margin-top:12px;
         background:#020913;
         border-left:3px solid #00ffc6;
-        border-radius:12px;
-        padding:15px;
+        border-radius:10px;
+        padding:12px;
         white-space:pre-wrap;
-        line-height:1.6;
+        line-height:1.5;
+        font-size:12.5px;
       }
 
       .memory-timeline{
-        margin-top:18px;
+        margin-top:14px;
         background:#031019;
         border:1px solid rgba(255,255,255,.08);
-        border-radius:14px;
-        padding:14px;
-        max-height:260px;
+        border-radius:10px;
+        padding:10px;
+        max-height:160px;
         overflow:auto;
+        font-size:12px;
       }
 
       .memory-event{
         border-bottom:1px solid rgba(255,255,255,.05);
-        padding:10px 0;
+        padding:8px 0;
         color:#cbe3ef;
       }
 
@@ -269,16 +303,9 @@
 
       .memory-row{
         display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:16px;
-        margin-top:18px;
-      }
-
-      @media(max-width:900px){
-        .memory-grid,
-        .memory-row{
-          grid-template-columns:1fr;
-        }
+        grid-template-columns:1fr;
+        gap:12px;
+        margin-top:14px;
       }
     `;
 
@@ -444,7 +471,15 @@ This sector now retains operational continuity across relays, escalations, owner
       </div>
     `;
 
-    (document.querySelector("main") || document.body).appendChild(box);
+    document.body.appendChild(box);
+
+    if(!document.getElementById("tsm-memory-tab")){
+      const tab=document.createElement("div");
+      tab.id="tsm-memory-tab";
+      tab.textContent="🧠 MEMORY";
+      tab.onclick=()=>box.classList.toggle("open");
+      document.body.appendChild(tab);
+    }
 
     renderState();
     renderNarrative();
