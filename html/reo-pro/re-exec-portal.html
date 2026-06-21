@@ -1101,9 +1101,18 @@ function loadWarPayload() {
       // ── Auto-surface proof of relay receipt — no manual click required ──
       extractRelayIntelligence();
       generateBrief();
+    } else {
+      // ── No relay — standalone mode. Don't show stale/fake demo numbers ──
+      ['th-pipeline','th-loans','th-closings','th-trid','th-pt','th-reo','th-title'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = '—';
+      });
+      const thLabel = document.getElementById('th-risklabel');
+      if (thLabel) thLabel.textContent = 'NO LIVE DATA';
+      const badge = document.getElementById('risk-badge');
+      if (badge) { badge.className = ''; badge.innerHTML = '<div class="risk-dot"></div>NO LIVE DATA'; }
     }
   } catch(e) {}
-}
 
 async function extractRelayIntelligence() {
   const wp = state.warPayload;
@@ -1158,7 +1167,6 @@ function buildTicker() {
     items.push({ cls: 'warn', text: `◉ RELAY RECEIVED · ${fromWhere.toUpperCase()} · <span>${relayTime}</span> · CHAIN ACTIVE` });
   }
   items.push(
-    items.push(
     { cls: 'alert', text: state.relayHeadline ? `⚠ ${state.relayHeadline}` : 'APPRAISAL GAP ALERT · 123 MAPLE ST · CONTRACT $460K · APPRAISED $434K · GAP: <span>$26,000</span>' },
     { cls: 'warn', text: 'REO PIPELINE · 6 ACTIVE ASSETS · <span>$2.1M PORTFOLIO</span> · 2 READY FOR LISTING' },
     { cls: '', text: 'PULL-THROUGH: <span>68%</span> · TARGET: 75% · DELTA: -7PT · RECOVERY PLAN ACTIVE' },
