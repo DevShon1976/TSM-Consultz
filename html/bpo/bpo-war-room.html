@@ -425,7 +425,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 
 <script src="https://code.responsivevoice.org/responsivevoice.js?key=FREE"></script>
 <script>
-const GROQ = '/api/hc/query';
+const GROQ = '/api/war-room/stream';
 let docText='', selectedSector='', selectedDocType='', engOut=['','','','','',''], e={};
 document.getElementById('docPaste').addEventListener('input', function(){
   docText = this.value.trim();
@@ -870,7 +870,7 @@ async function fireEngines(){
       if(i===6){const dm=buildDefectManifest(e);prompt=PROMPTS[5](doc,e,selectedSector,dm);}
       else if(i===1){prompt=PROMPTS[0](doc,selectedDocType,selectedSector);}
       else{prompt=PROMPTS[i-1](doc,e,selectedSector);}
-      const res=await fetch(GROQ,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:prompt,system:'You are a BPO operations intelligence AI for TSM Command. Expert in cross-vertical workforce operations, SLA management, contingency staffing, and defect triage/remediation routing across Healthcare RCM, Legal, FinOps, Real Estate, Construction, and Insurance verticals. Be direct and operational.'})});
+      const res=await fetch('/api/war-room/stream',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:800,messages:[{role:'system',content:'You are a BPO operations intelligence AI for TSM Command. Expert in cross-vertical workforce operations, SLA management, contingency staffing, and defect triage/remediation routing across Healthcare RCM, Legal, FinOps, Real Estate, Construction, and Insurance verticals. Be direct and operational.'},{role:'user',content:prompt}]})});
       if(res.ok){const d=await res.json();txt=d.answer||d.response||d.text||'';}
       if(!txt.trim())throw new Error('empty');
     }catch(err){txt=FALLBACKS[i-1](doc,e);}
