@@ -2634,22 +2634,29 @@ Dollar amounts and party names required.`;
 
     // ─── SESSION PAYLOAD / ESCALATION ────────────────────────────────────────────
     function buildWarRoomPayload() {
+      // Collect intelligence feed text for strategist context
+      const feedEl = document.getElementById('intelligenceFeed') || document.getElementById('feed-body') || document.querySelector('.intelligence-feed');
+      const feedText = feedEl ? feedEl.innerText.slice(0, 3000) : '';
+      const docInputEl = document.getElementById('docInput') || document.getElementById('docText') || document.querySelector('textarea');
+      const docText = docInputEl ? docInputEl.value.slice(0, 2000) : '';
       return {
         timestamp: new Date().toISOString(),
         platform: 'RE War Room',
         modulesRun: runCount,
         savedOutputs: savedOutputs.length,
         outputs: savedOutputs,
+        feedText: feedText,
+        docText: docText,
         rescuePack: sessionPayload.rescuePack || null,
         synthesis: sessionPayload.synthesis || null,
-        reportTitle: document.getElementById('rptTitle').value || 'RE War Room Report',
-        reportContent: document.getElementById('rptContent').value
+        reportTitle: document.getElementById('rptTitle') ? (document.getElementById('rptTitle').value || 'RE War Room Report') : 'RE War Room Report',
+        reportContent: document.getElementById('rptContent') ? document.getElementById('rptContent').value : ''
       };
     }
 
     function escalateToStrategist() {
       const payload = buildWarRoomPayload();
-      if (!payload.savedOutputs && !payload.rescuePack) {
+      if (!payload.savedOutputs && !payload.rescuePack && !payload.feedText) {
         alert('Run some analyses before escalating.');
         return;
       }
