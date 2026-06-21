@@ -1057,8 +1057,8 @@ const state = {
 
 // ─── INIT ────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  buildTicker();
   loadWarPayload();
+  buildTicker();
 });
 
 function loadWarPayload() {
@@ -1103,7 +1103,13 @@ function loadWarPayload() {
 
 // ─── TICKER ──────────────────────────────────────────────
 function buildTicker() {
-  const items = [
+  const items = [];
+  if (state.warPayload && state.warPayload.timestamp) {
+    const relayTime = new Date(state.warPayload.timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' });
+    const fromWhere = state.warPayload.platform || 'RE Strategist';
+    items.push({ cls: 'warn', text: `◉ RELAY RECEIVED · ${fromWhere.toUpperCase()} · <span>${relayTime}</span> · CHAIN ACTIVE` });
+  }
+  items.push(
     { cls: 'alert', text: 'APPRAISAL GAP ALERT · 123 MAPLE ST · CONTRACT $460K · APPRAISED $434K · GAP: <span>$26,000</span>' },
     { cls: 'warn', text: 'REO PIPELINE · 6 ACTIVE ASSETS · <span>$2.1M PORTFOLIO</span> · 2 READY FOR LISTING' },
     { cls: '', text: 'PULL-THROUGH: <span>68%</span> · TARGET: 75% · DELTA: -7PT · RECOVERY PLAN ACTIVE' },
@@ -1111,7 +1117,7 @@ function buildTicker() {
     { cls: '', text: 'CLOSINGS THIS WEEK: <span>5</span> · $2.3M FUNDED · PHOENIX METRO · ON TRACK' },
     { cls: 'warn', text: 'AML REVIEW · <span>2 LOANS PENDING</span> · FinCEN BENEFICIAL OWNERSHIP · COMPLIANCE HOLD' },
     { cls: '', text: 'DSCR LOAN · 2200 SUNRISE BLVD · $625K · INVESTOR PACKAGE UNDER REVIEW' },
-  ];
+  );
   const doubled = [...items, ...items];
   const html = doubled.map(i =>
     `<div class="tick-item ${i.cls}">${i.text}</div>`
