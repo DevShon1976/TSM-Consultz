@@ -646,10 +646,38 @@ async function runRescuePlan() {
 }
 
 async function buildFullBrief() {
-  if (!stratSaved.length) { alert('Run modules first.'); return; }
-  const content = stratSaved.map(o => '## ' + o.title + '\n\n' + o.text).join('\n\n---\n\n');
+  // Build from stratSaved modules OR fall back to war room relay payload
+  const hasModules = stratSaved.length > 0;
+  const hasRelay = warRoomPayload && (
+    (Array.isArray(warRoomPayload.outputs) && warRoomPayload.outputs.length > 0) ||
+    warRoomPayload.feedText || warRoomPayload.docText || warRoomPayload.synthesis
+  );
+
+  if (!hasModules && !hasRelay) { alert('Run a strategy module first, or escalate from the War Room with analysis complete.'); return; }
+
+  let content = '';
+
+  // Include war room relay data first if present
+  if (hasRelay) {
+    const p = warRoomPayload;
+    content += '# WAR ROOM INTELLIGENCE\n\n';
+    if (p.synthesis) content += '## War Room Synthesis\n\n' + p.synthesis + '\n\n---\n\n';
+    if (Array.isArray(p.outputs) && p.outputs.length > 0) {
+      content += p.outputs.map(o => '## ' + (o.title||'Output') + '\n\n' + (o.text||'')).join('\n\n---\n\n') + '\n\n---\n\n';
+    }
+    if (p.feedText && !p.synthesis) content += '## Intelligence Feed\n\n' + p.feedText + '\n\n---\n\n';
+    if (p.docText) content += '## Source Document\n\n' + p.docText + '\n\n---\n\n';
+  }
+
+  // Append any strategy modules run locally
+  if (hasModules) {
+    content += '# STRATEGY MODULES\n\n';
+    content += stratSaved.map(o => '## ' + o.title + '\n\n' + o.text).join('\n\n---\n\n');
+  }
+
   document.getElementById('stratContent').value = content;
   stratPayload.fullBrief = content;
+  alert('Full brief compiled — ' + (hasRelay ? 'War Room relay included. ' : '') + (hasModules ? stratSaved.length + ' strategy modules included.' : 'Run strategy modules to add analysis.'));
 }
 
 function autoStratSave(title, text) {
