@@ -1005,16 +1005,16 @@
     <div class="rp-section">
       <div class="rp-label">TRANSACTION HEALTH</div>
       <div style="text-align:center;padding:10px 0;">
-        <div style="font-family:'Orbitron',monospace;font-size:28px;font-weight:900;color:var(--amber);">—</div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--amber);margin-top:4px;letter-spacing:1px;">MEDIUM RISK</div>
+        <div id="th-score" style="font-family:'Orbitron',monospace;font-size:28px;font-weight:900;color:var(--amber);">—</div>
+        <div id="th-risklabel" style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--amber);margin-top:4px;letter-spacing:1px;">MEDIUM RISK</div>
       </div>
-      <div class="rp-stat"><span class="rp-stat-label">Pipeline Volume</span><span class="rp-stat-val cyan">$18.4M</span></div>
-      <div class="rp-stat"><span class="rp-stat-label">Loans Active</span><span class="rp-stat-val">22</span></div>
-      <div class="rp-stat"><span class="rp-stat-label">Closings This Week</span><span class="rp-stat-val green">5</span></div>
-      <div class="rp-stat"><span class="rp-stat-label">TRID Violations</span><span class="rp-stat-val red">2</span></div>
-      <div class="rp-stat"><span class="rp-stat-label">Pull-Through Rate</span><span class="rp-stat-val amber">68%</span></div>
-      <div class="rp-stat"><span class="rp-stat-label">REO Assets</span><span class="rp-stat-val amber">6 · $2.1M</span></div>
-      <div class="rp-stat"><span class="rp-stat-label">Title Issues</span><span class="rp-stat-val red">1 OPEN</span></div>
+      <div class="rp-stat"><span class="rp-stat-label">Pipeline Volume</span><span class="rp-stat-val cyan" id="th-pipeline">$18.4M</span></div>
+      <div class="rp-stat"><span class="rp-stat-label">Loans Active</span><span class="rp-stat-val" id="th-loans">22</span></div>
+      <div class="rp-stat"><span class="rp-stat-label">Closings This Week</span><span class="rp-stat-val green" id="th-closings">5</span></div>
+      <div class="rp-stat"><span class="rp-stat-label">TRID Violations</span><span class="rp-stat-val red" id="th-trid">2</span></div>
+      <div class="rp-stat"><span class="rp-stat-label">Pull-Through Rate</span><span class="rp-stat-val amber" id="th-pt">68%</span></div>
+      <div class="rp-stat"><span class="rp-stat-label">REO Assets</span><span class="rp-stat-val amber" id="th-reo">6 · $2.1M</span></div>
+      <div class="rp-stat"><span class="rp-stat-label">Title Issues</span><span class="rp-stat-val red" id="th-title">1 OPEN</span></div>
     </div>
 
     <!-- REPORT HISTORY -->
@@ -1097,10 +1097,58 @@ function loadWarPayload() {
       if (reoSub) reoSub.textContent = 'from: RE War Room';
       const closingsSub = document.getElementById('kpi-closings-sub');
       if (closingsSub) closingsSub.textContent = k.actionCount ? k.actionCount + ' actions queued' : 'live relay data';
+
+      // ── Auto-surface proof of relay receipt — no manual click required ──
+      extractRelayIntelligence();
+      generateBrief();
     }
   } catch(e) {}
 }
 
+async function extractRelayIntelligence() {
+  const wp = state.warPayload;
+  if (!wp) return;
+  const ctxText = buildRelayContext(3000);
+  if (!ctxText || ctxText.length < 20) return;
+  try {
+    const res = await fetch('/api/mortgage/query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        question: `Extract structured KPIs from this real estate/mortgage relay data. Respond with ONLY a single-line JSON object — no markdown, no commentary, no backticks: {"headline":"8-12 word alert citing the single biggest dollar risk or issue with exact dollar figure","riskLevel":"LOW or MEDIUM or HIGH","riskScore":integer 0-100,"dollarRisk":"$X total exposure","estRevenue":"$X potential revenue impact or savings","reoCount":integer or null,"reoValue":"$X or null","closingsCount":integer or null,"loansActive":integer or null,"tridViolations":integer or null,"titleIssuesOpen":integer or null}. Data: ${ctxText}`,
+        maxTokens: 280
+      })
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    const raw = (data.answer || data.response || '').replace(/```json|```/g, '').trim();
+    const kpi = JSON.parse(raw);
+    state.relayKPI = kpi;
+
+    const setTxt = (id, val) => { const el = document.getElementById(id); if (el && val !== null && val !== undefined && val !== '') el.textContent = val; };
+    setTxt('kpi-revenue', kpi.estRevenue);
+    setTxt('kpi-risk', kpi.dollarRisk);
+    setTxt('kpi-reo', kpi.reoValue);
+    if (kpi.closingsCount !== null && kpi.closingsCount !== undefined) setTxt('kpi-closings', String(kpi.closingsCount));
+
+    setTxt('th-loans', kpi.loansActive);
+    if (kpi.closingsCount !== null && kpi.closingsCount !== undefined) setTxt('th-closings', kpi.closingsCount);
+    setTxt('th-trid', kpi.tridViolations);
+    if (kpi.reoCount !== null && kpi.reoCount !== undefined && kpi.reoValue) setTxt('th-reo', kpi.reoCount + ' · ' + kpi.reoValue);
+    if (kpi.titleIssuesOpen !== null && kpi.titleIssuesOpen !== undefined) setTxt('th-title', kpi.titleIssuesOpen + ' OPEN');
+    setTxt('th-score', kpi.riskScore);
+    if (kpi.riskLevel) setTxt('th-risklabel', kpi.riskLevel.toUpperCase() + ' RISK');
+
+    const badge = document.getElementById('risk-badge');
+    if (badge && kpi.riskLevel) {
+      badge.className = kpi.riskLevel.toLowerCase();
+      badge.innerHTML = '<div class="risk-dot"></div>' + kpi.riskLevel.toUpperCase() + ' RISK';
+    }
+
+    state.relayHeadline = kpi.headline || null;
+    buildTicker();
+  } catch(e) { /* fail silent — tiles stay on existing fallback */ }
+}
 // ─── TICKER ──────────────────────────────────────────────
 function buildTicker() {
   const items = [];
@@ -1110,7 +1158,8 @@ function buildTicker() {
     items.push({ cls: 'warn', text: `◉ RELAY RECEIVED · ${fromWhere.toUpperCase()} · <span>${relayTime}</span> · CHAIN ACTIVE` });
   }
   items.push(
-    { cls: 'alert', text: 'APPRAISAL GAP ALERT · 123 MAPLE ST · CONTRACT $460K · APPRAISED $434K · GAP: <span>$26,000</span>' },
+    items.push(
+    { cls: 'alert', text: state.relayHeadline ? `⚠ ${state.relayHeadline}` : 'APPRAISAL GAP ALERT · 123 MAPLE ST · CONTRACT $460K · APPRAISED $434K · GAP: <span>$26,000</span>' },
     { cls: 'warn', text: 'REO PIPELINE · 6 ACTIVE ASSETS · <span>$2.1M PORTFOLIO</span> · 2 READY FOR LISTING' },
     { cls: '', text: 'PULL-THROUGH: <span>68%</span> · TARGET: 75% · DELTA: -7PT · RECOVERY PLAN ACTIVE' },
     { cls: 'alert', text: 'TRID VIOLATION · LOAN #2847 · <span>$1,247 CURE REQUIRED</span> · WINDOW: 18 HOURS' },
