@@ -586,13 +586,24 @@ if (window.pdfjsLib) {
     </div>
   </div>
 
+  <!-- CLIENT WORKSPACE ISOLATION -->
+  <div class="workspace-bar" id="workspace-bar" style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin:0 0 .9rem;padding:.6rem .8rem;border:1px solid rgba(30,232,182,.18);border-radius:4px;background:#080c14;font-family:var(--mono);">
+    <span style="color:#1ee8b6;font-size:.5rem;letter-spacing:.08em;font-weight:700;">🔒 CLIENT WORKSPACE</span>
+    <select id="workspace-select" onchange="switchWorkspace(this.value)" style="background:#0a0f0a;color:#e2e8f0;border:1px solid rgba(255,255,255,.12);border-radius:3px;padding:.3rem .5rem;font-family:var(--mono);font-size:.5rem;"></select>
+    <button type="button" class="btn-ghost" onclick="promptNewWorkspace()" style="font-size:.48rem;">+ New Client</button>
+    <button type="button" class="btn-ghost" id="isolation-toggle-btn" onclick="toggleIsolationDetail()" style="font-size:.48rem;">🔍 Inspect Storage Keys</button>
+    <span id="workspace-status" style="margin-left:auto;font-size:.48rem;color:#7a9a8a;"></span>
+  </div>
+  <div id="isolation-detail" style="display:none;margin:0 0 .9rem;padding:.6rem .8rem;border:1px solid rgba(30,232,182,.18);border-radius:4px;background:#060a10;font-family:var(--mono);font-size:.48rem;color:#a0b8a0;line-height:1.7;"></div>
+
   <!-- DOC ROUTER UPLOAD -->
   <div class="upload-zone" id="upload-zone" onclick="document.getElementById('doc-file-input').click()">
     <div class="uz-title">⬆ Drop files here or click to upload</div>
-    <div class="uz-sub">PDF · images · text/CSV — auto-classified &amp; routed to the right war room(s)</div>
-    <input type="file" id="doc-file-input" multiple accept=".pdf,.txt,.csv,.png,.jpg,.jpeg,.webp">
+    <div class="uz-sub">PDF · images · text/CSV · ZIP — auto-classified &amp; routed to the right war room(s)</div>
+    <input type="file" id="doc-file-input" multiple accept=".pdf,.txt,.csv,.png,.jpg,.jpeg,.webp,.zip">
   </div>
   <div class="upload-queue" id="upload-queue"></div>
+  <div id="zip-seclog" style="display:none;margin:0 0 1rem;font-family:var(--mono);"></div>
  
   <!-- VERTICAL TABS -->
   <div class="vertical-tabs">
@@ -852,20 +863,177 @@ const DEFECT_FLAG_ICONS = {
   "Closing Delay":     "🏠",
 };
 
+
+/* ═══════════════════════════════════════════════════
+   CLIENT WORKSPACE ISOLATION
+   Each vertical's documents are stored in a SEPARATE localStorage
+   key per client — not one shared array filtered by a tag. Opening
+   devtools and listing localStorage keys shows the compartments
+   directly: tsm_doc_index_fo::client::apex-corp,
+   tsm_doc_index_fo::client::saasco-llc, etc. A document always lands
+   in the compartment its OWN classified client belongs to — never
+   wherever the viewer happens to be looking — so a mixed batch
+   upload still separates correctly on write, not just on display.
+═══════════════════════════════════════════════════ */
+const ALL_CLIENTS_ID   = "__all__";
+const UNASSIGNED_CLIENT = "Unassigned";
+const CLIENT_REGISTRY_KEY = "tsm_client_registry";
+const ACTIVE_WORKSPACE_KEY = "tsm_active_client_workspace";
+const MIGRATION_FLAG_KEY = "tsm_client_scoping_migrated_v1";
+
+function slugifyClient(label) {
+  const s = (label || UNASSIGNED_CLIENT).toString().trim().toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return s || "unassigned";
+}
+
+function getClientRegistry() {
+  try { return JSON.parse(localStorage.getItem(CLIENT_REGISTRY_KEY) || "[]"); } catch(e) { return []; }
+}
+function saveClientRegistry(reg) {
+  try { localStorage.setItem(CLIENT_REGISTRY_KEY, JSON.stringify(reg)); } catch(e) {}
+}
+function getClientLabel(clientId) {
+  const c = getClientRegistry().find(c => c.id === clientId);
+  return c ? c.label : UNASSIGNED_CLIENT;
+}
+// Registers a client the first time it's seen and returns its stable id.
+// This is the ONLY place new compartments get created.
+function ensureClientRegistered(label) {
+  const clean = (label || UNASSIGNED_CLIENT).toString().trim() || UNASSIGNED_CLIENT;
+  const id = slugifyClient(clean);
+  const reg = getClientRegistry();
+  if (!reg.find(c => c.id === id)) {
+    reg.push({ id, label: clean, createdAt: Date.now() });
+    saveClientRegistry(reg);
+  }
+  return id;
+}
+
+function clientScopedKey(vertical, clientId) {
+  return VERTICALS[vertical].storageKey + "::client::" + clientId;
+}
+function loadIndexForClient(vertical, clientId) {
+  try { return JSON.parse(localStorage.getItem(clientScopedKey(vertical, clientId)) || "[]"); } catch(e) { return []; }
+}
+function saveIndexForClient(vertical, clientId, docs) {
+  try { localStorage.setItem(clientScopedKey(vertical, clientId), JSON.stringify(docs)); } catch(e) {}
+}
+
+// One-time migration: any pre-existing flat per-vertical array gets
+// split into per-client compartments based on each doc's own _ext.client
+// tag, so nothing is lost and nothing stays comingled.
+function migrateToClientScoping() {
+  if (localStorage.getItem(MIGRATION_FLAG_KEY)) return;
+  Object.keys(VERTICALS).forEach(v => {
+    let legacy = [];
+    try { legacy = JSON.parse(localStorage.getItem(VERTICALS[v].storageKey) || "[]"); } catch(e) {}
+    legacy.forEach(doc => {
+      const cid = ensureClientRegistered(doc._ext && doc._ext.client);
+      const bucket = loadIndexForClient(v, cid);
+      if (!bucket.some(d => d.id === doc.id)) bucket.push(doc);
+      saveIndexForClient(v, cid, bucket);
+    });
+    try { localStorage.removeItem(VERTICALS[v].storageKey); } catch(e) {}
+  });
+  localStorage.setItem(MIGRATION_FLAG_KEY, "1");
+}
+
 /* ═══════════════════════════════════════════════════
    STATE
 ═══════════════════════════════════════════════════ */
 let currentVertical = "fo";
+let activeClientId = localStorage.getItem(ACTIVE_WORKSPACE_KEY) || ALL_CLIENTS_ID;
 
 function vDef() { return VERTICALS[currentVertical]; }
 function vKey() { return vDef().storageKey; }
 
+// loadIndex()/saveIndex() are what every existing call site already
+// uses — they're now workspace-aware instead of touching one shared
+// array. ALL_CLIENTS is a read-time UNION across every client's own
+// compartment, never a separate shared store of its own.
 function loadIndex() {
-  try { return JSON.parse(localStorage.getItem(vKey()) || "[]"); } catch(e) { return []; }
+  if (activeClientId === ALL_CLIENTS_ID) {
+    return getClientRegistry().flatMap(c => loadIndexForClient(currentVertical, c.id));
+  }
+  return loadIndexForClient(currentVertical, activeClientId);
 }
 function saveIndex(docs) {
-  try { localStorage.setItem(vKey(), JSON.stringify(docs)); } catch(e) {}
+  if (activeClientId === ALL_CLIENTS_ID) {
+    // No single shared store to write back to — re-split by each
+    // document's own client so isolation holds even on bulk edits
+    // made while viewing the rollup.
+    const byClient = {};
+    docs.forEach(d => {
+      const cid = ensureClientRegistered(d._ext && d._ext.client);
+      (byClient[cid] = byClient[cid] || []).push(d);
+    });
+    Object.entries(byClient).forEach(([cid, list]) => saveIndexForClient(currentVertical, cid, list));
+    return;
+  }
+  saveIndexForClient(currentVertical, activeClientId, docs);
 }
+
+/* ── Workspace selector UI ── */
+function refreshWorkspaceSelector() {
+  const sel = document.getElementById("workspace-select");
+  if (!sel) return;
+  const reg = getClientRegistry().slice().sort((a,b) => a.label.localeCompare(b.label));
+  sel.innerHTML = `<option value="${ALL_CLIENTS_ID}">⬡ All Clients (admin rollup)</option>` +
+    reg.map(c => `<option value="${c.id}">${escapeHtml(c.label)}</option>`).join("");
+  if (activeClientId !== ALL_CLIENTS_ID && !reg.find(c => c.id === activeClientId)) activeClientId = ALL_CLIENTS_ID;
+  sel.value = activeClientId;
+  updateWorkspaceStatus();
+}
+function updateWorkspaceStatus() {
+  const statusEl = document.getElementById("workspace-status");
+  if (!statusEl) return;
+  if (activeClientId === ALL_CLIENTS_ID) {
+    const reg = getClientRegistry();
+    const total = reg.reduce((sum,c) => sum + loadIndexForClient(currentVertical, c.id).length, 0);
+    statusEl.textContent = `${reg.length} client compartment(s) · ${total} record(s) total in ${vDef().label}`;
+  } else {
+    const n = loadIndexForClient(currentVertical, activeClientId).length;
+    statusEl.textContent = `${n} record(s) · isolated key: ${clientScopedKey(currentVertical, activeClientId)}`;
+  }
+  renderIsolationDetail();
+}
+function switchWorkspace(clientId) {
+  activeClientId = clientId;
+  try { localStorage.setItem(ACTIVE_WORKSPACE_KEY, clientId); } catch(e) {}
+  updateWorkspaceStatus();
+  runSearch();
+  refreshTotalCount();
+}
+function promptNewWorkspace() {
+  const label = prompt("New client workspace name:");
+  if (!label || !label.trim()) return;
+  const cid = ensureClientRegistered(label.trim());
+  refreshWorkspaceSelector();
+  const sel = document.getElementById("workspace-select");
+  if (sel) sel.value = cid;
+  switchWorkspace(cid);
+}
+function toggleIsolationDetail() {
+  const el = document.getElementById("isolation-detail");
+  if (!el) return;
+  const showing = el.style.display !== "none";
+  el.style.display = showing ? "none" : "block";
+  if (!showing) renderIsolationDetail();
+}
+function renderIsolationDetail() {
+  const el = document.getElementById("isolation-detail");
+  if (!el || el.style.display === "none") return;
+  const rows = getClientRegistry().map(c => {
+    const key = clientScopedKey(currentVertical, c.id);
+    const n = loadIndexForClient(currentVertical, c.id).length;
+    const active = c.id === activeClientId ? " &larr; active" : "";
+    return `<div>${escapeHtml(c.label)} &nbsp;&rarr;&nbsp; <span style="color:#1ee8b6;">${escapeHtml(key)}</span> &nbsp;(${n} record${n===1?"":"s"})${active}</div>`;
+  }).join("") || "<div>No client workspaces registered yet for this vertical.</div>";
+  el.innerHTML = `<div style="color:#1ee8b6;margin-bottom:.4rem;">Each row is a SEPARATE localStorage key — open devtools → Application → Local Storage to verify live.</div>${rows}`;
+}
+
+
 
 /* ═══════════════════════════════════════════════════
    VERTICAL SWITCHING
@@ -878,6 +1046,7 @@ function switchVertical(v) {
   rebuildNodeLinks();
   rebuildNodeFilter();
   refreshTotalCount();
+  updateWorkspaceStatus();
   runSearch();
 }
 
@@ -1098,8 +1267,13 @@ function removeDoc(id) {
 }
 
 function confirmClearAll() {
-  if (confirm(`Clear all indexed ${vDef().label} records? This cannot be undone.`)) {
-    saveIndex([]);
+  const scopeLabel = activeClientId === ALL_CLIENTS_ID ? "ALL clients" : getClientLabel(activeClientId);
+  if (confirm(`Clear all indexed ${vDef().label} records for ${scopeLabel}? This cannot be undone.`)) {
+    if (activeClientId === ALL_CLIENTS_ID) {
+      getClientRegistry().forEach(c => saveIndexForClient(currentVertical, c.id, []));
+    } else {
+      saveIndexForClient(currentVertical, activeClientId, []);
+    }
     runSearch();
     refreshTotalCount();
   }
@@ -1354,25 +1528,32 @@ function cleanRouting(doc, v) {
 }
 
 function seedDemoData() {
-  // Seed current vertical from DEMO_DOCS
+  // Seed current vertical from DEMO_DOCS — each sample lands in its OWN
+  // client compartment, not whatever workspace is currently being viewed.
   const now = Date.now();
   const forThisVertical = DEMO_DOCS.filter(d => d.verticals.includes(currentVertical));
-  const samples = forThisVertical.map((doc, i) => ({
-    id:            doc.id + '-' + now + '-' + i,
-    fileName:      doc.fileName,
-    documentType:  doc.documentType,
-    vendor:        doc.vendor,
-    invoiceNo:     doc.invoiceNo,
-    exclusionCode: doc.exclusionCode,
-    amount:        doc.amount,
-    sourceNode:    cleanRouting(doc, currentVertical).sourceNode,
-    routing:       cleanRouting(doc, currentVertical).routing,
-    timestamp:     now - i * 3600000,
-    _ext:          { ...(doc._ext || {}), tags: doc.tags || [] },
-    tags:          doc.tags || [],
-  }));
-  const merged = [...samples, ...loadIndex()].slice(0, 500);
-  saveIndex(merged);
+  forThisVertical.forEach((doc, i) => {
+    const sample = {
+      id:            doc.id + '-' + now + '-' + i,
+      fileName:      doc.fileName,
+      documentType:  doc.documentType,
+      vendor:        doc.vendor,
+      invoiceNo:     doc.invoiceNo,
+      exclusionCode: doc.exclusionCode,
+      amount:        doc.amount,
+      sourceNode:    cleanRouting(doc, currentVertical).sourceNode,
+      routing:       cleanRouting(doc, currentVertical).routing,
+      timestamp:     now - i * 3600000,
+      _ext:          { ...(doc._ext || {}), tags: doc.tags || [] },
+      tags:          doc.tags || [],
+    };
+    const cid = ensureClientRegistered(sample._ext.client);
+    const bucket = loadIndexForClient(currentVertical, cid);
+    bucket.unshift(sample);
+    if (bucket.length > 500) bucket.splice(500);
+    saveIndexForClient(currentVertical, cid, bucket);
+  });
+  refreshWorkspaceSelector();
   runSearch();
   refreshTotalCount();
 }
@@ -1382,7 +1563,8 @@ function seedAllVerticals() {
   DEMO_DOCS.forEach((doc, i) => {
     doc.verticals.forEach(v => {
       if (!VERTICALS[v]) return;
-      const existing = loadIndexFor(v);
+      const cid = ensureClientRegistered(doc._ext && doc._ext.client);
+      const existing = loadIndexForClient(v, cid);
       if (existing.some(d => d.id && d.id.startsWith(doc.id))) return; // skip dupes
       existing.unshift({
         id:            doc.id + '-' + now + '-' + i,
@@ -1399,9 +1581,10 @@ function seedAllVerticals() {
         tags:          doc.tags || [],
       });
       if (existing.length > 500) existing.splice(500);
-      saveIndexFor(v, existing);
+      saveIndexForClient(v, cid, existing);
     });
   });
+  refreshWorkspaceSelector();
   runSearch();
   refreshTotalCount();
   const btn = document.getElementById('seed-all-btn');
@@ -1414,31 +1597,18 @@ function seedAllVerticals() {
 document.getElementById("search-query").addEventListener("input", () => runSearch());
 
 window.addEventListener("storage", e => {
-  const keys = Object.values(VERTICALS).map(v => v.storageKey);
-  if (keys.includes(e.key)) { runSearch(); refreshTotalCount(); }
+  if (!e.key) return;
+  const isVerticalKey = Object.values(VERTICALS).some(v => e.key.startsWith(v.storageKey));
+  if (isVerticalKey || e.key === CLIENT_REGISTRY_KEY) { refreshWorkspaceSelector(); runSearch(); refreshTotalCount(); }
 });
 
 ["fo","ins","con","bpo","re","leg","hc"].forEach(v => {
   window.addEventListener("document_processed_" + v, e => {
+    // The doc is already persisted into its own client compartment by
+    // routeDocument() at write time — this just refreshes the view so
+    // we never re-insert it into whatever workspace happens to be active.
     if (!e.detail || v !== currentVertical) return;
-    const docs = loadIndex();
-    if (!docs.some(d => d.id === e.detail.id)) {
-      docs.unshift({
-        id:            e.detail.id || "DOC-" + Date.now(),
-        fileName:      e.detail.fileName     || "Unknown",
-        documentType:  e.detail.documentType || "DOCUMENT REPORT",
-        vendor:        e.detail.vendor       || "",
-        invoiceNo:     e.detail.invoiceNo    || "",
-        exclusionCode: e.detail.exclusionCode|| "",
-        amount:        e.detail.amount       || 0,
-        sourceNode:    e.detail.sourceNode   || "unknown",
-        routing:       e.detail.routing      || [],
-        timestamp:     e.detail.timestamp    || Date.now(),
-        _ext:          e.detail._ext        || {},
-      });
-      if (docs.length > 500) docs.splice(500);
-      saveIndex(docs);
-    }
+    refreshWorkspaceSelector();
     runSearch();
     refreshTotalCount();
   });
@@ -1453,12 +1623,207 @@ window.addEventListener("storage", e => {
 // worker set above
  
 const DOC_ROUTER_ENDPOINT = '/api/doc-router/classify';
- 
-function loadIndexFor(v) {
-  try { return JSON.parse(localStorage.getItem(VERTICALS[v].storageKey) || "[]"); } catch(e) { return []; }
+
+/* ── ZIP UPLOAD SECURITY ────────────────────────────────────────────────
+   Everything below runs entirely client-side in the browser. A zip is
+   never sent anywhere as-is — it is only ever opened, validated, and
+   the individual cleared files are handed to the SAME per-file
+   extract → classify → route pipeline used for normal drag-drop
+   uploads. Nothing here is executed, eval'd, or rendered as raw HTML. */
+const ZIP_SECURITY = {
+  maxArchiveBytes:            50  * 1024 * 1024,  // 50MB compressed archive
+  maxEntries:                 200,                // file-count ceiling per archive
+  maxPerFileUncompressedBytes: 25 * 1024 * 1024,  // 25MB per extracted file
+  maxTotalUncompressedBytes:  250 * 1024 * 1024,  // 250MB extracted, per archive
+  maxCompressionRatio:        100,                // zip-bomb guard (declared-size based)
+  allowedExt: ["pdf","txt","csv","png","jpg","jpeg","webp"]
+};
+
+function fmtBytes(n) {
+  if (n < 1024) return n + " B";
+  if (n < 1024*1024) return (n/1024).toFixed(1) + " KB";
+  return (n/1024/1024).toFixed(1) + " MB";
 }
-function saveIndexFor(v, docs) {
-  try { localStorage.setItem(VERTICALS[v].storageKey, JSON.stringify(docs)); } catch(e) {}
+
+// Rejects directory traversal / absolute / drive-letter / null-byte paths.
+// Only a flat basename within the archive is ever used downstream.
+function isSafeZipEntryPath(path) {
+  if (!path || path.includes("\0")) return false;
+  const norm = path.replace(/\\/g, "/");
+  if (norm.startsWith("/") || /^[a-zA-Z]:/.test(norm)) return false;
+  if (norm.split("/").includes("..")) return false;
+  return true;
+}
+
+let zsBatchSeq = 0;
+function zsNewBatch(archiveName, archiveBytes) {
+  const id = "zs-" + (++zsBatchSeq);
+  const panel = document.getElementById("zip-seclog");
+  panel.style.display = "block";
+  const card = document.createElement("div");
+  card.id = id;
+  card.style.cssText = "border:1px solid rgba(30,232,182,.25);border-radius:4px;padding:.7rem .9rem;margin-bottom:.6rem;background:#080c14;";
+  card.innerHTML = `
+    <div style="color:#1ee8b6;font-size:.55rem;letter-spacing:.08em;font-weight:700;margin-bottom:.4rem;">
+      🔒 ZIP SECURITY VALIDATION — ${escapeHtml(archiveName)} (${fmtBytes(archiveBytes)})
+    </div>
+    <div class="zs-rows" style="font-size:.5rem;line-height:1.7;color:#a0b8a0;"></div>
+    <div class="zs-summary" style="margin-top:.4rem;font-size:.5rem;color:#7a9a8a;"></div>
+  `;
+  panel.prepend(card);
+  return id;
+}
+function zsLog(batchId, ok, label) {
+  const rows = document.querySelector(`#${batchId} .zs-rows`);
+  if (!rows) return;
+  const row = document.createElement("div");
+  row.style.color = ok ? "#1ee8b6" : "#ef4444";
+  row.textContent = (ok ? "✓ " : "✗ ") + label;
+  rows.appendChild(row);
+}
+function zsSummary(batchId, html) {
+  const s = document.querySelector(`#${batchId} .zs-summary`);
+  if (s) s.innerHTML = html;
+}
+
+function loadJSZip() {
+  return new Promise((resolve, reject) => {
+    if (typeof JSZip !== "undefined") return resolve();
+    const s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+    s.integrity = "sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==";
+    s.crossOrigin = "anonymous";
+    s.referrerPolicy = "no-referrer";
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error("jszip_load_failed"));
+    document.head.appendChild(s);
+  });
+}
+
+async function handleZipFile(file) {
+  const batchId = zsNewBatch(file.name, file.size);
+
+  if (file.size > ZIP_SECURITY.maxArchiveBytes) {
+    zsLog(batchId, false, `Archive size ${fmtBytes(file.size)} exceeds ${fmtBytes(ZIP_SECURITY.maxArchiveBytes)} limit — rejected before opening`);
+    zsSummary(batchId, "⛔ Archive rejected. 0 files processed.");
+    return;
+  }
+  zsLog(batchId, true, `Archive size ${fmtBytes(file.size)} within ${fmtBytes(ZIP_SECURITY.maxArchiveBytes)} limit`);
+
+  try {
+    await loadJSZip();
+  } catch (e) {
+    zsLog(batchId, false, "Could not load zip library (integrity-checked CDN fetch failed) — archive not processed");
+    return;
+  }
+
+  let zip;
+  try {
+    const buf = await file.arrayBuffer();
+    zip = await JSZip.loadAsync(buf);
+  } catch (e) {
+    zsLog(batchId, false, "Archive could not be parsed — not a valid zip or corrupted");
+    zsSummary(batchId, "⛔ Archive rejected. 0 files processed.");
+    return;
+  }
+
+  const entries = Object.values(zip.files).filter(e => !e.dir);
+
+  if (entries.length > ZIP_SECURITY.maxEntries) {
+    zsLog(batchId, false, `${entries.length} files exceeds ${ZIP_SECURITY.maxEntries}-file limit — archive rejected entirely`);
+    zsSummary(batchId, "⛔ Archive rejected. 0 files processed.");
+    return;
+  }
+  zsLog(batchId, true, `File count ${entries.length}/${ZIP_SECURITY.maxEntries} within limit`);
+
+  let pathFails = 0, extFails = 0, ratioFails = 0, sizeFails = 0;
+  let declaredTotal = 0;
+  const cleared = [];
+
+  for (const entry of entries) {
+    const fullPath = entry.name;
+    if (!isSafeZipEntryPath(fullPath)) { pathFails++; continue; }
+
+    const leaf = fullPath.replace(/\\/g, "/").split("/").pop().replace(/[<>"']/g, "_");
+    const ext = (leaf.split(".").pop() || "").toLowerCase();
+    if (!ZIP_SECURITY.allowedExt.includes(ext)) { extFails++; continue; }
+
+    const meta = entry._data || {};
+    const declaredUncompressed = meta.uncompressedSize || 0;
+    const declaredCompressed   = meta.compressedSize || 1;
+    const ratio = declaredUncompressed / Math.max(declaredCompressed, 1);
+
+    if (declaredUncompressed > ZIP_SECURITY.maxPerFileUncompressedBytes) { sizeFails++; continue; }
+    if (ratio > ZIP_SECURITY.maxCompressionRatio) { ratioFails++; continue; }
+
+    declaredTotal += declaredUncompressed;
+    if (declaredTotal > ZIP_SECURITY.maxTotalUncompressedBytes) {
+      zsLog(batchId, false, `Total declared uncompressed size exceeded ${fmtBytes(ZIP_SECURITY.maxTotalUncompressedBytes)} — remaining files in archive skipped`);
+      break;
+    }
+    cleared.push({ entry, leaf });
+  }
+
+  zsLog(batchId, pathFails === 0, pathFails === 0
+    ? "Path traversal check passed — no unsafe entry paths"
+    : `Path traversal check blocked ${pathFails} unsafe entry path(s)`);
+  zsLog(batchId, extFails === 0, extFails === 0
+    ? "Extension allowlist check passed — no disallowed file types"
+    : `Extension allowlist blocked ${extFails} disallowed file(s)`);
+  zsLog(batchId, ratioFails === 0, ratioFails === 0
+    ? `Compression-ratio (zip-bomb) check passed — max allowed ${ZIP_SECURITY.maxCompressionRatio}x`
+    : `Compression-ratio check blocked ${ratioFails} suspicious entr${ratioFails===1?"y":"ies"}`);
+  zsLog(batchId, sizeFails === 0, sizeFails === 0
+    ? `Per-file size check passed — max ${fmtBytes(ZIP_SECURITY.maxPerFileUncompressedBytes)}`
+    : `Per-file size check blocked ${sizeFails} oversized file(s)`);
+
+  let extractedTotal = 0, verifyFails = 0;
+  let processed = 0;
+  for (const { entry, leaf } of cleared) {
+    let blob;
+    try {
+      blob = await entry.async("blob");
+    } catch (e) { continue; }
+
+    // Defense in depth: re-check the ACTUAL decompressed size against the
+    // running budget — never trust the zip header alone.
+    extractedTotal += blob.size;
+    if (blob.size > ZIP_SECURITY.maxPerFileUncompressedBytes || extractedTotal > ZIP_SECURITY.maxTotalUncompressedBytes) {
+      verifyFails++;
+      continue;
+    }
+
+    const f = new File([blob], leaf, { type: blob.type || "application/octet-stream" });
+    processFile(f);
+    processed++;
+  }
+
+  zsLog(batchId, true, "All extraction performed client-side in this browser tab — no file content left the browser before classification");
+  zsLog(batchId, verifyFails === 0, verifyFails === 0
+    ? "Post-decompression size verification passed for all cleared files"
+    : `Post-decompression verification rejected ${verifyFails} file(s) whose real size exceeded declared size`);
+
+  zsSummary(batchId, `${processed} file(s) cleared and sent to classification &middot; ${pathFails + extFails + ratioFails + sizeFails + verifyFails} blocked by security checks`);
+}
+
+ 
+function loadIndexFor(v, clientId) {
+  const cid = clientId || activeClientId;
+  if (cid === ALL_CLIENTS_ID) return getClientRegistry().flatMap(c => loadIndexForClient(v, c.id));
+  return loadIndexForClient(v, cid);
+}
+function saveIndexFor(v, docs, clientId) {
+  const cid = clientId || activeClientId;
+  if (cid === ALL_CLIENTS_ID) {
+    const byClient = {};
+    docs.forEach(d => {
+      const dc = ensureClientRegistered(d._ext && d._ext.client);
+      (byClient[dc] = byClient[dc] || []).push(d);
+    });
+    Object.entries(byClient).forEach(([dc, list]) => saveIndexForClient(v, dc, list));
+    return;
+  }
+  saveIndexForClient(v, cid, docs);
 }
  
 function fileToBase64(file) {
@@ -1533,7 +1898,8 @@ async function classifyExtraction(fileName, extraction) {
 function routeDocument(fileName, classification) {
   const verticals = classification.verticals || [];
   const routedTo  = [];
- 
+  const docClientId = ensureClientRegistered(classification.client);
+
   verticals.forEach((v, idx) => {
     if (!VERTICALS[v]) return;
     const r = (classification.routing && classification.routing[v]) || {};
@@ -1560,27 +1926,39 @@ function routeDocument(fileName, classification) {
       }
     };
  
-    const docs = loadIndexFor(v);
+    // Always write into the document's OWN client compartment — never
+    // whatever workspace the operator currently has open. A zip with
+    // five different clients' files in it still lands each file in its
+    // own isolated bucket, on write, not just on display.
+    const docs = loadIndexForClient(v, docClientId);
     docs.unshift(doc);
     if (docs.length > 500) docs.splice(500);
-    saveIndexFor(v, docs);
+    saveIndexForClient(v, docClientId, docs);
  
     // Auto-load into war room — same relay mechanism as redispatch()
     try { localStorage.setItem("tsm_bridge_mesh_relay_" + v, JSON.stringify({ ts: Date.now(), payload: doc })); } catch(e) {}
     window.dispatchEvent(new CustomEvent("document_processed_" + v, { detail: doc }));
  
-    routedTo.push({ vertical: v, label: VERTICALS[v].label, color: VERTICALS[v].color });
+    routedTo.push({ vertical: v, label: VERTICALS[v].label, color: VERTICALS[v].color, clientId: docClientId });
   });
  
+  refreshWorkspaceSelector();
   return routedTo;
 }
  
+function escapeHtml(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
 function uqAdd(file) {
   const id = "uq-" + Date.now() + "-" + Math.random().toString(36).slice(2,7);
   const el = document.createElement("div");
   el.className = "uq-item";
   el.id = id;
-  el.innerHTML = `<span class="uq-name" title="${file.name}">${file.name}</span><span class="uq-status"><span class="uq-spinner"></span> Extracting...</span>`;
+  const safeName = escapeHtml(file.name);
+  el.innerHTML = `<span class="uq-name" title="${safeName}">${safeName}</span><span class="uq-status"><span class="uq-spinner"></span> Extracting...</span>`;
   document.getElementById("upload-queue").prepend(el);
   return id;
 }
@@ -1612,7 +1990,7 @@ async function processFile(file) {
     ).join("");
 
     // Find the doc just saved to get its id
-    const savedDoc = loadIndexFor(routed[0]?.vertical)?.find(d => d.fileName === (classification.fileName || file.name));
+    const savedDoc = routed[0] ? loadIndexForClient(routed[0].vertical, routed[0].clientId)?.find(d => d.fileName === (classification.fileName || file.name)) : null;
 
     const warRoomBtns = routed.map(r => {
       const roomKey = r.vertical + '-war-room';
@@ -1636,7 +2014,13 @@ return `<span class="uq-badge" onclick="launchWarRoomDirect('${roomKey}','${enco
 }
  
 function handleFiles(fileList) {
-  Array.from(fileList).forEach(processFile);
+  Array.from(fileList).forEach(file => {
+    const isZip = file.name.toLowerCase().endsWith(".zip") ||
+                  file.type === "application/zip" ||
+                  file.type === "application/x-zip-compressed";
+    if (isZip) handleZipFile(file);
+    else processFile(file);
+  });
 }
  
 const dropZone  = document.getElementById("upload-zone");
@@ -1662,11 +2046,14 @@ const HC_TYPE_NODE = {
   'GRANT':'grants','FILING':'legal','CONTRACT':'legal','ESCALATION':'billing',
 };
 function openHcNodeWithDoc(docId) {
-  // find doc in single-vertical and dual-vertical pools
+  // find doc across every vertical's per-client compartments
   let doc = null;
   for (const v of Object.keys(VERTICALS)) {
-    const list = (() => { try { return JSON.parse(localStorage.getItem(VERTICALS[v].storageKey)||'[]'); } catch(e){return[];} })();
-    doc = list.find(d => d.id === docId);
+    for (const c of getClientRegistry()) {
+      const list = loadIndexForClient(v, c.id);
+      doc = list.find(d => d.id === docId);
+      if (doc) break;
+    }
     if (doc) break;
   }
   if (!doc) doc = (typeof DEMO_DOCS !== 'undefined' ? DEMO_DOCS : []).find(d => d.id === docId);
@@ -1773,363 +2160,6 @@ window.openHcNodeWithDoc = openHcNodeWithDoc;
   </div>
 </div>
 
-<script>
-// ── HC DENIAL APP ROUTING ────────────────────────────────────
-const HC_APP_ROUTES = {
-  'CO-50': { app:'HC Insurance Node', url:'/html/healthcare/hc-nodes.html', reason:'Medical necessity denial requires insurance review' },
-  'CO-4':  { app:'HC Insurance Node', url:'/html/healthcare/hc-nodes.html', reason:'Medical necessity appeal' },
-  'CO-16': { app:'HC Billing Command', url:'/html/healthcare/hc-billing.html', reason:'Claim lacks info — billing correction needed' },
-  'CO-97': { app:'HC Billing Command', url:'/html/healthcare/hc-billing.html', reason:'Claim bundling/unbundling issue' },
-  'CO-22': { app:'HC Insurance Node', url:'/html/healthcare/hc-nodes.html', reason:'COB dispute — coordination of benefits review' },
-  'PR-96': { app:'HC Financial Node', url:'/html/healthcare/hc-financial.html', reason:'Patient liability — financial review needed' },
-};
- 
-function hcResolveApp(docText) {
-  const t = (docText||'').toLowerCase();
-  const codeMatch = (docText||'').match(/\b(CO-\d+|PR-\d+|OA-\d+|PI-\d+)\b/i);
-  if (codeMatch) {
-    const route = HC_APP_ROUTES[codeMatch[1].toUpperCase()];
-    if (route) return route;
-  }
-  if (/prior auth|authorization/.test(t)) return { app:'HC Insurance Node', url:'/html/healthcare/hc-nodes.html', reason:'Prior auth issue requires insurance review' };
-  if (/hipaa|compliance|audit/.test(t)) return { app:'HC Compliance Node', url:'/html/healthcare/hc-anomaly-advisor.html', reason:'Compliance flag detected' };
-  if (/vendor|clearinghouse/.test(t)) return { app:'HC Vendor Node', url:'/html/healthcare/hc-vendors.html', reason:'Vendor/clearinghouse issue' };
-  if (/ar aging|dso|collection|write.?off/.test(t)) return { app:'HC Financial Node', url:'/html/healthcare/hc-financial.html', reason:'Financial exposure requires review' };
-  return { app:'HC Denial War Room', url:'/html/healthcare/hc-denial-war-room.html', reason:'General RCM denial — re-run with full context' };
-}
- 
-async function hcGenerateMissionSteps(anomalyText, docText) {
-  const route = hcResolveApp(docText);
-  const HC_APPS = [
-    'HC Billing Command | /html/healthcare/hc-billing.html',
-    'HC Insurance Node | /html/healthcare/hc-nodes.html',
-    'HC Financial Node | /html/healthcare/hc-financial.html',
-    'HC Compliance Node | /html/healthcare/hc-anomaly-advisor.html',
-    'HC Vendor Node | /html/healthcare/hc-vendors.html',
-    'HC Strategist | /html/healthcare/hc-strategist.html',
-  ].join('\n');
- 
-  const sys = `You are TSM Neural Core. Generate a step-by-step RCM remediation mission for a healthcare denial anomaly. Respond ONLY with valid JSON. No markdown, no explanation.`;
-  const msg = `Anomaly detected:\n"${anomalyText.slice(0,600)}"\n\nDocument context:\n${(docText||'').slice(0,400)}\n\nAvailable apps:\n${HC_APPS}\n\nGenerate 4-6 steps. Return ONLY:\n{"missionTitle":"...","summary":"...","steps":[{"id":"step-1","title":"...","appName":"...","appUrl":"...","objective":"...","instructions":"...","expectedOutput":"...","completionCriteria":"..."}]}`;
- 
-  try {
-    const res = await fetch('/api/hc/query', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ system: sys, message: msg })
-    });
-    const data = await res.json();
-    const raw = (data.response||data.content||'').replace(/```json|```/g,'').trim();
-    const parsed = JSON.parse(raw);
-    return { missionId:'HC-'+Date.now(), ...parsed, steps:(parsed.steps||[]).map((s,i)=>({...s,status:i===0?'active':'pending'})) };
-  } catch(e) {
-    return {
-      missionId:'HC-'+Date.now(), missionTitle:'HC Denial Remediation',
-      summary:'Resolve the flagged healthcare denial using the recommended workflow.',
-      steps:[
-        { id:'step-1', title:route.app, appName:route.app, appUrl:route.url, objective:route.reason,
-          instructions:`Open ${route.app}. Load the denial document and review the flagged anomaly. Run the relevant engine or workflow for this denial type.`,
-          expectedOutput:'Denial root cause confirmed and appeal path identified', completionCriteria:'Root cause documented', status:'active' },
-        { id:'step-2', title:'HC Strategist Review', appName:'HC Strategist', appUrl:'/html/healthcare/hc-strategist.html',
-          objective:'Synthesize findings into appeal strategy',
-          instructions:'Open HC Strategist. Review the engine output from the previous step. Run the strategist chain to generate a complete appeal package with documentation checklist.',
-          expectedOutput:'Appeal strategy and documentation checklist', completionCriteria:'Appeal package ready for submission', status:'pending' }
-      ]
-    };
-  }
-}
- 
-function renderHCMissionGuide(mission, container) {
-  function completeStep(stepId) {
-    const idx = mission.steps.findIndex(s=>s.id===stepId);
-    if (idx<0) return;
-    mission.steps[idx].status='complete';
-    if (idx+1<mission.steps.length) mission.steps[idx+1].status='active';
-    renderGuide();
-    if (mission.steps.every(s=>s.status==='complete')) {
-      setTimeout(()=>{
-        const done=document.createElement('div');
-        done.style.cssText='margin-top:10px;padding:10px;background:rgba(30,232,182,.08);border:1px solid rgba(30,232,182,.3);color:#1ee8b6;font-size:9px;letter-spacing:1px;text-align:center;';
-        done.textContent='⬡ MISSION COMPLETE — ALL STEPS RESOLVED';
-        container.appendChild(done);
-      },300);
-    }
-  }
-  window._hcMissionComplete = completeStep;
- 
-  function renderGuide() {
-    const step = mission.steps.find(s=>s.status==='active');
-    const done = mission.steps.filter(s=>s.status==='complete').length;
-    const pct = Math.round((done/mission.steps.length)*100);
-    container.innerHTML = `
-      <div style="border-top:1px solid #1ee8b620;margin-top:10px;padding-top:10px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <span style="color:#1ee8b6;font-size:9px;letter-spacing:1px;font-weight:700;">⚡ REMEDIATION MISSION</span>
-          <span style="color:#1ee8b650;font-size:9px;">${done}/${mission.steps.length} · ${pct}%</span>
-        </div>
-        <div style="height:2px;background:#1ee8b615;margin-bottom:10px;"><div style="height:100%;width:${pct}%;background:#1ee8b6;transition:width .3s;"></div></div>
-        <div style="font-size:10px;color:#7a9a8a;margin-bottom:10px;line-height:1.5;">${mission.summary||''}</div>
-        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">
-          ${mission.steps.map((s,i)=>`<span style="font-size:8px;padding:2px 7px;border-radius:2px;background:${s.status==='complete'?'rgba(30,232,182,.15)':s.status==='active'?'rgba(30,232,182,.08)':'rgba(255,255,255,.03)'};border:1px solid ${s.status==='complete'?'rgba(30,232,182,.3)':s.status==='active'?'rgba(30,232,182,.2)':'rgba(255,255,255,.06)'};color:${s.status==='complete'?'#1ee8b6':s.status==='active'?'#c0e8d0':'#556655'};">${s.status==='complete'?'✓ ':s.status==='active'?'▶ ':`${i+1}. `}${s.appName}</span>`).join('')}
-        </div>
-        ${step ? `
-        <div style="background:#0d1a0d;border:1px solid #1ee8b620;border-radius:4px;padding:10px;margin-bottom:8px;">
-          <div style="font-size:8px;color:#1ee8b660;letter-spacing:1px;margin-bottom:4px;">STEP ${mission.steps.indexOf(step)+1} OF ${mission.steps.length}</div>
-          <div style="font-size:11px;color:#e0f0e0;font-weight:700;margin-bottom:8px;">${step.title}</div>
-          <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(30,232,182,.05);border:1px solid rgba(30,232,182,.12);border-radius:3px;padding:7px 10px;margin-bottom:8px;">
-            <div><div style="font-size:8px;color:#1ee8b660;margin-bottom:2px;">APP</div><div style="font-size:10px;color:#1ee8b6;font-weight:700;">${step.appName}</div><div style="font-size:8px;color:#446644;">${step.appUrl}</div></div>
-            <a href="${step.appUrl}" target="_blank" style="background:#1ee8b6;color:#000;font-size:9px;font-weight:700;padding:6px 10px;text-decoration:none;letter-spacing:1px;border-radius:3px;white-space:nowrap;">OPEN ↗</a>
-          </div>
-          <div style="font-size:9px;color:#7a9a8a;margin-bottom:6px;line-height:1.6;"><span style="color:#1ee8b660;font-size:8px;display:block;margin-bottom:2px;">OBJECTIVE</span>${step.objective}</div>
-          <div style="background:#0a0f0a;border:1px solid rgba(255,255,255,.06);border-radius:3px;padding:8px;margin-bottom:8px;font-size:9px;color:#7a9a8a;line-height:1.7;white-space:pre-wrap;"><span style="color:#1ee8b660;font-size:8px;display:block;margin-bottom:3px;">ACTIONS</span>${step.instructions}</div>
-          <div style="border-left:2px solid rgba(30,232,182,.3);padding:5px 8px;margin-bottom:8px;font-size:9px;color:#7a9a8a;"><span style="color:#1ee8b660;font-size:8px;display:block;margin-bottom:2px;">EXPECTED OUTPUT</span>${step.expectedOutput}</div>
-          <button onclick="window._hcMissionComplete('${step.id}')" style="width:100%;background:rgba(30,232,182,.1);border:1px solid rgba(30,232,182,.25);color:#1ee8b6;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1px;padding:9px;cursor:pointer;text-transform:uppercase;" onmouseover="this.style.background='rgba(30,232,182,.2)'" onmouseout="this.style.background='rgba(30,232,182,.1)'">✓ COMPLETE STEP ${mission.steps.indexOf(step)+1}</button>
-        </div>` : ''}
-      </div>`;
-  }
-  renderGuide();
-}
- 
-function showAnomalyAdvisorPanel(outputs, docText) {
-  const existing = document.getElementById('anomaly-slide-panel');
-  if (existing) existing.remove();
- 
-  const panel = document.createElement('div');
-  panel.id = 'anomaly-slide-panel';
-  panel.style.cssText = `
-    position:fixed; bottom:0; right:0; width:420px; max-height:75vh;
-    background:#0a0f0a; border-top:2px solid #1ee8b6; border-left:2px solid #1ee8b6;
-    z-index:300; display:flex; flex-direction:column;
-    transform:translateY(100%); transition:transform 0.4s cubic-bezier(0.16,1,0.3,1);
-    font-family:'JetBrains Mono',monospace;
-  `;
- 
-  panel.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #1ee8b633;background:#0d1a0d;">
-      <span style="color:#1ee8b6;font-size:11px;font-weight:700;letter-spacing:2px;">⬡ ANOMALY ADVISOR — FIELD DEFECT SCAN</span>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <button onclick="window.open('hc-anomaly-advisor.html','_blank')" style="background:#1ee8b620;border:1px solid #1ee8b6;color:#1ee8b6;font-size:9px;padding:3px 8px;cursor:pointer;font-family:inherit;letter-spacing:1px;">FULL REPORT ↗</button>
-        <button onclick="document.getElementById('anomaly-slide-panel').remove()" style="background:transparent;border:none;color:#666;font-size:16px;cursor:pointer;line-height:1;padding:0 2px;">✕</button>
-      </div>
-    </div>
-    <div id="anomaly-panel-body" style="flex:1;overflow-y:auto;padding:12px 14px;font-size:11px;line-height:1.8;color:#a0b8a0;">
-      <div id="anomaly-scan-msg" style="color:#1ee8b6;font-size:10px;letter-spacing:1px;">⬡ SCANNING ENGINE OUTPUTS FOR FIELD-LEVEL DEFECTS...</div>
-    </div>
-    <div id="hc-mission-container" style="padding:0 14px;"></div>
-    <div id="hc-mission-btn-wrap" style="display:none;padding:0 14px 14px;">
-      <button id="hc-build-mission-btn" onclick="hcLaunchMission()" style="width:100%;background:rgba(30,232,182,.1);border:1px solid rgba(30,232,182,.35);color:#1ee8b6;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1px;padding:10px;cursor:pointer;text-transform:uppercase;">⚡ BUILD REMEDIATION MISSION</button>
-    </div>
-  `;
- 
-  document.body.appendChild(panel);
-  requestAnimationFrame(() => { panel.style.transform = 'translateY(0)'; });
- 
-  const body = document.getElementById('anomaly-panel-body');
-  const context = `ENGINE 1 (DOCUMENT INTEL):\n${(outputs[0]||'').slice(0,400)}\n\nENGINE 2 (ROOT CAUSE):\n${(outputs[1]||'').slice(0,400)}\n\nENGINE 3 (FINANCIAL):\n${(outputs[2]||'').slice(0,300)}\n\nENGINE 4 (RECOVERY):\n${(outputs[3]||'').slice(0,300)}\n\nDOC SAMPLE:\n${(docText||'').slice(0,500)}`;
-  const sys = `You are TSM Anomaly Advisor, a field-level defect detection engine for healthcare RCM documents. Analyze the engine outputs and identify specific actionable document defects. Output ONLY a numbered list. Each item must follow this exact format:
-⚠ [FIELD NAME] — what is wrong — exact fix instruction (which tab, which field, what to enter or change).
-Maximum 8 items. No preamble. No headers. No summary. Start immediately with item 1.`;
- 
-  let anomalyFullText = '';
-  let firstChunk = true;
-  groqStreamModel(
-    'llama-3.3-70b-versatile', sys, context,
-    (chunk) => {
-      if (firstChunk) { firstChunk = false; const s=document.getElementById('anomaly-scan-msg'); if(s) s.remove(); }
-      anomalyFullText += chunk;
-      const span = document.createElement('span');
-      span.innerHTML = chunk.replace(/⚠/g,'<span style="color:#f59e0b">⚠</span>').replace(/—/g,'<span style="color:#1ee8b660"> — </span>');
-      body.appendChild(span);
-      body.scrollTop = body.scrollHeight;
-    },
-    () => {
-      const footer = document.createElement('div');
-      footer.style.cssText = 'margin-top:14px;padding-top:10px;border-top:1px solid #1ee8b620;color:#1ee8b650;font-size:9px;letter-spacing:1px;';
-      footer.textContent = '⬡ SCAN COMPLETE — ANOMALY REPORT PACKAGED FOR STRATEGIST RELAY';
-      body.appendChild(footer);
-      document.getElementById('hc-mission-btn-wrap').style.display = 'block';
-      document.getElementById('hc-build-mission-btn').dataset.anomaly = anomalyFullText;
-      document.getElementById('hc-build-mission-btn').dataset.doc = (docText||'').slice(0,600);
-    },
-    (err) => { const e=document.createElement('div'); e.style.color='#ef4444'; e.textContent='[Advisor error: '+err+']'; body.appendChild(e); },
-    600
-  );
-}
- 
-async function hcLaunchMission() {
-  const btn = document.getElementById('hc-build-mission-btn');
-  const container = document.getElementById('hc-mission-container');
-  if (!btn || !container) return;
-  document.getElementById('hc-mission-btn-wrap').style.display = 'none';
-  container.innerHTML = '<div style="padding:10px 0;color:#1ee8b660;font-size:9px;letter-spacing:1px;text-align:center;">⬡ BUILDING REMEDIATION MISSION...</div>';
-  const anomalyText = btn.dataset.anomaly || '';
-  const docCtx = btn.dataset.doc || '';
-  const mission = await hcGenerateMissionSteps(anomalyText, docCtx);
-  renderHCMissionGuide(mission, container);
-  hcWriteAnomalyRelay(anomalyText, docCtx, mission);
-}
-
-function hcWriteAnomalyRelay(anomalyText, docCtx, mission) {
-  try {
-    const route = hcResolveApp(docCtx || anomalyText);
-    const nodeMatch = (route.url || '').match(/hc-([^\.]+)\.html/);
-    const nodeId = nodeMatch ? nodeMatch[1] : 'billing';
-    const codeMatch = (docCtx || anomalyText || '').match(/\b(CO-\d+|PR-\d+|OA-\d+|PI-\d+)\b/i);
-    const excCode = codeMatch ? codeMatch[1].toUpperCase() : '';
-    const amountMatch = (docCtx || anomalyText || '').match(/\$[\d,]+(\.\d{2})?/);
-    const amount = amountMatch ? Number(amountMatch[0].replace(/[$,]/g, '')) : undefined;
-    const steps = (mission.steps || []).map(s => `${s.title}${s.instructions ? ' — ' + s.instructions : ''}`);
-    const findings = [
-      excCode ? '❌ ' + excCode + ' — denial code detected on this record' : '⚠️ Denial anomaly flagged by War Room',
-      '❌ Routed from HC Denial War Room · Recommended: ' + route.app,
-    ];
-    const payload = {
-      checkStatus: 'DENIAL_RISK',
-      narrative: mission.summary || (anomalyText.slice(0, 300) || 'Denial anomaly detected — review required.'),
-      findings, steps,
-      financialImpact: amount, risk: amount > 50000 ? 82 : amount > 10000 ? 68 : 55,
-      fileName: '', documentType: excCode || 'DENIAL',
-      docType: excCode || 'DENIAL', ref: '', client: '', exclusionCode: excCode,
-      nodeId, targetNodeIds: [nodeId],
-      source: 'war-room', warRoomUrl: '/html/healthcare/hc-denial-war-room.html',
-      ts: Date.now(), timestamp: new Date().toISOString(),
-    };
-    localStorage.setItem('tsm-doc-anomaly', JSON.stringify(payload));
-
-    // ── Write mission steps to tsm_active_mission for node pickup ──
-    if (typeof TSMMission !== 'undefined' && mission && mission.steps && mission.steps.length) {
-      const missionSteps = mission.steps.map(s =>
-        s.title + (s.instructions ? ' — ' + s.instructions : '')
-      );
-      TSMMission.setActiveMission('hc', mission.missionTitle || 'HC Remediation Mission', missionSteps);
-    }
-  } catch (e) { console.warn('War room anomaly relay write failed:', e); }
-}
-</script>
-
-<div class="tour-overlay" id="tourOverlay">
-  <div class="tour-card">
-    <button class="tour-close" onclick="tourClose()">✕</button>
-    <div class="tour-pip-row" id="tourPips"></div>
-    <div class="tour-step-label" id="tourStepLabel"></div>
-    <div class="tour-title" id="tourTitle"></div>
-    <div class="tour-body" id="tourBody"></div>
-    <div class="tour-actions">
-      <button class="tour-btn" id="tourBack" onclick="tourNav(-1)">← BACK</button>
-      <button class="tour-btn primary" id="tourNext" onclick="tourNav(1)">NEXT →</button>
-    </div>
-  </div>
-</div>
-
-<div class="howto-overlay" id="howtoOverlay">
-  <div class="howto-card">
-    <h2>⚡ HOW TO USE — HC DENIAL WAR ROOM</h2>
-    <div class="howto-section">
-      <h3>STEP 1 — LOAD YOUR DOCUMENT</h3>
-      <ul>
-        <li>Drop a PDF, DOCX, or image into the intake zone — or paste raw text into the text area.</li>
-        <li>Use a sample (Denial / Prior Auth / Compliance) to demo the system instantly.</li>
-      </ul>
-    </div>
-    <div class="howto-section">
-      <h3>STEP 2 — CONFIGURE API KEY</h3>
-      <ul>
-        <li>Enter your Groq API key in the key field and hit Test. A green dot = connected.</li>
-        <li>Key is saved to localStorage — you only need to do this once per browser.</li>
-      </ul>
-    </div>
-    <div class="howto-section">
-      <h3>STEP 3 — FIRE ALL 5 ENGINES</h3>
-      <ul>
-        <li><strong style="color:var(--cyan)">E1 · DOCUMENT INTEL</strong> — Extracts claim ID, CPT, denial codes, payer, amounts.</li>
-        <li><strong style="color:var(--cyan)">E2 · ROOT CAUSE</strong> — Identifies denial reason, policy violation, coding error.</li>
-        <li><strong style="color:var(--cyan)">E3 · FINANCIAL IMPACT</strong> — Calculates revenue at risk, timely filing exposure.</li>
-        <li><strong style="color:var(--cyan)">E4 · RECOVERY PLAN</strong> — Builds step-by-step appeal plan with deadlines.</li>
-        <li><strong style="color:var(--cyan)">E5 · RECOVERY NAVIGATOR</strong> — Routes next steps to the right staff roles.</li>
-      </ul>
-    </div>
-    <div class="howto-section">
-      <h3>STEP 4 — DOWNSTREAM WORKFLOW</h3>
-      <ul>
-        <li>Engine output feeds into the <strong style="color:var(--amber)">HC Strategist</strong> and <strong style="color:var(--amber)">Executive Portal</strong> via sessionStorage relay.</li>
-        <li>Navigate using the Ecosystem panel to route to other TSM suites.</li>
-      </ul>
-    </div>
-    <button class="howto-close-btn" onclick="document.getElementById('howtoOverlay').classList.remove('active')">CLOSE</button>
-  </div>
-</div>
-
-<button class="manifest-btn" onclick="document.getElementById('manifestOverlay').classList.add('active')">⚠ DEFECT MANIFEST</button>
-<div class="manifest-overlay" id="manifestOverlay">
-  <div class="manifest-card">
-    <h2>⚠ HC DENIAL WAR ROOM — DEFECT MANIFEST</h2>
-    <table class="manifest-table">
-      <thead><tr><th>#</th><th>COMPONENT</th><th>DEFECT</th><th>SEV</th><th>STATUS</th></tr></thead>
-      <tbody>
-        <tr><td>D-01</td><td>Engine E3</td><td>Financial calc uses LARGE model — may time out on slow Groq keys; no retry logic</td><td class="sev-crit">CRIT</td><td>OPEN</td></tr>
-        <tr><td>D-02</td><td>File Drop Zone</td><td>PDF/DOCX extraction dependent on browser FileReader; binary formats may silently fail</td><td class="sev-crit">CRIT</td><td>OPEN</td></tr>
-        <tr><td>D-03</td><td>Engine E5</td><td>Nav container used as outId — clear() wipes nav HTML on re-run</td><td class="sev-med">MED</td><td>OPEN</td></tr>
-        <tr><td>D-04</td><td>API Key</td><td>Key stored in localStorage plaintext; no expiry or rotation mechanism</td><td class="sev-med">MED</td><td>ACCEPTED</td></tr>
-        <tr><td>D-05</td><td>Timely Filing</td><td>Deadline calculation is narrative only — no date math against actual service date</td><td class="sev-med">MED</td><td>OPEN</td></tr>
-        <tr><td>D-06</td><td>clearAll()</td><td>Does not reset E5 nav-container output — stale nav persists on re-run</td><td class="sev-med">MED</td><td>OPEN</td></tr>
-        <tr><td>D-07</td><td>Mobile Layout</td><td>Engine output panels overflow viewport on screens &lt;768px</td><td class="sev-low">LOW</td><td>OPEN</td></tr>
-        <tr><td>D-08</td><td>Sample Data</td><td>BCBS AZ sample uses future date (Apr 2026) — may confuse timely filing engine</td><td class="sev-low">LOW</td><td>OPEN</td></tr>
-      </tbody>
-    </table>
-    <button class="manifest-close-btn" onclick="document.getElementById('manifestOverlay').classList.remove('active')">CLOSE</button>
-  </div>
-</div>
-
-<script>
-// ── GUIDED TOUR ENGINE ────────────────────────────────────────────
-const HC_TOUR_STEPS = [
-  { title: 'HC DENIAL WAR ROOM', body: 'This is the Healthcare Revenue Cycle command center. 5 AI engines process your denial documents in sequence — from raw extraction to a full recovery plan. This tour takes 60 seconds.' },
-  { title: 'E1 · DOCUMENT INTEL', body: 'The first engine ingests your claim document and extracts structured data: Claim ID, CPT codes, denial codes (CO-50, CO-4, PR-96), payer, billed amount, and denial reason — in under 10 seconds.' },
-  { title: 'E2 · ROOT CAUSE ANALYST', body: 'Feeds off E1 output. Identifies the exact denial root cause: payer policy violated, documentation gap, or coding error. This is what you\'d normally spend 2 hours researching manually.' },
-  { title: 'E3 · FINANCIAL IMPACT', body: 'Calculates total revenue at risk, timely filing deadline exposure, and dollar amounts per denial. Uses the LARGE model (llama-3.3-70b) for accuracy. Output feeds the HC Strategist.' },
-  { title: 'E4 · RECOVERY PLAN', body: 'Builds a step-by-step appeal plan: documents required, appeal letter talking points, payer portal instructions, and submission deadline. Ready to hand off to your billing team.' },
-  { title: 'E5 · RECOVERY NAVIGATOR', body: 'Final engine. Routes next actions to the correct staff roles — Billing Coordinator, Office Manager, or Appeals Specialist — with escalation path and priority order.' },
-  { title: 'DOWNSTREAM WORKFLOW', body: 'Engine output is relayed via sessionStorage to the HC Strategist and Executive Portal. Use the Ecosystem nav at the bottom of the page to route to other TSM suites or escalate to leadership.' },
-  { title: 'YOU\'RE READY', body: 'Load a denial document (or hit a sample), enter your Groq key, and fire all 5 engines. For a full walkthrough of controls, hit the HOW TO button in the toolbar.' },
-];
-
-let tourIdx = 0;
-function tourOpen() { tourIdx = 0; tourRender(); document.getElementById('tourOverlay').classList.add('active'); }
-function tourClose() { document.getElementById('tourOverlay').classList.remove('active'); }
-function tourNav(dir) {
-  const total = HC_TOUR_STEPS.length;
-  if (dir === 1 && tourIdx === total - 1) { tourClose(); return; }
-  tourIdx = Math.max(0, Math.min(total - 1, tourIdx + dir));
-  tourRender();
-}
-function tourRender() {
-  const s = HC_TOUR_STEPS[tourIdx];
-  const total = HC_TOUR_STEPS.length;
-  document.getElementById('tourStepLabel').textContent = 'STEP ' + (tourIdx + 1) + ' OF ' + total;
-  document.getElementById('tourTitle').textContent = s.title;
-  document.getElementById('tourBody').textContent = s.body;
-  document.getElementById('tourBack').style.display = tourIdx === 0 ? 'none' : '';
-  document.getElementById('tourNext').textContent = tourIdx === total - 1 ? 'FINISH' : 'NEXT →';
-  const pips = document.getElementById('tourPips');
-  pips.innerHTML = '';
-  for (let i = 0; i < total; i++) {
-    const d = document.createElement('div');
-    d.className = 'tour-pip' + (i < tourIdx ? ' done' : i === tourIdx ? ' active' : '');
-    pips.appendChild(d);
-  }
-}
-window.addEventListener('DOMContentLoaded', () => {
-  const tb = document.getElementById('tour-btn') || document.getElementById('tourBtn');
-  if (tb) tb.addEventListener('click', tourOpen);
-  const hb = document.getElementById('howto-btn') || document.getElementById('howtoBtn');
-  if (hb) hb.addEventListener('click', () => document.getElementById('howtoOverlay').classList.add('active'));
-  if (!localStorage.getItem('hc_denial_tour_done')) {
-    setTimeout(tourOpen, 800);
-    localStorage.setItem('hc_denial_tour_done', '1');
-  }
-});
-window.tourOpen = tourOpen;
-window.howtoOpen = () => document.getElementById('howtoOverlay').classList.add('active');
-</script>
 <script src="/html/tsm-mission-orchestrator.js"></script>
 <script src="/shared/tsm-cure-cheatsheet.js"></script>
 </body>
