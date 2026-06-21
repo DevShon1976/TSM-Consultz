@@ -60,6 +60,11 @@
       exposure:"ACTIVE",
       strategist:"ACTIVE",
       narrative:"Cross-sector operational pressure is actively being coordinated through the strategist mesh."
+    },
+    realestate:{
+      exposure:"$346K",
+      strategist:"MEDIUM",
+      narrative:"Appraisal gap exposure, title issues, and REO disposition timelines are driving pull-through risk."
     }
   };
 
