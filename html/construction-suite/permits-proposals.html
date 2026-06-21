@@ -1423,6 +1423,22 @@ body {
 
 </div><!-- /proposal-grid -->
 
+<!-- ─── CUSTOM DOC PASTE PANEL ─── -->
+<div class="sec-hd" style="margin-top:28px">
+  <div class="sec-hd-tag">CUSTOM DOCUMENT ANALYSIS</div>
+  <div class="sec-hd-line"></div>
+</div>
+<div style="background:rgba(0,255,198,.03);border:1px solid rgba(0,255,198,.12);border-radius:4px;padding:16px;margin-bottom:24px">
+  <div style="font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--muted);margin-bottom:8px">PASTE PERMIT · PROPOSAL · RFI · CHANGE ORDER DOCUMENT</div>
+  <textarea id="customDocInput" placeholder="Paste any construction document here — permit, proposal, RFI, change order, lien notice, bid comparison..." style="width:100%;box-sizing:border-box;min-height:110px;background:#03080f;border:1px solid rgba(0,255,198,.18);border-radius:3px;color:#c8d8e4;font-family:var(--mono);font-size:11px;padding:10px;resize:vertical;outline:none;line-height:1.6"></textarea>
+  <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;align-items:center">
+    <button onclick="runCustomDocAnalysis()" style="background:var(--cyan);color:#001a12;border:0;border-radius:3px;padding:8px 18px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.1em;cursor:pointer">⚡ ANALYZE DOCUMENT</button>
+    <button onclick="runCustomBidComparison()" style="background:transparent;color:var(--orange);border:1px solid var(--orange);border-radius:3px;padding:8px 14px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;cursor:pointer">⚖ BID COMPARISON</button>
+    <button onclick="document.getElementById('customDocInput').value=''" style="background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,.1);border-radius:3px;padding:8px 14px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;cursor:pointer">CLEAR</button>
+    <span id="customDocStatus" style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-left:auto"></span>
+  </div>
+</div>
+
 <!-- ─── AI OUTPUT PANEL ─── -->
 <div class="sec-hd" style="margin-top:28px">
   <div class="sec-hd-tag">AI ANALYSIS OUTPUT</div>
@@ -1764,6 +1780,99 @@ async function callAPI(prompt) {
     }
     return out || null;
   } catch(e) { return null; }
+}
+
+// ─── FORMAT HELPER ───
+function formatAIResult(text) {
+  return text
+    .split('\n')
+    .map(line => {
+      line = line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      if (/^▸ [A-Z]/.test(line)) line = '<span class="ai-section">' + line + '</span>';
+      return line;
+    })
+    .join('<br>');
+}
+// ─── CUSTOM DOC ANALYSIS ───
+async function runCustomDocAnalysis() {
+  const doc = document.getElementById('customDocInput').value.trim();
+  if (!doc) { document.getElementById('customDocStatus').textContent = 'Paste a document first'; return; }
+  document.getElementById('customDocStatus').textContent = 'Analyzing...';
+  document.getElementById('aiTitle').textContent = 'CUSTOM DOCUMENT ANALYSIS · RUNNING';
+  document.getElementById('aiDot').className = 'ai-dot active';
+  document.getElementById('aiOutput').className = 'ai-placeholder';
+  document.getElementById('aiOutput').textContent = '▊ Analyzing document...';
+  document.getElementById('aiSpinner').style.display = 'none';
+
+  const prompt = `You are a construction operations intelligence engine. Analyze this construction document in detail.
+
+DOCUMENT:
+${doc}
+
+Provide:
+▸ DOCUMENT TYPE — identify type (permit, proposal, RFI, change order, lien notice, etc.)
+▸ KEY PARTIES — GC, subcontractors, owner, agencies involved
+▸ FINANCIAL EXPOSURE — all dollar amounts, cost variances, daily exposure rates, total accumulated exposure
+▸ CRITICAL DEADLINES — all dates, hold durations, cure periods, bid validity windows
+▸ RISK FLAGS — permit blocks, zoning issues, schedule delays, compliance gaps, lien risks
+▸ RECOMMENDED ACTIONS — ranked by urgency with owner and deadline
+
+Be specific with dollar amounts and dates. Flag anything requiring immediate action.`;
+
+  const result = await callAPI(prompt);
+  const el = document.getElementById('aiOutput');
+  if (result) {
+    el.className = 'ai-output';
+    el.innerHTML = formatAIResult(result);
+    document.getElementById('aiTitle').textContent = 'CUSTOM DOCUMENT ANALYSIS · COMPLETE';
+    document.getElementById('customDocStatus').textContent = '✓ Analysis complete';
+    // Store for relay
+    try { localStorage.setItem('tsm_permits_custom_doc', JSON.stringify({ doc: doc.slice(0,500), result: result.slice(0,1000), ts: Date.now() })); } catch(e) {}
+  } else {
+    el.className = 'ai-placeholder';
+    el.textContent = 'Analysis failed — check connection.';
+    document.getElementById('customDocStatus').textContent = '✗ Failed';
+  }
+  document.getElementById('aiDot').className = 'ai-dot idle';
+}
+
+async function runCustomBidComparison() {
+  const doc = document.getElementById('customDocInput').value.trim();
+  if (!doc) { document.getElementById('customDocStatus').textContent = 'Paste a proposal/bid document first'; return; }
+  document.getElementById('customDocStatus').textContent = 'Comparing bids...';
+  document.getElementById('aiTitle').textContent = 'BID COMPARISON ANALYSIS · RUNNING';
+  document.getElementById('aiDot').className = 'ai-dot active';
+  document.getElementById('aiOutput').className = 'ai-placeholder';
+  document.getElementById('aiOutput').textContent = '▊ Running bid comparison...';
+
+  const prompt = `You are a construction procurement intelligence engine. Analyze this bid/proposal document and perform a detailed comparison.
+
+DOCUMENT:
+${doc}
+
+Provide:
+▸ BID SUMMARY — all bids identified, base amounts, alternates, bond requirements
+▸ PRICE COMPARISON — rank bids by total cost including alternates
+▸ SCHEDULE ANALYSIS — NTP to completion for each bidder, schedule delta between bids
+▸ SCOPE GAPS — exclusions, clarifications, missing scope items per bidder
+▸ RISK FACTORS — bond strength, bid validity, financial exposure if schedule slips
+▸ RECOMMENDATION — winning bid recommendation with rationale (price vs schedule vs risk tradeoff)
+
+Be specific with all dollar amounts and schedule deltas.`;
+
+  const result = await callAPI(prompt);
+  const el = document.getElementById('aiOutput');
+  if (result) {
+    el.className = 'ai-output';
+    el.innerHTML = formatAIResult(result);
+    document.getElementById('aiTitle').textContent = 'BID COMPARISON · COMPLETE';
+    document.getElementById('customDocStatus').textContent = '✓ Comparison complete';
+  } else {
+    el.className = 'ai-placeholder';
+    el.textContent = 'Comparison failed — check connection.';
+    document.getElementById('customDocStatus').textContent = '✗ Failed';
+  }
+  document.getElementById('aiDot').className = 'ai-dot idle';
 }
 
 // ─── RENDER OUTPUT ───
