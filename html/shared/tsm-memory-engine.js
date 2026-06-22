@@ -400,135 +400,421 @@ This sector now retains operational continuity across relays, escalations, owner
 
     const pick=n[Math.floor(Math.random()*n.length)];
 
-    window.TSMMemory.narrative(pick);
-    window.TSMMemory.timeline("Executive narrative evolved from strategist continuity.");
+      function nowISO(){
+    return new Date().toISOString();
   }
 
-  function build(){
-    if(document.getElementById("tsm-phase3-memory")) return;
-
-    css();
-
-    const box=document.createElement("section");
-
-    box.id="tsm-phase3-memory";
-    box.className="tsm-memory-layer";
-
-    box.innerHTML=`
-      <h2>Phase 3 · Persistent Operational Memory</h2>
-      <div style="color:#9fb6c6">
-        Relay continuity, strategist memory, operational timelines, ownership evolution, and exposure persistence across the TSM Operational Mesh.
-      </div>
-
-      <div class="memory-grid">
-        <div class="memory-card">
-          <small>Sector</small>
-          <b>${sector.toUpperCase()}</b>
-        </div>
-
-        <div class="memory-card">
-          <small>Exposure</small>
-          <b id="tsmMemoryExposure">${mem[sector].exposure}</b>
-        </div>
-
-        <div class="memory-card">
-          <small>Strategist Pressure</small>
-          <b id="tsmMemoryStrategist">${mem[sector].strategist}</b>
-        </div>
-
-        <div class="memory-card">
-          <small>Timeline State</small>
-          <b>LIVE</b>
-        </div>
-      </div>
-
-      <div class="memory-actions">
-        <button id="memEscalate">Escalate Pressure</button>
-        <button id="memAssign" class="alt">Assign Owner</button>
-        <button id="memNarrative" class="alt">Regenerate Narrative</button>
-        <button id="memStabilize" class="alt">Stabilize Workflow</button>
-      </div>
-
-      <div id="tsmMemoryNarrative" class="memory-panel"></div>
-
-      <div class="memory-row">
-
-        <div>
-          <h3 style="color:#00ffc6">Operational Timeline</h3>
-          <div id="tsmMemoryTimeline" class="memory-timeline"></div>
-        </div>
-
-        <div>
-
-          <h3 style="color:#00ffc6">Strategist Relay Memory</h3>
-          <div id="tsmMemoryRelays" class="memory-timeline"></div>
-
-          <h3 style="color:#00ffc6;margin-top:18px">Owner Evolution</h3>
-          <div id="tsmMemoryOwners" class="memory-timeline"></div>
-
-        </div>
-
-      </div>
-    `;
-
-    document.body.appendChild(box);
-
-    if(!document.getElementById("tsm-memory-tab")){
-      const tab=document.createElement("div");
-      tab.id="tsm-memory-tab";
-      tab.textContent="🧠 MEMORY";
-      tab.onclick=()=>box.classList.toggle("open");
-      document.body.appendChild(tab);
+  function ensureSector(){
+    if(!mem[sector]){
+      mem[sector] = {
+        exposure: DEFAULTS[sector]?.exposure || "ACTIVE",
+        strategist: DEFAULTS[sector]?.strategist || "MEDIUM",
+        narrative: DEFAULTS[sector]?.narrative || "Operational pressure detected.",
+        timeline: [],
+        owners: [],
+        relays: [],
+        pressure: 50,
+        anomalies: [],
+        cases: {},
+        fieldMemory: {},
+        suggestedApps: [],
+        executiveQueue: [],
+        stats: {
+          anomaliesDetected: 0,
+          anomaliesResolved: 0,
+          autoPopulatedFields: 0,
+          relayCount: 0
+        }
+      };
     }
-
-    renderState();
-    renderNarrative();
-    renderTimeline();
-    renderOwners();
-    renderRelays();
-
-    document.getElementById("memEscalate").onclick=()=>{
-      window.TSMMemory.strategist("CRITICAL");
-      window.TSMMemory.exposure("$" + (Math.floor(Math.random()*400)+150) + "K");
-      window.TSMMemory.timeline("Operational escalation triggered from unresolved workflow pressure.");
-      window.TSMMemory.relay("Strategist relay escalated cross-sector pressure.");
-      mutateNarrative();
-    };
-
-    document.getElementById("memAssign").onclick=()=>{
-      const owners=[
-        "Executive Operations",
-        "Finance Controller",
-        "Revenue Integrity",
-        "Compliance Lead",
-        "Legal Ops",
-        "Project Engineering",
-        "Audit Command"
-      ];
-
-      const pick=owners[Math.floor(Math.random()*owners.length)];
-
-      window.TSMMemory.owner(pick);
-      window.TSMMemory.timeline("Ownership reassigned to " + pick + ".");
-    };
-
-    document.getElementById("memNarrative").onclick=mutateNarrative;
-
-    document.getElementById("memStabilize").onclick=()=>{
-      window.TSMMemory.strategist("STABLE");
-      window.TSMMemory.exposure("Reduced");
-      window.TSMMemory.timeline("Workflow stabilized and escalation posture reduced.");
-      window.TSMMemory.relay("Strategist approved stabilization posture.");
-      mutateNarrative();
-    };
-
-    if((mem[sector].timeline || []).length === 0){
-      window.TSMMemory.timeline("Operational memory initialized.");
-      window.TSMMemory.timeline("Sector continuity tracking enabled.");
-      window.TSMMemory.relay("Strategist continuity engine activated.");
-      window.TSMMemory.owner("TSM Operational Mesh");
-    }
+    return mem[sector];
   }
+
+  function makeFieldKey(entityType, entityId, field){
+    return `${String(entityType || "unknown").toLowerCase()}:${String(entityId || "unknown")}:${String(field || "").trim()}`;
+  }
+
+  function getCaseKey(entityType, entityId){
+    return `${String(entityType || "case").toUpperCase()}:${String(entityId || "UNKNOWN")}`;
+  }
+
+  function ensureCase(entityType, entityId, extra = {}){
+    const s = ensureSector();
+    const caseKey = getCaseKey(entityType, entityId);
+
+    if(!s.cases[caseKey]){
+      s.cases[caseKey] = {
+        caseKey,
+        entityType: entityType || "case",
+        entityId: entityId || "UNKNOWN",
+        createdAt: nowISO(),
+        lastSeenAt: nowISO(),
+        fields: {},
+        anomalies: [],
+        relays: [],
+        notes: [],
+        meta: extra.meta || {}
+      };
+    } else {
+      s.cases[caseKey].lastSeenAt = nowISO();
+      if(extra.meta){
+        s.cases[caseKey].meta = {
+          ...(s.cases[caseKey].meta || {}),
+          ...extra.meta
+        };
+      }
+    }
+
+    return s.cases[caseKey];
+  }
+
+  window.TSMMemory = {
+    get(){
+      return ensureSector();
+    },
+
+    getCase(entityType, entityId){
+      const s = ensureSector();
+      return s.cases[getCaseKey(entityType, entityId)] || null;
+    },
+
+    timeline(msg, meta = {}){
+      const s = ensureSector();
+
+      s.timeline.unshift({
+        at: new Date().toLocaleTimeString(),
+        iso: nowISO(),
+        message: msg,
+        meta
+      });
+
+      s.timeline = s.timeline.slice(0, 50);
+      saveMemory(mem);
+      renderTimeline();
+    },
+
+    exposure(val){
+      const s = ensureSector();
+      s.exposure = val;
+      saveMemory(mem);
+      renderState();
+    },
+
+    strategist(val){
+      const s = ensureSector();
+      s.strategist = val;
+      saveMemory(mem);
+      renderState();
+    },
+
+    owner(val){
+      const s = ensureSector();
+
+      s.owners.unshift({
+        at: new Date().toLocaleTimeString(),
+        iso: nowISO(),
+        owner: val
+      });
+
+      s.owners = s.owners.slice(0, 25);
+      saveMemory(mem);
+      renderOwners();
+    },
+
+    narrative(val){
+      const s = ensureSector();
+      s.narrative = val;
+      saveMemory(mem);
+      renderNarrative();
+    },
+
+    relay(val, meta = {}){
+      const s = ensureSector();
+
+      s.relays.unshift({
+        at: new Date().toLocaleTimeString(),
+        iso: nowISO(),
+        relay: val,
+        meta
+      });
+
+      s.relays = s.relays.slice(0, 30);
+      s.stats.relayCount = (s.stats.relayCount || 0) + 1;
+
+      saveMemory(mem);
+      renderRelays();
+    },
+
+    registerAnomaly({
+      entityType = "case",
+      entityId = "UNKNOWN",
+      anomalyCode,
+      title,
+      severity = "MEDIUM",
+      missingFields = [],
+      source = "war-room",
+      detectedFrom = null,
+      meta = {}
+    } = {}){
+      if(!anomalyCode) return null;
+
+      const s = ensureSector();
+      const caseRef = ensureCase(entityType, entityId, { meta });
+
+      const record = {
+        id: `an_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
+        anomalyCode,
+        title: title || anomalyCode,
+        severity,
+        status: "open",
+        source,
+        detectedFrom,
+        missingFields: [...missingFields],
+        createdAt: nowISO(),
+        resolvedAt: null,
+        resolvedBy: null,
+        relayTargets: [],
+        recommendedApps: [],
+        meta
+      };
+
+      s.anomalies.unshift(record);
+      s.anomalies = s.anomalies.slice(0, 250);
+
+      caseRef.anomalies.unshift({
+        anomalyId: record.id,
+        anomalyCode,
+        title: record.title,
+        severity,
+        status: "open",
+        createdAt: record.createdAt
+      });
+
+      s.stats.anomaliesDetected = (s.stats.anomaliesDetected || 0) + 1;
+
+      saveMemory(mem);
+
+      window.TSMMemory.timeline(
+        `Anomaly detected: ${record.title}${missingFields.length ? " | Missing: " + missingFields.join(", ") : ""}`,
+        { anomalyCode, entityType, entityId }
+      );
+
+      return record;
+    },
+
+    rememberField({
+      entityType = "case",
+      entityId = "UNKNOWN",
+      field,
+      value,
+      source = "manual",
+      confidence = 1,
+      anomalyCode = null,
+      meta = {}
+    } = {}){
+      if(!field || value === undefined || value === null || value === "") return null;
+
+      const s = ensureSector();
+      const caseRef = ensureCase(entityType, entityId, { meta });
+      const key = makeFieldKey(entityType, entityId, field);
+
+      const payload = {
+        value,
+        source,
+        confidence,
+        updatedAt: nowISO(),
+        anomalyCode,
+        meta
+      };
+
+      s.fieldMemory[key] = payload;
+      caseRef.fields[field] = payload;
+
+      saveMemory(mem);
+      return payload;
+    },
+
+    lookupField({
+      entityType = "case",
+      entityId = "UNKNOWN",
+      field
+    } = {}){
+      if(!field) return null;
+
+      const s = ensureSector();
+      const key = makeFieldKey(entityType, entityId, field);
+      const result = s.fieldMemory[key] || null;
+
+      if(result){
+        s.stats.autoPopulatedFields = (s.stats.autoPopulatedFields || 0) + 1;
+        saveMemory(mem);
+      }
+
+      return result;
+    },
+
+    resolveAnomaly({
+      anomalyId = null,
+      anomalyCode = null,
+      entityType = "case",
+      entityId = "UNKNOWN",
+      resolvedBy = "unknown",
+      values = {},
+      status = "resolved",
+      relay = null
+    } = {}){
+      const s = ensureSector();
+      const caseRef = ensureCase(entityType, entityId);
+
+      let target = null;
+
+      if(anomalyId){
+        target = s.anomalies.find(a => a.id === anomalyId) || null;
+      } else if(anomalyCode){
+        target = s.anomalies.find(a =>
+          a.anomalyCode === anomalyCode &&
+          a.status !== "resolved"
+        ) || null;
+      }
+
+      if(target){
+        target.status = status;
+        target.resolvedAt = nowISO();
+        target.resolvedBy = resolvedBy;
+      }
+
+      caseRef.anomalies = (caseRef.anomalies || []).map(a => {
+        if(
+          (anomalyId && a.anomalyId === anomalyId) ||
+          (!anomalyId && anomalyCode && a.anomalyCode === anomalyCode)
+        ){
+          return {
+            ...a,
+            status,
+            resolvedBy,
+            resolvedAt: nowISO()
+          };
+        }
+        return a;
+      });
+
+      Object.entries(values || {}).forEach(([field, value]) => {
+        window.TSMMemory.rememberField({
+          entityType,
+          entityId,
+          field,
+          value,
+          source: resolvedBy,
+          confidence: 0.95,
+          anomalyCode: target?.anomalyCode || anomalyCode
+        });
+      });
+
+      s.stats.anomaliesResolved = (s.stats.anomaliesResolved || 0) + 1;
+
+      saveMemory(mem);
+
+      window.TSMMemory.timeline(
+        `Anomaly resolved: ${(target?.title || anomalyCode || "unknown")} by ${resolvedBy}`,
+        { anomalyId, anomalyCode, entityType, entityId }
+      );
+
+      if(relay){
+        window.TSMMemory.relay(relay, {
+          anomalyId: target?.id || anomalyId || null,
+          anomalyCode: target?.anomalyCode || anomalyCode || null,
+          entityType,
+          entityId
+        });
+      }
+
+      return target;
+    },
+
+    getSuggestedAppPayload({
+      sectorName = sector,
+      anomalyCode,
+      entityType = "case",
+      entityId = "UNKNOWN"
+    } = {}){
+      const intelligence =
+        window.TSMSectorIntelligence?.[sectorName]?.[anomalyCode] || null;
+
+      if(!intelligence) return null;
+
+      const requiredFields = intelligence.requiredFields || [];
+      const recoveredFields = {};
+      const missingStill = [];
+
+      requiredFields.forEach(field => {
+        const remembered = window.TSMMemory.lookupField({
+          entityType,
+          entityId,
+          field
+        });
+
+        if(remembered && remembered.value !== undefined && remembered.value !== null && remembered.value !== ""){
+          recoveredFields[field] = remembered.value;
+        } else {
+          missingStill.push(field);
+        }
+      });
+
+      return {
+        anomalyCode,
+        owner: intelligence.owner || null,
+        pressure: intelligence.pressure || "MEDIUM",
+        recommendedApps: intelligence.recommendedApps || [],
+        recommendedActions: intelligence.recommendedActions || [],
+        relayTargets: intelligence.relayTargets || [],
+        requiredFields,
+        recoveredFields,
+        missingStill,
+        autoPopulateReady: Object.keys(recoveredFields).length > 0
+      };
+    },
+
+    queueExecutiveRelay({
+      type = "strategist",
+      title,
+      summary,
+      sectorName = sector,
+      anomalyCode = null,
+      entityType = "case",
+      entityId = "UNKNOWN",
+      exposure = null,
+      owner = null
+    } = {}){
+      const s = ensureSector();
+
+      const item = {
+        id: `relay_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
+        type,
+        title: title || "Executive relay",
+        summary: summary || "",
+        sector: sectorName,
+        anomalyCode,
+        entityType,
+        entityId,
+        exposure,
+        owner,
+        createdAt: nowISO(),
+        status: "queued"
+      };
+
+      s.executiveQueue.unshift(item);
+      s.executiveQueue = s.executiveQueue.slice(0, 100);
+
+      saveMemory(mem);
+
+      window.TSMMemory.relay(
+        `${type.toUpperCase()} relay queued${title ? ": " + title : ""}`,
+        { anomalyCode, entityType, entityId, exposure, owner }
+      );
+
+      return item;
+    }
+  };
 
   if(document.readyState==="loading"){
     document.addEventListener("DOMContentLoaded",build);
