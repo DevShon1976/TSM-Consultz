@@ -242,6 +242,9 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
   </div>
 </div>
 
+<!-- ── CROSS-UPLOAD MEMORY BANNER ── -->
+<div id="crossUploadBanner" style="display:none;align-items:center;gap:10px;margin:0 24px 14px;padding:10px 16px;background:rgba(0,255,198,.08);border:1px solid rgba(0,255,198,.25);border-radius:8px;color:#bdf7ec;font-family:'JetBrains Mono',monospace;font-size:.72rem;"></div>
+
 <!-- ── CHAIN NAVIGATION ── -->
 <div class="chain-nav">
   <div class="chain-step">
@@ -576,6 +579,8 @@ DOCUMENT TYPE: ${selectedDocType || 'operational'}
 
 Return a JSON object with these exact keys:
 {
+  "anomalyCode": "Pick the single best match: SLA_BREACH_RISK, CLIENT_BACKLOG_SPIKE, SUPPLIER_SHUTDOWN, or PLANT_FAILURE",
+  "anomalyEntity": "The specific named client, supplier, or facility this incident is about (e.g. 'Acme Logistics', 'Plant 4')",
   "rootCause": "One sentence: the primary root cause",
   "rootCauseSub": "One sentence: why this matters operationally",
   "situationSummary": "2-3 sentence narrative: what happened, scope, and urgency",
@@ -632,6 +637,7 @@ Return ONLY the JSON object. No markdown, no explanation.`;
     if (jsonMatch) {
       const result = JSON.parse(jsonMatch[0]);
       renderExtraction(result);
+      registerIncidentInMemory(result);
       storeWarRoomRelay(result);
       addMemoryEntry('Extraction complete: ' + result.rootCause);
     } else {
@@ -654,6 +660,59 @@ Return ONLY the JSON object. No markdown, no explanation.`;
     document.getElementById('enginePulse').style.background = 'var(--red)';
     setStatus('Engine error — check server connection');
     engineFired = false;
+  }
+}
+
+// ── MEMORY: REGISTER ANOMALY + SURFACE CROSS-UPLOAD INSIGHT ──
+function registerIncidentInMemory(result) {
+  if (!window.TSMMemory) return;
+
+  const entityId = result.anomalyEntity || result.incidentLabel || ('INCIDENT-' + Date.now());
+  const anomalyCode = result.anomalyCode || 'CLIENT_BACKLOG_SPIKE';
+
+  window.TSMMemory.registerAnomaly({
+    entityType: 'bpo-incident',
+    entityId,
+    anomalyCode,
+    title: result.incidentLabel || result.rootCause,
+    severity: result.severity,
+    source: 'situation-room',
+    detectedFrom: relayData?.selectedDocType || 'document',
+    meta: { revenueAtRisk: result.revenueAtRisk, runway: result.runway }
+  });
+
+  ['revenueAtRisk', 'linesImpacted', 'clientsImpacted', 'runway', 'rootCause'].forEach(field => {
+    if (result[field]) {
+      window.TSMMemory.rememberField({
+        entityType: 'bpo-incident', entityId, field, value: result[field],
+        source: 'ai-extraction', anomalyCode
+      });
+    }
+  });
+
+  // Carry the classification forward so the Strategist can resolve against the same anomaly.
+  result.anomalyCode = anomalyCode;
+  result.anomalyEntity = entityId;
+
+  showCrossUploadInsight(anomalyCode, entityId);
+}
+
+function showCrossUploadInsight(anomalyCode, entityId) {
+  const el = document.getElementById('crossUploadBanner');
+  if (!el || !window.TSMMemory) return;
+
+  const insight = window.TSMMemory.getCrossUploadInsight({ anomalyCode, entityType: 'bpo-incident', entityId });
+  const priorCount = Math.max(0, (insight.priorOccurrences || 0) - 1); // exclude the one just registered
+
+  if (priorCount > 0) {
+    const fieldCount = Object.keys(insight.suggestedPrefill || {}).length;
+    el.style.display = 'flex';
+    el.innerHTML = `🧠 <span><b>Cross-Upload Memory:</b> this anomaly type has occurred <b>${priorCount}</b> time(s) before across previous uploads` +
+      (insight.lastResolvedBy ? ` &nbsp;·&nbsp; last resolved by <b>${insight.lastResolvedBy}</b>` : '') +
+      (fieldCount ? ` &nbsp;·&nbsp; <b>${fieldCount}</b> field(s) recoverable from memory` : '') +
+      `</span>`;
+  } else {
+    el.style.display = 'none';
   }
 }
 
