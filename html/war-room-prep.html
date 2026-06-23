@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TSM — War Room Pre-Presentation Test</title>
+<title>TSM — War Room Pre-Presentation Checklist</title>
 <style>
   :root {
     --bg: #0a0c10;
@@ -17,11 +17,14 @@
     --green: #00d4aa;
     --green-dim: rgba(0,212,170,0.08);
     --green-border: rgba(0,212,170,0.2);
+    --cyan: #00d4d4;
+    --cyan-dim: rgba(0,212,212,0.07);
     --amber: #f59e0b;
     --amber-dim: rgba(245,158,11,0.08);
     --red: #ef4444;
     --red-dim: rgba(239,68,68,0.08);
     --purple: #a78bfa;
+    --blue: #3b82f6;
     --mono: 'Courier New', monospace;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -40,13 +43,14 @@
   }
   .logo { font-size: 11px; letter-spacing: .15em; color: var(--text2); }
   .logo span { color: var(--green); }
-  .header-right { display: flex; align-items: center; gap: 1.5rem; }
+  .header-right { display: flex; align-items: center; gap: 2rem; }
   .global-pct { font-size: 22px; font-weight: 700; color: var(--green); }
   .global-lbl { font-size: 9px; letter-spacing: .1em; color: var(--text3); }
   .global-bar { width: 120px; height: 2px; background: var(--border2); border-radius: 1px; margin-top: 4px; }
   .global-fill { height: 2px; background: var(--green); border-radius: 1px; transition: width .4s; }
+  .chain-badge { font-size: 9px; letter-spacing: .12em; color: var(--cyan); border: 1px solid rgba(0,212,212,.2); padding: 4px 10px; }
 
-  .main { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 61px); }
+  .main { display: grid; grid-template-columns: 240px 1fr; min-height: calc(100vh - 61px); }
 
   nav {
     border-right: 1px solid var(--border);
@@ -57,15 +61,16 @@
     overflow-y: auto;
   }
   .nav-label { font-size: 9px; letter-spacing: .12em; color: var(--text3); padding: 0 1.25rem .5rem; }
+  .nav-section { border-top: 1px solid var(--border); margin-top: 1rem; padding-top: .75rem; }
   .nav-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: .6rem 1.25rem;
+    padding: .55rem 1.25rem;
     cursor: pointer;
     border-left: 2px solid transparent;
     transition: all .15s;
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text2);
     text-decoration: none;
   }
@@ -75,8 +80,10 @@
   .nav-pct.done { color: var(--green); }
   .nav-pct.partial { color: var(--amber); }
   .nav-pct.zero { color: var(--text3); }
+  .nav-chain { font-size: 9px; color: var(--text3); padding: 0 1.25rem .3rem; display: flex; align-items: center; gap: 4px; }
+  .nc-dot { width: 5px; height: 5px; border-radius: 50%; }
 
-  .content { padding: 2rem; max-width: 780px; }
+  .content { padding: 2rem; max-width: 860px; }
 
   .panel { display: none; }
   .panel.active { display: block; }
@@ -87,6 +94,33 @@
   .panel-url { font-size: 11px; color: var(--text3); margin-top: .3rem; }
   .panel-url a { color: var(--purple); text-decoration: none; }
   .panel-url a:hover { color: var(--text); }
+
+  /* CHAIN FLOW */
+  .chain-flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 10px 16px;
+    overflow-x: auto;
+  }
+  .cf-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 14px;
+    border-radius: 2px;
+    cursor: default;
+  }
+  .cf-step.active-step { background: var(--green-dim); border: 1px solid var(--green-border); }
+  .cf-step.bpo-step { background: rgba(0,212,212,.07); border: 1px solid rgba(0,212,212,.2); }
+  .cf-num { font-size: 9px; letter-spacing: .1em; color: var(--text3); }
+  .cf-label { font-size: 11px; font-weight: 700; }
+  .cf-sub { font-size: 9px; color: var(--text3); }
+  .cf-arrow { color: var(--text3); padding: 0 8px; font-size: 14px; }
 
   .progress-row { display: flex; align-items: center; gap: 12px; margin-bottom: 2rem; }
   .progress-track { flex: 1; height: 3px; background: var(--border2); border-radius: 2px; }
@@ -104,7 +138,6 @@
     line-height: 1.7;
   }
   .sample-doc-label { font-size: 9px; letter-spacing: .12em; color: var(--text3); margin-bottom: .5rem; }
-  .sample-doc-text { color: var(--text2); }
   .copy-btn {
     margin-top: .75rem;
     font-size: 10px;
@@ -130,41 +163,33 @@
   .step:last-child { border-bottom: none; }
   .step-left { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; }
   .step-num {
-    width: 28px;
-    height: 28px;
+    width: 28px; height: 28px;
     border: 1px solid var(--border2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    color: var(--text3);
-    transition: all .2s;
-    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: var(--text3);
+    transition: all .2s; flex-shrink: 0;
   }
   .step-num.done { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+  .step-num.phase3 { border-color: var(--cyan); color: var(--cyan); }
   .step-body { flex: 1; }
   .step-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; letter-spacing: .02em; }
   .step-desc { font-size: 12px; color: var(--text2); line-height: 1.6; }
-  .step-check {
-    margin-top: .6rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .step-check input[type=checkbox] {
-    width: 14px; height: 14px;
-    accent-color: var(--green);
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-  .step-check label {
-    font-size: 11px;
-    color: var(--text3);
-    cursor: pointer;
-    letter-spacing: .03em;
-  }
-  .step-check label.done { color: var(--green); }
+  .step-check { margin-top: .6rem; display: flex; align-items: center; gap: 8px; }
+  .step-check input[type=checkbox] { width: 14px; height: 14px; accent-color: var(--green); cursor: pointer; flex-shrink: 0; }
+  .step-check label { font-size: 11px; color: var(--text3); cursor: pointer; letter-spacing: .03em; }
   .step-check input:checked + label { color: var(--green); }
+
+  .step-tag {
+    display: inline-block;
+    font-size: 9px;
+    letter-spacing: .1em;
+    padding: 2px 7px;
+    margin-bottom: 5px;
+    border-radius: 2px;
+  }
+  .tag-phase3 { background: rgba(0,212,212,.08); border: 1px solid rgba(0,212,212,.25); color: var(--cyan); }
+  .tag-new { background: rgba(34,197,94,.08); border: 1px solid rgba(34,197,94,.25); color: #22c55e; }
+  .tag-critical { background: var(--red-dim); border: 1px solid rgba(239,68,68,.25); color: var(--red); }
 
   .devtools-note {
     background: var(--amber-dim);
@@ -174,6 +199,22 @@
     color: var(--amber);
     margin-top: .5rem;
     line-height: 1.5;
+  }
+  .info-note {
+    background: var(--cyan-dim);
+    border: 1px solid rgba(0,212,212,0.2);
+    padding: .6rem 1rem;
+    font-size: 11px;
+    color: var(--cyan);
+    margin-top: .5rem;
+    line-height: 1.5;
+  }
+
+  .step-divider {
+    font-size: 9px; letter-spacing: .12em; color: var(--text3);
+    margin: 1rem 0 .6rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
   }
 
   .panel-footer {
@@ -185,55 +226,70 @@
     justify-content: space-between;
   }
   .done-badge {
-    font-size: 10px;
-    letter-spacing: .12em;
+    font-size: 10px; letter-spacing: .12em;
     padding: 4px 12px;
-    background: var(--green-dim);
-    border: 1px solid var(--green-border);
-    color: var(--green);
+    background: var(--green-dim); border: 1px solid var(--green-border); color: var(--green);
   }
   .reset-btn {
-    font-size: 10px;
-    letter-spacing: .08em;
-    background: transparent;
-    border: none;
-    color: var(--text3);
-    cursor: pointer;
-    font-family: var(--mono);
+    font-size: 10px; letter-spacing: .08em;
+    background: transparent; border: none;
+    color: var(--text3); cursor: pointer; font-family: var(--mono);
   }
   .reset-btn:hover { color: var(--red); }
   .next-btn {
-    font-size: 11px;
-    letter-spacing: .08em;
+    font-size: 11px; letter-spacing: .08em;
     padding: 6px 16px;
     background: transparent;
     border: 1px solid var(--border2);
-    color: var(--text2);
-    cursor: pointer;
-    font-family: var(--mono);
-    transition: all .15s;
+    color: var(--text2); cursor: pointer; font-family: var(--mono); transition: all .15s;
   }
   .next-btn:hover { border-color: var(--green); color: var(--green); }
 
-  .summary-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: var(--border); margin-bottom: 2rem; border: 1px solid var(--border); }
+  .summary-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1px; background: var(--border); margin-bottom: 2rem; border: 1px solid var(--border); }
   .summary-cell { background: var(--surface); padding: 1rem; text-align: center; }
-  .summary-val { font-size: 26px; font-weight: 700; color: var(--green); }
+  .summary-val { font-size: 24px; font-weight: 700; color: var(--green); }
   .summary-lbl { font-size: 9px; letter-spacing: .1em; color: var(--text3); margin-top: 4px; }
 
-  .wr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); }
+  .wr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); margin-bottom: 2rem; }
   .wr-cell {
     background: var(--surface);
     padding: 1rem 1.25rem;
     cursor: pointer;
     transition: background .15s;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
   }
   .wr-cell:hover { background: var(--surface2); }
   .wr-cell-name { font-size: 13px; color: var(--text); }
   .wr-cell-pct { font-size: 12px; }
+  .wr-cell-chain { font-size: 9px; color: var(--text3); margin-top: 2px; }
+
+  /* Architecture overview */
+  .arch-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); margin-bottom: 1.5rem; }
+  .arch-cell { background: var(--surface); padding: 1rem; text-align: center; }
+  .arch-num { font-size: 9px; letter-spacing: .1em; color: var(--text3); margin-bottom: 4px; }
+  .arch-label { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .arch-q { font-size: 10px; color: var(--text2); font-style: italic; margin-bottom: 6px; }
+  .arch-tag { font-size: 9px; letter-spacing: .1em; padding: 2px 7px; border-radius: 2px; }
+
+  .pitch-box {
+    background: var(--green-dim);
+    border: 1px solid var(--green-border);
+    border-left: 3px solid var(--green);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.8;
+  }
+  .pitch-box strong { color: var(--green); }
+
+  .checklist-group { margin-bottom: 1.5rem; }
+  .cg-label { font-size: 9px; letter-spacing: .12em; color: var(--text3); margin-bottom: .75rem; padding-bottom: .4rem; border-bottom: 1px solid var(--border); }
+  .cg-item { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; border-bottom: 1px solid rgba(30,34,48,.7); }
+  .cg-item:last-child { border-bottom: none; }
+  .cg-check input[type=checkbox] { width: 13px; height: 13px; accent-color: var(--green); margin-top: 1px; }
+  .cg-text { font-size: 11px; color: var(--text2); line-height: 1.5; }
+  .cg-text input:checked + span { color: var(--green); }
 </style>
 </head>
 <body>
@@ -241,6 +297,7 @@
 <header>
   <div class="logo"><span>TSM</span> // WAR ROOM PRE-PRESENTATION CHECKLIST</div>
   <div class="header-right">
+    <div class="chain-badge">UNDERSTAND → DECIDE → EXECUTE</div>
     <div>
       <div class="global-pct" id="g-pct">0%</div>
       <div class="global-lbl">OVERALL READINESS</div>
@@ -251,126 +308,169 @@
 
 <div class="main">
   <nav>
-    <div class="nav-label">WAR ROOMS</div>
-    <a class="nav-item active" onclick="switchTo('overview')" href="#"><span>Overview</span></a>
-    <a class="nav-item" onclick="switchTo('hc')" href="#"><span>Healthcare</span><span class="nav-pct zero" id="nav-pct-hc">0%</span></a>
-    <a class="nav-item" onclick="switchTo('finops')" href="#"><span>FinOps</span><span class="nav-pct zero" id="nav-pct-finops">0%</span></a>
-    <a class="nav-item" onclick="switchTo('ins')" href="#"><span>Insurance</span><span class="nav-pct zero" id="nav-pct-ins">0%</span></a>
-    <a class="nav-item" onclick="switchTo('con')" href="#"><span>Construction</span><span class="nav-pct zero" id="nav-pct-con">0%</span></a>
-    <a class="nav-item" onclick="switchTo('legal')" href="#"><span>Legal</span><span class="nav-pct zero" id="nav-pct-legal">0%</span></a>
-    <a class="nav-item" onclick="switchTo('re')" href="#"><span>Real Estate</span><span class="nav-pct zero" id="nav-pct-re">0%</span></a>
-    <a class="nav-item" onclick="switchTo('bpo')" href="#"><span>BPO</span><span class="nav-pct zero" id="nav-pct-bpo">0%</span></a>
+    <div class="nav-label">OVERVIEW</div>
+    <a class="nav-item active" onclick="switchTo('overview')" href="#">Overview &amp; Architecture</a>
+    <div class="nav-section">
+      <div class="nav-label">WAR ROOMS (6 SECTORS)</div>
+      <div class="nav-chain"><div class="nc-dot" style="background:var(--green)"></div> Standard: WR → Strategist → Exec</div>
+      <a class="nav-item" onclick="switchTo('hc')" href="#"><span>Healthcare</span><span class="nav-pct zero" id="nav-pct-hc">0%</span></a>
+      <a class="nav-item" onclick="switchTo('finops')" href="#"><span>FinOps</span><span class="nav-pct zero" id="nav-pct-finops">0%</span></a>
+      <a class="nav-item" onclick="switchTo('ins')" href="#"><span>Insurance</span><span class="nav-pct zero" id="nav-pct-ins">0%</span></a>
+      <a class="nav-item" onclick="switchTo('con')" href="#"><span>Construction</span><span class="nav-pct zero" id="nav-pct-con">0%</span></a>
+      <a class="nav-item" onclick="switchTo('legal')" href="#"><span>Legal</span><span class="nav-pct zero" id="nav-pct-legal">0%</span></a>
+      <a class="nav-item" onclick="switchTo('re')" href="#"><span>Real Estate</span><span class="nav-pct zero" id="nav-pct-re">0%</span></a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">BPO — EVOLVED CHAIN</div>
+      <div class="nav-chain"><div class="nc-dot" style="background:var(--cyan)"></div> New: Understand → Decide → Execute</div>
+      <a class="nav-item" onclick="switchTo('bpo')" href="#"><span>BPO Intelligence</span><span class="nav-pct zero" id="nav-pct-bpo">0%</span></a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">PHASE 3 SYSTEMS</div>
+      <a class="nav-item" onclick="switchTo('phase3')" href="#"><span>Memory + Sector Intel</span><span class="nav-pct zero" id="nav-pct-phase3">0%</span></a>
+    </div>
   </nav>
 
   <div class="content">
 
+    <!-- ── OVERVIEW ── -->
     <div class="panel active" id="panel-overview">
       <div class="panel-header">
         <div class="panel-eyebrow">MONDAY READINESS</div>
-        <div class="panel-title">All 7 war rooms</div>
+        <div class="panel-title">TSM Shell — All 7 Verticals</div>
       </div>
+
+      <div class="pitch-box">
+        <strong>The pitch narrative:</strong><br>
+        "Traditional dashboards tell you what happened. TSM Shell tells you what happened, predicts what happens next, recommends what to do, and orchestrates execution. That's the shift from Information → Intelligence → Decisions → Action → Outcomes."
+      </div>
+
       <div class="summary-grid">
-        <div class="summary-cell"><div class="summary-val" id="ov-ready">0/7</div><div class="summary-lbl">WAR ROOMS READY</div></div>
+        <div class="summary-cell"><div class="summary-val" id="ov-ready">0/7</div><div class="summary-lbl">SECTORS READY</div></div>
         <div class="summary-cell"><div class="summary-val" id="ov-steps">0</div><div class="summary-lbl">STEPS CONFIRMED</div></div>
         <div class="summary-cell"><div class="summary-val" id="ov-pct">0%</div><div class="summary-lbl">OVERALL</div></div>
+        <div class="summary-cell"><div class="summary-val" id="ov-chain" style="font-size:14px;color:var(--cyan)">4-STAGE</div><div class="summary-lbl">BPO CHAIN</div></div>
       </div>
+
+      <div style="font-size:9px;letter-spacing:.12em;color:var(--text3);margin-bottom:.75rem;">ARCHITECTURE — TWO CHAIN PATTERNS</div>
+      <div class="arch-grid">
+        <div class="arch-cell">
+          <div class="arch-num">01</div>
+          <div class="arch-label" style="color:var(--green)">UNDERSTAND</div>
+          <div class="arch-q">"What happened?"</div>
+          <div class="arch-tag" style="background:var(--green-dim);border:1px solid var(--green-border);color:var(--green)">WAR ROOM</div>
+        </div>
+        <div class="arch-cell">
+          <div class="arch-num">02</div>
+          <div class="arch-label" style="color:var(--cyan)">DECIDE</div>
+          <div class="arch-q">"What does it mean?"</div>
+          <div class="arch-tag" style="background:var(--cyan-dim);border:1px solid rgba(0,212,212,.2);color:var(--cyan)">STRATEGIST</div>
+        </div>
+        <div class="arch-cell">
+          <div class="arch-num">03</div>
+          <div class="arch-label" style="color:var(--amber)">EXECUTE</div>
+          <div class="arch-q">"What do I do now?"</div>
+          <div class="arch-tag" style="background:var(--amber-dim);border:1px solid rgba(245,158,11,.2);color:var(--amber)">EXEC PORTAL</div>
+        </div>
+        <div class="arch-cell">
+          <div class="arch-num">04</div>
+          <div class="arch-label" style="color:var(--purple)">TRUST</div>
+          <div class="arch-q">"Why does AI believe this?"</div>
+          <div class="arch-tag" style="background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.25);color:var(--purple)">EXPLAINABILITY</div>
+        </div>
+      </div>
+
+      <div style="font-size:9px;letter-spacing:.12em;color:var(--text3);margin-bottom:.5rem;">SECTOR STATUS</div>
       <div class="wr-grid" id="ov-grid"></div>
+
+      <div class="checklist-group">
+        <div class="cg-label">PRE-DEMO SYSTEM CHECKS</div>
+        <div class="cg-item"><div class="cg-check"><input type="checkbox" id="sys-1" onchange="checkSys('sys-1',this.checked)"></div><div class="cg-text">Fly.io deployment live — confirm at tsm-shell.fly.dev</div></div>
+        <div class="cg-item"><div class="cg-check"><input type="checkbox" id="sys-2" onchange="checkSys('sys-2',this.checked)"></div><div class="cg-text">tsm-doc-search-multi.html loads — central entry point for all sectors</div></div>
+        <div class="cg-item"><div class="cg-check"><input type="checkbox" id="sys-3" onchange="checkSys('sys-3',this.checked)"></div><div class="cg-text">GROQ_API_KEY set as Fly.io secret — AI calls streaming in all sectors</div></div>
+        <div class="cg-item"><div class="cg-check"><input type="checkbox" id="sys-4" onchange="checkSys('sys-4',this.checked)"></div><div class="cg-text">DevTools Network confirms all AI calls → /api/war-room/stream (zero api.groq.com)</div></div>
+        <div class="cg-item"><div class="cg-check"><input type="checkbox" id="sys-5" onchange="checkSys('sys-5',this.checked)"></div><div class="cg-text">BPO chain: Doc Search → Situation Room → Strategist V2 → Executive Portal</div></div>
+        <div class="cg-item"><div class="cg-check"><input type="checkbox" id="sys-6" onchange="checkSys('sys-6',this.checked)"></div><div class="cg-text">tsm-memory-engine.js loading in all war rooms (check browser console)</div></div>
+        <div class="cg-item"><div class="cg-check"><input type="checkbox" id="sys-7" onchange="checkSys('sys-7',this.checked)"></div><div class="cg-text">tsm-sector-intelligence.js present and loaded at html/shared/</div></div>
+      </div>
     </div>
 
+    <!-- ── HEALTHCARE ── -->
     <div class="panel" id="panel-hc">
       <div class="panel-header">
         <div class="panel-eyebrow">WAR ROOM 1 / 7</div>
         <div class="panel-title">Healthcare — HC Denial War Room</div>
         <div class="panel-url"><a href="/html/healthcare/hc-denial-war-room.html" target="_blank">/html/healthcare/hc-denial-war-room.html ↗</a></div>
       </div>
+      <div class="chain-flow">
+        <div class="cf-step active-step"><div class="cf-num">01</div><div class="cf-label" style="color:var(--green)">WAR ROOM</div><div class="cf-sub">Understand</div></div>
+        <div class="cf-arrow">→</div>
+        <div class="cf-step"><div class="cf-num">02</div><div class="cf-label">HC STRATEGIST</div><div class="cf-sub">Decide</div></div>
+        <div class="cf-arrow">→</div>
+        <div class="cf-step"><div class="cf-num">03</div><div class="cf-label">HC EXEC PORTAL</div><div class="cf-sub">Execute</div></div>
+      </div>
       <div class="progress-row">
         <div class="progress-track"><div class="progress-fill-wr" id="prog-hc" style="width:0%"></div></div>
         <div class="progress-pct" id="pct-hc">0%</div>
       </div>
       <div class="sample-doc">
-        <div class="sample-doc-label">SAMPLE DENIAL DOC — PASTE INTO WAR ROOM</div>
+        <div class="sample-doc-label">SAMPLE DENIAL DOC</div>
         <div class="sample-doc-text" id="doc-hc">Patient: John Doe, DOB 03/12/1968. Claim #HC-2024-88321. Payer: BlueCross. Denial reason: CO-50 — medical necessity not established for CPT 99213. Treating physician: Dr. Sarah Kim. Date of service: 05/14/2024. Billed amount: $285.00.</div>
         <button class="copy-btn" onclick="copyDoc('hc')">COPY DOC</button>
       </div>
       <div class="steps">
-        <div class="step" id="step-hc-0">
-          <div class="step-left"><div class="step-num" id="snum-hc-0">1</div></div>
-          <div class="step-body">
-            <div class="step-title">Open war room</div>
-            <div class="step-desc">Navigate to the HC Denial War Room. Confirm page loads with all 4 engine panels visible and no console errors.</div>
-            <div class="step-check"><input type="checkbox" id="chk-hc-0" onchange="check('hc',0,this.checked)"><label for="chk-hc-0">Page loads clean with 4 engine panels</label></div>
-          </div>
-        </div>
-        <div class="step" id="step-hc-1">
-          <div class="step-left"><div class="step-num" id="snum-hc-1">2</div></div>
-          <div class="step-body">
-            <div class="step-title">Paste denial doc</div>
-            <div class="step-desc">Copy the sample doc above and paste it into the document input area. Confirm doc type auto-detects as "HC Denial".</div>
-            <div class="step-check"><input type="checkbox" id="chk-hc-1" onchange="check('hc',1,this.checked)"><label for="chk-hc-1">Doc type shows HC Denial</label></div>
-          </div>
-        </div>
-        <div class="step" id="step-hc-2">
-          <div class="step-left"><div class="step-num" id="snum-hc-2">3</div></div>
-          <div class="step-body">
-            <div class="step-title">Run all 4 engines</div>
-            <div class="step-desc">Run Document Intelligence → Root Cause → Financial Impact → Recovery Plan in sequence. Each should stream a response identifying CO-50 code and medical necessity issue.</div>
-            <div class="step-check"><input type="checkbox" id="chk-hc-2" onchange="check('hc',2,this.checked)"><label for="chk-hc-2">All 4 engines produce output</label></div>
-          </div>
-        </div>
-        <div class="step" id="step-hc-3">
-          <div class="step-left"><div class="step-num" id="snum-hc-3">4</div></div>
-          <div class="step-body">
-            <div class="step-title">Check E6 app recommendations</div>
-            <div class="step-desc">Confirm Engine 6 renders 3 recommended app cards relevant to HC denial (e.g. HC Insurance Node, HC Billing Command).</div>
-            <div class="step-check"><input type="checkbox" id="chk-hc-3" onchange="check('hc',3,this.checked)"><label for="chk-hc-3">3 app cards appear with correct suggestions</label></div>
-          </div>
-        </div>
-        <div class="step" id="step-hc-4">
-          <div class="step-left"><div class="step-num" id="snum-hc-4">5</div></div>
-          <div class="step-body">
-            <div class="step-title">Escalate to strategist</div>
-            <div class="step-desc">Click "Escalate to HC Main Strategist". Confirm new tab opens, strategist loads, and the war room brief banner appears at the top with session data.</div>
-            <div class="step-check"><input type="checkbox" id="chk-hc-4" onchange="check('hc',4,this.checked)"><label for="chk-hc-4">Strategist loads with brief banner</label></div>
-          </div>
-        </div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-hc-0">1</div></div><div class="step-body"><div class="step-title">Open war room via Doc Search</div><div class="step-desc">Navigate from tsm-doc-search-multi.html → Healthcare tab → launch to HC Denial War Room. Confirm page loads with all engine panels visible.</div><div class="step-check"><input type="checkbox" id="chk-hc-0" onchange="check('hc',0,this.checked)"><label for="chk-hc-0">War room loads from doc search entry point</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-hc-1">2</div></div><div class="step-body"><div class="step-title">Paste denial doc + run engines</div><div class="step-desc">Paste sample doc, run all 4 engines. CO-50 code, medical necessity issue, and dollar exposure should all be identified.</div><div class="step-check"><input type="checkbox" id="chk-hc-1" onchange="check('hc',1,this.checked)"><label for="chk-hc-1">All 4 engines produce output with CO-50 flagged</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-hc-2">3</div></div><div class="step-body"><div class="step-title">App recommendation panel visible</div><div class="step-desc">Confirm Engine 6 / remediation panel renders 3 recommended app cards relevant to HC denial (HC Insurance Node, HC Billing Command).</div><div class="step-check"><input type="checkbox" id="chk-hc-2" onchange="check('hc',2,this.checked)"><label for="chk-hc-2">3 app cards appear with correct suggestions</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-hc-3" style="border-color:var(--cyan);color:var(--cyan)">4</div></div><div class="step-body"><div class="step-tag tag-phase3">PHASE 3</div><div class="step-title">Memory engine cross-upload banner</div><div class="step-desc">Confirm the memory engine banner appears if prior similar anomalies exist. Check sessionStorage for TSM_HC_WAR_RELAY written correctly.</div><div class="info-note">If no prior anomalies exist, banner should say "No prior similar cases found in memory."</div><div class="step-check"><input type="checkbox" id="chk-hc-3" onchange="check('hc',3,this.checked)"><label for="chk-hc-3">Memory banner visible, relay key written</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-hc-4">5</div></div><div class="step-body"><div class="step-title">Escalate to HC Strategist</div><div class="step-desc">Click escalate. Confirm strategist loads with war room brief banner at top and session data populated.</div><div class="step-check"><input type="checkbox" id="chk-hc-4" onchange="check('hc',4,this.checked)"><label for="chk-hc-4">Strategist loads with brief banner</label></div></div></div>
       </div>
-      <div class="panel-footer">
-        <span class="done-badge" id="done-hc" style="display:none">✓ READY</span>
-        <button class="reset-btn" onclick="resetWr('hc')">RESET</button>
-        <button class="next-btn" onclick="switchTo('finops')">NEXT: FINOPS →</button>
-      </div>
+      <div class="panel-footer"><span class="done-badge" id="done-hc" style="display:none">✓ READY</span><button class="reset-btn" onclick="resetWr('hc')">RESET</button><button class="next-btn" onclick="switchTo('finops')">NEXT: FINOPS →</button></div>
     </div>
 
+    <!-- ── FINOPS ── -->
     <div class="panel" id="panel-finops">
       <div class="panel-header">
         <div class="panel-eyebrow">WAR ROOM 2 / 7</div>
         <div class="panel-title">FinOps — FinOps War Room</div>
         <div class="panel-url"><a href="/html/finops-suite/finops-war-room.html" target="_blank">/html/finops-suite/finops-war-room.html ↗</a></div>
       </div>
-      <div class="progress-row">
-        <div class="progress-track"><div class="progress-fill-wr" id="prog-finops" style="width:0%"></div></div>
-        <div class="progress-pct" id="pct-finops">0%</div>
+      <div class="chain-flow">
+        <div class="cf-step active-step"><div class="cf-num">01</div><div class="cf-label" style="color:var(--green)">WAR ROOM</div><div class="cf-sub">Understand</div></div>
+        <div class="cf-arrow">→</div>
+        <div class="cf-step"><div class="cf-num">02</div><div class="cf-label">FINOPS STRATEGIST</div><div class="cf-sub">Decide</div></div>
+        <div class="cf-arrow">→</div>
+        <div class="cf-step"><div class="cf-num">03</div><div class="cf-label">FINOPS EXEC PORTAL</div><div class="cf-sub">Execute</div></div>
       </div>
+      <div class="progress-row"><div class="progress-track"><div class="progress-fill-wr" id="prog-finops" style="width:0%"></div></div><div class="progress-pct" id="pct-finops">0%</div></div>
       <div class="sample-doc">
-        <div class="sample-doc-label">SAMPLE AP AGING DOC — PASTE INTO WAR ROOM</div>
+        <div class="sample-doc-label">SAMPLE AP AGING DOC</div>
         <div class="sample-doc-text" id="doc-finops">Invoice #INV-2024-4421. Vendor: Apex Supply Co. Amount: $142,800. Due: 06/01/2024. Status: 47 days past due. AP aging bucket: 60–90 days. PO match: failed — quantity variance 15%. Contract ref: MSA-2022-009.</div>
         <button class="copy-btn" onclick="copyDoc('finops')">COPY DOC</button>
       </div>
       <div class="steps">
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-finops-0">1</div></div><div class="step-body"><div class="step-title">Open war room</div><div class="step-desc">Navigate to FinOps War Room. Confirm page loads with sector selector and all engine panels visible.</div><div class="step-check"><input type="checkbox" id="chk-finops-0" onchange="check('finops',0,this.checked)"><label for="chk-finops-0">Page loads with sector selector</label></div></div></div>
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-finops-1">2</div></div><div class="step-body"><div class="step-title">Paste AP aging doc</div><div class="step-desc">Paste the sample invoice. Confirm doc type detects as financial/AP and char count is shown.</div><div class="step-check"><input type="checkbox" id="chk-finops-1" onchange="check('finops',1,this.checked)"><label for="chk-finops-1">Doc ingested, char count shown</label></div></div></div>
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-finops-2">3</div></div><div class="step-body"><div class="step-title">Run BNCA analysis</div><div class="step-desc">Run engines. Confirm streaming response identifies PO match failure (15% variance) and 60–90 day aging bucket.</div><div class="step-check"><input type="checkbox" id="chk-finops-2" onchange="check('finops',2,this.checked)"><label for="chk-finops-2">PO mismatch and aging bucket flagged</label></div></div></div>
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-finops-3">4</div></div><div class="step-body"><div class="step-title">Check financial impact engine</div><div class="step-desc">Confirm Engine 3 quantifies dollar exposure on the $142,800 past-due invoice.</div><div class="step-check"><input type="checkbox" id="chk-finops-3" onchange="check('finops',3,this.checked)"><label for="chk-finops-3">Dollar exposure figure in output</label></div></div></div>
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-finops-4">5</div></div><div class="step-body"><div class="step-title">Escalate to FinOps strategist</div><div class="step-desc">Click escalate. Confirm FinOps Strategist opens with session brief payload loaded.</div><div class="step-check"><input type="checkbox" id="chk-finops-4" onchange="check('finops',4,this.checked)"><label for="chk-finops-4">Strategist loads with brief</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-finops-0">1</div></div><div class="step-body"><div class="step-title">Open war room from Doc Search</div><div class="step-desc">Navigate tsm-doc-search-multi.html → FinOps tab → launch to FinOps War Room. Confirm sector selector and engine panels load.</div><div class="step-check"><input type="checkbox" id="chk-finops-0" onchange="check('finops',0,this.checked)"><label for="chk-finops-0">War room loads with sector selector</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-finops-1">2</div></div><div class="step-body"><div class="step-title">Paste AP aging doc + run BNCA</div><div class="step-desc">Paste sample invoice. Confirm PO match failure (15% variance) and 60–90 day aging bucket are flagged. Dollar exposure on $142,800 should appear.</div><div class="step-check"><input type="checkbox" id="chk-finops-1" onchange="check('finops',1,this.checked)"><label for="chk-finops-1">PO mismatch, aging, dollar exposure flagged</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-finops-2" style="border-color:var(--cyan);color:var(--cyan)">3</div></div><div class="step-body"><div class="step-tag tag-phase3">PHASE 3</div><div class="step-title">Memory engine + anomaly relay</div><div class="step-desc">Confirm tsm-memory-engine.js is loaded (check console). Verify tsm_finops_war_relay is written to localStorage after engine run.</div><div class="step-check"><input type="checkbox" id="chk-finops-2" onchange="check('finops',2,this.checked)"><label for="chk-finops-2">Memory engine loaded, relay key written</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-finops-3">4</div></div><div class="step-body"><div class="step-title">Verify proxy routing</div><div class="step-desc">DevTools → Network → run engines → confirm all calls hit /api/war-room/stream, not api.groq.com.</div><div class="devtools-note">DevTools → Network → filter "groq" — must return zero results</div><div class="step-check"><input type="checkbox" id="chk-finops-3" onchange="check('finops',3,this.checked)"><label for="chk-finops-3">All calls proxied, zero direct Groq</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-finops-4">5</div></div><div class="step-body"><div class="step-title">Escalate to FinOps Strategist</div><div class="step-desc">Click escalate. FinOps Strategist loads with session payload and brief banner populated.</div><div class="step-check"><input type="checkbox" id="chk-finops-4" onchange="check('finops',4,this.checked)"><label for="chk-finops-4">Strategist loads with brief</label></div></div></div>
       </div>
       <div class="panel-footer"><span class="done-badge" id="done-finops" style="display:none">✓ READY</span><button class="reset-btn" onclick="resetWr('finops')">RESET</button><button class="next-btn" onclick="switchTo('ins')">NEXT: INSURANCE →</button></div>
     </div>
 
+    <!-- ── INSURANCE ── -->
     <div class="panel" id="panel-ins">
       <div class="panel-header">
         <div class="panel-eyebrow">WAR ROOM 3 / 7</div>
         <div class="panel-title">Insurance — Insurance War Room</div>
         <div class="panel-url"><a href="/html/tsm-insurance/insurance-war-room.html" target="_blank">/html/tsm-insurance/insurance-war-room.html ↗</a></div>
+      </div>
+      <div class="chain-flow">
+        <div class="cf-step active-step"><div class="cf-num">01</div><div class="cf-label" style="color:var(--green)">WAR ROOM</div><div class="cf-sub">Understand</div></div>
+        <div class="cf-arrow">→</div>
+        <div class="cf-step"><div class="cf-num">02</div><div class="cf-label">INS STRATEGIST</div><div class="cf-sub">Decide</div></div>
+        <div class="cf-arrow">→</div>
+        <div class="cf-step"><div class="cf-num">03</div><div class="cf-label">INS EXEC PORTAL</div><div class="cf-sub">Execute</div></div>
       </div>
       <div class="progress-row"><div class="progress-track"><div class="progress-fill-wr" id="prog-ins" style="width:0%"></div></div><div class="progress-pct" id="pct-ins">0%</div></div>
       <div class="sample-doc">
@@ -379,15 +479,16 @@
         <button class="copy-btn" onclick="copyDoc('ins')">COPY DOC</button>
       </div>
       <div class="steps">
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-ins-0">1</div></div><div class="step-body"><div class="step-title">Open war room</div><div class="step-desc">Navigate to Insurance War Room. Confirm page loads with doc input and engine panels.</div><div class="step-check"><input type="checkbox" id="chk-ins-0" onchange="check('ins',0,this.checked)"><label for="chk-ins-0">Page loads clean</label></div></div></div>
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-ins-1">2</div></div><div class="step-body"><div class="step-title">Paste claim doc</div><div class="step-desc">Paste the sample claim. Confirm doc type detects as insurance claim.</div><div class="step-check"><input type="checkbox" id="chk-ins-1" onchange="check('ins',1,this.checked)"><label for="chk-ins-1">Insurance claim type detected</label></div></div></div>
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-ins-2">3</div></div><div class="step-body"><div class="step-title">Run claim analysis</div><div class="step-desc">Run engines. Coverage dispute and subrogation potential should be flagged in output.</div><div class="step-check"><input type="checkbox" id="chk-ins-2" onchange="check('ins',2,this.checked)"><label for="chk-ins-2">Coverage dispute and subrogation flagged</label></div></div></div>
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-ins-3">4</div></div><div class="step-body"><div class="step-title">Verify proxy routing (no direct Groq)</div><div class="step-desc">Open DevTools → Network tab. Run the strategist BNCA. Confirm all AI calls hit /api/war-room/stream — NOT api.groq.com.</div><div class="devtools-note">DevTools → Network → filter "groq" — should return zero results</div><div class="step-check"><input type="checkbox" id="chk-ins-3" onchange="check('ins',3,this.checked)"><label for="chk-ins-3">All calls hit /api/war-room/stream</label></div></div></div>
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-ins-4">5</div></div><div class="step-body"><div class="step-title">Escalate to strategist</div><div class="step-desc">Click escalate. Insurance Strategist loads with session payload and brief banner.</div><div class="step-check"><input type="checkbox" id="chk-ins-4" onchange="check('ins',4,this.checked)"><label for="chk-ins-4">Strategist loads with brief</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-ins-0">1</div></div><div class="step-body"><div class="step-title">Open war room from Doc Search</div><div class="step-desc">Navigate tsm-doc-search-multi.html → Insurance tab → launch to Insurance War Room. Page loads with doc input and engine panels.</div><div class="step-check"><input type="checkbox" id="chk-ins-0" onchange="check('ins',0,this.checked)"><label for="chk-ins-0">Page loads from doc search</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-ins-1">2</div></div><div class="step-body"><div class="step-title">Paste claim + run analysis</div><div class="step-desc">Paste sample claim. Coverage dispute and subrogation potential should both be flagged in engine output.</div><div class="step-check"><input type="checkbox" id="chk-ins-1" onchange="check('ins',1,this.checked)"><label for="chk-ins-1">Coverage dispute and subrogation flagged</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-ins-2">3</div></div><div class="step-body"><div class="step-title">Verify proxy routing</div><div class="step-desc">DevTools → Network → filter "groq" — should return zero results. All calls must hit /api/war-room/stream.</div><div class="devtools-note">Insurance strategist had direct Groq calls — confirm all patched.</div><div class="step-check"><input type="checkbox" id="chk-ins-2" onchange="check('ins',2,this.checked)"><label for="chk-ins-2">All calls proxied correctly</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-ins-3" style="border-color:var(--cyan);color:var(--cyan)">4</div></div><div class="step-body"><div class="step-tag tag-phase3">PHASE 3</div><div class="step-title">Memory relay written</div><div class="step-desc">After engine run, verify TSM_INS_WAR_RELAY is written to both sessionStorage and localStorage.</div><div class="step-check"><input type="checkbox" id="chk-ins-3" onchange="check('ins',3,this.checked)"><label for="chk-ins-3">TSM_INS_WAR_RELAY present in storage</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-ins-4">5</div></div><div class="step-body"><div class="step-title">Escalate to Insurance Strategist</div><div class="step-desc">Click escalate. Insurance Strategist loads with brief banner and relay payload visible.</div><div class="step-check"><input type="checkbox" id="chk-ins-4" onchange="check('ins',4,this.checked)"><label for="chk-ins-4">Strategist loads with brief</label></div></div></div>
       </div>
       <div class="panel-footer"><span class="done-badge" id="done-ins" style="display:none">✓ READY</span><button class="reset-btn" onclick="resetWr('ins')">RESET</button><button class="next-btn" onclick="switchTo('con')">NEXT: CONSTRUCTION →</button></div>
     </div>
 
+    <!-- ── CONSTRUCTION ── -->
     <div class="panel" id="panel-con">
       <div class="panel-header">
         <div class="panel-eyebrow">WAR ROOM 4 / 7</div>
@@ -398,55 +499,42 @@
           <a href="/html/construction-suite/permits-proposals.html" target="_blank">permits-proposals.html ↗</a>
         </div>
       </div>
+      <div class="chain-flow">
+        <div class="cf-step active-step"><div class="cf-num">01</div><div class="cf-label" style="color:var(--green)">WAR ROOM</div><div class="cf-sub">Understand</div></div>
+        <div class="cf-arrow">→</div>
+        <div class="cf-step"><div class="cf-num">02</div><div class="cf-label">CON STRATEGIST</div><div class="cf-sub">Decide</div></div>
+        <div class="cf-arrow">→</div>
+        <div class="cf-step"><div class="cf-num">03</div><div class="cf-label">CON EXEC PORTAL</div><div class="cf-sub">Execute</div></div>
+      </div>
       <div class="progress-row"><div class="progress-track"><div class="progress-fill-wr" id="prog-con" style="width:0%"></div></div><div class="progress-pct" id="pct-con">0%</div></div>
-
-      <div style="font-size:9px;letter-spacing:.12em;color:var(--text3);margin-bottom:.6rem;">PART 1 — CONSTRUCTION WAR ROOM</div>
-
       <div class="sample-doc">
-        <div class="sample-doc-label">SAMPLE RFI DOC — PASTE INTO WAR ROOM</div>
+        <div class="sample-doc-label">SAMPLE RFI DOC</div>
         <div class="sample-doc-text" id="doc-con">Project: Riverside Commons Phase 2. GC: Meridian Build Group. RFI #RFI-2024-088 — structural steel substitution request. Subcontractor: SteelCo. Impact: 14-day schedule delay, $87,000 cost variance. Owner approval required. Lien waiver deadline: 06/15/2024.</div>
         <button class="copy-btn" onclick="copyDoc('con')">COPY DOC</button>
       </div>
-
       <div class="steps">
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-con-0">1</div></div><div class="step-body"><div class="step-title">Open war room</div><div class="step-desc">Navigate to Construction War Room. Confirm all engine panels load clean.</div><div class="step-check"><input type="checkbox" id="chk-con-0" onchange="check('con',0,this.checked)"><label for="chk-con-0">Page loads clean with engine panels</label></div></div></div>
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-con-1">2</div></div><div class="step-body"><div class="step-title">Paste RFI doc</div><div class="step-desc">Paste the sample RFI above. Confirm doc ingests and type is identified.</div><div class="step-check"><input type="checkbox" id="chk-con-1" onchange="check('con',1,this.checked)"><label for="chk-con-1">RFI doc ingested</label></div></div></div>
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-con-2">3</div></div><div class="step-body"><div class="step-title">Run BNCA</div><div class="step-desc">Run engines. Schedule delay (14 days), $87k cost variance, and lien waiver deadline should all be flagged.</div><div class="step-check"><input type="checkbox" id="chk-con-2" onchange="check('con',2,this.checked)"><label for="chk-con-2">Schedule, cost, and lien deadline flagged</label></div></div></div>
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-con-3">4</div></div><div class="step-body"><div class="step-title">Verify strategist proxy (4 calls)</div><div class="step-desc">Open Construction Strategist → run BNCA → DevTools Network. All 4 AI calls must hit /api/war-room/stream, not api.groq.com.</div><div class="devtools-note">This file had the most direct Groq calls (4). Highest priority to verify.</div><div class="step-check"><input type="checkbox" id="chk-con-3" onchange="check('con',3,this.checked)"><label for="chk-con-3">All 4 strategist calls proxied correctly</label></div></div></div>
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-con-4">5</div></div><div class="step-body"><div class="step-title">Escalate to strategist</div><div class="step-desc">Click escalate from war room. Construction Strategist loads with brief banner and session data.</div><div class="step-check"><input type="checkbox" id="chk-con-4" onchange="check('con',4,this.checked)"><label for="chk-con-4">Strategist loads with brief</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-con-0">1</div></div><div class="step-body"><div class="step-title">Open war room + run RFI analysis</div><div class="step-desc">Launch from Doc Search. Paste RFI doc. Schedule delay (14 days), $87k cost variance, and lien deadline should all be flagged.</div><div class="step-check"><input type="checkbox" id="chk-con-0" onchange="check('con',0,this.checked)"><label for="chk-con-0">Schedule, cost, lien deadline flagged</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-con-1">1</div></div><div class="step-body"><div class="step-tag tag-critical">CRITICAL CHECK</div><div class="step-title">Verify strategist proxy (4 calls)</div><div class="step-desc">Open Construction Strategist → run BNCA → DevTools Network. All 4 AI calls must hit /api/war-room/stream. This file had the most direct Groq calls.</div><div class="devtools-note">Highest proxy-fix priority. Must be confirmed before Monday.</div><div class="step-check"><input type="checkbox" id="chk-con-1" onchange="check('con',1,this.checked)"><label for="chk-con-1">All 4 strategist calls proxied</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-con-2" style="border-color:var(--cyan);color:var(--cyan)">3</div></div><div class="step-body"><div class="step-tag tag-phase3">PHASE 3</div><div class="step-title">Memory relay + Engine 06 defect manifest</div><div class="step-desc">Confirm TSM_CONSTRUCTION_WAR_RELAY written to storage. Verify Engine 06 defect manifest injection is rendering properly.</div><div class="step-check"><input type="checkbox" id="chk-con-2" onchange="check('con',2,this.checked)"><label for="chk-con-2">Relay written, E06 manifest visible</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-con-3">4</div></div><div class="step-body"><div class="step-title">Test permits-proposals</div><div class="step-desc">Navigate to permits-proposals.html. Run a permit scenario. Dollar exposure and hold duration should appear. Confirm callAPI() hits /api/war-room/stream.</div><div class="step-check"><input type="checkbox" id="chk-con-3" onchange="check('con',3,this.checked)"><label for="chk-con-3">Permits page runs, proxy confirmed</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-con-4">5</div></div><div class="step-body"><div class="step-title">Escalate to Strategist</div><div class="step-desc">Escalate from war room. Construction Strategist loads with brief banner and relay data.</div><div class="step-check"><input type="checkbox" id="chk-con-4" onchange="check('con',4,this.checked)"><label for="chk-con-4">Strategist loads with brief</label></div></div></div>
       </div>
-
-      <div style="font-size:9px;letter-spacing:.12em;color:var(--text3);margin:1.5rem 0 .6rem;padding-top:1.5rem;border-top:1px solid var(--border);">PART 2 — PERMITS &amp; PROPOSALS</div>
-
-      <div class="sample-doc">
-        <div class="sample-doc-label">SAMPLE PERMIT DOC — PASTE INTO PERMITS-PROPOSALS</div>
-        <div class="sample-doc-text" id="doc-con-permit">Block C Building Permit BP-0201 approved partially — shell and structural only. MEP (mechanical, electrical, plumbing) permit pending City review. Estimated hold: 21 days. GC daily exposure: $12,000/day. Total accumulated exposure: $252,000. Zoning variance ZV-0019 still outstanding — blocks final CO.</div>
-        <button class="copy-btn" onclick="copyDocAlt('con-permit')">COPY PERMIT DOC</button>
-      </div>
-
-      <div class="sample-doc" style="margin-top:8px;">
-        <div class="sample-doc-label">SAMPLE PROPOSAL DOC — PASTE INTO PERMITS-PROPOSALS</div>
-        <div class="sample-doc-text" id="doc-con-proposal">Subcontractor proposal — SteelCo bid #SC-2024-441. Scope: structural steel package, Zones A–D. Base bid: $2,840,000. Alternates: galvanized coating add $88,000. Schedule: 18 weeks from NTP. Exclusions: fireproofing, embeds. Bond: performance + payment. Bid valid 30 days. Competing bid from IronWorks: $2,790,000 — 2-week longer schedule.</div>
-        <button class="copy-btn" onclick="copyDocAlt('con-proposal')">COPY PROPOSAL DOC</button>
-      </div>
-
-      <div class="steps">
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-con-5">6</div></div><div class="step-body"><div class="step-title">Open permits-proposals</div><div class="step-desc">Navigate to permits-proposals.html. Confirm page loads with scenario cards and ANALYSIS_MAP scenarios visible (permit_foundation_hold, electrical_permit_risk, etc.).</div><div class="step-check"><input type="checkbox" id="chk-con-5" onchange="check('con',5,this.checked)"><label for="chk-con-5">Scenario cards load with permit types</label></div></div></div>
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-con-6">7</div></div><div class="step-body"><div class="step-title">Run a permit scenario</div><div class="step-desc">Click a pre-loaded permit scenario (e.g. building_permit_partial or grading_permit_block). Confirm AI analysis streams and identifies dollar exposure and hold duration.</div><div class="step-check"><input type="checkbox" id="chk-con-6" onchange="check('con',6,this.checked)"><label for="chk-con-6">Permit scenario runs and shows dollar exposure</label></div></div></div>
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-con-7">8</div></div><div class="step-body"><div class="step-title">Paste permit doc and run custom analysis</div><div class="step-desc">Paste the sample permit doc above into the free-text input. Run analysis. Confirm MEP hold, $252k exposure, and ZV-0019 zoning issue are all identified.</div><div class="step-check"><input type="checkbox" id="chk-con-7" onchange="check('con',7,this.checked)"><label for="chk-con-7">MEP hold, exposure, and zoning flagged</label></div></div></div>
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-con-8">9</div></div><div class="step-body"><div class="step-title">Paste proposal doc and compare</div><div class="step-desc">Paste the sample proposal doc. Confirm bid comparison logic identifies SteelCo vs IronWorks tradeoff — price vs schedule delta.</div><div class="step-check"><input type="checkbox" id="chk-con-8" onchange="check('con',8,this.checked)"><label for="chk-con-8">Bid comparison and schedule tradeoff shown</label></div></div></div>
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-con-9">10</div></div><div class="step-body"><div class="step-title">Verify permits-proposals proxy fix</div><div class="step-desc">DevTools → Network → run any analysis in permits-proposals. Confirm the single Groq call now hits /api/war-room/stream (this file had 1 direct Groq call — line 1750 — that needs the same fix as the strategists).</div><div class="devtools-note">permits-proposals.html has 1 direct api.groq.com call at line 1750 in callAPI(). Must be proxied before Monday.</div><div class="step-check"><input type="checkbox" id="chk-con-9" onchange="check('con',9,this.checked)"><label for="chk-con-9">callAPI() hits /api/war-room/stream</label></div></div></div>
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-con-10">11</div></div><div class="step-body"><div class="step-title">Launch scenario to construction hub</div><div class="step-desc">Click "Launch Scenario" on a permit or proposal result. Confirm launchScenario() fires, stores tsm_construction_mission in localStorage, and routes correctly to construction hub.</div><div class="step-check"><input type="checkbox" id="chk-con-10" onchange="check('con',10,this.checked)"><label for="chk-con-10">Scenario launches and routes to hub</label></div></div></div>
-      </div>
-
       <div class="panel-footer"><span class="done-badge" id="done-con" style="display:none">✓ READY</span><button class="reset-btn" onclick="resetWr('con')">RESET</button><button class="next-btn" onclick="switchTo('legal')">NEXT: LEGAL →</button></div>
     </div>
 
+    <!-- ── LEGAL ── -->
     <div class="panel" id="panel-legal">
       <div class="panel-header">
         <div class="panel-eyebrow">WAR ROOM 5 / 7</div>
         <div class="panel-title">Legal — Legal War Room</div>
         <div class="panel-url"><a href="/html/legal-pro/legal-war-room.html" target="_blank">/html/legal-pro/legal-war-room.html ↗</a></div>
+      </div>
+      <div class="chain-flow">
+        <div class="cf-step active-step"><div class="cf-num">01</div><div class="cf-label" style="color:var(--green)">WAR ROOM</div><div class="cf-sub">Understand</div></div>
+        <div class="cf-arrow">→</div>
+        <div class="cf-step"><div class="cf-num">02</div><div class="cf-label">LEGAL STRATEGIST</div><div class="cf-sub">Decide</div></div>
+        <div class="cf-arrow">→</div>
+        <div class="cf-step"><div class="cf-num">03</div><div class="cf-label">LEGAL EXEC PORTAL</div><div class="cf-sub">Execute</div></div>
       </div>
       <div class="progress-row"><div class="progress-track"><div class="progress-fill-wr" id="prog-legal" style="width:0%"></div></div><div class="progress-pct" id="pct-legal">0%</div></div>
       <div class="sample-doc">
@@ -455,20 +543,28 @@
         <button class="copy-btn" onclick="copyDoc('legal')">COPY DOC</button>
       </div>
       <div class="steps">
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-legal-0">1</div></div><div class="step-body"><div class="step-title">Open war room</div><div class="step-desc">Navigate to Legal War Room. Confirm page loads with doc input and engine panels.</div><div class="step-check"><input type="checkbox" id="chk-legal-0" onchange="check('legal',0,this.checked)"><label for="chk-legal-0">Page loads clean</label></div></div></div>
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-legal-1">2</div></div><div class="step-body"><div class="step-title">Paste matter summary</div><div class="step-desc">Paste the sample case doc. Confirm legal doc type is detected.</div><div class="step-check"><input type="checkbox" id="chk-legal-1" onchange="check('legal',1,this.checked)"><label for="chk-legal-1">Legal doc type detected</label></div></div></div>
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-legal-2">3</div></div><div class="step-body"><div class="step-title">Run legal analysis</div><div class="step-desc">Run engines. NDA breach, discovery deadline (06/30), and $4.2M exposure should all be identified.</div><div class="step-check"><input type="checkbox" id="chk-legal-2" onchange="check('legal',2,this.checked)"><label for="chk-legal-2">NDA breach, deadline, and damages flagged</label></div></div></div>
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-legal-3">4</div></div><div class="step-body"><div class="step-title">Verify strategist proxy fix</div><div class="step-desc">Open Legal Strategist → run synthesis → DevTools Network tab. Confirm zero calls to api.groq.com.</div><div class="devtools-note">DevTools → Network → filter "groq" — must be empty</div><div class="step-check"><input type="checkbox" id="chk-legal-3" onchange="check('legal',3,this.checked)"><label for="chk-legal-3">Calls go to /api/war-room/stream only</label></div></div></div>
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-legal-4">5</div></div><div class="step-body"><div class="step-title">Escalate to strategist</div><div class="step-desc">Click escalate. Legal Strategist opens with session brief banner visible.</div><div class="step-check"><input type="checkbox" id="chk-legal-4" onchange="check('legal',4,this.checked)"><label for="chk-legal-4">Brief banner visible in strategist</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-legal-0">1</div></div><div class="step-body"><div class="step-title">Open war room + run legal analysis</div><div class="step-desc">Launch from Doc Search → Legal tab. Paste matter summary. NDA breach, discovery deadline (06/30), and $4.2M exposure should all be identified.</div><div class="step-check"><input type="checkbox" id="chk-legal-0" onchange="check('legal',0,this.checked)"><label for="chk-legal-0">NDA breach, deadline, damages flagged</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-legal-1">2</div></div><div class="step-body"><div class="step-title">Token compression active</div><div class="step-desc">Legal war room uses compressLegal() for ~70% token reduction. Confirm output still contains relevant case identifiers and doesn't truncate key facts.</div><div class="step-check"><input type="checkbox" id="chk-legal-1" onchange="check('legal',1,this.checked)"><label for="chk-legal-1">Compression active, output coherent</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-legal-2">3</div></div><div class="step-body"><div class="step-title">Verify proxy routing</div><div class="step-desc">DevTools → Network → filter "groq" — must return zero results for both war room and strategist.</div><div class="step-check"><input type="checkbox" id="chk-legal-2" onchange="check('legal',2,this.checked)"><label for="chk-legal-2">All calls proxied, zero direct Groq</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-legal-3" style="border-color:var(--cyan);color:var(--cyan)">4</div></div><div class="step-body"><div class="step-tag tag-phase3">PHASE 3</div><div class="step-title">Memory relay + HITL modal</div><div class="step-desc">Confirm TSM_LEGAL_WAR_RELAY written to storage. In Legal Exec Portal, verify HITL authorization modal loads and logs to sessionStorage on approval.</div><div class="step-check"><input type="checkbox" id="chk-legal-3" onchange="check('legal',3,this.checked)"><label for="chk-legal-3">Relay written, HITL modal functional</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-legal-4">5</div></div><div class="step-body"><div class="step-title">Escalate to Legal Strategist</div><div class="step-desc">Escalate from war room. Strategist opens with 8 tabs, brief banner, and 6 pull-pack buttons visible.</div><div class="step-check"><input type="checkbox" id="chk-legal-4" onchange="check('legal',4,this.checked)"><label for="chk-legal-4">Strategist loads with 8 tabs and brief</label></div></div></div>
       </div>
       <div class="panel-footer"><span class="done-badge" id="done-legal" style="display:none">✓ READY</span><button class="reset-btn" onclick="resetWr('legal')">RESET</button><button class="next-btn" onclick="switchTo('re')">NEXT: REAL ESTATE →</button></div>
     </div>
 
+    <!-- ── REAL ESTATE ── -->
     <div class="panel" id="panel-re">
       <div class="panel-header">
         <div class="panel-eyebrow">WAR ROOM 6 / 7</div>
         <div class="panel-title">Real Estate — RE War Room</div>
         <div class="panel-url"><a href="/html/reo-pro/re-war-room.html" target="_blank">/html/reo-pro/re-war-room.html ↗</a></div>
+      </div>
+      <div class="chain-flow">
+        <div class="cf-step active-step"><div class="cf-num">01</div><div class="cf-label" style="color:var(--green)">WAR ROOM</div><div class="cf-sub">Understand</div></div>
+        <div class="cf-arrow">→</div>
+        <div class="cf-step"><div class="cf-num">02</div><div class="cf-label">RE STRATEGIST</div><div class="cf-sub">Decide</div></div>
+        <div class="cf-arrow">→</div>
+        <div class="cf-step"><div class="cf-num">03</div><div class="cf-label">RE EXEC PORTAL</div><div class="cf-sub">Execute</div></div>
       </div>
       <div class="progress-row"><div class="progress-track"><div class="progress-fill-wr" id="prog-re" style="width:0%"></div></div><div class="progress-pct" id="pct-re">0%</div></div>
       <div class="sample-doc">
@@ -477,73 +573,171 @@
         <button class="copy-btn" onclick="copyDoc('re')">COPY DOC</button>
       </div>
       <div class="steps">
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-re-0">1</div></div><div class="step-body"><div class="step-title">Open war room</div><div class="step-desc">Navigate to RE War Room. Confirm page loads with property input and engine panels.</div><div class="step-check"><input type="checkbox" id="chk-re-0" onchange="check('re',0,this.checked)"><label for="chk-re-0">Page loads clean</label></div></div></div>
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-re-1">2</div></div><div class="step-body"><div class="step-title">Paste REO asset doc</div><div class="step-desc">Paste the sample REO doc. Confirm doc ingests with char count shown.</div><div class="step-check"><input type="checkbox" id="chk-re-1" onchange="check('re',1,this.checked)"><label for="chk-re-1">REO doc ingested</label></div></div></div>
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-re-2">3</div></div><div class="step-body"><div class="step-title">Run asset analysis</div><div class="step-desc">Run engines. Title lien issue ($22k), BPO vs appraisal gap ($23k), and HOA delinquency should all be flagged.</div><div class="step-check"><input type="checkbox" id="chk-re-2" onchange="check('re',2,this.checked)"><label for="chk-re-2">Lien, valuation gap, HOA flagged</label></div></div></div>
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-re-3">4</div></div><div class="step-body"><div class="step-title">Check recovery navigator</div><div class="step-desc">Confirm Recovery Navigator panel renders with prioritized next steps for this asset type.</div><div class="step-check"><input type="checkbox" id="chk-re-3" onchange="check('re',3,this.checked)"><label for="chk-re-3">Navigator shows prioritized action items</label></div></div></div>
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-re-4">4</div></div><div class="step-body"><div class="step-title">Escalate to strategist</div><div class="step-desc">Click escalate. RE Strategist loads with asset brief payload.</div><div class="step-check"><input type="checkbox" id="chk-re-4" onchange="check('re',4,this.checked)"><label for="chk-re-4">Strategist loads with brief</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-re-0">1</div></div><div class="step-body"><div class="step-title">Open war room + run asset analysis</div><div class="step-desc">Launch from Doc Search. Paste REO doc. Title lien ($22k), BPO vs appraisal gap ($23k), and HOA delinquency should all be flagged.</div><div class="step-check"><input type="checkbox" id="chk-re-0" onchange="check('re',0,this.checked)"><label for="chk-re-0">Lien, valuation gap, HOA flagged</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-re-1">2</div></div><div class="step-body"><div class="step-title">RE guided tour + waitFor gating</div><div class="step-desc">Confirm the guided tour auto-advances, waitFor event gating is working, and renderRemPath anomaly framing panel is visible.</div><div class="step-check"><input type="checkbox" id="chk-re-1" onchange="check('re',1,this.checked)"><label for="chk-re-1">Guided tour runs, remPath panel visible</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-re-2">3</div></div><div class="step-body"><div class="step-title">7-tool remediation panel</div><div class="step-desc">Confirm the 7-tool remediation panel renders with correct app recommendations for this REO asset type.</div><div class="step-check"><input type="checkbox" id="chk-re-2" onchange="check('re',2,this.checked)"><label for="chk-re-2">7-tool panel renders correctly</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-re-3" style="border-color:var(--cyan);color:var(--cyan)">4</div></div><div class="step-body"><div class="step-tag tag-phase3">PHASE 3</div><div class="step-title">Memory relay written</div><div class="step-desc">Confirm TSM_RE_WAR_RELAY written to both sessionStorage and localStorage after engine run.</div><div class="step-check"><input type="checkbox" id="chk-re-3" onchange="check('re',3,this.checked)"><label for="chk-re-3">TSM_RE_WAR_RELAY present in storage</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-re-4">5</div></div><div class="step-body"><div class="step-title">Escalate to RE Strategist</div><div class="step-desc">Click escalate. RE Strategist loads with asset brief payload and session data visible.</div><div class="step-check"><input type="checkbox" id="chk-re-4" onchange="check('re',4,this.checked)"><label for="chk-re-4">Strategist loads with asset brief</label></div></div></div>
       </div>
       <div class="panel-footer"><span class="done-badge" id="done-re" style="display:none">✓ READY</span><button class="reset-btn" onclick="resetWr('re')">RESET</button><button class="next-btn" onclick="switchTo('bpo')">NEXT: BPO →</button></div>
     </div>
 
+    <!-- ── BPO — EVOLVED CHAIN ── -->
     <div class="panel" id="panel-bpo">
       <div class="panel-header">
-        <div class="panel-eyebrow">WAR ROOM 7 / 7</div>
-        <div class="panel-title">BPO — BPO War Room</div>
-        <div class="panel-url"><a href="/html/bpo/bpo-war-room.html" target="_blank">/html/bpo/bpo-war-room.html ↗</a></div>
+        <div class="panel-eyebrow">WAR ROOM 7 / 7 — EVOLVED CHAIN</div>
+        <div class="panel-title">BPO — Decision Intelligence Chain</div>
+        <div class="panel-url">
+          <a href="/html/bpo/bpo-situation-room.html" target="_blank">bpo-situation-room.html ↗</a>
+          &nbsp;·&nbsp;
+          <a href="/html/bpo/bpo-strategist.html" target="_blank">bpo-strategist.html ↗</a>
+          &nbsp;·&nbsp;
+          <a href="/html/bpo/bpo-executive-portal.html" target="_blank">bpo-executive-portal.html ↗</a>
+        </div>
       </div>
+
+      <!-- BPO USES NEW 4-STAGE CHAIN -->
+      <div class="chain-flow">
+        <div class="cf-step"><div class="cf-num">00</div><div class="cf-label">DOC SEARCH</div><div class="cf-sub">Entry point</div></div>
+        <div class="cf-arrow">→</div>
+        <div class="cf-step bpo-step"><div class="cf-num">01</div><div class="cf-label" style="color:var(--cyan)">SITUATION ROOM</div><div class="cf-sub">Understand</div></div>
+        <div class="cf-arrow">→</div>
+        <div class="cf-step bpo-step"><div class="cf-num">02</div><div class="cf-label" style="color:var(--amber)">STRATEGIST V2</div><div class="cf-sub">Decide</div></div>
+        <div class="cf-arrow">→</div>
+        <div class="cf-step bpo-step"><div class="cf-num">03</div><div class="cf-label" style="color:var(--green)">EXEC PORTAL</div><div class="cf-sub">Execute</div></div>
+        <div class="cf-arrow">→</div>
+        <div class="cf-step"><div class="cf-num">04</div><div class="cf-label" style="color:var(--purple)">EXPLAINABILITY</div><div class="cf-sub">Trust</div></div>
+      </div>
+
+      <div class="info-note" style="margin-bottom:1.5rem">
+        ⊕ BPO is the evolved demo chain — entry is via tsm-doc-search-multi.html, which now routes directly to bpo-situation-room.html (not bpo-doc-uploader.html). The relay key is TSM_BPO_DOC.
+      </div>
+
       <div class="progress-row"><div class="progress-track"><div class="progress-fill-wr" id="prog-bpo" style="width:0%"></div></div><div class="progress-pct" id="pct-bpo">0%</div></div>
+
       <div class="sample-doc">
-        <div class="sample-doc-label">SAMPLE SLA PERFORMANCE DOC</div>
-        <div class="sample-doc-text" id="doc-bpo">Client: HealthFirst Admin Services. SLA: 98.5% processing accuracy, 24hr turnaround. Current month accuracy: 96.2%. Backlog: 1,840 claims. Staffing gap: 3 FTEs. Error type: missing auth codes — 62% of rejections. Escalations pending: 14 aged items over 72hrs.</div>
+        <div class="sample-doc-label">SAMPLE BPO INCIDENT DOC — SLA BREACH</div>
+        <div class="sample-doc-text" id="doc-bpo">Client: HealthFirst Admin Services. SLA: 98.5% processing accuracy, 24hr turnaround. Current month accuracy: 96.2%. Backlog: 1,840 claims. Staffing gap: 3 FTEs. Error type: missing auth codes — 62% of rejections. Escalations pending: 14 aged items over 72hrs. Revenue at risk: $58,200.</div>
         <button class="copy-btn" onclick="copyDoc('bpo')">COPY DOC</button>
       </div>
-      <div class="steps">
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-bpo-0">1</div></div><div class="step-body"><div class="step-title">Open war room</div><div class="step-desc">Navigate to BPO War Room. Confirm page loads with sector and doc type selectors.</div><div class="step-check"><input type="checkbox" id="chk-bpo-0" onchange="check('bpo',0,this.checked)"><label for="chk-bpo-0">Page loads with selectors visible</label></div></div></div>
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-bpo-1">2</div></div><div class="step-body"><div class="step-title">Paste SLA doc</div><div class="step-desc">Paste the sample SLA performance doc. Confirm it ingests.</div><div class="step-check"><input type="checkbox" id="chk-bpo-1" onchange="check('bpo',1,this.checked)"><label for="chk-bpo-1">SLA doc ingested</label></div></div></div>
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-bpo-2">3</div></div><div class="step-body"><div class="step-title">Run BPO analysis</div><div class="step-desc">Run engines. SLA breach (96.2% vs 98.5%), staffing gap (3 FTEs), and auth code error pattern (62%) should all be flagged.</div><div class="step-check"><input type="checkbox" id="chk-bpo-2" onchange="check('bpo',2,this.checked)"><label for="chk-bpo-2">SLA breach, staffing, error pattern flagged</label></div></div></div>
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-bpo-3">4</div></div><div class="step-body"><div class="step-title">Check exec portal live brief</div><div class="step-desc">Open BPO Exec Portal. Confirm generateExecBrief() fires and renders a live AI-generated brief — not a static stub.</div><div class="step-check"><input type="checkbox" id="chk-bpo-3" onchange="check('bpo',3,this.checked)"><label for="chk-bpo-3">Exec brief renders with live AI data</label></div></div></div>
-        <div class="step"><div class="step-left"><div class="step-num" id="snum-bpo-4">5</div></div><div class="step-body"><div class="step-title">Escalate to strategist</div><div class="step-desc">Click escalate. BPO Strategist loads with session payload and brief banner.</div><div class="step-check"><input type="checkbox" id="chk-bpo-4" onchange="check('bpo',4,this.checked)"><label for="chk-bpo-4">Strategist loads with brief</label></div></div></div>
+      <div class="sample-doc" style="border-left-color:var(--cyan)">
+        <div class="sample-doc-label">SAMPLE BPO INCIDENT DOC — SUPPLIER SHUTDOWN</div>
+        <div class="sample-doc-text" id="doc-bpo-supplier">SUPPLIER SHUTDOWN NOTICE — GlobalParts Inc filing Chapter 11 bankruptcy. All open POs totaling $2.3M frozen. Production lines A, B, C impacted within 6 days of inventory depletion. 17 customer commitments at risk — $8.2M contracted revenue. Decision window: 6 hours. Supplier B contingency available.</div>
+        <button class="copy-btn" onclick="copyDocAlt('bpo-supplier')">COPY SUPPLIER DOC</button>
       </div>
-      <div class="panel-footer"><span class="done-badge" id="done-bpo" style="display:none">✓ READY</span><button class="reset-btn" onclick="resetWr('bpo')">RESET</button><button class="next-btn" onclick="switchTo('overview')">BACK TO OVERVIEW →</button></div>
+
+      <div class="steps">
+
+        <div class="step-divider">STAGE 01 — SITUATION ROOM (UNDERSTAND)</div>
+
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-bpo-0">1</div></div><div class="step-body"><div class="step-tag tag-new">NEW ENTRY POINT</div><div class="step-title">Launch from Doc Search → Situation Room</div><div class="step-desc">Navigate tsm-doc-search-multi.html → BPO tab → launch. Confirm you land on bpo-situation-room.html (NOT bpo-doc-uploader.html or bpo-war-room.html). The relay key TSM_BPO_DOC should be pre-populated.</div><div class="step-check"><input type="checkbox" id="chk-bpo-0" onchange="check('bpo',0,this.checked)"><label for="chk-bpo-0">Land on Situation Room, relay data loaded</label></div></div></div>
+
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-bpo-1">2</div></div><div class="step-body"><div class="step-title">Impact Snapshot + Decision Window</div><div class="step-desc">Confirm 4 Impact tiles render (Revenue at Risk, Lines, Clients, Inventory/Runway) and the 6-hour decision window countdown is ticking.</div><div class="step-check"><input type="checkbox" id="chk-bpo-1" onchange="check('bpo',1,this.checked)"><label for="chk-bpo-1">4 tiles visible, countdown ticking</label></div></div></div>
+
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-bpo-2">3</div></div><div class="step-body"><div class="step-title">AI Extraction Engine fires</div><div class="step-desc">Extraction engine auto-fires on doc load and streams output. Root cause box populates. Risk cascade appears. BNCA preview renders. Evidence panel shows ✓ marks.</div><div class="step-check"><input type="checkbox" id="chk-bpo-2" onchange="check('bpo',2,this.checked)"><label for="chk-bpo-2">Extraction complete, all panels populated</label></div></div></div>
+
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-bpo-3" style="border-color:var(--cyan);color:var(--cyan)">4</div></div><div class="step-body"><div class="step-tag tag-phase3">PHASE 3</div><div class="step-title">Memory timeline + relay storage</div><div class="step-desc">Confirm TSM_BPO_DOC is read correctly. After extraction, TSM_BPO_WAR_RELAY should be written (for Strategist). Memory timeline panel should show log entries.</div><div class="step-check"><input type="checkbox" id="chk-bpo-3" onchange="check('bpo',3,this.checked)"><label for="chk-bpo-3">Memory timeline active, relay stored</label></div></div></div>
+
+        <div class="step-divider">STAGE 02 — STRATEGIST V2 (DECIDE)</div>
+
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-bpo-4">5</div></div><div class="step-body"><div class="step-title">Route to Strategist V2</div><div class="step-desc">Click "Route to Strategist →". Confirm bpo-strategist.html (V2) loads and reads TSM_BPO_WAR_RELAY from previous stage. Business Impact Model shows if/no-action delta.</div><div class="step-check"><input type="checkbox" id="chk-bpo-4" onchange="check('bpo',4,this.checked)"><label for="chk-bpo-4">Strategist V2 loads with impact model</label></div></div></div>
+
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-bpo-5">6</div></div><div class="step-body"><div class="step-title">Scenario Simulator — select Option A</div><div class="step-desc">Confirm 3 scenario cards render (Option A/B/C) with probability bars and outcome data. Select Option A (Recommended). Probability bar animates to 92%.</div><div class="step-check"><input type="checkbox" id="chk-bpo-5" onchange="check('bpo',5,this.checked)"><label for="chk-bpo-5">3 scenarios visible, Option A selectable</label></div></div></div>
+
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-bpo-6">7</div></div><div class="step-body"><div class="step-title">Fire Strategy Engine</div><div class="step-desc">Click "Generate Strategy Brief". Confirm it streams to Groq via /api/war-room/stream and parses into: Strategy Brief sections + JSON recommendation block with confidence score and reasoning chain.</div><div class="step-check"><input type="checkbox" id="chk-bpo-6" onchange="check('bpo',6,this.checked)"><label for="chk-bpo-6">Strategy brief streams, JSON parsed correctly</label></div></div></div>
+
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-bpo-7" style="border-color:var(--purple);color:var(--purple)">8</div></div><div class="step-body"><div class="step-tag" style="background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.25);color:var(--purple)">EXPLAINABILITY</div><div class="step-title">Confidence score + Reasoning chain visible</div><div class="step-desc">Right panel shows: Confidence % with fill bar, Recommended Actions with owners, Data Sources analyzed with weights, Reasoning chain (Threshold / Evidence / History / Risk).</div><div class="step-check"><input type="checkbox" id="chk-bpo-7" onchange="check('bpo',7,this.checked)"><label for="chk-bpo-7">Confidence, actions, sources, reasoning all visible</label></div></div></div>
+
+        <div class="step-divider">STAGE 03 — EXECUTIVE PORTAL (EXECUTE)</div>
+
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-bpo-8">9</div></div><div class="step-body"><div class="step-title">Escalate to Executive Portal</div><div class="step-desc">Click "Escalate to Executive →". Confirm bpo-executive-portal.html loads and reads TSM_BPO_STRAT_RELAY. Executive brief, action queue, and owners panel should all render.</div><div class="step-check"><input type="checkbox" id="chk-bpo-8" onchange="check('bpo',8,this.checked)"><label for="chk-bpo-8">Exec portal loads with strategy relay</label></div></div></div>
+
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-bpo-9">10</div></div><div class="step-body"><div class="step-title">Exec brief generates (live AI)</div><div class="step-desc">Confirm generateExecBrief() fires and renders a live AI-generated brief — not a static stub. Confirm this call also routes through /api/war-room/stream.</div><div class="step-check"><input type="checkbox" id="chk-bpo-9" onchange="check('bpo',9,this.checked)"><label for="chk-bpo-9">Live exec brief renders via proxy</label></div></div></div>
+
+      </div>
+      <div class="panel-footer"><span class="done-badge" id="done-bpo" style="display:none">✓ READY</span><button class="reset-btn" onclick="resetWr('bpo')">RESET</button><button class="next-btn" onclick="switchTo('phase3')">NEXT: PHASE 3 →</button></div>
+    </div>
+
+    <!-- ── PHASE 3 SYSTEMS ── -->
+    <div class="panel" id="panel-phase3">
+      <div class="panel-header">
+        <div class="panel-eyebrow">PHASE 3 READINESS</div>
+        <div class="panel-title">Memory Engine + Sector Intelligence</div>
+        <div class="panel-url">
+          <a href="/html/shared/tsm-memory-engine.js" target="_blank">html/shared/tsm-memory-engine.js ↗</a>
+          &nbsp;·&nbsp;
+          <a href="/html/shared/tsm-sector-intelligence.js" target="_blank">html/shared/tsm-sector-intelligence.js ↗</a>
+        </div>
+      </div>
+
+      <div class="progress-row"><div class="progress-track"><div class="progress-fill-wr" id="prog-phase3" style="width:0%"></div></div><div class="progress-pct" id="pct-phase3">0%</div></div>
+
+      <div class="checklist-group">
+        <div class="cg-label">MEMORY ENGINE — tsm-memory-engine.js</div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-phase3-0" style="border-color:var(--cyan);color:var(--cyan)">1</div></div><div class="step-body"><div class="step-title">registerAnomaly() implemented</div><div class="step-desc">Confirm window.TSMMemory.registerAnomaly() exists and accepts the canonical anomaly payload shape (id, sector, anomalyCode, severity, exposure, entityId, owner, pressure, timestamps).</div><div class="step-check"><input type="checkbox" id="chk-phase3-0" onchange="check('phase3',0,this.checked)"><label for="chk-phase3-0">registerAnomaly() accepts canonical payload</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-phase3-1" style="border-color:var(--cyan);color:var(--cyan)">2</div></div><div class="step-body"><div class="step-title">getCrossUploadInsight() returns data</div><div class="step-desc">Call TSMMemory.getCrossUploadInsight({ anomalyCode, sector }) in DevTools console. Confirm it returns a meaningful string or null — not an error.</div><div class="step-check"><input type="checkbox" id="chk-phase3-1" onchange="check('phase3',1,this.checked)"><label for="chk-phase3-1">getCrossUploadInsight() returns without error</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-phase3-2" style="border-color:var(--cyan);color:var(--cyan)">3</div></div><div class="step-body"><div class="step-title">timeline() writes entries</div><div class="step-desc">After a war room engine run, call TSMMemory.getSectorTimeline('healthcare') in console. Confirm timeline entries are being written per engine run.</div><div class="step-check"><input type="checkbox" id="chk-phase3-2" onchange="check('phase3',2,this.checked)"><label for="chk-phase3-2">Timeline entries visible after engine run</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-phase3-3" style="border-color:var(--cyan);color:var(--cyan)">4</div></div><div class="step-body"><div class="step-title">queueExecutiveRelay() works</div><div class="step-desc">Verify queueExecutiveRelay() method exists. Confirm it's called during strategist escalation and writes the executive relay payload.</div><div class="step-check"><input type="checkbox" id="chk-phase3-3" onchange="check('phase3',3,this.checked)"><label for="chk-phase3-3">queueExecutiveRelay() functional</label></div></div></div>
+      </div>
+
+      <div class="checklist-group">
+        <div class="cg-label">SECTOR INTELLIGENCE — tsm-sector-intelligence.js</div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-phase3-4" style="border-color:var(--cyan);color:var(--cyan)">5</div></div><div class="step-body"><div class="step-title">All 7 sectors have anomaly definitions</div><div class="step-desc">In DevTools, check window.TSMSectorIntelligence. Each sector (healthcare, finops, insurance, construction, legal, realestate, bpo) should have at least 1 anomaly code defined with label, owner, pressure, recommendedApps, and relayTargets.</div><div class="step-check"><input type="checkbox" id="chk-phase3-4" onchange="check('phase3',4,this.checked)"><label for="chk-phase3-4">All 7 sectors have anomaly definitions</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-phase3-5" style="border-color:var(--cyan);color:var(--cyan)">6</div></div><div class="step-body"><div class="step-title">strategistNarrative + executiveNarrative present</div><div class="step-desc">At least one anomaly per sector should have strategistNarrative and executiveNarrative fields — these feed the Decide and Execute layers with pre-written context.</div><div class="step-check"><input type="checkbox" id="chk-phase3-5" onchange="check('phase3',5,this.checked)"><label for="chk-phase3-5">Narratives present for at least 1 anomaly/sector</label></div></div></div>
+      </div>
+
+      <div class="checklist-group">
+        <div class="cg-label">ANOMALY CONTRACT — CANONICAL PAYLOAD SHAPE</div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-phase3-6">7</div></div><div class="step-body"><div class="step-title">All war rooms write consistent anomaly shape</div><div class="step-desc">Pick 2 war rooms (e.g. HC + FinOps). Run each with a doc. Compare the objects they write to localStorage. The keys exposure, sector, anomalyCode, owner, severity, entityId, timestamps should all be present in both.</div><div class="devtools-note">Key mismatch to watch: one file using "revenueAtRisk" vs another using "exposure" will break the mesh. Normalizer function recommended.</div><div class="step-check"><input type="checkbox" id="chk-phase3-6" onchange="check('phase3',6,this.checked)"><label for="chk-phase3-6">Consistent anomaly shape across 2+ war rooms</label></div></div></div>
+        <div class="step"><div class="step-left"><div class="step-num" id="snum-phase3-7">8</div></div><div class="step-body"><div class="step-title">Cross-upload memory banner visible</div><div class="step-desc">In any war room, run the same doc type twice in a row (simulating prior upload). The memory banner should show a "prior similar case" insight on the second run, not on the first.</div><div class="step-check"><input type="checkbox" id="chk-phase3-7" onchange="check('phase3',7,this.checked)"><label for="chk-phase3-7">Memory banner shows prior case on 2nd run</label></div></div></div>
+      </div>
+
+      <div class="panel-footer"><span class="done-badge" id="done-phase3" style="display:none">✓ PHASE 3 READY</span><button class="reset-btn" onclick="resetWr('phase3')">RESET</button><button class="next-btn" onclick="switchTo('overview')">BACK TO OVERVIEW →</button></div>
     </div>
 
   </div>
 </div>
 
 <script>
-const WR_IDS = ['hc','finops','ins','con','legal','re','bpo'];
-const WR_NAMES = {hc:'Healthcare',finops:'FinOps',ins:'Insurance',con:'Construction',legal:'Legal',re:'Real Estate',bpo:'BPO'};
-const STEPS = {hc:5,finops:5,ins:5,con:11,legal:5,re:5,bpo:5};
+const WR_IDS = ['hc','finops','ins','con','legal','re','bpo','phase3'];
+const WR_NAMES = {hc:'Healthcare',finops:'FinOps',ins:'Insurance',con:'Construction',legal:'Legal',re:'Real Estate',bpo:'BPO',phase3:'Phase 3'};
+const STEPS = {hc:5,finops:5,ins:5,con:5,legal:5,re:5,bpo:10,phase3:8};
 const state = {};
 WR_IDS.forEach(id=>{ state[id]={}; for(let i=0;i<STEPS[id];i++) state[id][i]=false; });
+const sysChecks = {};
 
-function pct(id){
-  const n=STEPS[id];
-  const done=Object.values(state[id]).filter(Boolean).length;
-  return Math.round(done/n*100);
-}
+function pct(id){ const n=STEPS[id]; const done=Object.values(state[id]).filter(Boolean).length; return Math.round(done/n*100); }
 
 function updateAll(){
   let totalSteps=0,totalDone=0,wrReady=0;
-  WR_IDS.forEach(id=>{
+  // Exclude phase3 from sector count
+  const sectorIds = WR_IDS.filter(id=>id!=='phase3');
+  sectorIds.forEach(id=>{
     const p=pct(id);
     const done=Object.values(state[id]).filter(Boolean).length;
     totalSteps+=STEPS[id]; totalDone+=done;
     if(p===100) wrReady++;
-    const el=document.getElementById('prog-'+id);
-    if(el) el.style.width=p+'%';
-    const pe=document.getElementById('pct-'+id);
-    if(pe) pe.textContent=p+'%';
+    const el=document.getElementById('prog-'+id); if(el) el.style.width=p+'%';
+    const pe=document.getElementById('pct-'+id); if(pe) pe.textContent=p+'%';
     const np=document.getElementById('nav-pct-'+id);
     if(np){ np.textContent=p+'%'; np.className='nav-pct '+(p===100?'done':p>0?'partial':'zero'); }
-    const db=document.getElementById('done-'+id);
-    if(db) db.style.display=p===100?'inline-flex':'none';
+    const db=document.getElementById('done-'+id); if(db) db.style.display=p===100?'inline-flex':'none';
     for(let i=0;i<STEPS[id];i++){
       const sn=document.getElementById('snum-'+id+'-'+i);
-      if(sn){ sn.className='step-num'+(state[id][i]?' done':''); sn.innerHTML=state[id][i]?'&#10003;':i+1; }
+      if(sn){ const wasCyan=sn.style.borderColor&&sn.style.borderColor.includes('212'); sn.className='step-num'+(state[id][i]?' done':''); if(!state[id][i]&&wasCyan){sn.style.borderColor='var(--cyan)';sn.style.color='var(--cyan)';} sn.innerHTML=state[id][i]?'&#10003;':i+1; }
     }
   });
+  // Phase 3 separate
+  const p3=pct('phase3');
+  const p3el=document.getElementById('prog-phase3'); if(p3el) p3el.style.width=p3+'%';
+  const p3pe=document.getElementById('pct-phase3'); if(p3pe) p3pe.textContent=p3+'%';
+  const p3np=document.getElementById('nav-pct-phase3'); if(p3np){ p3np.textContent=p3+'%'; p3np.className='nav-pct '+(p3===100?'done':p3>0?'partial':'zero'); }
+  const p3db=document.getElementById('done-phase3'); if(p3db) p3db.style.display=p3===100?'inline-flex':'none';
+  for(let i=0;i<STEPS['phase3'];i++){
+    const sn=document.getElementById('snum-phase3-'+i);
+    if(sn){ sn.className='step-num'+(state['phase3'][i]?' done':''); sn.innerHTML=state['phase3'][i]?'&#10003;':i+1; }
+  }
+
   const gp=Math.round(totalDone/totalSteps*100);
   document.getElementById('g-pct').textContent=gp+'%';
   document.getElementById('g-fill').style.width=gp+'%';
@@ -554,49 +748,40 @@ function updateAll(){
 }
 
 function renderOverviewGrid(){
-  const g=document.getElementById('ov-grid');
-  if(!g)return;
-  g.innerHTML=WR_IDS.map(id=>{
-    const p=pct(id);
-    const col=p===100?'var(--green)':p>0?'var(--amber)':'var(--text3)';
+  const g=document.getElementById('ov-grid'); if(!g)return;
+  const sectors=['hc','finops','ins','con','legal','re','bpo'];
+  const chains={hc:'WR → Strat → Exec',finops:'WR → Strat → Exec',ins:'WR → Strat → Exec',con:'WR → Strat → Exec',legal:'WR → Strat → Exec',re:'WR → Strat → Exec',bpo:'DocSearch → SitRoom → Strat → Exec'};
+  g.innerHTML=sectors.map(id=>{
+    const p=pct(id); const col=p===100?'var(--green)':p>0?'var(--amber)':'var(--text3)';
+    const isBpo=id==='bpo';
     return `<div class="wr-cell" onclick="switchTo('${id}')">
-      <div class="wr-cell-name">${WR_NAMES[id]}</div>
+      <div><div class="wr-cell-name" style="${isBpo?'color:var(--cyan)':''}">${WR_NAMES[id]}${isBpo?' ★':''}</div><div class="wr-cell-chain">${chains[id]}</div></div>
       <div class="wr-cell-pct" style="color:${col}">${p}%</div>
     </div>`;
   }).join('');
 }
 
-function check(id,i,val){
-  state[id][i]=val;
-  updateAll();
-}
-
-function resetWr(id){
-  for(let i=0;i<STEPS[id];i++){ state[id][i]=false; const cb=document.getElementById('chk-'+id+'-'+i); if(cb)cb.checked=false; }
-  updateAll();
-}
+function check(id,i,val){ state[id][i]=val; updateAll(); }
+function checkSys(id,val){ sysChecks[id]=val; }
+function resetWr(id){ for(let i=0;i<STEPS[id];i++){ state[id][i]=false; const cb=document.getElementById('chk-'+id+'-'+i); if(cb)cb.checked=false; } updateAll(); }
 
 function switchTo(id){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.getElementById('panel-'+id).classList.add('active');
-  const navItems=document.querySelectorAll('.nav-item');
-  navItems.forEach(n=>{ if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+id+"'")) n.classList.add('active'); });
+  const panel=document.getElementById('panel-'+id); if(panel) panel.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{ if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+id+"'")) n.classList.add('active'); });
   window.scrollTo(0,0);
 }
 
 function copyDoc(id){
-  const el=document.getElementById('doc-'+id);
-  if(!el)return;
+  const el=document.getElementById('doc-'+id); if(!el)return;
   navigator.clipboard.writeText(el.textContent).then(()=>{
     const btn=el.parentElement.querySelector('.copy-btn');
     if(btn){ btn.textContent='COPIED'; btn.classList.add('copied'); setTimeout(()=>{ btn.textContent='COPY DOC'; btn.classList.remove('copied'); },2000); }
   });
 }
-
 function copyDocAlt(id){
-  const el=document.getElementById('doc-'+id);
-  if(!el)return;
+  const el=document.getElementById('doc-'+id); if(!el)return;
   navigator.clipboard.writeText(el.textContent).then(()=>{
     const btn=el.parentElement.querySelector('.copy-btn');
     if(btn){ const orig=btn.textContent; btn.textContent='COPIED'; btn.classList.add('copied'); setTimeout(()=>{ btn.textContent=orig; btn.classList.remove('copied'); },2000); }
