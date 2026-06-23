@@ -724,6 +724,35 @@ function renderExplainability(obj) {
   document.getElementById('reasoningBox').innerHTML = reasoning.map(r => `
     <div class="reasoning-line"><span class="rl-key">${r.key}:</span> <span class="rl-val">${r.val}</span></div>
   `).join('') || '<div style="color:var(--muted)">Reasoning chain not extracted</div>';
+
+  appendCrossUploadSource();
+}
+
+// ── MEMORY: SURFACE WHAT WE ALREADY KNOW FROM PRIOR UPLOADS ──
+function appendCrossUploadSource() {
+  if (!window.TSMMemory) return;
+
+  const anomalyCode = warData?.extraction?.anomalyCode;
+  const entityId = warData?.extraction?.anomalyEntity;
+  if (!anomalyCode) return;
+
+  const insight = window.TSMMemory.getCrossUploadInsight({ anomalyCode, entityType: 'bpo-incident', entityId });
+  const priorCount = Math.max(0, (insight.priorOccurrences || 0) - 1); // exclude the current open incident
+  if (priorCount <= 0) return;
+
+  const weight = priorCount >= 3 ? 'HIGH' : 'MED';
+  document.getElementById('explainSources').insertAdjacentHTML('beforeend', `
+    <div class="explain-source">
+      <div class="es-check">✓</div>
+      <div class="es-name">Cross-Upload Memory (${priorCount}x prior occurrence)</div>
+      <div class="es-weight">${weight}</div>
+    </div>
+  `);
+
+  const fieldCount = Object.keys(insight.suggestedPrefill || {}).length;
+  document.getElementById('reasoningBox').insertAdjacentHTML('beforeend', `
+    <div class="reasoning-line"><span class="rl-key">Cross-upload memory:</span> <span class="rl-val">This anomaly type has been seen ${priorCount} time(s) before${insight.lastResolvedBy ? ', last resolved by ' + insight.lastResolvedBy : ''}${fieldCount ? '. ' + fieldCount + ' field(s) were recovered from memory rather than re-extracted' : ''}.</span></div>
+  `);
 }
 
 function renderFallbackRec() {
@@ -747,6 +776,7 @@ function renderFallbackRec() {
     <div class="reasoning-line"><span class="rl-key">History:</span> <span class="rl-val">Similar incidents resolved in 48hrs with contingency activation</span></div>
     <div class="reasoning-line"><span class="rl-key">Risk:</span> <span class="rl-val">Inaction probability of total loss: 94%</span></div>
   `;
+  appendCrossUploadSource();
 }
 
 // ── BRIEF TABS ──
@@ -793,7 +823,46 @@ function storeStratRelay(){
 function escalateToExec(){
   storeStratRelay();
   if (window.TSMMemory) TSMMemory.timeline('Escalating to Executive Portal');
+  resolveIncidentInMemory();
   window.location.href = '/html/bpo/bpo-executive-portal.html';
+}
+
+// ── MEMORY: RESOLVE ANOMALY + QUEUE EXECUTIVE RELAY ──
+function resolveIncidentInMemory() {
+  if (!window.TSMMemory) return;
+
+  const anomalyCode = warData?.extraction?.anomalyCode;
+  const entityId = warData?.extraction?.anomalyEntity;
+  if (!anomalyCode || !entityId) return;
+
+  const scenario = SCENARIO_DEFAULTS.find(s => s.id === selectedScenario);
+  const resolvedBy = scenario ? scenario.name : 'Strategist';
+
+  window.TSMMemory.resolveAnomaly({
+    anomalyCode,
+    entityType: 'bpo-incident',
+    entityId,
+    resolvedBy,
+    status: 'resolved',
+    values: scenario ? {
+      revenueLoss: scenario.outcomes?.revLoss,
+      recoveryTime: scenario.outcomes?.recovery,
+      clientRisk: scenario.outcomes?.clientRisk,
+      slaImpact: scenario.outcomes?.sla
+    } : {},
+    relay: `Strategy escalated to Executive Portal — ${resolvedBy}`
+  });
+
+  window.TSMMemory.queueExecutiveRelay({
+    type: 'strategist',
+    title: scenario ? scenario.name : 'BPO Strategy Escalation',
+    summary: scenario ? scenario.desc : (stratBrief || '').slice(0, 200),
+    anomalyCode,
+    entityType: 'bpo-incident',
+    entityId,
+    exposure: scenario?.outcomes?.revLoss || warData?.extraction?.revenueAtRisk || null,
+    owner: resolvedBy
+  });
 }
 
 function exportBrief(){
