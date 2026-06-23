@@ -552,7 +552,22 @@ function markExecuted() {
   document.getElementById('markExecutedBtnBar').disabled = true;
 
   if (window.TSMMemory) {
-    TSMMemory.timeline('Execution confirmed by Operations — incident closed');
+    // Stamp the final resolution so the next time this anomaly type arrives,
+    // cross-upload insight can say "last time: X was chosen, outcome: executed"
+    if (stratData?.anomalyCode && stratData?.anomalyEntity) {
+      TSMMemory.resolveAnomaly({
+        anomalyCode:    stratData.anomalyCode,
+        entityType:     'bpo-incident',
+        entityId:       stratData.anomalyEntity,
+        resolution:     stratData.selectedScenarioName || stratData.selectedScenario || 'Executive action executed',
+        outcome:        'EXECUTED',
+        resolvedBy:     'Executive Portal',
+        revenueContained: stratData.recommendation?.actionRevLoss || null,
+        recoveryTime:   stratData.recommendation?.recoveryTime || null,
+        timestamp:      Date.now()
+      });
+    }
+    TSMMemory.timeline('Execution confirmed by Operations — incident closed. Anomaly resolution stamped to memory.');
     TSMMemory.strategist('STABLE');
   }
 }
