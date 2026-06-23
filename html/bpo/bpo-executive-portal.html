@@ -13,369 +13,559 @@
   --gold:#c9a84c;--text:#e2e8f0;--muted:#64748b;--border:#1e293b;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;min-height:100vh;}
+body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;min-height:100vh;overflow-x:hidden;}
 
-.topbar{height:42px;background:#020810;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;}
+/* ── SCANLINE OVERLAY ── */
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);pointer-events:none;z-index:9999;}
+
+/* ── TOP BAR ── */
+.topbar{height:44px;background:#020810;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:100;}
 .topbar-left{display:flex;align-items:center;gap:16px;}
-.tb-brand{font-family:'Orbitron',sans-serif;font-size:.7rem;color:var(--amber);letter-spacing:.15em;}
+.tb-brand{font-family:'Orbitron',sans-serif;font-size:.72rem;color:var(--green);letter-spacing:.18em;display:flex;align-items:center;gap:8px;}
+.tb-brand-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 1.6s infinite;}
 .tb-stat{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted);}
 .tb-stat span{color:var(--green);}
 .tb-stat.warn span{color:var(--amber);}
 .tb-stat.crit span{color:var(--red);}
 .topbar-right{display:flex;align-items:center;gap:16px;}
-.tb-time{font-family:'Orbitron',sans-serif;font-size:.75rem;color:var(--amber);}
+.tb-time{font-family:'Orbitron',sans-serif;font-size:.78rem;color:var(--green);}
+.tb-avatar{width:30px;height:30px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:.6rem;color:#001;font-weight:700;}
+.tb-user-info .tb-name{color:#fff;font-weight:600;font-size:.72rem;}
+.tb-user-info .tb-role{color:var(--muted);font-size:.62rem;}
 .tb-user{display:flex;align-items:center;gap:8px;}
-.tb-avatar{width:28px;height:28px;border-radius:50%;background:var(--amber);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:.6rem;color:#000;font-weight:700;}
-.tb-name{color:#fff;font-weight:600;font-size:.7rem;}
-.tb-role{color:var(--muted);font-size:.62rem;}
 
-.ctx-bar{height:34px;background:rgba(245,166,35,.04);border-bottom:1px solid rgba(245,166,35,.15);display:flex;align-items:center;padding:0 20px;gap:20px;font-family:'JetBrains Mono',monospace;font-size:.65rem;}
-.ctx-item{color:var(--muted);}
-.ctx-item span{color:var(--amber);}
-.ctx-chain{margin-left:auto;color:var(--green);font-size:.62rem;}
+/* ── RESOLUTION BANNER ── */
+.incident-banner{background:rgba(34,197,94,.06);border-bottom:2px solid rgba(34,197,94,.3);padding:10px 20px;display:flex;align-items:center;gap:20px;}
+.inc-sev{display:flex;align-items:center;gap:8px;}
+.inc-sev-badge{font-family:'Orbitron',sans-serif;font-size:.65rem;padding:4px 12px;border-radius:2px;background:rgba(34,197,94,.15);border:1px solid var(--green);color:var(--green);letter-spacing:.1em;}
+.inc-label{font-family:'Orbitron',sans-serif;font-size:.72rem;color:var(--text);letter-spacing:.08em;}
+.inc-meta{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted);}
+.inc-meta span{color:var(--amber);}
+.inc-window{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.inc-window-label{font-family:'Orbitron',sans-serif;font-size:.6rem;color:var(--muted);letter-spacing:.08em;}
+.inc-window-val{font-family:'Orbitron',sans-serif;font-size:1.1rem;font-weight:700;color:var(--green);}
+.inc-window-sub{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--muted);}
+.inc-divider{width:1px;height:32px;background:rgba(34,197,94,.25);}
 
-.nav-tabs{display:flex;align-items:center;background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;gap:2px;}
-.nav-tab{padding:10px 18px;font-family:'Orbitron',sans-serif;font-size:.58rem;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;letter-spacing:.08em;transition:.2s;}
-.nav-tab:hover{color:var(--text);}
-.nav-tab.active{color:var(--amber);border-bottom-color:var(--amber);}
-.nav-right{margin-left:auto;display:flex;gap:8px;}
-.nav-btn{padding:5px 14px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'Orbitron',sans-serif;font-size:.58rem;cursor:pointer;letter-spacing:.06em;transition:.2s;}
-.nav-btn:hover{border-color:var(--amber);color:var(--amber);}
+/* ── CHAIN NAV ── */
+.chain-nav{height:38px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:0;}
+.chain-node{font-family:'Orbitron',sans-serif;font-size:.58rem;padding:6px 16px;letter-spacing:.08em;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:.2s;white-space:nowrap;}
+.chain-node:hover{color:var(--text);}
+.chain-node.active{color:var(--green);border-bottom-color:var(--green);}
+.chain-node.done{color:var(--green);}
+.chain-node.done:hover{color:var(--green);}
+.chain-arrow{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--border);padding:0 2px;}
+.chain-right{margin-left:auto;display:flex;gap:8px;}
+.chain-btn{padding:5px 14px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'Orbitron',sans-serif;font-size:.58rem;cursor:pointer;letter-spacing:.06em;transition:.2s;}
+.chain-btn:hover{border-color:var(--green);color:var(--green);}
+.chain-btn.primary{border-color:rgba(34,197,94,.5);color:var(--green);}
+.chain-btn.primary:hover{background:var(--green);color:#001;}
+.chain-btn:disabled{opacity:.4;cursor:not-allowed;}
 
-/* KPI */
-.kpi-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--border);}
-.kpi{background:var(--bg2);padding:16px 18px;}
-.kpi-label{font-family:'Orbitron',sans-serif;font-size:.55rem;color:var(--muted);letter-spacing:.08em;margin-bottom:6px;}
-.kpi-val{font-family:'Orbitron',sans-serif;font-size:1.5rem;font-weight:700;line-height:1;}
-.kpi-sub{font-size:.68rem;color:var(--muted);margin-top:3px;}
+/* ── KPI STRIP ── */
+.impact-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);}
+.impact-tile{background:var(--bg2);padding:18px 18px;position:relative;overflow:hidden;}
+.impact-tile::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;}
+.impact-tile.ok::after{background:var(--green);}
+.impact-tile.high::after{background:var(--amber);}
+.impact-tile.med::after{background:var(--blue);}
+.impact-label{font-family:'Orbitron',sans-serif;font-size:.55rem;color:var(--muted);letter-spacing:.1em;margin-bottom:8px;}
+.impact-val{font-family:'Orbitron',sans-serif;font-size:1.5rem;font-weight:900;line-height:1;}
+.impact-val.ok{color:var(--green);}
+.impact-val.high{color:var(--amber);}
+.impact-val.med{color:var(--blue);}
+.impact-sub{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--muted);margin-top:5px;}
 
-/* DECISIONS */
-.decisions{padding:20px;border-bottom:1px solid var(--border);}
-.dec-title{font-family:'Orbitron',sans-serif;font-size:.65rem;color:var(--red);letter-spacing:.1em;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
-.dec-dot{width:7px;height:7px;border-radius:50%;background:var(--red);animation:pulse 1.5s infinite;}
-.dec-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
-.dec-card{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--red);border-radius:4px;padding:14px;}
-.dec-card.amber{border-left-color:var(--amber);}
-.dec-card.green{border-left-color:var(--green);}
-.dec-card.purple{border-left-color:var(--purple);}
-.dec-priority{font-family:'Orbitron',sans-serif;font-size:.55rem;letter-spacing:.08em;margin-bottom:6px;}
-.dec-text{font-size:.8rem;color:#ccc;line-height:1.5;margin-bottom:8px;}
-.dec-action{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--amber);}
-.dec-btn{margin-top:10px;padding:5px 12px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'Orbitron',sans-serif;font-size:.55rem;cursor:pointer;transition:.2s;}
-.dec-btn:hover{border-color:var(--amber);color:var(--amber);}
+/* ── MAIN GRID ── */
+.main{display:grid;grid-template-columns:1fr 340px;grid-template-rows:auto 1fr;gap:1px;background:var(--border);min-height:calc(100vh - 168px);}
+.left-col{display:flex;flex-direction:column;gap:1px;background:var(--border);}
+.right-col{background:var(--bg2);display:flex;flex-direction:column;gap:1px;}
 
-/* THREE COL LAYOUT */
-.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border-bottom:1px solid var(--border);}
-.col-panel{background:var(--bg2);padding:18px;}
-.col-title{font-family:'Orbitron',sans-serif;font-size:.6rem;color:var(--muted);letter-spacing:.1em;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
-.col-title .dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+/* ── PANEL SHELL ── */
+.panel{background:var(--bg2);padding:18px;}
+.panel-title{font-family:'Orbitron',sans-serif;font-size:.6rem;color:var(--muted);letter-spacing:.1em;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.panel-title .dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+.panel-sub{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--muted);}
 
-/* RISK MATRIX */
-.risk-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);}
-.risk-row:last-child{border-bottom:none;}
-.risk-name{font-size:.76rem;color:#ccc;}
-.risk-badge{font-family:'Orbitron',sans-serif;font-size:.55rem;padding:2px 8px;border-radius:2px;}
-.risk-high{background:rgba(239,68,68,.15);border:1px solid var(--red);color:var(--red);}
-.risk-med{background:rgba(245,166,35,.15);border:1px solid var(--amber);color:var(--amber);}
-.risk-low{background:rgba(34,197,94,.15);border:1px solid var(--green);color:var(--green);}
-.risk-detail{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--muted);margin-left:8px;}
+/* EXECUTION PLAN */
+.exec-item{display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);}
+.exec-item:last-child{border-bottom:none;}
+.exec-check{width:22px;height:22px;border-radius:4px;border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.7rem;color:transparent;transition:.2s;margin-top:1px;}
+.exec-check:hover{border-color:var(--green);}
+.exec-check.done{background:var(--green);border-color:var(--green);color:#001;}
+.exec-num{font-family:'Orbitron',sans-serif;font-size:.65rem;color:var(--cyan);width:18px;flex-shrink:0;margin-top:2px;}
+.exec-body{flex:1;}
+.exec-text{font-size:.84rem;color:#ccc;line-height:1.45;}
+.exec-text.done{color:var(--muted);text-decoration:line-through;}
+.exec-owner{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--amber);margin-top:4px;}
 
-/* DEADLINES */
-.deadline-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
-.deadline-item:last-child{border-bottom:none;}
-.deadline-days{width:44px;height:44px;border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;}
-.deadline-days .num{font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:700;line-height:1;}
-.deadline-days .lbl{font-family:'Orbitron',sans-serif;font-size:.45rem;letter-spacing:.1em;}
-.deadline-text{font-size:.76rem;color:#ccc;line-height:1.4;}
-.deadline-sub{font-size:.65rem;color:var(--muted);margin-top:2px;}
+/* STRATEGY BRIEF */
+.extraction-stream{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:14px;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:#bbb;line-height:1.8;min-height:80px;max-height:320px;overflow-y:auto;white-space:pre-wrap;}
 
-/* STRATEGIST RELAY */
-.relay-panel{background:var(--bg2);border-bottom:1px solid var(--border);}
-.relay-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
-.relay-dot{width:8px;height:8px;border-radius:50%;background:var(--green);}
-.relay-title{font-family:'Orbitron',sans-serif;font-size:.65rem;color:var(--green);letter-spacing:.1em;}
-.relay-time{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--muted);}
-.relay-body{padding:18px 20px;font-family:'JetBrains Mono',monospace;font-size:.74rem;color:#bbb;line-height:1.7;white-space:pre-wrap;max-height:300px;overflow-y:auto;}
-.relay-idle{padding:30px 20px;text-align:center;color:var(--muted);font-family:'Orbitron',sans-serif;font-size:.65rem;letter-spacing:.1em;}
+/* CROSS-UPLOAD MEMORY */
+.evidence-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.evidence-item:last-child{border-bottom:none;}
+.ev-check{font-family:'JetBrains Mono',monospace;font-size:.75rem;width:18px;flex-shrink:0;margin-top:1px;}
+.ev-check.ok{color:var(--green);}
+.ev-check.pending{color:var(--amber);}
+.ev-name{font-size:.78rem;flex:1;color:#ccc;line-height:1.4;}
+.ev-name b{color:#fff;}
+.ev-time{font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--muted);margin-top:3px;display:block;}
+.insight-line{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--cyan);margin-top:8px;padding:8px 10px;background:rgba(0,212,212,.06);border-left:2px solid var(--cyan);border-radius:3px;line-height:1.5;}
+.insight-line.empty{color:var(--muted);background:transparent;border-left-color:var(--border);}
 
-/* BNCA / EXEC ACTIONS */
-.bottom-three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);}
-.bt-panel{background:var(--bg2);padding:18px;}
-.bt-title{font-family:'Orbitron',sans-serif;font-size:.58rem;color:var(--muted);letter-spacing:.1em;margin-bottom:10px;}
-.bt-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--amber);margin-right:5px;animation:pulse 2s infinite;}
-.bt-body{font-size:.76rem;color:#999;line-height:1.6;}
-.bt-body strong{color:var(--amber);}
-.bt-body .hl{color:var(--cyan);}
-.bt-actions{margin-top:10px;}
-.bt-action-btn{display:block;width:100%;padding:6px 10px;margin-bottom:4px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'Orbitron',sans-serif;font-size:.55rem;cursor:pointer;text-align:left;letter-spacing:.06em;transition:.2s;}
-.bt-action-btn:hover{border-color:var(--amber);color:var(--amber);}
+/* EXECUTIVE QUEUE */
+.eq-item{padding:11px 0;border-bottom:1px solid var(--border);}
+.eq-item:last-child{border-bottom:none;}
+.eq-top{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.eq-title{font-size:.78rem;color:#fff;font-weight:600;flex:1;}
+.eq-status{font-family:'Orbitron',sans-serif;font-size:.5rem;padding:2px 7px;border-radius:2px;letter-spacing:.06em;}
+.eq-status.queued{background:rgba(245,166,35,.15);border:1px solid var(--amber);color:var(--amber);}
+.eq-status.approved{background:rgba(34,197,94,.15);border:1px solid var(--green);color:var(--green);}
+.eq-summary{font-size:.7rem;color:var(--muted);line-height:1.4;margin-bottom:6px;}
+.eq-meta{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--muted);}
+.eq-meta span{color:var(--amber);}
+.eq-btn{margin-top:7px;padding:5px 12px;border-radius:3px;border:1px solid rgba(34,197,94,.4);background:transparent;color:var(--green);font-family:'Orbitron',sans-serif;font-size:.55rem;cursor:pointer;letter-spacing:.06em;transition:.2s;}
+.eq-btn:hover{background:var(--green);color:#001;}
+.eq-btn:disabled{opacity:.4;cursor:default;border-color:var(--border);color:var(--muted);}
+.eq-empty{color:var(--muted);font-size:.74rem;font-family:'JetBrains Mono',monospace;}
 
-.status-bar{padding:6px 20px;background:#020810;border-top:1px solid var(--border);display:flex;align-items:center;gap:20px;font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--muted);}
-.status-bar span{color:var(--amber);}
+/* RECOMMENDED APPS */
+.app-chip{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid var(--border);border-radius:4px;margin-bottom:7px;cursor:pointer;transition:.2s;}
+.app-chip:hover{border-color:var(--cyan);background:rgba(0,212,212,.05);}
+.app-chip-dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);flex-shrink:0;}
+.app-chip-label{font-size:.76rem;color:#ccc;flex:1;}
+.app-chip-arrow{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted);}
 
-@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+/* ── BOTTOM ACTION BAR ── */
+.action-bar{height:52px;background:#020810;border-top:2px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:10px;position:sticky;bottom:0;}
+.act-btn{padding:8px 18px;border-radius:3px;font-family:'Orbitron',sans-serif;font-size:.6rem;cursor:pointer;letter-spacing:.08em;transition:.2s;border:1px solid;}
+.act-btn.primary{background:var(--green);border-color:var(--green);color:#001;}
+.act-btn.primary:hover{opacity:.85;}
+.act-btn.secondary{background:transparent;border-color:var(--border);color:var(--muted);}
+.act-btn.secondary:hover{border-color:var(--cyan);color:var(--cyan);}
+.act-btn:disabled{opacity:.4;cursor:not-allowed;}
+.act-spacer{flex:1;}
+.act-status{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--muted);}
+.act-status span{color:var(--green);}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.25;}}
 </style>
+<script src="/shared/tsm-sector-intelligence.js?v=phase3"></script>
 <script src="/shared/tsm-memory-engine.js?v=phase3"></script>
-<script>
-  window.addEventListener("DOMContentLoaded", function(){
-    if (window.TSMMemory) TSMMemory.timeline("Executive Portal opened - reviewing escalation");
-  });
-</script>
 </head>
 <body>
 
-<!-- TOP BAR -->
+<!-- ── TOP BAR ── -->
 <div class="topbar">
   <div class="topbar-left">
-    <div class="tb-brand">◈ BPO EXECUTIVE PORTAL</div>
-    <div class="tb-stat">● CHAIN <span>COMPLETE</span></div>
-    <div class="tb-stat warn">PORTFOLIO SLA: <span id="tbSLA">94.2%</span></div>
-    <div class="tb-stat crit">OPEN DECISIONS: <span id="tbDecisions">4</span></div>
-    <div class="tb-stat">REVENUE AT RISK: <span id="tbRevRisk">$58.2K</span></div>
+    <div class="tb-brand"><div class="tb-brand-dot"></div>◈ BPO EXECUTIVE PORTAL</div>
+    <div class="tb-stat">SECTOR: <span id="tbSector">—</span></div>
+    <div class="tb-stat">DOC TYPE: <span id="tbDocType">—</span></div>
+    <div class="tb-stat warn">CONFIDENCE: <span id="tbConf">—</span></div>
+    <div class="tb-stat crit">EXPOSURE CONTAINED: <span id="tbExposure">—</span></div>
   </div>
   <div class="topbar-right">
     <div class="tb-time" id="tbTime">--:--:--</div>
     <div class="tb-user">
-      <div class="tb-avatar">EXEC</div>
-      <div>
+      <div class="tb-avatar">EX</div>
+      <div class="tb-user-info">
         <div class="tb-name">Executive Portal</div>
-        <div class="tb-role">BPO Operations Director</div>
+        <div class="tb-role">BPO Intelligence — Stage 04</div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- CONTEXT BAR -->
-<div class="ctx-bar">
-  <div class="ctx-item">Sector: <span id="ctxSector">BPO</span></div>
-  <div class="ctx-item">Client: <span id="ctxClient">—</span></div>
-  <div class="ctx-item">Doc Type: <span id="ctxDocType">—</span></div>
-  <div class="ctx-item">Time: <span id="ctxTime">—</span></div>
-  <div class="ctx-chain">CHAIN: UPLOADER → WAR ROOM → STRATEGIST → <span style="color:var(--amber)">EXECUTIVE ●</span></div>
-</div>
-
-<!-- NAV -->
-<div class="nav-tabs">
-  <div class="nav-tab active">EXECUTIVE BRIEF</div>
-  <div class="nav-tab">PORTFOLIO RISK</div>
-  <div class="nav-tab">CLIENT PERFORMANCE</div>
-  <div class="nav-tab">DELIVERY OPS</div>
-  <div class="nav-tab">COMPLIANCE</div>
-  <div class="nav-right">
-    <button class="nav-btn" onclick="nav('/html/bpo/bpo-strategist.html')">← STRATEGIST</button>
-    <button class="nav-btn" onclick="nav('/html/bpo/bpo-war-room.html')">WAR ROOM</button>
-    <button class="nav-btn" onclick="nav('/html/executive-portal-live.html')">ENTERPRISE EXEC →</button>
+<!-- ── RESOLUTION BANNER ── -->
+<div class="incident-banner">
+  <div class="inc-sev">
+    <div class="inc-sev-badge" id="incSevBadge">■ RESOLVED</div>
   </div>
-</div>
-
-<!-- KPI STRIP -->
-<div class="kpi-strip">
-  <div class="kpi">
-    <div class="kpi-label">CHAIN STATUS</div>
-    <div class="kpi-val" style="color:var(--green)" id="kpiChain">COMPLETE</div>
-    <div class="kpi-sub">4-stage pipeline</div>
+  <div class="inc-divider"></div>
+  <div>
+    <div class="inc-label" id="incLabel">AWAITING STRATEGIST DATA</div>
+    <div class="inc-meta">Strategy: <span id="incStrategy">—</span> &nbsp;|&nbsp; Chain: <span>UPLOADER → SITUATION ROOM → STRATEGIST → EXECUTIVE ●</span></div>
   </div>
-  <div class="kpi">
-    <div class="kpi-label">PORTFOLIO SLA</div>
-    <div class="kpi-val" style="color:var(--amber)">94.2%</div>
-    <div class="kpi-sub">Target: 98%</div>
-  </div>
-  <div class="kpi">
-    <div class="kpi-label">REVENUE AT RISK</div>
-    <div class="kpi-val" style="color:var(--red)">$58.2K</div>
-    <div class="kpi-sub">Across 4 clients</div>
-  </div>
-  <div class="kpi">
-    <div class="kpi-label">ACTIVE ESCALATIONS</div>
-    <div class="kpi-val" style="color:var(--amber)" id="kpiEsc">2</div>
-    <div class="kpi-sub">Require decision</div>
-  </div>
-  <div class="kpi">
-    <div class="kpi-label">ENGINES FIRED</div>
-    <div class="kpi-val" style="color:var(--cyan)" id="kpiEngines">—</div>
-    <div class="kpi-sub">War room analysis</div>
-  </div>
-  <div class="kpi">
-    <div class="kpi-label">CLIENT SECTOR</div>
-    <div class="kpi-val" style="color:var(--amber);font-size:.85rem" id="kpiSector">—</div>
-    <div class="kpi-sub">Active vertical</div>
-  </div>
-</div>
-
-<!-- DECISIONS -->
-<div class="decisions">
-  <div class="dec-title"><div class="dec-dot"></div>⚡ DECISIONS REQUIRED TODAY</div>
-  <div class="dec-grid">
-    <div class="dec-card">
-      <div class="dec-priority" style="color:var(--red)">● CRITICAL PRIORITY</div>
-      <div class="dec-text">PR-96 denial spike on HonorHealth + Desert Ridge — $47K combined exposure. Systematic modifier documentation gap requires immediate intervention.</div>
-      <div class="dec-action">→ OWNER: RCM Director · DEADLINE: 24hrs</div>
-      <button class="dec-btn" onclick="nav('/html/healthcare/hc-denial-war-room.html')">OPEN HC WAR ROOM →</button>
-    </div>
-    <div class="dec-card amber">
-      <div class="dec-priority" style="color:var(--amber)">● HIGH PRIORITY</div>
-      <div class="dec-text">Meridian Construction lien deadline in 14 days. $340K dispute requires executive negotiation decision. Legal review authorization needed.</div>
-      <div class="dec-action">→ OWNER: Operations Director · DEADLINE: 48hrs</div>
-      <button class="dec-btn" onclick="nav('/html/construction-suite/construction-war-room.html')">OPEN CONSTRUCTION WR →</button>
-    </div>
-    <div class="dec-card amber">
-      <div class="dec-priority" style="color:var(--amber)">● HIGH PRIORITY</div>
-      <div class="dec-text">Insurance Claims SLA at 91.8% — below 98% target. 6 active escalations on UHC accounts. Auth friction impacting timely filing.</div>
-      <div class="dec-action">→ OWNER: Claims Manager · DEADLINE: 48hrs</div>
-      <button class="dec-btn" onclick="nav('/html/tsm-insurance/insurance-war-room.html')">OPEN INSURANCE WR →</button>
-    </div>
-    <div class="dec-card green">
-      <div class="dec-priority" style="color:var(--green)">● STANDARD</div>
-      <div class="dec-text">Approve strategy brief and route remediation tasks to BPO delivery teams. Case-Tech pipeline performing at 98% — model for other accounts.</div>
-      <div class="dec-action">→ OWNER: Delivery Lead · DEADLINE: 72hrs</div>
-      <button class="dec-btn" onclick="exportBrief()">EXPORT BRIEF →</button>
+  <div class="inc-window">
+    <div>
+      <div class="inc-window-label">RESOLVED AT</div>
+      <div class="inc-window-val" id="resolvedTime">—:—:—</div>
+      <div class="inc-window-sub">Time of escalation</div>
     </div>
   </div>
 </div>
 
-<!-- RISK + DEADLINES + RELAY -->
-<div class="three-col">
-  <div class="col-panel">
-    <div class="col-title"><div class="dot"></div>RISK MATRIX · PORTFOLIO INTELLIGENCE</div>
-    <div class="risk-row"><span class="risk-name">HC Denial Rate</span><span class="risk-badge risk-high">HIGH</span><span class="risk-detail">18.4% · CMS threshold 15%</span></div>
-    <div class="risk-row"><span class="risk-name">Auth Friction</span><span class="risk-badge risk-high">HIGH</span><span class="risk-detail">22% above SLA · 31 pending</span></div>
-    <div class="risk-row"><span class="risk-name">Lien Exposure</span><span class="risk-badge risk-high">HIGH</span><span class="risk-detail">$340K · 14d window</span></div>
-    <div class="risk-row"><span class="risk-name">SLA Compliance</span><span class="risk-badge risk-med">MED</span><span class="risk-detail">94.2% · target 98%</span></div>
-    <div class="risk-row"><span class="risk-name">Coding Drift</span><span class="risk-badge risk-med">MED</span><span class="risk-detail">CPT 99215 · 23 claims</span></div>
-    <div class="risk-row"><span class="risk-name">Writeoff Risk</span><span class="risk-badge risk-med">MED</span><span class="risk-detail">$11.2K aging &gt;30d</span></div>
-    <div class="risk-row"><span class="risk-name">Case-Tech Pipeline</span><span class="risk-badge risk-low">LOW</span><span class="risk-detail">98% · exceeding target</span></div>
+<!-- ── CHAIN NAVIGATION ── -->
+<div class="chain-nav">
+  <div class="chain-node done" onclick="nav('/html/bpo/bpo-doc-uploader.html')">01 · INTAKE</div>
+  <div class="chain-arrow">→</div>
+  <div class="chain-node done" onclick="nav('/html/bpo/bpo-situation-room.html')">02 · UNDERSTAND</div>
+  <div class="chain-arrow">→</div>
+  <div class="chain-node done" onclick="nav('/html/bpo/bpo-strategist-v2.html')">03 · DECIDE</div>
+  <div class="chain-arrow">→</div>
+  <div class="chain-node active">04 · EXECUTE</div>
+  <div class="chain-right">
+    <button class="chain-btn" onclick="nav('/html/bpo/bpo-strategist-v2.html')">← STRATEGIST</button>
+    <button class="chain-btn" onclick="exportBrief()">⬇ EXPORT EXEC BRIEF</button>
+    <button class="chain-btn primary" id="markExecutedBtn" onclick="markExecuted()">✓ MARK EXECUTED</button>
   </div>
-  <div class="col-panel">
-    <div class="col-title"><div class="dot" style="background:var(--red)"></div>CRITICAL DEADLINES · ACTION REQUIRED</div>
-    <div class="deadline-item">
-      <div class="deadline-days" style="background:rgba(239,68,68,.15);border:1px solid var(--red)"><div class="num" style="color:var(--red)">7</div><div class="lbl" style="color:var(--red)">DAYS</div></div>
-      <div><div class="deadline-text">Meridian safety assessment required</div><div class="deadline-sub">Action required — Construction Legal review</div></div>
+</div>
+
+<!-- ── KPI STRIP ── -->
+<div class="impact-grid">
+  <div class="impact-tile ok">
+    <div class="impact-label">STRATEGY SELECTED</div>
+    <div class="impact-val ok" id="kpiStrategy" style="font-size:1.05rem">—</div>
+    <div class="impact-sub" id="kpiStrategySub">Awaiting escalation</div>
+  </div>
+  <div class="impact-tile ok">
+    <div class="impact-label">CONFIDENCE SCORE</div>
+    <div class="impact-val ok" id="kpiConfidence">—</div>
+    <div class="impact-sub">AI recommendation strength</div>
+  </div>
+  <div class="impact-tile med">
+    <div class="impact-label">REVENUE RECOVERED</div>
+    <div class="impact-val med" id="kpiRecovered">—</div>
+    <div class="impact-sub" id="kpiRecoveredSub">vs. no-action exposure</div>
+  </div>
+  <div class="impact-tile high">
+    <div class="impact-label">RECOVERY TIME</div>
+    <div class="impact-val high" id="kpiRecoveryTime">—</div>
+    <div class="impact-sub">Target time to resolution</div>
+  </div>
+</div>
+
+<!-- ── MAIN GRID ── -->
+<div class="main">
+
+  <!-- LEFT COLUMN -->
+  <div class="left-col">
+    <div class="panel">
+      <div class="panel-title"><div class="dot"></div>EXECUTION PLAN · OWNER ASSIGNMENTS<span class="panel-sub" id="execProgress">0 / 0 complete</span></div>
+      <div id="execPlanList">
+        <div style="color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:.68rem">No strategy escalated yet — navigate from the Strategist after generating a brief.</div>
+      </div>
     </div>
-    <div class="deadline-item">
-      <div class="deadline-days" style="background:rgba(245,166,35,.15);border:1px solid var(--amber)"><div class="num" style="color:var(--amber)">14</div><div class="lbl" style="color:var(--amber)">DAYS</div></div>
-      <div><div class="deadline-text">Lien window closes on Meridian dispute</div><div class="deadline-sub">Action required — Executive negotiation decision</div></div>
-    </div>
-    <div class="deadline-item">
-      <div class="deadline-days" style="background:rgba(245,166,35,.15);border:1px solid var(--amber)"><div class="num" style="color:var(--amber)">24</div><div class="lbl" style="color:var(--amber)">HRS</div></div>
-      <div><div class="deadline-text">HonorHealth PR-96 appeal deadline</div><div class="deadline-sub">Action required — RCM Director sign-off</div></div>
-    </div>
-    <div class="deadline-item">
-      <div class="deadline-days" style="background:rgba(34,197,94,.15);border:1px solid var(--green)"><div class="num" style="color:var(--green)">30</div><div class="lbl" style="color:var(--green)">DAYS</div></div>
-      <div><div class="deadline-text">Q3 reporting prep — Case-Tech</div><div class="deadline-sub">Standard — Assign to delivery team</div></div>
+
+    <div class="panel" style="flex:1">
+      <div class="panel-title"><div class="dot" style="background:var(--cyan)"></div>FULL STRATEGY BRIEF</div>
+      <div class="extraction-stream" id="briefStream">No strategist brief loaded.</div>
     </div>
   </div>
-  <div class="col-panel">
-    <div class="col-title"><div class="dot" style="background:var(--cyan)"></div>STRATEGIST RELAY · AI SYNTHESIS</div>
-    <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
-      <div style="width:8px;height:8px;border-radius:50%;background:var(--green);"></div>
-      <div style="font-family:'Orbitron',sans-serif;font-size:.62rem;color:var(--green);">Strategist Relay Received</div>
-      <div style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--muted)" id="relayTime">—</div>
+
+  <!-- RIGHT COLUMN -->
+  <div class="right-col">
+    <div class="panel">
+      <div class="panel-title"><div class="dot" style="background:var(--cyan)"></div>ANOMALY RESOLUTION · CROSS-UPLOAD MEMORY</div>
+      <div id="resolutionAudit">
+        <div style="color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:.68rem">No anomaly record found.</div>
+      </div>
+      <div class="insight-line empty" id="crossUploadLine">Cross-upload insight will appear once an anomaly resolution is loaded.</div>
     </div>
-    <div id="relaySnippet" style="font-family:'JetBrains Mono',monospace;font-size:.7rem;color:#999;line-height:1.6;">Navigate from BPO Strategist to load AI synthesis here.</div>
-    <div style="display:flex;gap:6px;margin-top:12px;">
-      <button class="dec-btn" onclick="nav('/html/bpo/bpo-war-room.html')">OPEN WAR ROOM</button>
-      <button class="dec-btn" onclick="nav('/html/bpo/bpo-strategist.html')">OPEN STRATEGIST</button>
+
+    <div class="panel">
+      <div class="panel-title"><div class="dot" style="background:var(--amber)"></div>EXECUTIVE RELAY QUEUE</div>
+      <div id="execQueueList">
+        <div class="eq-empty">Queue is empty.</div>
+      </div>
+    </div>
+
+    <div class="panel" style="flex:1">
+      <div class="panel-title"><div class="dot" style="background:var(--purple)"></div>RECOMMENDED APPS · ROUTE TO</div>
+      <div id="recommendedApps">
+        <div style="color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:.68rem">No routing recommendations yet.</div>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- STRATEGIST RELAY FULL -->
-<div class="relay-panel">
-  <div class="relay-header">
-    <div class="relay-dot" id="relayDot" style="background:var(--muted)"></div>
-    <div class="relay-title" id="relayTitle" style="color:var(--muted)">STRATEGY BRIEF — AWAITING STRATEGIST DATA</div>
-    <div class="relay-time" id="relayTimeStamp">—</div>
-  </div>
-  <div id="relayBody" class="relay-idle">No strategist data loaded — navigate from BPO Strategist after generating brief</div>
-</div>
-
-<!-- BNCA + EXEC ACTIONS -->
-<div class="bottom-three">
-  <div class="bt-panel">
-    <div class="bt-title"><span class="bt-dot"></span>BNCA STRATEGIC INTELLIGENCE · AUTO-GENERATED</div>
-    <div class="bt-title" style="color:var(--muted);font-size:.6rem;margin-bottom:8px">PORTFOLIO POSITION</div>
-    <div class="bt-body" id="bncaBody">The BPO portfolio is operating at <strong>94.2% SLA compliance</strong> against a 98% target. Two client accounts — HonorHealth and Desert Ridge Medical — are generating <span class="hl">$47K in combined denial exposure</span> through a systematic PR-96 modifier documentation gap. The Meridian Construction account presents a <strong>$340K lien risk</strong> with a 14-day resolution window. Immediate executive decision required on two fronts: authorize HC denial recovery protocol and approve legal negotiation strategy for Meridian. Case-Tech account is performing at <span class="hl">98% — model client</span> for portfolio benchmarking.</div>
-  </div>
-  <div class="bt-panel">
-    <div class="bt-title">PRIORITY ACTIONS</div>
-    <div class="bt-body" id="priorityBody">
-      <strong>1.</strong> Authorize PR-96 modifier review protocol for HonorHealth + Desert Ridge — <span class="hl">$47K recovery window · 24hrs</span><br><br>
-      <strong>2.</strong> Executive negotiation decision on Meridian lien dispute — <span class="hl">$200K–$300K settlement range · 14 days</span><br><br>
-      <strong>3.</strong> Insurance Claims SLA recovery plan — <span class="hl">6 UHC escalations · auth friction root cause</span><br><br>
-      <strong>4.</strong> Approve coder education for CPT 99215 upcoding pattern — <span class="hl">$12,040 audit exposure</span>
-    </div>
-  </div>
-  <div class="bt-panel">
-    <div class="bt-title">EXECUTIVE ACTIONS REQUIRED</div>
-    <div class="bt-body" id="execActions" style="color:#ccc">The most critical action sequence for the next <strong>72 hours</strong> is to authorize the HC denial recovery protocol targeting the PR-96 modifier gap across HonorHealth and Desert Ridge Medical — <span class="hl">combined $47K recovery</span>. Simultaneously, the Meridian Construction lien negotiation requires executive sign-off within 14 days. The Operations Director should schedule a client call within 48 hours to present the <span class="hl">$200K–$300K settlement recommendation</span>. Insurance Claims SLA recovery requires staffing review and UHC auth protocol update.</div>
-    <div class="bt-actions">
-      <button class="bt-action-btn" onclick="exportBrief()">⬇ EXPORT FULL BRIEF</button>
-      <button class="bt-action-btn" onclick="nav('/html/bpo/bpo-strategist.html')">← BACK TO STRATEGIST</button>
-      <button class="bt-action-btn" onclick="nav('/html/executive-portal-live.html')">ENTERPRISE EXEC PORTAL →</button>
-    </div>
-  </div>
-</div>
-
-<!-- STATUS BAR -->
-<div class="status-bar">
-  <span>TSM · BPO Executive Portal</span>
-  <span id="sbDocType">—</span>
-  <span id="sbDate">—</span>
-  <span>BPO Intelligence Engine Active</span>
-  <span>TSM OS v4.1 · Railway</span>
+<!-- ── ACTION BAR ── -->
+<div class="action-bar">
+  <span style="font-family:'Orbitron',sans-serif;font-size:.58rem;color:var(--muted)">EXECUTIVE PORTAL ·</span>
+  <button class="act-btn secondary" onclick="nav('/html/bpo/bpo-strategist-v2.html')">← STRATEGIST</button>
+  <button class="act-btn secondary" onclick="exportBrief()">⬇ EXPORT</button>
+  <div class="act-spacer"></div>
+  <div class="act-status" id="actStatus">Status: <span>AWAITING STRATEGIST DATA</span></div>
+  <button class="act-btn primary" id="markExecutedBtnBar" onclick="markExecuted()">✓ MARK EXECUTED</button>
 </div>
 
 <script>
 let stratData = null;
+let execChecklist = {}; // local UI-only checklist state for this session
 
 setInterval(()=>{
   document.getElementById('tbTime').textContent = new Date().toLocaleTimeString('en-US',{hour12:false});
-  document.getElementById('sbDate').textContent = new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
 },1000);
 
+function nav(url){ window.location.href = url; }
+
+// ── LOAD RELAY ──
 (function loadRelay(){
   try {
-    const raw = sessionStorage.getItem('TSM_BPO_STRAT_RELAY');
-    if(!raw) return;
+    const raw = sessionStorage.getItem('TSM_BPO_STRAT_RELAY') || localStorage.getItem('TSM_BPO_STRAT_RELAY');
+    if (!raw) { loadDemoMode(); return; }
     stratData = JSON.parse(raw);
-    const { sector, docType, stratBrief, engines, timestamp } = stratData;
-
-    document.getElementById('ctxSector').textContent = sector||'BPO';
-    document.getElementById('ctxClient').textContent = sector||'—';
-    document.getElementById('ctxDocType').textContent = docType||'—';
-    document.getElementById('ctxTime').textContent = timestamp ? new Date(timestamp).toLocaleTimeString() : '—';
-    document.getElementById('kpiSector').textContent = sector||'—';
-    document.getElementById('sbDocType').textContent = (docType||'—') + ' · Strategist relay active';
-
-    const eKeys = Object.keys(engines||{});
-    const filled = eKeys.filter(k=>engines[k]&&engines[k].length>20).length;
-    document.getElementById('kpiEngines').textContent = filled+' / '+eKeys.length;
-    document.getElementById('kpiChain').textContent = 'COMPLETE';
-
-    if(stratBrief){
-      document.getElementById('relayDot').style.background = 'var(--green)';
-      document.getElementById('relayTitle').style.color = 'var(--green)';
-      document.getElementById('relayTitle').textContent = 'STRATEGY BRIEF — STRATEGIST RELAY RECEIVED';
-      document.getElementById('relayTimeStamp').textContent = 'Synced ' + (timestamp ? new Date(timestamp).toLocaleTimeString() : '—');
-      document.getElementById('relayBody').className = 'relay-body';
-      document.getElementById('relayBody').textContent = stratBrief;
-      document.getElementById('relayTime').textContent = 'Synced ' + new Date(timestamp||Date.now()).toLocaleTimeString();
-      document.getElementById('relaySnippet').textContent = stratBrief.slice(0,300)+'...';
-      document.getElementById('bncaBody').textContent = stratBrief.slice(0,400)+'...';
-    }
-  } catch(e){}
+    hydratePage(stratData);
+  } catch(e) {
+    loadDemoMode();
+  }
 })();
 
-function exportBrief(){
-  const content = stratData?.stratBrief || 'No brief generated';
-  const blob = new Blob([content],{type:'text/plain'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'tsm-bpo-executive-brief-'+Date.now()+'.txt';
-  a.click();
+function loadDemoMode() {
+  stratData = {
+    sector: 'Supply Chain',
+    docType: 'Supplier Notice',
+    stratBrief: 'SITUATION\nSupplier bankruptcy filed. $8.2M revenue at risk across 3 production lines and 17 customers. 6-day inventory runway before critical failure.\n\nRECOMMENDATION\nActivate Contingency Plan (Option A): switch to backup supplier, divert production, expedite inventory. 92% probability of full recovery within 48 hours, containing exposure to approximately $1.2M.\n\nOWNERSHIP\nSupply Chain VP owns supplier activation. Plant Manager owns production diversion. Operations Director owns inventory expediting. Customer Success Director owns proactive client notification.',
+    engines: { engine1:'Supplier bankruptcy detected. $8.2M exposure.', engine2:'Production lines A/B/C at risk. 6-day runway.', engine3:'Activate Supplier B. Divert production. Expedite.' },
+    recommendation: {
+      confidence: 92,
+      recommendedActions: [
+        { text:'Activate contingency supplier immediately', owner:'Supply Chain VP' },
+        { text:'Divert production to available lines', owner:'Plant Manager' },
+        { text:'Expedite inventory from secondary warehouses', owner:'Operations Director' },
+        { text:'Notify affected customers proactively', owner:'Customer Success Director' }
+      ],
+      noActionRevLoss:'$8.2M', actionRevLoss:'$1.2M', recoveryTime:'48 Hrs'
+    },
+    selectedScenario:'A',
+    selectedScenarioName:'Activate Contingency Plan',
+    anomalyCode:'SUPPLIER_SHUTDOWN',
+    anomalyEntity:'Supplier Bankruptcy · Critical',
+    revenueAtRisk:'$8.2M',
+    runway:'6 Days',
+    timestamp: new Date().toISOString()
+  };
+  document.getElementById('actStatus').innerHTML = 'Status: <span>DEMO MODE ACTIVE</span>';
+  hydratePage(stratData);
 }
 
-function nav(url){ window.location.href=url; }
+// ── HYDRATE EVERYTHING FROM REAL RELAY DATA ──
+function hydratePage(d) {
+  const rec = d.recommendation || {};
+
+  document.getElementById('tbSector').textContent = d.sector || 'BPO';
+  document.getElementById('tbDocType').textContent = d.docType || '—';
+  document.getElementById('tbConf').textContent = rec.confidence ? rec.confidence + '%' : '—';
+  document.getElementById('tbExposure').textContent = rec.actionRevLoss || '—';
+
+  document.getElementById('incLabel').textContent = (d.anomalyEntity || d.sector || 'Incident') + ' — Strategy Escalated';
+  document.getElementById('incStrategy').textContent = d.selectedScenarioName || (d.selectedScenario ? 'Option ' + d.selectedScenario : '—');
+  document.getElementById('resolvedTime').textContent = d.timestamp ? new Date(d.timestamp).toLocaleTimeString() : '—';
+
+  document.getElementById('kpiStrategy').textContent = d.selectedScenarioName || (d.selectedScenario ? 'Option ' + d.selectedScenario : '—');
+  document.getElementById('kpiStrategySub').textContent = d.selectedScenario ? 'Scenario ' + d.selectedScenario + ' executed' : 'Awaiting escalation';
+  document.getElementById('kpiConfidence').textContent = rec.confidence ? rec.confidence + '%' : '—';
+  document.getElementById('kpiRecoveryTime').textContent = rec.recoveryTime || '—';
+
+  if (rec.noActionRevLoss && rec.actionRevLoss) {
+    const noAct = parseDollar(rec.noActionRevLoss);
+    const act = parseDollar(rec.actionRevLoss);
+    if (noAct && act) {
+      document.getElementById('kpiRecovered').textContent = formatDollar(noAct - act);
+      document.getElementById('kpiRecoveredSub').textContent = Math.round((1 - act/noAct) * 100) + '% of exposure contained';
+    }
+  }
+
+  document.getElementById('actStatus').innerHTML = 'Status: <span>STRATEGY RECEIVED — READY TO EXECUTE</span>';
+
+  buildExecPlan(rec.recommendedActions || []);
+  document.getElementById('briefStream').textContent = d.stratBrief || 'No brief text available.';
+
+  buildResolutionAudit(d);
+  buildExecQueue(d);
+  buildRecommendedApps(d);
+
+  if (window.TSMMemory) TSMMemory.timeline('Executive Portal opened — reviewing escalation for ' + (d.anomalyEntity || d.sector || 'incident'));
+}
+
+function parseDollar(s){
+  if (!s) return null;
+  const m = String(s).replace(/[^0-9.MK]/gi,'');
+  const num = parseFloat(m);
+  if (isNaN(num)) return null;
+  if (/m/i.test(s)) return num * 1e6;
+  if (/k/i.test(s)) return num * 1e3;
+  return num;
+}
+function formatDollar(n){
+  if (n >= 1e6) return '$' + (n/1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return '$' + (n/1e3).toFixed(0) + 'K';
+  return '$' + Math.round(n);
+}
+
+// ── EXECUTION PLAN CHECKLIST ──
+function buildExecPlan(actions) {
+  const el = document.getElementById('execPlanList');
+  if (!actions.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-family:\'JetBrains Mono\',monospace;font-size:.68rem">No recommended actions in this strategy brief.</div>';
+    document.getElementById('execProgress').textContent = '0 / 0 complete';
+    return;
+  }
+
+  el.innerHTML = actions.map((a,i) => `
+    <div class="exec-item">
+      <div class="exec-check" id="execCheck${i}" onclick="toggleExec(${i}, '${(a.text||'').replace(/'/g,"\\'")}')"></div>
+      <div class="exec-num">0${i+1}</div>
+      <div class="exec-body">
+        <div class="exec-text" id="execText${i}">${a.text}</div>
+        <div class="exec-owner">→ ${a.owner || 'Unassigned'}</div>
+      </div>
+    </div>
+  `).join('');
+
+  updateExecProgress(actions.length);
+}
+
+function toggleExec(i, text) {
+  execChecklist[i] = !execChecklist[i];
+  const check = document.getElementById('execCheck' + i);
+  const txt = document.getElementById('execText' + i);
+  const done = execChecklist[i];
+
+  check.classList.toggle('done', done);
+  check.textContent = done ? '✓' : '';
+  txt.classList.toggle('done', done);
+
+  if (window.TSMMemory) {
+    TSMMemory.timeline((done ? 'Execution step completed: ' : 'Execution step reopened: ') + text);
+  }
+
+  const total = document.querySelectorAll('.exec-check').length;
+  updateExecProgress(total);
+}
+
+function updateExecProgress(total) {
+  const done = Object.values(execChecklist).filter(Boolean).length;
+  document.getElementById('execProgress').textContent = done + ' / ' + total + ' complete';
+}
+
+// ── ANOMALY RESOLUTION AUDIT (CROSS-UPLOAD MEMORY) ──
+function buildResolutionAudit(d) {
+  const el = document.getElementById('resolutionAudit');
+  const lineEl = document.getElementById('crossUploadLine');
+
+  if (!window.TSMMemory || !d.anomalyCode || !d.anomalyEntity) {
+    el.innerHTML = '<div style="color:var(--muted);font-family:\'JetBrains Mono\',monospace;font-size:.68rem">No anomaly record linked to this escalation.</div>';
+    return;
+  }
+
+  const caseRef = TSMMemory.getCase('bpo-incident', d.anomalyEntity);
+  const anomaly = caseRef?.anomalies?.[0];
+
+  el.innerHTML = `
+    <div class="evidence-item">
+      <div class="ev-check ${anomaly?.status === 'resolved' ? 'ok' : 'pending'}">${anomaly?.status === 'resolved' ? '✓' : '○'}</div>
+      <div class="ev-name">
+        <b>${anomaly?.title || d.anomalyEntity}</b><br>
+        ${d.anomalyCode} · ${(anomaly?.status || 'open').toUpperCase()}
+        <span class="ev-time">Detected ${caseRef?.createdAt ? new Date(caseRef.createdAt).toLocaleString() : '—'}${anomaly?.resolvedAt ? ' · Resolved ' + new Date(anomaly.resolvedAt).toLocaleString() + ' by ' + anomaly.resolvedBy : ''}</span>
+      </div>
+    </div>
+  `;
+
+  const insight = TSMMemory.getCrossUploadInsight({ anomalyCode: d.anomalyCode, entityType: 'bpo-incident', entityId: d.anomalyEntity });
+  const priorCount = Math.max(0, (insight.priorOccurrences || 0) - 1);
+  const fieldCount = Object.keys(insight.suggestedPrefill || {}).length;
+
+  if (priorCount > 0) {
+    lineEl.classList.remove('empty');
+    lineEl.innerHTML = `🧠 This anomaly type (${d.anomalyCode}) has occurred <b>${priorCount}</b> time(s) before` +
+      (insight.lastResolvedBy ? ` · last resolved by <b>${insight.lastResolvedBy}</b>` : '') +
+      (fieldCount ? ` · <b>${fieldCount}</b> field(s) recovered from memory this run` : '') + '.';
+  } else {
+    lineEl.classList.add('empty');
+    lineEl.textContent = 'First time this anomaly type has been seen — no prior memory to draw from yet. Future uploads of this type will recover faster.';
+  }
+}
+
+// ── EXECUTIVE RELAY QUEUE ──
+function buildExecQueue(d) {
+  const el = document.getElementById('execQueueList');
+  if (!window.TSMMemory) { el.innerHTML = '<div class="eq-empty">Memory engine unavailable.</div>'; return; }
+
+  const queue = (TSMMemory.get().executiveQueue || []).slice(0, 6);
+  if (!queue.length) { el.innerHTML = '<div class="eq-empty">Queue is empty.</div>'; return; }
+
+  el.innerHTML = queue.map((item, i) => `
+    <div class="eq-item">
+      <div class="eq-top">
+        <div class="eq-title">${item.title}</div>
+        <div class="eq-status ${item.status === 'approved' ? 'approved' : 'queued'}" id="eqStatus${i}">${item.status.toUpperCase()}</div>
+      </div>
+      <div class="eq-summary">${(item.summary || '').slice(0, 140)}</div>
+      <div class="eq-meta">Exposure: <span>${item.exposure || '—'}</span> &nbsp;·&nbsp; Owner: <span>${item.owner || '—'}</span></div>
+      <button class="eq-btn" id="eqBtn${i}" onclick="approveQueueItem(${i}, '${(item.title||'').replace(/'/g,"\\'")}')" ${item.status === 'approved' ? 'disabled' : ''}>${item.status === 'approved' ? '✓ APPROVED' : 'APPROVE & EXECUTE'}</button>
+    </div>
+  `).join('');
+}
+
+function approveQueueItem(i, title) {
+  document.getElementById('eqStatus' + i).textContent = 'APPROVED';
+  document.getElementById('eqStatus' + i).classList.add('approved');
+  document.getElementById('eqStatus' + i).classList.remove('queued');
+  const btn = document.getElementById('eqBtn' + i);
+  btn.textContent = '✓ APPROVED';
+  btn.disabled = true;
+
+  if (window.TSMMemory) {
+    TSMMemory.timeline('Executive approved relay: ' + title);
+    TSMMemory.relay('Executive approval recorded: ' + title);
+  }
+}
+
+// ── RECOMMENDED APPS / ROUTE TO ──
+function buildRecommendedApps(d) {
+  const el = document.getElementById('recommendedApps');
+  if (!window.TSMMemory || !window.TSMSectorIntelligence || !d.anomalyCode) {
+    el.innerHTML = '<div style="color:var(--muted);font-family:\'JetBrains Mono\',monospace;font-size:.68rem">No routing recommendations available.</div>';
+    return;
+  }
+
+  const payload = TSMMemory.getSuggestedAppPayload({ anomalyCode: d.anomalyCode, entityType:'bpo-incident', entityId: d.anomalyEntity });
+  if (!payload || !payload.recommendedApps?.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-family:\'JetBrains Mono\',monospace;font-size:.68rem">No app routes mapped for this anomaly type yet.</div>';
+    return;
+  }
+
+  el.innerHTML = payload.recommendedApps.map(app => `
+    <div class="app-chip" onclick="nav('${app.url}')">
+      <div class="app-chip-dot"></div>
+      <div class="app-chip-label">${app.label}</div>
+      <div class="app-chip-arrow">→</div>
+    </div>
+  `).join('');
+}
+
+// ── MARK EXECUTED ──
+function markExecuted() {
+  document.getElementById('incSevBadge').textContent = '■ EXECUTED';
+  document.getElementById('actStatus').innerHTML = 'Status: <span>EXECUTION CONFIRMED — CLOSED LOOP</span>';
+  document.getElementById('markExecutedBtn').textContent = '✓ EXECUTION CONFIRMED';
+  document.getElementById('markExecutedBtn').disabled = true;
+  document.getElementById('markExecutedBtnBar').textContent = '✓ EXECUTION CONFIRMED';
+  document.getElementById('markExecutedBtnBar').disabled = true;
+
+  if (window.TSMMemory) {
+    TSMMemory.timeline('Execution confirmed by Operations — incident closed');
+    TSMMemory.strategist('STABLE');
+  }
+}
+
+// ── EXPORT ──
+function exportBrief(){
+  const content = stratData?.stratBrief || 'No brief generated';
+  const blob = new Blob([content], { type:'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'tsm-bpo-executive-brief-' + Date.now() + '.txt';
+  a.click();
+}
 </script>
 </body>
 </html>
