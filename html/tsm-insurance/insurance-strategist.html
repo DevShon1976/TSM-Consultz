@@ -489,7 +489,10 @@ BOARD ITEMS: [YES/NO — what warrants board attention]
 - [Target 2] — $[impact]
 - [Target 3] — $[impact]
 RELAY TO EXECUTIVE PORTAL: YES
-PACKAGE CONFIDENCE: [1-100]%`
+PACKAGE CONFIDENCE: [1-100]%
+
+Format your ENTIRE response exactly as follows: start with the literal line ===BRIEF=== followed by the full package above, then a new line with the literal ===JSON=== followed by a single JSON object (no markdown fences) with this exact shape:
+{"confidence":0-100,"dataSources":[{"name":"...","weight":"HIGH|MED|LOW"}],"reasoning":[{"key":"...","val":"..."}],"recommendedActions":[{"text":"...","owner":"..."}],"noActionRevLoss":"$amount","actionRevLoss":"$amount","recoveryTime":"e.g. 90 Days"}`
 ];
 
 const NODE_FALLBACKS=[
@@ -549,6 +552,7 @@ async function runStrategist(){
   document.getElementById('spinner').classList.add('active');
   document.getElementById('escalateBar').classList.remove('visible');
   document.getElementById('confidenceBar').style.display='none';
+  insXPResetExplain();
 
   const n={};
   const labels=['Situation Assessment','Strategic Analysis','BNCA Synthesis','Executive Package'];
@@ -578,6 +582,7 @@ async function runStrategist(){
     setNodeState(i,'done');
     document.getElementById('nodesComplete').textContent=i+'/4 NODES';
     document.getElementById('nodesComplete').className='out-badge done';
+    if(i===4){ const {brief:insBrief,obj:insObj}=insXPParseExplain(txt); setNodeBody(4,insBrief||txt); if(insObj) insXPRenderExplain(insObj); }
     await new Promise(r=>setTimeout(r,300));
   }
 
