@@ -1,0 +1,1638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TSM Career Training Platform · Decision Intelligence Academy</title>
+<style>
+:root {
+  --bg: #0a0c10;
+  --surface: #111318;
+  --surface2: #181b22;
+  --surface3: #1e2230;
+  --border: #1e2230;
+  --border2: #2a2f42;
+  --text: #e8eaf0;
+  --text2: #8890a8;
+  --text3: #4a5068;
+  --green: #00d4aa;
+  --green-dim: rgba(0,212,170,0.08);
+  --green-border: rgba(0,212,170,0.2);
+  --cyan: #00d4d4;
+  --cyan-dim: rgba(0,212,212,0.07);
+  --cyan-border: rgba(0,212,212,0.2);
+  --amber: #f59e0b;
+  --amber-dim: rgba(245,158,11,0.08);
+  --amber-border: rgba(245,158,11,0.2);
+  --red: #ef4444;
+  --red-dim: rgba(239,68,68,0.08);
+  --purple: #a78bfa;
+  --purple-dim: rgba(167,139,250,0.08);
+  --purple-border: rgba(167,139,250,0.2);
+  --blue: #3b82f6;
+  --blue-dim: rgba(59,130,246,0.08);
+  --orange: #f97316;
+  --orange-dim: rgba(249,115,22,0.08);
+  --mono: 'Courier New', monospace;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--mono); min-height: 100vh; }
+
+/* ── HEADER ── */
+header {
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 56px; position: sticky; top: 0; background: var(--bg); z-index: 200;
+}
+.logo { font-size: 11px; letter-spacing: .18em; color: var(--text2); }
+.logo span { color: var(--green); }
+.header-center { display: flex; align-items: center; gap: 1.5rem; }
+.hdr-stat { text-align: center; }
+.hdr-val { font-size: 18px; font-weight: 700; color: var(--green); line-height: 1; }
+.hdr-lbl { font-size: 8px; letter-spacing: .1em; color: var(--text3); margin-top: 2px; }
+.chain-badge { font-size: 9px; letter-spacing: .12em; color: var(--cyan); border: 1px solid var(--cyan-border); padding: 4px 12px; }
+.global-progress { display: flex; align-items: center; gap: 8px; }
+.gp-bar { width: 100px; height: 2px; background: var(--border2); border-radius: 1px; }
+.gp-fill { height: 2px; background: var(--green); border-radius: 1px; width: 0%; transition: width .4s; }
+.gp-pct { font-size: 11px; color: var(--text2); min-width: 32px; }
+
+/* ── LAYOUT ── */
+.main { display: grid; grid-template-columns: 260px 1fr; min-height: calc(100vh - 56px); }
+
+/* ── NAV ── */
+nav {
+  border-right: 1px solid var(--border);
+  padding: 1.25rem 0;
+  position: sticky; top: 56px;
+  height: calc(100vh - 56px);
+  overflow-y: auto;
+}
+.nav-section-label {
+  font-size: 8px; letter-spacing: .14em; color: var(--text3);
+  padding: .5rem 1.25rem .3rem;
+  border-top: 1px solid var(--border);
+  margin-top: .75rem;
+}
+.nav-section-label:first-child { border-top: none; margin-top: 0; }
+.nav-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .5rem 1.25rem;
+  cursor: pointer;
+  border-left: 2px solid transparent;
+  font-size: 11px; color: var(--text2);
+  text-decoration: none;
+  transition: all .15s;
+  gap: 6px;
+}
+.nav-item:hover { background: var(--surface); color: var(--text); }
+.nav-item.active { border-left-color: var(--green); color: var(--green); background: var(--green-dim); }
+.nav-item.active-cyan { border-left-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+.nav-item.active-amber { border-left-color: var(--amber); color: var(--amber); background: var(--amber-dim); }
+.nav-item.active-purple { border-left-color: var(--purple); color: var(--purple); background: var(--purple-dim); }
+.nav-item.active-blue { border-left-color: var(--blue); color: var(--blue); background: var(--blue-dim); }
+.nav-item.active-orange { border-left-color: var(--orange); color: var(--orange); background: var(--orange-dim); }
+.nav-left { display: flex; align-items: center; gap: 8px; }
+.nav-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.nav-right { display: flex; align-items: center; gap: 6px; }
+.nav-pct { font-size: 9px; }
+.nav-count { font-size: 8px; letter-spacing: .06em; color: var(--text3); }
+.nav-new { font-size: 7px; letter-spacing: .1em; background: var(--amber-dim); border: 1px solid var(--amber-border); color: var(--amber); padding: 1px 5px; }
+
+/* ── CONTENT ── */
+.content { padding: 2rem; max-width: 920px; }
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ── OVERVIEW HERO ── */
+.overview-hero {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-top: 3px solid var(--green);
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+.oh-eyebrow { font-size: 9px; letter-spacing: .18em; color: var(--text3); margin-bottom: .5rem; }
+.oh-title { font-size: 26px; font-weight: 700; color: var(--text); line-height: 1.2; margin-bottom: .5rem; }
+.oh-subtitle { font-size: 12px; color: var(--text2); line-height: 1.7; }
+.oh-chain { display: flex; align-items: center; gap: 0; margin-top: 1.25rem; flex-wrap: wrap; }
+.ohc-stage {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 8px 20px; border: 1px solid var(--border2);
+  background: var(--surface2);
+}
+.ohc-num { font-size: 8px; letter-spacing: .1em; color: var(--text3); }
+.ohc-label { font-size: 12px; font-weight: 700; margin-top: 2px; }
+.ohc-q { font-size: 9px; color: var(--text2); margin-top: 2px; font-style: italic; }
+.ohc-arrow { color: var(--text3); padding: 0 6px; font-size: 16px; align-self: center; }
+
+/* ── SUMMARY STATS ── */
+.summary-grid {
+  display: grid; grid-template-columns: repeat(5,1fr);
+  gap: 1px; background: var(--border);
+  border: 1px solid var(--border);
+  margin-bottom: 2rem;
+}
+.summary-cell { background: var(--surface); padding: 1rem; text-align: center; }
+.summary-val { font-size: 22px; font-weight: 700; color: var(--green); }
+.summary-lbl { font-size: 8px; letter-spacing: .1em; color: var(--text3); margin-top: 4px; }
+
+/* ── PITCH BLOCK ── */
+.pitch-block {
+  background: var(--green-dim);
+  border: 1px solid var(--green-border);
+  border-left: 3px solid var(--green);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  font-size: 12px; color: var(--text2); line-height: 1.8;
+}
+.pitch-block strong { color: var(--green); }
+.pitch-block.amber { background: var(--amber-dim); border-color: var(--amber-border); border-left-color: var(--amber); }
+.pitch-block.amber strong { color: var(--amber); }
+.pitch-block.cyan { background: var(--cyan-dim); border-color: var(--cyan-border); border-left-color: var(--cyan); }
+.pitch-block.cyan strong { color: var(--cyan); }
+.pitch-block.purple { background: var(--purple-dim); border-color: var(--purple-border); border-left-color: var(--purple); }
+.pitch-block.purple strong { color: var(--purple); }
+
+/* ── SECTOR GRID ── */
+.sector-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 1px; background: var(--border);
+  border: 1px solid var(--border);
+  margin-bottom: 2rem;
+}
+.sector-cell {
+  background: var(--surface); padding: 1.25rem;
+  cursor: pointer; transition: background .15s;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.sector-cell:hover { background: var(--surface2); }
+.sc-eyebrow { font-size: 8px; letter-spacing: .12em; color: var(--text3); }
+.sc-name { font-size: 14px; font-weight: 700; color: var(--text); }
+.sc-tools { font-size: 10px; color: var(--text2); }
+.sc-count { font-size: 9px; color: var(--text3); }
+.sc-bar { height: 2px; background: var(--border2); border-radius: 1px; margin-top: 4px; }
+.sc-fill { height: 2px; border-radius: 1px; width: 0; }
+
+/* ── SECTION HEADERS ── */
+.section-head {
+  font-size: 9px; letter-spacing: .16em; color: var(--text3);
+  padding-bottom: .5rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1rem;
+  margin-top: 1.5rem;
+}
+.section-head:first-child { margin-top: 0; }
+.section-head.green { color: var(--green); border-color: var(--green-border); }
+.section-head.cyan { color: var(--cyan); border-color: var(--cyan-border); }
+.section-head.amber { color: var(--amber); border-color: var(--amber-border); }
+.section-head.purple { color: var(--purple); border-color: var(--purple-border); }
+
+/* ── PANEL HEADER ── */
+.panel-eyebrow { font-size: 9px; letter-spacing: .15em; color: var(--text3); margin-bottom: .4rem; }
+.panel-title { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: .5rem; }
+.panel-sub { font-size: 12px; color: var(--text2); line-height: 1.6; margin-bottom: 1.5rem; }
+
+/* ── CHAIN FLOW ── */
+.chain-flow {
+  display: flex; align-items: center; gap: 0;
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 10px 16px; margin-bottom: 1.5rem;
+  overflow-x: auto; flex-wrap: wrap;
+}
+.cf-step {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 6px 14px; border-radius: 2px; cursor: default;
+}
+.cf-step.active-step { background: var(--green-dim); border: 1px solid var(--green-border); }
+.cf-step.cert-step { background: var(--amber-dim); border: 1px solid var(--amber-border); }
+.cf-step.exam-step { background: var(--cyan-dim); border: 1px solid var(--cyan-border); }
+.cf-step.deploy-step { background: var(--purple-dim); border: 1px solid var(--purple-border); }
+.cf-num { font-size: 8px; letter-spacing: .1em; color: var(--text3); }
+.cf-label { font-size: 11px; font-weight: 700; }
+.cf-sub { font-size: 9px; color: var(--text2); }
+.cf-arrow { color: var(--text3); padding: 0 8px; font-size: 14px; align-self: center; }
+
+/* ── APP CARDS ── */
+.app-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); margin-bottom: 1.5rem; }
+.app-card {
+  background: var(--surface); padding: 1rem 1.25rem;
+  cursor: pointer; transition: background .15s;
+  text-decoration: none; display: block;
+}
+.app-card:hover { background: var(--surface2); }
+.app-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.app-name { font-size: 13px; font-weight: 700; color: var(--text); }
+.app-tag {
+  font-size: 8px; letter-spacing: .1em;
+  padding: 2px 7px; border-radius: 2px;
+}
+.tag-exam { background: var(--amber-dim); border: 1px solid var(--amber-border); color: var(--amber); }
+.tag-cert { background: var(--cyan-dim); border: 1px solid var(--cyan-border); color: var(--cyan); }
+.tag-practice { background: var(--green-dim); border: 1px solid var(--green-border); color: var(--green); }
+.tag-intel { background: var(--purple-dim); border: 1px solid var(--purple-border); color: var(--purple); }
+.tag-ot { background: var(--blue-dim); border: 1px solid rgba(59,130,246,.2); color: var(--blue); }
+.tag-new { background: var(--orange-dim); border: 1px solid rgba(249,115,22,.2); color: var(--orange); }
+.app-desc { font-size: 11px; color: var(--text2); line-height: 1.5; margin-bottom: 6px; }
+.app-metrics { display: flex; gap: 12px; }
+.app-metric { font-size: 9px; color: var(--text3); }
+.app-metric span { color: var(--text2); }
+
+/* ── CERT CARD ── */
+.cert-card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  margin-bottom: 1px;
+  display: flex; align-items: stretch;
+}
+.cert-left {
+  width: 5px; flex-shrink: 0;
+}
+.cert-body { padding: 1rem 1.25rem; flex: 1; }
+.cert-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 4px; }
+.cert-name { font-size: 14px; font-weight: 700; color: var(--text); }
+.cert-org { font-size: 10px; color: var(--text3); margin-top: 2px; }
+.cert-desc { font-size: 11px; color: var(--text2); line-height: 1.6; margin-bottom: 8px; }
+.cert-meta { display: flex; gap: 16px; flex-wrap: wrap; }
+.cert-meta-item { font-size: 9px; color: var(--text3); }
+.cert-meta-item span { color: var(--text2); }
+.cert-actions { display: flex; gap: 8px; margin-top: 10px; }
+.cert-btn {
+  font-size: 9px; letter-spacing: .08em;
+  padding: 4px 12px;
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--text2); cursor: pointer;
+  font-family: var(--mono); transition: all .15s;
+  text-decoration: none; display: inline-block;
+}
+.cert-btn:hover { border-color: var(--green); color: var(--green); }
+.cert-btn.primary { border-color: var(--green-border); color: var(--green); }
+.cert-btn.primary:hover { background: var(--green-dim); }
+
+/* ── READINESS TRACKER ── */
+.readiness-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); margin-bottom: 1.5rem; }
+.readiness-cell { background: var(--surface); padding: 1rem; }
+.rc-phase { font-size: 8px; letter-spacing: .12em; color: var(--text3); margin-bottom: .5rem; }
+.rc-title { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: .4rem; }
+.rc-items { display: flex; flex-direction: column; gap: 4px; }
+.rc-item { display: flex; align-items: center; gap: 7px; font-size: 10px; color: var(--text2); }
+.rc-item input { accent-color: var(--green); width: 12px; height: 12px; cursor: pointer; flex-shrink: 0; }
+.rc-item.done { color: var(--green); }
+
+/* ── GOVERNANCE OVERLAY ── */
+.gov-grid {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 1px; background: var(--border); border: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+}
+.gov-cell { background: var(--surface2); padding: 1rem; }
+.gov-icon { font-size: 16px; margin-bottom: 6px; }
+.gov-title { font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 4px; letter-spacing: .02em; }
+.gov-desc { font-size: 10px; color: var(--text2); line-height: 1.6; }
+
+/* ── EXPLAINABILITY PANEL ── */
+.explain-box {
+  background: var(--surface);
+  border: 1px solid var(--purple-border);
+  border-top: 2px solid var(--purple);
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+.explain-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.explain-title { font-size: 11px; font-weight: 700; color: var(--purple); letter-spacing: .06em; }
+.explain-conf { font-size: 20px; font-weight: 700; color: var(--green); }
+.explain-conf-lbl { font-size: 8px; letter-spacing: .1em; color: var(--text3); }
+.explain-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 8px; font-size: 11px; }
+.explain-label { color: var(--text3); min-width: 80px; flex-shrink: 0; }
+.explain-val { color: var(--text2); }
+.confidence-bar { height: 3px; background: var(--border2); border-radius: 2px; margin-top: .5rem; }
+.confidence-fill { height: 3px; border-radius: 2px; background: var(--green); }
+
+/* ── STAFFING INTEL ── */
+.staffing-pitch {
+  background: linear-gradient(135deg, #0a0c10 0%, #111b2e 100%);
+  border: 1px solid var(--cyan-border);
+  border-top: 3px solid var(--cyan);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.sp-headline { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: .4rem; }
+.sp-sub { font-size: 11px; color: var(--text2); line-height: 1.7; }
+.pricing-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); margin-bottom: 1.5rem; }
+.pricing-cell { background: var(--surface); padding: 1.25rem; text-align: center; }
+.pricing-tier { font-size: 9px; letter-spacing: .12em; color: var(--text3); margin-bottom: 6px; }
+.pricing-price { font-size: 22px; font-weight: 700; color: var(--green); }
+.pricing-per { font-size: 9px; color: var(--text3); }
+.pricing-features { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+.pf-item { font-size: 10px; color: var(--text2); text-align: left; }
+.pf-item::before { content: '✓  '; color: var(--green); }
+
+/* ── PROGRESS BAR ── */
+.progress-row { display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem; }
+.progress-track { flex: 1; height: 3px; background: var(--border2); border-radius: 2px; }
+.progress-fill { height: 3px; border-radius: 2px; transition: width .4s; }
+.progress-label { font-size: 10px; color: var(--text2); }
+.progress-pct { font-size: 11px; min-width: 32px; text-align: right; }
+
+/* ── NARRATIVE ── */
+.narrative-block {
+  border: 1px solid var(--border2);
+  border-left: 3px solid var(--green);
+  background: var(--surface);
+  margin-bottom: 1.5rem;
+}
+.nb-header {
+  padding: .6rem 1rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 9px; letter-spacing: .12em; color: var(--text3);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nb-body { padding: 1rem; font-size: 12px; color: var(--text2); line-height: 1.8; font-family: var(--sans); }
+.nb-body strong { color: var(--text); font-family: var(--mono); font-size: 11px; }
+
+/* ── TESTIMONIAL ── */
+.testimonial-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); margin-bottom: 1.5rem; }
+.testimonial-cell {
+  background: var(--surface); padding: 1.25rem;
+}
+.t-quote { font-size: 13px; color: var(--text2); line-height: 1.7; font-style: italic; margin-bottom: 10px; font-family: var(--sans); }
+.t-attr { font-size: 9px; letter-spacing: .08em; color: var(--text3); }
+.t-attr span { color: var(--green); }
+
+/* ── FOOTER ── */
+.panel-footer {
+  margin-top: 2rem; padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.footer-badge {
+  font-size: 9px; letter-spacing: .12em;
+  padding: 4px 12px;
+  background: var(--green-dim); border: 1px solid var(--green-border); color: var(--green);
+}
+.footer-nav { display: flex; gap: 8px; }
+.footer-btn {
+  font-size: 10px; letter-spacing: .06em;
+  padding: 5px 14px; background: transparent;
+  border: 1px solid var(--border2); color: var(--text2);
+  cursor: pointer; font-family: var(--mono); transition: all .15s;
+}
+.footer-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+/* ── TAGS ── */
+.tag {
+  display: inline-block; font-size: 8px; letter-spacing: .1em;
+  padding: 2px 7px; border-radius: 2px; margin-right: 4px;
+}
+
+/* ── MISC ── */
+.info-note {
+  background: var(--cyan-dim); border: 1px solid var(--cyan-border);
+  padding: .6rem 1rem; font-size: 11px; color: var(--cyan);
+  margin-bottom: 1rem; line-height: 1.5;
+}
+.warn-note {
+  background: var(--amber-dim); border: 1px solid var(--amber-border);
+  padding: .6rem 1rem; font-size: 11px; color: var(--amber);
+  margin-bottom: 1rem; line-height: 1.5;
+}
+.divider { height: 1px; background: var(--border); margin: 1.5rem 0; }
+
+.badge-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem; }
+.badge {
+  font-size: 9px; letter-spacing: .1em;
+  padding: 3px 10px; border-radius: 2px;
+}
+.badge-green { background: var(--green-dim); border: 1px solid var(--green-border); color: var(--green); }
+.badge-cyan { background: var(--cyan-dim); border: 1px solid var(--cyan-border); color: var(--cyan); }
+.badge-amber { background: var(--amber-dim); border: 1px solid var(--amber-border); color: var(--amber); }
+.badge-purple { background: var(--purple-dim); border: 1px solid var(--purple-border); color: var(--purple); }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); }
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<header>
+  <div class="logo"><span>TSM</span> // CAREER TRAINING PLATFORM · DECISION INTELLIGENCE ACADEMY</div>
+  <div class="header-center">
+    <div class="hdr-stat"><div class="hdr-val" id="h-tools">22</div><div class="hdr-lbl">TRAINING TOOLS</div></div>
+    <div class="hdr-stat"><div class="hdr-val" id="h-certs">6</div><div class="hdr-lbl">CERTIFICATIONS</div></div>
+    <div class="hdr-stat"><div class="hdr-val" id="h-sectors">7</div><div class="hdr-lbl">SECTORS</div></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:1rem;">
+    <div class="global-progress">
+      <div class="gp-bar"><div class="gp-fill" id="global-fill"></div></div>
+      <div class="gp-pct" id="global-pct">0%</div>
+    </div>
+    <div class="chain-badge">LEARN → CERTIFY → DEPLOY → EARN</div>
+  </div>
+</header>
+
+<div class="main">
+
+<!-- ═══ NAV ═══ -->
+<nav>
+  <div class="nav-section-label">PLATFORM OVERVIEW</div>
+  <a class="nav-item active" onclick="switchTo('overview')" href="#">
+    <div class="nav-left"><div class="nav-dot" style="background:var(--green)"></div>Overview &amp; Architecture</div>
+  </a>
+  <a class="nav-item" onclick="switchTo('staffing')" href="#">
+    <div class="nav-left"><div class="nav-dot" style="background:var(--cyan)"></div>Staffing Firm Pitch</div>
+    <div class="nav-right"><span class="nav-new">B2B</span></div>
+  </a>
+
+  <div class="nav-section-label">HEALTHCARE · REVENUE CYCLE</div>
+  <a class="nav-item" onclick="switchTo('hc')" href="#">
+    <div class="nav-left"><div class="nav-dot" style="background:var(--green)"></div>HC Training Suite</div>
+    <div class="nav-right"><span class="nav-count">4 tools</span></div>
+  </a>
+  <a class="nav-item" onclick="switchTo('crcr')" href="#">
+    <div class="nav-left"><div class="nav-dot" style="background:var(--amber)"></div>CRCR Exam Prep</div>
+    <div class="nav-right"><span class="nav-new">CERT</span></div>
+  </a>
+
+  <div class="nav-section-label">FINOPS · ACCOUNTING</div>
+  <a class="nav-item" onclick="switchTo('finops')" href="#">
+    <div class="nav-left"><div class="nav-dot" style="background:var(--cyan)"></div>FinOps Training Suite</div>
+    <div class="nav-right"><span class="nav-count">3 tools</span></div>
+  </a>
+
+  <div class="nav-section-label">INSURANCE · BENEFITS</div>
+  <a class="nav-item" onclick="switchTo('insurance')" href="#">
+    <div class="nav-left"><div class="nav-dot" style="background:var(--blue)"></div>Insurance Training Suite</div>
+    <div class="nav-right"><span class="nav-count">3 tools</span></div>
+  </a>
+  <a class="nav-item" onclick="switchTo('ahip')" href="#">
+    <div class="nav-left"><div class="nav-dot" style="background:var(--amber)"></div>AHIP Certification Prep</div>
+    <div class="nav-right"><span class="nav-new">CERT</span></div>
+  </a>
+
+  <div class="nav-section-label">REAL ESTATE · MORTGAGE</div>
+  <a class="nav-item" onclick="switchTo('realestate')" href="#">
+    <div class="nav-left"><div class="nav-dot" style="background:var(--orange)"></div>Real Estate Suite</div>
+    <div class="nav-right"><span class="nav-count">2 tools</span></div>
+  </a>
+  <a class="nav-item" onclick="switchTo('mlo')" href="#">
+    <div class="nav-left"><div class="nav-dot" style="background:var(--amber)"></div>MLO Exam Prep</div>
+    <div class="nav-right"><span class="nav-new">CERT</span></div>
+  </a>
+
+  <div class="nav-section-label">BPO · OPERATIONS</div>
+  <a class="nav-item" onclick="switchTo('bpo')" href="#">
+    <div class="nav-left"><div class="nav-dot" style="background:var(--purple)"></div>BPO Intelligence Suite</div>
+    <div class="nav-right"><span class="nav-count">2 tools</span></div>
+  </a>
+
+  <div class="nav-section-label">CROSS-SECTOR CAREER</div>
+  <a class="nav-item" onclick="switchTo('career')" href="#">
+    <div class="nav-left"><div class="nav-dot" style="background:var(--green)"></div>Career Command Center</div>
+    <div class="nav-right"><span class="nav-count">3 tools</span></div>
+  </a>
+  <a class="nav-item" onclick="switchTo('readiness')" href="#">
+    <div class="nav-left"><div class="nav-dot" style="background:var(--cyan)"></div>Candidate Readiness Tracker</div>
+    <div class="nav-right"><span class="nav-new">NEW</span></div>
+  </a>
+  <a class="nav-item" onclick="switchTo('governance')" href="#">
+    <div class="nav-left"><div class="nav-dot" style="background:var(--purple)"></div>Governance &amp; Explainability</div>
+  </a>
+</nav>
+
+<!-- ═══ CONTENT ═══ -->
+<div class="content">
+
+<!-- ══════════════════════════════════════════════════════════
+     PANEL: OVERVIEW
+══════════════════════════════════════════════════════════ -->
+<div class="panel active" id="panel-overview">
+  <div class="overview-hero">
+    <div class="oh-eyebrow">TSM SHELL · DECISION INTELLIGENCE ACADEMY</div>
+    <div class="oh-title">The Ultimate Career Training Platform<br>for AI-Powered Industry Professionals</div>
+    <div class="oh-subtitle">
+      Seven sector-specific training suites · Six certification tracks · Full candidate readiness scoring ·
+      On-the-job application tools that work the day candidates start · Governance overlay with explainability
+      contracts that staffing firms can hand to enterprise clients.
+    </div>
+    <div class="oh-chain">
+      <div class="cf-step active-step"><div class="cf-num">01</div><div class="cf-label" style="color:var(--green)">LEARN</div><div class="cf-sub">Study + Practice</div></div>
+      <div class="cf-arrow">→</div>
+      <div class="cf-step cert-step"><div class="cf-num">02</div><div class="cf-label" style="color:var(--amber)">CERTIFY</div><div class="cf-sub">Exam Prep + Pass</div></div>
+      <div class="cf-arrow">→</div>
+      <div class="cf-step exam-step"><div class="cf-num">03</div><div class="cf-label" style="color:var(--cyan)">DEPLOY</div><div class="cf-sub">Day-1 Tools</div></div>
+      <div class="cf-arrow">→</div>
+      <div class="cf-step deploy-step"><div class="cf-num">04</div><div class="cf-label" style="color:var(--purple)">EARN</div><div class="cf-sub">ROI for Firms</div></div>
+    </div>
+  </div>
+
+  <div class="summary-grid">
+    <div class="summary-cell"><div class="summary-val">22</div><div class="summary-lbl">TRAINING TOOLS</div></div>
+    <div class="summary-cell"><div class="summary-val">6</div><div class="summary-lbl">CERT TRACKS</div></div>
+    <div class="summary-cell"><div class="summary-val">7</div><div class="summary-lbl">SECTORS</div></div>
+    <div class="summary-cell"><div class="summary-val" style="color:var(--cyan)">Day 1</div><div class="summary-lbl">DEPLOYMENT READY</div></div>
+    <div class="summary-cell"><div class="summary-val" style="color:var(--amber)">91%</div><div class="summary-lbl">AI CONFIDENCE</div></div>
+  </div>
+
+  <div class="pitch-block">
+    <strong>For Staffing Firms:</strong> Traditional staffing sends candidates with a resume. TSM sends candidates with a scored readiness profile, sector-specific AI tools they already know how to use, and certification prep that proves it — before day one.<br><br>
+    <strong>For Sector Companies:</strong> On-the-job training that doesn't stop at onboarding. CE tracking, live operational tools, and governance overlays that turn your team into AI-augmented decision makers.
+  </div>
+
+  <div class="section-head green">7 TRAINING SECTORS AT A GLANCE</div>
+  <div class="sector-grid">
+    <div class="sector-cell" onclick="switchTo('hc')">
+      <div class="sc-eyebrow">SECTOR 1 / 7 · HEALTHCARE</div>
+      <div class="sc-name">Revenue Cycle Management</div>
+      <div class="sc-tools">CRCR Prep · Denial War Room · HC Nodes · Scenario Engine</div>
+      <div class="sc-count">4 tools · CRCR certification track</div>
+      <div class="sc-bar"><div class="sc-fill" style="background:var(--green);width:85%"></div></div>
+    </div>
+    <div class="sector-cell" onclick="switchTo('finops')">
+      <div class="sc-eyebrow">SECTOR 2 / 7 · FINOPS</div>
+      <div class="sc-name">Accounting &amp; Financial Operations</div>
+      <div class="sc-tools">Study Guide · Interview Prep · CRCR Study Mode</div>
+      <div class="sc-count">3 tools · AP/AR career track</div>
+      <div class="sc-bar"><div class="sc-fill" style="background:var(--cyan);width:70%"></div></div>
+    </div>
+    <div class="sector-cell" onclick="switchTo('insurance')">
+      <div class="sc-eyebrow">SECTOR 3 / 7 · INSURANCE</div>
+      <div class="sc-name">Claims, CE &amp; AHIP Certification</div>
+      <div class="sc-tools">Claims Pro · CE Command · CE Study Prep · AHIP Prep</div>
+      <div class="sc-count">4 tools · AHIP + state CE tracks</div>
+      <div class="sc-bar"><div class="sc-fill" style="background:var(--blue);width:75%"></div></div>
+    </div>
+    <div class="sector-cell" onclick="switchTo('realestate')">
+      <div class="sc-eyebrow">SECTOR 4 / 7 · REAL ESTATE</div>
+      <div class="sc-name">REO, Mortgage &amp; MLO Licensing</div>
+      <div class="sc-tools">RE War Room · MLO Exam Prep · REO Remediation</div>
+      <div class="sc-count">3 tools · SAFE MLO license track</div>
+      <div class="sc-bar"><div class="sc-fill" style="background:var(--orange);width:65%"></div></div>
+    </div>
+    <div class="sector-cell" onclick="switchTo('bpo')">
+      <div class="sc-eyebrow">SECTOR 5 / 7 · BPO</div>
+      <div class="sc-name">Decision Intelligence &amp; Staffing</div>
+      <div class="sc-tools">Staffing Intelligence · Competitive Playbook · 4-Stage Chain</div>
+      <div class="sc-count">2 tools · Operations intelligence track</div>
+      <div class="sc-bar"><div class="sc-fill" style="background:var(--purple);width:80%"></div></div>
+    </div>
+    <div class="sector-cell" onclick="switchTo('career')">
+      <div class="sc-eyebrow">SECTOR 6–7 / 7 · CROSS-SECTOR</div>
+      <div class="sc-name">Career OS &amp; Enterprise Readiness</div>
+      <div class="sc-tools">Job Prep · Enterprise OS · Staffing Readiness Demo</div>
+      <div class="sc-count">3 tools · Universal candidate track</div>
+      <div class="sc-bar"><div class="sc-fill" style="background:var(--green);width:90%"></div></div>
+    </div>
+  </div>
+
+  <div class="section-head cyan">GOVERNANCE OVERLAY — WRAPS EVERY SECTOR</div>
+  <div class="gov-grid">
+    <div class="gov-cell">
+      <div class="gov-icon">◈</div>
+      <div class="gov-title">HITL Authorization</div>
+      <div class="gov-desc">Every AI recommendation requires explicit human sign-off. No action executes without a named human approving it — trained into candidates from day one.</div>
+    </div>
+    <div class="gov-cell">
+      <div class="gov-icon">⊕</div>
+      <div class="gov-title">Explainability Contract</div>
+      <div class="gov-desc">Every sector answers "Why does the AI believe this?" with confidence score, evidence sources, and reasoning chain. Auditable at every stage.</div>
+    </div>
+    <div class="gov-cell">
+      <div class="gov-icon">▣</div>
+      <div class="gov-title">Audit Trail Export</div>
+      <div class="gov-desc">Full decision log exportable per candidate, per session, per sector. Staffing firms get placement-ready evidence packages.</div>
+    </div>
+  </div>
+
+  <div class="section-head amber">PROOF OF VALUE — STAFFING PIVOT LINES</div>
+  <div class="testimonial-grid">
+    <div class="testimonial-cell">
+      <div class="t-quote">"Most staffing firms send us resumes. TSM sends us candidates who already know our systems and have scores to prove it."</div>
+      <div class="t-attr">Expected response from <span>healthcare RCM clients</span></div>
+    </div>
+    <div class="testimonial-cell">
+      <div class="t-quote">"The MLO prep tool cut our licensing lag from 90 days to 30. Candidates passed the first time because they trained on the actual workflow, not textbooks."</div>
+      <div class="t-attr">Expected response from <span>mortgage / RE clients</span></div>
+    </div>
+    <div class="testimonial-cell">
+      <div class="t-quote">"CRCR-certified candidates placed faster, billed higher, and stayed longer. The training platform is the differentiator we couldn't build in-house."</div>
+      <div class="t-attr">Expected response from <span>FinOps / healthcare staffing firms</span></div>
+    </div>
+    <div class="testimonial-cell">
+      <div class="t-quote">"Every candidate comes with a readiness score, sector certifications, and a portfolio of live AI decisions they already made in training. It's a staffing category of one."</div>
+      <div class="t-attr">Expected response from <span>enterprise operations clients</span></div>
+    </div>
+  </div>
+
+  <div class="panel-footer">
+    <div class="footer-badge">PLATFORM LIVE · tsm-shell.fly.dev</div>
+    <div class="footer-nav">
+      <button class="footer-btn" onclick="switchTo('staffing')">STAFFING PITCH →</button>
+      <button class="footer-btn" onclick="switchTo('hc')">HC SUITE →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PANEL: STAFFING FIRM PITCH
+══════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-staffing">
+  <div class="panel-eyebrow">B2B SALES DECK · STAFFING FIRMS</div>
+  <div class="panel-title">TSM Career Platform — Staffing Firm Pitch</div>
+  <div class="panel-sub">A complete pitch narrative for RemX, Staffmark, Aerotek, Robert Half, and Phoenix-area staffing firms. Position TSM as the training infrastructure that makes your placements faster, stickier, and billable at a premium.</div>
+
+  <div class="staffing-pitch">
+    <div class="sp-headline">"We don't just fill positions. We deploy certified AI-ready talent."</div>
+    <div class="sp-sub">
+      TSM Career Platform gives your candidates sector-specific AI training, certification prep across 6 tracks, and Day-1 deployment tools — before they ever walk into a client site.
+      The result: faster placements, fewer washouts, higher bill rates, and a differentiated pitch that no other staffing firm in Phoenix can match.
+    </div>
+  </div>
+
+  <div class="section-head green">THE STAFFING PROBLEM TSM SOLVES</div>
+  <div class="gov-grid">
+    <div class="gov-cell" style="border-top: 2px solid var(--red);">
+      <div class="gov-title" style="color:var(--red);">THE OLD WAY</div>
+      <div class="gov-desc">Send a resume. Hope they onboard fast. Lose the placement at 90 days when the client realizes the candidate can't execute independently.</div>
+    </div>
+    <div class="gov-cell" style="border-top: 2px solid var(--amber);">
+      <div class="gov-title" style="color:var(--amber);">THE GAP</div>
+      <div class="gov-desc">Candidates know the theory. They don't know the tools. Day-1 productivity lag costs clients $12–40k per misfire. Your margin suffers when it fails.</div>
+    </div>
+    <div class="gov-cell" style="border-top: 2px solid var(--green);">
+      <div class="gov-title" style="color:var(--green);">TSM SOLUTION</div>
+      <div class="gov-desc">Sector-trained. AI-certified. Scored and auditable. Candidates arrive knowing the exact tools your client uses — because they trained on them.</div>
+    </div>
+  </div>
+
+  <div class="section-head cyan">4-STAGE CANDIDATE PIPELINE</div>
+  <div class="chain-flow">
+    <div class="cf-step active-step"><div class="cf-num">01</div><div class="cf-label" style="color:var(--green)">ENROLL</div><div class="cf-sub">Sector assignment</div></div>
+    <div class="cf-arrow">→</div>
+    <div class="cf-step cert-step"><div class="cf-num">02</div><div class="cf-label" style="color:var(--amber)">TRAIN</div><div class="cf-sub">Tools + scenarios</div></div>
+    <div class="cf-arrow">→</div>
+    <div class="cf-step exam-step"><div class="cf-num">03</div><div class="cf-label" style="color:var(--cyan)">CERTIFY</div><div class="cf-sub">Exam prep + score</div></div>
+    <div class="cf-arrow">→</div>
+    <div class="cf-step deploy-step"><div class="cf-num">04</div><div class="cf-label" style="color:var(--purple)">PLACE</div><div class="cf-sub">Readiness package</div></div>
+  </div>
+
+  <div class="section-head amber">PRICING &amp; PARTNERSHIP MODELS</div>
+  <div class="pricing-grid">
+    <div class="pricing-cell">
+      <div class="pricing-tier">PER-CANDIDATE LICENSE</div>
+      <div class="pricing-price">$199</div>
+      <div class="pricing-per">/candidate · one-time</div>
+      <div class="pricing-features">
+        <div class="pf-item">All 7 sector tools</div>
+        <div class="pf-item">6 cert prep tracks</div>
+        <div class="pf-item">Readiness score export</div>
+        <div class="pf-item">90-day access</div>
+      </div>
+    </div>
+    <div class="pricing-cell" style="border-top:2px solid var(--green);">
+      <div class="pricing-tier">STAFFING FIRM SaaS</div>
+      <div class="pricing-price">$900</div>
+      <div class="pricing-per">/month · unlimited candidates</div>
+      <div class="pricing-features">
+        <div class="pf-item">White-label option</div>
+        <div class="pf-item">Bulk readiness exports</div>
+        <div class="pf-item">Client-facing reports</div>
+        <div class="pf-item">Priority support</div>
+      </div>
+    </div>
+    <div class="pricing-cell">
+      <div class="pricing-tier">ENTERPRISE / ON-THE-JOB</div>
+      <div class="pricing-price">$1,800</div>
+      <div class="pricing-per">/month · sector company direct</div>
+      <div class="pricing-features">
+        <div class="pf-item">CE tracking per employee</div>
+        <div class="pf-item">Governance audit exports</div>
+        <div class="pf-item">Custom scenario configs</div>
+        <div class="pf-item">War room integration</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-head purple">TARGET FIRMS — PHOENIX MARKET</div>
+  <div class="app-grid">
+    <div class="app-card">
+      <div class="app-card-top"><div class="app-name">RemX Staffing</div><span class="app-tag tag-intel">PRIMARY TARGET</span></div>
+      <div class="app-desc">Healthcare + financial ops focus. CRCR and FinOps training track maps directly to their placement verticals. Decision maker: Branch manager or VP of Healthcare.</div>
+      <div class="app-metrics"><span class="app-metric">Sector: <span>HC + FinOps</span></span><span class="app-metric">Angle: <span>CRCR cert pipeline</span></span></div>
+    </div>
+    <div class="app-card">
+      <div class="app-card-top"><div class="app-name">Staffmark</div><span class="app-tag tag-intel">PRIMARY TARGET</span></div>
+      <div class="app-desc">Light industrial + office/professional. TSM's cross-sector Career OS and Enterprise Readiness score gives them a premium candidate tier to offer.</div>
+      <div class="app-metrics"><span class="app-metric">Sector: <span>Cross-sector</span></span><span class="app-metric">Angle: <span>Readiness score as differentiator</span></span></div>
+    </div>
+    <div class="app-card">
+      <div class="app-card-top"><div class="app-name">Aerotek / TEKsystems</div><span class="app-tag tag-exam">SECONDARY</span></div>
+      <div class="app-desc">Tech + engineering heavy. Pitch the BPO Decision Intelligence Chain and governance overlay — enterprise operations buyers understand ROI of AI-trained talent.</div>
+      <div class="app-metrics"><span class="app-metric">Sector: <span>BPO + Enterprise</span></span><span class="app-metric">Angle: <span>Governance + audit trail</span></span></div>
+    </div>
+    <div class="app-card">
+      <div class="app-card-top"><div class="app-name">Robert Half / Accountemps</div><span class="app-tag tag-exam">SECONDARY</span></div>
+      <div class="app-desc">Direct match for FinOps suite. Accounting Study Guide + Interview Prep fills a gap their internal training leaves open. AP/AR candidates who arrive certified command 15–20% higher bill rates.</div>
+      <div class="app-metrics"><span class="app-metric">Sector: <span>FinOps</span></span><span class="app-metric">Angle: <span>Study Guide + Interview Prep</span></span></div>
+    </div>
+  </div>
+
+  <div class="pitch-block cyan">
+    <strong>STAFFING PIVOT LINE:</strong> "Every other staffing firm sends a resume and hopes the candidate figures it out. We send a readiness score, a certification record, and a candidate who already made 50 AI-augmented decisions in your client's sector before walking in the door. That's not a staffing service. That's a talent deployment system."
+  </div>
+
+  <div class="panel-footer">
+    <div class="footer-badge">LIVE AT tsm-shell.fly.dev</div>
+    <div class="footer-nav">
+      <button class="footer-btn" onclick="switchTo('readiness')">READINESS TRACKER →</button>
+      <button class="footer-btn" onclick="switchTo('hc')">HC SUITE →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PANEL: HEALTHCARE
+══════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-hc">
+  <div class="panel-eyebrow">SECTOR 1 / 7 · HEALTHCARE</div>
+  <div class="panel-title">Revenue Cycle Management Training Suite</div>
+  <div class="panel-sub">Four tools covering CRCR exam prep, active denial scenario practice, HC node navigation, and AI-powered claim analysis. Candidates complete this suite and arrive knowing more about RCM workflows than most 6-month employees.</div>
+
+  <div class="chain-flow">
+    <div class="cf-step active-step"><div class="cf-num">01</div><div class="cf-label" style="color:var(--green)">STUDY</div><div class="cf-sub">CRCR Study Mode</div></div>
+    <div class="cf-arrow">→</div>
+    <div class="cf-step cert-step"><div class="cf-num">02</div><div class="cf-label" style="color:var(--amber)">PRACTICE</div><div class="cf-sub">CRC HC Practice</div></div>
+    <div class="cf-arrow">→</div>
+    <div class="cf-step exam-step"><div class="cf-num">03</div><div class="cf-label" style="color:var(--cyan)">SCENARIOS</div><div class="cf-sub">CRCR Scenarios</div></div>
+    <div class="cf-arrow">→</div>
+    <div class="cf-step deploy-step"><div class="cf-num">04</div><div class="cf-label" style="color:var(--purple)">DEPLOY</div><div class="cf-sub">HC War Room Live</div></div>
+  </div>
+
+  <div class="section-head green">TRAINING TOOLS</div>
+  <div class="app-grid">
+    <a class="app-card" href="/html/finops-suite/crcr-study-mode.html" target="_blank">
+      <div class="app-card-top"><div class="app-name">CRCR Study Mode</div><span class="app-tag tag-exam">EXAM PREP</span></div>
+      <div class="app-desc">Full timed exam simulation with domain breakdown. 6 CRCR domains. Score tracking, wrong-answer review, and spaced repetition built in.</div>
+      <div class="app-metrics"><span class="app-metric">Format: <span>Timed exam simulation</span></span><span class="app-metric">Cert: <span>CRCR · AAHAM</span></span></div>
+    </a>
+    <a class="app-card" href="/html/healthcare/crc-hc-practice.html" target="_blank">
+      <div class="app-card-top"><div class="app-name">CRC HC Practice Hub</div><span class="app-tag tag-practice">PRACTICE</span></div>
+      <div class="app-desc">Flashcards, denial codes, payer rules, and CARC/RARC mastery. HC node navigation drills tied to live platform tools.</div>
+      <div class="app-metrics"><span class="app-metric">Format: <span>Flashcard + drill</span></span><span class="app-metric">Nodes: <span>11 HC nodes</span></span></div>
+    </a>
+    <a class="app-card" href="/html/healthcare/crcr-scenarios.html" target="_blank">
+      <div class="app-card-top"><div class="app-name">CRCR Scenario Engine</div><span class="app-tag tag-practice">SCENARIO</span></div>
+      <div class="app-desc">Real-world RCM scenarios: CO-50 denials, prior auth disputes, ERA/835 reconciliation, timely filing exceptions. Each scenario maps to a CRCR exam domain.</div>
+      <div class="app-metrics"><span class="app-metric">Format: <span>Scenario-based</span></span><span class="app-metric">Domains: <span>All 6 CRCR domains</span></span></div>
+    </a>
+    <a class="app-card" href="/html/healthcare/hc-war-room.html" target="_blank">
+      <div class="app-card-top"><div class="app-name">HC Denial War Room</div><span class="app-tag tag-ot">ON-THE-JOB</span></div>
+      <div class="app-desc">Live denial triage, remediation path generation, and HC node routing. Trained candidates use this on actual claims from Day 1 — not a training simulation.</div>
+      <div class="app-metrics"><span class="app-metric">Format: <span>Live operational tool</span></span><span class="app-metric">Integration: <span>All 11 HC nodes</span></span></div>
+    </a>
+  </div>
+
+  <div class="section-head amber">CRCR CERTIFICATION TRACK</div>
+  <div class="cert-card">
+    <div class="cert-left" style="background:var(--amber)"></div>
+    <div class="cert-body">
+      <div class="cert-top">
+        <div><div class="cert-name">Certified Revenue Cycle Representative (CRCR)</div><div class="cert-org">AAHAM · American Association of Healthcare Administrative Management</div></div>
+        <span class="app-tag tag-exam">GOLD STANDARD</span>
+      </div>
+      <div class="cert-desc">The CRCR is the primary credential for healthcare revenue cycle professionals. Covers patient access, financial counseling, claims, denials, appeals, and compliance. TSM's HC suite maps to all 6 exam domains with timed simulations, scenario-based practice, and active denial drills.</div>
+      <div class="cert-meta">
+        <div class="cert-meta-item">Exam: <span>100 questions · 2.5 hrs</span></div>
+        <div class="cert-meta-item">Passing: <span>70%</span></div>
+        <div class="cert-meta-item">Renewal: <span>2 years / 20 CEU</span></div>
+        <div class="cert-meta-item">Salary bump: <span>$8–15k average</span></div>
+      </div>
+      <div class="cert-actions">
+        <a class="cert-btn primary" href="/html/finops-suite/crcr-study-mode.html" target="_blank">OPEN STUDY MODE</a>
+        <a class="cert-btn" href="/html/healthcare/crcr-scenarios.html" target="_blank">RUN SCENARIOS</a>
+        <a class="cert-btn" href="https://www.aaham.org/crcr" target="_blank">AAHAM →</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="pitch-block">
+    <strong>Staffing pitch:</strong> "Our HC candidates arrive CRCR-ready. They've worked through 50+ denial scenarios, know all 11 HC operational nodes, and can triage a CO-50 denial faster than a 2-year employee. Bill rate premium: 15–25%."
+  </div>
+
+  <div class="panel-footer">
+    <div class="footer-badge">4 TOOLS · CRCR CERTIFIED TRACK</div>
+    <div class="footer-nav">
+      <button class="footer-btn" onclick="switchTo('crcr')">CRCR DEEP DIVE →</button>
+      <button class="footer-btn" onclick="switchTo('finops')">FINOPS SUITE →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PANEL: CRCR EXAM DEEP DIVE
+══════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-crcr">
+  <div class="panel-eyebrow">CERTIFICATION DEEP DIVE · HEALTHCARE</div>
+  <div class="panel-title">CRCR Exam Prep Command Center</div>
+  <div class="panel-sub">Complete CRCR preparation mapped to all 6 AAHAM exam domains. Timed simulations, scenario-based drilling, denial code mastery, and live tool integration — everything a candidate needs to pass and immediately apply it.</div>
+
+  <div class="explain-box">
+    <div class="explain-header">
+      <div class="explain-title">▣ TSM EXPLAINABILITY — CRCR READINESS ASSESSMENT</div>
+      <div style="text-align:right"><div class="explain-conf">88%</div><div class="explain-conf-lbl">READINESS SCORE</div></div>
+    </div>
+    <div class="explain-row"><div class="explain-label">Evidence</div><div class="explain-val">Domain 1–6 practice scores · Scenario completion rate · Denial code mastery · Timed exam simulation history</div></div>
+    <div class="explain-row"><div class="explain-label">Reasoning</div><div class="explain-val">Candidate has completed 4/6 domains at >75%. Weakest area: Domain 4 (Denials/Appeals). Recommended: 2 additional scenario sessions before exam booking.</div></div>
+    <div class="explain-row"><div class="explain-label">Next step</div><div class="explain-val">Run CO-29 and CO-197 scenarios → retake Domain 4 timed drill → schedule CRCR exam</div></div>
+    <div class="confidence-bar"><div class="confidence-fill" style="width:88%"></div></div>
+  </div>
+
+  <div class="section-head amber">6 EXAM DOMAINS · TRAINING MAP</div>
+  <div class="readiness-grid">
+    <div class="readiness-cell">
+      <div class="rc-phase">DOMAIN 1</div>
+      <div class="rc-title">Patient Access &amp; Registration</div>
+      <div class="rc-items">
+        <div class="rc-item"><input type="checkbox"> Eligibility verification</div>
+        <div class="rc-item"><input type="checkbox"> Pre-authorization workflow</div>
+        <div class="rc-item"><input type="checkbox"> Insurance validation (primary/secondary)</div>
+        <div class="rc-item"><input type="checkbox"> Patient financial counseling</div>
+      </div>
+    </div>
+    <div class="readiness-cell">
+      <div class="rc-phase">DOMAIN 2</div>
+      <div class="rc-title">Claims Submission &amp; Billing</div>
+      <div class="rc-items">
+        <div class="rc-item"><input type="checkbox"> CMS-1500 / UB-04 knowledge</div>
+        <div class="rc-item"><input type="checkbox"> CPT / ICD-10 coding basics</div>
+        <div class="rc-item"><input type="checkbox"> EDI 837P/I submission</div>
+        <div class="rc-item"><input type="checkbox"> Modifier usage (25, 59, GT)</div>
+      </div>
+    </div>
+    <div class="readiness-cell">
+      <div class="rc-phase">DOMAIN 3</div>
+      <div class="rc-title">Payment Posting &amp; Reconciliation</div>
+      <div class="rc-items">
+        <div class="rc-item"><input type="checkbox"> ERA/835 reconciliation</div>
+        <div class="rc-item"><input type="checkbox"> EOB interpretation</div>
+        <div class="rc-item"><input type="checkbox"> Contractual adjustment logic</div>
+        <div class="rc-item"><input type="checkbox"> Underpayment identification</div>
+      </div>
+    </div>
+    <div class="readiness-cell">
+      <div class="rc-phase">DOMAIN 4</div>
+      <div class="rc-title">Denials &amp; Appeals Management</div>
+      <div class="rc-items">
+        <div class="rc-item"><input type="checkbox"> CARC/RARC code mastery (CO-4, CO-11, CO-50, CO-197)</div>
+        <div class="rc-item"><input type="checkbox"> Timely filing windows (Medicare vs commercial)</div>
+        <div class="rc-item"><input type="checkbox"> Appeal letter construction</div>
+        <div class="rc-item"><input type="checkbox"> Retro authorization process</div>
+      </div>
+    </div>
+    <div class="readiness-cell">
+      <div class="rc-phase">DOMAIN 5</div>
+      <div class="rc-title">Compliance &amp; Regulations</div>
+      <div class="rc-items">
+        <div class="rc-item"><input type="checkbox"> HIPAA / PHI rules</div>
+        <div class="rc-item"><input type="checkbox"> Medicare/Medicaid regulations</div>
+        <div class="rc-item"><input type="checkbox"> Parity laws</div>
+        <div class="rc-item"><input type="checkbox"> ABN / waiver requirements</div>
+      </div>
+    </div>
+    <div class="readiness-cell">
+      <div class="rc-phase">DOMAIN 6</div>
+      <div class="rc-title">Operations &amp; Management</div>
+      <div class="rc-items">
+        <div class="rc-item"><input type="checkbox"> KPI tracking (denial rate, days in AR)</div>
+        <div class="rc-item"><input type="checkbox"> Staff workflow design</div>
+        <div class="rc-item"><input type="checkbox"> Bottleneck identification</div>
+        <div class="rc-item"><input type="checkbox"> Throughput optimization</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cert-actions" style="margin-bottom:1.5rem;">
+    <a class="cert-btn primary" href="/html/finops-suite/crcr-study-mode.html" target="_blank">TIMED EXAM SIM</a>
+    <a class="cert-btn" href="/html/healthcare/crcr-scenarios.html" target="_blank">SCENARIO ENGINE</a>
+    <a class="cert-btn" href="/html/healthcare/crc-hc-practice.html" target="_blank">PRACTICE HUB</a>
+  </div>
+
+  <div class="panel-footer">
+    <div class="footer-badge">CRCR · AAHAM CERTIFICATION</div>
+    <div class="footer-nav"><button class="footer-btn" onclick="switchTo('hc')">← HC SUITE</button><button class="footer-btn" onclick="switchTo('finops')">FINOPS →</button></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PANEL: FINOPS
+══════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-finops">
+  <div class="panel-eyebrow">SECTOR 2 / 7 · FINOPS</div>
+  <div class="panel-title">Accounting &amp; Financial Operations Training Suite</div>
+  <div class="panel-sub">From staff accountant interview prep to AP/AR workflows and CRCR study. FinOps candidates complete this suite and arrive ready to execute on invoice exceptions, AP aging analysis, and PO variance resolution — with AI tooling that most accounting teams don't have.</div>
+
+  <div class="chain-flow">
+    <div class="cf-step active-step"><div class="cf-num">01</div><div class="cf-label" style="color:var(--green)">STUDY</div><div class="cf-sub">Accounting Guide</div></div>
+    <div class="cf-arrow">→</div>
+    <div class="cf-step cert-step"><div class="cf-num">02</div><div class="cf-label" style="color:var(--amber)">INTERVIEW</div><div class="cf-sub">Prep + Mock</div></div>
+    <div class="cf-arrow">→</div>
+    <div class="cf-step exam-step"><div class="cf-num">03</div><div class="cf-label" style="color:var(--cyan)">CERT PREP</div><div class="cf-sub">CRCR Study Mode</div></div>
+    <div class="cf-arrow">→</div>
+    <div class="cf-step deploy-step"><div class="cf-num">04</div><div class="cf-label" style="color:var(--purple)">DEPLOY</div><div class="cf-sub">FinOps War Room</div></div>
+  </div>
+
+  <div class="app-grid">
+    <a class="app-card" href="/html/finops-suite/study-guide.html" target="_blank">
+      <div class="app-card-top"><div class="app-name">Accounting Study Guide</div><span class="app-tag tag-practice">STUDY</span></div>
+      <div class="app-desc">Comprehensive accounting fundamentals: GL, AP/AR cycle, reconciliation, journal entries, month-end close. Built for staffing candidates entering accounting roles.</div>
+      <div class="app-metrics"><span class="app-metric">Depth: <span>Entry to mid-level</span></span><span class="app-metric">Role: <span>Staff Accountant / AP/AR Specialist</span></span></div>
+    </a>
+    <a class="app-card" href="/html/finops-suite/staff-accountant-interview.html" target="_blank">
+      <div class="app-card-top"><div class="app-name">Interview Prep — Staff Accountant</div><span class="app-tag tag-cert">INTERVIEW</span></div>
+      <div class="app-desc">Role-specific interview Q&amp;A, behavioral scenarios, and technical questions covering debits/credits, reconciliation, Excel, and ERP basics. Mock interview mode included.</div>
+      <div class="app-metrics"><span class="app-metric">Format: <span>Q&amp;A + mock interview</span></span><span class="app-metric">Role: <span>Accounting / FinOps</span></span></div>
+    </a>
+    <a class="app-card" href="/html/finops-suite/crcr-study-mode.html" target="_blank">
+      <div class="app-card-top"><div class="app-name">CRCR Study Mode — FinOps</div><span class="app-tag tag-exam">EXAM PREP</span></div>
+      <div class="app-desc">CRCR exam study filtered for FinOps overlap: revenue recognition, contractual adjustments, billing cycles, and RCM fundamentals applicable to finance roles.</div>
+      <div class="app-metrics"><span class="app-metric">Cert: <span>CRCR · AAHAM</span></span><span class="app-metric">Overlap: <span>Domains 2, 3, 6</span></span></div>
+    </a>
+    <a class="app-card" href="/html/finops-suite/finops-war-room.html" target="_blank">
+      <div class="app-card-top"><div class="app-name">FinOps War Room</div><span class="app-tag tag-ot">ON-THE-JOB</span></div>
+      <div class="app-desc">Live AP aging analysis, invoice exception triage, PO variance detection, and BNCA output with contact + escalation path. Deploy on actual invoices from Day 1.</div>
+      <div class="app-metrics"><span class="app-metric">Format: <span>Live operational</span></span><span class="app-metric">AI: <span>BNCA synthesis engine</span></span></div>
+    </a>
+  </div>
+
+  <div class="pitch-block cyan">
+    <strong>Staffing pitch (Robert Half / Accountemps):</strong> "Your accounting candidates leave our platform knowing how to resolve a 15% PO variance in 8 seconds with AI. They arrive ready to cut AP exception management time by 40%. That's not a candidate — that's a productivity multiplier."
+  </div>
+
+  <div class="panel-footer">
+    <div class="footer-badge">3 TOOLS · AP/AR + ACCOUNTING TRACK</div>
+    <div class="footer-nav"><button class="footer-btn" onclick="switchTo('hc')">← HC</button><button class="footer-btn" onclick="switchTo('insurance')">INSURANCE →</button></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PANEL: INSURANCE
+══════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-insurance">
+  <div class="panel-eyebrow">SECTOR 3 / 7 · INSURANCE</div>
+  <div class="panel-title">Insurance Claims, CE &amp; Certification Training Suite</div>
+  <div class="panel-sub">Four tools covering P&amp;C claims analysis, continuing education management, state CE exam prep, and AHIP Medicare certification. The most certification-dense sector in the platform — with 2 distinct cert tracks and a live CE tracker.</div>
+
+  <div class="chain-flow">
+    <div class="cf-step active-step"><div class="cf-num">01</div><div class="cf-label" style="color:var(--green)">CLAIMS</div><div class="cf-sub">Claims Pro</div></div>
+    <div class="cf-arrow">→</div>
+    <div class="cf-step cert-step"><div class="cf-num">02</div><div class="cf-label" style="color:var(--amber)">CE TRACK</div><div class="cf-sub">CE Command + Prep</div></div>
+    <div class="cf-arrow">→</div>
+    <div class="cf-step exam-step"><div class="cf-num">03</div><div class="cf-label" style="color:var(--cyan)">AHIP</div><div class="cf-sub">Medicare Cert</div></div>
+    <div class="cf-arrow">→</div>
+    <div class="cf-step deploy-step"><div class="cf-num">04</div><div class="cf-label" style="color:var(--purple)">WAR ROOM</div><div class="cf-sub">Live Claims</div></div>
+  </div>
+
+  <div class="app-grid">
+    <a class="app-card" href="/html/tsm-insurance/insurance-claims-pro.html" target="_blank">
+      <div class="app-card-top"><div class="app-name">Insurance Claims Pro</div><span class="app-tag tag-ot">ON-THE-JOB</span></div>
+      <div class="app-desc">P&amp;C claims triage, subrogation detection, coverage dispute routing, and dual-flag workflow. Candidates learn to identify $28k+ subrogation opportunities that most adjusters miss.</div>
+      <div class="app-metrics"><span class="app-metric">Format: <span>Live operational</span></span><span class="app-metric">AI: <span>Dual-flag anomaly routing</span></span></div>
+    </a>
+    <a class="app-card" href="/html/tsm-insurance/insurance-ce-command.html" target="_blank">
+      <div class="app-card-top"><div class="app-name">Insurance CE Command</div><span class="app-tag tag-cert">CE TRACKING</span></div>
+      <div class="app-desc">Continuing education tracking dashboard. State CE requirements by license type, course completion logging, renewal deadlines, and CE hour calculations.</div>
+      <div class="app-metrics"><span class="app-metric">Format: <span>CE management</span></span><span class="app-metric">Licenses: <span>P&amp;C, L&amp;H, Adjuster</span></span></div>
+    </a>
+    <a class="app-card" href="/html/tsm-insurance/ce-study-prep.html" target="_blank">
+      <div class="app-card-top"><div class="app-name">CE Study Prep</div><span class="app-tag tag-exam">EXAM PREP</span></div>
+      <div class="app-desc">State insurance licensing exam prep. P&amp;C and L&amp;H exam domains, practice questions, and key concept review. Aligned to AZ DOI requirements.</div>
+      <div class="app-metrics"><span class="app-metric">State: <span>Arizona + multi-state</span></span><span class="app-metric">Exams: <span>P&amp;C · L&amp;H · Adjuster</span></span></div>
+    </a>
+    <a class="app-card" href="/html/tsm-insurance/ahip.html" target="_blank">
+      <div class="app-card-top"><div class="app-name">AHIP Certification Prep</div><span class="app-tag tag-exam">CERT PREP</span></div>
+      <div class="app-desc">Full AHIP Medicare certification prep: Parts A/B/C/D, FWA compliance, CMS marketing rules, Scope of Appointment, and agent obligations. AI-powered Q&amp;A coach included.</div>
+      <div class="app-metrics"><span class="app-metric">Cert: <span>AHIP · NPN 18818059</span></span><span class="app-metric">Domains: <span>4 Medicare domains</span></span></div>
+    </a>
+  </div>
+
+  <div class="section-head amber">CERTIFICATION TRACKS</div>
+  <div class="cert-card">
+    <div class="cert-left" style="background:var(--blue)"></div>
+    <div class="cert-body">
+      <div class="cert-top"><div><div class="cert-name">AHIP Medicare Certification</div><div class="cert-org">America's Health Insurance Plans · Required annually for Medicare sales agents</div></div><span class="app-tag tag-exam">ANNUAL REQUIRED</span></div>
+      <div class="cert-desc">Mandatory for any agent selling Medicare Advantage, Part D, or Medicare Supplement plans. TSM's AHIP prep covers all 4 domains with AI-powered Q&amp;A coaching, CMS marketing rule drills, and Scope of Appointment scenarios.</div>
+      <div class="cert-meta"><div class="cert-meta-item">Score required: <span>90%</span></div><div class="cert-meta-item">Renewal: <span>Annual</span></div><div class="cert-meta-item">Impact: <span>Required to sell Medicare products</span></div></div>
+      <div class="cert-actions"><a class="cert-btn primary" href="/html/tsm-insurance/ahip.html" target="_blank">OPEN AHIP PREP</a><a class="cert-btn" href="https://www.ahip.org" target="_blank">AHIP.ORG →</a></div>
+    </div>
+  </div>
+
+  <div class="pitch-block">
+    <strong>Staffing pitch (insurance firms):</strong> "TSM candidates arrive AHIP-certified, CE-tracked, and trained to spot subrogation opportunities that generate 3–5x the cost of their placement fee. For Medicare AEP season, our pipeline is the only one that's ready when the window opens."
+  </div>
+
+  <div class="panel-footer">
+    <div class="footer-badge">4 TOOLS · AHIP + CE CERT TRACKS</div>
+    <div class="footer-nav"><button class="footer-btn" onclick="switchTo('finops')">← FINOPS</button><button class="footer-btn" onclick="switchTo('realestate')">REAL ESTATE →</button></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PANEL: AHIP DEEP DIVE
+══════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-ahip">
+  <div class="panel-eyebrow">CERTIFICATION DEEP DIVE · INSURANCE</div>
+  <div class="panel-title">AHIP Medicare Certification Command Center</div>
+  <div class="panel-sub">Everything needed to pass AHIP on the first attempt. AI-powered domain coaching, CMS marketing rule drills, FWA scenario training, and Scope of Appointment practice. Required annually — TSM makes renewal frictionless.</div>
+
+  <div class="section-head amber">4 AHIP DOMAINS · PREP CHECKLIST</div>
+  <div class="readiness-grid">
+    <div class="readiness-cell">
+      <div class="rc-phase">DOMAIN 1</div>
+      <div class="rc-title">Medicare Program Overview</div>
+      <div class="rc-items">
+        <div class="rc-item"><input type="checkbox"> Parts A, B, C, D structure</div>
+        <div class="rc-item"><input type="checkbox"> Eligibility &amp; enrollment periods</div>
+        <div class="rc-item"><input type="checkbox"> Plan types (HMO, PPO, SNP, PFFS)</div>
+        <div class="rc-item"><input type="checkbox"> Cost-sharing: premiums, deductibles, OOP max</div>
+      </div>
+    </div>
+    <div class="readiness-cell">
+      <div class="rc-phase">DOMAIN 2</div>
+      <div class="rc-title">Fraud, Waste &amp; Abuse</div>
+      <div class="rc-items">
+        <div class="rc-item"><input type="checkbox"> FWA definitions and examples</div>
+        <div class="rc-item"><input type="checkbox"> Reporting obligations (1-800-HHS-TIPS)</div>
+        <div class="rc-item"><input type="checkbox"> Agent responsibilities</div>
+        <div class="rc-item"><input type="checkbox"> Penalties for non-compliance</div>
+      </div>
+    </div>
+    <div class="readiness-cell">
+      <div class="rc-phase">DOMAIN 3</div>
+      <div class="rc-title">General Compliance</div>
+      <div class="rc-items">
+        <div class="rc-item"><input type="checkbox"> HIPAA / PHI agent obligations</div>
+        <div class="rc-item"><input type="checkbox"> Compliance program components</div>
+        <div class="rc-item"><input type="checkbox"> Agent code of conduct</div>
+        <div class="rc-item"><input type="checkbox"> Star rating system awareness</div>
+      </div>
+    </div>
+    <div class="readiness-cell">
+      <div class="rc-phase">DOMAIN 4</div>
+      <div class="rc-title">CMS Marketing Rules</div>
+      <div class="rc-items">
+        <div class="rc-item"><input type="checkbox"> Scope of Appointment (SOA) rules</div>
+        <div class="rc-item"><input type="checkbox"> Prohibited marketing locations</div>
+        <div class="rc-item"><input type="checkbox"> Permission to contact requirements</div>
+        <div class="rc-item"><input type="checkbox"> Compensation disclosure rules</div>
+      </div>
+    </div>
+    <div class="readiness-cell">
+      <div class="rc-phase">EXAM LOGISTICS</div>
+      <div class="rc-title">Before You Test</div>
+      <div class="rc-items">
+        <div class="rc-item"><input type="checkbox"> 90% passing score required</div>
+        <div class="rc-item"><input type="checkbox"> 3 attempts before re-training required</div>
+        <div class="rc-item"><input type="checkbox"> Carrier-specific addenda completed</div>
+        <div class="rc-item"><input type="checkbox"> NPN registered with NIPR</div>
+      </div>
+    </div>
+    <div class="readiness-cell">
+      <div class="rc-phase">POST-CERT</div>
+      <div class="rc-title">Maintain Compliance</div>
+      <div class="rc-items">
+        <div class="rc-item"><input type="checkbox"> Annual renewal before AEP (Oct 15)</div>
+        <div class="rc-item"><input type="checkbox"> CE hours current per state</div>
+        <div class="rc-item"><input type="checkbox"> SOA forms up to date</div>
+        <div class="rc-item"><input type="checkbox"> E&amp;O coverage active</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cert-actions" style="margin-bottom:1.5rem;">
+    <a class="cert-btn primary" href="/html/tsm-insurance/ahip.html" target="_blank">OPEN AHIP PREP TOOL</a>
+    <a class="cert-btn" href="/html/tsm-insurance/ce-study-prep.html" target="_blank">CE STUDY PREP</a>
+    <a class="cert-btn" href="/html/tsm-insurance/insurance-ce-command.html" target="_blank">CE TRACKER</a>
+  </div>
+
+  <div class="panel-footer">
+    <div class="footer-badge">AHIP · NPN 18818059</div>
+    <div class="footer-nav"><button class="footer-btn" onclick="switchTo('insurance')">← INSURANCE</button><button class="footer-btn" onclick="switchTo('mlo')">MLO PREP →</button></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PANEL: REAL ESTATE
+══════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-realestate">
+  <div class="panel-eyebrow">SECTOR 4 / 7 · REAL ESTATE</div>
+  <div class="panel-title">REO, Mortgage &amp; MLO Licensing Suite</div>
+  <div class="panel-sub">From REO asset remediation to MLO SAFE Act licensing. Real estate candidates learn dependency-sequenced asset disposition and mortgage origination fundamentals — with the MLO exam prep track that gets candidates licensed in 30 days vs. the industry average of 90.</div>
+
+  <div class="chain-flow">
+    <div class="cf-step active-step"><div class="cf-num">01</div><div class="cf-label" style="color:var(--green)">REO OPS</div><div class="cf-sub">War Room</div></div>
+    <div class="cf-arrow">→</div>
+    <div class="cf-step cert-step"><div class="cf-num">02</div><div class="cf-label" style="color:var(--amber)">MLO PREP</div><div class="cf-sub">Exam Readiness</div></div>
+    <div class="cf-arrow">→</div>
+    <div class="cf-step exam-step"><div class="cf-num">03</div><div class="cf-label" style="color:var(--cyan)">SAFE EXAM</div><div class="cf-sub">Pass + License</div></div>
+    <div class="cf-arrow">→</div>
+    <div class="cf-step deploy-step"><div class="cf-num">04</div><div class="cf-label" style="color:var(--purple)">ORIGINATE</div><div class="cf-sub">Day-1 Workflow</div></div>
+  </div>
+
+  <div class="app-grid">
+    <a class="app-card" href="/html/real-estate/re-war-room.html" target="_blank">
+      <div class="app-card-top"><div class="app-name">RE War Room — REO Remediation</div><span class="app-tag tag-ot">ON-THE-JOB</span></div>
+      <div class="app-desc">7-tool REO remediation panel with dependency-sequenced disposition steps. Candidates learn to handle liens, clouded title, BPO gap analysis, and asset disposition — in the correct sequence — without a senior mentor.</div>
+      <div class="app-metrics"><span class="app-metric">Tools: <span>7-step sequenced panel</span></span><span class="app-metric">AI: <span>waitFor dependency gating</span></span></div>
+    </a>
+    <a class="app-card" href="/html/tsm-insurance/ahip.html" target="_blank">
+      <div class="app-card-top"><div class="app-name">MLO Exam Prep</div><span class="app-tag tag-exam">EXAM PREP</span></div>
+      <div class="app-desc">60 SAFE Act flashcards, 12 mortgage scenarios, 30 practice questions, full 60-minute timed practice exam, and spaced-repetition tracking. NMLS-aligned content covering federal law, ethics, and lending standards.</div>
+      <div class="app-metrics"><span class="app-metric">Cert: <span>NMLS SAFE MLO License</span></span><span class="app-metric">Content: <span>60 cards · 30 Qs · timed exam</span></span></div>
+    </a>
+  </div>
+
+  <div class="section-head amber">MLO CERTIFICATION TRACK</div>
+  <div class="cert-card">
+    <div class="cert-left" style="background:var(--orange)"></div>
+    <div class="cert-body">
+      <div class="cert-top"><div><div class="cert-name">SAFE MLO License — NMLS</div><div class="cert-org">Nationwide Multistate Licensing System · Required for all mortgage loan originators</div></div><span class="app-tag tag-exam">REQUIRED BY LAW</span></div>
+      <div class="cert-desc">Required by federal law under the SAFE Act for any individual originating residential mortgage loans. Covers federal mortgage law, ethics, lending standards, and state-specific requirements. TSM's MLO prep includes 60 flashcards, scenario-based practice, full timed exam, and spaced-repetition tracking — everything needed to pass NMLS on the first attempt.</div>
+      <div class="cert-meta">
+        <div class="cert-meta-item">Exam: <span>125 Qs · 3 hrs · National + State</span></div>
+        <div class="cert-meta-item">Passing: <span>75%</span></div>
+        <div class="cert-meta-item">Pre-license: <span>20 hours NMLS-approved education</span></div>
+        <div class="cert-meta-item">Renewal: <span>Annual · 8 CE hours/year</span></div>
+      </div>
+      <div class="cert-actions"><a class="cert-btn primary" href="#" target="_blank">OPEN MLO PREP</a><a class="cert-btn" href="https://mortgage.nationwidelicensingsystem.org" target="_blank">NMLS →</a></div>
+    </div>
+  </div>
+
+  <div class="pitch-block" style="border-left-color:var(--orange);background:var(--orange-dim);">
+    <strong style="color:var(--orange);">Staffing pitch (mortgage / RE firms):</strong> "TSM cuts MLO licensing lag from 90 days to 30. Our candidates pass the SAFE exam on the first attempt because they trained on actual mortgage scenarios, not just textbooks. For RE firms running seasonal hiring, that 60-day acceleration is worth $40–80k per headcount in productivity recovered."
+  </div>
+
+  <div class="panel-footer">
+    <div class="footer-badge">3 TOOLS · SAFE MLO LICENSE TRACK</div>
+    <div class="footer-nav"><button class="footer-btn" onclick="switchTo('insurance')">← INSURANCE</button><button class="footer-btn" onclick="switchTo('bpo')">BPO →</button></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PANEL: MLO DEEP DIVE
+══════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-mlo">
+  <div class="panel-eyebrow">CERTIFICATION DEEP DIVE · REAL ESTATE / MORTGAGE</div>
+  <div class="panel-title">MLO SAFE Act Exam Prep Command Center</div>
+  <div class="panel-sub">Complete NMLS SAFE Act preparation: 5 exam content areas, 60 flashcards, scenario-based mortgage practice, and a full 125-question timed exam simulation with spaced-repetition tracking.</div>
+
+  <div class="explain-box">
+    <div class="explain-header">
+      <div class="explain-title">▣ TSM EXPLAINABILITY — MLO READINESS ASSESSMENT</div>
+      <div style="text-align:right"><div class="explain-conf">79%</div><div class="explain-conf-lbl">EXAM READINESS</div></div>
+    </div>
+    <div class="explain-row"><div class="explain-label">Evidence</div><div class="explain-val">Federal law domain: 82% · Ethics: 91% · Lending standards: 74% · Uniform state content: 68% · Electives: 71%</div></div>
+    <div class="explain-row"><div class="explain-label">Reasoning</div><div class="explain-val">Candidate is above passing threshold (75%) in 3/5 areas. Uniform state content is the risk. Recommend 2 additional scenario sessions on state-specific licensing rules before exam booking.</div></div>
+    <div class="explain-row"><div class="explain-label">Next step</div><div class="explain-val">Complete state content flashcard set → run timed practice exam → schedule NMLS exam if score ≥ 80%</div></div>
+    <div class="confidence-bar"><div class="confidence-fill" style="width:79%;background:var(--amber)"></div></div>
+  </div>
+
+  <div class="section-head amber">5 EXAM CONTENT AREAS</div>
+  <div class="readiness-grid">
+    <div class="readiness-cell">
+      <div class="rc-phase">CONTENT AREA 1 · 23%</div>
+      <div class="rc-title">Federal Mortgage-Related Laws</div>
+      <div class="rc-items">
+        <div class="rc-item"><input type="checkbox"> TILA / Reg Z (APR, right of rescission)</div>
+        <div class="rc-item"><input type="checkbox"> RESPA / Reg X (GFE, HUD-1, kickbacks)</div>
+        <div class="rc-item"><input type="checkbox"> ECOA / HMDA / CRA</div>
+        <div class="rc-item"><input type="checkbox"> Dodd-Frank / QM / ATR rules</div>
+        <div class="rc-item"><input type="checkbox"> SAFE Act provisions</div>
+      </div>
+    </div>
+    <div class="readiness-cell">
+      <div class="rc-phase">CONTENT AREA 2 · 20%</div>
+      <div class="rc-title">General Mortgage Knowledge</div>
+      <div class="rc-items">
+        <div class="rc-item"><input type="checkbox"> Loan types (FHA, VA, USDA, Conv)</div>
+        <div class="rc-item"><input type="checkbox"> ARM vs fixed-rate mechanics</div>
+        <div class="rc-item"><input type="checkbox"> Underwriting fundamentals (DTI, LTV)</div>
+        <div class="rc-item"><input type="checkbox"> Appraisal types and process</div>
+        <div class="rc-item"><input type="checkbox"> Title and escrow basics</div>
+      </div>
+    </div>
+    <div class="readiness-cell">
+      <div class="rc-phase">CONTENT AREA 3 · 27%</div>
+      <div class="rc-title">Mortgage Loan Origination</div>
+      <div class="rc-items">
+        <div class="rc-item"><input type="checkbox"> Loan application (1003 / URLA)</div>
+        <div class="rc-item"><input type="checkbox"> Loan Estimate disclosure timeline</div>
+        <div class="rc-item"><input type="checkbox"> Closing Disclosure (3-day rule)</div>
+        <div class="rc-item"><input type="checkbox"> Points, fees, and APR calculations</div>
+        <div class="rc-item"><input type="checkbox"> Rate lock process</div>
+      </div>
+    </div>
+    <div class="readiness-cell">
+      <div class="rc-phase">CONTENT AREA 4 · 14%</div>
+      <div class="rc-title">Ethics</div>
+      <div class="rc-items">
+        <div class="rc-item"><input type="checkbox"> Fair lending / anti-steering</div>
+        <div class="rc-item"><input type="checkbox"> Predatory lending red flags</div>
+        <div class="rc-item"><input type="checkbox"> Fraud detection &amp; reporting</div>
+        <div class="rc-item"><input type="checkbox"> NMLS code of conduct</div>
+      </div>
+    </div>
+    <div class="readiness-cell">
+      <div class="rc-phase">CONTENT AREA 5 · 16%</div>
+      <div class="rc-title">Uniform State Content</div>
+      <div class="rc-items">
+        <div class="rc-item"><input type="checkbox"> State licensing requirements</div>
+        <div class="rc-item"><input type="checkbox"> License application &amp; renewal</div>
+        <div class="rc-item"><input type="checkbox"> Surety bond requirements</div>
+        <div class="rc-item"><input type="checkbox"> Supervisory authority &amp; exams</div>
+      </div>
+    </div>
+    <div class="readiness-cell">
+      <div class="rc-phase">EXAM LOGISTICS</div>
+      <div class="rc-title">Test Day Checklist</div>
+      <div class="rc-items">
+        <div class="rc-item"><input type="checkbox"> NMLS account created (NMLS.org)</div>
+        <div class="rc-item"><input type="checkbox"> 20 pre-license hours completed</div>
+        <div class="rc-item"><input type="checkbox"> Prometric test center scheduled</div>
+        <div class="rc-item"><input type="checkbox"> Government ID × 2 ready</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cert-actions" style="margin-bottom:1.5rem;">
+    <a class="cert-btn primary" href="#" target="_blank">OPEN MLO PREP TOOL</a>
+    <a class="cert-btn" href="/html/real-estate/re-war-room.html" target="_blank">RE WAR ROOM</a>
+  </div>
+
+  <div class="panel-footer">
+    <div class="footer-badge">NMLS · SAFE ACT MLO LICENSE</div>
+    <div class="footer-nav"><button class="footer-btn" onclick="switchTo('realestate')">← RE SUITE</button><button class="footer-btn" onclick="switchTo('bpo')">BPO →</button></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PANEL: BPO
+══════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-bpo">
+  <div class="panel-eyebrow">SECTOR 5 / 7 · BPO</div>
+  <div class="panel-title">Decision Intelligence &amp; Staffing Operations Suite</div>
+  <div class="panel-sub">The most advanced sector in the platform. BPO candidates train on the full 4-stage Decision Intelligence Chain — UNDERSTAND → DECIDE → EXECUTE → TRUST — and arrive knowing how to operate an AI-augmented command center from Day 1.</div>
+
+  <div class="chain-flow">
+    <div class="cf-step active-step"><div class="cf-num">01</div><div class="cf-label" style="color:var(--green)">UNDERSTAND</div><div class="cf-sub">Situation Room</div></div>
+    <div class="cf-arrow">→</div>
+    <div class="cf-step cert-step"><div class="cf-num">02</div><div class="cf-label" style="color:var(--amber)">DECIDE</div><div class="cf-sub">Strategist V2</div></div>
+    <div class="cf-arrow">→</div>
+    <div class="cf-step exam-step"><div class="cf-num">03</div><div class="cf-label" style="color:var(--cyan)">EXECUTE</div><div class="cf-sub">Exec Portal</div></div>
+    <div class="cf-arrow">→</div>
+    <div class="cf-step deploy-step"><div class="cf-num">04</div><div class="cf-label" style="color:var(--purple)">TRUST</div><div class="cf-sub">Explainability</div></div>
+  </div>
+
+  <div class="app-grid">
+    <a class="app-card" href="/html/bpo/tsm-staffing-intelligence.html" target="_blank">
+      <div class="app-card-top"><div class="app-name">Staffing Intelligence</div><span class="app-tag tag-intel">OPERATIONS</span></div>
+      <div class="app-desc">Market intelligence for BPO operations: competitive landscape, staffing metrics, placement analytics, and talent pipeline health scoring. Operational command center for staffing firms.</div>
+      <div class="app-metrics"><span class="app-metric">Format: <span>Intelligence dashboard</span></span><span class="app-metric">AI: <span>BNCA + pipeline scoring</span></span></div>
+    </a>
+    <a class="app-card" href="/html/bpo/tsm-bpo-competitive-playbook.html" target="_blank">
+      <div class="app-card-top"><div class="app-name">BPO Competitive Playbook</div><span class="app-tag tag-intel">STRATEGY</span></div>
+      <div class="app-desc">Competitive positioning, win/loss analysis, battlecard generator, and objection-handling scripts for BPO sales teams. Built for Phoenix-market staffing competition.</div>
+      <div class="app-metrics"><span class="app-metric">Format: <span>Strategic battlecards</span></span><span class="app-metric">Market: <span>Phoenix + national BPO</span></span></div>
+    </a>
+  </div>
+
+  <div class="pitch-block purple">
+    <strong>The BPO training advantage:</strong> "BPO is the sector where AI has the highest leverage — and the highest failure rate when operators don't understand it. TSM candidates don't just use AI tools. They understand the decision chain, know when to override the model, and can explain every recommendation to a client. That's an operations-ready candidate, not a dashboard user."
+  </div>
+
+  <div class="panel-footer">
+    <div class="footer-badge">2 TOOLS · 4-STAGE CHAIN TRAINING</div>
+    <div class="footer-nav"><button class="footer-btn" onclick="switchTo('realestate')">← REAL ESTATE</button><button class="footer-btn" onclick="switchTo('career')">CAREER OS →</button></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PANEL: CAREER OS
+══════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-career">
+  <div class="panel-eyebrow">CROSS-SECTOR · CAREER COMMAND</div>
+  <div class="panel-title">Career OS &amp; Enterprise Readiness Suite</div>
+  <div class="panel-sub">Three cross-sector tools that work for any candidate, regardless of sector. Job Prep covers universal interview skills. Enterprise OS covers AI workflow fundamentals. Staffing Readiness Demo gives firms a live scoring presentation they can show clients.</div>
+
+  <div class="app-grid">
+    <a class="app-card" href="/html/tsm-job-prep.html" target="_blank">
+      <div class="app-card-top"><div class="app-name">TSM Job Prep</div><span class="app-tag tag-practice">INTERVIEW</span></div>
+      <div class="app-desc">AI-powered interview preparation: behavioral question drill, STAR method coaching, role-specific Q&amp;A, salary negotiation, and offer evaluation. Works for every sector.</div>
+      <div class="app-metrics"><span class="app-metric">Format: <span>AI coaching + drill</span></span><span class="app-metric">Scope: <span>All 7 sectors</span></span></div>
+    </a>
+    <a class="app-card" href="/html/tsm-enterprise-operating-system.html" target="_blank">
+      <div class="app-card-top"><div class="app-name">TSM Enterprise OS</div><span class="app-tag tag-ot">WORKFLOW</span></div>
+      <div class="app-desc">AI workflow fundamentals for enterprise environments: prompt engineering basics, tool navigation, decision chain literacy, and governance awareness. Day-1 operations readiness.</div>
+      <div class="app-metrics"><span class="app-metric">Format: <span>Interactive OS walkthrough</span></span><span class="app-metric">Scope: <span>AI-augmented work</span></span></div>
+    </a>
+    <a class="app-card" href="/html/tsm-staffing-readiness-demo.html" target="_blank">
+      <div class="app-card-top"><div class="app-name">Staffing Readiness Demo</div><span class="app-tag tag-new">SALES TOOL</span></div>
+      <div class="app-desc">Live scoring presentation for staffing firm pitches. Shows a candidate's sector readiness, certification status, and AI tool proficiency — formatted for client-facing use.</div>
+      <div class="app-metrics"><span class="app-metric">Audience: <span>Staffing firms + enterprise clients</span></span><span class="app-metric">Output: <span>Readiness report export</span></span></div>
+    </a>
+    <a class="app-card" href="/html/war-room-prep.html" target="_blank">
+      <div class="app-card-top"><div class="app-name">War Room Pre-Presentation Checklist</div><span class="app-tag tag-intel">GOVERNANCE</span></div>
+      <div class="app-desc">Full pre-flight checklist for TSM platform demos. All 7 war rooms, chain flow verification, sample doc library, and step-by-step readiness confirmation with live progress tracking.</div>
+      <div class="app-metrics"><span class="app-metric">Format: <span>Interactive checklist</span></span><span class="app-metric">Scope: <span>All 7 verticals</span></span></div>
+    </a>
+  </div>
+
+  <div class="panel-footer">
+    <div class="footer-badge">4 TOOLS · CROSS-SECTOR</div>
+    <div class="footer-nav"><button class="footer-btn" onclick="switchTo('bpo')">← BPO</button><button class="footer-btn" onclick="switchTo('readiness')">READINESS TRACKER →</button></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PANEL: CANDIDATE READINESS TRACKER
+══════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-readiness">
+  <div class="panel-eyebrow">CANDIDATE INTELLIGENCE · NEW</div>
+  <div class="panel-title">Candidate Readiness Tracker</div>
+  <div class="panel-sub">The single most important tool for staffing firm pitches. Track a candidate's progress across all 7 sectors, all 6 cert tracks, and all governance checkpoints. Export a readiness package that no other staffing platform can produce.</div>
+
+  <div class="explain-box">
+    <div class="explain-header">
+      <div class="explain-title">▣ TSM EXPLAINABILITY — CANDIDATE READINESS ASSESSMENT</div>
+      <div style="text-align:right"><div class="explain-conf" id="overall-score">0%</div><div class="explain-conf-lbl">OVERALL READINESS</div></div>
+    </div>
+    <div class="explain-row"><div class="explain-label">Evidence</div><div class="explain-val">Completion scores across 7 sectors · Certification status · Governance checkpoint adherence · Scenario pass rates</div></div>
+    <div class="explain-row"><div class="explain-label">Reasoning</div><div class="explain-val">Readiness score calculated from: (Sector tool completions × 40%) + (Cert prep status × 35%) + (Governance checkpoints × 25%)</div></div>
+    <div class="explain-row"><div class="explain-label">Placement status</div><div class="explain-val" id="placement-status">Complete sector checklist items below to generate placement recommendation.</div></div>
+    <div class="confidence-bar"><div class="confidence-fill" id="readiness-bar" style="width:0%"></div></div>
+  </div>
+
+  <div class="section-head green">SECTOR READINESS CHECKLIST</div>
+  <div class="readiness-grid">
+    <div class="readiness-cell">
+      <div class="rc-phase">SECTOR 1 · HEALTHCARE</div>
+      <div class="rc-title">RCM Readiness</div>
+      <div class="rc-items">
+        <div class="rc-item"><input type="checkbox" class="readiness-check" onchange="updateReadiness()"> CRCR Study Mode — completed</div>
+        <div class="rc-item"><input type="checkbox" class="readiness-check" onchange="updateReadiness()"> CRC Practice Hub — 80%+ score</div>
+        <div class="rc-item"><input type="checkbox" class="readiness-check" onchange="updateReadiness()"> CRCR Scenarios — 5+ completed</div>
+        <div class="rc-item"><input type="checkbox" class="readiness-check" onchange="updateReadiness()"> HC War Room — live run completed</div>
+      </div>
+    </div>
+    <div class="readiness-cell">
+      <div class="rc-phase">SECTOR 2 · FINOPS</div>
+      <div class="rc-title">Accounting Readiness</div>
+      <div class="rc-items">
+        <div class="rc-item"><input type="checkbox" class="readiness-check" onchange="updateReadiness()"> Accounting Study Guide — completed</div>
+        <div class="rc-item"><input type="checkbox" class="readiness-check" onchange="updateReadiness()"> Interview Prep — mock session done</div>
+        <div class="rc-item"><input type="checkbox" class="readiness-check" onchange="updateReadiness()"> CRCR Study Mode — FinOps domains</div>
+        <div class="rc-item"><input type="checkbox" class="readiness-check" onchange="updateReadiness()"> FinOps War Room — live run</div>
+      </div>
+    </div>
+    <div class="readiness-cell">
+      <div class="rc-phase">SECTOR 3 · INSURANCE</div>
+      <div class="rc-title">Insurance Readiness</div>
+      <div class="rc-items">
+        <div class="rc-item"><input type="checkbox" class="readiness-check" onchange="updateReadiness()"> Claims Pro — 3+ claims processed</div>
+        <div class="rc-item"><input type="checkbox" class="readiness-check" onchange="updateReadiness()"> CE Study Prep — completed</div>
+        <div class="rc-item"><input type="checkbox" class="readiness-check" onchange="updateReadiness()"> AHIP Prep — all 4 domains reviewed</div>
+        <div class="rc-item"><input type="checkbox" class="readiness-check" onchange="updateReadiness()"> CE Command — license plan set</div>
+      </div>
+    </div>
+    <div class="readiness-cell">
+      <div class="rc-phase">SECTOR 4 · REAL ESTATE</div>
+      <div class="rc-title">RE/MLO Readiness</div>
+      <div class="rc-items">
+        <div class="rc-item"><input type="checkbox" class="readiness-check" onchange="updateReadiness()"> RE War Room — REO run completed</div>
+        <div class="rc-item"><input type="checkbox" class="readiness-check" onchange="updateReadiness()"> MLO Prep — all 5 content areas</div>
+        <div class="rc-item"><input type="checkbox" class="readiness-check" onchange="updateReadiness()"> Timed practice exam — 75%+</div>
+        <div class="rc-item"><input type="checkbox" class="readiness-check" onchange="updateReadiness()"> NMLS account created</div>
+      </div>
+    </div>
+    <div class="readiness-cell">
+      <div class="rc-phase">SECTOR 5 · BPO</div>
+      <div class="rc-title">Operations Readiness</div>
+      <div class="rc-items">
+        <div class="rc-item"><input type="checkbox" class="readiness-check" onchange="updateReadiness()"> Staffing Intelligence — reviewed</div>
+        <div class="rc-item"><input type="checkbox" class="readiness-check" onchange="updateReadiness()"> Competitive Playbook — completed</div>
+        <div class="rc-item"><input type="checkbox" class="readiness-check" onchange="updateReadiness()"> BPO 4-stage chain — run end-to-end</div>
+        <div class="rc-item"><input type="checkbox" class="readiness-check" onchange="updateReadiness()"> Explainability review — passed</div>
+      </div>
+    </div>
+    <div class="readiness-cell">
+      <div class="rc-phase">GOVERNANCE · ALL SECTORS</div>
+      <div class="rc-title">Governance Clearance</div>
+      <div class="rc-items">
+        <div class="rc-item"><input type="checkbox" class="readiness-check" onchange="updateReadiness()"> HITL approval protocol — understood</div>
+        <div class="rc-item"><input type="checkbox" class="readiness-check" onchange="updateReadiness()"> Explainability contract — reviewed</div>
+        <div class="rc-item"><input type="checkbox" class="readiness-check" onchange="updateReadiness()"> Audit trail — sample export done</div>
+        <div class="rc-item"><input type="checkbox" class="readiness-check" onchange="updateReadiness()"> War Room Pre-Presentation checklist</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-head cyan">CERTIFICATION STATUS</div>
+  <div class="cert-card">
+    <div class="cert-left" style="background:var(--green)"></div>
+    <div class="cert-body">
+      <div class="cert-top"><div><div class="cert-name">Multi-Cert Readiness Summary</div></div></div>
+      <div class="cert-meta" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px;">
+        <div style="background:var(--surface2);padding:8px;text-align:center;">
+          <div style="font-size:11px;color:var(--amber);font-weight:700;margin-bottom:3px;">CRCR</div>
+          <div style="font-size:9px;color:var(--text3);">AAHAM · HC/FinOps</div>
+          <input type="checkbox" class="readiness-check" onchange="updateReadiness()" style="margin-top:6px;accent-color:var(--amber);">
+        </div>
+        <div style="background:var(--surface2);padding:8px;text-align:center;">
+          <div style="font-size:11px;color:var(--blue);font-weight:700;margin-bottom:3px;">AHIP</div>
+          <div style="font-size:9px;color:var(--text3);">Medicare · Annual</div>
+          <input type="checkbox" class="readiness-check" onchange="updateReadiness()" style="margin-top:6px;accent-color:var(--blue);">
+        </div>
+        <div style="background:var(--surface2);padding:8px;text-align:center;">
+          <div style="font-size:11px;color:var(--orange);font-weight:700;margin-bottom:3px;">SAFE MLO</div>
+          <div style="font-size:9px;color:var(--text3);">NMLS · Mortgage</div>
+          <input type="checkbox" class="readiness-check" onchange="updateReadiness()" style="margin-top:6px;accent-color:var(--orange);">
+        </div>
+        <div style="background:var(--surface2);padding:8px;text-align:center;">
+          <div style="font-size:11px;color:var(--cyan);font-weight:700;margin-bottom:3px;">P&amp;C LICENSE</div>
+          <div style="font-size:9px;color:var(--text3);">State DOI · Insurance</div>
+          <input type="checkbox" class="readiness-check" onchange="updateReadiness()" style="margin-top:6px;accent-color:var(--cyan);">
+        </div>
+        <div style="background:var(--surface2);padding:8px;text-align:center;">
+          <div style="font-size:11px;color:var(--green);font-weight:700;margin-bottom:3px;">AWS</div>
+          <div style="font-size:9px;color:var(--text3);">Cloud Foundations</div>
+          <input type="checkbox" class="readiness-check" onchange="updateReadiness()" style="margin-top:6px;accent-color:var(--green);">
+        </div>
+        <div style="background:var(--surface2);padding:8px;text-align:center;">
+          <div style="font-size:11px;color:var(--purple);font-weight:700;margin-bottom:3px;">CISCO CCST</div>
+          <div style="font-size:9px;color:var(--text3);">IT Infrastructure</div>
+          <input type="checkbox" class="readiness-check" onchange="updateReadiness()" style="margin-top:6px;accent-color:var(--purple);">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-footer">
+    <div class="footer-badge">CANDIDATE READINESS SYSTEM</div>
+    <div class="footer-nav"><button class="footer-btn" onclick="switchTo('governance')">GOVERNANCE →</button></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PANEL: GOVERNANCE
+══════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-governance">
+  <div class="panel-eyebrow">PLATFORM ARCHITECTURE · GOVERNANCE</div>
+  <div class="panel-title">Governance &amp; Explainability Overlay</div>
+  <div class="panel-sub">The governance overlay is what separates TSM from every other training platform. It wraps every sector, every candidate, every decision — with an explainability contract that enterprise clients can audit, staffing firms can export, and candidates can point to as evidence of their AI literacy.</div>
+
+  <div class="section-head green">4-STAGE GOVERNANCE CHAIN</div>
+  <div class="chain-flow">
+    <div class="cf-step active-step"><div class="cf-num">01</div><div class="cf-label" style="color:var(--green)">UNDERSTAND</div><div class="cf-sub">Root cause + evidence</div></div>
+    <div class="cf-arrow">→</div>
+    <div class="cf-step cert-step"><div class="cf-num">02</div><div class="cf-label" style="color:var(--amber)">DECIDE</div><div class="cf-sub">Scenario comparison</div></div>
+    <div class="cf-arrow">→</div>
+    <div class="cf-step exam-step"><div class="cf-num">03</div><div class="cf-label" style="color:var(--cyan)">EXECUTE</div><div class="cf-sub">HITL authorization</div></div>
+    <div class="cf-arrow">→</div>
+    <div class="cf-step deploy-step"><div class="cf-num">04</div><div class="cf-label" style="color:var(--purple)">TRUST</div><div class="cf-sub">Confidence + sources</div></div>
+  </div>
+
+  <div class="section-head cyan">GOVERNANCE COMPONENTS</div>
+  <div class="gov-grid">
+    <div class="gov-cell" style="border-top:2px solid var(--green)">
+      <div class="gov-icon">◈</div>
+      <div class="gov-title">Approval Checkpoints</div>
+      <div class="gov-desc">Every sector has explicit approval gates. No AI recommendation advances to execution without sign-off. Candidates learn this protocol before touching live tools.</div>
+    </div>
+    <div class="gov-cell" style="border-top:2px solid var(--cyan)">
+      <div class="gov-icon">▦</div>
+      <div class="gov-title">Retained Evidence</div>
+      <div class="gov-desc">Every decision logged: what document was processed, what the AI recommended, who approved it, when, and why. Full chain of custody per candidate session.</div>
+    </div>
+    <div class="gov-cell" style="border-top:2px solid var(--amber)">
+      <div class="gov-icon">⊕</div>
+      <div class="gov-title">Exception Handling</div>
+      <div class="gov-desc">Candidates train on the exception path, not just the clean path. What happens when the AI is uncertain? What triggers escalation? When does a human override apply?</div>
+    </div>
+    <div class="gov-cell" style="border-top:2px solid var(--purple)">
+      <div class="gov-icon">▣</div>
+      <div class="gov-title">Attestation &amp; Signoff</div>
+      <div class="gov-desc">Configurable attestation blocks at each exec portal stage. Candidates learn the legal weight of AI-assisted decisions before they make them on client accounts.</div>
+    </div>
+    <div class="gov-cell" style="border-top:2px solid var(--blue)">
+      <div class="gov-icon">◉</div>
+      <div class="gov-title">Control Health Monitoring</div>
+      <div class="gov-desc">Real-time readiness scoring across all governance checkpoints. If a candidate skips the HITL step or bypasses an approval gate, the system flags it and requires remediation.</div>
+    </div>
+    <div class="gov-cell" style="border-top:2px solid var(--green)">
+      <div class="gov-icon">↯</div>
+      <div class="gov-title">Exportable Audit Trail</div>
+      <div class="gov-desc">Every training session generates an exportable audit package: decisions made, approvals given, confidence scores, evidence sources. Staffing firms deliver this to enterprise clients as a placement credential.</div>
+    </div>
+  </div>
+
+  <div class="section-head purple">EXPLAINABILITY CONTRACT — PER SECTOR</div>
+  <div class="explain-box">
+    <div class="explain-header">
+      <div class="explain-title">▣ TSM EXPLAINABILITY CONTRACT — TEMPLATE</div>
+      <div style="text-align:right"><div class="explain-conf">91%</div><div class="explain-conf-lbl">CONFIDENCE SCORE</div></div>
+    </div>
+    <div class="explain-row"><div class="explain-label">Sector</div><div class="explain-val">[ Healthcare / FinOps / Insurance / RE / BPO / Legal / Construction ]</div></div>
+    <div class="explain-row"><div class="explain-label">Evidence</div><div class="explain-val">4 sources processed: [document name] · [payer rule] · [historical precedent] · [anomaly definition]</div></div>
+    <div class="explain-row"><div class="explain-label">Reasoning</div><div class="explain-val">AI model identified [anomaly type] with [confidence]% confidence. Primary flag: [specific finding]. Secondary flag: [related finding]. Recommended action: [BNCA output].</div></div>
+    <div class="explain-row"><div class="explain-label">Override path</div><div class="explain-val">Human reviewer may override recommendation at Exec Portal. Override requires: reason code + authorization name + timestamp. All overrides logged.</div></div>
+    <div class="explain-row"><div class="explain-label">Audit export</div><div class="explain-val">Full decision record exportable as structured JSON or PDF. Retention: 90 days per session. Compliance-ready format.</div></div>
+    <div class="confidence-bar"><div class="confidence-fill" style="width:91%"></div></div>
+  </div>
+
+  <div class="pitch-block purple">
+    <strong>The enterprise pitch:</strong> "TSM doesn't just train candidates on AI tools. It trains them on AI governance — how to use, question, override, and audit AI recommendations. When your enterprise clients ask 'can we trust the AI decisions your candidates make?', the answer is: here's the audit trail, here's the confidence score, here's who approved it. That's not a training platform. That's an operational control system."
+  </div>
+
+  <div class="panel-footer">
+    <div class="footer-badge">GOVERNANCE OVERLAY · ALL 7 SECTORS</div>
+    <div class="footer-nav"><button class="footer-btn" onclick="switchTo('overview')">← OVERVIEW</button><button class="footer-btn" onclick="switchTo('staffing')">STAFFING PITCH →</button></div>
+  </div>
+</div>
+
+</div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// ── NAV SWITCH ──
+function switchTo(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.remove('active','active-cyan','active-amber','active-purple','active-blue','active-orange');
+  });
+  const panel = document.getElementById('panel-' + id);
+  if (panel) panel.classList.add('active');
+
+  const colorMap = {
+    overview: 'active', staffing: 'active-cyan',
+    hc: 'active', crcr: 'active-amber',
+    finops: 'active-cyan',
+    insurance: 'active-blue', ahip: 'active-amber',
+    realestate: 'active-orange', mlo: 'active-amber',
+    bpo: 'active-purple',
+    career: 'active', readiness: 'active-cyan',
+    governance: 'active-purple'
+  };
+
+  const navMap = {
+    overview: 0, staffing: 1,
+    hc: 3, crcr: 4,
+    finops: 6,
+    insurance: 8, ahip: 9,
+    realestate: 11, mlo: 12,
+    bpo: 14,
+    career: 16, readiness: 17, governance: 18
+  };
+
+  const items = document.querySelectorAll('.nav-item');
+  const idx = navMap[id];
+  if (idx !== undefined && items[idx]) {
+    items[idx].classList.add(colorMap[id] || 'active');
+  }
+  window.scrollTo(0, 0);
+}
+
+// ── READINESS TRACKER ──
+function updateReadiness() {
+  const checks = document.querySelectorAll('.readiness-check');
+  const checked = document.querySelectorAll('.readiness-check:checked');
+  const pct = Math.round((checked.length / checks.length) * 100);
+
+  document.getElementById('overall-score').textContent = pct + '%';
+  const bar = document.getElementById('readiness-bar');
+  bar.style.width = pct + '%';
+  if (pct < 40) bar.style.background = 'var(--red)';
+  else if (pct < 70) bar.style.background = 'var(--amber)';
+  else bar.style.background = 'var(--green)';
+
+  const status = document.getElementById('placement-status');
+  if (pct < 25) status.textContent = 'Early stage. Continue sector training.';
+  else if (pct < 50) status.textContent = 'In progress. Strong HC and FinOps completion recommended before placement.';
+  else if (pct < 75) status.textContent = 'Approaching placement-ready. Complete remaining cert prep items.';
+  else if (pct < 90) status.textContent = 'PLACEMENT READY — pending certification verification. Export readiness package.';
+  else status.textContent = 'FULLY CERTIFIED AND DEPLOYMENT READY. Export audit trail and schedule placement.';
+
+  // Update global header
+  document.getElementById('global-pct').textContent = pct + '%';
+  document.getElementById('global-fill').style.width = pct + '%';
+}
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', () => {
+  switchTo('overview');
+});
+</script>
+</body>
+</html>
