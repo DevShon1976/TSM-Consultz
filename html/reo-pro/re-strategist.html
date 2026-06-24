@@ -188,6 +188,36 @@ body::before{content:'';position:fixed;inset:0;
 /* LOADER */
 .loader{display:flex;align-items:center;gap:.5rem;font-family:var(--mono);font-size:.52rem;color:var(--muted);
   padding:1.5rem .85rem;animation:pulse 1.5s infinite}
+/* ── TSM EXPLAINABILITY PANEL ── */
+.tsm-xp{display:flex;flex-direction:column;gap:10px;padding:12px 13px;border-radius:4px;margin-top:12px}
+.tsm-xp-title{font-family:var(--orb);font-size:.58rem;letter-spacing:.12em;display:flex;align-items:center;gap:6px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06);text-transform:uppercase}
+.tsm-xp-pulse{width:6px;height:6px;border-radius:50%;animation:tsm-pulse 2s infinite}
+@keyframes tsm-pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.tsm-xp-lbl{font-family:var(--mono);font-size:.57rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;opacity:.5}
+.tsm-conf-row{display:flex;align-items:baseline;gap:8px;margin-bottom:4px}
+.tsm-conf-num{font-family:var(--orb);font-size:1.6rem;line-height:1}
+.tsm-conf-sub{font-size:.6rem;font-family:var(--mono);opacity:.5}
+.tsm-conf-bar-wrap{height:5px;background:rgba(255,255,255,.06);border-radius:10px;overflow:hidden;margin:4px 0 10px}
+.tsm-conf-bar{height:100%;border-radius:10px;transition:width .8s cubic-bezier(.4,0,.2,1);width:0%}
+.tsm-src{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.6rem;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.tsm-src-badge{font-size:.48rem;padding:1px 5px;border-radius:2px;letter-spacing:.06em;flex-shrink:0}
+.tsm-src-high{background:rgba(0,255,136,.12);color:var(--green)}
+.tsm-src-med{background:rgba(245,158,11,.12);color:var(--gold)}
+.tsm-src-low{background:rgba(239,68,68,.12);color:var(--red)}
+.tsm-reasoning{border-radius:3px;padding:10px;font-family:var(--mono);font-size:.62rem;line-height:1.7;border-left:3px solid}
+.tsm-rl-key{font-weight:600}
+.tsm-action{display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border-radius:3px;margin-bottom:4px;font-size:.61rem;font-family:var(--mono)}
+.tsm-owner{font-size:.52rem;padding:2px 7px;border-radius:2px;letter-spacing:.08em;white-space:nowrap;flex-shrink:0}
+.tsm-action-text{line-height:1.5;opacity:.85}
+.tsm-delta-row{display:flex;gap:8px;margin-top:4px}
+.tsm-delta-box{flex:1;padding:8px;border-radius:3px;text-align:center}
+.tsm-delta-no{background:rgba(255,68,85,.06);border:1px solid rgba(255,68,85,.18)}
+.tsm-delta-act{background:rgba(0,229,100,.06);border:1px solid rgba(0,229,100,.18)}
+.tsm-delta-lbl{font-size:.54rem;font-family:var(--mono);letter-spacing:.06em;margin-bottom:3px;opacity:.5}
+.tsm-delta-val{font-family:var(--orb);font-size:.85rem}
+.tsm-delta-no .tsm-delta-val{color:#ff4455}
+.tsm-delta-act .tsm-delta-val{color:#00e564}
+.tsm-recovery{text-align:center;font-family:var(--mono);font-size:.59rem;margin-top:5px;opacity:.4}
 </style>
 </head>
 <body>
@@ -437,6 +467,45 @@ body::before{content:'';position:fixed;inset:0;
           <div class="kpi-r"><span class="kpi-l">Current</span><span class="kpi-v acc">RE STRATEGIST</span></div>
           <div class="kpi-r"><span class="kpi-l">Next</span><span class="kpi-v" style="color:var(--gold)">RE EXEC PORTAL</span></div>
           <div class="kpi-r"><span class="kpi-l">Modules Run</span><span class="kpi-v" id="localRun">0</span></div>
+        </div>
+
+        <div class="tsm-xp" id="reXPPanel" style="background:linear-gradient(135deg,rgba(167,139,250,.04),rgba(196,181,253,.02));border:1px solid rgba(167,139,250,.18)">
+          <div class="tsm-xp-title" style="color:var(--acc)">
+            <div class="tsm-xp-pulse" style="background:var(--acc)"></div>
+            WHY DOES THE AI BELIEVE THIS?
+          </div>
+          <div>
+            <div class="tsm-xp-lbl">AI Confidence Score</div>
+            <div class="tsm-conf-row">
+              <div class="tsm-conf-num" id="reXPConfNum" style="color:var(--acc)">—</div>
+              <div class="tsm-conf-sub">confidence<br>probability</div>
+            </div>
+            <div class="tsm-conf-bar-wrap">
+              <div class="tsm-conf-bar" id="reXPConfBar" style="background:linear-gradient(90deg,var(--acc),rgba(196,181,253,.8))"></div>
+            </div>
+          </div>
+          <div>
+            <div class="tsm-xp-lbl">Data Sources Analyzed</div>
+            <div id="reXPSources"><div style="opacity:.4;font-family:var(--mono);font-size:.63rem">Awaiting analysis...</div></div>
+          </div>
+          <div>
+            <div class="tsm-xp-lbl">Reasoning Chain</div>
+            <div class="tsm-reasoning" id="reXPReasoning" style="background:rgba(0,0,0,.2);border-left-color:var(--acc)">
+              <div style="opacity:.4">Reasoning trace appears after analysis completes.</div>
+            </div>
+          </div>
+          <div>
+            <div class="tsm-xp-lbl">Actions · Named Owners</div>
+            <div id="reXPActions"><div style="opacity:.4;font-family:var(--mono);font-size:.63rem">Run analysis to surface owners...</div></div>
+          </div>
+          <div>
+            <div class="tsm-xp-lbl">Business Impact Delta</div>
+            <div class="tsm-delta-row">
+              <div class="tsm-delta-box tsm-delta-no"><div class="tsm-delta-lbl">NO ACTION</div><div class="tsm-delta-val" id="reXPDeltaNo">—</div></div>
+              <div class="tsm-delta-box tsm-delta-act"><div class="tsm-delta-lbl">WITH ACTION</div><div class="tsm-delta-val" id="reXPDeltaAct">—</div></div>
+            </div>
+            <div class="tsm-recovery" id="reXPRecovery"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -777,6 +846,53 @@ function switchPanel(name, btn) {
 
 // init
 loadPayload();
+
+// ── TSM EXPLAINABILITY PANEL — reXP ──
+function reXPResetExplain(){
+  document.getElementById('reXPConfNum').textContent='—';
+  document.getElementById('reXPConfBar').style.width='0%';
+  document.getElementById('reXPSources').innerHTML='<div style="opacity:.4;font-family:var(--mono);font-size:.63rem">Awaiting analysis...</div>';
+  document.getElementById('reXPReasoning').innerHTML='<div style="opacity:.4">Reasoning trace appears after analysis completes.</div>';
+  document.getElementById('reXPActions').innerHTML='<div style="opacity:.4;font-family:var(--mono);font-size:.63rem">Run analysis to surface action owners...</div>';
+  document.getElementById('reXPDeltaNo').textContent='—';
+  document.getElementById('reXPDeltaAct').textContent='—';
+  document.getElementById('reXPRecovery').textContent='';
+}
+function reXPRenderExplain(obj){
+  if(!obj) return;
+  const conf = obj.confidence||0;
+  document.getElementById('reXPConfNum').textContent=conf+'%';
+  setTimeout(()=>{document.getElementById('reXPConfBar').style.width=conf+'%';},100);
+  const wc = w=>w==='HIGH'?'tsm-src-high':w==='MED'?'tsm-src-med':'tsm-src-low';
+  const sources = obj.dataSources||[];
+  document.getElementById('reXPSources').innerHTML=sources.length
+    ?sources.map(s=>`<div class="tsm-src"><span class="tsm-src-badge ${wc(s.weight)}">${s.weight}</span>${s.name}</div>`).join('')
+    :'<div style="opacity:.4;font-size:.63rem">No source data.</div>';
+  const reasoning = obj.reasoning||[];
+  document.getElementById('reXPReasoning').innerHTML=reasoning.length
+    ?reasoning.map(r=>`<div><span class="tsm-rl-key" style="color:var(--acc)">${r.key}:</span> <span style="opacity:.7">${r.val}</span></div>`).join('')
+    :'<div style="opacity:.4">No reasoning chain.</div>';
+  const actions = obj.recommendedActions||[];
+  document.getElementById('reXPActions').innerHTML=actions.length
+    ?actions.map(a=>`<div class="tsm-action" style="background:rgba(167,139,250,.05);border:1px solid rgba(167,139,250,.2)"><span class="tsm-owner" style="background:rgba(167,139,250,.12);color:var(--acc)">${a.owner}</span><span class="tsm-action-text">${a.text}</span></div>`).join('')
+    :'<div style="opacity:.4;font-size:.63rem">No actions returned.</div>';
+  if(obj.noActionRevLoss) document.getElementById('reXPDeltaNo').textContent=obj.noActionRevLoss;
+  if(obj.actionRevLoss) document.getElementById('reXPDeltaAct').textContent=obj.actionRevLoss;
+  if(obj.recoveryTime) document.getElementById('reXPRecovery').textContent='Est. recovery: '+obj.recoveryTime;
+}
+function reXPParseExplain(raw){
+  const briefMatch = raw.match(/===BRIEF===\s*([\s\S]*?)(?:===JSON===|$)/);
+  const jsonMatch = raw.match(/===JSON===\s*([\s\S]*)/);
+  const brief = briefMatch ? briefMatch[1].trim() : raw;
+  let obj = null;
+  if(jsonMatch){
+    try{
+      const clean = jsonMatch[1].trim().replace(/```json|```/g,'').trim();
+      obj = JSON.parse(clean);
+    }catch(e){ console.warn('reXP explain JSON parse:',e); }
+  }
+  return {brief, obj};
+}
 </script>
 </body>
 </html>
