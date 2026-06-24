@@ -228,6 +228,36 @@ body{font-family:var(--mono);background:var(--bg);color:var(--text);font-size:12
 .big-synth{width:100%;border:none;border-radius:5px;padding:10px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;cursor:pointer;margin-top:10px;transition:all .2s;background:var(--gbright);color:#0a0e09}
 .big-synth:hover{filter:brightness(1.1)}
 .big-synth:disabled{opacity:.4;cursor:default}
+
+/* ── TSM EXPLAINABILITY PANEL — shared ── */
+.tsm-xp{display:flex;flex-direction:column;gap:10px;padding:12px 13px;border-radius:4px}
+.tsm-xp-title{font-family:'Orbitron',sans-serif;font-size:.58rem;letter-spacing:.12em;display:flex;align-items:center;gap:6px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06);text-transform:uppercase}
+.tsm-xp-pulse{width:6px;height:6px;border-radius:50%;animation:tsm-pulse 2s infinite}
+@keyframes tsm-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+.tsm-xp-lbl{font-family:'JetBrains Mono',monospace;font-size:.57rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;opacity:.5}
+.tsm-conf-row{display:flex;align-items:baseline;gap:8px;margin-bottom:4px}
+.tsm-conf-num{font-family:'Orbitron',sans-serif;font-size:1.6rem;line-height:1}
+.tsm-conf-sub{font-size:.6rem;font-family:'JetBrains Mono',monospace;opacity:.5}
+.tsm-conf-bar-wrap{height:5px;background:rgba(255,255,255,.06);border-radius:10px;overflow:hidden;margin:4px 0 10px}
+.tsm-conf-bar{height:100%;border-radius:10px;transition:width .8s cubic-bezier(.4,0,.2,1);width:0%}
+.tsm-src{display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:.63rem;font-family:'JetBrains Mono',monospace;opacity:.85}
+.tsm-src-badge{font-size:.54rem;padding:1px 5px;border-radius:2px;letter-spacing:.06em;flex-shrink:0;font-family:'JetBrains Mono',monospace}
+.tsm-src-high{background:rgba(0,229,100,.12);color:#00e564;border:1px solid rgba(0,229,100,.25)}
+.tsm-src-med{background:rgba(255,170,0,.1);color:#ffaa00;border:1px solid rgba(255,170,0,.2)}
+.tsm-src-low{background:rgba(168,85,247,.1);color:#a855f7;border:1px solid rgba(168,85,247,.2)}
+.tsm-reasoning{border-radius:3px;padding:10px;font-family:'JetBrains Mono',monospace;font-size:.62rem;line-height:1.7;border-left:3px solid}
+.tsm-action{display:flex;align-items:flex-start;gap:7px;padding:6px 8px;border-radius:3px;margin-bottom:5px;font-size:.63rem;font-family:'JetBrains Mono',monospace}
+.tsm-owner{font-weight:700;flex-shrink:0;font-size:.57rem;padding:1px 5px;border-radius:2px;margin-top:1px}
+.tsm-action-text{line-height:1.5;opacity:.8}
+.tsm-delta-row{display:flex;gap:8px;margin-top:4px}
+.tsm-delta-box{flex:1;padding:8px;border-radius:3px;text-align:center}
+.tsm-delta-no{background:rgba(255,68,85,.06);border:1px solid rgba(255,68,85,.18)}
+.tsm-delta-act{background:rgba(0,229,100,.06);border:1px solid rgba(0,229,100,.18)}
+.tsm-delta-lbl{font-size:.54rem;font-family:'JetBrains Mono',monospace;letter-spacing:.06em;margin-bottom:3px;opacity:.5}
+.tsm-delta-val{font-family:'Orbitron',sans-serif;font-size:.85rem}
+.tsm-delta-no .tsm-delta-val{color:#ff4455}
+.tsm-delta-act .tsm-delta-val{color:#00e564}
+.tsm-recovery{text-align:center;font-family:'JetBrains Mono',monospace;font-size:.59rem;margin-top:5px;opacity:.4}
 </style>
   <link rel="stylesheet" href="/shared/tsm-shared.css">
   <script src="/shared/tsm-shared.js"></script>
@@ -497,6 +527,44 @@ body{font-family:var(--mono);background:var(--bg);color:var(--text);font-size:12
     <div class="bnca-box" id="currentNode">Operations ready. Enter Groq API key and run BNCA.</div>
     <div class="bnca-lbl">BNCA Output</div>
     <div class="bnca-box" id="bncaOutput" style="color:var(--muted);font-style:italic">Waiting for construction intelligence…</div>
+    <div class="tsm-xp" style="background:linear-gradient(135deg,rgba(255,215,0,.04),rgba(255,230,0,.02));border:1px solid rgba(255,215,0,.18)">
+      <div class="tsm-xp-title" style="color:#ffd700">
+        <div class="tsm-xp-pulse" style="background:#ffd700"></div>
+        WHY DOES THE AI BELIEVE THIS?
+      </div>
+      <div>
+        <div class="tsm-xp-lbl">AI Confidence Score</div>
+        <div class="tsm-conf-row">
+          <div class="tsm-conf-num" id="conXPConfNum" style="color:#ffd700">—</div>
+          <div class="tsm-conf-sub">confidence<br>probability</div>
+        </div>
+        <div class="tsm-conf-bar-wrap">
+          <div class="tsm-conf-bar" id="conXPConfBar" style="background:linear-gradient(90deg,#ffd700,rgba(255,230,100,.8))"></div>
+        </div>
+      </div>
+      <div>
+        <div class="tsm-xp-lbl">Data Sources Analyzed</div>
+        <div id="conXPSources"><div style="opacity:.4;font-family:'JetBrains Mono',monospace;font-size:.63rem">Awaiting analysis...</div></div>
+      </div>
+      <div>
+        <div class="tsm-xp-lbl">Reasoning Chain</div>
+        <div class="tsm-reasoning" id="conXPReasoning" style="background:rgba(0,0,0,.2);border-left-color:#ffd700">
+          <div style="opacity:.4">Reasoning trace appears after analysis completes.</div>
+        </div>
+      </div>
+      <div>
+        <div class="tsm-xp-lbl">Actions · Named Owners</div>
+        <div id="conXPActions"><div style="opacity:.4;font-family:'JetBrains Mono',monospace;font-size:.63rem">Run analysis to surface owners...</div></div>
+      </div>
+      <div>
+        <div class="tsm-xp-lbl">Business Impact Delta</div>
+        <div class="tsm-delta-row">
+          <div class="tsm-delta-box tsm-delta-no"><div class="tsm-delta-lbl">NO ACTION</div><div class="tsm-delta-val" id="conXPDeltaNo">—</div></div>
+          <div class="tsm-delta-box tsm-delta-act"><div class="tsm-delta-lbl">WITH ACTION</div><div class="tsm-delta-val" id="conXPDeltaAct">—</div></div>
+        </div>
+        <div class="tsm-recovery" id="conXPRecovery"></div>
+      </div>
+    </div>
     <div class="bnca-lbl">Cross-App State</div>
     <div class="cross-box" id="crossBox">
       • Operations <span class="hi">[ready]</span> — Rebalance workload before backlog expands.<br>
@@ -764,13 +832,12 @@ function pushConstructionToDocEngine(){
 
 async function runConstructionBNCA(){
   const out=document.getElementById('bncaOutput');
-  const groqKey=document.getElementById('groqKey')?.value||localStorage.getItem('tsm_groq_key')||'';
-  if(!groqKey){out.textContent='Enter Groq API key first.';return;}
+  conXPResetExplain();
   const mission=JSON.parse(localStorage.getItem('tsm_construction_mission')||'{}');
   const ctx=CONSTRUCTION_SCENARIOS[mission.scenarioId]||'Full construction portfolio review';
   out.textContent='Generating BNCA...';
   try{
-    const r=await fetch('/api/war-room/stream',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:1024,stream:true,messages:[{role:'user',content:'Construction strategist BNCA for: '+ctx+'\n\nFormat: CONTROLLER PRIORITY ACTIONS (numbered, dollar-quantified, owner assigned) then BNCA — BEST NEXT COURSE OF ACTION (one paragraph).'}]})});
+    const r=await fetch('/api/war-room/stream',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:1024,stream:true,messages:[{role:'user',content:'Construction strategist BNCA for: '+ctx+'\n\nFormat: CONTROLLER PRIORITY ACTIONS (numbered, dollar-quantified, owner assigned) then BNCA — BEST NEXT COURSE OF ACTION (one paragraph).\n\nAfter the brief above, on a new line output exactly ===JSON=== followed by a single JSON object (no markdown fences) with this exact shape: {"confidence":0-100,"dataSources":[{"name":"...","weight":"HIGH|MED|LOW"}],"reasoning":[{"key":"...","val":"..."}],"recommendedActions":[{"text":"...","owner":"..."}],"noActionRevLoss":"$amount","actionRevLoss":"$amount","recoveryTime":"e.g. 30 Days"}'}]})});
     const reader=r.body.getReader();const dec=new TextDecoder();let full='';
     out.style.whiteSpace='pre-wrap';
     while(true){const{done,value}=await reader.read();if(done)break;
@@ -779,6 +846,9 @@ async function runConstructionBNCA(){
       }});
       out.textContent=full;
     }
+    const {brief: conBrief2, obj: conObj2} = conXPParseExplain(full);
+    if(conBrief2) out.textContent = conBrief2;
+    conXPRenderExplain(conObj2);
     localStorage.setItem('tsm_construction_strategist_output',JSON.stringify({summary:out.textContent,scenario:mission.scenarioId||'manual',timestamp:Date.now()}));
   }catch(e){out.textContent='Error: '+e.message;}
 }
@@ -860,9 +930,54 @@ function showEscalateBar(d) {
 // ═══════════════════════════════════════════════════
 // BNCA FROM WAR ROOM RELAY — with app guidance
 // ═══════════════════════════════════════════════════
+// ── TSM EXPLAINABILITY PANEL — conXP ──
+function conXPResetExplain(){
+  document.getElementById('conXPConfNum').textContent='—';
+  document.getElementById('conXPConfBar').style.width='0%';
+  document.getElementById('conXPSources').innerHTML='<div style="opacity:.4;font-family:\'JetBrains Mono\',monospace;font-size:.63rem">Awaiting analysis...</div>';
+  document.getElementById('conXPReasoning').innerHTML='<div style="opacity:.4">Reasoning trace appears after analysis completes.</div>';
+  document.getElementById('conXPActions').innerHTML='<div style="opacity:.4;font-family:\'JetBrains Mono\',monospace;font-size:.63rem">Run analysis to surface action owners...</div>';
+  document.getElementById('conXPDeltaNo').textContent='—';
+  document.getElementById('conXPDeltaAct').textContent='—';
+  document.getElementById('conXPRecovery').textContent='';
+}
+function conXPRenderExplain(obj){
+  if(!obj) return;
+  const conf = obj.confidence||0;
+  document.getElementById('conXPConfNum').textContent=conf+'%';
+  setTimeout(()=>{document.getElementById('conXPConfBar').style.width=conf+'%';},100);
+  const wc = w=>w==='HIGH'?'tsm-src-high':w==='MED'?'tsm-src-med':'tsm-src-low';
+  const sources = obj.dataSources||[];
+  document.getElementById('conXPSources').innerHTML=sources.length
+    ?sources.map(s=>`<div class="tsm-src"><span class="tsm-src-badge ${wc(s.weight)}">${s.weight}</span>${s.name}</div>`).join('')
+    :'<div style="opacity:.4;font-size:.63rem">No source data.</div>';
+  const reasoning = obj.reasoning||[];
+  document.getElementById('conXPReasoning').innerHTML=reasoning.length
+    ?reasoning.map(r=>`<div><span style="color:#ffd700">${r.key}:</span> <span style="opacity:.7">${r.val}</span></div>`).join('')
+    :'<div style="opacity:.4">No reasoning chain.</div>';
+  const actions = obj.recommendedActions||[];
+  document.getElementById('conXPActions').innerHTML=actions.length
+    ?actions.map(a=>`<div class="tsm-action" style="background:rgba(255,215,0,.05);border:1px solid rgba(255,215,0,.2)"><span class="tsm-owner" style="background:rgba(255,215,0,.12);color:#ffd700">${a.owner}</span><span class="tsm-action-text">${a.text}</span></div>`).join('')
+    :'<div style="opacity:.4;font-size:.63rem">No actions returned.</div>';
+  if(obj.noActionRevLoss) document.getElementById('conXPDeltaNo').textContent=obj.noActionRevLoss;
+  if(obj.actionRevLoss) document.getElementById('conXPDeltaAct').textContent=obj.actionRevLoss;
+  if(obj.recoveryTime) document.getElementById('conXPRecovery').textContent='Est. recovery: '+obj.recoveryTime;
+}
+function conXPParseExplain(raw){
+  const briefMatch = raw.match(/===BRIEF===\s*([\s\S]*?)(?:===JSON===|$)/);
+  const jsonMatch = raw.match(/===JSON===\s*([\s\S]*)/);
+  const brief = briefMatch ? briefMatch[1].trim() : raw.replace(/===JSON===[\s\S]*/,'').trim();
+  let obj = null;
+  if(jsonMatch){
+    try{
+      const clean = jsonMatch[1].trim().replace(/```json|```/g,'').trim();
+      obj = JSON.parse(clean);
+    }catch(e){ console.warn('conXP explain JSON parse:',e); }
+  }
+  return {brief, obj};
+}
+
 async function runConstructionBNCAFromRelay() {
-  const groqKeyVal = document.getElementById('groqKey')?.value || localStorage.getItem('tsm_groq_key') || '';
-  if (!groqKeyVal) { alert('Enter Groq API key first.'); return; }
   if (!warRoomRelay) { runConstructionBNCA(); return; }
  
   const out = document.getElementById('bncaOutput');
@@ -870,6 +985,7 @@ async function runConstructionBNCAFromRelay() {
   const engines = warRoomRelay.engines || {};
   const snap = warRoomRelay.snapshot || {};
  
+  conXPResetExplain();
   nodeEl.textContent = 'Synthesizing War Room relay via Groq...';
   out.classList.add('streaming');
   out.style.color = 'var(--text)';
@@ -888,12 +1004,12 @@ ENGINE 06 — BNCA EXEC: ${engines.e6||''}
   `.trim();
  
   const sys = `You are a Construction Strategist AI. Synthesize war room engine data into a complete executive intelligence package. Be specific, dollar-quantified, and action-oriented.`;
-  const usr = `War Room Data:\n${ctx}\n\nGenerate:\n\nCONTROLLER PRIORITY ACTIONS (4 actions, numbered, dollar-quantified, owner assigned, deadline):\n\nAPP ROUTING GUIDANCE (for each Construction Suite app — AuditOps, Financial, Legal, Compliance — give 2-3 sentences of specific step-by-step instruction on what tab to open, what data to enter, and what output to produce for THIS specific document and issue):\n\nBNCA — BEST NEXT COURSE OF ACTION (one paragraph, most important 72-hour action sequence):\n\nESCALATION TRIGGER (condition for immediate executive involvement):`;
+  const usr = `War Room Data:\n${ctx}\n\nGenerate:\n\nCONTROLLER PRIORITY ACTIONS (4 actions, numbered, dollar-quantified, owner assigned, deadline):\n\nAPP ROUTING GUIDANCE (for each Construction Suite app — AuditOps, Financial, Legal, Compliance — give 2-3 sentences of specific step-by-step instruction on what tab to open, what data to enter, and what output to produce for THIS specific document and issue):\n\nBNCA — BEST NEXT COURSE OF ACTION (one paragraph, most important 72-hour action sequence):\n\nESCALATION TRIGGER (condition for immediate executive involvement):\n\nAfter the brief above, on a new line output exactly ===JSON=== followed by a single JSON object (no markdown fences) with this exact shape:\n{"confidence":0-100,"dataSources":[{"name":"...","weight":"HIGH|MED|LOW"}],"reasoning":[{"key":"...","val":"..."}],"recommendedActions":[{"text":"...","owner":"..."}],"noActionRevLoss":"$amount","actionRevLoss":"$amount","recoveryTime":"e.g. 30 Days"}`;
  
   try {
     const res = await fetch('/api/war-room/stream', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + groqKeyVal },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
         max_tokens: 1200,
@@ -932,6 +1048,9 @@ ENGINE 06 — BNCA EXEC: ${engines.e6||''}
     }
  
     out.textContent = full;
+    const {brief: conBrief, obj: conObj} = conXPParseExplain(full);
+    if(conBrief) out.textContent = conBrief;
+    conXPRenderExplain(conObj);
     out.classList.remove('streaming');
     nodeEl.textContent = `BNCA complete — War Room relay synthesized · ${new Date().toLocaleTimeString()}`;
  
