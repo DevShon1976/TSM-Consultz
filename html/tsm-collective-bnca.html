@@ -3,737 +3,513 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TSM SHELL · Collective BNCA</title>
+<title>TSM Neural Core — Collective BNCA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg:#07090a;
-    --panel:#0d1113;
-    --panel-2:#101517;
-    --line:#1b2326;
-    --cyan:#19e0d6;
-    --cyan-dim:#0d6f6a;
-    --green:#3ddc84;
-    --gold:#e8b84b;
-    --orange:#e08a3d;
-    --red:#e0473d;
-    --text:#cfe0df;
-    --text-dim:#6f8584;
-    --mono:'JetBrains Mono','Share Tech Mono',monospace;
-  }
-  *{box-sizing:border-box;}
-  body{
-    margin:0;
-    background:
-      radial-gradient(circle at 12% -10%, rgba(25,224,214,0.06), transparent 45%),
-      radial-gradient(circle at 100% 110%, rgba(61,220,132,0.05), transparent 50%),
-      var(--bg);
-    color:var(--text);
-    font-family:var(--mono);
-    min-height:100vh;
-  }
-  ::selection{background:var(--cyan);color:#03100f;}
+:root {
+  --black:#020408; --deep:#060c14; --panel:#0a1220; --border:#1a2a3a; --border2:#243444;
+  --cyan:#00c8ff; --cyan2:#0096cc; --green:#00c896; --amber:#f5a623; --red:#ff4d4d;
+  --purple:#a855f7; --dim:#3a5068; --muted:#7a98b8; --text:#c8dff0;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--black);color:var(--text);font-family:'JetBrains Mono',monospace;min-height:100vh;}
 
-  /* ── HEADER ── */
-  header{
-    border-bottom:1px solid var(--line);
-    padding:18px 28px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:16px;
-    flex-wrap:wrap;
-    background:linear-gradient(180deg, rgba(255,255,255,0.015), transparent);
-  }
-  .brand{display:flex;align-items:baseline;gap:10px;}
-  .brand .mark{
-    color:var(--cyan);
-    font-size:11px;
-    letter-spacing:0.25em;
-    border:1px solid var(--cyan-dim);
-    padding:3px 7px;
-    border-radius:2px;
-  }
-  .brand h1{
-    margin:0;
-    font-size:17px;
-    letter-spacing:0.06em;
-    font-weight:600;
-    color:#eef7f6;
-  }
-  .brand .sub{color:var(--text-dim);font-size:12px;margin-top:2px;letter-spacing:0.04em;}
-  .header-right{display:flex;align-items:center;gap:14px;}
-  .reporting-pill{
-    font-size:11px;
-    color:var(--text-dim);
-    border:1px solid var(--line);
-    padding:6px 10px;
-    border-radius:3px;
-    letter-spacing:0.04em;
-  }
-  .reporting-pill b{color:var(--cyan);font-weight:600;}
-  button.ghost{
-    background:transparent;
-    border:1px solid var(--line);
-    color:var(--text-dim);
-    font-family:var(--mono);
-    font-size:11px;
-    letter-spacing:0.05em;
-    padding:8px 12px;
-    border-radius:3px;
-    cursor:pointer;
-    transition:border-color .15s, color .15s;
-  }
-  button.ghost:hover{border-color:var(--red);color:var(--red);}
+.header{background:var(--deep);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.logo{font-family:'Orbitron',sans-serif;font-size:.9rem;font-weight:900;color:#fff;letter-spacing:.15em;}
+.logo span{color:var(--cyan);}
+.badge{font-size:.58rem;letter-spacing:.2em;color:var(--cyan);border:1px solid rgba(0,200,255,.3);padding:3px 8px;border-radius:3px;}
+.header-right{display:flex;align-items:center;gap:.75rem;}
+.pulse-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+.status-text{font-size:.65rem;letter-spacing:.1em;color:var(--muted);}
 
-  main{padding:26px 28px 60px;max-width:1280px;margin:0 auto;}
+.main{max-width:1400px;margin:0 auto;padding:2rem;}
 
-  .section-label{
-    font-size:11px;
-    letter-spacing:0.22em;
-    color:var(--text-dim);
-    margin:0 0 14px;
-    display:flex;
-    align-items:center;
-    gap:10px;
-  }
-  .section-label::after{content:'';flex:1;height:1px;background:var(--line);}
+.risk-banner{border:1px solid var(--border2);border-radius:8px;padding:1.5rem 2rem;margin-bottom:2rem;display:grid;grid-template-columns:auto 1fr auto;gap:2rem;align-items:center;background:var(--deep);position:relative;overflow:hidden;}
+.risk-banner::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--cyan);border-radius:4px 0 0 4px;}
+.risk-banner.URGENT::before{background:var(--red);}
+.risk-banner.RISK::before{background:var(--amber);}
+.risk-banner.WATCH::before{background:var(--cyan);}
+.risk-banner.READY::before{background:var(--green);}
+.risk-badge{font-family:'Orbitron',sans-serif;font-size:1.4rem;font-weight:900;letter-spacing:.1em;color:var(--cyan);}
+.risk-badge.URGENT{color:var(--red);} .risk-badge.RISK{color:var(--amber);} .risk-badge.WATCH{color:var(--cyan);} .risk-badge.READY{color:var(--green);}
+.risk-label{font-size:.58rem;letter-spacing:.2em;color:var(--dim);margin-top:.2rem;}
+.risk-bnca{font-size:.82rem;line-height:1.7;color:var(--text);}
+.risk-meta{text-align:right;}
+.risk-conf{font-family:'Orbitron',sans-serif;font-size:1.6rem;font-weight:700;color:var(--cyan);}
+.risk-conf-label{font-size:.58rem;letter-spacing:.15em;color:var(--dim);}
+.risk-verticals{font-size:.65rem;color:var(--muted);margin-top:.3rem;}
 
-  /* ── VERTICAL GRID ── */
-  .grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));
-    gap:12px;
-    margin-bottom:34px;
-  }
-  .vcard{
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-left:3px solid var(--line);
-    border-radius:4px;
-    padding:14px 14px 12px;
-    position:relative;
-    min-height:128px;
-    display:flex;
-    flex-direction:column;
-    justify-content:space-between;
-    transition:border-color .2s, transform .15s;
-  }
-  .vcard.has-signal:hover{transform:translateY(-1px);}
-  .vcard .vname{
-    font-size:12px;
-    letter-spacing:0.08em;
-    color:#dfeceb;
-    font-weight:600;
-  }
-  .vcard .vtop{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
-  .badge{
-    font-size:10px;
-    letter-spacing:0.08em;
-    padding:2px 7px;
-    border-radius:2px;
-    font-weight:700;
-    white-space:nowrap;
-  }
-  .badge.READY{background:rgba(61,220,132,0.14);color:var(--green);}
-  .badge.WATCH{background:rgba(232,184,75,0.14);color:var(--gold);}
-  .badge.RISK{background:rgba(224,138,61,0.16);color:var(--orange);}
-  .badge.URGENT{background:rgba(224,71,61,0.18);color:var(--red);}
-  .badge.NONE{background:rgba(255,255,255,0.04);color:var(--text-dim);}
+.section-head{font-size:.6rem;letter-spacing:.25em;text-transform:uppercase;color:var(--cyan);border-bottom:1px solid var(--border);padding-bottom:.5rem;margin-bottom:1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.section-head.amber{color:var(--amber);border-color:rgba(245,166,35,.2);}
+.section-head.red{color:var(--red);border-color:rgba(255,77,77,.2);}
+.section-head.green{color:var(--green);border-color:rgba(0,200,150,.2);}
+.section-head.purple{color:var(--purple);border-color:rgba(168,85,247,.2);}
 
-  .vcard.READY{border-left-color:var(--green);}
-  .vcard.WATCH{border-left-color:var(--gold);}
-  .vcard.RISK{border-left-color:var(--orange);}
-  .vcard.URGENT{border-left-color:var(--red);}
+.signals-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem;margin-bottom:2.5rem;}
+.signal-card{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:1.1rem;transition:border-color .2s;}
+.signal-card:hover{border-color:var(--border2);}
+.signal-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;}
+.signal-name{font-size:.72rem;letter-spacing:.1em;color:#fff;font-weight:600;}
+.risk-pill{font-size:.55rem;letter-spacing:.15em;padding:3px 8px;border-radius:20px;font-weight:700;}
+.risk-pill.URGENT{background:rgba(255,77,77,.15);color:var(--red);border:1px solid rgba(255,77,77,.3);}
+.risk-pill.RISK{background:rgba(245,166,35,.15);color:var(--amber);border:1px solid rgba(245,166,35,.3);}
+.risk-pill.WATCH{background:rgba(0,200,255,.1);color:var(--cyan);border:1px solid rgba(0,200,255,.2);}
+.risk-pill.READY{background:rgba(0,200,150,.1);color:var(--green);border:1px solid rgba(0,200,150,.2);}
+.signal-issue{font-size:.72rem;color:var(--muted);line-height:1.5;margin-bottom:.6rem;}
+.signal-conf-bar{height:3px;background:var(--border);border-radius:2px;margin-bottom:.5rem;}
+.signal-conf-fill{height:100%;border-radius:2px;background:var(--cyan);transition:width .5s;}
+.signal-meta{display:flex;justify-content:space-between;font-size:.6rem;color:var(--dim);}
+.signal-ts{font-size:.58rem;color:var(--dim);margin-top:.4rem;}
+.signal-owners{font-size:.62rem;color:var(--purple);margin-top:.3rem;}
+.no-signal{grid-column:1/-1;text-align:center;padding:3rem;color:var(--dim);font-size:.75rem;letter-spacing:.1em;border:1px dashed var(--border);border-radius:6px;}
 
-  .vcard .vissue{
-    font-size:11.5px;
-    color:var(--text-dim);
-    line-height:1.45;
-    margin-top:8px;
-  }
-  .vcard.has-signal .vissue{color:#a9bdbb;}
-  .vcard .vmeta{
-    display:flex;
-    justify-content:space-between;
-    font-size:10px;
-    color:var(--text-dim);
-    margin-top:10px;
-    letter-spacing:0.04em;
-  }
-  .vcard-link{
-    display:block;
-    margin-top:10px;
-    font-size:10.5px;
-    letter-spacing:0.04em;
-    color:var(--cyan);
-    text-decoration:none;
-    border-top:1px dashed var(--line);
-    padding-top:9px;
-    transition:color .15s;
-  }
-  .vcard-link:hover{color:#7df5ee;}
-  .vcard.empty{opacity:0.55;}
-  .vcard.empty .vissue{font-style:italic;}
+.actions-list{display:flex;flex-direction:column;gap:.75rem;margin-bottom:2.5rem;}
+.action-row{display:grid;grid-template-columns:36px 1fr auto;gap:1rem;align-items:start;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:1rem 1.1rem;}
+.action-rank{font-family:'Orbitron',sans-serif;font-size:1.1rem;font-weight:900;color:var(--dim);line-height:1;}
+.action-rank.top{color:var(--cyan);}
+.action-text{font-size:.78rem;line-height:1.6;color:var(--text);}
+.action-owner{font-size:.65rem;color:var(--purple);margin-top:.3rem;}
+.action-deadline{font-size:.62rem;color:var(--muted);margin-top:.2rem;}
+.action-outcome{font-size:.62rem;color:var(--green);margin-top:.2rem;}
+.action-vertical-tag{font-size:.58rem;letter-spacing:.12em;padding:3px 8px;border-radius:3px;background:rgba(0,200,255,.08);color:var(--cyan);border:1px solid rgba(0,200,255,.15);white-space:nowrap;align-self:start;}
 
-  /* ── SYNTH BAR ── */
-  .synth-bar{
-    display:flex;
-    align-items:center;
-    gap:16px;
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:5px;
-    padding:18px 20px;
-    margin-bottom:34px;
-    flex-wrap:wrap;
-  }
-  .synth-bar .status-text{flex:1;min-width:220px;}
-  .synth-bar .status-text .t1{font-size:12px;color:#dfeceb;letter-spacing:0.03em;}
-  .synth-bar .status-text .t2{font-size:11px;color:var(--text-dim);margin-top:3px;}
-  button.synth{
-    background:linear-gradient(180deg, rgba(25,224,214,0.16), rgba(25,224,214,0.07));
-    border:1px solid var(--cyan-dim);
-    color:var(--cyan);
-    font-family:var(--mono);
-    font-weight:700;
-    font-size:12px;
-    letter-spacing:0.1em;
-    padding:13px 22px;
-    border-radius:4px;
-    cursor:pointer;
-    transition:all .15s;
-    white-space:nowrap;
-  }
-  button.synth:hover:not(:disabled){
-    border-color:var(--cyan);
-    box-shadow:0 0 0 1px var(--cyan), 0 0 22px rgba(25,224,214,0.18);
-  }
-  button.synth:disabled{
-    opacity:0.35;
-    cursor:not-allowed;
-    color:var(--text-dim);
-    border-color:var(--line);
-    background:none;
-  }
-  button.synth .spin{
-    display:inline-block;
-    width:10px;height:10px;
-    border:2px solid rgba(25,224,214,0.25);
-    border-top-color:var(--cyan);
-    border-radius:50%;
-    margin-right:8px;
-    vertical-align:-1px;
-    animation:spin .7s linear infinite;
-  }
-  @keyframes spin{to{transform:rotate(360deg);}}
+.hitl-list{display:flex;flex-direction:column;gap:.75rem;margin-bottom:2.5rem;}
+.hitl-card{background:var(--panel);border:1px solid rgba(168,85,247,.2);border-radius:6px;padding:1.1rem;}
+.hitl-decision{font-size:.82rem;color:#fff;font-weight:600;margin-bottom:.4rem;}
+.hitl-context{font-size:.72rem;color:var(--muted);line-height:1.6;margin-bottom:.75rem;}
+.hitl-options{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem;}
+.hitl-option{font-size:.65rem;padding:5px 12px;border-radius:4px;border:1px solid var(--border2);color:var(--muted);}
+.hitl-option.recommended{border-color:var(--cyan);color:var(--cyan);background:rgba(0,200,255,.06);}
+.hitl-owner{font-size:.65rem;color:var(--purple);}
 
-  /* ── ESCALATION BANNER ── */
-  .escalate-banner{
-    border:1px solid var(--red);
-    background:rgba(224,71,61,0.08);
-    border-radius:4px;
-    padding:13px 16px;
-    margin-bottom:22px;
-    font-size:12px;
-    color:#ffd5d1;
-    display:flex;
-    gap:10px;
-    align-items:flex-start;
-  }
-  .escalate-banner b{color:var(--red);letter-spacing:0.06em;}
+.risks-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;margin-bottom:2.5rem;}
+.risk-card{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:1rem;}
+.risk-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;}
+.risk-card-name{font-size:.75rem;color:#fff;font-weight:600;}
+.urgency-tag{font-size:.55rem;letter-spacing:.12em;padding:2px 7px;border-radius:3px;}
+.urgency-tag.HIGH{background:rgba(255,77,77,.15);color:var(--red);}
+.urgency-tag.MEDIUM{background:rgba(245,166,35,.12);color:var(--amber);}
+.urgency-tag.LOW{background:rgba(0,200,150,.1);color:var(--green);}
+.risk-card-impact{font-size:.7rem;color:var(--muted);line-height:1.5;margin-bottom:.5rem;}
+.risk-card-verticals{display:flex;gap:.4rem;flex-wrap:wrap;}
+.v-tag{font-size:.58rem;padding:2px 6px;border-radius:3px;background:rgba(0,200,255,.07);color:var(--cyan);border:1px solid rgba(0,200,255,.15);}
 
-  /* ── RESULTS ── */
-  #results{display:none;}
-  .result-top{
-    display:grid;
-    grid-template-columns:auto 1fr auto auto;
-    gap:18px;
-    align-items:center;
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:5px;
-    padding:20px 22px;
-    margin-bottom:18px;
-    flex-wrap:wrap;
-  }
-  @media (max-width:760px){.result-top{grid-template-columns:1fr;}}
-  .risk-dial{
-    width:84px;height:84px;
-    border-radius:50%;
-    border:3px solid var(--line);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    flex-direction:column;
-    flex-shrink:0;
-  }
-  .risk-dial .rl{font-size:10px;letter-spacing:0.06em;font-weight:800;}
-  .risk-dial.READY{border-color:var(--green);}
-  .risk-dial.WATCH{border-color:var(--gold);}
-  .risk-dial.RISK{border-color:var(--orange);}
-  .risk-dial.URGENT{border-color:var(--red);}
-  .risk-dial.READY .rl{color:var(--green);}
-  .risk-dial.WATCH .rl{color:var(--gold);}
-  .risk-dial.RISK .rl{color:var(--orange);}
-  .risk-dial.URGENT .rl{color:var(--red);}
+.synergy-list{display:flex;flex-direction:column;gap:.6rem;margin-bottom:2.5rem;}
+.synergy-row{background:var(--panel);border:1px solid rgba(0,200,150,.15);border-radius:6px;padding:.9rem 1.1rem;display:grid;grid-template-columns:1fr auto;gap:1rem;align-items:center;}
+.synergy-text{font-size:.75rem;color:var(--text);line-height:1.5;}
+.synergy-impact{font-size:.65rem;color:var(--green);white-space:nowrap;}
+.synergy-vtags{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.4rem;}
 
-  .exec-summary{font-size:12.5px;line-height:1.6;color:#cfe0df;}
-  .exec-summary .lbl{display:block;font-size:10px;letter-spacing:0.18em;color:var(--text-dim);margin-bottom:6px;}
+.controls{display:flex;gap:.75rem;margin-bottom:2rem;flex-wrap:wrap;align-items:center;}
+.btn{font-family:'JetBrains Mono',monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;padding:.6rem 1.2rem;border-radius:4px;cursor:pointer;border:none;transition:all .2s;}
+.btn-primary{background:linear-gradient(135deg,var(--cyan2),#0066aa);color:#fff;}
+.btn-primary:hover{opacity:.85;}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--muted);}
+.btn-ghost:hover{border-color:var(--cyan);color:var(--cyan);}
+.btn-danger{background:transparent;border:1px solid rgba(255,77,77,.3);color:var(--red);}
+.btn-danger:hover{background:rgba(255,77,77,.08);}
+.last-run{font-size:.62rem;color:var(--dim);margin-left:auto;}
 
-  .gauge{text-align:center;min-width:84px;}
-  .gauge .num{font-size:22px;font-weight:700;color:var(--cyan);letter-spacing:-0.02em;}
-  .gauge .lbl{font-size:9.5px;letter-spacing:0.1em;color:var(--text-dim);margin-top:3px;}
+.loading-overlay{display:none;position:fixed;inset:0;background:rgba(2,4,8,.85);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:1rem;}
+.loading-overlay.show{display:flex;}
+.loading-spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--cyan);border-radius:50%;animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:.72rem;letter-spacing:.2em;color:var(--cyan);}
 
-  .two-col{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:14px;
-    margin-bottom:18px;
-  }
-  @media (max-width:760px){.two-col{grid-template-columns:1fr;}}
-  .pane{
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:5px;
-    padding:16px 18px;
-  }
-  .pane .ptitle{
-    font-size:10.5px;
-    letter-spacing:0.12em;
-    color:var(--text-dim);
-    margin-bottom:10px;
-  }
-  .pane.conflicts .ptitle{color:var(--orange);}
-  .pane.synergies .ptitle{color:var(--green);}
-  .pane ul{margin:0;padding:0;list-style:none;}
-  .pane li{
-    font-size:11.5px;
-    line-height:1.5;
-    color:#bfd2d0;
-    padding:7px 0;
-    border-top:1px dashed var(--line);
-  }
-  .pane li:first-child{border-top:none;}
-  .pane .none{font-size:11px;color:var(--text-dim);font-style:italic;}
+.empty-state{text-align:center;padding:2rem;color:var(--dim);font-size:.72rem;letter-spacing:.08em;border:1px dashed var(--border);border-radius:6px;margin-bottom:2rem;}
 
-  /* ── DECISION QUEUE (signature element) ── */
-  .queue-panel{
-    background:var(--panel-2);
-    border:1px solid var(--line);
-    border-radius:5px;
-    padding:18px 20px 8px;
-    margin-bottom:18px;
-  }
-  .queue-panel .ptitle{
-    font-size:11px;
-    letter-spacing:0.16em;
-    color:var(--cyan);
-    margin-bottom:14px;
-  }
-  .qrow{
-    display:grid;
-    grid-template-columns:46px 1fr 130px 110px;
-    gap:14px;
-    align-items:start;
-    padding:13px 0;
-    border-top:1px solid var(--line);
-  }
-  .qrow:first-of-type{border-top:none;}
-  @media (max-width:700px){.qrow{grid-template-columns:36px 1fr;}.qrow .qowner,.qrow .qdeadline{grid-column:2;}}
-  .qnum{
-    font-family:var(--mono);
-    font-size:26px;
-    font-weight:800;
-    color:var(--line);
-    -webkit-text-stroke:1px var(--cyan-dim);
-    line-height:1;
-  }
-  .qbody .qaction{font-size:12.5px;color:#e9f5f4;line-height:1.4;}
-  .qbody .qmeta2{margin-top:5px;font-size:10.5px;color:var(--text-dim);}
-  .qbody .qmeta2 .vtag{
-    color:var(--cyan);
-    border:1px solid var(--cyan-dim);
-    padding:1px 6px;
-    border-radius:2px;
-    margin-right:6px;
-    letter-spacing:0.03em;
-  }
-  .qowner{font-size:11px;color:#aebebd;}
-  .qowner .lbl{display:block;font-size:9px;color:var(--text-dim);letter-spacing:0.08em;margin-bottom:2px;}
-  .qdeadline{font-size:11px;text-align:right;}
-  .qdeadline .lbl{display:block;font-size:9px;color:var(--text-dim);letter-spacing:0.08em;margin-bottom:2px;text-align:right;}
-  .qdeadline .val{color:var(--gold);font-weight:700;}
-  @media (max-width:700px){.qdeadline,.qdeadline .lbl{text-align:left;}}
+.wr-links{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:2rem;}
+.wr-link{font-size:.6rem;letter-spacing:.1em;padding:5px 12px;border-radius:4px;border:1px solid var(--border);color:var(--muted);text-decoration:none;transition:all .2s;}
+.wr-link:hover{border-color:var(--cyan);color:var(--cyan);}
 
-  .bnca-statement{
-    background:linear-gradient(180deg, rgba(25,224,214,0.05), transparent);
-    border:1px solid var(--cyan-dim);
-    border-radius:5px;
-    padding:18px 20px;
-    margin-bottom:30px;
-  }
-  .bnca-statement .lbl{font-size:10px;letter-spacing:0.18em;color:var(--cyan);margin-bottom:8px;}
-  .bnca-statement .stmt{font-size:13px;line-height:1.6;color:#eef7f6;}
-  .bnca-statement .meta{margin-top:10px;font-size:10.5px;color:var(--text-dim);}
+.error-banner{display:none;background:rgba(255,77,77,.08);border:1px solid rgba(255,77,77,.25);border-radius:6px;padding:.75rem 1rem;margin-bottom:1.5rem;font-size:.7rem;color:var(--red);letter-spacing:.05em;}
+.error-banner.show{display:block;}
 
-  /* ── EMPTY / FOOTER ── */
-  .empty-state{
-    text-align:center;
-    padding:50px 20px;
-    color:var(--text-dim);
-    font-size:12px;
-    border:1px dashed var(--line);
-    border-radius:5px;
-  }
-  .api-error-banner{
-    display:none;
-    border:1px solid var(--red);
-    background:rgba(224,71,61,0.08);
-    border-radius:4px;
-    padding:12px 16px;
-    margin-bottom:18px;
-    font-size:11.5px;
-    color:#ffd5d1;
-    align-items:flex-start;
-    gap:10px;
-  }
-  .api-error-banner b{color:var(--red);letter-spacing:0.06em;}
-  footer{
-    text-align:center;
-    padding:24px;
-    font-size:10.5px;
-    color:var(--text-dim);
-    letter-spacing:0.06em;
-    border-top:1px solid var(--line);
-  }
-  .toast{
-    position:fixed;
-    bottom:22px;left:50%;
-    transform:translateX(-50%) translateY(12px);
-    background:#0d1113;
-    border:1px solid var(--line);
-    color:var(--text);
-    font-size:11.5px;
-    padding:10px 16px;
-    border-radius:4px;
-    opacity:0;
-    pointer-events:none;
-    transition:opacity .2s, transform .2s;
-    z-index:50;
-  }
-  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-  .toast.err{border-color:var(--red);color:#ffd5d1;}
+
+/* ── KPI TICKER BAR ── */
+.ticker-bar{
+  background:var(--deep);border-bottom:1px solid var(--border);border-top:1px solid var(--border);
+  padding:.6rem 2rem;display:flex;gap:2rem;overflow-x:auto;flex-wrap:nowrap;
+  scrollbar-width:none;margin-bottom:1.5rem;
+}
+.ticker-bar::-webkit-scrollbar{display:none;}
+.ticker-item{display:flex;flex-direction:column;align-items:center;min-width:90px;flex-shrink:0;}
+.ticker-val{font-family:'Orbitron',sans-serif;font-size:1.05rem;font-weight:700;color:var(--cyan);letter-spacing:.05em;line-height:1;}
+.ticker-val.red{color:var(--red);}
+.ticker-val.amber{color:var(--amber);}
+.ticker-val.green{color:var(--green);}
+.ticker-val.purple{color:var(--purple);}
+.ticker-lbl{font-size:.52rem;letter-spacing:.15em;color:var(--dim);margin-top:.3rem;text-align:center;text-transform:uppercase;}
+.ticker-divider{width:1px;background:var(--border);align-self:stretch;flex-shrink:0;}
+/* ── SIGNAL CARD — impact delta ── */
+.signal-impact{font-size:.65rem;color:var(--amber);margin-top:.3rem;letter-spacing:.04em;}
+.signal-kpi{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:.4rem;}
+.signal-kpi-item{font-size:.58rem;color:var(--dim);}
+.signal-kpi-item span{color:var(--text);}
+
+.footer{text-align:center;padding:2rem;font-size:.6rem;letter-spacing:.15em;color:var(--dim);border-top:1px solid var(--border);margin-top:3rem;}
 </style>
 </head>
 <body>
 
-<header>
-  <div class="brand">
-    <span class="mark">TSM SHELL</span>
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="loadingText">TSM NEURAL CORE SYNTHESIZING...</div>
+</div>
+
+<div class="header">
+  <div style="display:flex;align-items:center;gap:1rem;">
     <div>
-      <h1>Collective BNCA</h1>
-      <div class="sub">Cross-vertical decision synthesis · TSM Neural Core</div>
+      <div class="logo">TSM <span>NEURAL CORE</span></div>
+      <div style="font-size:.58rem;letter-spacing:.15em;color:var(--dim);margin-top:.15rem;">COLLECTIVE BNCA · CROSS-VERTICAL INTELLIGENCE</div>
     </div>
+    <div class="badge">HITL GOVERNANCE LAYER</div>
   </div>
   <div class="header-right">
-    <span class="reporting-pill" id="reportingPill"><b>0</b> / 7 verticals reporting</span>
-    <button class="ghost" id="clearBtn">Clear signals</button>
+    <div class="pulse-dot" id="pulseDot" style="background:var(--dim);animation:none;"></div>
+    <div class="status-text" id="statusText">AWAITING SIGNALS</div>
   </div>
-</header>
+</div>
 
-<main>
-  <div class="api-error-banner" id="apiErrorBanner">
-    <span>⚠</span>
-    <div><b>API UNREACHABLE —</b> <span id="apiErrorText">Could not reach Collective BNCA endpoints.</span></div>
+<!-- ── KPI TICKER BAR — always live ── -->
+<div class="ticker-bar" id="tickerBar">
+  <div class="ticker-item"><div class="ticker-val" id="tk-verticals">0</div><div class="ticker-lbl">Verticals Active</div></div>
+  <div class="ticker-divider"></div>
+  <div class="ticker-item"><div class="ticker-val red" id="tk-urgent">0</div><div class="ticker-lbl">Urgent</div></div>
+  <div class="ticker-divider"></div>
+  <div class="ticker-item"><div class="ticker-val amber" id="tk-risk">0</div><div class="ticker-lbl">At Risk</div></div>
+  <div class="ticker-divider"></div>
+  <div class="ticker-item"><div class="ticker-val" id="tk-watch">0</div><div class="ticker-lbl">Watch</div></div>
+  <div class="ticker-divider"></div>
+  <div class="ticker-item"><div class="ticker-val green" id="tk-ready">0</div><div class="ticker-lbl">Ready</div></div>
+  <div class="ticker-divider"></div>
+  <div class="ticker-item"><div class="ticker-val amber" id="tk-rar">$0</div><div class="ticker-lbl">Revenue at Risk</div></div>
+  <div class="ticker-divider"></div>
+  <div class="ticker-item"><div class="ticker-val purple" id="tk-hitl">0</div><div class="ticker-lbl">HITL Required</div></div>
+  <div class="ticker-divider"></div>
+  <div class="ticker-item"><div class="ticker-val" id="tk-avgconf">—</div><div class="ticker-lbl">Avg Confidence</div></div>
+  <div class="ticker-divider"></div>
+  <div class="ticker-item"><div class="ticker-val green" id="tk-lastupdate">—</div><div class="ticker-lbl">Last Signal</div></div>
+</div>
+
+
+<div class="main">
+
+  <div class="error-banner" id="errorBanner"></div>
+
+  <div class="controls">
+    <button class="btn btn-primary" onclick="runCollectiveBNCA()">⚡ RUN COLLECTIVE BNCA</button>
+    <button class="btn btn-ghost" onclick="loadSignals()">↻ REFRESH SIGNALS</button>
+    <button class="btn btn-danger" onclick="clearSignals()">✕ CLEAR ALL SIGNALS</button>
+    <div class="last-run" id="lastRun">—</div>
   </div>
 
-  <div class="section-label">ACTIVE VERTICAL SIGNALS</div>
-  <div class="grid" id="vgrid"></div>
+  <div class="section-head" style="margin-bottom:.75rem;">LAUNCH WAR ROOMS</div>
+  <div class="wr-links">
+    <a class="wr-link" href="/html/healthcare/hc-denial-war-room.html" target="_blank">⚕ Healthcare</a>
+    <a class="wr-link" href="/html/finops-suite/finops-war-room.html" target="_blank">💰 FinOps</a>
+    <a class="wr-link" href="/html/bpo/bpo-situation-room.html" target="_blank">📋 BPO</a>
+    <a class="wr-link" href="/html/legal-pro/legal-war-room.html" target="_blank">⚖ Legal</a>
+    <a class="wr-link" href="/html/reo-pro/re-war-room.html" target="_blank">🏠 Real Estate</a>
+    <a class="wr-link" href="/html/tsm-insurance/insurance-war-room.html" target="_blank">🛡 Insurance</a>
+    <a class="wr-link" href="/html/construction-suite/construction-war-room.html" target="_blank">🏗 Construction</a>
+  </div>
 
-  <div class="synth-bar">
-    <div class="status-text">
-      <div class="t1" id="synthStatusT1">Waiting on signals from war rooms.</div>
-      <div class="t2" id="synthStatusT2">At least one vertical must POST a BNCA signal before synthesis can run.</div>
+  <div class="risk-banner" id="riskBanner">
+    <div>
+      <div class="risk-badge" id="overallRiskBadge">—</div>
+      <div class="risk-label">OVERALL RISK LEVEL</div>
     </div>
-    <button class="synth" id="synthBtn" disabled>SYNTHESIZE COLLECTIVE BNCA</button>
-  </div>
-
-  <div id="escalateBanner" class="escalate-banner" style="display:none;">
-    <span>⚠</span>
-    <div><b>ESCALATE TO EXECUTIVE —</b> <span id="escalateReason"></span></div>
-  </div>
-
-  <div id="results">
-    <div class="section-label">SYNTHESIS RESULT</div>
-
-    <div class="result-top">
-      <div class="risk-dial" id="riskDial"><div class="rl" id="riskDialText">—</div></div>
-      <div class="exec-summary">
-        <span class="lbl">EXECUTIVE SUMMARY</span>
-        <span id="execSummary">—</span>
-      </div>
-      <div class="gauge"><div class="num" id="confNum">—</div><div class="lbl">CONFIDENCE</div></div>
-      <div class="gauge"><div class="num" id="integrityNum">—</div><div class="lbl">NEURAL INTEGRITY</div></div>
-    </div>
-
-    <div class="two-col">
-      <div class="pane conflicts">
-        <div class="ptitle">CROSS-VERTICAL CONFLICTS</div>
-        <ul id="conflictsList"></ul>
-      </div>
-      <div class="pane synergies">
-        <div class="ptitle">CROSS-VERTICAL SYNERGIES</div>
-        <ul id="synergiesList"></ul>
-      </div>
-    </div>
-
-    <div class="queue-panel">
-      <div class="ptitle">HITL DECISION QUEUE — RANKED BY BUSINESS IMPACT</div>
-      <div id="queueRows"></div>
-    </div>
-
-    <div class="bnca-statement">
-      <div class="lbl">COLLECTIVE BNCA</div>
-      <div class="stmt" id="collectiveBnca">—</div>
-      <div class="meta" id="resultMeta"></div>
+    <div class="risk-bnca" id="collectiveBNCA">Run Collective BNCA to synthesize signals from all active war rooms into a unified executive decision package.</div>
+    <div class="risk-meta">
+      <div class="risk-conf" id="confScore">—</div>
+      <div class="risk-conf-label">CONFIDENCE</div>
+      <div class="risk-verticals" id="verticalsActive">0 VERTICALS ACTIVE</div>
     </div>
   </div>
 
-  <div id="emptyState" class="empty-state">
-    No collective synthesis has been generated yet. Once a war room posts a signal, run synthesis above.
+  <div class="section-head">ACTIVE WAR ROOM SIGNALS <span id="signalCount" style="color:var(--dim);margin-left:.5rem;">0</span></div>
+  <div class="signals-grid" id="signalsGrid">
+    <div class="no-signal">No signals received yet. Launch a war room, run its BNCA analysis, and signals will appear here automatically.</div>
   </div>
-</main>
 
-<footer>TSM SHELL · COLLECTIVE INTELLIGENCE MESH · ALL AI SYNTHESIS ROUTED THROUGH TSM NEURAL CORE</footer>
+  <div class="section-head amber">CROSS-VERTICAL PRIORITY ACTIONS</div>
+  <div class="actions-list" id="actionsList">
+    <div class="empty-state">Priority actions will appear after running Collective BNCA.</div>
+  </div>
 
-<div class="toast" id="toast"></div>
+  <div class="section-head purple">HITL DECISION QUEUE</div>
+  <div class="hitl-list" id="hitlList">
+    <div class="empty-state">HITL decisions will be queued after Collective BNCA synthesis.</div>
+  </div>
+
+  <div class="section-head red">CROSS-VERTICAL RISK INTERSECTIONS</div>
+  <div class="risks-grid" id="risksGrid">
+    <div class="empty-state" style="grid-column:1/-1;">Cross-vertical risks will appear after synthesis.</div>
+  </div>
+
+  <div class="section-head green">SYNERGY OPPORTUNITIES</div>
+  <div class="synergy-list" id="synergyList">
+    <div class="empty-state">Synergy opportunities will appear after synthesis.</div>
+  </div>
+
+</div>
+
+<div class="footer">TSM NEURAL CORE · COLLECTIVE BNCA ENGINE · HITL GOVERNANCE LAYER · ALL VERTICALS</div>
 
 <script>
-const VERTICALS = [
-  { id:'healthcare',   label:'Healthcare RCM',     warRoom:'/html/healthcare/hc-denial-war-room.html' },
-  { id:'finops',       label:'FinOps',             warRoom:'/html/finops-suite/finops-war-room.html' },
-  { id:'bpo',          label:'BPO / Workforce',    warRoom:'/html/bpo/bpo-situation-room.html' },
-  { id:'legal',        label:'Legal',              warRoom:'/html/legal-pro/legal-war-room.html' },
-  { id:'real-estate',  label:'Real Estate',        warRoom:'/html/reo-pro/re-war-room.html' },
-  { id:'insurance',    label:'Insurance',          warRoom:'/html/tsm-insurance/insurance-war-room.html' },
-  { id:'construction', label:'Construction',       warRoom:'/html/construction-suite/construction-war-room.html' }
-];
-const RISK_ORDER = { URGENT:0, RISK:1, WATCH:2, READY:3 };
+const RISK_COLOR = { URGENT:'#ff4d4d', RISK:'#f5a623', WATCH:'#00c8ff', READY:'#00c896' };
 
-let lastSignals = {};
-let pollTimer = null;
-
-function toast(msg, isErr){
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show' + (isErr ? ' err' : '');
-  clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.classList.remove('show'), 3200);
+function setError(msg) {
+  const b = document.getElementById('errorBanner');
+  if (msg) { b.textContent = '⚠ ' + msg; b.classList.add('show'); }
+  else { b.textContent = ''; b.classList.remove('show'); }
 }
 
-function timeAgo(ts){
-  if(!ts) return '';
-  const s = Math.floor((Date.now() - ts) / 1000);
-  if(s < 60) return s + 's ago';
-  if(s < 3600) return Math.floor(s/60) + 'm ago';
-  return Math.floor(s/3600) + 'h ago';
+// Safe fetch wrapper — detects HTML responses (auth redirect) and surfaces a clean error
+async function apiFetch(url, opts) {
+  const res = await fetch(url, opts);
+  const ct = res.headers.get('content-type') || '';
+  if (!ct.includes('application/json')) {
+    // Got HTML instead of JSON — likely auth redirect or server error
+    if (res.status === 302 || res.redirected || ct.includes('text/html')) {
+      throw new Error('Session expired or not authenticated — please reload and log in.');
+    }
+    throw new Error(`Unexpected response (${res.status}) from ${url}`);
+  }
+  return res.json();
 }
 
-function renderGrid(signals){
-  lastSignals = signals;
-  const grid = document.getElementById('vgrid');
-  grid.innerHTML = '';
-  const ordered = VERTICALS.slice().sort((a,b) => {
-    const sa = signals[a.id], sb = signals[b.id];
-    const ra = sa ? (RISK_ORDER[sa.risk_level] ?? 4) : 5;
-    const rb = sb ? (RISK_ORDER[sb.risk_level] ?? 4) : 5;
-    return ra - rb;
+async function loadSignals() {
+  try {
+    setError(null);
+    const data = await apiFetch('/api/collective/signals');
+    renderSignals(data.signals || []);
+    updateStatus(data.signals || []);
+  } catch (e) {
+    setError('Signal load error: ' + e.message);
+    console.error(e);
+  }
+}
+
+function updateTickers(signals) {
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  const urgent  = signals.filter(s => s.riskLevel === 'URGENT').length;
+  const risk    = signals.filter(s => s.riskLevel === 'RISK').length;
+  const watch   = signals.filter(s => s.riskLevel === 'WATCH').length;
+  const ready   = signals.filter(s => s.riskLevel === 'READY').length;
+  const hitl    = signals.filter(s => s.hitlRequired).length;
+  const avgConf = signals.length
+    ? Math.round(signals.reduce((a,s) => a + (s.confidence||0), 0) / signals.length)
+    : null;
+  // Sum impactDelta dollar amounts if parseable
+  let rar = 0;
+  signals.forEach(s => {
+    if (s.impactDelta) {
+      const m = String(s.impactDelta).match(/\$([\d,]+)/);
+      if (m) rar += parseInt(m[1].replace(/,/g,''), 10);
+    }
   });
-  ordered.forEach(v => {
-    const sig = signals[v.id];
-    const card = document.createElement('div');
-    card.className = 'vcard' + (sig ? ' has-signal ' + sig.risk_level : ' empty');
-    card.innerHTML = `
-      <div>
-        <div class="vtop">
-          <div class="vname">${v.label}</div>
-          <span class="badge ${sig ? sig.risk_level : 'NONE'}">${sig ? sig.risk_level : 'NO SIGNAL'}</span>
-        </div>
-        <div class="vissue">${sig ? esc(sig.top_issue || 'Signal received — no issue summary.') : 'Awaiting BNCA signal from this war room.'}</div>
-      </div>
-      <div class="vmeta">
-        <span>${sig ? esc((sig.owner_lanes||[]).slice(0,2).join(', ') || '—') : '—'}</span>
-        <span>${sig ? (sig.confidence + '% · ' + timeAgo(sig.ts)) : ''}</span>
-      </div>
-      <a class="vcard-link" href="${v.warRoom}">Open War Room →</a>`;
-    grid.appendChild(card);
-  });
+  const lastTs = signals.length
+    ? new Date(Math.max(...signals.map(s => s.ts || 0))).toLocaleTimeString()
+    : '—';
 
-  const count = Object.keys(signals).length;
-  document.getElementById('reportingPill').innerHTML = `<b>${count}</b> / 7 verticals reporting`;
-  const btn = document.getElementById('synthBtn');
-  const t1 = document.getElementById('synthStatusT1');
-  const t2 = document.getElementById('synthStatusT2');
-  if(count === 0){
-    btn.disabled = true;
-    t1.textContent = 'Waiting on signals from war rooms.';
-    t2.textContent = 'At least one vertical must POST a BNCA signal before synthesis can run.';
-  } else {
-    btn.disabled = false;
-    t1.textContent = `${count} vertical${count===1?'':'s'} ready for synthesis.`;
-    t2.textContent = 'TSM Neural Core will rank actions, surface conflicts, and produce a unified BNCA.';
-  }
+  set('tk-verticals', signals.length);
+  set('tk-urgent',   urgent);
+  set('tk-risk',     risk);
+  set('tk-watch',    watch);
+  set('tk-ready',    ready);
+  set('tk-hitl',     hitl);
+  set('tk-avgconf',  avgConf !== null ? avgConf + '%' : '—');
+  set('tk-rar',      rar > 0 ? '$' + rar.toLocaleString() : '$0');
+  set('tk-lastupdate', lastTs);
+
+  // Flash urgent ticker red if any urgent signals
+  const urgEl = document.getElementById('tk-urgent');
+  if (urgEl) urgEl.style.animation = urgent > 0 ? 'pulse 1.5s infinite' : 'none';
 }
 
-function esc(s){
-  const d = document.createElement('div');
-  d.textContent = s == null ? '' : String(s);
-  return d.innerHTML;
-}
-
-function setApiError(msg){
-  const banner = document.getElementById('apiErrorBanner');
-  if(msg){
-    document.getElementById('apiErrorText').textContent = msg;
-    banner.style.display = 'flex';
-  } else {
-    banner.style.display = 'none';
-  }
-}
-
-async function safeJson(response){
-  const ct = response.headers.get('content-type') || '';
-  if(!ct.includes('application/json')){
-    throw new Error(`Expected JSON, got "${ct || 'unknown'}" (status ${response.status})`);
-  }
-  return response.json();
-}
-
-async function loadSignals(){
-  try{
-    const r = await fetch('/api/collective/signals');
-    const data = await safeJson(r);
-    const map = {};
-    (data.signals || []).forEach(s => map[s.vertical] = s);
-    renderGrid(map);
-    setApiError(null);
-  }catch(e){
-    console.error('signal load failed', e);
-    setApiError('Could not load vertical signals — ' + e.message);
-  }
-}
-
-function renderResult(result){
-  if(!result){
-    document.getElementById('results').style.display = 'none';
-    document.getElementById('emptyState').style.display = 'block';
-    document.getElementById('escalateBanner').style.display = 'none';
+function updateStatus(signals) {
+  const dot = document.getElementById('pulseDot');
+  const txt = document.getElementById('statusText');
+  document.getElementById('signalCount').textContent = signals.length;
+  if (!signals.length) {
+    dot.style.background = 'var(--dim)';
+    dot.style.animation = 'none';
+    txt.textContent = 'AWAITING SIGNALS';
     return;
   }
-  document.getElementById('emptyState').style.display = 'none';
-  document.getElementById('results').style.display = 'block';
+  const hasUrgent = signals.some(s => s.riskLevel === 'URGENT');
+  const hasRisk   = signals.some(s => s.riskLevel === 'RISK');
+  dot.style.background = hasUrgent ? '#ff4d4d' : hasRisk ? '#f5a623' : '#00c8ff';
+  dot.style.animation = 'pulse 2s infinite';
+  txt.textContent = `${signals.length} VERTICAL${signals.length > 1 ? 'S' : ''} ACTIVE`;
+}
 
-  const dial = document.getElementById('riskDial');
-  dial.className = 'risk-dial ' + (result.collective_risk_level || 'WATCH');
-  document.getElementById('riskDialText').textContent = result.collective_risk_level || '—';
-
-  document.getElementById('execSummary').textContent = result.executive_summary || '—';
-  document.getElementById('confNum').textContent = (result.overall_confidence ?? '—') + (result.overall_confidence != null ? '%' : '');
-  document.getElementById('integrityNum').textContent = (result.neural_integrity_score ?? '—') + (result.neural_integrity_score != null ? '%' : '');
-
-  const conflicts = result.cross_vertical_conflicts || [];
-  const synergies = result.cross_vertical_synergies || [];
-  document.getElementById('conflictsList').innerHTML = conflicts.length
-    ? conflicts.map(c => `<li>${esc(c)}</li>`).join('')
-    : '<li class="none">No conflicts detected across active verticals.</li>';
-  document.getElementById('synergiesList').innerHTML = synergies.length
-    ? synergies.map(s => `<li>${esc(s)}</li>`).join('')
-    : '<li class="none">No shared-fix synergies detected.</li>';
-
-  const queue = (result.hitl_decision_queue || []).slice().sort((a,b) => (a.priority||99) - (b.priority||99));
-  document.getElementById('queueRows').innerHTML = queue.length ? queue.map(q => `
-    <div class="qrow">
-      <div class="qnum">${String(q.priority ?? '–').padStart(2,'0')}</div>
-      <div class="qbody">
-        <div class="qaction">${esc(q.action || '')}</div>
-        <div class="qmeta2"><span class="vtag">${esc((q.vertical||'').toUpperCase())}</span>${esc(q.impact || '')}</div>
+function renderSignals(signals) {
+  const grid = document.getElementById('signalsGrid');
+  if (!signals.length) {
+    grid.innerHTML = '<div class="no-signal">No signals received yet. Launch a war room, run its BNCA analysis, and signals will appear here automatically.</div>';
+    updateTickers([]);
+    return;
+  }
+  grid.innerHTML = signals.map(s => {
+    const color = RISK_COLOR[s.riskLevel] || '#7a98b8';
+    const conf  = s.confidence || 0;
+    const ts    = s.receivedAt ? new Date(s.receivedAt).toLocaleTimeString() : '—';
+    // KPI entries from kpi object
+    const kpiEntries = s.kpi && typeof s.kpi === 'object'
+      ? Object.entries(s.kpi).slice(0, 4).map(([k,v]) =>
+          `<div class="signal-kpi-item">${esc(k)}: <span>${esc(String(v))}</span></div>`).join('')
+      : '';
+    return `
+    <div class="signal-card">
+      <div class="signal-card-top">
+        <div class="signal-name">${esc(s.warRoom || s.vertical)}</div>
+        <div class="risk-pill ${s.riskLevel}">${s.riskLevel}</div>
       </div>
-      <div class="qowner"><span class="lbl">OWNER</span>${esc(q.owner || '—')}</div>
-      <div class="qdeadline"><span class="lbl">DEADLINE</span><span class="val">${esc(q.deadline || '—')}</span></div>
-    </div>
-  `).join('') : '<div class="empty-state" style="border:none;padding:20px;">No ranked actions returned.</div>';
+      <div class="signal-issue">${esc(s.topIssue || 'No issue reported')}</div>
+      <div class="signal-conf-bar"><div class="signal-conf-fill" style="width:${conf}%;background:${color};transition:width .6s;"></div></div>
+      <div class="signal-meta"><span>CONFIDENCE: ${conf}%</span><span>HITL: ${s.hitlRequired ? '⚠ REQUIRED' : 'Optional'}</span></div>
+      ${s.impactDelta ? `<div class="signal-impact">⚡ IMPACT: ${esc(s.impactDelta)}</div>` : ''}
+      ${kpiEntries ? `<div class="signal-kpi">${kpiEntries}</div>` : ''}
+      ${s.ownerLanes?.length ? `<div class="signal-owners">OWNERS: ${esc(s.ownerLanes.join(' · '))}</div>` : ''}
+      <div class="signal-ts">Received: ${ts}</div>
+    </div>`;
+  }).join('');
+  updateTickers(signals);
+}
 
-  document.getElementById('collectiveBnca').textContent = result.collective_bnca || '—';
-  document.getElementById('resultMeta').textContent =
-    `Synthesized from ${result.signals_used ?? '?'} active vertical(s): ${(result.verticals_active||[]).join(', ') || '—'} · ${result.generated_at ? new Date(result.generated_at).toLocaleString() : ''}`;
+async function runCollectiveBNCA() {
+  const overlay = document.getElementById('loadingOverlay');
+  const loadTxt = document.getElementById('loadingText');
+  overlay.classList.add('show');
+  loadTxt.textContent = 'TSM NEURAL CORE SYNTHESIZING...';
+  setError(null);
 
-  const banner = document.getElementById('escalateBanner');
-  if(result.escalate_to_executive){
-    banner.style.display = 'flex';
-    document.getElementById('escalateReason').textContent = result.escalate_reason || 'Executive review recommended.';
-  } else {
-    banner.style.display = 'none';
+  try {
+    const data = await apiFetch('/api/collective/bnca', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}'
+    });
+    if (!data.ok) throw new Error(data.error || 'BNCA synthesis failed');
+
+    const r = data.result;
+
+    // Risk banner
+    const banner = document.getElementById('riskBanner');
+    banner.className = `risk-banner ${r.overallRisk || 'WATCH'}`;
+    document.getElementById('overallRiskBadge').textContent = r.overallRisk || 'WATCH';
+    document.getElementById('overallRiskBadge').className   = `risk-badge ${r.overallRisk || 'WATCH'}`;
+    document.getElementById('collectiveBNCA').textContent   = r.collectiveBNCA || '—';
+    document.getElementById('confScore').textContent        = (r.confidence || 0) + '%';
+    document.getElementById('verticalsActive').textContent  = `${r.verticalsActive || 0} VERTICALS ACTIVE`;
+
+    // Priority actions
+    const al = document.getElementById('actionsList');
+    al.innerHTML = (r.priorityActions || []).length
+      ? r.priorityActions.map((a, i) => `
+        <div class="action-row">
+          <div class="action-rank ${i < 3 ? 'top' : ''}">${a.rank || i + 1}</div>
+          <div>
+            <div class="action-text">${esc(a.action)}</div>
+            <div class="action-owner">OWNER: ${esc(a.owner || '—')}</div>
+            <div class="action-deadline">DEADLINE: ${esc(a.deadline || '—')}</div>
+            <div class="action-outcome">OUTCOME: ${esc(a.expectedOutcome || '—')}</div>
+          </div>
+          <div class="action-vertical-tag">${esc((a.vertical || '').toUpperCase())}</div>
+        </div>`).join('')
+      : '<div class="empty-state">No priority actions generated.</div>';
+
+    // HITL queue
+    const hl = document.getElementById('hitlList');
+    hl.innerHTML = (r.hitlQueue || []).length
+      ? r.hitlQueue.map(h => `
+        <div class="hitl-card">
+          <div class="hitl-decision">⚡ ${esc(h.decision)}</div>
+          <div class="hitl-context">${esc(h.context || '')}</div>
+          <div class="hitl-options">
+            ${(h.options || []).map(o => `<div class="hitl-option ${o === h.recommendedOption ? 'recommended' : ''}">${o === h.recommendedOption ? '★ ' : ''}${esc(o)}</div>`).join('')}
+          </div>
+          <div class="hitl-owner">DECISION OWNER: ${esc(h.owner || '—')}</div>
+        </div>`).join('')
+      : '<div class="empty-state">No HITL decisions queued.</div>';
+
+    // Cross-vertical risks
+    const rg = document.getElementById('risksGrid');
+    rg.innerHTML = (r.crossVerticalRisks || []).length
+      ? r.crossVerticalRisks.map(risk => `
+        <div class="risk-card">
+          <div class="risk-card-head">
+            <div class="risk-card-name">${esc(risk.risk)}</div>
+            <div class="urgency-tag ${risk.urgency}">${esc(risk.urgency)}</div>
+          </div>
+          <div class="risk-card-impact">${esc(risk.impact)}</div>
+          <div class="risk-card-verticals">${(risk.verticals || []).map(v => `<div class="v-tag">${esc(v.toUpperCase())}</div>`).join('')}</div>
+        </div>`).join('')
+      : '<div class="empty-state" style="grid-column:1/-1;">No cross-vertical risks identified.</div>';
+
+    // Synergy
+    const sl = document.getElementById('synergyList');
+    sl.innerHTML = (r.synergyOpportunities || []).length
+      ? r.synergyOpportunities.map(s => `
+        <div class="synergy-row">
+          <div>
+            <div class="synergy-text">${esc(s.opportunity)}</div>
+            <div class="synergy-vtags">${(s.verticals || []).map(v => `<div class="v-tag">${esc(v.toUpperCase())}</div>`).join('')}</div>
+          </div>
+          <div class="synergy-impact">↑ ${esc(s.estimatedImpact)}</div>
+        </div>`).join('')
+      : '<div class="empty-state">No synergy opportunities identified.</div>';
+
+    if (data.signals) renderSignals(data.signals);
+    updateStatus(data.signals || []);
+    document.getElementById('lastRun').textContent = 'Last run: ' + new Date().toLocaleTimeString();
+
+  } catch (e) {
+    setError('Collective BNCA error: ' + e.message);
+    console.error(e);
+  } finally {
+    overlay.classList.remove('show');
   }
 }
 
-async function loadLatest(){
-  try{
-    const r = await fetch('/api/collective/bnca/latest');
-    if(r.status === 404){ renderResult(null); return; }
-    const data = await safeJson(r);
-    renderResult(data.result);
-    setApiError(null);
-  }catch(e){
-    console.error('latest BNCA load failed', e);
-    renderResult(null);
-    setApiError('Could not load the last collective BNCA — ' + e.message);
+async function clearSignals() {
+  if (!confirm('Clear all active war room signals?')) return;
+  try {
+    await apiFetch('/api/collective/signals', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}'
+    });
+    await loadSignals();
+    // Reset banner
+    document.getElementById('riskBanner').className = 'risk-banner';
+    document.getElementById('overallRiskBadge').textContent = '—';
+    document.getElementById('overallRiskBadge').className   = 'risk-badge';
+    document.getElementById('collectiveBNCA').textContent   = 'Run Collective BNCA to synthesize signals from all active war rooms.';
+    document.getElementById('confScore').textContent        = '—';
+    document.getElementById('verticalsActive').textContent  = '0 VERTICALS ACTIVE';
+    document.getElementById('actionsList').innerHTML  = '<div class="empty-state">Priority actions will appear after running Collective BNCA.</div>';
+    document.getElementById('hitlList').innerHTML     = '<div class="empty-state">HITL decisions will be queued after Collective BNCA synthesis.</div>';
+    document.getElementById('risksGrid').innerHTML    = '<div class="empty-state" style="grid-column:1/-1;">Cross-vertical risks will appear after synthesis.</div>';
+    document.getElementById('synergyList').innerHTML  = '<div class="empty-state">Synergy opportunities will appear after synthesis.</div>';
+    document.getElementById('lastRun').textContent    = '—';
+  } catch (e) {
+    setError('Clear error: ' + e.message);
   }
 }
 
-async function synthesize(){
-  const btn = document.getElementById('synthBtn');
-  const originalText = btn.textContent;
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spin"></span>SYNTHESIZING…';
-  try{
-    const r = await fetch('/api/collective/bnca', { method:'POST' });
-    const data = await safeJson(r);
-    if(!data.ok){
-      toast(data.error || 'Synthesis failed.', true);
-      return;
-    }
-    renderResult(data.result);
-    toast('Collective BNCA synthesized.');
-  }catch(e){
-    toast('Synthesis request failed — ' + e.message, true);
-  }finally{
-    btn.disabled = Object.keys(lastSignals).length === 0;
-    btn.textContent = originalText;
-  }
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-async function clearSignals(){
-  if(!confirm('Clear all active vertical signals and the last collective BNCA? This cannot be undone.')) return;
-  try{
-    const r = await fetch('/api/collective/signals', { method:'DELETE' });
-    const data = await r.json();
-    if(data.ok){
-      toast('Signals cleared.');
-      renderResult(null);
-      loadSignals();
-    }
-  }catch(e){
-    toast('Clear failed.', true);
-  }
-}
-
-document.getElementById('synthBtn').addEventListener('click', synthesize);
-document.getElementById('clearBtn').addEventListener('click', clearSignals);
-
+// Boot
 loadSignals();
-loadLatest();
-pollTimer = setInterval(loadSignals, 15000);
+setInterval(loadSignals, 30000);
 </script>
-
 </body>
 </html>
