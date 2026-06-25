@@ -376,6 +376,19 @@ function exportBrief(){
 }
 
 function nav(url){ window.location.href=url; }
+
+function pushCollectiveSignal(vertical, signal, severity) {
+  try { fetch('/api/collective/signal', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ vertical, signal, severity: severity||'MEDIUM', source: window.location.pathname }) }); } catch(e) {}
+}
+(function() {
+  try {
+    const raw = sessionStorage.getItem('TSM_BPO_STRAT_RELAY');
+    if (raw) {
+      const d = JSON.parse(raw);
+      if (d.stratBrief) pushCollectiveSignal('bpo', 'BPO strategist relay loaded — ' + (d.sector||'BPO') + ' brief active', 'MEDIUM');
+    }
+  } catch(e) {}
+})();
 </script>
 </body>
 </html>
