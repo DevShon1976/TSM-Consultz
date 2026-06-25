@@ -2529,19 +2529,46 @@ async function buildContinuityTab() {
 buildStratBriefTab();
 setInterval(buildStratBriefTab, 30000);
 
-function pushCollectiveSignal(vertical, signal, severity) {
-  try { fetch('/api/collective/signal', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ vertical, signal, severity: severity||'MEDIUM', source: window.location.pathname }) }); } catch(e) {}
-}
-(function() {
+function pushCollectiveSignal_HC(d) {
   try {
-    const raw = localStorage.getItem('tsm_hc_war_relay') || sessionStorage.getItem('tsm_hc_war_relay');
-    if (raw) {
-      const d = JSON.parse(raw);
-      localStorage.setItem('TSM_CURE_RELAY', JSON.stringify({ vertical:'Healthcare', appName:'HC Denial War Room', anomalies:[], docText: d.warRoomBrief||'', timestamp: Date.now() }));
-      if (d.kpi?.denialRate) pushCollectiveSignal('healthcare', 'Denial rate ' + d.kpi.denialRate + ' — HC war room data loaded', 'HIGH');
-    }
-  } catch(e) {}
-})();
+    // Parse values from the KPI object already built by the war room
+    const denialRate  = d?.kpi?.denialRate  || d?.denialRate  || '—';
+    const revenueRisk = d?.kpi?.revenueRisk || d?.revenueRisk || '$0';
+    const topDenial   = d?.kpi?.topDenial   || d?.topDenial   || 'Unknown denial type';
+    const confidence  = d?.confidence || 82;
+ 
+    // Derive risk level from denial rate
+    const rate = parseFloat(String(denialRate).replace(/[^0-9.]/g,'')) || 0;
+    const riskLevel = rate > 20 ? 'URGENT' : rate > 10 ? 'RISK' : rate > 5 ? 'WATCH' : 'READY';
+ 
+    fetch('/api/collective/signal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        vertical:     'hc',
+        warRoom:      'Healthcare Denial War Room',
+        bnca:         d?.bnca || `Denial rate ${denialRate} detected. Top denial: ${topDenial}. Immediate RCM intervention required.`,
+        confidence,
+        riskLevel,
+        topIssue:     `Denial rate ${denialRate} — ${topDenial}`,
+        ownerLanes:   ['Billing Manager', 'RCM Director', 'Compliance Officer'],
+        hitlRequired: riskLevel === 'URGENT' || riskLevel === 'RISK',
+        actions:      [
+          'Run denial code deep-dive across top 3 payers',
+          'Submit appeals for clean claims within 30-day window',
+          'Escalate to HC Strategist if rate exceeds 15%'
+        ],
+        impactDelta:  revenueRisk,
+        kpi: {
+          'Denial Rate':    denialRate,
+          'Revenue at Risk': revenueRisk,
+          'Top Denial':     topDenial,
+          'Nodes Active':   '11'
+        }
+      })
+    });
+  } catch(e) { console.warn('[Collective Signal HC]', e.message); }
+}
 </script>
 
 <!-- ── STRATEGIST BRIEF · PERSISTENT PANEL ── -->
