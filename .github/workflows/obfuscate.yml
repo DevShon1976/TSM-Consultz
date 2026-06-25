@@ -1,0 +1,53 @@
+# TSM Shell — Auto JS Obfuscation Pipeline
+# Runs on every push to main, obfuscates all inline <script> blocks
+# across /html, then commits the result back to the repo.
+
+name: Obfuscate JS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'html/**'          # only trigger when HTML files change
+      - 'build.js'         # or when the build script itself changes
+
+  workflow_dispatch:       # allow manual trigger from GitHub Actions tab
+
+jobs:
+  obfuscate:
+    runs-on: ubuntu-latest
+    # Skip if the commit was made by the action itself (avoid infinite loop)
+    if: "!contains(github.event.head_commit.message, '[skip ci]') && github.actor != 'github-actions[bot]'"
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --include=dev
+
+      - name: Run obfuscation pipeline
+        run: node build.js
+
+      - name: Check for changes
+        id: diff
+        run: |
+          git diff --quiet && echo "changed=false" >> $GITHUB_OUTPUT || echo "changed=true" >> $GITHUB_OUTPUT
+
+      - name: Commit obfuscated files
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name  "TSM Build Bot"
+          git config user.email "build@tsm-shell.fly.dev"
+          git add html/
+          git commit -m "chore: obfuscate inline JS [skip ci]"
+          git push
