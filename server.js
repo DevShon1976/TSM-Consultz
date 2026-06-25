@@ -886,11 +886,163 @@ app.post('/api/doc-router/classify', async (req, res) => {
   }
 });
 
-/* ════════════════════════════════════════════════════════════════
-   END DOC ROUTER BLOCK
-════════════════════════════════════════════════════════════════ */
+// ══════════════════════════════════════════════════════════════════════════════
+// ── END COLLECTIVE BNCA ───────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
 
-// ── GLOBAL ERROR HANDLER — prevents HTML error pages from crashing JSON API routes ──
+// ══════════════════════════════════════════════════════════════════════════════
+// ── WIP / EXECUTION COMMAND CENTER ────────────────────────────────────────────
+// Per-vertical: WIP tasks, readiness score, data quality, decision queue, trends.
+// ══════════════════════════════════════════════════════════════════════════════
+
+const WIP_TASKS = {};         // vertical -> [ {id, action, owner, status, due, risk, createdAt, updatedAt} ]
+const WIP_READINESS = {};     // vertical -> { dataCompleteness, stakeholderCoverage, mitigationPlans, resourceAvailability, openRisks, updatedAt }
+const WIP_DATA_QUALITY = {};  // vertical -> [ {id, source, status, updatedAt} ]
+const WIP_DECISIONS = {};     // vertical -> [ {id, title, impact, cost, recommendation, confidence, status, createdAt, decidedAt} ]
+const WIP_TRENDS = {};        // vertical -> [ {id, event, date, resolutionHours, notes, createdAt} ]
+
+function ensureWipVertical(v) {
+  if (!COLLECTIVE_VERTICALS.includes(v)) return false;
+  if (!WIP_TASKS[v]) WIP_TASKS[v] = [];
+  if (!WIP_DATA_QUALITY[v]) WIP_DATA_QUALITY[v] = [];
+  if (!WIP_DECISIONS[v]) WIP_DECISIONS[v] = [];
+  if (!WIP_TRENDS[v]) WIP_TRENDS[v] = [];
+  return true;
+}
+
+function computeReadinessOverall(r) {
+  if (!r) return null;
+  const fields = ['dataCompleteness', 'stakeholderCoverage', 'mitigationPlans', 'resourceAvailability', 'openRisks'];
+  const vals = fields.map(f => Number(r[f])).filter(n => !isNaN(n));
+  if (!vals.length) return null;
+  return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+}
+
+function wipId(prefix) {
+  return prefix + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+}
+
+// GET /api/wip/board?vertical=healthcare — combined read for the WIP Command Center page
+app.get('/api/wip/board', (req, res) => {
+  const v = req.query.vertical;
+  if (!ensureWipVertical(v)) return res.status(400).json({ ok: false, error: `vertical must be one of: ${COLLECTIVE_VERTICALS.join(', ')}` });
+  const readiness = WIP_READINESS[v] || null;
+  res.json({
+    ok: true,
+    vertical: v,
+    tasks: WIP_TASKS[v],
+    readiness,
+    readinessOverall: computeReadinessOverall(readiness),
+    dataQuality: WIP_DATA_QUALITY[v],
+    decisions: WIP_DECISIONS[v],
+    trends: WIP_TRENDS[v]
+  });
+});
+
+// ── WIP TASKS ──────────────────────────────────────────────────────────────────
+app.post('/api/wip/task', (req, res) => {
+  const { vertical, action, owner, status, due, risk } = req.body || {};
+  if (!ensureWipVertical(vertical)) return res.status(400).json({ ok: false, error: 'valid vertical required' });
+  if (!action) return res.status(400).json({ ok: false, error: 'action required' });
+  const task = {
+    id: wipId('wip'), action, owner: owner || 'Unassigned', status: status || 'TO DO',
+    due: due || '', risk: risk || 'LOW', createdAt: Date.now(), updatedAt: Date.now()
+  };
+  WIP_TASKS[vertical].unshift(task);
+  res.json({ ok: true, task });
+});
+
+app.patch('/api/wip/task/:id', (req, res) => {
+  const { vertical } = req.body || {};
+  if (!ensureWipVertical(vertical)) return res.status(400).json({ ok: false, error: 'valid vertical required' });
+  const task = WIP_TASKS[vertical].find(t => t.id === req.params.id);
+  if (!task) return res.status(404).json({ ok: false, error: 'task not found' });
+  Object.assign(task, req.body, { id: task.id, vertical: undefined, updatedAt: Date.now() });
+  delete task.vertical;
+  res.json({ ok: true, task });
+});
+
+app.delete('/api/wip/task/:id', (req, res) => {
+  const { vertical } = req.body || req.query || {};
+  if (!ensureWipVertical(vertical)) return res.status(400).json({ ok: false, error: 'valid vertical required' });
+  WIP_TASKS[vertical] = WIP_TASKS[vertical].filter(t => t.id !== req.params.id);
+  res.json({ ok: true, deleted: req.params.id });
+});
+
+// ── READINESS SCORE ────────────────────────────────────────────────────────────
+app.post('/api/wip/readiness', (req, res) => {
+  const { vertical, dataCompleteness, stakeholderCoverage, mitigationPlans, resourceAvailability, openRisks } = req.body || {};
+  if (!ensureWipVertical(vertical)) return res.status(400).json({ ok: false, error: 'valid vertical required' });
+  WIP_READINESS[vertical] = { dataCompleteness, stakeholderCoverage, mitigationPlans, resourceAvailability, openRisks, updatedAt: Date.now() };
+  res.json({ ok: true, readiness: WIP_READINESS[vertical], overall: computeReadinessOverall(WIP_READINESS[vertical]) });
+});
+
+// ── DATA QUALITY ───────────────────────────────────────────────────────────────
+app.post('/api/wip/data-quality', (req, res) => {
+  const { vertical, source, status } = req.body || {};
+  if (!ensureWipVertical(vertical)) return res.status(400).json({ ok: false, error: 'valid vertical required' });
+  if (!source) return res.status(400).json({ ok: false, error: 'source required' });
+  const list = WIP_DATA_QUALITY[vertical];
+  const existing = list.find(d => d.source.toLowerCase() === String(source).toLowerCase());
+  if (existing) {
+    existing.status = status || existing.status;
+    existing.updatedAt = Date.now();
+    return res.json({ ok: true, entry: existing });
+  }
+  const entry = { id: wipId('dq'), source, status: status || 'UNKNOWN', updatedAt: Date.now() };
+  list.unshift(entry);
+  res.json({ ok: true, entry });
+});
+
+app.delete('/api/wip/data-quality/:id', (req, res) => {
+  const { vertical } = req.body || req.query || {};
+  if (!ensureWipVertical(vertical)) return res.status(400).json({ ok: false, error: 'valid vertical required' });
+  WIP_DATA_QUALITY[vertical] = WIP_DATA_QUALITY[vertical].filter(d => d.id !== req.params.id);
+  res.json({ ok: true, deleted: req.params.id });
+});
+
+// ── EXECUTIVE DECISION QUEUE ────────────────────────────────────────────────────
+app.post('/api/wip/decision', (req, res) => {
+  const { vertical, title, impact, cost, recommendation, confidence } = req.body || {};
+  if (!ensureWipVertical(vertical)) return res.status(400).json({ ok: false, error: 'valid vertical required' });
+  if (!title) return res.status(400).json({ ok: false, error: 'title required' });
+  const decision = {
+    id: wipId('dec'), title, impact: impact || '', cost: cost || '', recommendation: recommendation || '',
+    confidence: confidence != null ? confidence : 80, status: 'PENDING', createdAt: Date.now(), decidedAt: null
+  };
+  WIP_DECISIONS[vertical].unshift(decision);
+  res.json({ ok: true, decision });
+});
+
+app.patch('/api/wip/decision/:id', (req, res) => {
+  const { vertical, status } = req.body || {};
+  if (!ensureWipVertical(vertical)) return res.status(400).json({ ok: false, error: 'valid vertical required' });
+  if (!['APPROVED', 'REJECTED', 'PENDING'].includes(status)) return res.status(400).json({ ok: false, error: 'status must be APPROVED, REJECTED, or PENDING' });
+  const decision = WIP_DECISIONS[vertical].find(d => d.id === req.params.id);
+  if (!decision) return res.status(404).json({ ok: false, error: 'decision not found' });
+  decision.status = status;
+  decision.decidedAt = status === 'PENDING' ? null : Date.now();
+  res.json({ ok: true, decision });
+});
+
+// ── TREND INTELLIGENCE ─────────────────────────────────────────────────────────
+app.post('/api/wip/trend', (req, res) => {
+  const { vertical, event, date, resolutionHours, notes } = req.body || {};
+  if (!ensureWipVertical(vertical)) return res.status(400).json({ ok: false, error: 'valid vertical required' });
+  if (!event) return res.status(400).json({ ok: false, error: 'event required' });
+  const trend = {
+    id: wipId('trend'), event, date: date || new Date().toISOString().slice(0, 10),
+    resolutionHours: resolutionHours != null ? resolutionHours : null, notes: notes || '', createdAt: Date.now()
+  };
+  WIP_TRENDS[vertical].unshift(trend);
+  res.json({ ok: true, trend });
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ── END WIP / EXECUTION COMMAND CENTER ────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── HEALTH & STUB ROUTES ──────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error('[TSM GLOBAL ERROR]', err.message, err.stack);
   if (res.headersSent) return next(err);
