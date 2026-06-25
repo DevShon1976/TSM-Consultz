@@ -1166,7 +1166,16 @@ function storeSession() {
 
 function escalateToChief() {
   storeSession();
-  addTL('Escalating to Chief Strategist', '6-engine package → legal-main-strategist.html', 'p');
+  try {
+    localStorage.setItem('TSM_CURE_RELAY', JSON.stringify({
+      vertical: 'Legal',
+      appName: 'Legal War Room',
+      anomalies: [],
+      docText: document.getElementById('docPaste')?.value || '',
+      timestamp: Date.now()
+    }));
+  } catch(e) {}
+  pushCollectiveSignal('legal', 'War room escalation triggered — 6-engine package dispatched to Chief Strategist', 'HIGH');
   document.getElementById('ss4').className = 'sstep active';
   setTimeout(() => nav('legal-main-strategist.html'), 700);
 }
