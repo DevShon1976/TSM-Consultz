@@ -61,6 +61,7 @@ const PUBLIC_PREFIXES = [
   '/assets/',
   '/css/',
   '/fonts/',
+  '/api/',   // ← ADD THIS — all API routes bypass auth
 ];
 
 function isPublic(url) {
