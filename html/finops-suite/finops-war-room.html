@@ -766,6 +766,13 @@ async function fireEngines() {
         document.getElementById('sbEngines').textContent = '6 / 6 Engines Complete';
         buildAppDispatch(c.e[6] || '');
         document.getElementById('escalSub').textContent = '6-engine analysis complete — ' + selectedDocType + ' · Ready to escalate to FinOps Strategist.';
+        (function runBNCA() {
+          try {
+            const allOut = Object.values(engOut).join('\n');
+            const anomalies = (allOut.match(/ANOMALY[:\s]+([^\n]+)/gi)||[]).map(s=>s.replace(/ANOMALY[:\s]+/i,'').trim());
+            localStorage.setItem('TSM_FINOPS_BNCA', JSON.stringify({ anomalies, docType: selectedDocType, timestamp: Date.now(), engines: engOut }));
+          } catch(e) {}
+        })();
         document.getElementById('escalateBar').classList.add('visible');
         addLog('Loaded cached analysis', 'No engines re-fired — tokens conserved', 'p');
         return;
