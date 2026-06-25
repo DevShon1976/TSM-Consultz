@@ -160,6 +160,18 @@
     margin-top:10px;
     letter-spacing:0.04em;
   }
+  .vcard-link{
+    display:block;
+    margin-top:10px;
+    font-size:10.5px;
+    letter-spacing:0.04em;
+    color:var(--cyan);
+    text-decoration:none;
+    border-top:1px dashed var(--line);
+    padding-top:9px;
+    transition:color .15s;
+  }
+  .vcard-link:hover{color:#7df5ee;}
   .vcard.empty{opacity:0.55;}
   .vcard.empty .vissue{font-style:italic;}
 
@@ -498,13 +510,13 @@
 
 <script>
 const VERTICALS = [
-  { id:'healthcare',   label:'Healthcare RCM' },
-  { id:'finops',       label:'FinOps' },
-  { id:'bpo',          label:'BPO / Workforce' },
-  { id:'legal',        label:'Legal' },
-  { id:'real-estate',  label:'Real Estate' },
-  { id:'insurance',    label:'Insurance' },
-  { id:'construction', label:'Construction' }
+  { id:'healthcare',   label:'Healthcare RCM',     warRoom:'/html/healthcare/hc-denial-war-room.html' },
+  { id:'finops',       label:'FinOps',             warRoom:'/html/finops-suite/finops-war-room.html' },
+  { id:'bpo',          label:'BPO / Workforce',    warRoom:'/html/bpo/bpo-situation-room.html' },
+  { id:'legal',        label:'Legal',              warRoom:'/html/legal-pro/legal-war-room.html' },
+  { id:'real-estate',  label:'Real Estate',        warRoom:'/html/reo-pro/re-war-room.html' },
+  { id:'insurance',    label:'Insurance',          warRoom:'/html/tsm-insurance/insurance-war-room.html' },
+  { id:'construction', label:'Construction',       warRoom:'/html/construction-suite/construction-war-room.html' }
 ];
 const RISK_ORDER = { URGENT:0, RISK:1, WATCH:2, READY:3 };
 
@@ -552,7 +564,8 @@ function renderGrid(signals){
       <div class="vmeta">
         <span>${sig ? esc((sig.owner_lanes||[]).slice(0,2).join(', ') || '—') : '—'}</span>
         <span>${sig ? (sig.confidence + '% · ' + timeAgo(sig.ts)) : ''}</span>
-      </div>`;
+      </div>
+      <a class="vcard-link" href="${v.warRoom}">Open War Room →</a>`;
     grid.appendChild(card);
   });
 
@@ -599,12 +612,14 @@ async function safeJson(response){
 async function loadSignals(){
   try{
     const r = await fetch('/api/collective/signals');
-    const data = await r.json();
+    const data = await safeJson(r);
     const map = {};
     (data.signals || []).forEach(s => map[s.vertical] = s);
     renderGrid(map);
+    setApiError(null);
   }catch(e){
     console.error('signal load failed', e);
+    setApiError('Could not load vertical signals — ' + e.message);
   }
 }
 
@@ -665,10 +680,13 @@ async function loadLatest(){
   try{
     const r = await fetch('/api/collective/bnca/latest');
     if(r.status === 404){ renderResult(null); return; }
-    const data = await r.json();
+    const data = await safeJson(r);
     renderResult(data.result);
+    setApiError(null);
   }catch(e){
+    console.error('latest BNCA load failed', e);
     renderResult(null);
+    setApiError('Could not load the last collective BNCA — ' + e.message);
   }
 }
 
@@ -679,7 +697,7 @@ async function synthesize(){
   btn.innerHTML = '<span class="spin"></span>SYNTHESIZING…';
   try{
     const r = await fetch('/api/collective/bnca', { method:'POST' });
-    const data = await r.json();
+    const data = await safeJson(r);
     if(!data.ok){
       toast(data.error || 'Synthesis failed.', true);
       return;
@@ -687,7 +705,7 @@ async function synthesize(){
     renderResult(data.result);
     toast('Collective BNCA synthesized.');
   }catch(e){
-    toast('Synthesis request failed — check connection.', true);
+    toast('Synthesis request failed — ' + e.message, true);
   }finally{
     btn.disabled = Object.keys(lastSignals).length === 0;
     btn.textContent = originalText;
