@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TSM SHELL · Collective BNCA</title>
+<style>
+  :root{
+    --bg:#07090a;
+    --panel:#0d1113;
+    --panel-2:#101517;
+    --line:#1b2326;
+    --cyan:#19e0d6;
+    --cyan-dim:#0d6f6a;
+    --green:#3ddc84;
+    --gold:#e8b84b;
+    --orange:#e08a3d;
+    --red:#e0473d;
+    --text:#cfe0df;
+    --text-dim:#6f8584;
+    --mono:'JetBrains Mono','Share Tech Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 12% -10%, rgba(25,224,214,0.06), transparent 45%),
+      radial-gradient(circle at 100% 110%, rgba(61,220,132,0.05), transparent 50%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--mono);
+    min-height:100vh;
+  }
+  ::selection{background:var(--cyan);color:#03100f;}
+
+  /* ── HEADER ── */
+  header{
+    border-bottom:1px solid var(--line);
+    padding:18px 28px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+    background:linear-gradient(180deg, rgba(255,255,255,0.015), transparent);
+  }
+  .brand{display:flex;align-items:baseline;gap:10px;}
+  .brand .mark{
+    color:var(--cyan);
+    font-size:11px;
+    letter-spacing:0.25em;
+    border:1px solid var(--cyan-dim);
+    padding:3px 7px;
+    border-radius:2px;
+  }
+  .brand h1{
+    margin:0;
+    font-size:17px;
+    letter-spacing:0.06em;
+    font-weight:600;
+    color:#eef7f6;
+  }
+  .brand .sub{color:var(--text-dim);font-size:12px;margin-top:2px;letter-spacing:0.04em;}
+  .header-right{display:flex;align-items:center;gap:14px;}
+  .reporting-pill{
+    font-size:11px;
+    color:var(--text-dim);
+    border:1px solid var(--line);
+    padding:6px 10px;
+    border-radius:3px;
+    letter-spacing:0.04em;
+  }
+  .reporting-pill b{color:var(--cyan);font-weight:600;}
+  button.ghost{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--text-dim);
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:0.05em;
+    padding:8px 12px;
+    border-radius:3px;
+    cursor:pointer;
+    transition:border-color .15s, color .15s;
+  }
+  button.ghost:hover{border-color:var(--red);color:var(--red);}
+
+  main{padding:26px 28px 60px;max-width:1280px;margin:0 auto;}
+
+  .section-label{
+    font-size:11px;
+    letter-spacing:0.22em;
+    color:var(--text-dim);
+    margin:0 0 14px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .section-label::after{content:'';flex:1;height:1px;background:var(--line);}
+
+  /* ── VERTICAL GRID ── */
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));
+    gap:12px;
+    margin-bottom:34px;
+  }
+  .vcard{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-left:3px solid var(--line);
+    border-radius:4px;
+    padding:14px 14px 12px;
+    position:relative;
+    min-height:128px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    transition:border-color .2s, transform .15s;
+  }
+  .vcard.has-signal:hover{transform:translateY(-1px);}
+  .vcard .vname{
+    font-size:12px;
+    letter-spacing:0.08em;
+    color:#dfeceb;
+    font-weight:600;
+  }
+  .vcard .vtop{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  .badge{
+    font-size:10px;
+    letter-spacing:0.08em;
+    padding:2px 7px;
+    border-radius:2px;
+    font-weight:700;
+    white-space:nowrap;
+  }
+  .badge.READY{background:rgba(61,220,132,0.14);color:var(--green);}
+  .badge.WATCH{background:rgba(232,184,75,0.14);color:var(--gold);}
+  .badge.RISK{background:rgba(224,138,61,0.16);color:var(--orange);}
+  .badge.URGENT{background:rgba(224,71,61,0.18);color:var(--red);}
+  .badge.NONE{background:rgba(255,255,255,0.04);color:var(--text-dim);}
+
+  .vcard.READY{border-left-color:var(--green);}
+  .vcard.WATCH{border-left-color:var(--gold);}
+  .vcard.RISK{border-left-color:var(--orange);}
+  .vcard.URGENT{border-left-color:var(--red);}
+
+  .vcard .vissue{
+    font-size:11.5px;
+    color:var(--text-dim);
+    line-height:1.45;
+    margin-top:8px;
+  }
+  .vcard.has-signal .vissue{color:#a9bdbb;}
+  .vcard .vmeta{
+    display:flex;
+    justify-content:space-between;
+    font-size:10px;
+    color:var(--text-dim);
+    margin-top:10px;
+    letter-spacing:0.04em;
+  }
+  .vcard.empty{opacity:0.55;}
+  .vcard.empty .vissue{font-style:italic;}
+
+  /* ── SYNTH BAR ── */
+  .synth-bar{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:5px;
+    padding:18px 20px;
+    margin-bottom:34px;
+    flex-wrap:wrap;
+  }
+  .synth-bar .status-text{flex:1;min-width:220px;}
+  .synth-bar .status-text .t1{font-size:12px;color:#dfeceb;letter-spacing:0.03em;}
+  .synth-bar .status-text .t2{font-size:11px;color:var(--text-dim);margin-top:3px;}
+  button.synth{
+    background:linear-gradient(180deg, rgba(25,224,214,0.16), rgba(25,224,214,0.07));
+    border:1px solid var(--cyan-dim);
+    color:var(--cyan);
+    font-family:var(--mono);
+    font-weight:700;
+    font-size:12px;
+    letter-spacing:0.1em;
+    padding:13px 22px;
+    border-radius:4px;
+    cursor:pointer;
+    transition:all .15s;
+    white-space:nowrap;
+  }
+  button.synth:hover:not(:disabled){
+    border-color:var(--cyan);
+    box-shadow:0 0 0 1px var(--cyan), 0 0 22px rgba(25,224,214,0.18);
+  }
+  button.synth:disabled{
+    opacity:0.35;
+    cursor:not-allowed;
+    color:var(--text-dim);
+    border-color:var(--line);
+    background:none;
+  }
+  button.synth .spin{
+    display:inline-block;
+    width:10px;height:10px;
+    border:2px solid rgba(25,224,214,0.25);
+    border-top-color:var(--cyan);
+    border-radius:50%;
+    margin-right:8px;
+    vertical-align:-1px;
+    animation:spin .7s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* ── ESCALATION BANNER ── */
+  .escalate-banner{
+    border:1px solid var(--red);
+    background:rgba(224,71,61,0.08);
+    border-radius:4px;
+    padding:13px 16px;
+    margin-bottom:22px;
+    font-size:12px;
+    color:#ffd5d1;
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+  }
+  .escalate-banner b{color:var(--red);letter-spacing:0.06em;}
+
+  /* ── RESULTS ── */
+  #results{display:none;}
+  .result-top{
+    display:grid;
+    grid-template-columns:auto 1fr auto auto;
+    gap:18px;
+    align-items:center;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:5px;
+    padding:20px 22px;
+    margin-bottom:18px;
+    flex-wrap:wrap;
+  }
+  @media (max-width:760px){.result-top{grid-template-columns:1fr;}}
+  .risk-dial{
+    width:84px;height:84px;
+    border-radius:50%;
+    border:3px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    flex-shrink:0;
+  }
+  .risk-dial .rl{font-size:10px;letter-spacing:0.06em;font-weight:800;}
+  .risk-dial.READY{border-color:var(--green);}
+  .risk-dial.WATCH{border-color:var(--gold);}
+  .risk-dial.RISK{border-color:var(--orange);}
+  .risk-dial.URGENT{border-color:var(--red);}
+  .risk-dial.READY .rl{color:var(--green);}
+  .risk-dial.WATCH .rl{color:var(--gold);}
+  .risk-dial.RISK .rl{color:var(--orange);}
+  .risk-dial.URGENT .rl{color:var(--red);}
+
+  .exec-summary{font-size:12.5px;line-height:1.6;color:#cfe0df;}
+  .exec-summary .lbl{display:block;font-size:10px;letter-spacing:0.18em;color:var(--text-dim);margin-bottom:6px;}
+
+  .gauge{text-align:center;min-width:84px;}
+  .gauge .num{font-size:22px;font-weight:700;color:var(--cyan);letter-spacing:-0.02em;}
+  .gauge .lbl{font-size:9.5px;letter-spacing:0.1em;color:var(--text-dim);margin-top:3px;}
+
+  .two-col{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+    margin-bottom:18px;
+  }
+  @media (max-width:760px){.two-col{grid-template-columns:1fr;}}
+  .pane{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:5px;
+    padding:16px 18px;
+  }
+  .pane .ptitle{
+    font-size:10.5px;
+    letter-spacing:0.12em;
+    color:var(--text-dim);
+    margin-bottom:10px;
+  }
+  .pane.conflicts .ptitle{color:var(--orange);}
+  .pane.synergies .ptitle{color:var(--green);}
+  .pane ul{margin:0;padding:0;list-style:none;}
+  .pane li{
+    font-size:11.5px;
+    line-height:1.5;
+    color:#bfd2d0;
+    padding:7px 0;
+    border-top:1px dashed var(--line);
+  }
+  .pane li:first-child{border-top:none;}
+  .pane .none{font-size:11px;color:var(--text-dim);font-style:italic;}
+
+  /* ── DECISION QUEUE (signature element) ── */
+  .queue-panel{
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:5px;
+    padding:18px 20px 8px;
+    margin-bottom:18px;
+  }
+  .queue-panel .ptitle{
+    font-size:11px;
+    letter-spacing:0.16em;
+    color:var(--cyan);
+    margin-bottom:14px;
+  }
+  .qrow{
+    display:grid;
+    grid-template-columns:46px 1fr 130px 110px;
+    gap:14px;
+    align-items:start;
+    padding:13px 0;
+    border-top:1px solid var(--line);
+  }
+  .qrow:first-of-type{border-top:none;}
+  @media (max-width:700px){.qrow{grid-template-columns:36px 1fr;}.qrow .qowner,.qrow .qdeadline{grid-column:2;}}
+  .qnum{
+    font-family:var(--mono);
+    font-size:26px;
+    font-weight:800;
+    color:var(--line);
+    -webkit-text-stroke:1px var(--cyan-dim);
+    line-height:1;
+  }
+  .qbody .qaction{font-size:12.5px;color:#e9f5f4;line-height:1.4;}
+  .qbody .qmeta2{margin-top:5px;font-size:10.5px;color:var(--text-dim);}
+  .qbody .qmeta2 .vtag{
+    color:var(--cyan);
+    border:1px solid var(--cyan-dim);
+    padding:1px 6px;
+    border-radius:2px;
+    margin-right:6px;
+    letter-spacing:0.03em;
+  }
+  .qowner{font-size:11px;color:#aebebd;}
+  .qowner .lbl{display:block;font-size:9px;color:var(--text-dim);letter-spacing:0.08em;margin-bottom:2px;}
+  .qdeadline{font-size:11px;text-align:right;}
+  .qdeadline .lbl{display:block;font-size:9px;color:var(--text-dim);letter-spacing:0.08em;margin-bottom:2px;text-align:right;}
+  .qdeadline .val{color:var(--gold);font-weight:700;}
+  @media (max-width:700px){.qdeadline,.qdeadline .lbl{text-align:left;}}
+
+  .bnca-statement{
+    background:linear-gradient(180deg, rgba(25,224,214,0.05), transparent);
+    border:1px solid var(--cyan-dim);
+    border-radius:5px;
+    padding:18px 20px;
+    margin-bottom:30px;
+  }
+  .bnca-statement .lbl{font-size:10px;letter-spacing:0.18em;color:var(--cyan);margin-bottom:8px;}
+  .bnca-statement .stmt{font-size:13px;line-height:1.6;color:#eef7f6;}
+  .bnca-statement .meta{margin-top:10px;font-size:10.5px;color:var(--text-dim);}
+
+  /* ── EMPTY / FOOTER ── */
+  .empty-state{
+    text-align:center;
+    padding:50px 20px;
+    color:var(--text-dim);
+    font-size:12px;
+    border:1px dashed var(--line);
+    border-radius:5px;
+  }
+  .api-error-banner{
+    display:none;
+    border:1px solid var(--red);
+    background:rgba(224,71,61,0.08);
+    border-radius:4px;
+    padding:12px 16px;
+    margin-bottom:18px;
+    font-size:11.5px;
+    color:#ffd5d1;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .api-error-banner b{color:var(--red);letter-spacing:0.06em;}
+  footer{
+    text-align:center;
+    padding:24px;
+    font-size:10.5px;
+    color:var(--text-dim);
+    letter-spacing:0.06em;
+    border-top:1px solid var(--line);
+  }
+  .toast{
+    position:fixed;
+    bottom:22px;left:50%;
+    transform:translateX(-50%) translateY(12px);
+    background:#0d1113;
+    border:1px solid var(--line);
+    color:var(--text);
+    font-size:11.5px;
+    padding:10px 16px;
+    border-radius:4px;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s, transform .2s;
+    z-index:50;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .toast.err{border-color:var(--red);color:#ffd5d1;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="mark">TSM SHELL</span>
+    <div>
+      <h1>Collective BNCA</h1>
+      <div class="sub">Cross-vertical decision synthesis · TSM Neural Core</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="reporting-pill" id="reportingPill"><b>0</b> / 7 verticals reporting</span>
+    <button class="ghost" id="clearBtn">Clear signals</button>
+  </div>
+</header>
+
+<main>
+  <div class="api-error-banner" id="apiErrorBanner">
+    <span>⚠</span>
+    <div><b>API UNREACHABLE —</b> <span id="apiErrorText">Could not reach Collective BNCA endpoints.</span></div>
+  </div>
+
+  <div class="section-label">ACTIVE VERTICAL SIGNALS</div>
+  <div class="grid" id="vgrid"></div>
+
+  <div class="synth-bar">
+    <div class="status-text">
+      <div class="t1" id="synthStatusT1">Waiting on signals from war rooms.</div>
+      <div class="t2" id="synthStatusT2">At least one vertical must POST a BNCA signal before synthesis can run.</div>
+    </div>
+    <button class="synth" id="synthBtn" disabled>SYNTHESIZE COLLECTIVE BNCA</button>
+  </div>
+
+  <div id="escalateBanner" class="escalate-banner" style="display:none;">
+    <span>⚠</span>
+    <div><b>ESCALATE TO EXECUTIVE —</b> <span id="escalateReason"></span></div>
+  </div>
+
+  <div id="results">
+    <div class="section-label">SYNTHESIS RESULT</div>
+
+    <div class="result-top">
+      <div class="risk-dial" id="riskDial"><div class="rl" id="riskDialText">—</div></div>
+      <div class="exec-summary">
+        <span class="lbl">EXECUTIVE SUMMARY</span>
+        <span id="execSummary">—</span>
+      </div>
+      <div class="gauge"><div class="num" id="confNum">—</div><div class="lbl">CONFIDENCE</div></div>
+      <div class="gauge"><div class="num" id="integrityNum">—</div><div class="lbl">NEURAL INTEGRITY</div></div>
+    </div>
+
+    <div class="two-col">
+      <div class="pane conflicts">
+        <div class="ptitle">CROSS-VERTICAL CONFLICTS</div>
+        <ul id="conflictsList"></ul>
+      </div>
+      <div class="pane synergies">
+        <div class="ptitle">CROSS-VERTICAL SYNERGIES</div>
+        <ul id="synergiesList"></ul>
+      </div>
+    </div>
+
+    <div class="queue-panel">
+      <div class="ptitle">HITL DECISION QUEUE — RANKED BY BUSINESS IMPACT</div>
+      <div id="queueRows"></div>
+    </div>
+
+    <div class="bnca-statement">
+      <div class="lbl">COLLECTIVE BNCA</div>
+      <div class="stmt" id="collectiveBnca">—</div>
+      <div class="meta" id="resultMeta"></div>
+    </div>
+  </div>
+
+  <div id="emptyState" class="empty-state">
+    No collective synthesis has been generated yet. Once a war room posts a signal, run synthesis above.
+  </div>
+</main>
+
+<footer>TSM SHELL · COLLECTIVE INTELLIGENCE MESH · ALL AI SYNTHESIS ROUTED THROUGH TSM NEURAL CORE</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const VERTICALS = [
+  { id:'healthcare',   label:'Healthcare RCM' },
+  { id:'finops',       label:'FinOps' },
+  { id:'bpo',          label:'BPO / Workforce' },
+  { id:'legal',        label:'Legal' },
+  { id:'real-estate',  label:'Real Estate' },
+  { id:'insurance',    label:'Insurance' },
+  { id:'construction', label:'Construction' }
+];
+const RISK_ORDER = { URGENT:0, RISK:1, WATCH:2, READY:3 };
+
+let lastSignals = {};
+let pollTimer = null;
+
+function toast(msg, isErr){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isErr ? ' err' : '');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+function timeAgo(ts){
+  if(!ts) return '';
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if(s < 60) return s + 's ago';
+  if(s < 3600) return Math.floor(s/60) + 'm ago';
+  return Math.floor(s/3600) + 'h ago';
+}
+
+function renderGrid(signals){
+  lastSignals = signals;
+  const grid = document.getElementById('vgrid');
+  grid.innerHTML = '';
+  const ordered = VERTICALS.slice().sort((a,b) => {
+    const sa = signals[a.id], sb = signals[b.id];
+    const ra = sa ? (RISK_ORDER[sa.risk_level] ?? 4) : 5;
+    const rb = sb ? (RISK_ORDER[sb.risk_level] ?? 4) : 5;
+    return ra - rb;
+  });
+  ordered.forEach(v => {
+    const sig = signals[v.id];
+    const card = document.createElement('div');
+    card.className = 'vcard' + (sig ? ' has-signal ' + sig.risk_level : ' empty');
+    card.innerHTML = `
+      <div>
+        <div class="vtop">
+          <div class="vname">${v.label}</div>
+          <span class="badge ${sig ? sig.risk_level : 'NONE'}">${sig ? sig.risk_level : 'NO SIGNAL'}</span>
+        </div>
+        <div class="vissue">${sig ? esc(sig.top_issue || 'Signal received — no issue summary.') : 'Awaiting BNCA signal from this war room.'}</div>
+      </div>
+      <div class="vmeta">
+        <span>${sig ? esc((sig.owner_lanes||[]).slice(0,2).join(', ') || '—') : '—'}</span>
+        <span>${sig ? (sig.confidence + '% · ' + timeAgo(sig.ts)) : ''}</span>
+      </div>`;
+    grid.appendChild(card);
+  });
+
+  const count = Object.keys(signals).length;
+  document.getElementById('reportingPill').innerHTML = `<b>${count}</b> / 7 verticals reporting`;
+  const btn = document.getElementById('synthBtn');
+  const t1 = document.getElementById('synthStatusT1');
+  const t2 = document.getElementById('synthStatusT2');
+  if(count === 0){
+    btn.disabled = true;
+    t1.textContent = 'Waiting on signals from war rooms.';
+    t2.textContent = 'At least one vertical must POST a BNCA signal before synthesis can run.';
+  } else {
+    btn.disabled = false;
+    t1.textContent = `${count} vertical${count===1?'':'s'} ready for synthesis.`;
+    t2.textContent = 'TSM Neural Core will rank actions, surface conflicts, and produce a unified BNCA.';
+  }
+}
+
+function esc(s){
+  const d = document.createElement('div');
+  d.textContent = s == null ? '' : String(s);
+  return d.innerHTML;
+}
+
+function setApiError(msg){
+  const banner = document.getElementById('apiErrorBanner');
+  if(msg){
+    document.getElementById('apiErrorText').textContent = msg;
+    banner.style.display = 'flex';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+async function safeJson(response){
+  const ct = response.headers.get('content-type') || '';
+  if(!ct.includes('application/json')){
+    throw new Error(`Expected JSON, got "${ct || 'unknown'}" (status ${response.status})`);
+  }
+  return response.json();
+}
+
+async function loadSignals(){
+  try{
+    const r = await fetch('/api/collective/signals');
+    const data = await r.json();
+    const map = {};
+    (data.signals || []).forEach(s => map[s.vertical] = s);
+    renderGrid(map);
+  }catch(e){
+    console.error('signal load failed', e);
+  }
+}
+
+function renderResult(result){
+  if(!result){
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('emptyState').style.display = 'block';
+    document.getElementById('escalateBanner').style.display = 'none';
+    return;
+  }
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('results').style.display = 'block';
+
+  const dial = document.getElementById('riskDial');
+  dial.className = 'risk-dial ' + (result.collective_risk_level || 'WATCH');
+  document.getElementById('riskDialText').textContent = result.collective_risk_level || '—';
+
+  document.getElementById('execSummary').textContent = result.executive_summary || '—';
+  document.getElementById('confNum').textContent = (result.overall_confidence ?? '—') + (result.overall_confidence != null ? '%' : '');
+  document.getElementById('integrityNum').textContent = (result.neural_integrity_score ?? '—') + (result.neural_integrity_score != null ? '%' : '');
+
+  const conflicts = result.cross_vertical_conflicts || [];
+  const synergies = result.cross_vertical_synergies || [];
+  document.getElementById('conflictsList').innerHTML = conflicts.length
+    ? conflicts.map(c => `<li>${esc(c)}</li>`).join('')
+    : '<li class="none">No conflicts detected across active verticals.</li>';
+  document.getElementById('synergiesList').innerHTML = synergies.length
+    ? synergies.map(s => `<li>${esc(s)}</li>`).join('')
+    : '<li class="none">No shared-fix synergies detected.</li>';
+
+  const queue = (result.hitl_decision_queue || []).slice().sort((a,b) => (a.priority||99) - (b.priority||99));
+  document.getElementById('queueRows').innerHTML = queue.length ? queue.map(q => `
+    <div class="qrow">
+      <div class="qnum">${String(q.priority ?? '–').padStart(2,'0')}</div>
+      <div class="qbody">
+        <div class="qaction">${esc(q.action || '')}</div>
+        <div class="qmeta2"><span class="vtag">${esc((q.vertical||'').toUpperCase())}</span>${esc(q.impact || '')}</div>
+      </div>
+      <div class="qowner"><span class="lbl">OWNER</span>${esc(q.owner || '—')}</div>
+      <div class="qdeadline"><span class="lbl">DEADLINE</span><span class="val">${esc(q.deadline || '—')}</span></div>
+    </div>
+  `).join('') : '<div class="empty-state" style="border:none;padding:20px;">No ranked actions returned.</div>';
+
+  document.getElementById('collectiveBnca').textContent = result.collective_bnca || '—';
+  document.getElementById('resultMeta').textContent =
+    `Synthesized from ${result.signals_used ?? '?'} active vertical(s): ${(result.verticals_active||[]).join(', ') || '—'} · ${result.generated_at ? new Date(result.generated_at).toLocaleString() : ''}`;
+
+  const banner = document.getElementById('escalateBanner');
+  if(result.escalate_to_executive){
+    banner.style.display = 'flex';
+    document.getElementById('escalateReason').textContent = result.escalate_reason || 'Executive review recommended.';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+async function loadLatest(){
+  try{
+    const r = await fetch('/api/collective/bnca/latest');
+    if(r.status === 404){ renderResult(null); return; }
+    const data = await r.json();
+    renderResult(data.result);
+  }catch(e){
+    renderResult(null);
+  }
+}
+
+async function synthesize(){
+  const btn = document.getElementById('synthBtn');
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span>SYNTHESIZING…';
+  try{
+    const r = await fetch('/api/collective/bnca', { method:'POST' });
+    const data = await r.json();
+    if(!data.ok){
+      toast(data.error || 'Synthesis failed.', true);
+      return;
+    }
+    renderResult(data.result);
+    toast('Collective BNCA synthesized.');
+  }catch(e){
+    toast('Synthesis request failed — check connection.', true);
+  }finally{
+    btn.disabled = Object.keys(lastSignals).length === 0;
+    btn.textContent = originalText;
+  }
+}
+
+async function clearSignals(){
+  if(!confirm('Clear all active vertical signals and the last collective BNCA? This cannot be undone.')) return;
+  try{
+    const r = await fetch('/api/collective/signals', { method:'DELETE' });
+    const data = await r.json();
+    if(data.ok){
+      toast('Signals cleared.');
+      renderResult(null);
+      loadSignals();
+    }
+  }catch(e){
+    toast('Clear failed.', true);
+  }
+}
+
+document.getElementById('synthBtn').addEventListener('click', synthesize);
+document.getElementById('clearBtn').addEventListener('click', clearSignals);
+
+loadSignals();
+loadLatest();
+pollTimer = setInterval(loadSignals, 15000);
+</script>
+
+</body>
+</html>
