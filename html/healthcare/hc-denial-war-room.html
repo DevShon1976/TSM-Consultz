@@ -2528,6 +2528,19 @@ async function buildContinuityTab() {
 
 buildStratBriefTab();
 setInterval(buildStratBriefTab, 30000);
+
+function pushCollectiveSignal(vertical, signal, severity) {
+  try { fetch('/api/collective/signal', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ vertical, signal, severity: severity||'MEDIUM', source: window.location.pathname }) }); } catch(e) {}
+}
+(function() {
+  try {
+    const raw = localStorage.getItem('tsm_hc_war_relay') || sessionStorage.getItem('tsm_hc_war_relay');
+    if (raw) {
+      const d = JSON.parse(raw);
+      if (d.kpi?.denialRate) pushCollectiveSignal('healthcare', 'Denial rate ' + d.kpi.denialRate + ' — HC war room data loaded', 'HIGH');
+    }
+  } catch(e) {}
+})();
 </script>
 
 <!-- ── STRATEGIST BRIEF · PERSISTENT PANEL ── -->
