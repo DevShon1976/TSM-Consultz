@@ -772,6 +772,51 @@ function renderExtraction(r) {
   `).join('');
   document.getElementById('bncaPreview').innerHTML = bncaHtml;
   document.getElementById('bncaRight').innerHTML = bncaHtml;
+
+  pushCollectiveSignal_BPO();
+}
+
+function pushCollectiveSignal_BPO() {
+  try {
+    const bncaText = document.getElementById('bncaPreview')?.innerText || '';
+    const bncaRight = document.getElementById('bncaRight')?.innerText || '';
+    const fullBnca = bncaText || bncaRight;
+
+    // Parse revenue at risk from demo data or live text
+    const dollarMatch = fullBnca.match(/\$[\d,.]+[MK]?\s*(?:at risk|revenue|contracted|frozen)/i);
+    const impactDelta = dollarMatch ? dollarMatch[0] : '$0';
+
+    const riskMatch = fullBnca.match(/RISK[:\s]+(URGENT|HIGH|MEDIUM|LOW|CRITICAL)/i);
+    const riskMap = { CRITICAL:'URGENT', HIGH:'RISK', MEDIUM:'WATCH', LOW:'READY' };
+    const riskLevel = riskMap[(riskMatch?.[1]||'').toUpperCase()] || 'WATCH';
+
+    fetch('/api/collective/signal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        vertical:     'bpo',
+        warRoom:      'BPO Situation Room',
+        bnca:         fullBnca.slice(0, 400) || 'BPO situation analysis complete.',
+        confidence:   80,
+        riskLevel,
+        topIssue:     fullBnca.split('\n').find(l => l.trim().length > 20) || 'BPO operational risk detected',
+        ownerLanes:   ['Operations Manager', 'BPO Director', 'Account Lead'],
+        hitlRequired: true,
+        actions:      [
+          'Activate contingency supplier or staffing plan',
+          'Notify affected client accounts within 4 hours',
+          'Escalate to BPO Strategist for chain decision'
+        ],
+        impactDelta,
+        kpi: {
+          'Stage':         'Situation Room',
+          'Chain':         'Understand → Decide',
+          'Revenue Risk':  impactDelta,
+          'HITL':          'Required'
+        }
+      })
+    });
+  } catch(e) { console.warn('[Collective Signal BPO]', e.message); }
 }
 
 function renderFallback(raw) {
