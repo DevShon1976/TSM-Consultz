@@ -1166,7 +1166,6 @@ function storeSession() {
 
 function escalateToChief() {
   storeSession();
-  try { fetch('/api/collective/signal', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ vertical:'legal', signal:'War room escalation triggered — 6-engine legal package dispatched to Chief Strategist', severity:'HIGH', source: window.location.pathname }) }); } catch(e) {}
   try {
     localStorage.setItem('TSM_CURE_RELAY', JSON.stringify({
       vertical: 'Legal',
@@ -1176,9 +1175,58 @@ function escalateToChief() {
       timestamp: Date.now()
     }));
   } catch(e) {}
-  pushCollectiveSignal('legal', 'War room escalation triggered — 6-engine package dispatched to Chief Strategist', 'HIGH');
+  pushCollectiveSignal_LEGAL();
   document.getElementById('ss4').className = 'sstep active';
   setTimeout(() => nav('legal-main-strategist.html'), 700);
+}
+
+function pushCollectiveSignal_LEGAL() {
+  try {
+    const e = engOut;
+    const bncaText = e[4] || e[5] || '';
+
+    // Parse exposure from Engine 03 (Risk Analysis)
+    const exposureMatch = (e[2] || e[3] || '').match(/\$[\d,]+(?:\s*exposure|\s*at risk|\s*damages|\s*liability)/i);
+    const impactDelta = exposureMatch ? exposureMatch[0] : 'Exposure TBD';
+
+    // Parse confidence
+    const confMatch = bncaText.match(/CONFIDENCE[:\s]+(\d+)/i);
+    const confidence = confMatch ? parseInt(confMatch[1]) : 85;
+
+    // Risk from escalation trigger
+    const escalateMatch = bncaText.match(/ESCALATION\s*TRIGGER[:\s]+([^\n]+)/i);
+    const riskLevel = escalateMatch ? 'URGENT' : 'RISK';
+
+    const topIssueMatch = bncaText.match(/IMMEDIATE\s*NEXT\s*STEPS[:\s]*\n?1\.\s*([^\n]+)/i);
+    const topIssue = topIssueMatch ? topIssueMatch[1].trim() : 'Legal matter requires immediate counsel engagement';
+
+    fetch('/api/collective/signal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        vertical:     'legal',
+        warRoom:      'Legal War Room',
+        bnca:         bncaText.slice(0, 400) || 'Legal 6-engine analysis complete. Escalation triggered.',
+        confidence,
+        riskLevel,
+        topIssue,
+        ownerLanes:   ['General Counsel', 'Managing Partner', 'CFO'],
+        hitlRequired: true,
+        actions:      [
+          'Initiate litigation hold immediately',
+          'Brief outside counsel within 24 hours',
+          'Prepare settlement authority memo for board'
+        ],
+        impactDelta,
+        kpi: {
+          'Matter Type':   selectedDocType || '—',
+          'Engines Run':   '6/6',
+          'Exposure':      impactDelta,
+          'Confidence':    confidence + '%'
+        }
+      })
+    });
+  } catch(e) { console.warn('[Collective Signal Legal]', e.message); }
 }
 
 // ═══════════════════════════════════════════════════
