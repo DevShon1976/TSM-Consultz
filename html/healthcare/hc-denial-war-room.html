@@ -1832,6 +1832,11 @@ function buildStratBriefTab() {
   let d = {};
   try { d = JSON.parse(raw); } catch(e){ return; }
 
+  if (d.kpi?.denialRate && window._tsmHcSignalSession !== d.sessionId) {
+    window._tsmHcSignalSession = d.sessionId;
+    pushCollectiveSignal_HC(d);
+  }
+
   const ts = new Date(d.ts).toLocaleTimeString('en-US',{hour12:false});
   const age = Math.floor((Date.now() - d.ts) / 1000 / 60);
   const freshLabel = age < 1 ? 'just now' : age < 60 ? `${age}m ago` : `${Math.floor(age/60)}h ago`;
@@ -2545,7 +2550,7 @@ function pushCollectiveSignal_HC(d) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        vertical:     'hc',
+        vertical:     'healthcare',
         warRoom:      'Healthcare Denial War Room',
         bnca:         d?.bnca || `Denial rate ${denialRate} detected. Top denial: ${topDenial}. Immediate RCM intervention required.`,
         confidence,
