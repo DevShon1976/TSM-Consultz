@@ -890,123 +890,42 @@ app.post('/api/doc-router/classify', async (req, res) => {
 // ── COLLECTIVE BNCA ───────────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
 
-const COLLECTIVE_VERTICALS = ['healthcare', 'finops', 'insurance', 'construction', 'legal', 'realestate', 'bpo'];
-
-const COLLECTIVE_SIGNALS = []; // { vertical, signal, severity, timestamp, source }
-const COLLECTIVE_BNCA = [];   // synthesis results
-
-// POST /api/collective/signal — war rooms push their BNCA signal here
-app.post('/api/collective/signal', (req, res) => {
-  const { vertical, signal, severity, source } = req.body || {};
-  if (!vertical || !signal) return res.status(400).json({ ok: false, error: 'vertical and signal required' });
-  const entry = { vertical, signal, severity: severity || 'MEDIUM', source: source || '', timestamp: Date.now() };
-  COLLECTIVE_SIGNALS.unshift(entry);
-  if (COLLECTIVE_SIGNALS.length > 200) COLLECTIVE_SIGNALS.length = 200;
-  res.json({ ok: true, entry });
-});
-
-// GET /api/collective/signals — fetch all pushed signals
-app.get('/api/collective/signals', (req, res) => {
-  res.json({ ok: true, signals: COLLECTIVE_SIGNALS });
-});
-
-// DELETE /api/collective/signals — clear all signals
-app.delete('/api/collective/signals', (req, res) => {
-  COLLECTIVE_SIGNALS.length = 0;
-  res.json({ ok: true });
-});
-
-// POST /api/collective/bnca — run cross-vertical synthesis via Groq
-app.post('/api/collective/bnca', async (req, res) => {
-  try {
-    if (!COLLECTIVE_SIGNALS.length) return res.status(400).json({ ok: false, error: 'No signals to synthesize' });
-    const prompt = `You are TSM's cross-vertical BNCA synthesizer. Given the following signals from multiple verticals, identify: (1) conflicts between verticals, (2) synergies or compounding risks, (3) a ranked HITL decision queue. Respond ONLY in valid JSON with keys: conflicts (array), synergies (array), hitlQueue (array of {priority, vertical, action, rationale}), summary (string).\n\nSignals:\n${JSON.stringify(COLLECTIVE_SIGNALS.slice(0, 50), null, 2)}`;
-    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          { role: 'system', content: 'Respond with ONLY valid JSON. No markdown fences, no preamble.' },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.2,
-        response_format: { type: 'json_object' }
-      })
-    });
-    if (!groqRes.ok) return res.status(502).json({ ok: false, error: 'Groq error' });
-    const data = await groqRes.json();
-    const parsed = JSON.parse(data.choices[0].message.content);
-    const result = { ...parsed, timestamp: Date.now(), signalCount: COLLECTIVE_SIGNALS.length };
-    COLLECTIVE_BNCA.unshift(result);
-    if (COLLECTIVE_BNCA.length > 20) COLLECTIVE_BNCA.length = 20;
-    res.json({ ok: true, bnca: result });
-  } catch (err) {
-    console.error('[collective/bnca] error:', err);
-    res.status(500).json({ ok: false, error: err.message });
-  }
-});
-
-// GET /api/collective/bnca/latest — fetch most recent synthesis
-app.get('/api/collective/bnca/latest', (req, res) => {
-  res.json({ ok: true, bnca: COLLECTIVE_BNCA[0] || null });
-});
-
 const COLLECTIVE_VERTICALS = ['healthcare', 'finops', 'bpo', 'legal', 'real-estate', 'insurance', 'construction'];
 
-const COLLECTIVE_SIGNALS = [];
-const COLLECTIVE_BNCA = [];
+const COLLECTIVE_SIGNALS = []; // { vertical, signal, severity, riskLevel, confidence, topIssue, ownerLanes, hitlRequired, actions, impactDelta, kpi, warRoom, bnca, timestamp, source }
+const COLLECTIVE_BNCA = [];   // synthesis results
 
+// POST /api/collective/signal — war rooms push their BNCA signal here.
+// Accepts both the legacy 3-field shape (vertical, signal, severity) and the
+// richer war-room payload (warRoom, bnca, confidence, riskLevel, topIssue,
+// ownerLanes, hitlRequired, actions, impactDelta, kpi).
 app.post('/api/collective/signal', (req, res) => {
-  const { vertical, signal, severity, source } = req.body || {};
-  if (!vertical || !signal) return res.status(400).json({ ok: false, error: 'vertical and signal required' });
-  const entry = { vertical, signal, severity: severity || 'MEDIUM', source: source || '', timestamp: Date.now() };
+  const {
+    vertical, signal, severity, source,
+    warRoom, bnca, confidence, riskLevel, topIssue,
+    ownerLanes, hitlRequired, actions, impactDelta, kpi
+  } = req.body || {};
+  if (!vertical) return res.status(400).json({ ok: false, error: 'vertical required' });
+  const entry = {
+    vertical,
+    signal: signal || topIssue || (typeof bnca === 'string' ? bnca.slice(0, 200) : '') || 'War room signal received',
+    severity: severity || riskLevel || 'MEDIUM',
+    riskLevel: riskLevel || severity || 'WATCH',
+    confidence: confidence != null ? confidence : null,
+    topIssue: topIssue || '',
+    warRoom: warRoom || '',
+    bnca: bnca || '',
+    ownerLanes: ownerLanes || [],
+    hitlRequired: !!hitlRequired,
+    actions: actions || [],
+    impactDelta: impactDelta || '',
+    kpi: kpi || {},
+    source: source || '',
+    timestamp: Date.now()
+  };
   COLLECTIVE_SIGNALS.unshift(entry);
   if (COLLECTIVE_SIGNALS.length > 200) COLLECTIVE_SIGNALS.length = 200;
   res.json({ ok: true, entry });
-});
-
-app.get('/api/collective/signals', (req, res) => {
-  res.json({ ok: true, signals: COLLECTIVE_SIGNALS });
-});
-
-app.delete('/api/collective/signals', (req, res) => {
-  COLLECTIVE_SIGNALS.length = 0;
-  res.json({ ok: true });
-});
-
-app.post('/api/collective/bnca', async (req, res) => {
-  try {
-    if (!COLLECTIVE_SIGNALS.length) return res.status(400).json({ ok: false, error: 'No signals to synthesize' });
-    const prompt = `You are TSM's cross-vertical BNCA synthesizer. Given the following signals from multiple verticals, identify: (1) conflicts between verticals, (2) synergies or compounding risks, (3) a ranked HITL decision queue. Respond ONLY in valid JSON with keys: conflicts (array), synergies (array), hitlQueue (array of {priority, vertical, action, rationale}), summary (string).\n\nSignals:\n${JSON.stringify(COLLECTIVE_SIGNALS.slice(0, 50), null, 2)}`;
-    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          { role: 'system', content: 'Respond with ONLY valid JSON. No markdown fences, no preamble.' },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.2,
-        response_format: { type: 'json_object' }
-      })
-    });
-    if (!groqRes.ok) return res.status(502).json({ ok: false, error: 'Groq error' });
-    const data = await groqRes.json();
-    const parsed = JSON.parse(data.choices[0].message.content);
-    const result = { ...parsed, timestamp: Date.now(), signalCount: COLLECTIVE_SIGNALS.length };
-    COLLECTIVE_BNCA.unshift(result);
-    if (COLLECTIVE_BNCA.length > 20) COLLECTIVE_BNCA.length = 20;
-    res.json({ ok: true, bnca: result });
-  } catch (err) {
-    console.error('[collective/bnca] error:', err);
-    res.status(500).json({ ok: false, error: err.message });
-  }
-});
-
-app.get('/api/collective/bnca/latest', (req, res) => {
-  res.json({ ok: true, bnca: COLLECTIVE_BNCA[0] || null });
 });
 
 // ══════════════════════════════════════════════════════════════════════════════
