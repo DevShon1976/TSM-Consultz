@@ -766,14 +766,16 @@ async function fireEngines() {
         document.getElementById('sbEngines').textContent = '6 / 6 Engines Complete';
         buildAppDispatch(c.e[6] || '');
         document.getElementById('escalSub').textContent = '6-engine analysis complete — ' + selectedDocType + ' · Ready to escalate to FinOps Strategist.';
+        document.getElementById('escalateBar').classList.add('visible');
+        pushCollectiveSignal_FINOPS();
         (function runBNCA() {
           try {
             const allOut = Object.values(engOut).join('\n');
             const anomalies = (allOut.match(/ANOMALY[:\s]+([^\n]+)/gi)||[]).map(s=>s.replace(/ANOMALY[:\s]+/i,'').trim());
             localStorage.setItem('TSM_FINOPS_BNCA', JSON.stringify({ anomalies, docType: selectedDocType, timestamp: Date.now(), engines: engOut }));
+            pushCollectiveSignal_FINOPS();
           } catch(e) {}
         })();
-        document.getElementById('escalateBar').classList.add('visible');
         addLog('Loaded cached analysis', 'No engines re-fired — tokens conserved', 'p');
         return;
       }
@@ -979,7 +981,53 @@ function launchApp(href, appMeta){
     window.open('/html/finops-suite/' + href, '_blank');
   }
 }
-function pushCollectiveSignal(vertical, signal, severity) {   try { fetch('/api/collective/signal', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ vertical, signal, severity: severity||'MEDIUM', source: window.location.pathname }) }); } catch(e) {} } async function finopsQuickMission(appName, appUrl, howto) {
+function pushCollectiveSignal_FINOPS() {
+  try {
+    const e = engOut;
+    // Parse dollar at risk from Engine 06 BNCA output
+    const bncaText  = e[6] || e[5] || '';
+    const riskMatch = bncaText.match(/\$[\d,]+(?:\sat\srisk|\sexposure|\swrite.off)/i);
+    const impactDelta = riskMatch ? riskMatch[0] : '$0 identified';
+
+    // Parse risk score
+    const scoreMatch = bncaText.match(/OVERALL\s*RISK\s*SCORE[:\s]+(\d+)/i);
+    const score = scoreMatch ? parseInt(scoreMatch[1]) : 65;
+    const riskLevel = score >= 80 ? 'URGENT' : score >= 60 ? 'RISK' : score >= 40 ? 'WATCH' : 'READY';
+
+    // Parse top exception
+    const excMatch = (e[2] || '').match(/EXCEPTION[:\s]+([^\n]+)/i);
+    const topIssue = excMatch ? excMatch[1].trim() : 'Financial exceptions detected — review required';
+
+    fetch('/api/collective/signal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        vertical:     'finops',
+        warRoom:      'FinOps War Room',
+        bnca:         bncaText.slice(0, 400) || 'FinOps 6-engine analysis complete.',
+        confidence:   78,
+        riskLevel,
+        topIssue,
+        ownerLanes:   ['CFO', 'Controller', 'Finance Manager'],
+        hitlRequired: riskLevel !== 'READY',
+        actions:      [
+          'Review flagged GL exceptions and variance items',
+          'Reconcile revenue recognition discrepancies',
+          'Escalate write-off risk to CFO within 24h'
+        ],
+        impactDelta,
+        kpi: {
+          'Risk Score':     score + '/100',
+          'Doc Type':       selectedDocType || '—',
+          'Engines Run':    enginesComplete + '/6',
+          'Exceptions':     (e[2] || '').match(/(\d+)\s*exception/i)?.[1] + ' items' || '—'
+        }
+      })
+    });
+  } catch(e) { console.warn('[Collective Signal FinOps]', e.message); }
+}
+
+async function finopsQuickMission(appName, appUrl, howto) {
   const modal = document.createElement('div');
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;display:flex;align-items:center;justify-content:center;';
   modal.innerHTML = `
@@ -1289,7 +1337,7 @@ function showAnomalyAdvisorPanel(outputs, docText) {
         .replace(/—/g,'<span style="color:#1ee8b660"> — </span>');
       const footer=document.createElement('div');
       footer.style.cssText='margin-top:14px;padding-top:10px;border-top:1px solid #1ee8b620;color:#1ee8b650;font-size:9px;letter-spacing:1px;';
-      footer.textContent='⬡ SCAN COMPLETE — FINOPS ANOMALIES PACKAGED FOR STRATEGIST RELAY'; pushCollectiveSignal('finops', 'War room scan complete — anomalies packaged for strategist relay', 'HIGH');
+      footer.textContent='⬡ SCAN COMPLETE — FINOPS ANOMALIES PACKAGED FOR STRATEGIST RELAY';
       body.appendChild(footer);
       document.getElementById('finops-mission-btn-wrap').style.display='block';
       document.getElementById('finops-build-mission-btn').dataset.anomaly=anomalyFullText;
