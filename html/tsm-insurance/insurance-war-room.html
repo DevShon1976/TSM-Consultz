@@ -934,9 +934,61 @@ function clearAll(){
   addLog('War Room cleared','Ready for new document','f');
 }
 
+function pushCollectiveSignal_INS() {
+  try {
+    const e = engOut;
+
+    // Engine 05 (index 4) has dollar-quantified recovery actions
+    const recoveryText = e[4] || '';
+    const dollarAmounts = [...(recoveryText.matchAll(/\$[\d,]+/g))].map(m => parseInt(m[0].replace(/[$,]/g,''),10));
+    const totalRecovery = dollarAmounts.reduce((a,b) => a+b, 0);
+    const impactDelta = totalRecovery > 0 ? '$' + totalRecovery.toLocaleString() + ' recoverable' : '$0';
+
+    // Engine 04 (index 3) compliance risk level
+    const compM = (e[3] || '').match(/COMPLIANCE RISK LEVEL[:\s]+([^\n]+)/i);
+    const compRisk = (compM?.[1] || '').trim().toUpperCase();
+    const riskMap = { HIGH:'RISK', CRITICAL:'URGENT', MEDIUM:'WATCH', LOW:'READY' };
+    const riskLevel = riskMap[compRisk] || 'WATCH';
+
+    // Engine 03 (index 2) top issue
+    const impactM = (e[2] || '').match(/(?:TOP|PRIMARY)\s*(?:ISSUE|RISK|DENIAL)[:\s]+([^\n]+)/i);
+    const topIssue = impactM ? impactM[1].trim() : 'Insurance claim exceptions require immediate review';
+
+    const allText = Object.values(e).join(' ');
+    const escalateM = allText.match(/ESCALATE TO PRINCIPAL[:\s]+([^\n]+)/i);
+
+    fetch('/api/collective/signal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        vertical:     'insurance',
+        warRoom:      'Insurance War Room',
+        bnca:         (e[5] || recoveryText).slice(0, 400) || 'Insurance 6-engine analysis complete.',
+        confidence:   79,
+        riskLevel,
+        topIssue,
+        ownerLanes:   ['Principal Agent', 'Claims Manager', 'Compliance Officer'],
+        hitlRequired: escalateM?.[1]?.toUpperCase().includes('YES') || riskLevel !== 'READY',
+        actions:      [
+          'Submit priority appeals for dollar-quantified denials',
+          'File NIPR compliance corrections if CE gap found',
+          'Escalate to principal if recovery exceeds $10K'
+        ],
+        impactDelta,
+        kpi: {
+          'Engines Run':      enginesComplete + '/6',
+          'Compliance Risk':  compRisk || '—',
+          'Recovery Est.':    impactDelta,
+          'Doc Type':         docText ? docText.slice(0,30)+'...' : '—'
+        }
+      })
+    });
+  } catch(e) { console.warn('[Collective Signal Insurance]', e.message); }
+}
+
 function escalateToStrategist(){
 try { localStorage.setItem('TSM_CURE_RELAY', JSON.stringify({ vertical:'Insurance', appName:'Insurance War Room', anomalies:[], docText: document.getElementById('docPaste')?.value||'', timestamp: Date.now() })); } catch(e) {}
-try { fetch('/api/collective/signal', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ vertical:'insurance', signal:'War room escalation triggered — 6-engine insurance package dispatched to strategist', severity:'HIGH', source: window.location.pathname }) }); } catch(e) {}
+pushCollectiveSignal_INS();
 try {
     const combined = engOut ? engOut.join(' ') : '';
     const e5 = engOut ? (engOut[4]||'') : '';
