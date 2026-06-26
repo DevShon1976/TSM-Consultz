@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>TSM Client Access — Sovereign Intelligence Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#08090a;
+  --surface:#0e1012;
+  --surface2:#141618;
+  --line:#1c2025;
+  --line2:#252a30;
+  --cyan:#00e5cc;
+  --cyan2:#00b8a3;
+  --gold:#c8a96e;
+  --text:#c8cdd4;
+  --muted:#5a6270;
+  --bright:#eef0f3;
+  --red:#ff4d6a;
+  --green:#00d68f;
+  --amber:#f59e0b;
+  --purple:#a78bfa;
+  --blue:#3b82f6;
+  --mono:'DM Mono',monospace;
+  --syne:'Syne',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--mono);-webkit-font-smoothing:antialiased;}
+
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.4;}
+
+/* TOPBAR */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(8,9,10,0.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--line);padding:0 32px;height:52px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:var(--syne);font-size:12px;font-weight:800;letter-spacing:.3em;color:var(--bright);text-transform:uppercase;}
+.logo em{color:var(--cyan);font-style:normal;}
+.topbar-right{display:flex;align-items:center;gap:20px;font-size:10px;letter-spacing:.12em;color:var(--muted);}
+.status-dot{width:5px;height:5px;border-radius:50%;background:var(--green);display:inline-block;margin-right:5px;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes scanline{0%{top:-10%}100%{top:110%}}
+
+.shell{padding-top:52px;min-height:100vh;}
+
+/* ══ LOGIN ══ */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 52px);padding:48px 24px;position:relative;}
+.login-bg-text{position:absolute;font-family:var(--syne);font-size:clamp(60px,12vw,160px);font-weight:800;color:rgba(0,229,204,0.025);letter-spacing:-.04em;pointer-events:none;user-select:none;white-space:nowrap;top:50%;left:50%;transform:translate(-50%,-50%);}
+.login-card{width:100%;max-width:440px;position:relative;z-index:1;}
+.login-eyebrow{font-size:9px;letter-spacing:.28em;color:var(--cyan);margin-bottom:18px;text-transform:uppercase;display:flex;align-items:center;gap:8px;}
+.login-eyebrow::before{content:'';display:inline-block;width:20px;height:1px;background:var(--cyan);}
+.login-title{font-family:var(--syne);font-size:32px;font-weight:800;color:var(--bright);line-height:1.05;margin-bottom:8px;letter-spacing:-.03em;}
+.login-sub{font-size:11px;color:var(--muted);margin-bottom:36px;letter-spacing:.04em;line-height:1.7;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:9px;letter-spacing:.2em;color:var(--muted);margin-bottom:6px;text-transform:uppercase;}
+.field input{width:100%;background:var(--surface);border:1px solid var(--line2);color:var(--bright);font-family:var(--mono);font-size:13px;padding:13px 16px;outline:none;transition:border-color .2s,box-shadow .2s;letter-spacing:.04em;}
+.field input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,229,204,.06);}
+.field input::placeholder{color:var(--muted);}
+.login-btn{width:100%;background:var(--cyan);color:#000;border:none;font-family:var(--syne);font-size:11px;font-weight:800;letter-spacing:.25em;text-transform:uppercase;padding:15px;cursor:pointer;margin-top:8px;transition:background .2s,transform .1s;position:relative;overflow:hidden;}
+.login-btn:hover{background:var(--cyan2);}
+.login-btn:active{transform:scale(.99);}
+.login-err{font-size:11px;color:var(--red);margin-top:10px;display:none;letter-spacing:.04em;padding:10px 14px;background:rgba(255,77,106,.06);border:1px solid rgba(255,77,106,.15);}
+.login-meta{font-size:10px;color:var(--muted);margin-top:20px;text-align:center;letter-spacing:.06em;}
+.login-meta a{color:var(--cyan);text-decoration:none;}
+
+.demo-tokens{margin-top:28px;border:1px solid var(--line);background:var(--surface);}
+.demo-tokens-title{font-size:9px;letter-spacing:.2em;color:var(--muted);padding:12px 16px;border-bottom:1px solid var(--line);text-transform:uppercase;}
+.demo-token{display:flex;justify-content:space-between;align-items:center;padding:11px 16px;border-bottom:1px solid var(--line);cursor:pointer;transition:background .15s;gap:12px;}
+.demo-token:last-child{border-bottom:none;}
+.demo-token:hover{background:rgba(0,229,204,.04);}
+.demo-token-name{font-size:11px;color:var(--bright);letter-spacing:.03em;}
+.demo-token-hint{font-size:9px;color:var(--muted);letter-spacing:.08em;white-space:nowrap;}
+.demo-token-sector{font-size:8px;padding:2px 7px;border:1px solid var(--line2);color:var(--muted);letter-spacing:.1em;white-space:nowrap;}
+
+/* ══ DASHBOARD ══ */
+.dashboard{display:none;padding:32px;max-width:1320px;margin:0 auto;animation:fadeIn .3s ease;}
+.dash-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;}
+.dash-greeting{font-family:var(--syne);font-size:24px;font-weight:800;color:var(--bright);letter-spacing:-.02em;}
+.dash-sector{font-size:10px;color:var(--cyan);margin-top:4px;letter-spacing:.15em;text-transform:uppercase;}
+.dash-right{display:flex;align-items:center;gap:12px;}
+.logout-btn{font-size:10px;letter-spacing:.12em;color:var(--muted);background:none;border:1px solid var(--line2);padding:7px 16px;cursor:pointer;font-family:var(--mono);transition:all .2s;}
+.logout-btn:hover{color:var(--bright);border-color:var(--muted);}
+.dash-token-badge{font-size:9px;color:var(--muted);letter-spacing:.08em;background:var(--surface);border:1px solid var(--line);padding:7px 12px;}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:28px;}
+.stat-card{background:var(--surface);border:1px solid var(--line);padding:18px 20px;position:relative;overflow:hidden;}
+.stat-card::after{content:'';position:absolute;top:0;left:0;width:2px;height:100%;background:var(--cyan);opacity:0;transition:opacity .2s;}
+.stat-card:hover::after{opacity:1;}
+.stat-label{font-size:8px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin-bottom:10px;}
+.stat-val{font-family:var(--syne);font-size:26px;font-weight:800;color:var(--bright);}
+.stat-val.cyan{color:var(--cyan);}
+.stat-val.gold{color:var(--gold);}
+.stat-val.green{color:var(--green);}
+.stat-val.red{color:var(--red);}
+.stat-sub{font-size:9px;color:var(--muted);margin-top:4px;letter-spacing:.06em;}
+
+/* SEC TITLE */
+.sec-title{font-size:9px;letter-spacing:.25em;color:var(--muted);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--line);}
+.sec-title .count{font-size:8px;background:var(--surface2);border:1px solid var(--line2);padding:2px 7px;color:var(--muted);letter-spacing:.1em;}
+
+/* TABS */
+.tab-row{display:flex;border-bottom:1px solid var(--line);margin-bottom:24px;gap:0;}
+.tab{font-size:10px;letter-spacing:.15em;padding:10px 20px;cursor:pointer;border-bottom:2px solid transparent;color:var(--muted);transition:all .2s;text-transform:uppercase;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--mono);}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--cyan);border-bottom-color:var(--cyan);}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* ══ UPLOAD ZONE ══ */
+.upload-section{margin-bottom:28px;}
+.upload-zone{border:2px dashed var(--line2);background:var(--surface);padding:48px 32px;text-align:center;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--cyan);background:rgba(0,229,204,.03);}
+.upload-zone.dragover .uz-icon{transform:scale(1.1);}
+.uz-icon{font-size:32px;margin-bottom:12px;display:block;transition:transform .2s;}
+.uz-title{font-family:var(--syne);font-size:15px;font-weight:700;color:var(--bright);margin-bottom:6px;letter-spacing:-.01em;}
+.uz-sub{font-size:10px;color:var(--muted);letter-spacing:.06em;line-height:1.7;}
+.uz-types{display:flex;gap:6px;justify-content:center;margin-top:14px;flex-wrap:wrap;}
+.uz-type{font-size:8px;padding:3px 8px;border:1px solid var(--line2);color:var(--muted);letter-spacing:.1em;}
+.file-input{display:none;}
+
+/* QUEUE */
+.upload-queue{margin-top:16px;display:flex;flex-direction:column;gap:8px;}
+.queue-item{background:var(--surface);border:1px solid var(--line);padding:14px 16px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start;animation:fadeIn .2s ease;}
+.qi-left{min-width:0;}
+.qi-filename{font-size:12px;color:var(--bright);letter-spacing:.02em;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.qi-status{font-size:10px;color:var(--muted);letter-spacing:.06em;margin-bottom:8px;}
+.qi-status.classifying{color:var(--cyan);}
+.qi-status.done{color:var(--green);}
+.qi-status.error{color:var(--red);}
+.qi-bar-wrap{height:2px;background:var(--line2);margin-bottom:8px;}
+.qi-bar{height:2px;background:var(--cyan);width:0%;transition:width .3s ease;}
+.qi-bar.done{background:var(--green);}
+.qi-bar.error{background:var(--red);}
+.qi-tags{display:flex;gap:5px;flex-wrap:wrap;}
+.qi-tag{font-size:8px;padding:2px 7px;border:1px solid;letter-spacing:.1em;text-transform:uppercase;}
+.qi-tag.sector{color:var(--cyan);border-color:rgba(0,229,204,.25);background:rgba(0,229,204,.06);}
+.qi-tag.doctype{color:var(--gold);border-color:rgba(200,169,110,.25);background:rgba(200,169,110,.06);}
+.qi-tag.sev-high{color:var(--red);border-color:rgba(255,77,106,.25);background:rgba(255,77,106,.06);}
+.qi-tag.sev-moderate{color:var(--amber);border-color:rgba(245,158,11,.25);background:rgba(245,158,11,.06);}
+.qi-tag.sev-low{color:var(--green);border-color:rgba(0,214,143,.25);background:rgba(0,214,143,.06);}
+.qi-tag.exposure{color:var(--purple);border-color:rgba(167,139,250,.25);background:rgba(167,139,250,.06);}
+.qi-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+.qi-launch{font-size:9px;padding:6px 12px;background:transparent;border:1px solid var(--cyan2);color:var(--cyan);font-family:var(--mono);cursor:pointer;letter-spacing:.1em;transition:background .2s;white-space:nowrap;text-decoration:none;display:inline-block;}
+.qi-launch:hover{background:rgba(0,229,204,.08);}
+.qi-dismiss{font-size:9px;color:var(--muted);background:none;border:none;cursor:pointer;letter-spacing:.1em;padding:6px 0;}
+.qi-dismiss:hover{color:var(--text);}
+
+/* CLASSIFICATION RESULT */
+.qi-result{margin-top:10px;background:var(--surface2);border:1px solid var(--line2);padding:12px 14px;}
+.qi-result-title{font-size:9px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
+.qi-result-body{font-size:11px;color:var(--text);line-height:1.7;letter-spacing:.02em;}
+.qi-result-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px;}
+.qi-result-field{background:var(--bg);border:1px solid var(--line);padding:8px 10px;}
+.qi-rf-label{font-size:8px;letter-spacing:.15em;color:var(--muted);margin-bottom:3px;text-transform:uppercase;}
+.qi-rf-val{font-size:11px;color:var(--bright);letter-spacing:.02em;}
+
+/* SPINNER */
+.spinner{display:inline-block;width:10px;height:10px;border:1px solid var(--line2);border-top-color:var(--cyan);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:5px;}
+
+/* HISTORY TABLE */
+.history-wrap{overflow-x:auto;}
+.history-table{width:100%;border-collapse:collapse;}
+.history-table th{font-size:8px;letter-spacing:.18em;color:var(--muted);text-align:left;padding:8px 14px;border-bottom:1px solid var(--line);text-transform:uppercase;white-space:nowrap;}
+.history-table td{font-size:11px;padding:12px 14px;border-bottom:1px solid var(--line);color:var(--text);vertical-align:top;}
+.history-table tr:hover td{background:var(--surface);}
+.sev-badge{font-size:8px;padding:2px 7px;letter-spacing:.08em;font-weight:500;display:inline-block;}
+.sev-badge.high{background:rgba(255,77,106,.1);color:var(--red);border:1px solid rgba(255,77,106,.2);}
+.sev-badge.moderate{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.2);}
+.sev-badge.low{background:rgba(0,214,143,.1);color:var(--green);border:1px solid rgba(0,214,143,.2);}
+.sector-badge{font-size:8px;padding:2px 7px;letter-spacing:.1em;border:1px solid var(--line2);color:var(--muted);}
+.summary-cell{font-size:10px;color:var(--muted);max-width:280px;line-height:1.5;}
+.war-room-link{font-size:10px;color:var(--cyan);text-decoration:none;letter-spacing:.08em;border:1px solid rgba(0,229,204,.2);padding:3px 9px;white-space:nowrap;transition:background .15s;}
+.war-room-link:hover{background:rgba(0,229,204,.06);}
+
+/* APPS GRID */
+.apps-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin-bottom:28px;}
+.app-tile{background:var(--surface);border:1px solid var(--line);padding:18px 20px;cursor:pointer;text-decoration:none;display:block;transition:border-color .2s,background .2s;position:relative;overflow:hidden;}
+.app-tile::before{content:'';position:absolute;top:0;left:0;width:2px;height:100%;background:var(--cyan);transform:scaleY(0);transform-origin:bottom;transition:transform .2s;}
+.app-tile:hover{border-color:var(--line2);background:var(--surface2);}
+.app-tile:hover::before{transform:scaleY(1);}
+.tile-sector{font-size:8px;letter-spacing:.2em;color:var(--cyan);text-transform:uppercase;margin-bottom:8px;}
+.tile-name{font-family:var(--syne);font-size:14px;font-weight:700;color:var(--bright);margin-bottom:6px;letter-spacing:-.01em;}
+.tile-desc{font-size:10px;color:var(--muted);line-height:1.6;letter-spacing:.03em;margin-bottom:14px;}
+.tile-status{display:flex;align-items:center;gap:6px;font-size:8px;letter-spacing:.1em;}
+.tile-dot{width:5px;height:5px;border-radius:50%;}
+.tile-dot.live{background:var(--green);}
+.tile-badge{font-size:8px;padding:2px 7px;letter-spacing:.1em;margin-left:auto;}
+.tile-badge.ai{background:rgba(0,229,204,.08);color:var(--cyan);border:1px solid rgba(0,229,204,.15);}
+.tile-badge.intake{background:rgba(200,169,110,.08);color:var(--gold);border:1px solid rgba(200,169,110,.15);}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:48px 24px;}
+.empty-icon{font-size:28px;margin-bottom:12px;opacity:.4;}
+.empty-title{font-family:var(--syne);font-size:14px;font-weight:700;color:var(--muted);margin-bottom:6px;letter-spacing:-.01em;}
+.empty-sub{font-size:10px;color:var(--muted);letter-spacing:.05em;opacity:.7;}
+
+/* FOOTER */
+.dash-footer{border-top:1px solid var(--line);padding:20px 0;display:flex;justify-content:space-between;align-items:center;font-size:9px;color:var(--muted);letter-spacing:.1em;margin-top:32px;}
+
+/* INTAKE LINK */
+.intake-panel{background:var(--surface);border:1px solid var(--line);padding:20px;margin-bottom:20px;}
+.intake-row{display:flex;gap:10px;align-items:center;margin-top:10px;}
+.intake-link{flex:1;background:var(--bg);border:1px solid var(--line2);color:var(--cyan);font-family:var(--mono);font-size:11px;padding:10px 14px;letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.copy-btn{background:var(--surface2);border:1px solid var(--line2);color:var(--muted);font-family:var(--mono);font-size:10px;padding:10px 16px;cursor:pointer;letter-spacing:.1em;transition:all .2s;white-space:nowrap;}
+.copy-btn:hover{color:var(--cyan);border-color:var(--cyan2);}
+
+@media(max-width:768px){
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+  .dashboard{padding:16px;}
+  .topbar{padding:0 16px;}
+  .qi-result-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">TSM <em>·</em> Shell</div>
+  <div class="topbar-right">
+    <span><span class="status-dot"></span>Systems online</span>
+    <span id="topbarClient" style="display:none;color:var(--bright);"></span>
+  </div>
+</div>
+
+<div class="shell">
+
+  <!-- ══ LOGIN ══ -->
+  <div class="login-wrap" id="loginView">
+    <div class="login-bg-text">TSM</div>
+    <div class="login-card">
+      <div class="login-eyebrow">Sovereign Intelligence Portal</div>
+      <div class="login-title">Client Access</div>
+      <div class="login-sub">Enter your access token to reach your command center, secure document intake, and AI-classified findings archive.</div>
+      <div class="field">
+        <label>Access Token</label>
+        <input type="text" id="tokenInput" placeholder="tkn_xxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <button class="login-btn" onclick="doLogin()">Access Portal →</button>
+      <div class="login-err" id="loginErr">Token not recognized. Check your intake email or contact your account manager.</div>
+      <div class="login-meta">Need access? <a href="mailto:hello@tsmshell.com">Contact TSM Shell</a></div>
+      <div class="demo-tokens">
+        <div class="demo-tokens-title">Demo Access — Click to load</div>
+        <div class="demo-token" onclick="loadDemo('ameris')">
+          <span class="demo-token-name">Ameris Construction</span>
+          <span class="demo-token-sector">Construction</span>
+        </div>
+        <div class="demo-token" onclick="loadDemo('montana')">
+          <span class="demo-token-name">Montana Del Sur</span>
+          <span class="demo-token-sector">Real Estate · Legal</span>
+        </div>
+        <div class="demo-token" onclick="loadDemo('rrd')">
+          <span class="demo-token-name">RRD Enterprise</span>
+          <span class="demo-token-sector">Document BPO</span>
+        </div>
+        <div class="demo-token" onclick="loadDemo('banner')">
+          <span class="demo-token-name">Banner Health</span>
+          <span class="demo-token-sector">Healthcare RCM</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ DASHBOARD ══ -->
+  <div class="dashboard" id="dashView">
+
+    <div class="dash-header">
+      <div>
+        <div class="dash-greeting" id="dashGreeting"></div>
+        <div class="dash-sector" id="dashSector"></div>
+      </div>
+      <div class="dash-right">
+        <span class="dash-token-badge" id="dashTokenBadge"></span>
+        <button class="logout-btn" onclick="doLogout()">Sign out</button>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Documents Processed</div>
+        <div class="stat-val cyan" id="statDocs">0</div>
+        <div class="stat-sub">This session</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Issues Flagged</div>
+        <div class="stat-val gold" id="statIssues">—</div>
+        <div class="stat-sub">Across all scans</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Exposure Identified</div>
+        <div class="stat-val green" id="statExposure">—</div>
+        <div class="stat-sub">Dollar risk surfaced</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Sectors Active</div>
+        <div class="stat-val" id="statSectors" style="font-size:22px;padding-top:2px;">—</div>
+        <div class="stat-sub" id="statSectorsList"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">SLA Status</div>
+        <div class="stat-val" id="statSLA" style="font-size:15px;padding-top:6px;">—</div>
+        <div class="stat-sub" id="statSLAsub"></div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tab-row">
+      <button class="tab active" onclick="switchTab('upload',this)">⬆ Upload &amp; Classify</button>
+      <button class="tab" onclick="switchTab('history',this)">📋 Findings History</button>
+      <button class="tab" onclick="switchTab('apps',this)">⚡ Command Centers</button>
+    </div>
+
+    <!-- TAB: UPLOAD -->
+    <div class="tab-panel active" id="tab-upload">
+      <div class="upload-section">
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+          <span class="uz-icon">⬆</span>
+          <div class="uz-title">Drop documents here or click to upload</div>
+          <div class="uz-sub">TSM reads, classifies, and routes each file to the correct war room automatically.<br>Multi-file supported. All uploads isolated to your client workspace.</div>
+          <div class="uz-types">
+            <span class="uz-type">PDF</span>
+            <span class="uz-type">TXT</span>
+            <span class="uz-type">CSV</span>
+            <span class="uz-type">DOCX</span>
+            <span class="uz-type">IMAGES</span>
+          </div>
+        </div>
+        <input type="file" id="fileInput" class="file-input" multiple accept=".pdf,.txt,.csv,.doc,.docx,.png,.jpg,.jpeg" onchange="handleFileSelect(this.files)"/>
+        <div class="upload-queue" id="uploadQueue"></div>
+      </div>
+
+      <div class="intake-panel">
+        <div class="sec-title" style="margin-bottom:10px;">Secure intake link</div>
+        <div style="font-size:10px;color:var(--muted);letter-spacing:.05em;line-height:1.6;">Share this encrypted link with your team for direct document submission — TLS 1.3 · SHA-256 verified · client-isolated.</div>
+        <div class="intake-row">
+          <div class="intake-link" id="intakeLinkEl"></div>
+          <button class="copy-btn" onclick="copyIntake()">Copy Link</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: HISTORY -->
+    <div class="tab-panel" id="tab-history">
+      <div id="historyEmpty" class="empty-state" style="display:none;">
+        <div class="empty-icon">📄</div>
+        <div class="empty-title">No findings yet</div>
+        <div class="empty-sub">Upload documents in the Upload tab — classified results appear here automatically.</div>
+      </div>
+      <div class="history-wrap">
+        <table class="history-table" id="historyTable">
+          <thead>
+            <tr>
+              <th>Date / Time</th>
+              <th>Document</th>
+              <th>Sector</th>
+              <th>Type</th>
+              <th>Severity</th>
+              <th>Exposure</th>
+              <th>Summary</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: APPS -->
+    <div class="tab-panel" id="tab-apps">
+      <div class="apps-grid" id="appsGrid"></div>
+    </div>
+
+    <div class="dash-footer">
+      <span>TSM Shell · Sovereign Intelligence Platform</span>
+      <span id="footerToken"></span>
+      <span>All data client-isolated · Zero cross-tenant sharing</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// CLIENT REGISTRY
+// ══════════════════════════════════════════════════════════
+const CLIENTS = {
+  'tkn_ameris_69d597c500bac578f704c25c': {
+    name: 'Ameris Construction',
+    sector: 'Construction · Compliance · Vendor Intelligence',
+    sectors: ['Construction','Compliance','Vendor Intel'],
+    intake: 'https://intake.tsmshell.com/upload?tkn=tkn_ameris_69d597c500bac578f704c25c',
+    stats: { docs:14, issues:7, exposure:'$147K', sla:'Active', slasub:'11 days remaining' },
+    apps: [
+      { sector:'Construction', name:'Construction Command', desc:'COI compliance, permit tracking, subcontractor audit, OSHA documentation review.', url:'/html/construction-suite/construction-war-room.html', status:'live', badge:'ai' },
+      { sector:'Compliance', name:'Compliance Shield', desc:'Full regulatory audit — OSHA gaps, documentation defects, exception exposure.', url:'/html/construction-suite/permits-proposals.html', status:'live', badge:'ai' },
+      { sector:'Document Intake', name:'Secure Intake', desc:'Upload COIs, permits, and compliance docs directly to your encrypted workspace.', url:'#', status:'live', badge:'intake' },
+    ],
+    history: [
+      { date:'Apr 13 2026, 9:14 AM', doc:'Apex Concrete COI Package', sector:'Construction', type:'CONTRACT', sev:'high', exposure:'$100K', summary:'3 expired certificates, missing indemnification clause, 1 exclusion conflict.', warRoom:'/html/construction-suite/construction-war-room.html' },
+      { date:'Apr 12 2026, 2:31 PM', doc:'OSHA Site Readiness Scan', sector:'Compliance', type:'PERMIT', sev:'moderate', exposure:'$47K', summary:'Fall protection gap and 2 equipment certification lapses identified.', warRoom:'/html/construction-suite/construction-war-room.html' },
+      { date:'Apr 10 2026, 11:02 AM', doc:'Subcontractor Final Audit', sector:'Construction', type:'DOCUMENT REPORT', sev:'low', exposure:'$0', summary:'All subcontractor records current. No exceptions flagged.', warRoom:'/html/construction-suite/construction-war-room.html' },
+    ]
+  },
+  'tkn_montana_642ebe520da8026c69d5c39c': {
+    name: 'Montana Del Sur',
+    sector: 'Real Estate · Legal · Financial',
+    sectors: ['Real Estate','Legal','Financial'],
+    intake: 'https://intake.tsmshell.com/upload?tkn=tkn_montana_642ebe520da8026c69d5c39c',
+    stats: { docs:6, issues:3, exposure:'$380K', sla:'Active', slasub:'Closing window open' },
+    apps: [
+      { sector:'Real Estate', name:'RE War Room', desc:'Cost segregation analysis, closing document review, deed compliance, 1031 exchange support.', url:'/html/reo-pro/re-war-room.html', status:'live', badge:'ai' },
+      { sector:'Legal', name:'Legal War Room', desc:'Contract risk, clause exposure, missing exhibits, title due diligence.', url:'/html/legal-pro/legal-war-room.html', status:'live', badge:'ai' },
+      { sector:'Document Intake', name:'Secure Intake', desc:'Upload closing packages, title commitments, and deed documentation.', url:'#', status:'live', badge:'intake' },
+    ],
+    history: [
+      { date:'Apr 13 2026, 10:45 AM', doc:'Lot 14 Closing Package', sector:'Real Estate', type:'TITLE DOCUMENT', sev:'moderate', exposure:'$220K', summary:'Junior lien $22K unresolved, HOA balance $4,200 due before close.', warRoom:'/html/reo-pro/re-war-room.html' },
+      { date:'Apr 11 2026, 3:12 PM', doc:'Cost Seg Study — Phase II', sector:'Financial', type:'DOCUMENT REPORT', sev:'low', exposure:'$380K saved', summary:'Accelerated depreciation opportunity confirmed across 4 asset classes.', warRoom:'/html/reo-pro/re-war-room.html' },
+      { date:'Apr 09 2026, 8:55 AM', doc:'Vendor Contract Review', sector:'Legal', type:'CONTRACT', sev:'high', exposure:'$160K', summary:'Arbitration clause conflicts with jurisdiction; missing liquidated damages provision.', warRoom:'/html/legal-pro/legal-war-room.html' },
+    ]
+  },
+  'tkn_rrd_demo': {
+    name: 'RRD Enterprise',
+    sector: 'Document BPO · Compliance · Vendor Intelligence',
+    sectors: ['BPO','Compliance','Vendor Intel'],
+    intake: 'https://intake.tsmshell.com/upload?tkn=tkn_rrd_demo',
+    stats: { docs:184, issues:23, exposure:'$2.1M', sla:'Active', slasub:'11:54 remaining' },
+    apps: [
+      { sector:'BPO', name:'BPO Situation Room', desc:'Grant closeout, TOA audit, exception scan, escalation brief, SLA countdown.', url:'/html/bpo/bpo-situation-room.html', status:'live', badge:'ai' },
+      { sector:'BPO Strategy', name:'BPO Strategist', desc:'4-stage decision chain — Understand → Decide → Execute → Trust.', url:'/html/bpo/bpo-strategist-v2.html', status:'live', badge:'ai' },
+      { sector:'Document Intake', name:'Secure Intake', desc:'Client document submission — encrypted, isolated, audit logged.', url:'#', status:'live', badge:'intake' },
+    ],
+    history: [
+      { date:'Apr 13 2026, 7:33 AM', doc:'Grant Closeout — Community Infrastructure', sector:'BPO', type:'FILING', sev:'moderate', exposure:'$147K', summary:'3 line items missing supporting documentation; 1 expenditure exceeds allowable threshold.', warRoom:'/html/bpo/bpo-situation-room.html' },
+      { date:'Apr 13 2026, 6:18 AM', doc:'TOA Audit — Packet 184', sector:'BPO', type:'ESCALATION', sev:'high', exposure:'$680K', summary:'Transfer of assets package incomplete — 4 exhibits missing, 2 valuations outdated.', warRoom:'/html/bpo/bpo-situation-room.html' },
+      { date:'Apr 12 2026, 4:05 PM', doc:'Exception Scan — Q1 Batch', sector:'Compliance', type:'DOCUMENT REPORT', sev:'low', exposure:'$0', summary:'Q1 exception batch cleared. No outstanding items flagged.', warRoom:'/html/bpo/bpo-situation-room.html' },
+    ]
+  },
+  'tkn_banner_demo': {
+    name: 'Banner Health',
+    sector: 'Healthcare RCM · HIPAA Compliance',
+    sectors: ['Healthcare','Compliance'],
+    intake: 'https://intake.tsmshell.com/upload?tkn=tkn_banner_demo',
+    stats: { docs:47, issues:12, exposure:'$840K', sla:'Active', slasub:'HIPAA compliant' },
+    apps: [
+      { sector:'Healthcare', name:'HC Denial War Room', desc:'Claims denial audit, payer code extraction, appeal strategy generation, RCM exception resolution.', url:'/html/healthcare/hc-denial-war-room.html', status:'live', badge:'ai' },
+      { sector:'Compliance', name:'Compliance Shield', desc:'HIPAA documentation audit, regulatory gap analysis, remediation action queue.', url:'/html/healthcare/hc-denial-war-room.html', status:'live', badge:'ai' },
+      { sector:'Document Intake', name:'Secure Intake', desc:'HIPAA-compliant document submission — PHI isolated, zero cross-client access.', url:'#', status:'live', badge:'intake' },
+    ],
+    history: [
+      { date:'Apr 13 2026, 9:02 AM', doc:'Claims Denial Batch — Q1', sector:'Healthcare', type:'DENIAL', sev:'high', exposure:'$420K', summary:'47 CO-50 denials identified. Medical necessity documentation gaps across 3 payers.', warRoom:'/html/healthcare/hc-denial-war-room.html' },
+      { date:'Apr 11 2026, 1:44 PM', doc:'Provider Credentialing Audit', sector:'Compliance', type:'DOCUMENT REPORT', sev:'moderate', exposure:'$180K', summary:'2 providers with lapsed DEA licenses; 1 board certification expiring in 30 days.', warRoom:'/html/healthcare/hc-denial-war-room.html' },
+      { date:'Apr 09 2026, 10:20 AM', doc:'HIPAA Gap Scan', sector:'Healthcare', type:'DOCUMENT REPORT', sev:'low', exposure:'$0', summary:'PHI handling procedures current. No material gaps detected.', warRoom:'/html/healthcare/hc-denial-war-room.html' },
+    ]
+  }
+};
+
+const DEMO_MAP = {
+  ameris: 'tkn_ameris_69d597c500bac578f704c25c',
+  montana: 'tkn_montana_642ebe520da8026c69d5c39c',
+  rrd: 'tkn_rrd_demo',
+  banner: 'tkn_banner_demo'
+};
+
+// WAR ROOM ROUTING MAP
+const SECTOR_WAR_ROOMS = {
+  hc:  { label:'Healthcare', url:'/html/healthcare/hc-denial-war-room.html', relay:'TSM_HC_WAR_RELAY' },
+  fo:  { label:'FinOps', url:'/html/finops-suite/finops-war-room.html', relay:'TSM_FO_WAR_RELAY' },
+  ins: { label:'Insurance', url:'/html/tsm-insurance/insurance-war-room.html', relay:'TSM_INS_WAR_RELAY' },
+  con: { label:'Construction', url:'/html/construction-suite/construction-war-room.html', relay:'TSM_CON_WAR_RELAY' },
+  leg: { label:'Legal', url:'/html/legal-pro/legal-war-room.html', relay:'TSM_LEG_WAR_RELAY' },
+  re:  { label:'Real Estate', url:'/html/reo-pro/re-war-room.html', relay:'TSM_RE_WAR_RELAY' },
+  bpo: { label:'BPO', url:'/html/bpo/bpo-situation-room.html', relay:'TSM_BPO_WAR_RELAY' },
+};
+
+// ══════════════════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════════════════
+let activeClient = null;
+let activeToken = null;
+let sessionUploads = []; // in-memory upload history for this session
+
+function loadDemo(key){ document.getElementById('tokenInput').value=DEMO_MAP[key]; doLogin(); }
+
+function doLogin(){
+  const token = document.getElementById('tokenInput').value.trim();
+  const client = CLIENTS[token];
+  if(!client){ document.getElementById('loginErr').style.display='block'; return; }
+  document.getElementById('loginErr').style.display='none';
+  sessionStorage.setItem('tsm_client_token', token);
+  activeToken = token;
+  activeClient = client;
+  renderDash(client);
+}
+
+function doLogout(){
+  sessionStorage.removeItem('tsm_client_token');
+  activeClient = null; activeToken = null; sessionUploads = [];
+  document.getElementById('dashView').style.display='none';
+  document.getElementById('loginView').style.display='flex';
+  document.getElementById('topbarClient').style.display='none';
+  document.getElementById('tokenInput').value='';
+}
+
+// ══════════════════════════════════════════════════════════
+// RENDER DASHBOARD
+// ══════════════════════════════════════════════════════════
+function renderDash(client){
+  document.getElementById('loginView').style.display='none';
+  document.getElementById('dashView').style.display='block';
+  document.getElementById('topbarClient').textContent=client.name;
+  document.getElementById('topbarClient').style.display='inline';
+
+  document.getElementById('dashGreeting').textContent = client.name;
+  document.getElementById('dashSector').textContent = client.sector;
+  document.getElementById('dashTokenBadge').textContent = activeToken.slice(0,20)+'…';
+  document.getElementById('footerToken').textContent = activeToken.slice(0,24)+'…';
+
+  const s = client.stats;
+  animateCount('statDocs', 0, s.docs, 900);
+  document.getElementById('statIssues').textContent = s.issues;
+  document.getElementById('statExposure').textContent = s.exposure;
+  document.getElementById('statSectors').textContent = client.sectors.length;
+  document.getElementById('statSectorsList').textContent = client.sectors.join(' · ');
+  document.getElementById('statSLA').textContent = s.sla;
+  document.getElementById('statSLAsub').textContent = s.slasub;
+
+  document.getElementById('intakeLinkEl').textContent = client.intake;
+
+  // Render apps
+  document.getElementById('appsGrid').innerHTML = client.apps.map(a=>`
+    <a href="${a.url}" ${a.url!=='#'?'target="_blank"':''} class="app-tile" style="text-decoration:none;">
+      <div class="tile-sector">${a.sector}</div>
+      <div class="tile-name">${a.name}</div>
+      <div class="tile-desc">${a.desc}</div>
+      <div class="tile-status">
+        <span class="tile-dot live"></span>
+        <span style="font-size:9px;letter-spacing:.1em;color:var(--muted);">LIVE</span>
+        <span class="tile-badge ${a.badge}">${a.badge==='ai'?'AI POWERED':'ENCRYPTED'}</span>
+      </div>
+    </a>
+  `).join('');
+
+  // Render initial history from client profile
+  renderHistory(client.history);
+}
+
+// ══════════════════════════════════════════════════════════
+// HISTORY
+// ══════════════════════════════════════════════════════════
+function renderHistory(items){
+  const tbody = document.getElementById('historyBody');
+  const empty = document.getElementById('historyEmpty');
+  if(!items || items.length===0){
+    empty.style.display='block';
+    tbody.innerHTML='';
+    return;
+  }
+  empty.style.display='none';
+  tbody.innerHTML = items.map(h=>`
+    <tr>
+      <td style="color:var(--muted);font-size:10px;white-space:nowrap;">${h.date}</td>
+      <td style="color:var(--bright);font-size:12px;">${h.doc}</td>
+      <td><span class="sector-badge">${h.sector}</span></td>
+      <td style="font-size:10px;color:var(--muted);">${h.type||'—'}</td>
+      <td><span class="sev-badge ${h.sev}">${h.sev.toUpperCase()}</span></td>
+      <td style="color:var(--gold);font-family:var(--syne);font-weight:700;font-size:13px;">${h.exposure}</td>
+      <td class="summary-cell">${h.summary||'—'}</td>
+      <td>${h.warRoom?`<a href="${h.warRoom}" target="_blank" class="war-room-link">Open War Room →</a>`:'—'}</td>
+    </tr>
+  `).join('');
+}
+
+function addToHistory(result, filename){
+  const item = {
+    date: new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}),
+    doc: filename,
+    sector: result.sector || '—',
+    type: result.documentType || 'DOCUMENT REPORT',
+    sev: result.severity || 'low',
+    exposure: result.exposure || '—',
+    summary: result.summary || '—',
+    warRoom: result.warRoomUrl || null
+  };
+  sessionUploads.unshift(item);
+  // merge with client history
+  const all = [...sessionUploads, ...(activeClient.history||[])];
+  renderHistory(all);
+  // update doc counter
+  const cur = parseInt(document.getElementById('statDocs').textContent)||0;
+  document.getElementById('statDocs').textContent = cur+1;
+}
+
+// ══════════════════════════════════════════════════════════
+// UPLOAD HANDLING
+// ══════════════════════════════════════════════════════════
+function onDragOver(e){ e.preventDefault(); document.getElementById('uploadZone').classList.add('dragover'); }
+function onDragLeave(){ document.getElementById('uploadZone').classList.remove('dragover'); }
+function onDrop(e){ e.preventDefault(); document.getElementById('uploadZone').classList.remove('dragover'); handleFileSelect(e.dataTransfer.files); }
+function handleFileSelect(files){ Array.from(files).forEach(processFile); }
+
+async function processFile(file){
+  const qid = addQueueItem(file.name);
+  try {
+    updateQueueItem(qid, 'reading', 'Reading file…', 20);
+    const text = await extractText(file);
+
+    updateQueueItem(qid, 'classifying', 'Classifying with AI…', 55);
+    const result = await classifyDocument(file.name, text);
+
+    updateQueueItem(qid, 'done', 'Classification complete', 100, result, file.name);
+    addToHistory(result, file.name);
+  } catch(e){
+    updateQueueItem(qid, 'error', 'Error: '+e.message, 100);
+  }
+}
+
+async function extractText(file){
+  return new Promise((resolve, reject)=>{
+    const ext = file.name.split('.').pop().toLowerCase();
+    if(['png','jpg','jpeg','gif','webp'].includes(ext)){
+      const reader = new FileReader();
+      reader.onload = e => resolve('[IMAGE] '+file.name+' — image document submitted for AI classification');
+      reader.onerror = ()=>reject(new Error('Image read failed'));
+      reader.readAsDataURL(file);
+    } else {
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result || '');
+      reader.onerror = ()=>reject(new Error('File read failed'));
+      reader.readAsText(file);
+    }
+  });
+}
+
+async function classifyDocument(filename, text){
+  // Try server-side classify endpoint first
+  try {
+    const res = await fetch('/api/doc-router/classify', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ fileName: filename, textContent: text.slice(0, 6000) })
+    });
+    if(res.ok){
+      const data = await res.json();
+      return buildResult(data, text);
+    }
+  } catch(e){ /* fall through to AI */ }
+
+  // AI-powered classification via Anthropic
+  const clientCtx = activeClient ? `Client: ${activeClient.name}. Active sectors: ${activeClient.sectors.join(', ')}.` : '';
+  const prompt = `You are TSM Shell's document classification AI. Analyze this document and return ONLY valid JSON — no markdown, no preamble.
+
+${clientCtx}
+
+Document filename: ${filename}
+Document content (first 4000 chars):
+${text.slice(0,4000)}
+
+Return this exact JSON schema:
+{
+  "documentType": "one of: DENIAL, CLAIM, CONTRACT, INVOICE, PERMIT, FILING, TITLE DOCUMENT, DOCUMENT REPORT, ESCALATION, REMITTANCE, POLICY",
+  "verticals": ["array of: hc, fo, ins, con, leg, re, bpo — include all that apply"],
+  "primaryVertical": "single best match from above codes",
+  "severity": "high | moderate | low",
+  "exposure": "dollar amount as string e.g. $42,000 or N/A",
+  "client": "extracted client or company name from document, or Unknown",
+  "ref": "document reference number or ID if present",
+  "summary": "2-3 sentence plain English summary of the document and its key risk or finding",
+  "recommendedAction": "1 sentence: what should the user do next with this document",
+  "bnca": true or false
+}`;
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1000,
+      messages:[{role:'user',content:prompt}]
+    })
+  });
+  if(!res.ok) throw new Error('Classification API error '+res.status);
+  const data = await res.json();
+  const raw = data.content?.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
+  let parsed;
+  try { parsed = JSON.parse(raw); } catch(e){ throw new Error('Could not parse AI response'); }
+  return buildResult(parsed, text);
+}
+
+function buildResult(parsed, text){
+  const vertical = parsed.primaryVertical || (parsed.verticals||[])[0] || 'bpo';
+  const room = SECTOR_WAR_ROOMS[vertical];
+  // Write relay for war room
+  if(room && room.relay){
+    try {
+      localStorage.setItem(room.relay, JSON.stringify({
+        docText: text.slice(0,8000),
+        documentType: parsed.documentType,
+        client: parsed.client,
+        ref: parsed.ref,
+        summary: parsed.summary,
+        severity: parsed.severity,
+        exposure: parsed.exposure,
+        timestamp: Date.now()
+      }));
+    } catch(e){}
+  }
+  return {
+    documentType: parsed.documentType || 'DOCUMENT REPORT',
+    sector: room ? room.label : (parsed.primaryVertical || 'General').toUpperCase(),
+    verticals: parsed.verticals || [],
+    severity: parsed.severity || 'low',
+    exposure: parsed.exposure || 'N/A',
+    client: parsed.client || '—',
+    ref: parsed.ref || '—',
+    summary: parsed.summary || '—',
+    recommendedAction: parsed.recommendedAction || '—',
+    warRoomUrl: room ? room.url : null
+  };
+}
+
+// ══════════════════════════════════════════════════════════
+// QUEUE UI
+// ══════════════════════════════════════════════════════════
+let qCount = 0;
+function addQueueItem(filename){
+  const id = 'qi-'+(++qCount);
+  const el = document.createElement('div');
+  el.className='queue-item'; el.id=id;
+  el.innerHTML=`
+    <div class="qi-left">
+      <div class="qi-filename">${filename}</div>
+      <div class="qi-status" id="${id}-status"><span class="spinner"></span>Queued…</div>
+      <div class="qi-bar-wrap"><div class="qi-bar" id="${id}-bar"></div></div>
+      <div class="qi-tags" id="${id}-tags"></div>
+      <div id="${id}-result"></div>
+    </div>
+    <div class="qi-right">
+      <button class="qi-dismiss" onclick="dismissQueueItem('${id}')">✕</button>
+    </div>
+  `;
+  document.getElementById('uploadQueue').prepend(el);
+  return id;
+}
+
+function updateQueueItem(id, state, statusText, pct, result, filename){
+  const status = document.getElementById(id+'-status');
+  const bar = document.getElementById(id+'-bar');
+  const tags = document.getElementById(id+'-tags');
+  const resultEl = document.getElementById(id+'-result');
+  const right = document.querySelector('#'+id+' .qi-right');
+
+  if(status){
+    status.className = 'qi-status '+state;
+    status.innerHTML = state==='classifying'||state==='reading'?`<span class="spinner"></span>${statusText}`:statusText;
+  }
+  if(bar){
+    bar.style.width = pct+'%';
+    if(state==='done') bar.classList.add('done');
+    if(state==='error') bar.classList.add('error');
+  }
+
+  if(state==='done' && result){
+    // Tags
+    const sevClass = result.severity==='high'?'sev-high':result.severity==='moderate'?'sev-moderate':'sev-low';
+    tags.innerHTML=`
+      <span class="qi-tag sector">${result.sector}</span>
+      <span class="qi-tag doctype">${result.documentType}</span>
+      <span class="qi-tag ${sevClass}">${result.severity.toUpperCase()} RISK</span>
+      ${result.exposure&&result.exposure!=='N/A'?`<span class="qi-tag exposure">${result.exposure}</span>`:''}
+    `;
+
+    // Result panel
+    resultEl.innerHTML=`
+      <div class="qi-result">
+        <div class="qi-result-title">AI Classification Result</div>
+        <div class="qi-result-body">${result.summary}</div>
+        <div class="qi-result-grid">
+          <div class="qi-result-field">
+            <div class="qi-rf-label">Recommended Action</div>
+            <div class="qi-rf-val">${result.recommendedAction}</div>
+          </div>
+          <div class="qi-result-field">
+            <div class="qi-rf-label">Detected Client</div>
+            <div class="qi-rf-val">${result.client}</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // War room launch button
+    if(result.warRoomUrl && right){
+      right.innerHTML=`
+        <a href="${result.warRoomUrl}" target="_blank" class="qi-launch">Open War Room →</a>
+        <button class="qi-dismiss" onclick="dismissQueueItem('${id}')">✕</button>
+      `;
+    }
+  }
+}
+
+function dismissQueueItem(id){
+  const el=document.getElementById(id);
+  if(el){el.style.opacity='0';el.style.transform='translateX(10px)';el.style.transition='all .2s';setTimeout(()=>el.remove(),200);}
+}
+
+// ══════════════════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════════════════
+function switchTab(name, el){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(el) el.classList.add('active');
+}
+
+// ══════════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════════
+function animateCount(id,from,to,dur){
+  const el=document.getElementById(id);
+  const start=performance.now();
+  function tick(now){
+    const p=Math.min((now-start)/dur,1);
+    el.textContent=Math.round(from+(to-from)*p);
+    if(p<1)requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+function copyIntake(){
+  const link=document.getElementById('intakeLinkEl').textContent;
+  navigator.clipboard?.writeText(link).then(()=>{
+    const btn=document.querySelector('.copy-btn');
+    const orig=btn.textContent;
+    btn.textContent='Copied ✓'; btn.style.color='var(--green)';
+    setTimeout(()=>{btn.textContent=orig;btn.style.color='';},2000);
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// AUTO-LOGIN
+// ══════════════════════════════════════════════════════════
+const saved=sessionStorage.getItem('tsm_client_token');
+if(saved && CLIENTS[saved]){ activeToken=saved; activeClient=CLIENTS[saved]; renderDash(CLIENTS[saved]); }
+</script>
+</body>
+</html>
