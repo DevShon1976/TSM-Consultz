@@ -1246,7 +1246,58 @@ function storeSession(e){
   }catch(err){console.warn('Store error:',err);}
 }
 
-function pushCollectiveSignal(vertical, signal, severity) {   try { fetch('/api/collective/signal', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ vertical, signal, severity: severity||'MEDIUM', source: window.location.pathname }) }); } catch(e) {} } function escalateToStrategist(){ storeSession(); pushCollectiveSignal('construction', 'War room escalation triggered — 6-engine package dispatched to strategist', 'HIGH'); setTimeout(()=>{ window.location.href='/html/construction-suite/construction-strategist.html'; },400); addLog('Escalating to Construction Strategist','6-engine package dispatched','p'); setTimeout(()=>goNav('construction-strategist.html'),500); }
+function pushCollectiveSignal_CON() {
+  try {
+    const e = engOut;
+    const bncaText = e[6] || e[5] || '';
+
+    // Parse risk score from Engine 06
+    const scoreM = bncaText.match(/OVERALL\s*RISK\s*SCORE[:\s]+(\d+)/i);
+    const score = scoreM ? parseInt(scoreM[1]) : 68;
+    const riskLevel = score >= 80 ? 'URGENT' : score >= 60 ? 'RISK' : score >= 40 ? 'WATCH' : 'READY';
+
+    // Parse financial exposure
+    const dollarAmounts = [...(bncaText.matchAll(/\$[\d,.]+(?:\s*[MK])?(?:\s*(?:exposure|at risk|TBD|reserve))?/gi))];
+    const impactDelta = dollarAmounts.length ? dollarAmounts[0][0] : '$TBD';
+
+    // Parse top action from priority actions
+    const actionM = bncaText.match(/PRIORITY\s*ACTIONS[:\s]*\n?1\.\s*([^\n—]+)/i);
+    const topIssue = actionM ? actionM[1].trim() : 'Construction document requires accounting and legal review';
+
+    // Legal risk from Engine 04
+    const legalRiskM = (e[4] || '').match(/PRIMARY\s*LEGAL\s*RISK[:\s]+([^\n]+)/i);
+    const legalRisk = legalRiskM ? legalRiskM[1].trim() : '—';
+
+    fetch('/api/collective/signal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        vertical:     'construction',
+        warRoom:      'Construction War Room',
+        bnca:         bncaText.slice(0, 400) || 'Construction 6-engine BNCA complete.',
+        confidence:   77,
+        riskLevel,
+        topIssue,
+        ownerLanes:   ['Project Manager', 'Project Accountant', 'Construction Attorney'],
+        hitlRequired: riskLevel !== 'READY',
+        actions:      [
+          'Correct GL misclassifications within 48 hours',
+          'File lien preservation before window closes',
+          'Establish financial reserve at 10% of contract value'
+        ],
+        impactDelta,
+        kpi: {
+          'Risk Score':   score + '/100',
+          'Doc Type':     selectedDocType || '—',
+          'Legal Risk':   legalRisk.slice(0,30) || '—',
+          'Engines Run':  enginesComplete + '/6'
+        }
+      })
+    });
+  } catch(e) { console.warn('[Collective Signal Construction]', e.message); }
+}
+
+function escalateToStrategist(){ storeSession(); pushCollectiveSignal_CON(); setTimeout(()=>{ window.location.href='/html/construction-suite/construction-strategist.html'; },400); addLog('Escalating to Construction Strategist','6-engine package dispatched','p'); setTimeout(()=>goNav('construction-strategist.html'),500); }
 
 function exportFull(){
   let out=`TSM CONSTRUCTION WAR ROOM — FULL ANALYSIS\n${new Date().toLocaleString()}\nDocument Type: ${selectedDocType}\n\n`;
