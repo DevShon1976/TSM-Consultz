@@ -928,6 +928,53 @@ app.post('/api/collective/signal', (req, res) => {
   res.json({ ok: true, entry });
 });
 
+// GET /api/collective/signals — fetch all pushed signals
+app.get('/api/collective/signals', (req, res) => {
+  res.json({ ok: true, signals: COLLECTIVE_SIGNALS });
+});
+
+// DELETE /api/collective/signals — clear all signals
+app.delete('/api/collective/signals', (req, res) => {
+  COLLECTIVE_SIGNALS.length = 0;
+  res.json({ ok: true });
+});
+
+// POST /api/collective/bnca — run cross-vertical synthesis via Groq
+app.post('/api/collective/bnca', async (req, res) => {
+  try {
+    if (!COLLECTIVE_SIGNALS.length) return res.status(400).json({ ok: false, error: 'No signals to synthesize' });
+    const prompt = `You are TSM's cross-vertical BNCA synthesizer. Given the following signals from multiple verticals, identify: (1) conflicts between verticals, (2) synergies or compounding risks, (3) a ranked HITL decision queue. Respond ONLY in valid JSON with keys: conflicts (array), synergies (array), hitlQueue (array of {priority, vertical, action, rationale}), summary (string).\n\nSignals:\n${JSON.stringify(COLLECTIVE_SIGNALS.slice(0, 50), null, 2)}`;
+    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: 'Respond with ONLY valid JSON. No markdown fences, no preamble.' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.2,
+        response_format: { type: 'json_object' }
+      })
+    });
+    if (!groqRes.ok) return res.status(502).json({ ok: false, error: 'Groq error' });
+    const data = await groqRes.json();
+    const parsed = JSON.parse(data.choices[0].message.content);
+    const result = { ...parsed, timestamp: Date.now(), signalCount: COLLECTIVE_SIGNALS.length };
+    COLLECTIVE_BNCA.unshift(result);
+    if (COLLECTIVE_BNCA.length > 20) COLLECTIVE_BNCA.length = 20;
+    res.json({ ok: true, bnca: result });
+  } catch (err) {
+    console.error('[collective/bnca] error:', err);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// GET /api/collective/bnca/latest — fetch most recent synthesis
+app.get('/api/collective/bnca/latest', (req, res) => {
+  res.json({ ok: true, bnca: COLLECTIVE_BNCA[0] || null });
+});
+
 // ══════════════════════════════════════════════════════════════════════════════
 // ── END COLLECTIVE BNCA ───────────────════════════════════════════════════════
 // ══════════════════════════════════════════════════════════════════════════════
