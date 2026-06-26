@@ -2654,6 +2654,50 @@ Dollar amounts and party names required.`;
       };
     }
 
+    function pushCollectiveSignal_RE(payload) {
+      try {
+        const bncaText = payload.synthesis || payload.feedText || '';
+
+        const dollarMatch = bncaText.match(/\$[\d,.]+[MK]?(?:\s*pipeline|\s*at risk|\s*exposure|\s*fall.through)/i);
+        const impactDelta = dollarMatch ? dollarMatch[0] : '$0';
+
+        const riskTerms = (bncaText.match(/CRITICAL|HIGH RISK|TITLE ISSUE|FINANCING (?:FAILURE|RISK)/gi) || []);
+        const riskLevel = riskTerms.length > 2 ? 'URGENT' : riskTerms.length > 0 ? 'RISK' : 'WATCH';
+        const hasTitle = /title/i.test(bncaText);
+        const hasFinance = /financ/i.test(bncaText);
+
+        const topIssue = bncaText.split('\n').find(l => l.trim().length > 20) || 'RE deal package dispatched to strategist';
+
+        fetch('/api/collective/signal', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            vertical:     'real-estate',
+            warRoom:      'Real Estate War Room',
+            bnca:         bncaText.slice(0, 400) || 'RE analysis complete. Deal package dispatched.',
+            confidence:   81,
+            riskLevel,
+            topIssue,
+            ownerLanes:   ['Loan Officer', 'Underwriter', 'Title Agent', 'Closing Manager'],
+            hitlRequired: riskLevel !== 'READY',
+            actions:      [
+              'Run rescue pack for highest-risk defect flag',
+              'Order title cure or appraisal rebuttal as needed',
+              'Escalate financing failures to UW within 48h'
+            ],
+            impactDelta,
+            kpi: {
+              'Modules Run':    payload.modulesRun + ' nodes',
+              'Outputs Saved':  payload.savedOutputs,
+              'Pipeline':       impactDelta,
+              'Title Issue':    hasTitle ? 'YES' : 'No',
+              'Finance Issue':  hasFinance ? 'YES' : 'No'
+            }
+          })
+        });
+      } catch(e) { console.warn('[Collective Signal RE]', e.message); }
+    }
+
     function escalateToStrategist() {
       const payload = buildWarRoomPayload();
       if (!payload.savedOutputs && !payload.rescuePack && !payload.feedText) {
@@ -2668,7 +2712,7 @@ Dollar amounts and party names required.`;
         localStorage.setItem('TSM_RE_WAR_RELAY', JSON.stringify(payload));
         sessionStorage.setItem('TSM_RE_WAR_RELAY', JSON.stringify(payload));
         try { localStorage.setItem('TSM_CURE_RELAY', JSON.stringify({ vertical:'Real Estate', appName:'RE War Room', anomalies: payload.defectFlags||[], docText: payload.feedText||'', timestamp: Date.now() })); } catch(e) {}
-        try { fetch('/api/collective/signal', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ vertical:'real-estate', signal:'War room escalation triggered — RE deal package dispatched to strategist', severity:'HIGH', source: window.location.pathname }) }); } catch(e) {}
+        pushCollectiveSignal_RE(payload);
         window.location.href = 're-strategist.html';
       } catch (e) {
         alert('Session saved. Open re-strategist.html to continue.');
