@@ -90,7 +90,7 @@ const SMOS = (() => {
     go(path) { window.location.href = this.base + path; },
     toSongBuilder()     { this.go('creation/song-builder.html'); },
     toBeatWorkbench()   { this.go('creation/beat-workbench.html'); },
-    toCadence()         { this.go('creation/cadence-builder.html'); },
+    toCadence()         { this.go('cadence-builder.html'); },
     toProducerAI()      { this.go('producer/producer-ai.html'); },
     toRecordingCoach()  { this.go('producer/recording-coach.html'); },
     toMixCoach()        { this.go('producer/mixing-coach.html'); },
