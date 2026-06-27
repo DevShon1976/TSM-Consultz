@@ -658,5 +658,6 @@ router.post('/api/hc/query', async function(req, res) {
   try { var a = await groqChat(SP.healthcare, body.question||body.query||'', body.maxTokens||1024); return res.json({ ok:true, answer:a, createdAt:new Date().toISOString() }); }
   catch(e) { return res.status(500).json({ ok:false, error:e.message }); }
 });
+router.post('/api/hc/ask', async (req, res) => { req.body.question = req.body.question||req.body.prompt||req.body.query||''; try { const a = await groqChat(SP.healthcare, req.body.question, req.body.maxTokens||1024); return res.json({ok:true, answer:a, createdAt:new Date().toISOString()}); } catch(e) { return res.status(500).json({ok:false, error:e.message}); } });
 
 module.exports = router;
