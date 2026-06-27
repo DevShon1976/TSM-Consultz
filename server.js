@@ -15,7 +15,7 @@ const https = require('https');
 const app = express();
 const PORT = process.env.PORT || 8080;
 const HTML_ROOT = path.join(__dirname, "html");
-const { tsmAuthMiddleware } = require('./tsm-auth');
+const { tsmAuthMiddleware } = require('./html/tsm-auth');
 
 app.use(express.json());
 app.use(require('express').urlencoded({ extended: false }));
