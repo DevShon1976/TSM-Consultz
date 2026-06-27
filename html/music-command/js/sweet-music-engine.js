@@ -56,22 +56,16 @@ const SMOS = (() => {
 
   // ── TSM Neural Core API wrapper ───────────────────────────────
   async function ask(userPrompt, systemPrompt = '', maxTokens = 1000) {
-    const body = {
-      model: 'claude-sonnet-4-6',
-      max_tokens: maxTokens,
-      messages: [{ role: 'user', content: userPrompt }]
-    };
-    if (systemPrompt) body.system = systemPrompt;
-
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('/api/music/sweet/ai', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+      body: JSON.stringify({ system: systemPrompt, prompt: userPrompt, maxTokens })
     });
 
     if (!res.ok) throw new Error(`Neural Core error: ${res.status}`);
     const data = await res.json();
-    return data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    if (!data.ok) throw new Error(data.error || 'Neural Core error');
+    return data.text;
   }
 
   async function askJSON(userPrompt, systemPrompt = '') {
