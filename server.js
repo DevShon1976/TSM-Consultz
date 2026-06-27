@@ -465,6 +465,7 @@ app.all("/api/wip/sector-ai", (req, res) => {
 // WIP sub-routes mounted on /api (before catch-all)
 const apiRouter = require('express').Router();
 require('./wip-routes')(apiRouter);
+apiRouter.use(require('./routes/hc'));
 app.use('/api', apiRouter);
 
 // ── Music Command ─────────────────────────────────────────────────
