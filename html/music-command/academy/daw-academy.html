@@ -175,6 +175,7 @@
   </div>
 </div>
 
+<script src="../js/sweet-music-engine.js"></script>
 <script>
 let selectedDAW = 'FL Studio';
 
@@ -198,19 +199,10 @@ async function askDAW() {
   responseEl.classList.add('show');
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-6',max_tokens:1000,
-        system:`You are a music production coach specializing in DAWs and beginner producer education. The user is currently interested in ${selectedDAW}. Give practical, specific, actionable answers. Keep responses under 200 words. Use plain text, no markdown.`,
-        messages:[{role:'user',content:q}]
-      })
-    });
-    const data = await res.json();
-    responseEl.textContent = data.content[0].text;
+    const text = await SMOS.ask(q, `You are a music production coach specializing in DAWs and beginner producer education. The user is currently interested in ${selectedDAW}. Give practical, specific, actionable answers. Keep responses under 200 words. Use plain text, no markdown.`);
+    responseEl.textContent = text;
   } catch(e) {
-    responseEl.textContent = 'Connection error. Make sure the TSM server is running and your API key is set.';
+    responseEl.textContent = 'Connection error. Please try again in a moment.';
   }
   document.getElementById('chatInput').value = '';
 }
