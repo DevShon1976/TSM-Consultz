@@ -2,6 +2,13 @@
 const express = require('express');
 const router  = express.Router();
 const fs = require('fs');
+const path = require('path');
+const DATA_DIR = path.join(__dirname, '..', 'data');
+const HC_NODE_STATE_FILE = path.join(DATA_DIR, 'hc-node-state.json');
+const HC_REPORTS_FILE = path.join(DATA_DIR, 'hc-reports.json');
+const HC_PROFILES_FILE = path.join(DATA_DIR, 'hc-profiles.json');
+function readJson(f, def) { try { return JSON.parse(require('fs').readFileSync(f,'utf8')); } catch(e) { return def; } }
+function writeJson(f, d) { try { require('fs').mkdirSync(path.dirname(f),{recursive:true}); require('fs').writeFileSync(f, JSON.stringify(d)); } catch(e) {} }
 
 router.get('/api/hc/reports', (req, res) => {
   const reports = readJson(HC_REPORTS_FILE, []);
