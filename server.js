@@ -454,6 +454,27 @@ app.post('/api/candidate/clear-new', (req, res) => {
 });
 
 // ── MUSIC API ROUTES ──────────────────────────────────────────────────────────
+// Deterministic heuristic used only to rank/gate revision options (not a
+// stand-in for AI judgment — the lyric content itself always comes from
+// real groqChat() calls above; this just scores text shape for the UI).
+function musicHeuristicScore(text){
+  var body = String(text || '');
+  var lines = body.split(/\n+/).filter(Boolean).length;
+  var len = body.length;
+  var cadence = Math.min(.99, .72 + (lines >= 2 ? .08 : 0) + (len > 60 ? .06 : 0));
+  var emotion = Math.min(.99, .74 + (len > 120 ? .08 : 0));
+  var structure = Math.min(.99, .70 + (lines >= 4 ? .12 : .05));
+  var imagery = Math.min(.99, .70 + (len > 150 ? .08 : 0));
+  var overall = Number(((cadence + emotion + structure + imagery) / 4).toFixed(2));
+  return {
+    cadence: Number(cadence.toFixed(2)),
+    emotion: Number(emotion.toFixed(2)),
+    structure: Number(structure.toFixed(2)),
+    imagery: Number(imagery.toFixed(2)),
+    overall
+  };
+}
+
 app.post('/api/music/structure', async (req, res) => {
   try {
     var body = req.body || {};
@@ -558,21 +579,26 @@ app.post('/api/music/chain', async (req, res) => {
 });
 
 app.post('/api/music/revision/generate', async (req, res) => {
-  var body = req.body || {};
-  var draft = body.draft || '';
-  var request = body.request || 'Give me 3 revision options';
   try {
+    var body = req.body || {};
+    var draft = body.draft || '';
+    var request = body.request || 'Give me 3 revision options';
     var results = await Promise.all([
       groqChat(SP.music, 'Flow-first revision.\nRequest: ' + request + '\nDraft: ' + draft + '\nOption A:', 400),
       groqChat(SP.music, 'Emotion-first revision.\nRequest: ' + request + '\nDraft: ' + draft + '\nOption B:', 400),
       groqChat(SP.music, 'Hook-first revision.\nRequest: ' + request + '\nDraft: ' + draft + '\nOption C:', 400)
     ]);
+    var scoreA = musicHeuristicScore(results[0]);
+    var scoreB = musicHeuristicScore(results[1]);
+    var scoreC = musicHeuristicScore(results[2]);
     var options = [
-      { id: 'A', title: 'Option A - Flow First', strategy: 'Cadence and bounce', output: results[0] },
-      { id: 'B', title: 'Option B - Emotion First', strategy: 'Imagery and vulnerability', output: results[1] },
-      { id: 'C', title: 'Option C - Hook First', strategy: 'Structure and repeatability', output: results[2] }
+      { id: 'A', title: 'Option A - Flow First', strategy: 'Cadence and bounce', output: results[0], score: scoreA },
+      { id: 'B', title: 'Option B - Emotion First', strategy: 'Imagery and vulnerability', output: results[1], score: scoreB },
+      { id: 'C', title: 'Option C - Hook First', strategy: 'Structure and repeatability', output: results[2], score: scoreC }
     ];
-    var session = { id: Date.now(), request, input: draft, options, recommended: 'A', createdAt: new Date().toISOString() };
+    var bestOverall = Math.max(scoreA.overall, scoreB.overall, scoreC.overall);
+    var recommended = options.find(o => o.score.overall === bestOverall).id;
+    var session = { id: Date.now(), request, input: draft, options, recommended, createdAt: new Date().toISOString() };
     if (!global.MUSIC_REVISIONS) global.MUSIC_REVISIONS = { sessions: [], selected: null };
     global.MUSIC_REVISIONS.sessions.unshift(session);
     global.MUSIC_REVISIONS.sessions = global.MUSIC_REVISIONS.sessions.slice(0, 20);
@@ -601,6 +627,17 @@ app.post('/api/music/song/learn', async (req, res) => {
   catch (e) { song.aiAnalysis = null; }
   return res.json({ ok: true, song, dna: global.MUSIC_PLATFORM.artistDNA });
 });
+
+// ── MUSIC API ROUTES (additional engine/revision/dna/billing layer) ───────────
+// app.html calls a wider set of /api/music/* endpoints than were defined above
+// (agent/run, agent/chain, dna/learn, engine, revision/select, revision/state,
+// revision/pick-rerun, dashboard-sync, session/save, export, monetization/state,
+// billing/state, billing/upgrade-intent, billing/set-tier-dev, and /api/music/state
+// itself) — all of which were 404ing live. routes/music.js already implements
+// them with the exact response shapes app.html expects; it just was never
+// mounted. Mounted AFTER the routes above so those (already real, Groq-backed)
+// inline handlers keep precedence for any overlapping paths.
+app.use(require('./routes/music'));
 
 // ── FINOPS ────────────────────────────────────────────────────────────────────
 app.post('/api/finops/bnca/report', (req, res) => res.json({ ok: true }));
