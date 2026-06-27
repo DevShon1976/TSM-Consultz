@@ -139,8 +139,9 @@ const TSM_MESH = {
   FINANCE: { owner: 'Financial Strategist', controller: 'Financial Command', risks: ['Margin compression', 'Payer variance', 'Cash flow slowdown', 'Revenue forecasting deviation'] }
 };
 
-const suites = [
 app.use('/html/runtime', express.static(path.join(__dirname, 'html', 'runtime')));
+app.use('/', express.static(path.join(__dirname, 'html')));
+const suites = [
   { route: '/construction', dir: 'html/construction-suite', index: 'construction-hub.html' },
   { route: '/finops', dir: 'html/finops-suite', index: 'finops-presentation/index.html' },
   { route: '/healthcare', dir: 'html/healthcare', index: 'index.html' },
