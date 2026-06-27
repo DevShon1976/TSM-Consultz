@@ -1104,4 +1104,23 @@ function requireMusicDemo(req, res, next){
   next();
 }
 
-// ===== SWEET MUSIC OS — generic AI bridge ===== // Front-end pages (beat-workbench, song-builder, daw-academy, release-center, // cadence-builder) build their own system/user prompts client-side, same as // before — this just gives them a real server-side AI call to hit instead of // fetching https://api.anthropic.com/v1/messages directly with no key, which // only ever worked inside a Claude.ai Artifact preview and always 401s live. router.post('/api/music/sweet/ai', async (req, res) => {   try {     const body = req.body || {};     const system = body.system || "You are a helpful AI music production assistant. Respond ONLY with valid JSON when asked for JSON — no markdown fences, no preamble.";     const prompt = body.prompt || "";     const maxTokens = Math.min(Number(body.maxTokens) || 1000, 1500);     if(!prompt) return res.status(400).json({ ok:false, error:"Missing prompt" });      const text = await musicGroqCall(system, prompt, maxTokens);     return res.json({ ok:true, text });   } catch(e){     console.error("[sweet/ai] error:", e.message);     return res.status(500).json({ ok:false, error:e.message });   } });  module.exports = router;
+// ===== SWEET MUSIC OS — generic AI bridge =====
+// Front-end pages (beat-workbench, song-builder, daw-academy, release-center,
+// cadence-builder) call this instead of api.anthropic.com directly (which
+// has no key in the browser and always 401s in production).
+router.post('/api/music/sweet/ai', async (req, res) => {
+  try {
+    const body = req.body || {};
+    const system = body.system || 'You are a helpful AI music production assistant. Respond ONLY with valid JSON when asked for JSON — no markdown fences, no preamble.';
+    const prompt = body.prompt || '';
+    const maxTokens = Math.min(Number(body.maxTokens) || 1000, 1500);
+    if (!prompt) return res.status(400).json({ ok: false, error: 'Missing prompt' });
+    const text = await musicGroqCall(system, prompt, maxTokens);
+    return res.json({ ok: true, text });
+  } catch (e) {
+    console.error('[sweet/ai] error:', e.message);
+    return res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+module.exports = router;
