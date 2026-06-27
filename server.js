@@ -1091,7 +1091,6 @@ app.post("/api/ai/query", async (req, res) => {
 });
 
 // Alias routes so existing apps dont need changes
-app.post("/api/hc/ask",        (req, res) => { req.body.sector = "HEALTHCARE";   app._router.handle(Object.assign(req, {url:"/api/ai/query",path:"/api/ai/query"}), res, ()=>{}); });
 app.post("/api/chat",          (req, res) => { req.body.sector = req.body.sector || "HEALTHCARE"; app._router.handle(Object.assign(req, {url:"/api/ai/query",path:"/api/ai/query"}), res, ()=>{}); });
 app.post("/api/strategist/query", (req, res) => { req.body.sector = "HEALTHCARE"; app._router.handle(Object.assign(req, {url:"/api/ai/query",path:"/api/ai/query"}), res, ()=>{}); });
 
