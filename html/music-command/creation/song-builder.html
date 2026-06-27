@@ -337,13 +337,14 @@ Return ONLY valid JSON with this exact structure:
 }`;
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages',{
+    const res = await fetch('/api/music/sweet/ai',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,system:'You are a professional songwriter AI. Respond ONLY with valid JSON, no markdown.',messages:[{role:'user',content:prompt}]})
+      body:JSON.stringify({system:'You are a professional songwriter AI. Respond ONLY with valid JSON, no markdown.',prompt})
     });
     const data = await res.json();
-    const d = JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim());
+    if (!data.ok) throw new Error(data.error || 'Backend error');
+    const d = JSON.parse((data.text||'{}').replace(/```json|```/g,'').trim());
     renderOutput(d, context);
   } catch(e) {
     document.getElementById('output').innerHTML = `<div style="color:var(--red);font-size:0.75rem">Error generating song. Check your connection and try again.</div>`;
@@ -377,7 +378,7 @@ function renderOutput(d, ctx) {
     </div>
     <div class="output-actions">
       <button class="btn" onclick="copySong()">Copy Lyrics</button>
-      <button class="btn-outline" onclick="window.location.href='../creation/cadence-builder.html'">→ Cadence Studio</button>
+      <button class="btn-outline" onclick="window.location.href='../cadence-builder.html'">→ Cadence Studio</button>
       <button class="btn-outline" onclick="window.location.href='../producer/recording-coach.html'">→ Recording Coach</button>
       <button class="btn-outline" onclick="location.reload()">Build New Song</button>
     </div>
