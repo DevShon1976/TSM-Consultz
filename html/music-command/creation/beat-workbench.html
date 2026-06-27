@@ -196,6 +196,7 @@
   </div>
 </div>
 
+<script src="../js/sweet-music-engine.js"></script>
 <script>
 let currentSource = 'file';
 
@@ -226,20 +227,24 @@ async function analyzeWithAI(prompt) {
   document.getElementById('intelPanel').classList.remove('show');
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1000,
-        system: 'You are a professional music producer AI. Respond ONLY with valid JSON, no markdown, no preamble.',
-        messages: [{role:'user', content: prompt}]
-      })
-    });
-    const data = await res.json();
-    const text = data.content[0].text.replace(/```json|```/g,'').trim();
-    const d = JSON.parse(text);
+    const d = await SMOS.askJSON(prompt, 'You are a professional music producer AI.');
     renderIntel(d);
+  } catch(e) {
+    console.error('[beat-workbench] AI error:', e.message);
+    // Fallback demo data
+    renderIntel({
+      genre:'Trap',bpm:'148',key:'F Minor',mood:'Dark',energy:'9.2',length:'3:14',
+      vocalStyles:['Melodic Trap','Pain Rap','Aggressive Drill'],
+      songStructure:['Intro (4 bars)','Hook (8 bars)','Verse 1 (16 bars)','Hook (8 bars)','Bridge (4 bars)','Outro (4 bars)'],
+    roducerNotes:'This beat runs at 148 BPM in F Minor — keep bars tight at 9–11 syllables. Do not overcrowd the hook; leave space for adlibs. Record  p at least 3 takes and double the hook for commercial polish.'
+    });
+  }
+  document.getElementById('loading').classList.remove('show');
+}
+
+  try {
+    const d = await SMOS.askJSON(prompt, 'You are a professional songwriter AI.');
+    renderOutput(d, context);
   } catch(e) {
     // Fallback demo data
     renderIntel({
@@ -271,7 +276,7 @@ function renderIntel(d) {
 }
 
 function goToSongBuilder() { window.location.href = '../creation/song-builder.html'; }
-function goToCadence() { window.location.href = '../creation/cadence-builder.html'; }
+function goToCadence() { window.location.href = 'cadence-builder.html'; }
 function reset() {
   document.getElementById('intelPanel').classList.remove('show');
   document.getElementById('fileInput').value = '';
