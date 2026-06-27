@@ -178,6 +178,7 @@
   </div>
 </div>
 
+<script src="js/sweet-music-engine.js"></script>
 <script>
 let targetSyl = 8;
 let rowCount = 0;
@@ -261,7 +262,7 @@ function clearAll() {
 }
 
 function loadFromSong() {
-  const s = JSON.parse(localStorage.getItem('smos_song') || '{}');
+  const s = SMOS.song.load();
   if (!s.verse1) { alert('No song loaded. Build a song in Song Builder first.'); return; }
   document.getElementById('lyricsArea').innerHTML = '';
   rowCount = 0;
@@ -286,7 +287,7 @@ async function analyzeFlow() {
   content.innerHTML = '<span class="spinner"></span> Cadence AI analyzing...';
 
   const bpm = document.getElementById('bpmInput').value || '140';
-  const beatCtx = JSON.parse(localStorage.getItem('smos_beat_intel') || '{}');
+  const beatCtx = SMOS.beatIntel.load();
   const genre = beatCtx.genre || 'Hip-Hop';
 
   const prompt = `You are a professional hip-hop cadence coach. Analyze these bars for flow, syllable density, rhythm, and delivery.
@@ -307,14 +308,7 @@ Return ONLY valid JSON:
 }`;
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,
-        system:'You are a cadence AI coach. Respond ONLY with valid JSON, no markdown.',
-        messages:[{role:'user',content:prompt}]})
-    });
-    const data = await res.json();
-    const d = JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim());
+    const d = await SMOS.askJSON(prompt, 'You are a cadence AI coach.');
     renderFeedback(d);
   } catch(e) {
     content.innerHTML = `<div style="color:var(--red);font-size:0.72rem">Error: ${e.message}</div>`;
@@ -350,7 +344,7 @@ function renderFeedback(d) {
 }
 
 // Load beat intel if present
-const bi = JSON.parse(localStorage.getItem('smos_beat_intel')||'{}');
+const bi = SMOS.beatIntel.load();
 if (bi.bpm) {
   document.getElementById('beatCtx').textContent = `${bi.genre||'?'} · ${bi.bpm} BPM · ${bi.key||'?'}`;
   document.getElementById('bpmInput').value = bi.bpm;
