@@ -1,91 +1,59 @@
-/** 
- * TSM SHARED - HEALTHCARE NODE EXPANSION 
- * Targets: /healthcare/hc-* nodes 
- */
-(function() {
-    const hcNodes = {
-        'hc-medical': 'Clinical Audit: EHR Integrity & Patient Safety',
-        'hc-billing': 'Revenue Cycle: Claims Processing & Denial Management',
-        'hc-compliance': 'Regulatory: HIPAA Oversight & Risk Mitigation',
-        'hc-insurance': 'Payer Relations: Credentialing & Contract Logic',
-        'hc-pharmacy': 'Pharmacy: Formulary Compliance & Drug Utilization',
-        'hc-strategist': 'Strategic Operations: Enterprise Resource Mesh'
-    };
+// ═══════════════════════════════════════════════
+// TSM SHARED — Core launcher + Groq utility
+// ═══════════════════════════════════════════════
 
-    function populateHCNodes() {
-        // Detects which sub-folder/node the user is currently in
-        const pathParts = window.location.pathname.split('/');
-        const activeNode = pathParts.find(p => hcNodes.hasOwnProperty(p));
-        
-        // Targets the active tab content or the intelligence feed
-        const displayArea = document.querySelector('.tab-content.active') || 
-                            document.querySelector('#intelligence-feed') ||
-                            document.querySelector('.intelligence-feed');
-
-        if (activeNode && displayArea && displayArea.innerHTML.length < 100) {
-            displayArea.innerHTML = `
-                <div class="hc-node-payload" style="border-left: 3px solid #00ffcc; padding: 20px; background: rgba(0, 255, 204, 0.05); margin: 10px 0;">
-                    <h3 style="font-family: 'Orbitron', sans-serif; color: #00ffcc; margin-top: 0;">${hcNodes[activeNode]}</h3>
-                    <p style="font-family: 'JetBrains Mono', monospace; font-size: 0.9em; color: #888;">
-                        [NEURAL LINK] Node identified: ${activeNode.toUpperCase()}...<br>
-                        [CORE] Handshake: 11/11 Nodes Verified.<br>
-                        [STATUS] Sovereign Mesh active.
-                    </p>
-                    <div class="node-metrics" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
-                        <div style="border: 1px solid #333; padding: 10px; font-size: 0.8em; color: #00ffcc;">AUDIT STATUS: NOMINAL</div>
-                        <div style="border: 1px solid #333; padding: 10px; font-size: 0.8em; color: #00ffcc;">LATENCY: 14ms</div>
-                    </div>
-                </div>
-            `;
-            console.log(`[TSM] Node Content Injected: ${activeNode}`);
-        }
+window.TSM = {
+  version: '2.0',
+  launcher: {
+    registry: {},
+    register(name, fn){ this.registry[name] = fn; },
+    run(action, argsStr, el){
+      const fn = this.registry[action] || window[action];
+      if(typeof fn === 'function'){
+        try{
+          const args = argsStr ? (function(){ return eval('['+argsStr+']'); }).call(el) : [];
+          fn(...args);
+        }catch(e){ console.warn('[TSM] Error running',action,e); }
+      } else {
+        console.warn('[TSM] launcher missing:',action, argsStr);
+      }
     }
+  }
+};
 
-    // Initialize on load and re-check periodically for tab switches
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', populateHCNodes);
-    } else {
-        populateHCNodes();
-    }
-    setInterval(populateHCNodes, 3000);
-})();
+// Global Groq caller
+window.callGroq = async function(messages, onStream, model='llama-3.3-70b-versatile'){
+  const key = document.querySelector('[id*=groq],[id*=api-key]')?.value
+    || localStorage.getItem('tsm_groq_key') || '';
+  if(!key) throw new Error('No Groq API key');
+  const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify({model, max_tokens:1024, messages})
+  });
+  const d = await r.json();
+  const text = d.choices?.[0]?.message?.content || '';
+  const tok = d.usage?.completion_tokens || 0;
+  const spd = Math.round(tok / ((d.usage?.total_time||1)));
+  if(onStream) onStream(text, tok, spd);
+  return {text, tokens:tok, speed:spd};
+};
 
-/** 
- * TSM SHARED - HEALTHCARE NODE POPULATION
- * Specifically for /healthcare/ sub-apps
- */
-(function() {
-    const hcNodes = {
-        'hc-medical': 'Clinical Audit: EHR Integrity & Patient Safety',
-        'hc-billing': 'Revenue Cycle: Claims Processing & Denial Management',
-        'hc-compliance': 'Regulatory: HIPAA Oversight & Risk Mitigation',
-        'hc-insurance': 'Payer Relations: Credentialing & Contract Logic',
-        'hc-pharmacy': 'Pharmacy: Formulary Compliance & Drug Utilization',
-        'hc-strategist': 'Strategic Operations: Enterprise Resource Mesh'
-    };
+// Save groq key to localStorage on input
+document.addEventListener('change', e=>{
+  if(e.target.id?.includes('groq') || e.target.id?.includes('Key')){
+    const v = e.target.value?.trim();
+    if(v) localStorage.setItem('tsm_groq_key', v);
+  }
+});
 
-    function populateHCNodes() {
-        const pathParts = window.location.pathname.split('/');
-        const activeNode = pathParts.find(p => hcNodes.hasOwnProperty(p));
-        const displayArea = document.querySelector('.tab-content.active') || 
-                            document.querySelector('#intelligence-feed') ||
-                            document.querySelector('.intelligence-feed');
+// TSM click dispatcher
+document.addEventListener('click', e=>{
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args') || '';
+  TSM.launcher.run(action, args, el);
+});
 
-        if (activeNode && displayArea && displayArea.innerHTML.length < 100) {
-            displayArea.innerHTML = `
-                <div class="hc-node-payload" style="border-left: 3px solid #00ffcc; padding: 20px; background: rgba(0, 255, 204, 0.05); margin: 10px 0;">
-                    <h3 style="font-family: 'Orbitron', sans-serif; color: #00ffcc; margin-top: 0;">${hcNodes[activeNode]}</h3>
-                    <p style="font-family: 'JetBrains Mono', monospace; font-size: 0.9em; color: #888;">
-                        [NEURAL LINK] Node identified: ${activeNode.toUpperCase()}...<br>
-                        [CORE] Handshake: 11/11 Nodes Verified.<br>
-                        [STATUS] Sovereign Mesh active.
-                    </p>
-                </div>`;
-            console.log("[TSM] Injected content for: " + activeNode);
-        }
-    }
-    setInterval(populateHCNodes, 3000);
-})();
-
-// Ensure functions available immediately (non-deferred)
-if(typeof window!=='undefined'){window.switchTab=window.switchTab||function(t){document.querySelectorAll('.trm-tab').forEach(e=>e.classList.remove('active'));document.querySelectorAll('.trm-panel').forEach(e=>e.classList.remove('active'));var el=document.getElementById(t);if(el)el.classList.add('active');};}
+console.log('[TSM SHARED] v2.0 loaded');

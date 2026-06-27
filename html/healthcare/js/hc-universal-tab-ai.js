@@ -80,6 +80,25 @@
     </div>`;
   }
 
+  // ── WRITE MISSION TO QUEUE ─────────────────────────────────────────────────
+  function writeMission(key, d, narrativeTxt) {
+    const steps = d.queue.map((item, i) => 'Step ' + (i + 1) + ': ' + item);
+    const label = key.charAt(0).toUpperCase() + key.slice(1);
+    if (window.TSMMission) {
+      TSMMission.setActiveMission(key, label, steps);
+    } else {
+      // Fallback if TSMMission not loaded
+      const mission = { vertical: key, label, progression_steps: steps, generated_at: Date.now() };
+      localStorage.setItem('tsm_active_mission', JSON.stringify(mission));
+      const queue = JSON.parse(localStorage.getItem('tsm_mission_queue') || '[]');
+      const idx = queue.findIndex(q => q.vertical === key);
+      const entry = { id: 'tsm-' + key + '-' + Date.now(), vertical: key, label, status: 'active', step_index: 0, completion_pct: 0 };
+      if (idx === -1) queue.push(entry); else queue[idx] = entry;
+      localStorage.setItem('tsm_mission_queue', JSON.stringify(queue));
+    }
+    console.log('[HC-TAB-AI] Mission written for vertical:', key);
+  }
+
   // ── GENERATE FULL NARRATIVE via API ───────────────────────────────────────
   window.generateNodeNarrative = function(key) {
     const d = NODE_DATA[key] || NODE_DATA.operations;
@@ -90,21 +109,20 @@
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
-        sector: 'HEALTHCARE',
-        node: key.toUpperCase(),
-        context: 'Generate WIP executive narrative, HITL BNCA, owner lane, strategist relay, and CFO-ready next actions.',
-        queue: d.queue,
-        risk: d.risk,
-        owner: d.owner
+        message: `Generate WIP executive narrative for ${key.toUpperCase()} node. Queue: ${d.queue.join(', ')}. Risk: ${d.risk}. Owner: ${d.owner}. Include HITL BNCA, owner lane, strategist relay, and CFO-ready next actions.`,
+        system: 'You are a healthcare operations AI for TSM Command. Be precise and data-driven.'
       })
     })
     .then(r => r.json())
     .then(data => {
       const txt = data.reply || data.content || data.message || d.ai;
       if(el) el.textContent = txt;
+      writeMission(key, d, txt);
     })
     .catch(() => {
-      if(el) el.textContent = d.ai + '\n\n[Strategist relay: resolve ' + d.queue[0] + ' within SLA window. Owner: ' + d.owner + '. CONFIDENCE: 94%]';
+      const fallback = d.ai + '\n\n[Strategist relay: resolve ' + d.queue[0] + ' within SLA window. Owner: ' + d.owner + '. CONFIDENCE: 94%]';
+      if(el) el.textContent = fallback;
+      writeMission(key, d, fallback);
     });
   };
 

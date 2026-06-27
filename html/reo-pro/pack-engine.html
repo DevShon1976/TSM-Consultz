@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TSM Pack Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#070b10;
+    --panel:#0e151c;
+    --panel-border:#1c2a35;
+    --cyan:#00e5ff;
+    --gold:#ffc857;
+    --amber:#ff9f43;
+    --red:#ff5470;
+    --green:#3ddc97;
+    --text:#cfe8ee;
+    --dim:#5d7a87;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:radial-gradient(circle at top, #0c1620 0%, #060a0e 70%);
+    color:var(--text);
+    font-family:'Rajdhani',sans-serif;
+    min-height:100vh;
+    padding:20px;
+  }
+  .topbar{
+    display:flex;justify-content:space-between;align-items:center;
+    border-bottom:1px solid var(--panel-border);
+    padding-bottom:14px;margin-bottom:20px;
+    flex-wrap:wrap;gap:10px;
+  }
+  .pack-title{
+    font-family:'Orbitron',sans-serif;
+    font-size:22px;letter-spacing:2px;
+    color:var(--cyan);
+    text-shadow:0 0 14px rgba(0,229,255,.4);
+    display:flex;align-items:center;gap:12px;
+  }
+  .pack-title .icon{font-size:28px;text-shadow:none;}
+  .pack-sub{font-size:13px;color:var(--dim);font-family:'Share Tech Mono',monospace;margin-top:4px;}
+  .back-btn{
+    font-family:'Share Tech Mono',monospace;
+    background:transparent;border:1px solid var(--panel-border);
+    color:var(--text);padding:8px 14px;border-radius:6px;cursor:pointer;
+    font-size:12px;letter-spacing:1px;transition:.2s;
+  }
+  .back-btn:hover{border-color:var(--cyan);color:var(--cyan);}
+
+  .grid{display:grid;grid-template-columns:1fr;gap:18px;max-width:1100px;margin:0 auto;}
+  @media(min-width:760px){.grid{grid-template-columns:280px 1fr;}}
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    padding:18px;
+  }
+  .panel h3{
+    font-family:'Orbitron',sans-serif;font-size:13px;
+    color:var(--gold);letter-spacing:1.5px;margin-bottom:12px;
+  }
+  .cat-list{display:flex;flex-direction:column;gap:8px;}
+  .cat-item{
+    font-size:13px;font-family:'Share Tech Mono',monospace;
+    padding:8px 10px;border:1px solid var(--panel-border);
+    border-radius:6px;color:var(--text);
+    display:flex;align-items:center;gap:8px;
+  }
+  .cat-item .dot{width:8px;height:8px;border-radius:50%;background:var(--dim);flex-shrink:0;}
+  .cat-item.done .dot{background:var(--green);box-shadow:0 0 8px var(--green);}
+
+  .relay-status{
+    margin-top:14px;font-size:12px;font-family:'Share Tech Mono',monospace;
+    color:var(--dim);border-top:1px solid var(--panel-border);padding-top:10px;
+  }
+  .relay-status.ok{color:var(--green);}
+  .relay-status.warn{color:var(--amber);}
+
+  .run-btn{
+    width:100%;margin-top:16px;
+    font-family:'Orbitron',sans-serif;font-size:14px;letter-spacing:2px;
+    background:linear-gradient(135deg, rgba(0,229,255,.15), rgba(255,200,87,.1));
+    border:1px solid var(--cyan);color:var(--cyan);
+    padding:14px;border-radius:8px;cursor:pointer;
+    transition:.2s;
+  }
+  .run-btn:hover{box-shadow:0 0 18px rgba(0,229,255,.35);background:rgba(0,229,255,.15);}
+  .run-btn:disabled{opacity:.5;cursor:wait;border-color:var(--dim);color:var(--dim);}
+
+  .results{min-height:200px;}
+  .placeholder{
+    color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:13px;
+    display:flex;align-items:center;justify-content:center;height:200px;text-align:center;
+    border:1px dashed var(--panel-border);border-radius:10px;
+  }
+
+  .score-banner{
+    display:flex;justify-content:space-between;align-items:center;
+    background:linear-gradient(135deg, rgba(0,229,255,.08), rgba(255,200,87,.05));
+    border:1px solid var(--cyan);border-radius:10px;
+    padding:16px 20px;margin-bottom:16px;
+  }
+  .score-banner .label{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--dim);letter-spacing:1px;}
+  .score-banner .value{font-family:'Orbitron',sans-serif;font-size:32px;color:var(--cyan);text-shadow:0 0 12px rgba(0,229,255,.5);}
+
+  .output-block{
+    border:1px solid var(--panel-border);border-radius:8px;
+    padding:14px 16px;margin-bottom:12px;background:rgba(255,255,255,.01);
+  }
+  .output-block h4{
+    font-family:'Orbitron',sans-serif;font-size:12px;color:var(--gold);
+    letter-spacing:1.5px;margin-bottom:8px;
+  }
+  .output-block .body{
+    font-size:14px;line-height:1.6;color:var(--text);
+    white-space:pre-wrap;font-family:'Rajdhani',sans-serif;
+  }
+  .output-block .body strong{color:var(--cyan);}
+
+  .spinner{
+    width:24px;height:24px;border-radius:50%;
+    border:3px solid var(--panel-border);border-top-color:var(--cyan);
+    animation:spin 0.8s linear infinite;margin:0 auto 10px;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loading-text{text-align:center;color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:13px;}
+
+  .error-block{
+    border:1px solid var(--red);border-radius:8px;padding:14px;color:var(--red);
+    font-family:'Share Tech Mono',monospace;font-size:13px;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="pack-title"><span class="icon" id="packIcon">⚙️</span><span id="packTitle">LOADING PACK...</span></div>
+    <div class="pack-sub" id="packSub"></div>
+  </div>
+  <button class="back-btn" onclick="goBack()">← BACK TO WAR ROOM</button>
+</div>
+
+<div class="grid">
+  <div class="panel">
+    <h3>SCAN CATEGORIES</h3>
+    <div class="cat-list" id="catList"></div>
+    <div class="relay-status" id="relayStatus">Checking relay data...</div>
+    <button class="back-btn" id="loadSampleBtn" style="width:100%;margin-top:10px;" onclick="loadSample()">📄 LOAD SAMPLE DOCUMENT</button>
+    <button class="run-btn" id="runBtn" onclick="runPack()">⚡ RUN ANALYSIS</button>
+  </div>
+
+  <div class="panel results" id="resultsPanel">
+    <div class="placeholder" id="placeholder">Click RUN ANALYSIS to scan the active file with this pack.</div>
+  </div>
+</div>
+
+<script src="pack-configs.js"></script>
+<script src="sample-docs.js"></script>
+<script src="mlo-regulatory-context.js"></script>
+<script>
+// ---- Resolve pack from query string ----
+const params = new URLSearchParams(window.location.search);
+const packKey = params.get('pack');
+const config = (typeof TSM_PACK_CONFIGS !== 'undefined') ? TSM_PACK_CONFIGS[packKey] : null;
+
+const titleEl = document.getElementById('packTitle');
+const iconEl = document.getElementById('packIcon');
+const subEl = document.getElementById('packSub');
+const catList = document.getElementById('catList');
+const relayStatus = document.getElementById('relayStatus');
+const runBtn = document.getElementById('runBtn');
+const resultsPanel = document.getElementById('resultsPanel');
+
+if (!config) {
+  titleEl.textContent = 'UNKNOWN PACK';
+  subEl.textContent = 'No configuration found for pack="' + (packKey || '') + '"';
+  runBtn.disabled = true;
+} else {
+  titleEl.textContent = config.title;
+  iconEl.textContent = config.icon || '⚙️';
+  subEl.textContent = config.subtitle || '';
+  config.categories.forEach(cat => {
+    const div = document.createElement('div');
+    div.className = 'cat-item';
+    div.id = 'cat-' + cat.replace(/[^a-zA-Z0-9]/g,'');
+    div.innerHTML = '<span class="dot"></span>' + cat;
+    catList.appendChild(div);
+  });
+}
+
+let loadedSample = null;
+
+function loadSample(){
+  const sample = (typeof TSM_SAMPLE_DOCS !== 'undefined') ? TSM_SAMPLE_DOCS[packKey] : null;
+  if(!sample){
+    relayStatus.textContent = '⚠ No sample document defined for this pack';
+    relayStatus.classList.remove('ok');
+    relayStatus.classList.add('warn');
+    return;
+  }
+  loadedSample = sample;
+  relayStatus.textContent = '✓ Sample loaded: ' + sample.fileName;
+  relayStatus.classList.remove('warn');
+  relayStatus.classList.add('ok');
+}
+
+// ---- Relay data: sample override > sessionStorage > opener docPaste ----
+const RELAY_KEYS = ['TSM_RE_WAR_RELAY', 'TSM_CONSTRUCTION_WAR_RELAY', 'TSM_INS_WAR_RELAY'];
+function getRelayData(){
+  if(loadedSample) return loadedSample;
+  for(const k of RELAY_KEYS){
+    try{
+      const raw = sessionStorage.getItem(k);
+      if(raw){
+        try{ return JSON.parse(raw); }catch(e){ return { docText: raw }; }
+      }
+    }catch(e){}
+  }
+  // fallback: opener window's docPaste textarea (if launched same-tab via iframe/window.opener)
+  try{
+    if(window.opener){
+      const dp = window.opener.document.getElementById('docPaste');
+      if(dp && dp.value) return { docText: dp.value };
+    }
+  }catch(e){}
+  return null;
+}
+
+(function initRelayStatus(){
+  const relay = getRelayData();
+  if(relay){
+    const label = relay.fileName || relay.docType || (relay.docText ? 'document text from active session' : 'active file');
+    relayStatus.textContent = '✓ Relay data loaded: ' + label;
+    relayStatus.classList.add('ok');
+  } else {
+    relayStatus.textContent = '⚠ No relay data found — pack will run on general inputs only';
+    relayStatus.classList.add('warn');
+  }
+})();
+
+function goBack(){
+  if (window.history.length > 1) window.history.back();
+  else window.location.href = 're-war-room.html';
+}
+
+// ---- AI call (matches RE War Room contract) ----
+const API = '/api/mortgage/query';
+const APP = 'realestate';
+
+async function callAI(systemPrompt, userPrompt){
+  const res = await fetch(API, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      question: userPrompt,
+      context: systemPrompt,
+      app: APP,
+      maxTokens: 1200
+    })
+  });
+  if(!res.ok) throw new Error('API error: ' + res.status);
+  const data = await res.json();
+  return data.answer || data.response || data.reply || 'No response.';
+}
+
+function buildUserPrompt(){
+  const relay = getRelayData();
+  let relayText = relay ? (relay.docText || relay.analysis || JSON.stringify(relay, null, 2)) : 'No relay/document data available. Use general best-practice mortgage scenario assumptions and clearly state that this is a generic analysis pending real file data.';
+
+  let outputSpec = config.outputs.map((o,i)=>(i+1)+'. '+o).join('\n');
+
+  return `RELAY DATA:\n${relayText}\n\nProduce your analysis as plain text organized under these exact section headers (use the header text verbatim, each on its own line, followed by content):\n${outputSpec}\n\nAlso include a final line in the exact format:\nSCORE: <numeric value or percentage> — ${config.scoreLabel}\n\nKeep each section concise but specific (3-6 sentences or a short list). Do not use markdown headers (#), just plain section titles followed by a colon.`;
+}
+
+function markCategoriesDone(){
+  config.categories.forEach(cat=>{
+    const el = document.getElementById('cat-' + cat.replace(/[^a-zA-Z0-9]/g,''));
+    if(el) el.classList.add('done');
+  });
+}
+
+function parseAndRender(text){
+  resultsPanel.innerHTML = '';
+
+  // Normalize literal backslash-n sequences into real newlines
+  text = text.replace(/\\n/g, '\n');
+
+  // Find the LAST "SCORE:" line, capture only a short value (number/percent + few words)
+  const scoreMatches = [...text.matchAll(/SCORE:\s*([^\n]{1,40})/gi)];
+  let scoreValue = '—';
+  let body = text;
+  if(scoreMatches.length){
+    const last = scoreMatches[scoreMatches.length - 1];
+    scoreValue = last[1].trim().replace(/[—\-–]\s*$/, '').trim();
+    body = text.slice(0, last.index) + text.slice(last.index + last[0].length);
+  }
+  body = body.trim();
+
+  const banner = document.createElement('div');
+  banner.className = 'score-banner';
+  banner.innerHTML = `<span class="label">${config.scoreLabel.toUpperCase()}</span><span class="value">${escapeHtml(scoreValue)}</span>`;
+  resultsPanel.appendChild(banner);
+
+  // Split body into sections based on config.outputs headers
+  let remaining = body;
+  config.outputs.forEach((label, idx) => {
+    const nextLabel = config.outputs[idx+1];
+    let sectionContent = '';
+
+    // Try to find this label and capture until next label or end
+    const escLabel = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    let pattern;
+    if(nextLabel){
+      const escNext = nextLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      pattern = new RegExp('(?:\\d+\\.\\s*)?' + escLabel + '\\s*:?\\s*([\\s\\S]*?)(?=(?:\\d+\\.\\s*)?' + escNext + '\\s*:?)', 'i');
+    } else {
+      pattern = new RegExp('(?:\\d+\\.\\s*)?' + escLabel + '\\s*:?\\s*([\\s\\S]*)', 'i');
+    }
+    const m = remaining.match(pattern);
+    sectionContent = m ? m[1].trim() : '';
+
+    if(!sectionContent){
+      sectionContent = '(No specific content returned for this section — see full output below if available.)';
+    }
+
+    const block = document.createElement('div');
+    block.className = 'output-block';
+    block.innerHTML = `<h4>${escapeHtml(label)}</h4><div class="body">${escapeHtml(sectionContent)}</div>`;
+    resultsPanel.appendChild(block);
+  });
+
+  markCategoriesDone();
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+async function runPack(){
+  if(!config) return;
+  runBtn.disabled = true;
+  resultsPanel.innerHTML = `<div class="loading-text"><div class="spinner"></div>Running ${config.title}...</div>`;
+
+  try{
+    const result = await callAI(config.systemPrompt + '\n\n' + getRegulatoryContext(packKey, { includeAZ: true }), buildUserPrompt());
+    parseAndRender(result);
+  }catch(err){
+    resultsPanel.innerHTML = `<div class="error-block">⚠ ${escapeHtml(err.message)}<br><br>Check that the /api/mortgage/query endpoint is reachable.</div>`;
+  }finally{
+    runBtn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>

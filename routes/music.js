@@ -74,41 +74,59 @@ function cleanAgentText(text){
     .trim();
 }
 
-function agentPass(agent, draft, request){
+// Self-contained Groq call — same direct-fetch pattern already used in
+// server.js's /api/collective/bnca route. No dependency on server.js's
+// local groqChat() helper, so this file stays a standalone router module.
+async function musicGroqCall(systemPrompt, userPrompt, maxTokens){
+  const groqKey = process.env.GROQ_API_KEY;
+  if(!groqKey) throw new Error("GROQ_API_KEY not configured on server.");
+
+  const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: "Bearer " + groqKey },
+    body: JSON.stringify({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+      ],
+      temperature: 0.85,
+      max_tokens: maxTokens || 500
+    })
+  });
+
+  if(!r.ok){
+    const errText = await r.text().catch(() => "");
+    throw new Error("Groq error " + r.status + ": " + errText.slice(0, 200));
+  }
+
+  const data = await r.json();
+  return ((data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || "").trim();
+}
+
+const MUSIC_AGENT_PROMPTS = {
+  ZAY: "You are ZAY, a music producer AI focused on cadence, flow, and bounce. Given a lyric draft, rewrite it to tighten the rhythm, shorten heavy phrasing, and make the last line hit in-pocket. Preserve the artist's voice and meaning. Return ONLY the revised lyrics — no preamble, no labels, no explanation.",
+  RIYA: "You are RIYA, a music producer AI focused on emotion and imagery. Given a lyric draft, sharpen the emotional imagery and make it more specific and vivid while keeping the artist's voice plain-spoken and authentic. Return ONLY the revised lyrics — no preamble, no labels, no explanation.",
+  DJ: "You are DJ, a music producer AI focused on structure and hooks. Given a lyric draft, move the strongest repeatable phrase into hook position and clean up the transitions for commercial impact. Return ONLY the revised lyrics — no preamble, no labels, no explanation."
+};
+
+async function agentPass(agent, draft, request){
   const a = String(agent || "ZAY").toUpperCase();
   const base = cleanAgentText(draft || "");
   const dna = global.MUSIC_ENGINE && global.MUSIC_ENGINE.dna ? global.MUSIC_ENGINE.dna : {};
-  const weights = dna.weights || { cadence:.8, emotion:.8, structure:.8, imagery:.8 };
   const terms = (dna.styleTerms || []).join(", ");
+  const sys = MUSIC_AGENT_PROMPTS[a] || MUSIC_AGENT_PROMPTS.ZAY;
+  const userPrompt = "Artist style terms: " + (terms || "none yet") +
+    "\nRequest: " + (request || "Improve this draft") +
+    "\n\nDraft:\n" + (base || "(no draft provided — write an original opening verse in this style)");
 
-  if (a === "ZAY") {
-    return `[ZAY — CADENCE / BOUNCE]
-
-${base}
-
-Agent move: tighten rhythm, shorten heavy phrasing, and make the last phrase hit in-pocket.
-DNA influence: cadence ${weights.cadence} · style terms ${terms}`;
+  try {
+    const output = await musicGroqCall(sys, userPrompt, 500);
+    return output || base;
+  } catch(e){
+    console.error("[music agentPass] Groq error:", e.message);
+    return base; // fail safe: never break the chain, just pass the draft through unchanged
   }
-
-  if (a === "RIYA") {
-    return `[RIYA — EMOTION / IMAGERY]
-
-${base}
-
-Agent move: make the emotional image more specific while keeping the artist voice plain-spoken.
-DNA influence: emotion ${weights.emotion} · imagery ${weights.imagery}`;
-  }
-
-  if (a === "DJ") {
-    return `[DJ — STRUCTURE / HOOK]
-
-${base}
-
-Agent move: move the strongest repeatable phrase into hook position and clean the transition.
-DNA influence: structure ${weights.structure}`;
-  }
-
-  return base;
 }
 
 
@@ -119,12 +137,12 @@ function musicActivity(type, title, detail){
   return item;
 }
 
-router.post('/api/music/agent/run', (req, res) => {
+router.post('/api/music/agent/run', async (req, res) => {
   const body = req.body || {};
   const agent = String(body.agent || "ZAY").toUpperCase();
   const draft = body.draft || "";
   const request = body.request || "Improve draft";
-  const output = agentPass(agent, draft, request);
+  const output = await agentPass(agent, draft, request);
   const score = scoreMusicDraft(output);
 
   const run = {
@@ -146,15 +164,15 @@ router.post('/api/music/agent/run', (req, res) => {
   return res.json({ ok: true, run, engine: global.MUSIC_ENGINE, billing: global.MUSIC_BILLING || null });
 });
 
-router.post('/api/music/agent/chain', (req, res) => {
+router.post('/api/music/agent/chain', async (req, res) => {
   const body = req.body || {};
   const draft = body.draft || "";
   const request = body.request || "Run full ZAY → RIYA → DJ chain";
 
   const baseDraft = cleanAgentText(draft);
-  const zay = agentPass("ZAY", baseDraft, request);
-  const riya = agentPass("RIYA", cleanAgentText(zay), request);
-  const dj = agentPass("DJ", cleanAgentText(riya), request);
+  const zay = await agentPass("ZAY", baseDraft, request);
+  const riya = await agentPass("RIYA", cleanAgentText(zay), request);
+  const dj = await agentPass("DJ", cleanAgentText(riya), request);
   const score = scoreMusicDraft(dj);
 
   const run = {
@@ -298,7 +316,7 @@ function hitPotential(score){
   return { percent, label };
 }
 
-router.post('/api/music/revision/pick-rerun', (req, res) => {
+router.post('/api/music/revision/pick-rerun', async (req, res) => {
   const body = req.body || {};
   const session = global.MUSIC_REVISIONS?.sessions?.find(s => String(s.id) === String(body.sessionId));
 
@@ -308,9 +326,9 @@ router.post('/api/music/revision/pick-rerun', (req, res) => {
   if(!option) return res.status(404).json({ ok:false, error:"Revision option not found" });
 
   const cleanSelected = cleanAgentText(option.output);
-  const rerunZay = agentPass("ZAY", cleanSelected, "Pick + rerun");
-  const rerunRiya = agentPass("RIYA", cleanAgentText(rerunZay), "Pick + rerun");
-  const rerunOutput = agentPass("DJ", cleanAgentText(rerunRiya), "Pick + rerun");
+  const rerunZay = await agentPass("ZAY", cleanSelected, "Pick + rerun");
+  const rerunRiya = await agentPass("RIYA", cleanAgentText(rerunZay), "Pick + rerun");
+  const rerunOutput = await agentPass("DJ", cleanAgentText(rerunRiya), "Pick + rerun");
   const score = scoreMusicDraft(rerunOutput);
   const hit = hitPotential(score);
 
@@ -1085,5 +1103,24 @@ function requireMusicDemo(req, res, next){
   trackMusicUsage(req, req.path);
   next();
 }
+
+// ===== SWEET MUSIC OS — generic AI bridge =====
+// Front-end pages (beat-workbench, song-builder, daw-academy, release-center,
+// cadence-builder) call this instead of api.anthropic.com directly (which
+// has no key in the browser and always 401s in production).
+router.post('/api/music/sweet/ai', async (req, res) => {
+  try {
+    const body = req.body || {};
+    const system = body.system || 'You are a helpful AI music production assistant. Respond ONLY with valid JSON when asked for JSON — no markdown fences, no preamble.';
+    const prompt = body.prompt || '';
+    const maxTokens = Math.min(Number(body.maxTokens) || 1000, 1500);
+    if (!prompt) return res.status(400).json({ ok: false, error: 'Missing prompt' });
+    const text = await musicGroqCall(system, prompt, maxTokens);
+    return res.json({ ok: true, text });
+  } catch (e) {
+    console.error('[sweet/ai] error:', e.message);
+    return res.status(500).json({ ok: false, error: e.message });
+  }
+});
 
 module.exports = router;

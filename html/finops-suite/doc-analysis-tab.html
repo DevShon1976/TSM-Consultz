@@ -1,724 +1,1006 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TSM · Doc Analysis — 4-Engine Pipeline</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TSM · FinOps Intelligence · Document Processor</title>
 <style>
-/* ── RESET & BASE ───────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap');
 
-:root {
-  --bg:        #0a0f0a;
-  --bg2:       #0d1a0d;
-  --bg3:       #112011;
-  --border:    #1e3a1e;
-  --border2:   #1e5a1e;
-  --green:     #00ff41;
-  --green-dim: #1a7a2a;
-  --yellow:    #ffd700;
-  --red:       #ff4444;
-  --orange:    #ff8c00;
-  --cyan:      #00e5ff;
-  --text:      #a8c8a8;
-  --text-dim:  #4a6a4a;
-  --white:     #e0ffe0;
-  --mono:      'IBM Plex Mono', monospace;
+/* ====== RESET & ROOT ====== */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#030a12;
+  --bg1:#060f1a;
+  --bg2:#080f1c;
+  --bg3:#0a1525;
+  --bg4:#0c1a2e;
+  --cyan:#00d4ff;
+  --cyan-dim:#008fb3;
+  --cyan-pale:rgba(0,212,255,0.07);
+  --cyan-glow:rgba(0,212,255,0.18);
+  --cyan-border:rgba(0,212,255,0.28);
+  --green:#00ff9d;
+  --green-dim:#00cc7a;
+  --green-pale:rgba(0,255,157,0.07);
+  --green-border:rgba(0,255,157,0.28);
+  --amber:#ffaa00;
+  --amber-pale:rgba(255,170,0,0.08);
+  --red:#ff3d5a;
+  --purple:#c084fc;
+  --purple-pale:rgba(192,132,252,0.08);
+  --purple-border:rgba(192,132,252,0.3);
+  --text:#b8d8f0;
+  --text-dim:#4a7a9b;
+  --text-muted:#1e4060;
+  --border:#0d2035;
+  --border2:#112540;
+  --font:'JetBrains Mono',monospace;
+  --mono:'IBM Plex Mono',monospace;
 }
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px;line-height:1.5;display:flex;flex-direction:column}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--cyan-dim);border-radius:2px}
 
-html, body { height: 100%; }
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 13px;
-  line-height: 1.6;
-  min-height: 100vh;
-}
+/* ====== TOP HEADER ====== */
+.topbar{background:var(--bg1);border-bottom:1px solid var(--border2);padding:0 20px;height:48px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-left{display:flex;align-items:center;gap:14px}
+.tsm-logo{display:flex;align-items:center;gap:8px}
+.tsm-diamond{width:18px;height:18px;background:var(--cyan);transform:rotate(45deg);flex-shrink:0;box-shadow:0 0 8px var(--cyan)}
+.tsm-wordmark{font-size:14px;font-weight:700;color:var(--cyan);letter-spacing:.14em}
+.suite-divider{width:1px;height:22px;background:var(--border2)}
+.suite-name{font-size:10px;font-weight:600;color:var(--text-dim);letter-spacing:.18em;text-transform:uppercase}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.tb-badge{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 11px;border:1px solid;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:all .2s}
+.tb-badge.live{border-color:var(--green-border);color:var(--green);background:var(--green-pale)}
+.tb-badge.live::before{content:'●';font-size:8px;animation:blink 1.4s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.tb-badge.groq{border-color:var(--cyan-border);color:var(--cyan);background:var(--cyan-pale)}
+.tb-badge.poc{border-color:var(--purple-border);color:var(--purple);background:var(--purple-pale)}
+.tb-badge:hover{opacity:.8}
+.tb-time{font-size:11px;color:var(--text-dim);letter-spacing:.05em;margin-left:4px}
 
-/* ── HEADER ─────────────────────────────────────────────── */
-.header {
-  background: var(--bg2);
-  border-bottom: 1px solid var(--border);
-  padding: 10px 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-.logo { color: var(--green); font-weight: 700; letter-spacing: .15em; font-size: 13px; }
-.logo .sep { color: var(--text-dim); }
-.logo-sub { color: var(--text-dim); font-size: 10px; letter-spacing: .1em; margin-top: 1px; }
-.session { color: var(--green); font-size: 11px; display: flex; align-items: center; gap: 6px; }
-.dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  background: var(--green);
-  animation: pulse 2s infinite;
-}
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
-#clock { font-variant-numeric: tabular-nums; }
+/* ====== BREADCRUMB / TITLE ROW ====== */
+.titlebar{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 20px 0;flex-shrink:0}
+.breadcrumb{font-size:10px;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.breadcrumb a{color:var(--text-muted);text-decoration:none;transition:color .2s}
+.breadcrumb a:hover{color:var(--cyan)}
+.breadcrumb .sep{color:var(--text-muted)}
+.breadcrumb .active{color:var(--cyan)}
+.title-row{display:flex;align-items:flex-end;justify-content:space-between}
+.page-title{font-size:22px;font-weight:700;color:var(--text);letter-spacing:.02em}
+.page-title .accent{color:var(--cyan)}
+.stat-row{display:flex;align-items:center;gap:0;padding:8px 0 0}
+.stat-item{display:flex;flex-direction:column;align-items:flex-end;padding:0 18px;border-left:1px solid var(--border)}
+.stat-item:first-child{border-left:none;padding-left:0}
+.stat-num{font-size:18px;font-weight:700;color:var(--cyan);line-height:1;letter-spacing:-.01em}
+.stat-num.green{color:var(--green)}
+.stat-num.amber{color:var(--amber)}
+.stat-label{font-size:9px;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;margin-top:2px}
 
-/* ── NAV ────────────────────────────────────────────────── */
-nav {
-  background: var(--bg2);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  gap: 0;
-  padding: 0 24px;
-  overflow-x: auto;
-}
-nav a {
-  color: var(--text-dim);
-  text-decoration: none;
-  font-size: 11px;
-  letter-spacing: .12em;
-  padding: 12px 18px;
-  border-bottom: 2px solid transparent;
-  white-space: nowrap;
-  transition: color .2s, border-color .2s;
-}
-nav a:hover { color: var(--text); }
-nav a.active { color: var(--green); border-bottom-color: var(--green); }
+/* ====== TAB BAR ====== */
+.tabbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;gap:0;flex-shrink:0}
+.tab{font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--text-muted);padding:10px 16px;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;display:flex;align-items:center;gap:6px;text-decoration:none;white-space:nowrap}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--cyan);border-bottom-color:var(--cyan)}
+.tab .tab-icon{font-size:11px}
+.tab-sep{width:1px;height:24px;background:var(--border);margin:0 4px}
+.workflow-arrow{font-size:10px;color:var(--text-muted);padding:0 6px;display:flex;align-items:center;margin-top:-2px}
+.tab.warroom{color:var(--text-muted)}
+.tab.warroom:hover,.tab.warroom.linked{color:var(--cyan)}
+.tab.strategist{color:var(--text-muted)}
+.tab.strategist:hover,.tab.strategist.linked{color:var(--amber)}
+.tab.executive{color:var(--text-muted)}
+.tab.executive:hover,.tab.executive.linked{color:var(--green)}
 
-/* ── MAIN ───────────────────────────────────────────────── */
-main { padding: 28px 28px 60px; max-width: 1100px; margin: 0 auto; }
+/* ====== MAIN BODY ====== */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;padding:16px 20px 0}
 
-.section-label {
-  color: var(--text-dim);
-  font-size: 10px;
-  letter-spacing: .2em;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
-h2 { color: var(--white); font-size: 20px; font-weight: 600; margin-bottom: 20px; }
+/* Drop zone */
+.doc-select-label{font-size:10px;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.mode-btns{display:flex;gap:5px}
+.mode-btn{font-family:var(--font);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:4px 11px;border:1px solid;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;background:none}
+.mode-btn.sample{border-color:var(--border2);color:var(--text-muted)}
+.mode-btn.sample.active{border-color:var(--cyan-border);color:var(--cyan);background:var(--cyan-pale)}
+.mode-btn.upload{border-color:var(--border2);color:var(--text-muted)}
+.mode-btn.upload.active{border-color:var(--amber);color:var(--amber);background:rgba(255,170,0,.07)}
+.mode-btn:hover:not(.active){color:var(--text);border-color:var(--border2)}
 
-/* ── PANEL ──────────────────────────────────────────────── */
-.panel {
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  margin-bottom: 20px;
-}
-.panel-hdr {
-  padding: 11px 16px;
-  border-bottom: 1px solid var(--border);
-  color: var(--text-dim);
-  font-size: 10px;
-  letter-spacing: .2em;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.ai-badge {
-  background: rgba(0,229,255,.08);
-  border: 1px solid var(--cyan);
-  color: var(--cyan);
-  font-size: 9px;
-  padding: 2px 9px;
-  border-radius: 2px;
-  letter-spacing: .1em;
-}
+.dropzone{border:1px dashed var(--cyan-border);background:var(--cyan-pale);padding:28px 20px;text-align:center;cursor:pointer;position:relative;margin-bottom:12px;transition:all .25s;min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.dropzone:hover,.dropzone.drag-over{border-color:var(--cyan);background:rgba(0,212,255,.1);box-shadow:0 0 20px rgba(0,212,255,.08)}
+.dropzone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.dz-icon{font-size:32px;margin-bottom:8px;filter:drop-shadow(0 0 8px rgba(0,212,255,.4))}
+.dz-title{font-size:16px;font-weight:600;color:var(--text);margin-bottom:4px;letter-spacing:.02em}
+.dz-sub{font-size:11px;color:var(--text-dim);letter-spacing:.03em}
+.dz-tags{display:flex;gap:6px;justify-content:center;margin-top:10px;flex-wrap:wrap}
+.dz-tag{font-size:9px;border:1px solid var(--border2);color:var(--text-muted);padding:2px 7px;letter-spacing:.06em;text-transform:uppercase}
+.dz-tag.active{border-color:var(--cyan-border);color:var(--cyan);background:var(--cyan-pale)}
 
-/* ── API KEY ROW ────────────────────────────────────────── */
-.key-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--border);
-  flex-wrap: wrap;
-}
-.key-label { color: var(--text-dim); font-size: 10px; letter-spacing: .15em; white-space: nowrap; }
-.key-input {
-  flex: 1;
-  min-width: 220px;
-  background: var(--bg);
-  border: 1px solid var(--border2);
-  border-radius: 3px;
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 12px;
-  padding: 6px 12px;
-  outline: none;
-  transition: border-color .2s;
-  letter-spacing: .04em;
-}
-.key-input:focus { border-color: var(--green); }
-.key-input::placeholder { color: var(--text-dim); }
-.key-save {
-  padding: 6px 14px;
-  background: transparent;
-  border: 1px solid var(--green-dim);
-  border-radius: 3px;
-  color: var(--text-dim);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: .1em;
-  cursor: pointer;
-  transition: all .15s;
-  white-space: nowrap;
-}
-.key-save:hover { border-color: var(--green); color: var(--green); }
-.key-status { font-size: 10px; color: var(--text-dim); white-space: nowrap; }
-.key-status.ok { color: var(--green); }
+/* Sample pills */
+.sample-pills{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px}
+.sample-pill{font-family:var(--font);font-size:10px;border:1px solid var(--border);color:var(--text-dim);padding:4px 11px;cursor:pointer;background:var(--bg3);transition:all .15s;letter-spacing:.04em}
+.sample-pill:hover{border-color:var(--cyan-border);color:var(--cyan)}
+.sample-pill.active{border-color:var(--cyan);color:var(--cyan);background:var(--cyan-pale)}
 
-/* ── DROP ZONE ──────────────────────────────────────────── */
-.dropzone {
-  margin: 16px;
-  border: 1px dashed var(--border2);
-  border-radius: 4px;
-  padding: 36px 20px;
-  text-align: center;
-  cursor: pointer;
-  position: relative;
-  transition: border-color .2s, background .2s;
-}
-.dropzone:hover, .dropzone.dragover {
-  border-color: var(--green);
-  background: rgba(0,255,65,.04);
-}
-.dropzone input[type=file] {
-  position: absolute; inset: 0; opacity: 0;
-  cursor: pointer; width: 100%; height: 100%;
-}
-.dz-icon { font-size: 30px; margin-bottom: 10px; color: var(--text-dim); }
-.dz-title { color: var(--text); font-size: 13px; margin-bottom: 4px; }
-.dz-sub   { color: var(--text-dim); font-size: 11px; }
+/* ====== LOWER GRID ====== */
+.lower-grid{display:grid;grid-template-columns:340px 1fr;gap:1px;background:var(--border);flex:1;overflow:hidden;min-height:0}
 
-/* file chosen strip */
-.file-strip {
-  display: none;
-  align-items: center;
-  gap: 10px;
-  margin: 0 16px 14px;
-  background: rgba(0,255,65,.05);
-  border: 1px solid var(--border2);
-  border-radius: 3px;
-  padding: 9px 14px;
-  color: var(--green);
-  font-size: 12px;
-}
-.file-strip .fname { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.file-strip button {
-  background: none; border: none; color: var(--red);
-  cursor: pointer; font-size: 14px; font-family: var(--mono); padding: 0 2px;
-}
+/* LEFT PANEL */
+.left-panel{background:var(--bg2);display:flex;flex-direction:column;overflow:hidden}
+.panel-header{padding:10px 14px 8px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.panel-step{font-size:9px;color:var(--text-muted);letter-spacing:.12em;text-transform:uppercase}
+.panel-title{font-size:11px;font-weight:600;color:var(--cyan);letter-spacing:.06em;text-transform:uppercase}
+.groq-badge{font-size:9px;font-weight:700;border:1px solid var(--green-border);color:var(--green);padding:2px 8px;letter-spacing:.08em;background:var(--green-pale)}
 
-/* ── RUN BAR ────────────────────────────────────────────── */
-.run-bar {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 0 16px 16px;
-  flex-wrap: wrap;
-}
-.btn-run {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 24px;
-  background: rgba(0,255,65,.08);
-  border: 1px solid var(--green);
-  border-radius: 3px;
-  color: var(--green);
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .14em;
-  cursor: pointer;
-  transition: background .15s, color .15s;
-}
-.btn-run:hover:not(:disabled) { background: var(--green); color: var(--bg); }
-.btn-run:disabled { opacity: .35; cursor: not-allowed; }
-.spinner {
-  display: none;
-  width: 14px; height: 14px;
-  border: 2px solid rgba(0,255,65,.25);
-  border-top-color: var(--green);
-  border-radius: 50%;
-  animation: spin .7s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-.run-status { color: var(--text-dim); font-size: 11px; }
+/* Pipeline status */
+.pipeline-status-wrap{padding:10px 14px 8px;border-bottom:1px solid var(--border);flex-shrink:0}
+.pipeline-label{font-size:9px;color:var(--text-muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px}
+.pipeline-track{display:flex;align-items:center;gap:0}
+.pipe-step{display:flex;flex-direction:column;align-items:center;gap:3px}
+.pipe-icon{width:36px;height:36px;border:1px solid var(--border2);background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .3s}
+.pipe-icon.active{border-color:var(--cyan);background:var(--cyan-pale);box-shadow:0 0 10px var(--cyan-glow);animation:pipePulse 1s ease-in-out infinite}
+@keyframes pipePulse{0%,100%{box-shadow:0 0 6px var(--cyan-glow)}50%{box-shadow:0 0 18px rgba(0,212,255,.5)}}
+.pipe-icon.done{border-color:var(--cyan-dim);background:rgba(0,143,179,.12)}
+.pipe-step-label{font-size:8px;color:var(--text-muted);letter-spacing:.08em;text-transform:uppercase;text-align:center;max-width:50px}
+.pipe-connector{flex:1;height:1px;background:var(--border);margin-bottom:14px;transition:background .4s}
+.pipe-connector.done{background:var(--cyan-border)}
 
-/* ── ENGINE GRID ────────────────────────────────────────── */
-.engine-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  padding: 0 16px 16px;
-}
-@media (max-width: 680px) { .engine-grid { grid-template-columns: 1fr; } }
+/* Analysis focus checkboxes */
+.focus-wrap{padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.focus-label{font-size:9px;color:var(--text-muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px}
+.focus-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.focus-item{display:flex;align-items:center;gap:7px;cursor:pointer}
+.focus-cb{width:14px;height:14px;border:1px solid var(--border2);background:var(--bg);accent-color:var(--cyan);cursor:pointer;flex-shrink:0}
+.focus-text{font-size:11px;color:var(--text-dim)}
 
-.engine {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  overflow: hidden;
-  transition: border-color .25s;
-}
-.engine.running { border-color: var(--yellow); }
-.engine.done    { border-color: var(--green); }
-.engine.errored { border-color: var(--red); }
+/* Config fields */
+.config-wrap{padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.config-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.config-row:last-child{margin-bottom:0}
+.cfg-label{font-size:9px;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;width:70px;flex-shrink:0}
+.cfg-input{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;padding:5px 8px;outline:none;transition:border-color .2s}
+.cfg-input:focus{border-color:var(--cyan-border)}
+.cfg-select{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;padding:5px 8px;cursor:pointer;outline:none}
 
-.engine-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg2);
-}
-.eng-num {
-  width: 24px; height: 24px;
-  border-radius: 50%;
-  border: 1px solid var(--border2);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 10px; color: var(--text-dim); flex-shrink: 0;
-  transition: border-color .25s, color .25s, background .25s;
-}
-.engine.running .eng-num { border-color: var(--yellow); color: var(--yellow); }
-.engine.done    .eng-num { border-color: var(--green);  color: var(--bg);     background: var(--green); }
-.engine.errored .eng-num { border-color: var(--red);    color: var(--red); }
+/* Process button */
+.process-btn{margin:10px 14px;padding:12px;background:var(--cyan);color:var(--bg);font-family:var(--font);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;border:none;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0}
+.process-btn:hover{background:var(--cyan-dim);box-shadow:0 0 20px var(--cyan-glow)}
+.process-btn:disabled{opacity:.4;cursor:default;background:var(--bg3);color:var(--text-muted)}
+.process-btn .btn-icon{font-size:13px}
 
-.eng-meta { flex: 1; min-width: 0; }
-.eng-name { color: var(--white); font-size: 11px; font-weight: 600; letter-spacing: .08em; }
-.eng-desc { color: var(--text-dim); font-size: 10px; margin-top: 1px; }
+/* Workflow flow buttons */
+.workflow-btns{padding:0 14px 10px;display:flex;flex-direction:column;gap:5px;flex-shrink:0}
+.wf-btn{padding:8px 12px;font-family:var(--font);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;border:1px solid;cursor:pointer;background:none;transition:all .2s;display:flex;align-items:center;justify-content:space-between;text-decoration:none}
+.wf-btn.war{border-color:var(--cyan-border);color:var(--cyan)}
+.wf-btn.war:hover{background:var(--cyan-pale);box-shadow:0 0 10px var(--cyan-glow)}
+.wf-btn.strat{border-color:rgba(255,170,0,.35);color:var(--amber)}
+.wf-btn.strat:hover{background:var(--amber-pale)}
+.wf-btn.exec{border-color:var(--green-border);color:var(--green)}
+.wf-btn.exec:hover{background:var(--green-pale)}
+.wf-btn-arrow{font-size:12px}
+.wf-section-label{font-size:9px;color:var(--text-muted);letter-spacing:.12em;text-transform:uppercase;padding:4px 0 2px}
 
-.eng-badge {
-  font-size: 10px;
-  padding: 2px 8px;
-  border-radius: 2px;
-  border: 1px solid;
-  letter-spacing: .06em;
-  flex-shrink: 0;
-  transition: all .25s;
-}
-.eng-badge.idle    { color: var(--text-dim); border-color: var(--border); }
-.eng-badge.running { color: var(--yellow);   border-color: var(--yellow); animation: blink .9s step-end infinite; }
-.eng-badge.done    { color: var(--green);    border-color: var(--green); }
-.eng-badge.error   { color: var(--red);      border-color: var(--red); }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+/* RIGHT PANEL — Terminal output */
+.right-panel{background:var(--bg1);display:flex;flex-direction:column;overflow:hidden}
+.terminal-header{padding:9px 14px 8px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.terminal-title{font-size:10px;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;gap:7px}
+.terminal-dot{width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 4px var(--green);animation:blink 1.6s infinite}
+.engine-pills{display:flex;gap:4px}
+.eng-pill{font-size:9px;color:var(--text-muted);border:1px solid var(--border);padding:2px 7px;letter-spacing:.05em;text-transform:uppercase;transition:all .3s}
+.eng-pill.active{border-color:var(--cyan-border);color:var(--cyan);background:var(--cyan-pale)}
+.eng-pill.done{border-color:var(--green-border);color:var(--green)}
+.terminal-body{flex:1;overflow-y:auto;padding:14px 16px;font-family:var(--mono);font-size:12px;line-height:1.8;color:var(--text);white-space:pre-wrap;min-height:0}
+.t-prompt{color:var(--text-muted)}
+.t-cyan{color:var(--cyan)}
+.t-green{color:var(--green)}
+.t-amber{color:var(--amber)}
+.t-red{color:var(--red)}
+.t-purple{color:var(--purple)}
+.t-dim{color:var(--text-dim)}
+.t-muted{color:var(--text-muted)}
+.t-bold{font-weight:700}
+.t-cursor{display:inline-block;width:8px;height:14px;background:var(--cyan);animation:cursorBlink .9s infinite;vertical-align:middle;margin-left:2px}
+@keyframes cursorBlink{0%,100%{opacity:1}50%{opacity:0}}
 
-.eng-output {
-  padding: 14px;
-  min-height: 100px;
-  max-height: 280px;
-  overflow-y: auto;
-  color: var(--text);
-  font-size: 11.5px;
-  line-height: 1.65;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-.eng-output.placeholder { color: #2a4a2a; font-style: italic; }
-.eng-output::-webkit-scrollbar { width: 4px; }
-.eng-output::-webkit-scrollbar-track { background: transparent; }
-.eng-output::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+/* Engine section dividers in terminal */
+.eng-section{margin:8px 0;padding:6px 0;border-top:1px solid var(--border)}
+.eng-label{font-size:10px;color:var(--cyan);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
 
-/* ── MODEL ROW ──────────────────────────────────────────── */
-.model-row {
-  padding: 10px 16px;
-  border-top: 1px solid var(--border);
-  color: var(--text-dim);
-  font-size: 10px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.model-tag {
-  color: var(--cyan);
-  border: 1px solid rgba(0,229,255,.3);
-  padding: 1px 8px;
-  border-radius: 2px;
-  font-size: 10px;
-}
+/* ====== STATUS BAR ====== */
+.statusbar{background:var(--bg1);border-top:1px solid var(--border2);padding:5px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;height:32px}
+.sb-left{display:flex;align-items:center;gap:18px}
+.sb-item{font-size:10px;color:var(--text-muted);letter-spacing:.06em;display:flex;align-items:center;gap:5px}
+.sb-item .label{color:var(--text-muted)}
+.sb-item .val{color:var(--cyan);font-weight:600}
+.sb-item .val.green{color:var(--green)}
+.sb-item .val.amber{color:var(--amber)}
+.sb-suite{font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:.12em;text-transform:uppercase}
+
+/* ====== SPINNER ====== */
+.spinner{width:12px;height:12px;border:2px solid var(--border2);border-top-color:var(--cyan);border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ====== WORKFLOW TOAST ====== */
+.wf-toast{position:fixed;bottom:40px;right:20px;background:var(--bg3);border:1px solid var(--cyan-border);padding:14px 18px;z-index:600;display:none;box-shadow:0 4px 24px rgba(0,0,0,.6);min-width:280px}
+.wf-toast.show{display:block;animation:toastIn .3s ease}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.wt-header{font-size:11px;font-weight:700;color:var(--green);margin-bottom:3px;letter-spacing:.05em}
+.wt-msg{font-size:10px;color:var(--text-dim);margin-bottom:10px;line-height:1.5}
+.wt-actions{display:flex;gap:5px}
+.wt-btn{font-family:var(--font);font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;padding:5px 12px;border:1px solid;cursor:pointer;background:none;text-decoration:none;display:inline-flex;align-items:center;gap:4px;transition:all .15s}
+.wt-btn.war{border-color:var(--cyan-border);color:var(--cyan)}
+.wt-btn.war:hover{background:var(--cyan-pale)}
+.wt-btn.stay{border-color:var(--border);color:var(--text-muted)}
 </style>
 </head>
 <body>
 
-<!-- ── HEADER ── -->
-<div class="header">
-  <div>
-    <div class="logo">TSM <span class="sep">·</span> FINOPS INTERVIEW SUITE</div>
-    <div class="logo-sub">STAFF ACCOUNTANT TECHNICAL ASSESSMENT · 20-DEMO PLAYBOOK</div>
+<!-- ====== TOP BAR ====== -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="tsm-logo">
+      <div class="tsm-diamond"></div>
+      <span class="tsm-wordmark">TSM</span>
+    </div>
+    <div class="suite-divider"></div>
+    <span class="suite-name">FinOps Intelligence Suite</span>
   </div>
-  <div class="session">
-    <span class="dot"></span>
-    SESSION ACTIVE <span id="clock">00:00:00</span>
+  <div class="topbar-right">
+    <span class="tb-badge live">FINOPS LIVE</span>
+    <span class="tb-badge groq" id="groqBadge">GROQ llama-3.3-70b</span>
+    <a class="tb-badge poc" href="finops-executive-portal.html">■ EXEC PORTAL</a>
+    <span class="tb-time" id="topTime">--:--:-- AM</span>
   </div>
 </div>
 
-<!-- ── NAV ── -->
-<nav>
-  <a href="#">OVERVIEW</a>
-  <a href="#">20 DEMO PLAYBOOK</a>
-  <a href="#">POC DATA</a>
-  <a href="#">LIVE LEDGER</a>
-  <a href="#">RECONCILIATION</a>
-  <a href="#" class="active">DOC ANALYSIS</a>
-  <a href="#">SCORE CARD</a>
-</nav>
-
-<!-- ── MAIN ── -->
-<main>
-  <div class="section-label">AI · DOCUMENT INTELLIGENCE</div>
-  <h2>4-Engine Document Analysis</h2>
-
-  <div class="panel">
-    <div class="panel-hdr">
-      <span>⬡ DOCUMENT ANALYSIS — GROQ-POWERED PIPELINE</span>
-      <span class="ai-badge">4 ENGINES · PARALLEL</span>
+<!-- ====== TITLE BAR ====== -->
+<div class="titlebar">
+  <div class="breadcrumb">
+    <a href="#">TSM Suite</a>
+    <span class="sep">·</span>
+    <a href="#" class="active">Financial Operations</a>
+    <span class="sep">·</span>
+    <span style="color:var(--text-dim)">Live Document Intelligence</span>
+  </div>
+  <div class="title-row">
+    <div class="page-title">FinOps Intelligence · <span class="accent">Document Processor</span></div>
+    <div class="stat-row">
+      <div class="stat-item">
+        <div class="stat-num">8</div>
+        <div class="stat-label">Doc Types</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num cyan">4-Engine</div>
+        <div class="stat-label">AI Pipeline</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num amber" id="stat-processed">0</div>
+        <div class="stat-label">Processed</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">7</div>
+        <div class="stat-label">Node Routes</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num green">GAAP</div>
+        <div class="stat-label">Compliance</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num green">IRS</div>
+        <div class="stat-label">1099 Tracking</div>
+      </div>
     </div>
+  </div>
 
-    <!-- API key -->
-    <div class="key-row">
-      <span class="key-label">GROQ API KEY</span>
-      <input class="key-input" type="password" id="apiKey"
-             placeholder="gsk_…  (stored in sessionStorage only)" autocomplete="off" />
-      <button class="key-save" id="saveKey">SAVE</button>
-      <span class="key-status" id="keyStatus">not set</span>
+  <!-- TAB BAR -->
+  <div class="tabbar">
+    <a class="tab active" href="#">
+      <span class="tab-icon">✦</span> DOC PROCESSOR
+    </a>
+    <div class="tab-sep"></div>
+    <a class="tab" href="#">
+      <span class="tab-icon">↓</span> DOC ANALYSIS
+    </a>
+    <div class="tab-sep"></div>
+    <a class="tab" href="#">
+      <span class="tab-icon">✦</span> FINOPS DASHBOARD
+    </a>
+    <div class="tab-sep"></div>
+    <a class="tab" href="#">
+      <span class="tab-icon">✦</span> FINANCE NODES
+    </a>
+    <div class="tab-sep"></div>
+    <a class="tab" href="#">
+      <span class="tab-icon">◎</span> FINOPS AI <span style="color:var(--green);margin-left:4px;font-size:9px;border:1px solid var(--green-border);padding:1px 5px">GROQ</span>
+    </a>
+    <div class="tab-sep"></div>
+    <!-- WORKFLOW CHAIN -->
+    <div class="workflow-arrow">›</div>
+    <a class="tab warroom" href="finops-war-room.html">
+      ⚡ WAR ROOM
+    </a>
+    <div class="workflow-arrow">›</div>
+    <a class="tab strategist" href="finops-main-strategist.html">
+      ▶ STRATEGIST
+    </a>
+    <div class="workflow-arrow">›</div>
+    <a class="tab executive" href="finops-executive-portal.html">
+      → EXECUTIVE
+    </a>
+  </div>
+</div>
+
+<!-- ====== MAIN BODY ====== -->
+<div class="main">
+
+  <!-- SELECT LABEL + MODE BTNS -->
+  <div class="doc-select-label">
+    <span>Select Financial Document</span>
+    <div class="mode-btns">
+      <button class="mode-btn sample active" id="btnSample" onclick="setMode('sample')">■ SAMPLE</button>
+      <button class="mode-btn upload" id="btnUpload" onclick="setMode('upload')">↑ UPLOAD</button>
     </div>
+  </div>
 
-    <!-- Drop zone -->
-    <div class="dropzone" id="dropzone">
-      <input type="file" id="fileInput"
-             accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.csv,.txt,.md,.json" />
-      <div class="dz-icon">⬆</div>
-      <div class="dz-title">Drop a document or click to browse</div>
-      <div class="dz-sub">Images · CSV · TXT · JSON · PDF*</div>
+  <!-- DROP ZONE -->
+  <div class="dropzone" id="dropzone">
+    <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.csv,.xlsx,.txt" onchange="handleUpload(event)">
+    <div class="dz-icon" id="dzIcon">📊</div>
+    <div class="dz-title" id="dzTitle">Drop Financial Document Here</div>
+    <div class="dz-sub" id="dzSub">GL · AP · AR · Bank Rec · Budget · P&L · Balance Sheet · 1099</div>
+    <div class="dz-tags">
+      <span class="dz-tag active" id="tag-gl">GL</span>
+      <span class="dz-tag" id="tag-ap">AP</span>
+      <span class="dz-tag" id="tag-ar">AR</span>
+      <span class="dz-tag" id="tag-bank">Bank Rec</span>
+      <span class="dz-tag" id="tag-budget">Budget</span>
+      <span class="dz-tag" id="tag-pl">P&L</span>
+      <span class="dz-tag" id="tag-bal">Balance Sheet</span>
+      <span class="dz-tag" id="tag-1099">1099</span>
     </div>
+  </div>
 
-    <!-- File strip -->
-    <div class="file-strip" id="fileStrip">
-      <span>📄</span>
-      <span class="fname" id="fName"></span>
-      <button id="fClear" title="Remove">✕</button>
-    </div>
+<div style="margin-top:12px;text-align:right">
+  <button
+    class="sample-pill"
+    style="background:#00d4ff;color:#001018;font-weight:700"
+    onclick="sendToWarRoom()">
 
-    <!-- Run -->
-    <div class="run-bar">
-      <button class="btn-run" id="runBtn" disabled>
-        <div class="spinner" id="spinner"></div>
-        <span id="runLabel">⚡ RUN 4-ENGINE ANALYSIS</span>
+    ⚡ SEND TO WAR ROOM →
+
+  </button>
+</div>
+
+  <!-- SAMPLE PILLS -->
+  <div class="sample-pills" id="samplePills">
+    <button class="sample-pill" onclick="loadSample('ap-aging')">AP Aging</button>
+    <button class="sample-pill active" onclick="loadSample('gl-extract')">GL Variance</button>
+    <button class="sample-pill" onclick="loadSample('era-batch')">ERA Batch</button>
+    <button class="sample-pill" onclick="loadSample('ar-aging')">AR Aging</button>
+    <button class="sample-pill" onclick="loadSample('bank-recon')">Bank Recon</button>
+    <button class="sample-pill" onclick="loadSample('1099')">1099 / Tax</button>
+    <button class="sample-pill" onclick="loadSample('budget-var')">Budget Variance</button>
+    <button class="sample-pill" onclick="loadSample('vendor-rpt')">Vendor Report</button>
+  </div>
+
+  <!-- LOWER GRID -->
+  <div class="lower-grid">
+
+    <!-- LEFT: CONFIG PANEL -->
+    <div class="left-panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-step">STEP 1 · LOAD & CONFIGURE</div>
+          <div class="panel-title">4-Engine AI Pipeline</div>
+        </div>
+        <div class="groq-badge">GROQ LIVE</div>
+      </div>
+
+      <!-- Pipeline status track -->
+      <div class="pipeline-status-wrap">
+        <div class="pipeline-label">Pipeline Status</div>
+        <div class="pipeline-track">
+          <div class="pipe-step">
+            <div class="pipe-icon active" id="pipe-ingest">🔥</div>
+            <div class="pipe-step-label">Ingest</div>
+          </div>
+          <div class="pipe-connector" id="conn-1"></div>
+          <div class="pipe-step">
+            <div class="pipe-icon" id="pipe-classify">🔍</div>
+            <div class="pipe-step-label">Classify</div>
+          </div>
+          <div class="pipe-connector" id="conn-2"></div>
+          <div class="pipe-step">
+            <div class="pipe-icon" id="pipe-analyze">🧠</div>
+            <div class="pipe-step-label">Analyze</div>
+          </div>
+          <div class="pipe-connector" id="conn-3"></div>
+          <div class="pipe-step">
+            <div class="pipe-icon" id="pipe-route">⚡</div>
+            <div class="pipe-step-label">Route</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Analysis focus -->
+      <div class="focus-wrap">
+        <div class="focus-label">Analysis Focus</div>
+        <div class="focus-grid">
+          <label class="focus-item"><input class="focus-cb" type="checkbox" id="cb-risk" checked> <span class="focus-text">Risk Flags</span></label>
+          <label class="focus-item"><input class="focus-cb" type="checkbox" id="cb-gaap" checked> <span class="focus-text">GAAP/IRS Compliance</span></label>
+          <label class="focus-item"><input class="focus-cb" type="checkbox" id="cb-var" checked> <span class="focus-text">Variance Analysis</span></label>
+          <label class="focus-item"><input class="focus-cb" type="checkbox" id="cb-action" checked> <span class="focus-text">Action Items</span></label>
+        </div>
+      </div>
+
+      <!-- Config -->
+      <div class="config-wrap">
+        <div class="config-row">
+          <span class="cfg-label">API Key</span>
+          <input class="cfg-input" type="password" id="groqKey" placeholder="gsk_••••••••••••••" value="">
+        </div>
+        <div class="config-row">
+          <span class="cfg-label">Model</span>
+          <select class="cfg-select" id="modelSel" onchange="updateGroqBadge()">
+            <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option>
+            <option value="llama-3.1-8b-instant">llama-3.1-8b-instant</option>
+            <option value="mixtral-8x7b-32768">mixtral-8x7b-32768</option>
+            <option value="gemma2-9b-it">gemma2-9b-it</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Process button -->
+      <button class="process-btn" id="processBtn" onclick="processDocument()">
+        <span class="btn-icon">▶</span> PROCESS DOCUMENT
       </button>
-      <span class="run-status" id="runStatus">Upload a document to begin</span>
+
+      <!-- Workflow navigation -->
+      <div class="workflow-btns">
+        <div class="wf-section-label">Workflow Chain</div>
+        <a class="wf-btn war" href="finops-war-room.html">
+          <span>⚡ Open War Room — 6-Engine Analysis</span>
+          <span class="wf-btn-arrow">›</span>
+        </a>
+        <a class="wf-btn strat" href="finops-main-strategist.html">
+          <span>▶ Main Strategist — BNCA Synthesis</span>
+          <span class="wf-btn-arrow">›</span>
+        </a>
+        <a class="wf-btn exec" href="finops-executive-portal.html">
+          <span>→ Executive Portal — CFO Decision Queue</span>
+          <span class="wf-btn-arrow">›</span>
+        </a>
+      </div>
     </div>
 
-    <!-- Engines -->
-    <div class="engine-grid">
-
-      <div class="engine" id="eng1">
-        <div class="engine-head">
-          <div class="eng-num">1</div>
-          <div class="eng-meta">
-            <div class="eng-name">TRANSACTION EXTRACTOR</div>
-            <div class="eng-desc">Pulls every line item, date, amount &amp; payee</div>
-          </div>
-          <div class="eng-badge idle" id="e1-badge">IDLE</div>
+    <!-- RIGHT: TERMINAL OUTPUT -->
+    <div class="right-panel">
+      <div class="terminal-header">
+        <div class="terminal-title">
+          <span class="terminal-dot"></span>
+          FINOPS INTELLIGENCE ENGINE
         </div>
-        <div class="eng-output placeholder" id="e1-out">Awaiting document…</div>
-      </div>
-
-      <div class="engine" id="eng2">
-        <div class="engine-head">
-          <div class="eng-num">2</div>
-          <div class="eng-meta">
-            <div class="eng-name">VARIANCE DETECTOR</div>
-            <div class="eng-desc">Flags mismatches, duplicates &amp; gaps</div>
-          </div>
-          <div class="eng-badge idle" id="e2-badge">IDLE</div>
+        <div class="engine-pills">
+          <span class="eng-pill active" id="ep1">E1: INGEST</span>
+          <span class="eng-pill" id="ep2">E2: CLASSIFY</span>
+          <span class="eng-pill" id="ep3">E3: COMPLIANCE</span>
+          <span class="eng-pill" id="ep4">E4: ROUTE</span>
         </div>
-        <div class="eng-output placeholder" id="e2-out">Awaiting document…</div>
       </div>
+      <div class="terminal-body" id="terminalBody">
+<span class="t-prompt">›</span> <span class="t-dim">Awaiting financial document...</span>
 
-      <div class="engine" id="eng3">
-        <div class="engine-head">
-          <div class="eng-num">3</div>
-          <div class="eng-meta">
-            <div class="eng-name">GL AUTO-CLASSIFIER</div>
-            <div class="eng-desc">Maps transactions to GL account codes</div>
-          </div>
-          <div class="eng-badge idle" id="e3-badge">IDLE</div>
-        </div>
-        <div class="eng-output placeholder" id="e3-out">Awaiting document…</div>
+<span class="t-muted">Select a document type or upload a financial file to begin 4-engine analysis.</span>
+
+<span class="t-dim">──────────────────────────────────────</span>
+
+<span class="t-cyan">Engine 1:</span> <span class="t-dim">Document Ingestion &amp; Structure Parse</span>
+<span class="t-cyan">Engine 2:</span> <span class="t-amber">Financial Document Classification</span>
+<span class="t-cyan">Engine 3:</span> <span class="t-amber">GAAP/IRS Compliance &amp; Risk Analysis</span>
+<span class="t-cyan">Engine 4:</span> <span class="t-green">Next-Action &amp; Finance Node Routing</span>
+
+<span class="t-dim">──────────────────────────────────────</span>
+
+<span class="t-muted">WORKFLOW:</span>
+<span class="t-muted">  Doc Processor → </span><span class="t-cyan">⚡ War Room</span><span class="t-muted"> → </span><span class="t-amber">▶ Strategist</span><span class="t-muted"> → </span><span class="t-green">→ Executive Portal</span>
+
+<span class="t-dim">Ready. Load a document to fire the pipeline.</span>
+<span class="t-cursor"></span>
       </div>
-
-      <div class="engine" id="eng4">
-        <div class="engine-head">
-          <div class="eng-num">4</div>
-          <div class="eng-meta">
-            <div class="eng-name">AUDIT RISK SCORER</div>
-            <div class="eng-desc">Rates risk level and surfaces red flags</div>
-          </div>
-          <div class="eng-badge idle" id="e4-badge">IDLE</div>
-        </div>
-        <div class="eng-output placeholder" id="e4-out">Awaiting document…</div>
-      </div>
-
     </div>
 
-    <!-- Model info -->
-    <div class="model-row">
-      VISION / IMAGE →
-      <span class="model-tag">llama-3.2-90b-vision-preview</span>
-      &nbsp; TEXT →
-      <span class="model-tag">llama-3.3-70b-versatile</span>
-    </div>
+  </div>
+</div>
 
-  </div><!-- /.panel -->
-</main>
+<!-- ====== STATUS BAR ====== -->
+<div class="statusbar">
+  <div class="sb-left">
+    <span class="sb-suite">TSM FinOps Suite</span>
+    <span class="sb-item"><span class="label">DOCS PROCESSED:</span> <span class="val" id="sb-docs">0</span></span>
+    <span class="sb-item"><span class="label">RISK FLAGS:</span> <span class="val amber" id="sb-flags">0</span></span>
+    <span class="sb-item"><span class="label">AI MODEL:</span> <span class="val" id="sb-model">llama-3.3-70b-versatile</span></span>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <a href="finops-war-room.html" style="font-size:10px;color:var(--cyan);text-decoration:none;letter-spacing:.07em;text-transform:uppercase;border:1px solid var(--cyan-border);padding:2px 9px;transition:all .2s" onmouseover="this.style.background='var(--cyan-pale)'" onmouseout="this.style.background=''">⚡ WAR ROOM →</a>
+    <a href="finops-main-strategist.html" style="font-size:10px;color:var(--amber);text-decoration:none;letter-spacing:.07em;text-transform:uppercase;border:1px solid rgba(255,170,0,.3);padding:2px 9px;transition:all .2s" onmouseover="this.style.background='rgba(255,170,0,.07)'" onmouseout="this.style.background=''">▶ STRATEGIST →</a>
+    <a href="finops-executive-portal.html" style="font-size:10px;color:var(--green);text-decoration:none;letter-spacing:.07em;text-transform:uppercase;border:1px solid var(--green-border);padding:2px 9px;transition:all .2s" onmouseover="this.style.background='var(--green-pale)'" onmouseout="this.style.background=''">→ EXECUTIVE</a>
+  </div>
+</div>
 
+<!-- ====== WORKFLOW TOAST ====== -->
+<div class="wf-toast" id="wfToast">
+  <div class="wt-header" id="wt-header">✓ Analysis Complete</div>
+  <div class="wt-msg" id="wt-msg">Document processed. Send to War Room for 6-engine deep analysis?</div>
+  <div class="wt-actions">
+    <a class="wt-btn war" href="finops-war-room.html" id="wt-warroom">⚡ Open War Room</a>
+    <button class="wt-btn stay" onclick="hideToast()">Stay Here</button>
+  </div>
+</div>
+
+<!-- ====== SCRIPTS ====== -->
 <script>
-(function () {
-  'use strict';
+// ===== CLOCK =====
+function updateClock(){
+  const now = new Date();
+  document.getElementById('topTime').textContent = now.toLocaleTimeString('en-US',{hour12:true});
+}
+setInterval(updateClock,1000); updateClock();
 
-  /* ── Clock ── */
-  const clockEl = document.getElementById('clock');
-  const start = Date.now();
-  setInterval(() => {
-    const s = Math.floor((Date.now() - start) / 1000);
-    const h = String(Math.floor(s / 3600)).padStart(2,'0');
-    const m = String(Math.floor((s % 3600) / 60)).padStart(2,'0');
-    const sec = String(s % 60).padStart(2,'0');
-    clockEl.textContent = `${h}:${m}:${sec}`;
-  }, 1000);
+// ===== GROQ BADGE =====
+function updateGroqBadge(){
+  const m = document.getElementById('modelSel').value.replace('-versatile','').replace('-instant','');
+  document.getElementById('groqBadge').textContent = 'GROQ '+m;
+  document.getElementById('sb-model').textContent = document.getElementById('modelSel').value;
+}
 
-  /* ── API key ── */
-  const apiKeyEl   = document.getElementById('apiKey');
-  const saveKeyBtn = document.getElementById('saveKey');
-  const keyStatus  = document.getElementById('keyStatus');
+// ===== MODE TOGGLE =====
+let currentMode = 'sample';
+let currentDocType = '';
+let currentDocName = '';
+let currentDocumentText = '';
+let currentDoc = null;
+let docsProcessed = 0;
 
-  function loadKey() {
-    const k = sessionStorage.getItem('groq_key') || '';
-    if (k) {
-      apiKeyEl.value = k;
-      keyStatus.textContent = 'set ✓';
-      keyStatus.className = 'key-status ok';
-    }
-    return k;
+function sendToWarRoom(){
+  if(!currentDoc){ alert('Load a document first.'); return; }
+  const payload = {
+    type: currentDocType || currentDoc.tag || 'DOC',
+    name: currentDocName || currentDoc.label || 'Document',
+    content: currentDocumentText || currentDoc.context || '',
+    label: currentDoc.label || '',
+    tag: currentDoc.tag || '',
+    timestamp: Date.now()
+  };
+  sessionStorage.setItem('FINOPS_DOC_RELAY', JSON.stringify(payload));
+  window.location.href = '/html/finops-suite/finops-war-room.html';
+}
+
+function setMode(mode){
+  currentMode = mode;
+  document.getElementById('btnSample').classList.toggle('active', mode==='sample');
+  document.getElementById('btnUpload').classList.toggle('active', mode==='upload');
+  document.getElementById('samplePills').style.display = mode==='sample'?'flex':'none';
+  // Toggle drop zone click behavior
+  const input = document.getElementById('fileInput');
+  if(mode==='sample'){
+    input.style.pointerEvents='none';
+    resetDropzone();
+  } else {
+    input.style.pointerEvents='';
+    setDropzone('upload');
   }
-  loadKey();
+}
 
-  saveKeyBtn.addEventListener('click', () => {
-    const k = apiKeyEl.value.trim();
-    if (!k) { keyStatus.textContent = 'enter a key'; keyStatus.className = 'key-status'; return; }
-    sessionStorage.setItem('groq_key', k);
-    keyStatus.textContent = 'saved ✓';
-    keyStatus.className = 'key-status ok';
-    checkReady();
+function resetDropzone(){
+  document.getElementById('dzIcon').textContent='📊';
+  document.getElementById('dzTitle').textContent='Drop Financial Document Here';
+  document.getElementById('dzSub').textContent='GL · AP · AR · Bank Rec · Budget · P&L · Balance Sheet · 1099';
+}
+
+function setDropzone(type){
+  if(type==='upload'){
+    document.getElementById('dzTitle').textContent='Click or Drag to Upload';
+    document.getElementById('dzSub').textContent='PDF · DOCX · XLSX · CSV · TXT — auto-classified on load';
+    document.getElementById('dzIcon').textContent='📂';
+  }
+}
+
+// ===== SAMPLE DATA =====
+const SAMPLES = {
+  'gl-extract':{
+    label:'GL Variance Extract Q1',tag:'GL',icon:'📈',
+    context:`DOCUMENT TYPE: General Ledger Extract — Q1 2025
+PERIOD: January 1 – March 31, 2025
+TOTAL REVENUE: $2,420,000 vs Budget $2,820,000 — VARIANCE: -$400,000 (-14.3%)
+COGS: $1,500,400 — Gross Profit: $919,600 (38% margin vs 44% target)
+Payroll: $480,200 (budgeted $460,000) — OVER by $20,200
+Rent: $84,000 (on budget)
+Utilities: $31,800 (budgeted $28,000) — OVER by $3,800
+Marketing: $62,400 (budgeted $90,000) — UNDER by $27,600
+NET INCOME: $142,400 (below target $180,000)
+FLAGGED: Revenue shortfall driven by Q1 project delays. Payroll overage due to overtime. Margin compression 6 points below target.`
+  },
+  'ap-aging':{
+    label:'AP Aging Report',tag:'AP',icon:'💳',
+    context:`DOCUMENT TYPE: Accounts Payable Aging Report
+PERIOD: April 30, 2025 — TOTAL OUTSTANDING: $312,480
+VENDORS: 22 active — CURRENT (0-30): $148,200 — 31-60 DAYS: $89,400 — 61-90: $52,880 — 90+: $22,000
+CREDIT HOLD: 3 vendors — Acme Supply ($14,200 / 94 days / threatening suspension), TechParts ($5,800), FlexStaff ($2,000)
+EARLY PAY DISCOUNTS: 4 vendors 2/10 net 30 — $3,840 savings available this week
+RISK: Acme Supply critical — service suspension risk if not resolved by Friday`
+  },
+  'ar-aging':{
+    label:'AR Aging Report',tag:'AR',icon:'📋',
+    context:`DOCUMENT TYPE: Accounts Receivable Aging
+PERIOD: April 30, 2025 — TOTAL: $198,640
+Westside Holdings: $18,400 — 97 days — no response to 3 attempts — WRITE-OFF RISK
+Delta Logistics: $12,200 — 78 days — disputed invoice
+Sunrise Group: $8,600 — 63 days — promised May 10
+DSO: 52 days (target: 35) — HIGH RISK: $18,400 recommend escalation to collections`
+  },
+  'era-batch':{
+    label:'ERA Batch — War Room Relay',tag:'ERA',icon:'⚡',
+    context:`DOCUMENT TYPE: ERA Batch — War Room Relay
+RISK SCORE: 70/100 — FINANCIAL EXPOSURE: $91,800 – $112,200
+EXCEPTIONS: 7 items flagged
+COMPLIANCE: ★★ HIGH regulatory posture
+KEY FLAGS:
+- LabCore Diagnostics: $29,400 vendor flag
+- Missing documentation: $44,200 exposure
+- Outstanding invoices: $31,600 review required
+- Duplicate payment risk: LOW
+- OIG/Regulatory: HIGH
+RECOVERY: Active — recoverable amount identified
+CFO ITEMS: YES — memo and sign-off required`
+  },
+  'bank-recon':{
+    label:'Bank Reconciliation Q1',tag:'BANK',icon:'🏦',
+    context:`DOCUMENT TYPE: Bank Reconciliation Statement
+ACCOUNT: Operating Checking — First National Bank
+DATE: March 31, 2025 — BANK BALANCE: $284,720
+Deposits in Transit: +$32,400 — Outstanding Checks: -$18,650
+ADJUSTED BANK BALANCE: $298,470 — BOOK BALANCE: $250,320
+DIFFERENCE: $48,150 UNRECONCILED
+FLAGGED: 2 deposits in transit over 30 days old. Check outstanding since January — possible lost check. 3 accounts flagged.`
+  },
+  '1099':{
+    label:'1099 / Tax Readiness',tag:'TAX',icon:'🧾',
+    context:`DOCUMENT TYPE: 1099 / Tax Readiness Review
+PERIOD: Tax Year 2024
+VENDORS REQUIRING 1099: 14 identified
+MISSING W-9: 3 vendors (Apex Consulting $8,200 / Ridgeline Services $6,400 / Summit Tech $4,100)
+NEAR $600 THRESHOLD: 2 vendors ($580 and $595)
+STATUS: 1099 mapping in progress — filing deadline at risk
+GAAP: Non-compliance risk on 3 vendor records
+IRS EXPOSURE: Potential $2,700 in penalties if W-9s not collected before close`
+  },
+  'budget-var':{
+    label:'Budget Variance Report',tag:'BUDGET',icon:'📊',
+    context:`DOCUMENT TYPE: Budget Variance Report
+PERIOD: Q1 2025 — DEPT: All
+TOTAL VARIANCE: -$48,200 unfavorable
+Operations: -$22,400 (overtime, unplanned repairs)
+Marketing: +$27,600 (underspend — campaigns delayed)
+HR: -$18,200 (new hires ahead of plan)
+IT: -$5,800 (emergency security upgrade)
+FAVORABLE: Marketing underspend partially offsets ops overage
+ACTION: CFO review required — operations variance exceeds 10% threshold`
+  },
+  'vendor-rpt':{
+    label:'Vendor Compliance Report',tag:'VENDOR',icon:'🏢',
+    context:`DOCUMENT TYPE: Vendor Compliance Report
+TOTAL VENDORS REVIEWED: 34
+COMPLIANT: 28 vendors
+NON-COMPLIANT FLAGS:
+- LabCore Diagnostics: Missing certificate of insurance ($29,400 exposure)
+- MedSupply Inc: Pending W-9 — $6,200 threshold risk
+- TechParts Inc: Credit hold — $5,800 overdue
+- FlexStaff: Background check expired
+RISK: 2 vendors at regulatory non-compliance — OIG flag active
+RECOMMENDATION: Pause payments to non-compliant until resolved`
+  }
+};
+
+function loadSample(type){
+
+  currentDocType = type;
+  currentDocName = type;
+  const key = type;
+  document.querySelectorAll('.sample-pill').forEach(p=>p.classList.remove('active'));
+  event.target.classList.add('active');
+  const s = SAMPLES[key];
+  currentDocumentText = s ? s.context : '';
+  const s2 = SAMPLES[key];
+  if(!s) return;
+  currentDoc = s;
+  // Update dropzone
+  document.getElementById('dzIcon').textContent = s.icon;
+  document.getElementById('dzTitle').textContent = s.label + ' — LOADED';
+  document.getElementById('dzSub').textContent = 'Sample document ready for 4-engine analysis';
+  // Highlight active tag
+  document.querySelectorAll('.dz-tag').forEach(t=>t.classList.remove('active'));
+  const tagEl = document.getElementById('tag-'+key.split('-')[0].toLowerCase());
+  if(tagEl) tagEl.classList.add('active');
+  // Update terminal with load confirmation
+  appendTerminal(`\n<span class="t-prompt">›</span> <span class="t-green">LOADED</span> <span class="t-cyan">${s.label}</span>\n<span class="t-dim">  Type: ${s.tag} · Document classified · Ready to process</span>\n<span class="t-muted">  Run PROCESS DOCUMENT to fire all 4 engines →</span>\n`);
+}
+
+function sendToWarRoom(){
+  if(!currentDoc){ alert('Load a document first.'); return; }
+  sessionStorage.setItem('FINOPS_DOC_RELAY', JSON.stringify({
+    type: currentDoc.tag || currentDocType || 'DOC',
+    name: currentDoc.label || currentDocName || 'Document',
+    content: currentDoc.context || currentDocumentText || '',
+    timestamp: Date.now()
+  }));
+  window.location.href = '/html/finops-suite/finops-war-room.html';
+}
+
+// ===== TERMINAL HELPERS =====
+function setTerminal(html){
+  document.getElementById('terminalBody').innerHTML = html;
+}
+function appendTerminal(html){
+  const tb = document.getElementById('terminalBody');
+  // Remove cursor, append, re-add cursor
+  tb.innerHTML = tb.innerHTML.replace('<span class="t-cursor"></span>','') + html + '<span class="t-cursor"></span>';
+  tb.scrollTop = tb.scrollHeight;
+}
+function clearCursor(){
+  const tb = document.getElementById('terminalBody');
+  tb.innerHTML = tb.innerHTML.replace('<span class="t-cursor"></span>','');
+}
+
+// ===== ENGINE STATES =====
+function setEngineState(step, state){
+  // steps: ingest, classify, analyze, route
+  // pills: ep1-ep4
+  const icons = {ingest:'🔥',classify:'🔍',analyze:'🧠',route:'⚡'};
+  const doneIcons = {ingest:'✓',classify:'✓',analyze:'✓',route:'⚡'};
+  const el = document.getElementById('pipe-'+step);
+  if(!el) return;
+  if(state==='active'){
+    el.className='pipe-icon active';
+    el.textContent=icons[step];
+  } else if(state==='done'){
+    el.className='pipe-icon done';
+    el.textContent=doneIcons[step];
+  }
+}
+function setEnginePill(n, state){
+  const el=document.getElementById('ep'+n);
+  if(!el) return;
+  el.className='eng-pill'+(state==='active'?' active':state==='done'?' done':'');
+}
+function setConnector(n, done){
+  const el=document.getElementById('conn-'+n);
+  if(el) el.classList.toggle('done',done);
+}
+
+// ===== GROQ CALL =====
+async function callGroq(prompt, onChunk){
+  const key = document.getElementById('groqKey').value.trim();
+  const model = document.getElementById('modelSel').value;
+  if(!key) throw new Error('No API key — enter Groq API key in config');
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify({model, messages:[{role:'user',content:prompt}], max_tokens:700, stream:true, temperature:0.35})
   });
-
-  /* ── File ── */
-  const dropzone  = document.getElementById('dropzone');
-  const fileInput = document.getElementById('fileInput');
-  const fileStrip = document.getElementById('fileStrip');
-  const fName     = document.getElementById('fName');
-  const fClear    = document.getElementById('fClear');
-
-  let fileB64  = null;
-  let fileMime = null;
-  let fileText = null; // decoded text for non-image types
-
-  function setFile(file) {
-    if (!file) return;
-    fileMime = file.type || 'text/plain';
-    const reader = new FileReader();
-    reader.onload = e => {
-      const dataUrl = e.target.result;
-      fileB64 = dataUrl.split(',')[1];
-      // Decode text for non-image types
-      const isImg = fileMime.startsWith('image/');
-      if (!isImg) {
-        try { fileText = atob(fileB64); } catch { fileText = '[binary]'; }
-      } else {
-        fileText = null;
-      }
-      fName.textContent = file.name + ' (' + (file.size/1024).toFixed(1) + ' KB)';
-      fileStrip.style.display = 'flex';
-      dropzone.style.display  = 'none';
-      checkReady();
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function clearFile() {
-    fileB64 = fileMime = fileText = null;
-    fileInput.value = '';
-    fileStrip.style.display = 'none';
-    dropzone.style.display  = '';
-    resetEngines();
-    checkReady();
-    document.getElementById('runStatus').textContent = 'Upload a document to begin';
-  }
-
-  fileInput.addEventListener('change', e => setFile(e.target.files[0]));
-  fClear.addEventListener('click', clearFile);
-  dropzone.addEventListener('dragover',  e => { e.preventDefault(); dropzone.classList.add('dragover'); });
-  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
-  dropzone.addEventListener('drop', e => {
-    e.preventDefault();
-    dropzone.classList.remove('dragover');
-    setFile(e.dataTransfer.files[0]);
-  });
-
-  /* ── Ready check ── */
-  const runBtn    = document.getElementById('runBtn');
-  const runLabel  = document.getElementById('runLabel');
-  const spinner   = document.getElementById('spinner');
-  const runStatus = document.getElementById('runStatus');
-
-  function checkReady() {
-    const hasKey  = !!sessionStorage.getItem('groq_key');
-    const hasFile = !!fileB64;
-    runBtn.disabled = !(hasKey && hasFile);
-    if (hasKey && hasFile) runStatus.textContent = 'Ready — click RUN to start all 4 engines';
-    else if (!hasKey) runStatus.textContent = 'Enter Groq API key above';
-    else runStatus.textContent = 'Upload a document to begin';
-  }
-
-  /* ── Engines ── */
-  const ENGINES = [
-    {
-      n: 1,
-      name: 'TRANSACTION EXTRACTOR',
-      system: 'You are a financial transaction extractor. Given a document, extract every transaction as a compact table with columns: DATE | DESCRIPTION | AMOUNT | TYPE (credit/debit). If no clear transactions exist, summarise what financial data is present. Max 20 rows. Be concise.',
-      prompt: 'Extract all transactions from this document as a table.',
-    },
-    {
-      n: 2,
-      name: 'VARIANCE DETECTOR',
-      system: 'You are a variance and discrepancy detector for accounting documents. Identify: duplicate or near-duplicate entries, unusual round-number amounts, missing expected counterparts, date gaps or sequence breaks, and any amounts that look miskeyed. Return a short bulleted list of findings. If none found, say "No variances detected."',
-      prompt: 'Detect any variances, duplicates, or anomalies in this document.',
-    },
-    {
-      n: 3,
-      name: 'GL AUTO-CLASSIFIER',
-      system: 'You are a GL (General Ledger) classifier using a standard US chart of accounts. Map each transaction or line item to the most appropriate GL code and name (e.g. 6120 - Bank Charges, 1010 - Cash, 2000 - Accounts Payable, 6000 - Operating Expenses). Format: DESCRIPTION → GL CODE - GL NAME. Max 20 lines.',
-      prompt: 'Classify each transaction or line item to a GL account code.',
-    },
-    {
-      n: 4,
-      name: 'AUDIT RISK SCORER',
-      system: 'You are an audit risk analyst. Review the document and return: 1) OVERALL RISK: LOW / MEDIUM / HIGH on the first line. 2) Up to 5 specific red flags with a brief one-line explanation each. 3) One-sentence recommendation for the reconciliation team. Be direct and concise.',
-      prompt: 'Score the audit risk and list any red flags in this document.',
-    },
-  ];
-
-  function setState(n, state) {
-    const card  = document.getElementById('eng' + n);
-    const badge = document.getElementById('e' + n + '-badge');
-    card.className = 'engine ' + (state !== 'idle' ? state : '');
-    badge.className = 'eng-badge ' + (state === 'errored' ? 'error' : state);
-    const lbl = { idle:'IDLE', running:'RUNNING', done:'DONE', errored:'ERROR' };
-    badge.textContent = lbl[state] || state.toUpperCase();
-  }
-  function setOut(n, text, placeholder) {
-    const el = document.getElementById('e' + n + '-out');
-    el.textContent = text;
-    el.className = 'eng-output' + (placeholder ? ' placeholder' : '');
-  }
-  function resetEngines() {
-    ENGINES.forEach(e => { setState(e.n, 'idle'); setOut(e.n, 'Awaiting document…', true); });
-  }
-
-  /* ── Groq API call ── */
-  async function callGroq(engine) {
-    const key = sessionStorage.getItem('groq_key');
-    const isImg = fileMime && fileMime.startsWith('image/');
-    const model = isImg ? 'llama-3.2-90b-vision-preview' : 'llama-3.3-70b-versatile';
-
-    let userContent;
-    if (isImg) {
-      userContent = [
-        { type: 'image_url', image_url: { url: 'data:' + fileMime + ';base64,' + fileB64 } },
-        { type: 'text',      text: engine.prompt },
-      ];
-    } else {
-      // Text / CSV / PDF treated as raw text
-      const docText = fileText && fileText.length < 20000
-        ? fileText
-        : (fileText || '').slice(0, 20000) + '\n[truncated]';
-      userContent = engine.prompt + '\n\nDOCUMENT CONTENTS:\n' + docText;
+  if(!res.ok){ const e=await res.text(); throw new Error(e); }
+  const reader=res.body.getReader(), dec=new TextDecoder();
+  let full='';
+  while(true){
+    const {done,value}=await reader.read(); if(done) break;
+    for(const line of dec.decode(value).split('\n')){
+      if(!line.startsWith('data:')) continue;
+      const d=line.slice(5).trim(); if(d==='[DONE]') continue;
+      try{ const j=JSON.parse(d); const delta=j.choices?.[0]?.delta?.content||''; full+=delta; if(onChunk) onChunk(delta); }catch{}
     }
+  }
+  return full;
+}
 
-    const body = {
-      model,
-      max_tokens: 1024,
-      messages: [
-        { role: 'system', content: engine.system },
-        { role: 'user',   content: userContent },
-      ],
-    };
+// ===== PROCESS DOCUMENT =====
+async function processDocument(){
+  if(!currentDoc){ alert('Select or upload a financial document first.'); return; }
+  const btn = document.getElementById('processBtn');
+  btn.disabled=true; btn.innerHTML='<div class="spinner"></div> PROCESSING...';
 
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + key,
-      },
-      body: JSON.stringify(body),
+  const ctx = currentDoc.context;
+  const focus = [];
+  if(document.getElementById('cb-risk').checked) focus.push('risk flags and anomalies');
+  if(document.getElementById('cb-var').checked) focus.push('variance analysis');
+  if(document.getElementById('cb-gaap').checked) focus.push('GAAP/IRS compliance');
+  if(document.getElementById('cb-action').checked) focus.push('action items and next steps');
+
+  const tbody = document.getElementById('terminalBody');
+  clearCursor();
+  tbody.innerHTML = '';
+
+  let riskCount = 0;
+
+  // ===== ENGINE 1: INGEST & STRUCTURE PARSE =====
+  setEngineState('ingest','active'); setEnginePill(1,'active');
+  tbody.innerHTML += `<span class="t-prompt">›</span> <span class="t-cyan">ENGINE 1</span> <span class="t-dim">— Document Ingestion & Structure Parse</span>\n<span class="t-muted">  Parsing: ${currentDoc.label}</span>\n\n`;
+  tbody.scrollTop=tbody.scrollHeight;
+
+  try{
+    const e1prompt = `You are TSM FinOps Engine 1 — Document Ingestion & Structure Parse.
+
+DOCUMENT:
+${ctx}
+
+Output a CONCISE structured parse (6-8 lines):
+- DOC TYPE: [identified type]
+- PERIOD: [date range or "N/A"]
+- KEY ENTITIES: [names, accounts, vendors — max 3]
+- TOTAL EXPOSURE: [dollar amount or "N/A"]
+- STRUCTURE: [Complete/Partial/Missing data]
+- ANOMALIES DETECTED: [count and brief description, or "None"]
+
+Be terse. One line per field. No headers other than field labels.`;
+
+    let e1out = '';
+    tbody.innerHTML += `<span class="t-dim">`;
+    await callGroq(e1prompt, (delta)=>{
+      e1out += delta;
+      tbody.innerHTML = tbody.innerHTML.replace(/<\/span>\s*$/, '') + delta.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span>';
+      tbody.scrollTop=tbody.scrollHeight;
     });
-
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message);
-    return data.choices?.[0]?.message?.content || '(no output)';
+    tbody.innerHTML += `\n`;
+    setEngineState('ingest','done'); setConnector(1,true); setEnginePill(1,'done'); setEngineState('classify','active'); setEnginePill(2,'active');
+  }catch(e){
+    tbody.innerHTML += `<span class="t-red">[E1 ERROR] ${e.message}</span>\n`;
   }
 
-  /* ── Run ── */
-  runBtn.addEventListener('click', async () => {
-    if (runBtn.disabled) return;
-    runBtn.disabled       = true;
-    spinner.style.display = 'block';
-    runLabel.textContent  = 'ANALYSING…';
-    runStatus.textContent = 'All 4 engines running in parallel via Groq…';
-    resetEngines();
+  // ===== ENGINE 2: CLASSIFICATION =====
+  tbody.innerHTML += `\n<span class="t-prompt">›</span> <span class="t-cyan">ENGINE 2</span> <span class="t-amber">— Financial Document Classification</span>\n\n<span class="t-dim">`;
+  tbody.scrollTop=tbody.scrollHeight;
 
-    await Promise.all(ENGINES.map(async (eng) => {
-      setState(eng.n, 'running');
-      try {
-        const result = await callGroq(eng);
-        setOut(eng.n, result);
-        setState(eng.n, 'done');
-      } catch (err) {
-        setOut(eng.n, '⚠ ' + err.message);
-        setState(eng.n, 'errored');
-      }
+  try{
+    const e2prompt = `You are TSM FinOps Engine 2 — Financial Document Classification.
+
+DOCUMENT CONTEXT:
+${ctx.substring(0,1500)}
+
+Classify this document (5-6 lines):
+- CLASSIFICATION: [primary type: AP Aging / AR Aging / GL Extract / Bank Recon / ERA Batch / Tax / Budget / Vendor / Other]
+- RISK LEVEL: [HIGH / MEDIUM / LOW] — [one sentence rationale]
+- ROUTE: [which FinOps node this should go to: AP/AR/GL/Tax/Compliance/Zero Trust/War Room]
+- GAAP FLAGS: [count] — [brief description or "None"]
+- IRS FLAGS: [count] — [brief description or "None"]
+- WAR ROOM TRIGGER: [YES/NO] — [reason if YES]
+
+Terse. One line per field.`;
+
+    let e2out = '';
+    await callGroq(e2prompt, (delta)=>{
+      e2out += delta;
+      tbody.innerHTML = tbody.innerHTML.replace(/<\/span>\s*$/, '') + delta.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span>';
+      tbody.scrollTop=tbody.scrollHeight;
+    });
+    tbody.innerHTML += `\n`;
+    // Count risk flags
+    if(e2out.toLowerCase().includes('high')) riskCount += 3;
+    if(e2out.toLowerCase().includes('war room trigger: yes')) riskCount += 2;
+    setEngineState('classify','done'); setConnector(2,true); setEnginePill(2,'done'); setEngineState('analyze','active'); setEnginePill(3,'active');
+  }catch(e){
+    tbody.innerHTML += `<span class="t-red">[E2 ERROR] ${e.message}</span>\n`;
+  }
+
+  // ===== ENGINE 3: GAAP/IRS/RISK ANALYSIS =====
+  tbody.innerHTML += `\n<span class="t-prompt">›</span> <span class="t-cyan">ENGINE 3</span> <span class="t-amber">— GAAP/IRS Compliance & Risk Analysis</span>\n\n<span class="t-dim">`;
+  tbody.scrollTop=tbody.scrollHeight;
+
+  try{
+    const focus_str = focus.join(', ');
+    const e3prompt = `You are TSM FinOps Engine 3 — GAAP/IRS Compliance & Risk Analysis.
+
+Focus areas: ${focus_str}
+
+DOCUMENT:
+${ctx.substring(0,1500)}
+
+Provide compliance and risk analysis (8-10 lines):
+- GAAP ISSUES: [specific violations or "None found"]
+- IRS / 1099 FLAGS: [specific items or "None"]
+- TOP RISK ITEM: [most critical single issue with dollar amount]
+- VARIANCE FLAGS: [key variances from budget/target or "N/A"]
+- APPROVAL GAPS: [missing approvals or sign-offs, or "None"]
+- AUDIT EXPOSURE: [HIGH/MEDIUM/LOW — brief reason]
+- IMMEDIATE ACTION: [single most urgent step]
+
+Specific, terse, dollar-quantified where possible.`;
+
+    await callGroq(e3prompt, (delta)=>{
+      tbody.innerHTML = tbody.innerHTML.replace(/<\/span>\s*$/, '') + delta.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span>';
+      tbody.scrollTop=tbody.scrollHeight;
+    });
+    tbody.innerHTML += `\n`;
+    setEngineState('analyze','done'); setConnector(3,true); setEnginePill(3,'done'); setEngineState('route','active'); setEnginePill(4,'active');
+  }catch(e){
+    tbody.innerHTML += `<span class="t-red">[E3 ERROR] ${e.message}</span>\n`;
+  }
+
+  // ===== ENGINE 4: NEXT-ACTION & ROUTING =====
+  tbody.innerHTML += `\n<span class="t-prompt">›</span> <span class="t-cyan">ENGINE 4</span> <span class="t-green">— Next-Action & Finance Node Routing</span>\n\n<span class="t-dim">`;
+  tbody.scrollTop=tbody.scrollHeight;
+
+  try{
+    const e4prompt = `You are TSM FinOps Engine 4 — Next-Action & Finance Node Routing.
+
+DOCUMENT:
+${ctx.substring(0,1200)}
+
+Provide routing and next actions (7-8 lines):
+- PRIMARY ROUTE: [War Room / Strategist / AP Node / AR Node / Tax Node / Compliance / Zero Trust]
+- NEXT ACTION: [single most important immediate step]
+- CONTROLLER PRIORITY: [P1/P2/P3 — brief reason]
+- WORKFLOW: [Doc Processor → which node → Strategist → Executive Portal, or alternate path]
+- CFO ITEMS: [YES/NO — what needs CFO attention]
+- RECOVERY POTENTIAL: [dollar amount or "N/A"]
+- SEND TO WAR ROOM: [YES — reason / NO — reason]
+
+Directive and specific.`;
+
+    let e4out = '';
+    await callGroq(e4prompt, (delta)=>{
+      e4out += delta;
+      tbody.innerHTML = tbody.innerHTML.replace(/<\/span>\s*$/, '') + delta.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span>';
+      tbody.scrollTop=tbody.scrollHeight;
+    });
+    tbody.innerHTML += `\n`;
+    setEngineState('route','done'); setEnginePill(4,'done');
+
+    // Final summary
+    tbody.innerHTML += `\n<span class="t-dim">──────────────────────────────────────────</span>\n<span class="t-prompt">›</span> <span class="t-green">PIPELINE COMPLETE</span> <span class="t-dim">— ${currentDoc.label}</span>\n<span class="t-muted">  4 engines complete · Send to War Room for 6-engine deep analysis</span>\n<span class="t-muted">  Workflow: </span><span class="t-cyan">⚡ War Room</span><span class="t-muted"> → </span><span class="t-amber">▶ Strategist</span><span class="t-muted"> → </span><span class="t-green">→ Executive Portal</span>\n<span class="t-cursor"></span>`;
+    tbody.scrollTop=tbody.scrollHeight;
+
+    // Save relay for War Room
+    localStorage.setItem('tsm_doc_processor_relay', JSON.stringify({
+      doc: currentDoc.label,
+      tag: currentDoc.tag,
+      context: currentDoc.context.substring(0,2000),
+      timestamp: Date.now()
     }));
 
-    spinner.style.display = 'none';
-    runLabel.textContent  = '⚡ RUN 4-ENGINE ANALYSIS';
-    runBtn.disabled       = false;
-    runStatus.textContent = 'Complete · ' + new Date().toLocaleTimeString();
-  });
+    // Update stats
+    docsProcessed++;
+    document.getElementById('stat-processed').textContent = docsProcessed;
+    document.getElementById('sb-docs').textContent = docsProcessed;
+    document.getElementById('sb-flags').textContent = riskCount;
 
-  checkReady();
-})();
-</script>
+    // Show toast
+    showToast();
 
-<script>(function(){
-document.addEventListener('click', function(e){
-
-  const el = e.target.closest('[data-tsm-action]');
-  if(!el) return;
-
-  const action = el.getAttribute('data-tsm-action');
-  const args = el.getAttribute('data-tsm-args');
-
-  if(window.TSM && TSM.launcher && TSM.launcher.run){
-    TSM.launcher.run(action, args);
-  } else {
-    console.warn('[TSM] launcher missing:', action, args);
+  }catch(e){
+    tbody.innerHTML += `<span class="t-red">[E4 ERROR] ${e.message}</span>\n`;
   }
 
-});
-})();</script>
+  btn.disabled=false; btn.innerHTML='<span class="btn-icon">▶</span> PROCESS DOCUMENT';
+}
+
+// ===== TOAST =====
+function showToast(){
+  const t = document.getElementById('wfToast');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 8000);
+}
+function hideToast(){
+  document.getElementById('wfToast').classList.remove('show');
+}
+
+// ===== DRAG & DROP =====
+const dz = document.getElementById('dropzone');
+dz.addEventListener('dragover', e=>{ e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', ()=>dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e=>{ e.preventDefault(); dz.classList.remove('drag-over'); const f=e.dataTransfer.files[0]; if(f){ document.getElementById('fileInput').files=e.dataTransfer.files; handleUpload({target:{files:[f]}}); } });
+
+// ===== INIT =====
+loadSample('gl-extract');
+</script>
 </body>
 </html>

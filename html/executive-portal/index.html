@@ -5,29 +5,17 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>TSM Executive Portal</title>
 <style>
-/* TSM_SCROLL_FIX */
-html, body {
-  height: 100%;
-  overflow-y: auto;
-}
-main {
-  padding-bottom: 80px !important;
-  min-height: calc(100vh - 60px);
-}
-.footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 32px;
-  z-index: 10;
-}
-.ask-bar {
-  position: fixed;
-  bottom: 40px;
-  right: 12px;
-  z-index: 20;
-}
+/* TSM_SCROLL_FIX_V2 */
+html, body { height: 100%; overflow-y: auto; }
+main, .main { padding-bottom: 80px !important; min-height: calc(100vh - 60px); }
+.panel { max-height: none !important; overflow-y: visible; }
+.panel.active { display: block; }
+.scroll-box { max-height: 400px; overflow-y: auto; }
+.bnca-output { min-height: 120px; max-height: none; white-space: pre-wrap; }
+.footer { position: fixed; bottom: 0; left: 0; right: 0; height: 32px; z-index: 10; }
+.ask-bar { position: fixed; bottom: 40px; right: 12px; z-index: 20; }
+
+
 .panel {
   max-height: 60vh;
   overflow-y: auto;
@@ -122,33 +110,35 @@ document.addEventListener('click', (e) => {
 console.log("TSM_UI: Direct Neural Link Established.");
 </script>
 <script src="/healthcare/js/tsm-bridge.js?v=relay2" defer></script>
-<script src="/healthcare/js/hc-node-tab-controller.js?v=relay2" defer></script>
-<script src="/healthcare/js/hc-universal-tab-ai.js?v=relay2" defer></script>
-<script src="/healthcare/js/hc-strategist-relay.js?v=relay2" defer></script>
+<!-- hc-node-tab-controller disabled — overwrites exec portal nav -->
+<!-- hc-universal-tab-ai disabled — overwrites exec portal nav -->
+<!-- hc-strategist-relay disabled — overwrites exec portal nav -->
 <script src="/healthcare/js/hc-howto-system.js?v=relay2" defer></script>
 </head>
 <body>
 <header>
   <div>
     <div class="brand">TSM EXECUTIVE PORTAL</div>
-    <div class="sub">Unified leadership view · Healthcare operations · BNCA relay · CFO decision view</div>
+    <div class="sub">Unified leadership view · Healthcare operations + Insurance revenue/risk</div>
   </div>
   <div class="badge" id="liveBadge">SYNCING</div>
 </header>
 
 <nav class="tabs">
-  <button class="tab active" data-tsm-action="showSector" data-tsm-args="'healthcare',this">HEALTHCARE</button>
-  <button class="tab" data-tsm-action="showSector" data-tsm-args="'healthcare',this">HEALTHCARE</button>
-  <button class="tab" data-tsm-action="showSector" data-tsm-args="'combined',this">COMBINED EXECUTIVE VIEW</button>
+  <button class="tab active" onclick="showSector('healthcare',this)">HEALTHCARE</button>
+  <button class="tab" onclick="showSector('insurance',this)">INSURANCE</button>
+  <button class="tab" onclick="showSector('finops',this)">FINOPS</button>
+  <button class="tab" onclick="showSector('construction',this)">CONSTRUCTION</button>
+  <button class="tab" onclick="showSector('combined',this)">COMBINED EXECUTIVE VIEW</button>
 </nav>
 
 <main class="wrap">
   <section id="healthcare" class="section active">
     <div class="grid">
-      <div class="card"><b>HC Nodes Reporting</b><div class="val green" id="hcNodes">—</div></div>
-      <div class="card"><b>Latest Document</b><div class="val blue" id="hcDoc">—</div></div>
-      <div class="card"><b>Risk Posture</b><div class="val warn" id="hcRisk">—</div></div>
-      <div class="card"><b>Report Status</b><div class="val green" id="hcStatus">—</div></div>
+      <div class="card"><b>HC Nodes Reporting</b><div class="val green" id="hcNodes">—</div><div class="val green" id="tsm-ep-nodes-hc" style="font-size:11px;margin-top:4px">—</div></div>
+      <div class="card"><b>Latest Document</b><div class="val blue" id="hcDoc">—</div><div id="tsm-ep-latest-doc" style="display:none"></div></div>
+      <div class="card"><b>Risk Posture</b><div class="val warn" id="hcRisk" style="display:none">—</div><div class="val warn" id="tsm-ep-risk">—</div></div>
+      <div class="card"><b>Report Status</b><div class="val green" id="hcStatus" style="display:none">—</div><div class="val green" id="tsm-ep-report-status">OFFLINE</div></div>
     </div>
 
     <div class="panel">
@@ -159,13 +149,17 @@ console.log("TSM_UI: Direct Neural Link Established.");
     <div class="panel">
       <b style="color:#00e0ff">HEALTHCARE EXECUTIVE BNCA</b>
       <div class="summary" id="hcSummary">Loading healthcare report...</div>
+      <div id="tsm-ep-node-postures" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:12px 0"></div>
+      <div id="tsm-ep-bnca-content"></div>
+      <div id="tsm-ep-ops-board" style="margin-top:12px"></div>
+      <div id="tsm-ep-strategist-relay" style="margin-top:12px"></div>
       <button class="btn" onclick="location.href='/html/hc-main-strategist/index.html?v=exec-portal'">OPEN HC MAIN STRATEGIST</button>
       <button class="btn dark" onclick="location.href='/html/ghs-presentation/index.html?v=exec-portal'">OPEN GHS PRESENTATION</button>
       <button class="btn dark" onclick="location.href='/html/honor-portal/index.html?v=exec-portal'">OPEN HONOR PORTAL</button>
     </div>
   </section>
 
-  <section id="healthcare" class="section">
+  <section id="insurance" class="section">
     <div class="grid">
       <div class="card"><b>Exposure Identified</b><div class="val gold" id="insExposure">$4.2M</div></div>
       <div class="card"><b>Recoverable Premium</b><div class="val gold" id="insRecoverable">$280K–$420K</div></div>
@@ -174,18 +168,48 @@ console.log("TSM_UI: Direct Neural Link Established.");
     </div>
 
     <div class="panel">
-      <b style="color:#E8C870">HEALTHCARE REVENUE + RISK BNCA</b>
-      <div class="summary" id="insSummary">Loading healthcare report...</div>
+      <b style="color:#E8C870">INSURANCE REVENUE + RISK BNCA</b>
+      <div class="summary" id="insSummary">Loading insurance report...</div>
       <button class="btn gold" onclick="location.href='/html/ins-main-strategist/index.html?v=exec-portal'">OPEN INS MAIN STRATEGIST</button>
       <button class="btn gold dark" onclick="location.href='/html/pc-command/index.html?v=exec-portal'">OPEN P&C COMMAND</button>
       <button class="btn gold dark" onclick="location.href='/html/ins-presentation/index.html?v=exec-portal'">OPEN INS PRESENTATION</button>
     </div>
   </section>
 
-  <section id="combined" class="section">
+  <section id="finops" class="section">
+  <div class="grid">
+    <div class="card"><b>Scenario</b><div class="val green" id="finopsScenario">—</div></div>
+    <div class="card"><b>Report Status</b><div class="val green" id="finopsStatus">WAITING</div></div>
+    <div class="card"><b>Last Generated</b><div class="val blue" id="finopsTimestamp">—</div></div>
+    <div class="card"><b>Source</b><div class="val warn">MISSION COMPLETE</div></div>
+  </div>
+  <div class="panel">
+    <b style="color:#00e676">⚡ FINOPS STRATEGIST · BNCA</b>
+    <div class="summary" id="finopsSummary">No FinOps report yet.</div>
+    <button class="btn" onclick="location.href='/finops-suite/finops-main-strategist/index.html'">OPEN FINOPS STRATEGIST</button>
+    <button class="btn dark" onclick="location.href='/finops-suite/finops-scenarios.html'">RUN A SCENARIO</button>
+  </div>
+</section>
+
+<section id="construction" class="section">
+  <div class="grid">
+    <div class="card"><b>Scenario</b><div class="val green" id="constructionScenario">—</div></div>
+    <div class="card"><b>Report Status</b><div class="val green" id="constructionStatus">WAITING</div></div>
+    <div class="card"><b>Last Generated</b><div class="val blue" id="constructionTimestamp">—</div></div>
+    <div class="card"><b>Source</b><div class="val warn">CONSTRUCTION BNCA</div></div>
+  </div>
+  <div class="panel">
+    <b style="color:#00d4ff">⚡ CONSTRUCTION STRATEGIST · BNCA</b>
+    <div class="summary" id="constructionSummary">No construction report yet.</div>
+    <button class="btn" onclick="location.href='/construction-suite/construction-strategist.html'">OPEN STRATEGIST</button>
+    <button class="btn dark" onclick="location.href='/construction-suite/construction-scenarios.html'">RUN A SCENARIO</button>
+  </div>
+</section>
+
+<section id="combined" class="section">
     <div class="grid">
       <div class="card"><b>Healthcare Status</b><div class="val green" id="comboHC">—</div></div>
-      <div class="card"><b>Healthcare Status</b><div class="val gold" id="comboINS">—</div></div>
+      <div class="card"><b>Insurance Status</b><div class="val gold" id="comboINS">—</div></div>
       <div class="card"><b>Enterprise Risk</b><div class="val warn" id="comboRisk">WATCH</div></div>
       <div class="card"><b>Executive Action</b><div class="val blue">PILOT</div></div>
     </div>
@@ -194,13 +218,13 @@ console.log("TSM_UI: Direct Neural Link Established.");
       <b style="color:#00e0ff">COMBINED EXECUTIVE READOUT</b>
       <div class="summary" id="comboSummary">Loading combined executive summary...</div>
       <button class="btn" data-tsm-action="showSector" data-tsm-args="'healthcare',document.querySelectorAll('.tab')[0]">VIEW HEALTHCARE</button>
-      <button class="btn gold" data-tsm-action="showSector" data-tsm-args="'healthcare',document.querySelectorAll('.tab')[1]">VIEW HEALTHCARE</button>
+      <button class="btn gold" data-tsm-action="showSector" data-tsm-args="'insurance',document.querySelectorAll('.tab')[1]">VIEW INSURANCE</button>
     </div>
   </section>
 </main>
 
 <div class="footer">
-  <span>● TSM EXECUTIVE PORTAL · HEALTHCARE + HEALTHCARE · LIVE COMMAND VIEW</span>
+  <span>● TSM EXECUTIVE PORTAL · HEALTHCARE + INSURANCE · LIVE COMMAND VIEW</span>
   <span>READY</span>
 </div>
 
@@ -216,7 +240,7 @@ function clean(x){return String(x||'').replace(/\\n/g,'\n')}
 
 async function loadHC(){
   try{
-    const data = await fetch('https://tsm-shell.fly.dev/api/main-strategist/hc-report',{cache:'no-store'}).then(r=>r.json());
+    const data = await fetch('/api/main-strategist/hc-report',{cache:'no-store'}).then(r=>r.json());
     const relay=data.relay||{}, nodes=relay.nodes||{}, report=data.report||{};
     const keys=Object.keys(nodes);
     const doc=nodes['ghs-document-pipeline'];
@@ -241,6 +265,8 @@ async function loadHC(){
     return {ready:!!report.summary, nodes:keys.length, summary:report.summary||''};
   }catch(e){
     document.getElementById('hcStatus').textContent='OFFLINE';
+    document.getElementById('tsm-ep-report-status').textContent='OFFLINE';
+    document.getElementById('tsm-ep-report-status').style.color='#E24B4A';
     return {ready:false,nodes:0,summary:''};
   }
 }
@@ -249,7 +275,7 @@ function loadINS(){
   let data={};
   try{data=JSON.parse(sessionStorage.getItem('tsm_pc_strategist_output') || localStorage.getItem('tsm_ins_persist') || '{}')}catch(e){}
 
-  const summary = data.summary || `HEALTHCARE REVENUE + RISK BNCA
+  const summary = data.summary || `INSURANCE REVENUE + RISK BNCA
 
 1. Prioritize 14 wildfire-zone property accounts.
 2. Close 8 auto liability gaps with umbrella outreach.
@@ -281,18 +307,40 @@ async function refreshAll(){
 HEALTHCARE:
 ${hc.ready ? clean(hc.summary).slice(0,900) : 'Waiting for healthcare pipeline run.'}
 
-HEALTHCARE:
+INSURANCE:
 ${ins.summary}
 
 EXECUTIVE POSITIONING:
-Healthcare shows operational decisioning. Healthcare shows financial decisioning. Both are powered by the same TSM command architecture: signal → analysis → BNCA → strategist → executive action.
+Healthcare shows operational decisioning. Insurance shows financial decisioning. Both are powered by the same TSM command architecture: signal → analysis → BNCA → strategist → executive action.
 
 RECOMMENDED NEXT MOVE:
-Validate the system with a focused 90-day pilot. Start with Prior Auth / Denials for healthcare and Coverage Gap / Renewal Risk for healthcare.`;
+Validate the system with a focused 90-day pilot. Start with Prior Auth / Denials for healthcare and Coverage Gap / Renewal Risk for insurance.`;
+}
+
+function loadFinOps(){
+  let data={};
+  try{data=JSON.parse(localStorage.getItem('tsm_finops_strategist_output')||'{}')}catch(e){}
+  const scenarioMap={'ap-aging':'AP Aging Crisis','gl-variance':'GL Variance Investigation','bank-recon':'Bank Recon + Cash Flow','invoice-audit':'Invoice Audit','budget-overrun':'Q1 Budget Overrun','month-end-close':'Month-End Close Sprint','manual':'Manual Run'};
+  if(document.getElementById('finopsStatus')) document.getElementById('finopsStatus').textContent=data.summary?'READY':'WAITING';
+  if(document.getElementById('finopsScenario')) document.getElementById('finopsScenario').textContent=scenarioMap[data.scenario]||data.scenario||'—';
+  if(document.getElementById('finopsTimestamp')) document.getElementById('finopsTimestamp').textContent=data.timestamp?new Date(data.timestamp).toLocaleTimeString():'—';
+  if(document.getElementById('finopsSummary')) document.getElementById('finopsSummary').textContent=data.summary||'No FinOps report yet.';
+  return{ready:!!data.summary,summary:data.summary||''};
+}
+
+function loadConstruction(){
+  let data={};
+  try{data=JSON.parse(localStorage.getItem('tsm_construction_strategist_output')||'{}')}catch(e){}
+  const scenarioMap={'scenario_1':'Permit Block','scenario_2':'OSHA Incident','scenario_3':'Invoice Backlog','scenario_4':'Zoning Variance','scenario_5':'MEP Conflict','scenario_6':'Full Portfolio','manual':'Manual Run'};
+  if(document.getElementById('constructionStatus')) document.getElementById('constructionStatus').textContent=data.summary?'READY':'WAITING';
+  if(document.getElementById('constructionScenario')) document.getElementById('constructionScenario').textContent=scenarioMap[data.scenario]||data.scenario||'—';
+  if(document.getElementById('constructionTimestamp')) document.getElementById('constructionTimestamp').textContent=data.timestamp?new Date(data.timestamp).toLocaleTimeString():'—';
+  if(document.getElementById('constructionSummary')) document.getElementById('constructionSummary').textContent=data.summary||'No construction report yet.';
+  return{ready:!!data.summary,summary:data.summary||''};
 }
 
 refreshAll();
-setInterval(refreshAll,4000);
+setInterval(()=>{ loadINS(); loadFinOps(); loadConstruction(); },4000);
 </script>
 
 
@@ -449,7 +497,7 @@ setInterval(refreshAll,4000);
     loadedOnce = true;
 
     try{
-      const res = await fetch("https://tsm-shell.fly.dev/api/main-strategist/hc-report",{cache:"no-store"});
+      const res = await fetch("/api/main-strategist/hc-report",{cache:"no-store"});
       const data = await res.json();
       render(data.report || fallback());
     }catch(e){
@@ -479,5 +527,8 @@ document.addEventListener('click', function(e){
 
 });
 })();</script>
+<script src="/runtime/tsm-runtime-engine.js"></script>
+<script src="executive-portal-upgrade.js"></script>
 </body>
 </html>
+<script src="/html/runtime/tsm-runtime-engine.js"></script>

@@ -1,1203 +1,1185 @@
 const express = require('express');
-const path = require('path');
+
+process.on('uncaughtException', (err) => {
+  console.error('💥 UNCAUGHT EXCEPTION:', err.message, err.stack);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('💥 UNHANDLED REJECTION at:', promise, 'reason:', reason);
+});
+
+const path = require("path");
+const fs = require("fs");
+const https = require('https');
+
 const app = express();
+const PORT = process.env.PORT || 8080;
+const HTML_ROOT = path.join(__dirname, "html");
+const { tsmAuthMiddleware } = require('./tsm-auth');
+
 app.use(express.json());
+app.use(require('express').urlencoded({ extended: false }));
+tsmAuthMiddleware(app);
 
-
-
-
-
-
-
-
-
-// =====================================================
-const TSM_MESH = {
-  HEALTHCARE: {
-    owner: "HC Strategist",
-    controller: "Healthcare Command",
-    risks: ["Revenue leakage", "Denial escalation", "Patient throughput degradation", "Compliance exposure"]
-  },
-  CONSTRUCTION: {
-    owner: "Construction Strategist",
-    controller: "Construction Command",
-    risks: ["Permit delays", "Schedule variance", "Cost overrun", "Supply chain disruption"]
-  },
-  FINANCE: {
-    owner: "Financial Strategist",
-    controller: "Financial Command",
-    risks: ["Margin compression", "Payer variance", "Cash flow slowdown", "Revenue forecasting deviation"]
-  }
-};
-
-function buildMeshBNCA(sector, context) {
-  const cfg = TSM_MESH[sector] || TSM_MESH.HEALTHCARE;
-  const riskLines = cfg.risks.map(r => `• ${r}`).join("\n");
-
-  return `${sector} BNCA SYNTHESIS
-
-TOP ISSUE
-${context || "Operational degradation detected"}
-
-WHY IT MATTERS
-This issue impacts executive KPIs, operational throughput, financial performance, compliance posture, and strategist escalation readiness.
-
-BEST NEXT ACTIONS
-1. Assign accountable owner lane.
-2. Resolve blockers inside SLA window.
-3. Relay unresolved escalation to strategist.
-4. Generate executive briefing packet.
-
-OWNER LANE
-${cfg.owner}
-
-CONTROLLER
-${cfg.controller}
-
-ENTERPRISE RISKS
-${riskLines}
-
-HITL DECISION
-Human leadership review required before enterprise escalation.
-
-STRATEGIST RELAY
-Signal routed into strategist synthesis layer for enterprise prioritization.
-
-CONFIDENCE
-94%`;
-}
-
-app.get("/api/hc/strategist-rollup", (req, res) => {
-  res.json({
-    ok: true,
-    controller: "HC STRATEGIST",
-    status: "ROLLUP ACTIVE",
-    nodes_online: 11,
-    executive_escalations: 3,
-    bnca: "Enterprise healthcare synthesis complete",
-    mesh: true,
-    timestamp: new Date().toISOString()
-  });
+// ── GLOBAL NO-CACHE ───────────────────────────────────────────────────────────
+app.use((req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
 });
 
-app.post("/api/hc/strategist-rollup", (req, res) => {
-  res.json({
-    ok: true,
-    controller: "HC STRATEGIST",
-    status: "ROLLUP ACTIVE",
-    nodes_online: 11,
-    executive_escalations: 3,
-    bnca: "Enterprise healthcare synthesis complete",
-    mesh: true,
-    timestamp: new Date().toISOString()
-  });
+app.use((req, res, next) => {
+  res.setHeader('Surrogate-Control', 'no-store');
+  res.setHeader('CDN-Cache-Control', 'no-store');
+  next();
 });
 
-app.get("/api/construction/strategist-rollup", (req, res) => {
-  res.json({
-    ok: true,
-    controller: "CONSTRUCTION STRATEGIST",
-    status: "ROLLUP ACTIVE",
-    nodes_online: 8,
-    executive_escalations: 2,
-    bnca: "Construction enterprise synthesis complete",
-    mesh: true,
-    timestamp: new Date().toISOString()
-  });
-});
-
-app.post("/api/construction/strategist-rollup", (req, res) => {
-  res.json({
-    ok: true,
-    controller: "CONSTRUCTION STRATEGIST",
-    status: "ROLLUP ACTIVE",
-    nodes_online: 8,
-    executive_escalations: 2,
-    bnca: "Construction enterprise synthesis complete",
-    mesh: true,
-    timestamp: new Date().toISOString()
-  });
-});
-
-
-app.get("/api/finance/strategist-rollup", (req, res) => {
-  res.json({
-    ok: true,
-    controller: "FINANCIAL STRATEGIST",
-    status: "ROLLUP ACTIVE",
-    nodes_online: 6,
-    executive_escalations: 2,
-    bnca: "Finance enterprise synthesis complete",
-    mesh: true,
-    timestamp: new Date().toISOString()
-  });
-});
-
-console.log("TSM SOVEREIGN MESH ACTIVE");
-
-
-app.use(express.static(path.join(__dirname, 'html')));
-app.use('/construction-suite', express.static(path.join(__dirname, 'html', 'construction-suite')));
-app.use('/finops-suite', express.static(path.join(__dirname, 'html', 'finops-suite')));
-app.use('/healthcare', express.static(path.join(__dirname, 'html', 'healthcare')));
-app.use(express.static(path.join(__dirname, 'public')));
-
-
-// ======================================================
-app.all('/api/music/structure', async (req,res) => {
-  res.json({
-    ok:true,
-    producer:"ZAY",
-
-    blueprint: `
-INTRO — 4 bars
-HOOK — 8 bars
-VERSE 1 — 16 bars
-BRIDGE — 8 bars
-VERSE 2 — 16 bars
-FINAL HOOK — 8 bars
-OUTRO — 4 bars
-`,
-
-    structureText: `
-INTRO — 4 bars
-HOOK — 8 bars
-VERSE 1 — 16 bars
-BRIDGE — 8 bars
-VERSE 2 — 16 bars
-FINAL HOOK — 8 bars
-OUTRO — 4 bars
-`,
-
-
-    blueprint: `
-INTRO — 4 bars
-HOOK — 8 bars
-VERSE 1 — 16 bars
-BRIDGE — 8 bars
-VERSE 2 — 16 bars
-FINAL HOOK — 8 bars
-OUTRO — 4 bars
-`,
-
-    structureText: `
-INTRO — 4 bars
-HOOK — 8 bars
-VERSE 1 — 16 bars
-BRIDGE — 8 bars
-VERSE 2 — 16 bars
-FINAL HOOK — 8 bars
-OUTRO — 4 bars
-`,
-
-    structure:{
-      intro:"4 bars",
-      hook:"8 bars",
-      verse1:"16 bars",
-      bridge:"8 bars",
-      verse2:"16 bars",
-      finalHook:"8 bars",
-      outro:"4 bars"
-    },
-
-    sections:[
-      "INTRO",
-      "HOOK",
-      "VERSE 1",
-      "BRIDGE",
-      "VERSE 2",
-      "FINAL HOOK",
-      "OUTRO"
-    ],
-
-    narrative:"ZAY generated a commercial structure blueprint around the user's concept.",
-    mesh:true,
-    timestamp:new Date().toISOString()
-  });
-});
-
-app.all('/api/music/hooks/generate', async (req,res) => {
-  const body=req.body||{};
-  const theme=body.theme||body.prompt||"victory";
-  res.json({
-    ok:true,
-    producer:"ZAY",
-    theme,
-    hooks:[
-      "Started from pressure now the whole team up",
-      "Built from the dark now the lights can't blind us",
-      "Every loss turned lessons into leverage",
-      "City on my back but the vision still elegant",
-      "Can't stop now the blueprint too legendary",
-      "Pain turned power now the whole room listening",
-      "Built the foundation then I doubled the ceiling",
-      "From survival mode to executive rhythm",
-      "Every late night turned strategy into motion",
-      "Came too far now the mission too important"
-    ],
-    mesh:true,
-    timestamp:new Date().toISOString()
-  });
-});
-
-
-
-app.all('/api/music/complete-song', async (req,res) => {
-  const body=req.body||{};
-  const prompt=body.prompt||body.idea||"dark cinematic victory anthem";
-
-  res.json({
-    ok:true,
-    producer:"ZAY",
-    title:"Pressure Made Diamonds",
-    concept:prompt,
-    structure:["Intro","Hook","Verse 1","Hook","Verse 2","Bridge","Final Hook","Outro"],
-    lyrics:`TITLE: Pressure Made Diamonds
-
-[INTRO]
-Yeah...
-Late nights, low lights...
-Pressure made diamonds.
-ZAY, run it.
-
-[HOOK]
-I came from the pressure, now the whole room shine,
-Had to lose a couple pieces just to build my line.
-They counted out the vision, I was counting up the signs,
-Now the pain look expensive when it hit the right time.
-
-Adlib: Yeah, yeah.
-Adlib: Pressure made me.
-
-[VERSE 1]
-I was standing in the storm with a plan in my chest,
-Had a hundred closed doors but I still got blessed.
-Every setback wrote a bar, every scar got dressed,
-Now I move with intention, not a point to impress.
-
-I seen doubt turn loud when the numbers came clean,
-I seen pain turn power when I stepped on the scene.
-Had to build from the basement with a king-size dream,
-Now the whole team eating off the work unseen.
-
-Adlib: Talk to 'em.
-Adlib: We made it through that.
-
-[HOOK]
-I came from the pressure, now the whole room shine,
-Had to lose a couple pieces just to build my line.
-They counted out the vision, I was counting up the signs,
-Now the pain look expensive when it hit the right time.
-
-Adlib: Right time.
-Adlib: Whole room shine.
-
-[VERSE 2]
-This ain't luck, this is discipline in motion,
-Late night strategy, faith in the ocean.
-I was broke in the spirit but rich in devotion,
-Now the blueprint alive and the doors cracking open.
-
-They want the highlight, not the climb that it cost,
-Not the days I had to lead while I felt like I lost.
-I turned silence into leverage, turned delay into sauce,
-Now I speak from the win but remember the cross.
-
-Adlib: Remember that.
-Adlib: Never forgot.
-
-[BRIDGE]
-If I bend, I won't break,
-If I fall, I still wake.
-Every risk that I take
-Put my name on the gate.
-
-I was built for the weight,
-I was trained by the wait.
-Now the pressure too late,
-I already turned great.
-
-[FINAL HOOK]
-I came from the pressure, now the whole room shine,
-Had to lose a couple pieces just to build my line.
-They counted out the vision, I was counting up the signs,
-Now the pain look expensive when it hit the right time.
-
-Adlib: Pressure made diamonds.
-Adlib: Whole team up.
-Adlib: We survived it.
-
-[OUTRO]
-Late nights paid.
-Pressure stayed.
-Faith led.
-Vision made.`,
-    notes:{
-      bpm:"82-90 BPM",
-      mood:"dark cinematic, victorious, emotional",
-      arrangement:"808s, choir pads, filtered piano, wide hook stacks",
-      performance:"Verse tight and controlled; hooks bigger with doubled vocals and adlibs."
-    },
-    mesh:true,
-    timestamp:new Date().toISOString()
-  });
-});
-
-
-app.post(['/api/cfo-chat', '*/api/cfo-chat'], (req, res) => {
-    const { sector } = req.body;
-    // WIP Data derived from the Job Master Schema
-    const data = (sector === 'Construction' || req.body.query?.includes('WIP')) 
-        ? { 
-            name: "Ameris Job #203", 
-            logic: "WIP-RECON-UNDER", 
-            analysis: "$900k recoup on Ameris Job #203", 
-            earned: 1820140, 
-            billed: 1760000,
-            narrative: "Under-billed by $60,140. Ready for AIA G702 alignment.", 
-            mesh_status: "11/11 NODES ACTIVE" 
-          }
-        : { 
-            name: "Banner Health Facility",
-            logic: "UPCODE-DETECT-V2", 
-            analysis: "14 miscoded '99214' instances", 
-            earned: 42000, 
-            billed: 38000,
-            narrative: "Revenue risk: $4.2k/provider month. Target: Banner & HonorHealth.", 
-            mesh_status: "11/11 NODES ACTIVE" 
-          };
-    res.json(data);
-});
-
-
-
-
-
-
-
-
-// ── Multi-Industry Adaptive Intelligence Route ───────────────────────────
-function autoDetectSector(payloadText) {
-    const text = String(payloadText || "").toLowerCase();
-    if (text.match(/(retainage|subcontractor|aia|job_cost|construction|mesa premier)/)) return "CONSTRUCTION";
-    if (text.match(/(cpt|drg|payer|denial|provider|healthcare|banner)/)) return "HEALTHCARE";
-    if (text.match(/(adjuster|claim|reserve|payout|insurance)/)) return "INSURANCE";
-    if (text.match(/(gl_code|ap|ar|purchase_order|billing|finops|finance)/)) return "FINOPS";
-    return "CONSTRUCTION"; // Default core alignment fallback
-}
-
-function tsmSectorWipReply(sector, context){
-    sector = String(sector || "GENERAL").toUpperCase();
-    const map = {
-        CONSTRUCTION: ["Construction Strategist", "Construction Command", "Profit fade", "Underbilling", "Schedule variance", "Retainage exposure"],
-        FINOPS: ["Financial Strategist", "Financial Command", "AP aging", "Reconciliation variance", "Close readiness", "Cash exposure"],
-        HEALTHCARE: ["HC Strategist", "Healthcare Command", "Prior auth denials", "Claim scrubbing holds", "AR aging", "Coding variance"],
-        INSURANCE: ["Insurance Strategist", "Insurance Command", "Claims leakage", "Policy verification", "Audit exposure", "Reserve variance"]
-    };
-    const cfg = map[sector] || map.CONSTRUCTION;
-    return `${sector} WIP BNCA SYNTHESIS
-
-TOP ISSUE
-${context || "Sector WIP review"}
-
-WHY IT MATTERS
-This WIP signal impacts executive KPIs, operational throughput, financial posture, compliance exposure, and strategist escalation readiness.
-
-BEST NEXT ACTIONS
-1. Assign accountable owner lane.
-2. Resolve blockers inside SLA window.
-3. Push unresolved issue to the main strategist.
-4. Generate executive briefing packet.
-
-OWNER LANE
-${cfg[0]}
-
-CONTROLLER
-${cfg[1]}
-
-ENTERPRISE RISKS
-• ${cfg.slice(2).join("\n• ")}
-
-HITL DECISION
-Human leadership review required before enterprise escalation.
-
-STRATEGIST RELAY
-Signal routed to ${cfg[0]} for main-suite synthesis.
-
-CONFIDENCE
-94%`;
-}
-
-app.all("/api/wip/sector-ai", (req, res) => {
-    const body = req.body || {};
-    const contextText = body.question || body.context || body.payload?.context || "";
-    
-    // Explicit body sector or auto-detected based on incoming keywords
-    const determinedSector = body.sector || body.payload?.sector || autoDetectSector(contextText + " " + (body.question || ""));
-    const txt = tsmSectorWipReply(determinedSector, contextText);
-    
-    // Compute mockup numeric balances conforming to the 4 universal panels
-    const progress = body.progress || body.payload?.progress || 75;
-    const costs = body.costs || body.payload?.costs || 120000;
-    const earned = body.earned || body.payload?.earned || 145000;
-    const liquidated = body.liquidated || body.payload?.liquidated || 110000;
-    
-    res.json({
-        ok: true,
-        sector: String(determinedSector).toUpperCase(),
-        reply: txt,
-        content: txt,
-        schema: {
-            industry: String(determinedSector).toUpperCase(),
-            percent_complete: progress,
-            costs_to_date: costs,
-            revenue_earned: earned,
-            billed_or_paid_to_date: liquidated,
-            over_under_status: (earned - liquidated >= 0) ? "UNDER-BILLED / ASSET EXPOSURE" : "OVER-BILLED / ADVANCED LIABILITY",
-            ai_risk_score: body.risk || (determinedSector === "HEALTHCARE" ? 82 : 45)
-        },
-        mesh: true,
-        timestamp: new Date().toISOString()
-    });
-});
-
-// ── 404 catch-all ─────────────────────────────────────────────────
-// WIP sub-routes mounted on /api (before catch-all)
-const apiRouter = require('express').Router();
-require('./wip-routes')(apiRouter);
-app.use(require('./routes/hc'));
-app.use('/api', apiRouter);
-
-// ── Music Command ─────────────────────────────────────────────────
-app.get(['/music','/suite/music'],
-  (req,res) => res.sendFile(path.join(__dirname,'html','music-command','index.html')));
-app.use('/music-command', express.static(path.join(__dirname,'html','music-command')));
-
-
-app.use('/api', require('./servers/shared'));
-
-
-
-// ======================================================
-
-function finalHCProfile(node){
-
-node=String(node||"OPERATIONS").toUpperCase();
-
-const MAP={
-
-MEDICAL:{
-owner:"Clinical Operations Lead",
-issue:"Clinical backlog, provider load, documentation gaps, and patient throughput degradation",
-actions:[
-"Reduce provider backlog",
-"Resolve documentation defects",
-"Review no-show trend",
-"Escalate unresolved care delays"
-]
-},
-
-BILLING:{
-owner:"RCM Director",
-issue:"AR aging, denial escalation, payer rejection trend, and reimbursement slowdown",
-actions:[
-"Reduce denial backlog",
-"Escalate payer variance",
-"Correct coding defects",
-"Prioritize high-dollar AR recovery"
-]
-},
-
-COMPLIANCE:{
-owner:"Compliance Officer",
-issue:"HIPAA exposure, CMS audit risk, and unresolved policy exceptions",
-actions:[
-"Review audit gaps",
-"Validate HIPAA controls",
-"Generate compliance escalation packet",
-"Prepare executive compliance review"
-]
-},
-
-FINANCIAL:{
-owner:"Finance Director",
-issue:"Margin compression, payer variance, reimbursement slowdown, and revenue leakage",
-actions:[
-"Review reimbursement slowdown",
-"Forecast margin exposure",
-"Reduce avoidable leakage",
-"Escalate enterprise financial risk"
-]
-},
-
-INSURANCE:{
-owner:"Prior Authorization Lead",
-issue:"Prior-auth backlog, eligibility mismatch, and payer SLA degradation",
-actions:[
-"Resolve auth backlog",
-"Escalate payer delays",
-"Review authorization aging",
-"Prioritize high-risk patients"
-]
-},
-
-LEGAL:{
-owner:"Legal Operations Lead",
-issue:"Contract exposure, unresolved legal escalation, and documentation liability",
-actions:[
-"Review contract exposure",
-"Prepare escalation packet",
-"Validate legal timelines",
-"Escalate unresolved liability"
-]
-},
-
-PHARMACY:{
-owner:"Pharmacy Director",
-issue:"Medication queue backlog, formulary mismatch, and refill delay risk",
-actions:[
-"Review refill backlog",
-"Validate formulary exceptions",
-"Resolve medication blockers",
-"Escalate high-risk delays"
-]
-},
-
-VENDORS:{
-owner:"Vendor Operations Manager",
-issue:"Vendor SLA degradation, procurement blockers, and supply chain risk",
-actions:[
-"Review vendor SLA",
-"Escalate procurement blockers",
-"Validate supply continuity",
-"Review high-risk dependencies"
-]
-},
-
-GRANTS:{
-owner:"Grant Program Director",
-issue:"Grant deadline risk, reporting backlog, and funding continuity exposure",
-actions:[
-"Review funding deadlines",
-"Generate reporting packet",
-"Escalate unresolved compliance",
-"Protect continuity funding"
-]
-},
-
-TAXPREP:{
-owner:"Tax Operations Lead",
-issue:"1099 backlog, filing exposure, and unresolved documentation gaps",
-actions:[
-"Review filing exposure",
-"Resolve W-9 gaps",
-"Prepare compliance exports",
-"Escalate unresolved tax risk"
-]
-},
-
-OPERATIONS:{
-owner:"Operations Lead",
-issue:"Staffing pressure, scheduling backlog, intake slowdown, and throughput degradation",
-actions:[
-"Reduce staffing pressure",
-"Clear scheduling backlog",
-"Resolve intake bottlenecks",
-"Escalate throughput degradation"
-]
-}
-
-};
-
-return MAP[node]||MAP.OPERATIONS;
-}
-
-
-console.log("FINAL HC QUERY ROUTE ACTIVE");
-
-
-
-
-
-
-
-
-
-// ── Groq streaming proxy ─────────────────────────────────────────
-app.post('/api/groq/stream', express.json({limit:'2mb'}), async (req, res) => {
-  const key = process.env.GROQ_API_KEY;
-  if (!key) return res.status(503).json({error:'No API key configured'});
-  try {
-    const upstream = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method:'POST',
-      headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
-      body: JSON.stringify({...req.body, stream:true})
-    });
-    res.setHeader('Content-Type','text/event-stream');
-    res.setHeader('Cache-Control','no-cache');
-    upstream.body.pipeTo(new WritableStream({
-      write(chunk){ res.write(chunk); },
-      close(){ res.end(); }
-    }));
-  } catch(e){ res.status(500).json({error:e.message}); }
-});
-
-
-/* =========================================================
-   TSM UNIVERSAL MESH ROUTES
-========================================================= */
-
-function tsmMeshReply(sector, context=""){
-
-  const upper = String(sector || "GENERAL").toUpperCase();
-
-  const risks = {
-    HEALTHCARE:[
-      "Revenue leakage",
-      "Denial escalation",
-      "Patient throughput degradation",
-      "Compliance exposure"
-    ],
-    CONSTRUCTION:[
-      "Permit delays",
-      "Schedule variance",
-      "Cost overrun",
-      "Supply chain disruption"
-    ],
-    FINANCE:[
-      "Margin compression",
-      "Payer variance",
-      "Cash flow slowdown",
-      "Forecast deviation"
-    ],
-    INSURANCE:[
-      "Claims escalation",
-      "Audit exposure",
-      "Reserve variance",
-      "Policy delay"
-    ]
-  };
-
-  return `
-${upper} BNCA SYNTHESIS
-
-TOP ISSUE
-${context || "Generate executive WIP narrative."}
-
-WHY IT MATTERS
-This impacts executive KPIs, operational throughput, financial posture, and strategist escalation readiness.
-
-BEST NEXT ACTIONS
-1. Assign accountable owner lane.
-2. Resolve blockers inside SLA window.
-3. Relay unresolved escalation to strategist.
-4. Generate executive briefing packet.
-
-OWNER LANE
-${upper} Strategist
-
-CONTROLLER
-${upper} Command
-
-ENTERPRISE RISKS
-• ${(risks[upper] || ["Operational exposure"]).join("\n• ")}
-
-HITL DECISION
-Human leadership review required before enterprise escalation.
-
-STRATEGIST RELAY
-Signal routed into strategist synthesis layer.
-
-CONFIDENCE
-94%
-`.trim();
-}
-
-/* ---------- Healthcare ---------- */
-app.all('/api/hc/query', async (req,res)=>{
-  const payload=req.body?.payload || req.body || {};
-  const prompt=payload.prompt||payload.context||payload.question||payload.query||payload.action||"Analyze HEALTHCARE operations.";
-  const GROQ_KEY=process.env.GROQ_API_KEY;
-  if(!GROQ_KEY) return res.json({ok:true,reply:tsmMeshReply("HEALTHCARE",prompt),content:tsmMeshReply("HEALTHCARE",prompt),mesh:true});
-  try {
-    const r=await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{"Authorization":"Bearer "+GROQ_KEY,"Content-Type":"application/json"},body:JSON.stringify({model:process.env.TSM_MODEL||"llama-3.3-70b-versatile",max_tokens:800,messages:[{role:"system",content:"You are the TSM Healthcare Neural Strategist. Analyze HC operations, billing, compliance, clinical, and revenue cycle. Be specific and actionable."},{role:"user",content:prompt}]})}); 
-    const d=await r.json();
-    const reply=d.choices?.[0]?.message?.content||tsmMeshReply("HEALTHCARE",prompt);
-    res.json({ok:true,reply,content:reply,response:reply,sector:"HEALTHCARE",mesh:true,timestamp:new Date().toISOString()});
-  } catch(e){res.json({ok:true,reply:tsmMeshReply("HEALTHCARE",prompt),content:tsmMeshReply("HEALTHCARE",prompt)});}
-});
-
-/* ---------- Construction ---------- */
-app.all('/api/construction/query', async (req,res)=>{
-  const payload=req.body?.payload || req.body || {};
-  const prompt=payload.prompt||payload.context||payload.question||payload.query||payload.action||"Analyze CONSTRUCTION operations.";
-  const GROQ_KEY=process.env.GROQ_API_KEY;
-  if(!GROQ_KEY) return res.json({ok:true,reply:tsmMeshReply("CONSTRUCTION",prompt),content:tsmMeshReply("CONSTRUCTION",prompt),mesh:true});
-  try {
-    const r=await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{"Authorization":"Bearer "+GROQ_KEY,"Content-Type":"application/json"},body:JSON.stringify({model:process.env.TSM_MODEL||"llama-3.3-70b-versatile",max_tokens:800,messages:[{role:"system",content:"You are the TSM Construction Neural Strategist. Analyze construction operations, permits, scheduling, cost, compliance. Be specific and actionable."},{role:"user",content:prompt}]})}); 
-    const d=await r.json();
-    const reply=d.choices?.[0]?.message?.content||tsmMeshReply("CONSTRUCTION",prompt);
-    res.json({ok:true,reply,content:reply,response:reply,sector:"CONSTRUCTION",mesh:true,timestamp:new Date().toISOString()});
-  } catch(e){res.json({ok:true,reply:tsmMeshReply("CONSTRUCTION",prompt),content:tsmMeshReply("CONSTRUCTION",prompt)});}
-});
-
-/* ---------- Finance ---------- */
-app.all('/api/finance/query', async (req,res)=>{
-  const payload=req.body?.payload || req.body || {};
-  const prompt=payload.prompt||payload.context||payload.question||payload.query||payload.action||"Analyze FINANCE operations.";
-  const GROQ_KEY=process.env.GROQ_API_KEY;
-  if(!GROQ_KEY) return res.json({ok:true,reply:tsmMeshReply("FINANCE",prompt),content:tsmMeshReply("FINANCE",prompt),mesh:true});
-  try {
-    const r=await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{"Authorization":"Bearer "+GROQ_KEY,"Content-Type":"application/json"},body:JSON.stringify({model:process.env.TSM_MODEL||"llama-3.3-70b-versatile",max_tokens:800,messages:[{role:"system",content:"You are the TSM Financial Neural Strategist. Analyze financial operations, revenue, cash flow, CFO priorities. Be specific and data-driven."},{role:"user",content:prompt}]})}); 
-    const d=await r.json();
-    const reply=d.choices?.[0]?.message?.content||tsmMeshReply("FINANCE",prompt);
-    res.json({ok:true,reply,content:reply,response:reply,sector:"FINANCE",mesh:true,timestamp:new Date().toISOString()});
-  } catch(e){res.json({ok:true,reply:tsmMeshReply("FINANCE",prompt),content:tsmMeshReply("FINANCE",prompt)});}
-});
-
-/* ---------- Insurance ---------- */
-
-app.all('/api/insurance/query', async (req,res)=>{
-  const payload=req.body?.payload || req.body || {};
-  const prompt=payload.prompt||payload.context||payload.question||payload.query||payload.action||"Analyze AZ insurance operations.";
-  const GROQ_KEY=process.env.GROQ_API_KEY;
-  if(!GROQ_KEY) return res.json({ok:true,reply:tsmMeshReply("INSURANCE",prompt),content:tsmMeshReply("INSURANCE",prompt),mesh:true});
-  try {
-    const r=await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{"Authorization":"Bearer "+GROQ_KEY,"Content-Type":"application/json"},body:JSON.stringify({model:process.env.TSM_MODEL||"llama-3.3-70b-versatile",max_tokens:800,messages:[{role:"system",content:"You are the TSM Insurance Neural Strategist. Analyze AZ insurance, Medicare, P&C, DME, agent performance, compliance, payer relations. Be specific and actionable."},{role:"user",content:prompt}]})});
-    const d=await r.json();
-    const reply=d.choices?.[0]?.message?.content||tsmMeshReply("INSURANCE",prompt);
-    res.json({ok:true,reply,content:reply,response:reply,sector:"INSURANCE",mesh:true,timestamp:new Date().toISOString()});
-  } catch(e){res.json({ok:true,reply:tsmMeshReply("INSURANCE",prompt),content:tsmMeshReply("INSURANCE",prompt)});}
-});
-
-/* ---------- Strategist Rollup ---------- */
-
-app.all('/api/hc/strategist-rollup', async (req,res)=>{
-  res.json({
-    ok:true,
-    controller:"HC STRATEGIST",
-    status:"ROLLUP ACTIVE",
-    nodes_online:11,
-    executive_escalations:3,
-    bnca:"Enterprise healthcare synthesis complete",
-    mesh:true,
-    timestamp:new Date().toISOString()
-  });
-});
-
-/* ========================================================= */
-
-
-
-
-
-
-
-
-// ── Music Command route ───────────────────────────────────────────
-app.get(['/music','/suite/music'],
-  (req,res) => res.sendFile(path.join(__dirname,'html','music-command','index.html')));
-app.use('/music-command', express.static(path.join(__dirname,'html','music-command')));
-
-
-
-
-
-// TSM System Route Alias Bridge: Captures frontend layout hooks
-app.post('/api/music/hooks/generate10', (req, res, next) => {
-    console.log("⚡ Route alias hit: Forwarding frontend payload to core generator...");
-    req.url = '/api/music/generate-hooks'; // Change this to your actual backend endpoint string found in Step 1
-    next();
-});
-
-
-
-
-
-
-
-
-
-
-
-
-// ============================================================================
-// 🎵 TSM MUSIC COMMAND SYSTEMS - UNIFIED PRODUCTION INTERCEPTORS
-// ============================================================================
-app.post('/api/music/blueprint', async (req, res) => {
-    console.log("⚡ Music Engine: Compiling Song Blueprint Grid Array...");
+// ── GROQ AI ENGINE ────────────────────────────────────────────────────────────
+// Primary: fetch-based (reliable on Railway)
+const GROQ_MODELS = [
+  'llama-3.3-70b-versatile',
+  'llama-3.1-8b-instant',
+  'llama3-8b-8192',
+  'gemma2-9b-it'
+];
+
+async function groqChat(system, message, maxTokens, clientKey) {
+  const groqKey = process.env.GROQ_KEY || process.env.GROQ_API_KEY || clientKey;
+  if (!groqKey) throw new Error('No Groq API key configured (server env missing and no client key provided)');
+  for (const model of GROQ_MODELS) {
     try {
-        const Groq = require('groq-sdk');
-        const token = req.headers.authorization?.split(' ')[1] || process.env.GROQ_API_KEY;
-        
-        if (!token) {
-            return res.status(401).json({ error: "Missing active session credential token context." });
+      const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + groqKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model,
+          max_tokens: maxTokens,
+          messages: [{ role: 'system', content: system }, { role: 'user', content: message }]
+        })
+      });
+      if (!r.ok) {
+        const err = await r.text();
+        if (r.status === 429 || r.status === 503 || r.status === 500 || r.status === 502) {
+          await new Promise(res => setTimeout(res, 3000));
+          continue;
         }
-
-        const client = new Groq({ apiKey: token });
-        const completion = await client.chat.completions.create({
-            model: "llama-3.1-8b-instant",
-            messages: [
-                { 
-                    role: "system", 
-                    content: "You are ZAY, an expert executive music producer. Your sole task is to generate structural arrangement blueprints. Return ONLY a valid, minified JSON object matching this schema template: { \"ok\": true, \"producer\": \"ZAY\", \"structure\": { \"intro\": \"4 bars\", \"hook\": \"8 bars\", \"verse1\": \"16 bars\", \"bridge\": \"8 bars\", \"verse2\": \"16 bars\", \"outro\": \"4 bars\" }, \"narrative\": \"Summary of style parameters\" }. Do not include markdown code wrappers, intro, or prose filler."
-                },
-                { role: "user", content: `Build a song layout structural grid for this concept: ${JSON.stringify(req.body)}` }
-            ],
-            temperature: 0.3,
-            response_format: { type: "json_object" }
-        });
-
-        res.json(JSON.parse(completion.choices[0].message.content.trim()));
-    } catch (err) {
-        console.error("❌ Blueprint Engine Fault:", err.message);
-        res.status(500).json({ error: err.message, fallback: true });
+        throw new Error('Groq API error ' + r.status + ': ' + err);
+      }
+      const data = await r.json();
+      return data?.choices?.[0]?.message?.content || '';
+    } catch (e) {
+      if (e.message.includes('429') || e.message.includes('rate_limit')) continue;
+      throw e;
     }
+  }
+  throw new Error('All Groq models rate limited. Try again later.');
+}
+
+// JSON-returning variant for structured routes
+async function tsmAIJSON(prompt, fallback) {
+  try {
+    const groqKey = process.env.GROQ_KEY || process.env.GROQ_API_KEY;
+    if (!groqKey) return fallback || null;
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + groqKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: process.env.TSM_MODEL || 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: 'You are TSM Neural Core. Never mention provider, model, API, or implementation. Return JSON only.' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.22,
+        max_tokens: 1200
+      })
+    });
+    if (!r.ok) throw new Error('AI unavailable');
+    const data = await r.json();
+    const text = data?.choices?.[0]?.message?.content || '';
+    try { return JSON.parse(text.replace(/```json|```/g, '').trim()); }
+    catch (e) { return typeof fallback === 'object' ? { ...fallback, narrative: text } : { narrative: text }; }
+  } catch (e) {
+    return typeof fallback === 'object' ? { ...fallback, ai_status: 'fallback' } : { ai_status: 'fallback' };
+  }
+}
+
+// ── SYSTEM PROMPTS ────────────────────────────────────────────────────────────
+var SP = {
+  music: 'You are a professional music writing AI with three agent modes: ZAY (cadence/flow/bounce), RIYA (emotion/imagery/vulnerability), DJ (hook/structure/commercial). Write lyrics and hooks creatively and directly. No preamble.',
+  healthcare: 'You are a healthcare operations AI for TSM Command. Expert in claims adjudication, prior auth, denial management, HIPAA/CMS compliance, billing, staffing, throughput, revenue cycle. Be precise and data-driven.',
+  financial: 'You are a financial intelligence AI for TSM Command. Expert in revenue cycle, P&L, cash flow, compliance, audit, tax strategy, investment analysis. Be analytical and strategic.',
+  mortgage: 'You are a mortgage and real estate AI for TSM Command. Expert in mortgage origination, underwriting, REO, BPO realty, title, closing. Be precise and regulatory-aware.',
+  construction: 'You are a construction operations AI for TSM Command. Expert in project management, bid analysis, cost control, contractor/vendor management, scheduling. Be direct and operational.',
+  legal: 'You are a legal intelligence AI for TSM Command. Expert in contract analysis, regulatory compliance, case strategy, risk assessment. Note: AI analysis only, not legal advice.',
+  insurance: 'You are an insurance intelligence AI for TSM Command. Expert in P&C, life, health insurance, claims, underwriting, AZ market, NPN licensing. Be precise.',
+  education: 'You are an education operations AI for TSM Command. Expert in school administration, compliance, staffing, student outcomes, budget, grants. Be strategic.',
+  hospitality: 'You are a hospitality operations AI for TSM Command. Expert in hotel ops, concierge, staffing, revenue management, guest experience. Be service-oriented.',
+  enterprise: 'You are a senior business strategist AI for TSM Command. Expert in enterprise strategy, GTM, operations optimization, ROI analysis. Be executive-level and direct.',
+  strategist: 'You are the TSM Sovereign Strategist — the ultimate business consultant AI. Deep expertise across healthcare, financial, legal, real estate, construction, insurance, education, hospitality, enterprise strategy, M&A, GTM. Be bold and transformative.'
+};
+
+// ── GLOBAL STATE ──────────────────────────────────────────────────────────────
+global.MUSIC_PLATFORM = global.MUSIC_PLATFORM || {
+  artistDNA: { status: 'active', artist: 'Current Artist', styleTerms: ['pain', 'resilience'], weights: { cadence: 0.88, emotion: 0.91, structure: 0.76, imagery: 0.82 }, learnedSongs: [] },
+  agentRuns: [], activity: []
+};
+global.MUSIC_SUITE_STATE = global.MUSIC_SUITE_STATE || {
+  artistsOnline: 12, releasesDropping: 3, monthlyStreams: '84M', revenueMTD: 847400, pipelineValue: 2400000, aiStatus: 'online'
+};
+const TSM_MEMORY = global.__TSM_MEMORY__ = global.__TSM_MEMORY__ || {
+  healthcare: { nodes: {}, hcStrategist: null, mainStrategist: null, executive: null }
+};
+const TSM_MESH = {
+  HEALTHCARE: { owner: 'HC Strategist', controller: 'Healthcare Command', risks: ['Revenue leakage', 'Denial escalation', 'Patient throughput degradation', 'Compliance exposure'] },
+  CONSTRUCTION: { owner: 'Construction Strategist', controller: 'Construction Command', risks: ['Permit delays', 'Schedule variance', 'Cost overrun', 'Supply chain disruption'] },
+  FINANCE: { owner: 'Financial Strategist', controller: 'Financial Command', risks: ['Margin compression', 'Payer variance', 'Cash flow slowdown', 'Revenue forecasting deviation'] }
+};
+
+const suites = [
+  { route: '/construction', dir: 'html/construction-suite', index: 'construction-hub.html' },
+  { route: '/finops', dir: 'html/finops-suite', index: 'finops-presentation/index.html' },
+  { route: '/healthcare', dir: 'html/healthcare', index: 'index.html' },
+  { route: '/insurance', dir: 'html/tsm-insurance', index: 'ins-presentation.html' },
+  { route: '/music', dir: 'html/music-command', index: 'index.html' },
+];
+
+// ── HEALTH & STUB ROUTES ──────────────────────────────────────────────────────
+app.get('/health', (req, res) => res.json({ status: 'ok', v: 3 }));
+app.post('/api/bpo/query', (req, res) => res.json({ reply: 'ok' }));
+app.post('/api/wip/sector-ai', (req, res) => res.json({ content: 'ok' }));
+
+app.get('/api/hc/strategist-rollup', (req, res) => {
+  res.json({ ok: true, controller: 'HC STRATEGIST', status: 'ROLLUP ACTIVE', nodes_online: 11, executive_escalations: 3, bnca: 'Enterprise healthcare synthesis complete', mesh: true, timestamp: new Date().toISOString() });
+});
+
+app.get('/api/hc/nodes', (req, res) => {
+  res.json({ ok: true, status: 'HC node route online', nodes: ['operations', 'billing', 'medical', 'pharmacy', 'financial', 'legal', 'vendors', 'compliance', 'tax-prep', 'grants', 'insurance'] });
+});
+
+app.get('/api/music/activity', (_req, res) => res.json({ ok: true, activity: global.MUSIC_PLATFORM.activity || [], platform: global.MUSIC_PLATFORM }));
+app.get('/api/music/platform', (_req, res) => res.json({ ok: true, platform: global.MUSIC_PLATFORM }));
+app.get('/executive-portal', (req, res) => res.redirect('/html/executive-portal/index.html'));
+app.get('/healthcare/executive-portal', (req, res) => res.redirect('/html/executive-portal/index.html'));
+
+// ── STATIC MOUNTS ─────────────────────────────────────────────────────────────
+const dirPath = path.join(__dirname, 'html');// ── STATIC MOUNTS v2 ──
+
+app.use('/html', express.static(path.join(__dirname, 'html'), { setHeaders: (res) => res.setHeader('Cache-Control', 'no-store') }));
+app.use('/js', express.static(path.join(__dirname, 'html/tsm-insurance/public/js')));
+app.use('/js', express.static(path.join(__dirname, 'html/js')));
+app.use('/bpo', express.static(path.join(__dirname, 'html/bpo')));
+app.use('/shared', express.static(path.join(__dirname, 'html/bpo/shared')));
+app.use('/insurance', express.static(path.join(__dirname, 'html/tsm-insurance')));
+app.use('/construction', express.static(path.join(__dirname, 'html/construction-suite')));
+app.use(express.static(dirPath));
+app.use(express.static(__dirname));
+
+// ── HC NODE ROUTES ────────────────────────────────────────────────────────────
+app.get('/html/hc-strategist', (req, res) => res.redirect('/healthcare/hc-strategist/'));
+app.get('/html/hc-strategist/', (req, res) => res.redirect('/healthcare/hc-strategist/'));
+app.get('/html/hc-strategist/index.html', (req, res) => res.redirect('/healthcare/hc-strategist/'));
+
+['hc-medical', 'hc-billing', 'hc-vendors', 'hc-grants', 'hc-insurance', 'hc-legal', 'hc-operations', 'hc-financial', 'hc-taxprep', 'hc-compliance', 'hc-pharmacy', 'hc-strategist'].forEach(function (node) {
+  var dir = path.join(__dirname, 'html/healthcare', node);
+  app.use('/healthcare/' + node, express.static(dir, { setHeaders: (res) => res.setHeader('Cache-Control', 'no-store') }));
+  app.get('/healthcare/' + node, (req, res) => { res.setHeader('Cache-Control', 'no-store,no-cache,must-revalidate'); res.sendFile(path.join(dir, 'index.html')); });
+  app.get('/healthcare/' + node + '/', (req, res) => { res.setHeader('Cache-Control', 'no-store,no-cache,must-revalidate'); res.sendFile(path.join(dir, 'index.html')); });
+});
+
+// ── SUITE ROUTES ──────────────────────────────────────────────────────────────
+suites.forEach(s => {
+  if (!s.route || !s.index) return;
+  app.get(s.route, (req, res) => res.sendFile(path.join(dirPath, s.index)));
+  app.get(s.route + '/', (req, res) => res.sendFile(path.join(dirPath, s.index)));
+});
+
+// ── HC API ROUTES ─────────────────────────────────────────────────────────────
+app.post('/api/hc/query', async (req, res) => {
+  try {
+    var body = req.body || {};
+    var sys = body.system || SP.healthcare;
+    var msg = body.message || body.question || body.query;
+    if (!msg) return res.status(400).json({ ok: false, error: 'Query required' });
+    var a = await groqChat(sys, msg, body.maxTokens || 1024);
+    console.log('[HC QUERY DEBUG] a =', JSON.stringify(a));
+    return res.json({ ok: true, output: a, answer: a, reply: a, content: a, createdAt: new Date().toISOString() });
+  } catch (e) { console.log('[HC ERROR]', e.message); return res.status(500).json({ ok: false, error: e.message }); }
+});
+
+const clientUsage = {}; // v3
+
+// ── HC NODE REPORT STORE ──────────────────────────────────────────────────────
+// In-memory store for node reports relayed from war rooms → strategist → exec
+const hcNodeReports = {}; // keyed by node id
+
+app.post('/api/hc/node-report', (req, res) => {
+  try {
+    const { nodeId, nodeLabel, report, analysisText, denialCodes, claimIds, severity, kpi, ts } = req.body || {};
+    if (!nodeId) return res.status(400).json({ ok: false, error: 'nodeId required' });
+    hcNodeReports[nodeId] = {
+      nodeId,
+      nodeLabel: nodeLabel || nodeId,
+      report: report || '',
+      analysisText: analysisText || '',
+      denialCodes: denialCodes || [],
+      claimIds: claimIds || [],
+      severity: severity || 'INFO',
+      kpi: kpi || {},
+      ts: ts || Date.now(),
+      receivedAt: Date.now()
+    };
+    console.log('[HC NODE REPORT] stored:', nodeId, 'severity:', severity);
+    return res.json({ ok: true, nodeId, stored: true });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+app.get('/api/hc/node-reports', (req, res) => {
+  try {
+    const reports = Object.values(hcNodeReports).sort((a, b) => b.ts - a.ts);
+    return res.json({ ok: true, reports, count: reports.length });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+app.delete('/api/hc/node-reports', (req, res) => {
+  const { nodeId } = req.body || req.query || {};
+  if (nodeId) {
+    delete hcNodeReports[nodeId];
+    return res.json({ ok: true, cleared: nodeId });
+  }
+  Object.keys(hcNodeReports).forEach(k => delete hcNodeReports[k]);
+  return res.json({ ok: true, cleared: 'all' });
+});
+
+
+app.post('/api/hc/stream', async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  const { model, sys, user, maxTok } = req.body;
+  if (!sys || !user) return res.status(400).json({ error: 'Missing sys or user' });
+
+  const clientId = req.ip;
+  const today = new Date().toDateString();
+  const key = clientId + '_' + today;
+  clientUsage[key] = (clientUsage[key] || 0) + 1;
+  if (clientUsage[key] > 20) {
+    return res.status(429).json({ error: 'Daily analysis limit reached. Contact TSM to upgrade.' });
+  }
+
+  const groqKey = process.env.GROQ_KEY || process.env.GROQ_API_KEY;
+  if (!groqKey) return res.status(500).json({ error: 'GROQ_KEY not configured on server.' });
+
+  try {
+    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + (process.env.GROQ_KEY || process.env.GROQ_API_KEY)
+      },
+      body: JSON.stringify({
+        model: model || 'llama-3.3-70b-versatile',
+        stream: true,
+        max_tokens: maxTok || 500,
+        messages: [{ role: 'system', content: sys }, { role: 'user', content: user }]
+      })
+    });
+
+    if (!groqRes.ok) {
+      const err = await groqRes.json();
+      return res.status(502).json({ error: err.error?.message || 'Groq error' });
+    }
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    const { Readable } = require('stream');
+    Readable.fromWeb(groqRes.body).pipe(res);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/war-room/stream', async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  const { model, messages, max_tokens, temperature } = req.body;
+  if (!Array.isArray(messages) || !messages.length) return res.status(400).json({ error: 'Missing messages' });
+
+  const groqKey = process.env.GROQ_KEY || process.env.GROQ_API_KEY;
+  if (!groqKey) return res.status(500).json({ error: 'GROQ_KEY not configured on server.' });
+
+  try {
+    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + groqKey
+      },
+      body: JSON.stringify({
+        model: model || 'llama-3.3-70b-versatile',
+        stream: true,
+        max_tokens: max_tokens || 600,
+        temperature: temperature ?? 0.4,
+        messages
+      })
+    });
+
+    if (!groqRes.ok) {
+      const err = await groqRes.json().catch(() => ({}));
+      return res.status(502).json({ error: err.error?.message || 'Groq error' });
+    }
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    const { Readable } = require('stream');
+    Readable.fromWeb(groqRes.body).pipe(res);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/hc/ask', async (req, res) => {
+  try {
+    var body = req.body || {};
+    if (!body.message || !body.message.trim()) return res.status(400).json({ ok: false, error: 'Message is required' });
+    var a = await groqChat(body.system || SP.healthcare, body.message, 1024);
+    return res.json({ ok: true, output: a, content: a });
+  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.post('/api/hc/triage', async (req, res) => {
+  try {
+    const { client = '', taskType = '', department = '', priority = 'P3', deadline = '', description = '', notes = '' } = req.body || {};
+    if (!description) return res.status(400).json({ ok: false, error: 'Description is required' });
+    const sp = `You are an expert Healthcare BPO triage AI for TSM. Respond in this EXACT format:\nPRIORITY: [P1-CRITICAL / P2-HIGH / P3-MEDIUM / P4-LOW]\nDEPARTMENT: [best-fit department]\nROUTE_TO: [Billing & Coding / Clinical Operations / Compliance / Executive / Finance / Provider Relations]\nURGENCY_REASON: [1 sentence max]\nRECOMMENDED_ACTION: [2-4 bullet points starting with •]\nESCALATE_TO_STRATEGIST: [YES / NO]\nESCALATE_REASON: [1 sentence, or N/A]\nESTIMATED_RESOLUTION: [timeframe]`;
+    const result = await groqChat(sp, `Client: ${client}\nTask Type: ${taskType}\nDepartment: ${department}\nPriority: ${priority}\nDeadline: ${deadline}\nDescription: ${description}\nNotes: ${notes}`, 1024);
+    res.json({ ok: true, content: result });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+app.post('/api/hc/strategist', async (req, res) => {
+  try {
+    const { task = {}, aiTriage = '', query = '' } = req.body || {};
+    const sp = `You are the TSM Healthcare BPO Strategist. Produce executive-grade strategy in this EXACT format:\nSTRATEGIC_SUMMARY: [2-3 sentences]\nROOT_CAUSE: [1 sentence]\nIMPACT_LEVEL: [HIGH / MEDIUM / LOW] — [impact in 1 sentence]\nRECOMMENDED_STRATEGY:\n• [Action 1]\n• [Action 2]\n• [Action 3]\nOWNER_LANES: [departments]\nTIMELINE: [Day 1-2: ... / Week 1: ...]\nESCALATE_TO_EXECUTIVE: [YES / NO]\nESCALATE_REASON: [1 sentence, or N/A]\nCONFIDENCE: [percentage]`;
+    const result = await groqChat(sp, `TASK: ${JSON.stringify(task)}\nTRIAGE_OUTPUT: ${aiTriage}\nQUERY: ${query || 'Full strategic assessment'}`, 1024);
+    res.json({ ok: true, content: result });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+app.post('/api/hc/layer2', async (req, res) => {
+  try {
+    const { system: org = 'TSM Healthcare', location = '' } = req.body || {};
+    const sp = `You are a senior Healthcare BPO enterprise strategist for ${org}${location ? ' · ' + location : ''}. Synthesize findings across ALL nodes. Return structured BNCA:\n\nENTERPRISE BNCA SUMMARY\n========================\nTOP RISKS (ranked by revenue impact):\n1. [Risk · Node · $ impact]\n2. [Risk · Node · $ impact]\n3. [Risk · Node · $ impact]\n\nIMMEDIATE ACTIONS (next 48 hours):\n1. [Action · Owner Lane · Expected outcome]\n2. [Action · Owner Lane · Expected outcome]\n3. [Action · Owner Lane · Expected outcome]\n\n30-DAY RECOVERY PLAN:\n[Concise cross-node plan with milestones]\n\nESCALATE_TO_EXECUTIVE: YES/NO\nESCALATE_REASON: [reason if YES]\nCONFIDENCE: [0-100]%`;
+    const result = await groqChat(sp, `Run full enterprise BNCA for ${org}${location ? ' at ' + location : ''}`, 1500);
+    res.json({ ok: true, output: result });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+app.post('/api/hc/node/:node', async (req, res) => {
+  const node = req.params.node;
+  const payload = req.body || {};
+  const result = await tsmAIJSON(`Analyze healthcare node ${node}. Payload: ${JSON.stringify(payload).slice(0, 4000)}. Return JSON: {"node":"${node}","status":"READY|WATCH|RISK","top_issue":"...","findings":[],"actions":[],"bnca":"...","owner_lane":"...","confidence":0}`,
+    { node, status: 'WATCH', top_issue: 'Node requires review', findings: [], actions: [], bnca: 'Review node output.', owner_lane: 'office manager', confidence: 80 });
+  TSM_MEMORY.healthcare.nodes[node] = result;
+  res.json({ ok: true, node, result, ts: new Date().toISOString() });
+});
+
+app.post('/api/hc/bnca', async (req, res) => {
+  const payload = req.body || {};
+  const result = await tsmAIJSON(`Healthcare Command BNCA. Nodes: ${JSON.stringify(TSM_MEMORY.healthcare.nodes).slice(0, 6000)}. Payload: ${JSON.stringify(payload).slice(0, 4000)}. Return JSON: {"suite":"healthcare-command","top_issue":"...","risk_level":"READY|WATCH|RISK|URGENT","node_summary":[],"bnca":"...","owner_lanes":[],"hitl_review_required":true,"confidence":0}`,
+    { suite: 'healthcare-command', top_issue: 'Review needed', risk_level: 'WATCH', node_summary: [], bnca: 'Prioritize billing/auth/compliance.', owner_lanes: ['office manager'], hitl_review_required: true, confidence: 82 });
+  TSM_MEMORY.healthcare.hcCommand = result;
+  res.json({ ok: true, result, ts: new Date().toISOString() });
+});
+
+app.post('/api/hc-strategist/bnca', async (req, res) => {
+  const payload = req.body || {};
+  const result = await tsmAIJSON(`HC Strategist synthesis. Memory: ${JSON.stringify(TSM_MEMORY.healthcare).slice(0, 8000)}. Payload: ${JSON.stringify(payload).slice(0, 4000)}. Return JSON: {"suite":"hc-strategist","strategic_summary":"...","priority_actions":[],"bnca":"...","relay_to_main_strategist":true,"confidence":0}`,
+    { suite: 'hc-strategist', strategic_summary: 'HC Strategist review needed.', priority_actions: [], bnca: 'Relay to Main Strategist.', relay_to_main_strategist: true, confidence: 82 });
+  TSM_MEMORY.healthcare.hcStrategist = result;
+  res.json({ ok: true, result, ts: new Date().toISOString() });
+});
+
+app.post('/api/main-strategist/healthcare', async (req, res) => {
+  const payload = req.body || {};
+  const result = await tsmAIJSON(`Main Strategist executive package. Memory: ${JSON.stringify(TSM_MEMORY.healthcare).slice(0, 9000)}. Return JSON: {"suite":"main-strategist","executive_issue":"...","financial_or_operational_impact":"...","recommendation":"...","decision_options":[],"hitl_relay":"...","send_to_executive_portal":true,"confidence":0}`,
+    { suite: 'main-strategist', executive_issue: 'Healthcare readiness needs review.', financial_or_operational_impact: 'Billing pressure may affect throughput.', recommendation: 'Start office manager workflow pilot.', decision_options: ['30-day pilot'], hitl_relay: 'Review BNCA and confirm owner lanes.', send_to_executive_portal: true, confidence: 84 });
+  TSM_MEMORY.healthcare.mainStrategist = result;
+  res.json({ ok: true, result, ts: new Date().toISOString() });
+});
+
+app.post('/api/executive/portal', async (req, res) => {
+  const payload = req.body || {};
+  const result = await tsmAIJSON(`Executive Portal. Memory: ${JSON.stringify(TSM_MEMORY.healthcare).slice(0, 10000)}. Return JSON: {"portal":"executive","audience":"CFO / Decision Maker","decision_summary":"...","bnca_recommendation":"...","hitl_script":"...","approval_path":[],"next_step":"...","confidence":0}`,
+    { portal: 'executive', audience: 'CFO / Decision Maker', decision_summary: 'Healthcare BNCA ready.', bnca_recommendation: 'Approve pilot workflow.', hitl_script: 'Action-ready recommendation and owner lanes for approval.', approval_path: ['Office Manager', 'CFO'], next_step: 'Book walkthrough or approve 30-day pilot.', confidence: 85 });
+  TSM_MEMORY.healthcare.executive = result;
+  res.json({ ok: true, result, ts: new Date().toISOString() });
+});
+
+// ── TSM Candidate Sync Routes ──
+const candidateStore = []; // swap for DB later
+
+// POST /api/candidate/submit  — called by candidate-intake.html
+app.post('/api/candidate/submit', (req, res) => {
+  const entry = {
+    id: 'cand_' + Date.now(),
+    timestamp: new Date().toISOString(),
+    new: true,
+    ...req.body
+  };
+  candidateStore.unshift(entry);
+  if (candidateStore.length > 500) candidateStore.length = 500;
+  res.json({ ok: true, id: entry.id });
+});
+
+// GET /api/candidate/list  — polled by wia2.html recruiter dashboard
+app.get('/api/candidate/list', (req, res) => {
+  res.json(candidateStore);
+});
+
+// POST /api/candidate/clear-new  — marks all as seen
+app.post('/api/candidate/clear-new', (req, res) => {
+  candidateStore.forEach(c => c.new = false);
+  res.json({ ok: true });
+});
+
+// ── MUSIC API ROUTES ──────────────────────────────────────────────────────────
+// Deterministic heuristic used only to rank/gate revision options (not a
+// stand-in for AI judgment — the lyric content itself always comes from
+// real groqChat() calls above; this just scores text shape for the UI).
+function musicHeuristicScore(text){
+  var body = String(text || '');
+  var lines = body.split(/\n+/).filter(Boolean).length;
+  var len = body.length;
+  var cadence = Math.min(.99, .72 + (lines >= 2 ? .08 : 0) + (len > 60 ? .06 : 0));
+  var emotion = Math.min(.99, .74 + (len > 120 ? .08 : 0));
+  var structure = Math.min(.99, .70 + (lines >= 4 ? .12 : .05));
+  var imagery = Math.min(.99, .70 + (len > 150 ? .08 : 0));
+  var overall = Number(((cadence + emotion + structure + imagery) / 4).toFixed(2));
+  return {
+    cadence: Number(cadence.toFixed(2)),
+    emotion: Number(emotion.toFixed(2)),
+    structure: Number(structure.toFixed(2)),
+    imagery: Number(imagery.toFixed(2)),
+    overall
+  };
+}
+
+app.post('/api/music/structure', async (req, res) => {
+  try {
+    var body = req.body || {};
+    var sys = 'You are ZAY, a world-class music producer. Build a detailed song structure/blueprint. Return sections, BPM suggestion, key, mood, and arrangement notes. Write in plain text.';
+    var msg = body.query || body.prompt || `Build a song blueprint. Genre: ${body.genre || 'Hip-Hop'}, Mood: ${body.mood || 'Motivational'}, Theme: ${body.theme || 'hustle and perseverance'}, Artist style: ${body.artist || 'versatile'}`;
+    var a = await groqChat(sys, msg, 1200);
+    return res.json({ ok: true, output: a, structure: a });
+  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
 
 app.post('/api/music/hooks/generate10', async (req, res) => {
-    console.log("⚡ Music Engine: Compiling 10 Catchy Track Hooks...");
-    try {
-        const Groq = require('groq-sdk');
-        const token = req.headers.authorization?.split(' ')[1] || process.env.GROQ_API_KEY;
-        
-        if (!token) {
-            return res.status(401).json({ error: "Missing active session credential token context." });
-        }
-
-        const client = new Groq({ apiKey: token });
-        const completion = await client.chat.completions.create({
-            model: "llama-3.1-8b-instant",
-            messages: [
-                { 
-                    role: "system", 
-                    content: "You are ZAY, an elite hip-hop and R&B songwriter. Return ONLY a valid, minified JSON object matching this schema template: { \"ok\": true, \"producer\": \"ZAY\", \"hooks\": [\"Hook text entry line 1\", \"Hook text entry line 2\"] }. Provide exactly 10 distinct high-fidelity lyrical hooks. Do not include markdown formatting, backticks, or conversational commentary."
-                },
-                { role: "user", content: `Write 10 hooks targeting this theme context: ${JSON.stringify(req.body)}` }
-            ],
-            temperature: 0.7,
-            response_format: { type: "json_object" }
-        });
-
-        res.json(JSON.parse(completion.choices[0].message.content.trim()));
-    } catch (err) {
-        console.error("❌ Hook Engine Fault:", err.message);
-        res.status(500).json({ error: err.message });
-    }
+  try {
+    var body = req.body || {};
+    var sys = 'You are ZAY, a world-class songwriter. Generate exactly 10 distinct, catchy, numbered hook options. Make them memorable and genre-appropriate.';
+    var msg = body.query || `Generate 10 hook options. Genre: ${body.genre || 'Hip-Hop'}, Mood: ${body.mood || 'Motivational'}, Theme: ${body.theme || 'hustle'}, Artist style: ${body.artist || 'versatile'}`;
+    var a = await groqChat(sys, msg, 1024);
+    return res.json({ ok: true, output: a, hooks: a });
+  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
 });
 
-// ── Port Binding Engine Initialization (Safely Deferred to Final Step) ──
-
-// ── Final Server Port Binding Initialization ──
-
-
-// SAFE_WIP_ROUTES_START
-function safeWipPayload(sector, context) {
-  const upper = String(sector || "GENERAL").toUpperCase();
-  return {
-    ok: true,
-    suite: upper.toLowerCase(),
-    logic: "WIP-BNCA",
-    status: "ACTIVE",
-    action: "HITL_REVIEW",
-    message: `${upper} WIP signal received. ${context || "Executive WIP exposure ready for review."}`,
-    next_steps: [
-      "Assign accountable owner lane",
-      "Review billing / WIP variance",
-      "Prepare executive brief",
-      "Route to strategist for HITL decision"
-    ],
-    metrics: {
-      exposure_score: 94,
-      risk_level: "HIGH",
-      strategist_relay: "READY"
-    },
-    timestamp: new Date().toISOString()
-  };
-}
-
-app.post("/api/wip/:sector/query", (req, res) => {
+app.post('/api/music/hooks', async (req, res) => {
   try {
-    const payload = (req.body && (req.body.payload || req.body)) || {};
-    return res.json(safeWipPayload(req.params.sector, payload.context));
-  } catch (e) {
-    return res.status(200).json({
-      ok: false,
-      error: e.message,
-      fallback: true,
-      timestamp: new Date().toISOString()
-    });
+    var body = req.body || {};
+    var sys = 'You are ZAY, a world-class songwriter. Generate 10 distinct, catchy hook options. Number each one. Make them memorable and genre-appropriate.';
+    var msg = body.query || `Generate 10 hook options. Genre: ${body.genre || 'Hip-Hop'}, Mood: ${body.mood || 'Motivational'}, Theme: ${body.theme || 'hustle'}`;
+    var a = await groqChat(sys, msg, 1024);
+    return res.json({ ok: true, output: a, hooks: a });
+  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.post('/api/music/song', async (req, res) => {
+  try {
+    var body = req.body || {};
+    var sys = 'You are ZAY, a world-class songwriter. Write complete, full song lyrics. Include all sections: intro, verse 1, pre-chorus, chorus, verse 2, bridge, outro. Make it professional and authentic.';
+    var msg = body.query || `Write a complete song. Genre: ${body.genre || 'Hip-Hop'}, Mood: ${body.mood || 'Motivational'}, Hook: ${body.hook || ''}, Theme: ${body.theme || 'hustle'}`;
+    var a = await groqChat(sys, msg, 2048);
+    return res.json({ ok: true, output: a, lyrics: a });
+  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.post('/api/music/revision/run', async (req, res) => {
+  try {
+    var body = req.body || {};
+    var sys = 'You are ZAY, a world-class songwriter. Revise the provided lyrics based on the notes given. Return only the revised lyrics.';
+    var msg = `Original lyrics:\n${body.lyrics || ''}\n\nRevision notes: ${body.notes || ''}\n\nHook to preserve: ${body.hook || ''}\nGenre: ${body.genre || 'Hip-Hop'}`;
+    var a = await groqChat(sys, msg, 2048);
+    return res.json({ ok: true, output: a, content: a });
+  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.post('/api/music/strategy', async (req, res) => {
+  try {
+    var body = req.body || {};
+    var sys = 'You are ZAY, an expert music industry strategist. Create a detailed release strategy and marketing plan.';
+    var msg = body.query || `Create a release strategy for a ${body.genre || 'Hip-Hop'} song titled "${body.title || 'Untitled'}" with theme: ${body.theme || ''}. Artist style: ${body.artist || 'independent'}. Cover: release timeline, DSP strategy, playlist targeting, social media rollout, sync licensing, marketing angles.`;
+    var a = await groqChat(sys, msg, 1200);
+    return res.json({ ok: true, output: a, answer: a });
+  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.post('/api/music/guidance', async (req, res) => {
+  try {
+    var body = req.body || {};
+    var sys = 'You are ZAY, a music industry expert. Provide industry guidance and career development advice for independent artists.';
+    var msg = body.query || `Provide industry guidance for an independent ${body.genre || 'Hip-Hop'} artist. Artist style: ${body.artist || 'independent'}. Theme: ${body.theme || ''}. Cover: career development, networking, monetization, next steps.`;
+    var a = await groqChat(sys, msg, 1200);
+    return res.json({ ok: true, output: a, answer: a });
+  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.post('/api/music/coach', async (req, res) => {
+  try {
+    var body = req.body || {};
+    var sys = 'You are ZAY, a real music producer and artist coach. Keep responses direct, real, and helpful. Under 80 words unless asked for more.';
+    var msg = body.query || body.message || 'How can I improve my song?';
+    var a = await groqChat(sys, msg, 512);
+    return res.json({ ok: true, output: a, content: a, reply: a });
+  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.post('/api/music/agent-pass', async (req, res) => {
+  var body = req.body || {};
+  var agent = body.agent || 'ZAY';
+  var draft = body.draft || body.lyrics || '';
+  var request = body.request || 'Refine this draft';
+  try {
+    var output = await groqChat(SP.music, 'Agent: ' + agent + '\nRequest: ' + request + '\n\nDraft:\n' + draft + '\n\nProvide your refined version:', 512);
+    return res.json({ ok: true, agent: agent, output: output, createdAt: new Date().toISOString() });
+  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.post('/api/music/chain', async (req, res) => {
+  var body = req.body || {};
+  var draft = body.draft || '';
+  var request = body.request || 'Sharpen this draft';
+  try {
+    var zay = await groqChat(SP.music, 'Agent ZAY cadence/flow focus.\nRequest: ' + request + '\nDraft: ' + draft + '\nRefine:', 400);
+    var riya = await groqChat(SP.music, 'Agent RIYA emotion/imagery focus.\nRequest: ' + request + '\nDraft: ' + zay + '\nRefine:', 400);
+    var dj = await groqChat(SP.music, 'Agent DJ hook/structure focus.\nRequest: ' + request + '\nDraft: ' + riya + '\nFinal version:', 400);
+    return res.json({ ok: true, mode: 'chain', input: draft, zay, riya, output: dj, score: { overall: 0.87 }, createdAt: new Date().toISOString() });
+  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.post('/api/music/revision/generate', async (req, res) => {
+  try {
+    var body = req.body || {};
+    var draft = body.draft || '';
+    var request = body.request || 'Give me 3 revision options';
+    var results = await Promise.all([
+      groqChat(SP.music, 'Flow-first revision.\nRequest: ' + request + '\nDraft: ' + draft + '\nOption A:', 400),
+      groqChat(SP.music, 'Emotion-first revision.\nRequest: ' + request + '\nDraft: ' + draft + '\nOption B:', 400),
+      groqChat(SP.music, 'Hook-first revision.\nRequest: ' + request + '\nDraft: ' + draft + '\nOption C:', 400)
+    ]);
+    var scoreA = musicHeuristicScore(results[0]);
+    var scoreB = musicHeuristicScore(results[1]);
+    var scoreC = musicHeuristicScore(results[2]);
+    var options = [
+      { id: 'A', title: 'Option A - Flow First', strategy: 'Cadence and bounce', output: results[0], score: scoreA },
+      { id: 'B', title: 'Option B - Emotion First', strategy: 'Imagery and vulnerability', output: results[1], score: scoreB },
+      { id: 'C', title: 'Option C - Hook First', strategy: 'Structure and repeatability', output: results[2], score: scoreC }
+    ];
+    var bestOverall = Math.max(scoreA.overall, scoreB.overall, scoreC.overall);
+    var recommended = options.find(o => o.score.overall === bestOverall).id;
+    var session = { id: Date.now(), request, input: draft, options, recommended, createdAt: new Date().toISOString() };
+    if (!global.MUSIC_REVISIONS) global.MUSIC_REVISIONS = { sessions: [], selected: null };
+    global.MUSIC_REVISIONS.sessions.unshift(session);
+    global.MUSIC_REVISIONS.sessions = global.MUSIC_REVISIONS.sessions.slice(0, 20);
+    return res.json({ ok: true, session });
+  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.post('/api/music/dna/save', async (req, res) => {
+  var body = req.body || {};
+  var dna = global.MUSIC_PLATFORM.artistDNA;
+  dna.artist = body.artist || dna.artist;
+  dna.styleTerms = Array.isArray(body.styleTerms) ? body.styleTerms : dna.styleTerms;
+  dna.weights = Object.assign({}, dna.weights, body.weights || {});
+  dna.updatedAt = new Date().toISOString();
+  try { dna.aiInsight = await groqChat(SP.music, 'Artist: ' + dna.artist + '\nStyle: ' + dna.styleTerms.join(', ') + '\n\nSuggest 3 directions to push their sound.', 400); }
+  catch (e) { dna.aiInsight = null; }
+  return res.json({ ok: true, dna });
+});
+
+app.post('/api/music/song/learn', async (req, res) => {
+  var body = req.body || {};
+  var song = { id: Date.now(), title: body.title || 'Untitled', lyrics: body.lyrics || body.draft || '', learnedAt: new Date().toISOString() };
+  global.MUSIC_PLATFORM.artistDNA.learnedSongs.unshift(song);
+  global.MUSIC_PLATFORM.artistDNA.learnedSongs = global.MUSIC_PLATFORM.artistDNA.learnedSongs.slice(0, 12);
+  try { song.aiAnalysis = await groqChat(SP.music, 'Analyze these lyrics for cadence, emotion, structure, imagery. Score each 0-1:\n\n' + song.lyrics, 400); }
+  catch (e) { song.aiAnalysis = null; }
+  return res.json({ ok: true, song, dna: global.MUSIC_PLATFORM.artistDNA });
+});
+
+// ── MUSIC API ROUTES (additional engine/revision/dna/billing layer) ───────────
+// app.html calls a wider set of /api/music/* endpoints than were defined above
+// (agent/run, agent/chain, dna/learn, engine, revision/select, revision/state,
+// revision/pick-rerun, dashboard-sync, session/save, export, monetization/state,
+// billing/state, billing/upgrade-intent, billing/set-tier-dev, and /api/music/state
+// itself) — all of which were 404ing live. routes/music.js already implements
+// them with the exact response shapes app.html expects; it just was never
+// mounted. Mounted AFTER the routes above so those (already real, Groq-backed)
+// inline handlers keep precedence for any overlapping paths.
+app.use(require('./routes/music'));
+
+// ── FINOPS ────────────────────────────────────────────────────────────────────
+app.post('/api/finops/bnca/report', (req, res) => res.json({ ok: true }));
+app.post('/api/chat', (req, res) => res.json({ ok: true }));
+
+// ── AI QUERY ROUTES ───────────────────────────────────────────────────────────
+app.post('/api/ai/query', async (req, res) => {
+  var body = req.body || {};
+  var appType = body.app || 'enterprise';
+  var question = body.question || body.query || body.input || '';
+  var system = SP[appType] || SP.enterprise;
+  try {
+    var userMsg = body.context ? 'Context:\n' + body.context + '\n\nQuestion: ' + question : question;
+    var answer = await groqChat(system, userMsg, body.maxTokens || 1024);
+    return res.json({ ok: true, app: appType, question, answer, createdAt: new Date().toISOString() });
+  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.post('/api/prompt', async (req, res) => {
+  try {
+    const { key, context } = req.body || {};
+    const prompts = {
+      doc_controller: 'You are a financial document controller AI. Analyze accounting documents for errors, missing data, and compliance issues. Be precise and actionable.',
+      doc_cfo: 'You are a CFO-level financial AI. Provide executive-level analysis of financial documents with strategic recommendations and risk assessment.',
+      doc_variance: 'You are a variance analysis AI. Identify budget variances, anomalies, and financial discrepancies. Quantify impact and recommend corrective actions.',
+      doc_triage: 'You are a financial document triage AI. Classify document type, extract key fields, flag critical items, and route to appropriate workflow.'
+    };
+    const prompt = prompts[key] || 'You are a financial operations AI assistant.';
+    return res.json({ ok: true, prompt, context: context || '' });
+  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.post('/api/financial/query', async (req, res) => {
+  try {
+    const { system, message, question, query, maxTokens, messages } = req.body || {};
+    let msg, sys;
+    if (messages && Array.isArray(messages)) {
+      sys = messages.find(m => m.role === 'system')?.content || SP.financial;
+      msg = messages.find(m => m.role === 'user')?.content || '';
+    } else {
+      msg = message || question || query || '';
+      sys = system || SP.financial;
+    }
+    if (!msg) return res.status(400).json({ ok: false, error: 'message required' });
+    msg = msg.slice(0, 3000);
+    let a = '';
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        a = await groqChat(sys, msg, Math.min(maxTokens || 700, 700));
+        break;
+      } catch(retryErr) {
+        if (attempt === 2) throw retryErr;
+        await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
+      }
+    }
+    return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() });
+  }
+  catch (e) {
+    console.error('FINANCIAL QUERY ERROR:', e.message);
+    return res.status(500).json({ ok: false, error: e.message, detail: e.stack?.slice(0,200) });
   }
 });
-// SAFE_WIP_ROUTES_END
 
+app.post('/api/mortgage/query', async (req, res) => {
+  try { var sys = req.body.context || req.body.system || SP.mortgage; var a = await groqChat(sys, req.body.question || req.body.query || '', req.body.maxTokens || 1024); return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() }); }
+  catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
 
+app.post('/api/legal/query', async (req, res) => {
+  try { var a = await groqChat(SP.legal, req.body.question || req.body.query || '', req.body.maxTokens || 1024); return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() }); }
+  catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
 
-// TSM_BPO_GROQ_ROUTE
-app.post('/api/bpo/query', async (req, res) => {
+app.post('/api/construction/query', async (req, res) => {
+  try { var a = await groqChat(SP.construction, req.body.question || req.body.query || '', req.body.maxTokens || 400); return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() }); }
+  catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.post('/api/insurance/query', async (req, res) => {
+  const { system, message, maxTokens, question, query } = req.body || {};
+  const msg = message || question || query || '';
+  if (!msg) return res.status(400).json({ ok: false, error: 'message required' });
+  try { const answer = await groqChat(system || SP.insurance, msg, maxTokens || 1400); res.json({ ok: true, answer }); }
+  catch (e) { console.error('GROQ ERROR:', e.message); res.status(500).json({ ok: false, error: e.message, detail: e.stack }); }
+});
+
+app.post('/api/insurance/quiz', async (req, res) => {
+  const { topic, state, lob, count } = req.body || {};
+  const prompt = `Generate ${count || 10} exam-level multiple choice questions for "${topic}" on the ${state} ${lob} insurance licensing exam. Return ONLY a JSON array: [{"q":"Question?","options":["A","B","C","D"],"answer":0,"explanation":"..."}]`;
   try {
-    const apiKey = process.env.GROQ_API_KEY;
-    const body = req.body || {};
-    const payload = body.payload || {};
-    const sector = payload.sector || body.sector || 'BPO Operations';
-    const context = payload.context || body.prompt || body.query || '';
-    const lane = payload.lane || body.lane || 'General';
+    const raw = await groqChat('You are an insurance licensing exam question writer. Respond ONLY with valid JSON — no markdown, no backticks.', prompt, 2200);
+    res.json({ ok: true, questions: JSON.parse(raw.replace(/```json|```/g, '').trim()) });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
 
-    if (!apiKey) {
-      return res.json({
-        ok: true,
-        mode: 'local-fallback',
-        reply: `TOP ISSUE\n${lane} requires operational review.\n\nRISK LEVEL\nMEDIUM\n\nBEST NEXT ACTIONS\n1. Assign accountable owner.\n2. Clear blockers older than SLA.\n3. Validate evidence and document trail.\n4. Relay unresolved risk to Strategist.\n\nCONFIDENCE\n92%`
-      });
+app.post('/api/insurance/flashcards', async (req, res) => {
+  const { topic, state, lob } = req.body || {};
+  const prompt = `Create 15 flashcards for "${topic}" on the ${state} ${lob} insurance exam. Return ONLY JSON: [{"term":"Term","definition":"..."}]`;
+  try {
+    const raw = await groqChat('You are an insurance exam flashcard creator. Respond ONLY with valid JSON.', prompt, 1400);
+    res.json({ ok: true, cards: JSON.parse(raw.replace(/```json|```/g, '').trim()) });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.post('/api/insurance/ahip', async (req, res) => {
+  const { moduleTitle, moduleId } = req.body || {};
+  try {
+    const answer = await groqChat('You are a Medicare insurance compliance expert and AHIP certification trainer. Format with HTML only.', `Create a comprehensive AHIP study guide for: "${moduleTitle}".`, 1600);
+    res.json({ ok: true, answer, moduleId });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.post('/api/insurance/ahip-quiz', async (req, res) => {
+  const { count } = req.body || {};
+  const prompt = `Generate ${count || 25} AHIP-style multiple choice questions. Return ONLY JSON: [{"q":"Question?","options":["A","B","C","D"],"answer":0,"explanation":"..."}]`;
+  try {
+    const raw = await groqChat('You are an AHIP Medicare certification exam question writer. Respond ONLY with valid JSON.', prompt, 2800);
+    res.json({ ok: true, questions: JSON.parse(raw.replace(/```json|```/g, '').trim()) });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.post('/api/schools/query', async (req, res) => {
+  try { var a = await groqChat(SP.education, req.body.question || req.body.query || '', req.body.maxTokens || 1024); return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() }); }
+  catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.post('/api/strategist/query', async (req, res) => {
+  try { var a = await groqChat(SP.strategist, req.body.question || req.body.query || '', req.body.maxTokens || 2048); return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() }); }
+  catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
+// ── MISC ROUTES ───────────────────────────────────────────────────────────────
+app.get(['/html/healthcare/poc-html', '/html/healthcare/poc-html/'], (req, res) => res.sendFile(path.join(dirPath, 'healthcare', 'poc-html', 'index.html')));
+app.get('/_debug', (_req, res) => res.json({ dirname: __dirname, dirPath, suitesConfigured: suites.length, cacheBust: 'v2-20260607' }));
+app.get('/', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+  res.sendFile(path.join(dirPath, 'bpo', 'bpo-command-center.html'), (err) => {
+    if (err) res.sendFile(path.join(dirPath, 'healthcare', 'hc-strategist', 'index.html'));
+  });
+});
+
+/* ════════════════════════════════════════════════════════════════
+   DOC ROUTER — paste this block into server.js
+   Placement: anywhere after `const app = express()` and after
+   `app.use(express.json(...))`, before `app.listen(...)`.
+   Requires: process.env.GROQ_API_KEY already set (same as other nodes).
+   Requires: Node 18+ for global fetch (already a project requirement).
+════════════════════════════════════════════════════════════════ */
+
+// Models — verify current availability in Groq console if these change
+const GROQ_TEXT_MODEL = 'llama-3.3-70b-versatile';
+const GROQ_VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
+
+// Valid node IDs per vertical — keep in sync with VERTICALS in
+// tsm-document-search.html if you add/rename nodes.
+const DOC_ROUTER_NODES = {
+  fo: ['fo-financial', 'fo-accounting', 'fo-pitch', 'fo-bpo', 'fo-demo', 'fo-index', 'strategist'],
+  ins: ['ins-az', 'ins-hub', 'ins-bpo', 'ins-pitch', 'ins-index', 'strategist'],
+  con: ['con-hub', 'con-pitch', 'con-permits', 'con-strategist', 'con-bpo', 'con-demo', 'con-index', 'strategist'],
+  bpo: ['bpo-cmd', 'bpo-int1', 'bpo-access', 'bpo-launch', 'bpo-sops', 'bpo-sales', 'bpo-services', 'bpo-website', 'strategist'],
+  re: ['re-finance', 're-market', 're-strategist', 're-exec', 're-doc-command', 'strategist'],
+  leg: ['leg-index', 'leg-ediscovery', 'leg-strategist', 'leg-exec', 'strategist'],
+  hc: ['hc-denial', 'strategist'],
+};
+
+const DOC_ROUTER_DOC_TYPES = [
+  'CLAIM', 'CLAIM APPEAL', 'POLICY', 'VENDOR INVOICE', 'LEDGER',
+  'PERMIT', 'REMITTANCE', 'DOCUMENT REPORT', 'ESCALATION',
+  'CONTRACT', 'FILING', 'TITLE DOCUMENT', 'DENIAL',
+];
+
+const DOC_ROUTER_PROMPT = `You are TSM's document routing classifier. Analyze the document content (and filename) and return ONLY valid JSON — no markdown fences, no preamble, no commentary.
+
+Return JSON matching exactly this schema:
+{
+  "documentType": one of ${JSON.stringify(DOC_ROUTER_DOC_TYPES)},
+  "verticals": array, subset of ["fo","ins","con","bpo","re","leg","hc"] — include MULTIPLE verticals if the content is genuinely relevant to more than one (e.g. a vendor invoice tied to a construction project may be relevant to both "con" and "fo"; a property sale with a legal dispute may be relevant to both "re" and "leg"; a claim denial with financial exposure may be relevant to both "hc" and "fo"),
+  "primaryVertical": one value from "verticals",
+  "routing": {
+    "<vertical>": { "sourceNode": "<one valid node id for that vertical>", "nodes": ["<valid node ids...>"] }
+    ... one entry for EACH vertical listed in "verticals"
+  },
+  "fileName": suggested filename ending in ".record",
+  "vendor": string or "",
+  "invoiceNo": string or "",
+  "exclusionCode": string or "",
+  "amount": number — dollar exposure/value, 0 if none applicable,
+  "client": string or "",
+  "ref": string or "",
+  "summary": one short sentence describing the document,
+  "defectFlags": array of short strings — specific issues/exceptions found in the document. For vertical "re", choose ONLY from this fixed set when applicable: ["Financing Failure","Appraisal Gap","Title Defect","Inspection Issues","UW Conditions","Closing Delay"], and use them to inform routing.re.sourceNode (Financing Failure->re-finance, Appraisal Gap->re-market, Title Defect/UW Conditions->re-strategist, Closing Delay->re-exec, Inspection Issues->re-doc-command). For all other verticals, use concise 2-4 word freeform issue labels relevant to the content (e.g. "Coverage Gap", "Code Violation", "Late Filing"), or [] if no issues are present,
+  "bnca": boolean — true ONLY if the document represents an anomaly, discrepancy, denial, dispute, or risk that should escalate to BNCA review
+}
+
+Valid node IDs per vertical:
+fo:  ${DOC_ROUTER_NODES.fo.join(', ')}
+ins: ${DOC_ROUTER_NODES.ins.join(', ')}
+con: ${DOC_ROUTER_NODES.con.join(', ')}
+bpo: ${DOC_ROUTER_NODES.bpo.join(', ')}
+re:  ${DOC_ROUTER_NODES.re.join(', ')}  — finance/dti/loan/mortgage->re-finance, appraisal/valuation/comps->re-market, title/lien/compliance/disclosure->re-strategist, closing/escrow/hoa/wire->re-exec, intake/upload/extract->re-doc-command
+leg: ${DOC_ROUTER_NODES.leg.join(', ')}
+hc:  ${DOC_ROUTER_NODES.hc.join(', ')}
+
+Rules:
+- Always include "strategist" in routing.<vertical>.nodes for every vertical listed.
+- If "bnca" is true, also append "bnca-engine" to routing.<vertical>.nodes for every vertical listed.
+- "sourceNode" must be the node most directly responsible for this document type (not "strategist" unless nothing else fits).
+- If the document doesn't clearly belong anywhere, return "verticals": [] and leave "routing" as {}.
+- Be conservative with "bnca" — only flag genuine anomalies, denials, disputes, code violations, SLA breaches, or financial exposure outliers.`;
+
+// crude in-memory rate limit: 20 requests / 5 min / IP
+const docRouterHits = new Map();
+function docRouterRateOk(ip) {
+  const now = Date.now();
+  const hits = (docRouterHits.get(ip) || []).filter(t => now - t < 5 * 60 * 1000);
+  if (hits.length >= 20) return false;
+  hits.push(now);
+  docRouterHits.set(ip, hits);
+  return true;
+}
+
+app.post('/api/doc-router/classify', async (req, res) => {
+  try {
+    if (!docRouterRateOk(req.ip)) {
+      return res.status(429).json({ error: 'Rate limit exceeded — try again shortly.' });
+    }
+
+    const { fileName, mimeType, textContent, imageBase64 } = req.body || {};
+    if (!textContent && !imageBase64) {
+      return res.status(400).json({ error: 'No content provided.' });
+    }
+
+    let userContent;
+    let model;
+
+    if (imageBase64) {
+      model = GROQ_VISION_MODEL;
+      userContent = [
+        { type: 'text', text: `Filename: ${fileName || 'unknown'}\n\n${DOC_ROUTER_PROMPT}` },
+        { type: 'image_url', image_url: { url: `data:${mimeType || 'image/png'};base64,${imageBase64}` } },
+      ];
+    } else {
+      model = GROQ_TEXT_MODEL;
+      userContent = `Filename: ${fileName || 'unknown'}\n\nDocument content:\n${String(textContent).slice(0, 12000)}\n\n${DOC_ROUTER_PROMPT}`;
     }
 
     const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
       },
       body: JSON.stringify({
-        model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
-        temperature: 0.25,
+        model,
         messages: [
-          {
-            role: 'system',
-            content: 'You are TSM Neural Core for enterprise BPO operations. Never mention the underlying model/vendor. Return concise BNCA output with TOP ISSUE, RISK LEVEL, BEST NEXT ACTIONS, OWNER LANE, SLA WATCH, and CONFIDENCE.'
-          },
-          {
-            role: 'user',
-            content: `Sector: ${sector}\nLane: ${lane}\nContext:\n${context}`
-          }
-        ]
-      })
+          { role: 'system', content: 'Respond with ONLY valid JSON. No markdown fences, no preamble, no trailing text.' },
+          { role: 'user', content: userContent },
+        ],
+        temperature: 0.2,
+        response_format: { type: 'json_object' },
+      }),
     });
+
+    if (!groqRes.ok) {
+      const errText = await groqRes.text();
+      console.error('[doc-router] Groq error:', groqRes.status, errText);
+      return res.status(502).json({ error: 'Classification service error.' });
+    }
 
     const data = await groqRes.json();
-    const reply = data?.choices?.[0]?.message?.content || 'No response from TSM Neural Core.';
-    res.json({ ok: true, mode: 'groq', reply });
-  } catch (e) {
-    res.json({
-      ok: false,
-      mode: 'fallback',
-      error: String(e.message || e),
-      reply: 'TOP ISSUE\nBPO AI route failed safely.\n\nBEST NEXT ACTIONS\n1. Verify GROQ_API_KEY.\n2. Restart app.\n3. Re-test /api/bpo/query.\n\nCONFIDENCE\n88%'
-    });
-  }
-});
-
-
-
-// ── /api/claude/proxy — Anthropic msg format, Groq fallback ──
-app.post('/api/claude/proxy', express.json({limit:'4mb'}), async (req, res) => {
-  const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
-  const GROQ_KEY      = process.env.GROQ_API_KEY;
-  if (ANTHROPIC_KEY) {
+    let parsed;
     try {
-      const r = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type':'application/json', 'x-api-key':ANTHROPIC_KEY,
-                   'anthropic-version':'2023-06-01' },
-        body: JSON.stringify(req.body)
-      });
-      return res.json(await r.json());
-    } catch(e) { /* fall through to Groq */ }
+      parsed = JSON.parse(data.choices[0].message.content);
+    } catch (e) {
+      console.error('[doc-router] Bad JSON from model:', data.choices?.[0]?.message?.content);
+      return res.status(502).json({ error: 'Invalid classification response.' });
+    }
+
+    res.json(parsed);
+  } catch (err) {
+    console.error('[doc-router] error:', err);
+    res.status(500).json({ error: 'Internal error.' });
   }
-  if (!GROQ_KEY) return res.status(503).json({error:{message:'No AI key configured'}});
-  try {
-    const { system, messages, max_tokens = 1200 } = req.body;
-    const msgs = system ? [{role:'system', content:system}, ...messages] : messages;
-    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Authorization':'Bearer '+GROQ_KEY, 'Content-Type':'application/json' },
-      body: JSON.stringify({ model: process.env.TSM_MODEL||'llama-3.3-70b-versatile',
-                             max_tokens, messages: msgs })
-    });
-    const data = await r.json();
-    const text = data.choices?.[0]?.message?.content || '';
-    res.json({ content: [{ type:'text', text }] }); // Anthropic-shape response
-  } catch(e) { res.status(500).json({error:{message:e.message}}); }
 });
 
-// ── /api/groq/complete — OpenAI format passthrough, non-streaming ──
-app.post('/api/groq/complete', express.json({limit:'2mb'}), async (req, res) => {
-  const key = process.env.GROQ_API_KEY;
-  if (!key) return res.status(503).json({error:{message:'No GROQ_API_KEY'}});
-  try {
-    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Authorization':'Bearer '+key, 'Content-Type':'application/json' },
-      body: JSON.stringify({ ...req.body, stream:false })
-    });
-    res.json(await r.json());
-  } catch(e) { res.status(500).json({error:{message:e.message}}); }
-});
+// ══════════════════════════════════════════════════════════════════════════════
+// ── COLLECTIVE BNCA ───────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
 
-app.listen(8080, '0.0.0.0', () => console.log('Sovereign Mesh Online on 0.0.0.0:8080'));
+const COLLECTIVE_VERTICALS = ['healthcare', 'finops', 'bpo', 'legal', 'real-estate', 'insurance', 'construction'];
 
-// =====================================================
-// TSM UNIVERSAL GROQ PROXY — fixes all suites
-// Any app can POST to /api/ai/query with:
-// { prompt, system, sector, model }
-// =====================================================
-const https = require('https');
+const COLLECTIVE_SIGNALS = []; // { vertical, signal, severity, riskLevel, confidence, topIssue, ownerLanes, hitlRequired, actions, impactDelta, kpi, warRoom, bnca, timestamp, source }
+const COLLECTIVE_BNCA = [];   // synthesis results
 
-app.post("/api/ai/query", async (req, res) => {
-  const { prompt, system, sector, model, stream } = req.body || {};
-  const GROQ_KEY = process.env.GROQ_API_KEY;
-
-  if (!GROQ_KEY) {
-    return res.json({ ok: false, error: "No GROQ_API_KEY on server", reply: buildMeshBNCA(sector || "HEALTHCARE", prompt) });
-  }
-
-  const sectorSystems = {
-    HEALTHCARE: "You are the TSM Healthcare Neural Strategist. Analyze HC operations, billing, compliance, clinical, and revenue cycle issues. Be specific, actionable, and data-driven.",
-    CONSTRUCTION: "You are the TSM Construction Neural Strategist. Analyze construction operations, permits, scheduling, cost, compliance, and vendor issues. Be specific and actionable.",
-    FINANCE: "You are the TSM Financial Neural Strategist. Analyze financial operations, revenue, cash flow, compliance, and CFO-level priorities. Be specific and data-driven.",
-    INSURANCE: "You are the TSM Insurance Neural Strategist. Analyze insurance operations, claims, compliance, payer relations, and risk. Be specific and actionable.",
+// POST /api/collective/signal — war rooms push their BNCA signal here.
+// Accepts both the legacy 3-field shape (vertical, signal, severity) and the
+// richer war-room payload (warRoom, bnca, confidence, riskLevel, topIssue,
+// ownerLanes, hitlRequired, actions, impactDelta, kpi).
+app.post('/api/collective/signal', (req, res) => {
+  const {
+    vertical, signal, severity, source,
+    warRoom, bnca, confidence, riskLevel, topIssue,
+    ownerLanes, hitlRequired, actions, impactDelta, kpi
+  } = req.body || {};
+  if (!vertical) return res.status(400).json({ ok: false, error: 'vertical required' });
+  const entry = {
+    vertical,
+    signal: signal || topIssue || (typeof bnca === 'string' ? bnca.slice(0, 200) : '') || 'War room signal received',
+    severity: severity || riskLevel || 'MEDIUM',
+    riskLevel: riskLevel || severity || 'WATCH',
+    confidence: confidence != null ? confidence : null,
+    topIssue: topIssue || '',
+    warRoom: warRoom || '',
+    bnca: bnca || '',
+    ownerLanes: ownerLanes || [],
+    hitlRequired: !!hitlRequired,
+    actions: actions || [],
+    impactDelta: impactDelta || '',
+    kpi: kpi || {},
+    source: source || '',
+    timestamp: Date.now()
   };
+  COLLECTIVE_SIGNALS.unshift(entry);
+  if (COLLECTIVE_SIGNALS.length > 200) COLLECTIVE_SIGNALS.length = 200;
+  res.json({ ok: true, entry });
+});
 
-  const systemPrompt = system || sectorSystems[sector] || sectorSystems.HEALTHCARE;
-  const groqModel = model || "llama-3.3-70b-versatile";
+// GET /api/collective/signals — fetch all pushed signals
+app.get('/api/collective/signals', (req, res) => {
+  res.json({ ok: true, signals: COLLECTIVE_SIGNALS });
+});
 
+// DELETE /api/collective/signals — clear all signals
+app.delete('/api/collective/signals', (req, res) => {
+  COLLECTIVE_SIGNALS.length = 0;
+  res.json({ ok: true });
+});
+
+// POST /api/collective/bnca — run cross-vertical synthesis via Groq
+app.post('/api/collective/bnca', async (req, res) => {
   try {
-    const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROQ_KEY}` },
+    if (!COLLECTIVE_SIGNALS.length) return res.status(400).json({ ok: false, error: 'No signals to synthesize' });
+    const prompt = `You are TSM's cross-vertical BNCA synthesizer. Given the following signals from multiple verticals, identify: (1) conflicts between verticals, (2) synergies or compounding risks, (3) a ranked HITL decision queue. Respond ONLY in valid JSON with keys: conflicts (array), synergies (array), hitlQueue (array of {priority, vertical, action, rationale}), summary (string).\n\nSignals:\n${JSON.stringify(COLLECTIVE_SIGNALS.slice(0, 50), null, 2)}`;
+    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
       body: JSON.stringify({
-        model: groqModel,
-        max_tokens: 800,
-        stream: false,
+        model: 'llama-3.3-70b-versatile',
         messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: prompt || "Provide a strategic analysis." }
-        ]
+          { role: 'system', content: 'Respond with ONLY valid JSON. No markdown fences, no preamble.' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.2,
+        response_format: { type: 'json_object' }
       })
     });
-
-    const ct = groqRes.headers.get("content-type") || "";
-    if (!groqRes.ok || !ct.includes("application/json")) {
-      const txt = await groqRes.text();
-      return res.json({ ok: false, error: txt.slice(0, 200), reply: buildMeshBNCA(sector || "HEALTHCARE", prompt) });
-    }
-
+    if (!groqRes.ok) return res.status(502).json({ ok: false, error: 'Groq error' });
     const data = await groqRes.json();
-    const reply = data.choices?.[0]?.message?.content || buildMeshBNCA(sector || "HEALTHCARE", prompt);
-    res.json({ ok: true, reply, content: reply, sector, mesh: true, timestamp: new Date().toISOString() });
-
-  } catch (e) {
-    res.json({ ok: false, error: e.message, reply: buildMeshBNCA(sector || "HEALTHCARE", prompt) });
+    const parsed = JSON.parse(data.choices[0].message.content);
+    const result = { ...parsed, timestamp: Date.now(), signalCount: COLLECTIVE_SIGNALS.length };
+    COLLECTIVE_BNCA.unshift(result);
+    if (COLLECTIVE_BNCA.length > 20) COLLECTIVE_BNCA.length = 20;
+    res.json({ ok: true, bnca: result });
+  } catch (err) {
+    console.error('[collective/bnca] error:', err);
+    res.status(500).json({ ok: false, error: err.message });
   }
 });
 
-// Alias routes so existing apps dont need changes
-app.post("/api/chat",          (req, res) => { req.body.sector = req.body.sector || "HEALTHCARE"; app._router.handle(Object.assign(req, {url:"/api/ai/query",path:"/api/ai/query"}), res, ()=>{}); });
-app.post("/api/strategist/query", (req, res) => { req.body.sector = "HEALTHCARE"; app._router.handle(Object.assign(req, {url:"/api/ai/query",path:"/api/ai/query"}), res, ()=>{}); });
-
-// INSURANCE QUERY ROUTE
-app.get("/api/insurance/query", (req, res) => {
-  res.json({ ok: true, mesh: true });
+// GET /api/collective/bnca/latest — fetch most recent synthesis
+app.get('/api/collective/bnca/latest', (req, res) => {
+  res.json({ ok: true, bnca: COLLECTIVE_BNCA[0] || null });
 });
-app.post("/api/insurance/query", async (req, res) => {
-  const payload = req.body || {};
-  const prompt = payload.prompt || payload.query || payload.context || payload.action || "Analyze AZ insurance operations.";
-  const GROQ_KEY = process.env.GROQ_API_KEY;
-  if (!GROQ_KEY) return res.json({ ok: true, reply: buildMeshBNCA("INSURANCE", prompt), content: buildMeshBNCA("INSURANCE", prompt) });
-  try {
-    const r = await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { "Authorization": "Bearer " + GROQ_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ model: process.env.TSM_MODEL || "llama-3.3-70b-versatile", max_tokens: 800, messages: [{ role: "system", content: "You are the TSM Insurance Neural Strategist. Analyze AZ insurance, Medicare, P&C, DME, agent performance, compliance, payer relations. Be specific and actionable." }, { role: "user", content: prompt }] }) });
-    const d = await r.json();
-    const reply = d.choices?.[0]?.message?.content || buildMeshBNCA("INSURANCE", prompt);
-    res.json({ ok: true, reply, content: reply, response: reply, sector: "INSURANCE", mesh: true, timestamp: new Date().toISOString() });
-  } catch(e) {
-    res.json({ ok: true, reply: buildMeshBNCA("INSURANCE", prompt), content: buildMeshBNCA("INSURANCE", prompt) });
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ── END COLLECTIVE BNCA ───────────────════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ── WIP / EXECUTION COMMAND CENTER ────────────────────────────────────────────
+// Per-vertical: WIP tasks, readiness score, data quality, decision queue, trends.
+// ══════════════════════════════════════════════════════════════════════════════
+
+const WIP_TASKS = {};         // vertical -> [ {id, action, owner, status, due, risk, createdAt, updatedAt} ]
+const WIP_READINESS = {};     // vertical -> { dataCompleteness, stakeholderCoverage, mitigationPlans, resourceAvailability, openRisks, updatedAt }
+const WIP_DATA_QUALITY = {};  // vertical -> [ {id, source, status, updatedAt} ]
+const WIP_DECISIONS = {};     // vertical -> [ {id, title, impact, cost, recommendation, confidence, status, createdAt, decidedAt} ]
+const WIP_TRENDS = {};        // vertical -> [ {id, event, date, resolutionHours, notes, createdAt} ]
+
+function ensureWipVertical(v) {
+  if (!COLLECTIVE_VERTICALS.includes(v)) return false;
+  if (!WIP_TASKS[v]) WIP_TASKS[v] = [];
+  if (!WIP_DATA_QUALITY[v]) WIP_DATA_QUALITY[v] = [];
+  if (!WIP_DECISIONS[v]) WIP_DECISIONS[v] = [];
+  if (!WIP_TRENDS[v]) WIP_TRENDS[v] = [];
+  return true;
+}
+
+function computeReadinessOverall(r) {
+  if (!r) return null;
+  const fields = ['dataCompleteness', 'stakeholderCoverage', 'mitigationPlans', 'resourceAvailability', 'openRisks'];
+  const vals = fields.map(f => Number(r[f])).filter(n => !isNaN(n));
+  if (!vals.length) return null;
+  return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+}
+
+function wipId(prefix) {
+  return prefix + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+}
+
+// GET /api/wip/board?vertical=healthcare — combined read for the WIP Command Center page
+app.get('/api/wip/board', (req, res) => {
+  const v = req.query.vertical;
+  if (!ensureWipVertical(v)) return res.status(400).json({ ok: false, error: `vertical must be one of: ${COLLECTIVE_VERTICALS.join(', ')}` });
+  const readiness = WIP_READINESS[v] || null;
+  res.json({
+    ok: true,
+    vertical: v,
+    tasks: WIP_TASKS[v],
+    readiness,
+    readinessOverall: computeReadinessOverall(readiness),
+    dataQuality: WIP_DATA_QUALITY[v],
+    decisions: WIP_DECISIONS[v],
+    trends: WIP_TRENDS[v]
+  });
+});
+
+// ── WIP TASKS ──────────────────────────────────────────────────────────────────
+app.post('/api/wip/task', (req, res) => {
+  const { vertical, action, owner, status, due, risk } = req.body || {};
+  if (!ensureWipVertical(vertical)) return res.status(400).json({ ok: false, error: 'valid vertical required' });
+  if (!action) return res.status(400).json({ ok: false, error: 'action required' });
+  const task = {
+    id: wipId('wip'), action, owner: owner || 'Unassigned', status: status || 'TO DO',
+    due: due || '', risk: risk || 'LOW', createdAt: Date.now(), updatedAt: Date.now()
+  };
+  WIP_TASKS[vertical].unshift(task);
+  res.json({ ok: true, task });
+});
+
+app.patch('/api/wip/task/:id', (req, res) => {
+  const { vertical } = req.body || {};
+  if (!ensureWipVertical(vertical)) return res.status(400).json({ ok: false, error: 'valid vertical required' });
+  const task = WIP_TASKS[vertical].find(t => t.id === req.params.id);
+  if (!task) return res.status(404).json({ ok: false, error: 'task not found' });
+  Object.assign(task, req.body, { id: task.id, vertical: undefined, updatedAt: Date.now() });
+  delete task.vertical;
+  res.json({ ok: true, task });
+});
+
+app.delete('/api/wip/task/:id', (req, res) => {
+  const { vertical } = req.body || req.query || {};
+  if (!ensureWipVertical(vertical)) return res.status(400).json({ ok: false, error: 'valid vertical required' });
+  WIP_TASKS[vertical] = WIP_TASKS[vertical].filter(t => t.id !== req.params.id);
+  res.json({ ok: true, deleted: req.params.id });
+});
+
+// ── READINESS SCORE ────────────────────────────────────────────────────────────
+app.post('/api/wip/readiness', (req, res) => {
+  const { vertical, dataCompleteness, stakeholderCoverage, mitigationPlans, resourceAvailability, openRisks } = req.body || {};
+  if (!ensureWipVertical(vertical)) return res.status(400).json({ ok: false, error: 'valid vertical required' });
+  WIP_READINESS[vertical] = { dataCompleteness, stakeholderCoverage, mitigationPlans, resourceAvailability, openRisks, updatedAt: Date.now() };
+  res.json({ ok: true, readiness: WIP_READINESS[vertical], overall: computeReadinessOverall(WIP_READINESS[vertical]) });
+});
+
+// ── DATA QUALITY ───────────────────────────────────────────────────────────────
+app.post('/api/wip/data-quality', (req, res) => {
+  const { vertical, source, status } = req.body || {};
+  if (!ensureWipVertical(vertical)) return res.status(400).json({ ok: false, error: 'valid vertical required' });
+  if (!source) return res.status(400).json({ ok: false, error: 'source required' });
+  const list = WIP_DATA_QUALITY[vertical];
+  const existing = list.find(d => d.source.toLowerCase() === String(source).toLowerCase());
+  if (existing) {
+    existing.status = status || existing.status;
+    existing.updatedAt = Date.now();
+    return res.json({ ok: true, entry: existing });
   }
+  const entry = { id: wipId('dq'), source, status: status || 'UNKNOWN', updatedAt: Date.now() };
+  list.unshift(entry);
+  res.json({ ok: true, entry });
 });
 
-// =====================================================
-// MISSING ROUTES — bulk add all suite endpoints
-// =====================================================
-const groqReply = async (systemPrompt, userPrompt) => {
-  const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: { "Authorization": "Bearer " + process.env.GROQ_API_KEY, "Content-Type": "application/json" },
-    body: JSON.stringify({ model: process.env.TSM_MODEL || "llama-3.3-70b-versatile", max_tokens: 800, messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }] })
-  });
-  const d = await r.json();
-  return d.choices?.[0]?.message?.content || "Analysis complete.";
-};
-const mkRoute = (path, system, sector) => {
-  app.get(path, (req, res) => res.json({ ok: true, mesh: true }));
-  app.post(path, async (req, res) => {
-    const b = req.body || {};
-    const prompt = b.prompt || b.query || b.context || b.action || b.message || ("Analyze " + sector + " operations.");
-    try {
-      const reply = await groqReply(system, prompt);
-      res.json({ ok: true, reply, content: reply, response: reply, output: reply, sector, mesh: true, timestamp: new Date().toISOString() });
-    } catch(e) {
-      res.json({ ok: true, reply: buildMeshBNCA(sector, prompt), content: buildMeshBNCA(sector, prompt) });
-    }
-  });
-};
-
-mkRoute("/api/audit",                    "You are the TSM Audit Strategist. Analyze compliance, billing audit, and operational audit findings. Be specific and actionable.", "AUDIT");
-mkRoute("/api/financial/query",          "You are the TSM Financial Neural Strategist. Analyze financial operations, revenue, cash flow, CFO priorities. Be specific.", "FINANCE");
-mkRoute("/api/finops/report",            "You are the TSM FinOps Strategist. Generate financial operations reports covering revenue, margins, and cash flow.", "FINANCE");
-mkRoute("/api/finops/actions",           "You are the TSM FinOps Strategist. Generate prioritized financial action items and owner assignments.", "FINANCE");
-mkRoute("/api/finops/upload-doc",        "You are the TSM FinOps Document Analyzer. Extract key financial insights from the provided document.", "FINANCE");
-mkRoute("/api/groq",                     "You are the TSM Neural Strategist. Answer the query with specific, actionable intelligence.", "GENERAL");
-mkRoute("/api/hc/brief",                 "You are the TSM HC Briefing Engine. Generate concise executive healthcare briefings.", "HEALTHCARE");
-mkRoute("/api/hc/delegate",              "You are the TSM HC Delegation Engine. Assign tasks to the correct owner lanes with deadlines.", "HEALTHCARE");
-mkRoute("/api/hc/layer2",                "You are the TSM HC Layer 2 Strategist. Provide deep-dive clinical and operational analysis.", "HEALTHCARE");
-mkRoute("/api/hc/nodes",                 "You are the TSM HC Node Intelligence Engine. Report on all active healthcare nodes and their status.", "HEALTHCARE");
-mkRoute("/api/hc/tasks",                 "You are the TSM HC Task Engine. Generate and prioritize healthcare operational tasks.", "HEALTHCARE");
-mkRoute("/api/honor/dee/dashboard",      "You are the TSM Honor Health DEE Dashboard. Provide executive healthcare dashboard intelligence.", "HEALTHCARE");
-mkRoute("/api/legal/query",              "You are the TSM Legal Neural Strategist. Analyze legal operations, contracts, compliance, and risk. Be specific.", "LEGAL");
-mkRoute("/api/main-strategist/hc-report","You are the TSM Main Strategist HC Report Engine. Generate comprehensive healthcare executive reports.", "HEALTHCARE");
-mkRoute("/api/mortgage/query",           "You are the TSM Mortgage Neural Strategist. Analyze mortgage operations, pipeline, and financial performance.", "MORTGAGE");
-mkRoute("/api/strategist/hc/dee-action", "You are the TSM HC DEE Action Engine. Generate strategic action plans for healthcare executive decisions.", "HEALTHCARE");
-
-/* ---------- Music ---------- */
-app.all('/api/music/strategy', async (req,res)=>{
-  const prompt=(req.body||{}).prompt||(req.body||{}).query||"Analyze music strategy.";
-  const GROQ_KEY=process.env.GROQ_API_KEY;
-  if(!GROQ_KEY) return res.json({ok:true,reply:"Music AI unavailable",content:"Music AI unavailable"});
-  try {
-    const r=await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{"Authorization":"Bearer "+GROQ_KEY,"Content-Type":"application/json"},body:JSON.stringify({model:process.env.TSM_MODEL||"llama-3.3-70b-versatile",max_tokens:800,messages:[{role:"system",content:"You are the TSM Music Industry Strategist. Analyze artist development, releases, revenue, distribution, and music business strategy."},{role:"user",content:prompt}]})});
-    const d=await r.json();
-    const reply=d.choices?.[0]?.message?.content||"Analysis complete.";
-    res.json({ok:true,reply,content:reply,response:reply,mesh:true,timestamp:new Date().toISOString()});
-  } catch(e){res.json({ok:true,reply:"Music AI error: "+e.message});}
+app.delete('/api/wip/data-quality/:id', (req, res) => {
+  const { vertical } = req.body || req.query || {};
+  if (!ensureWipVertical(vertical)) return res.status(400).json({ ok: false, error: 'valid vertical required' });
+  WIP_DATA_QUALITY[vertical] = WIP_DATA_QUALITY[vertical].filter(d => d.id !== req.params.id);
+  res.json({ ok: true, deleted: req.params.id });
 });
 
-
-// ── /api/claude/proxy ──
-app.post('/api/claude/proxy', express.json({limit:'4mb'}), async (req, res) => {
-  const GROQ_KEY = process.env.GROQ_API_KEY;
-  try {
-    const {system, messages, max_tokens=1200} = req.body;
-    const msgs = system ? [{role:'system',content:system},...messages] : messages;
-    const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
-      method:'POST',
-      headers:{'Authorization':'Bearer '+GROQ_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({model:process.env.TSM_MODEL||'llama-3.3-70b-versatile',max_tokens,messages:msgs})
-    });
-    const data = await r.json();
-    const text = data.choices?.[0]?.message?.content || '';
-    res.json({content:[{type:'text',text}]});
-  } catch(e){ res.status(500).json({error:{message:e.message}}); }
+// ── EXECUTIVE DECISION QUEUE ────────────────────────────────────────────────────
+app.post('/api/wip/decision', (req, res) => {
+  const { vertical, title, impact, cost, recommendation, confidence } = req.body || {};
+  if (!ensureWipVertical(vertical)) return res.status(400).json({ ok: false, error: 'valid vertical required' });
+  if (!title) return res.status(400).json({ ok: false, error: 'title required' });
+  const decision = {
+    id: wipId('dec'), title, impact: impact || '', cost: cost || '', recommendation: recommendation || '',
+    confidence: confidence != null ? confidence : 80, status: 'PENDING', createdAt: Date.now(), decidedAt: null
+  };
+  WIP_DECISIONS[vertical].unshift(decision);
+  res.json({ ok: true, decision });
 });
 
-// ── /api/groq/complete ──
-app.post('/api/groq/complete', express.json({limit:'2mb'}), async (req, res) => {
-  const key = process.env.GROQ_API_KEY;
-  try {
-    const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
-      method:'POST',
-      headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
-      body:JSON.stringify({...req.body, stream:false})
-    });
-    res.json(await r.json());
-  } catch(e){ res.status(500).json({error:{message:e.message}}); }
+app.patch('/api/wip/decision/:id', (req, res) => {
+  const { vertical, status } = req.body || {};
+  if (!ensureWipVertical(vertical)) return res.status(400).json({ ok: false, error: 'valid vertical required' });
+  if (!['APPROVED', 'REJECTED', 'PENDING'].includes(status)) return res.status(400).json({ ok: false, error: 'status must be APPROVED, REJECTED, or PENDING' });
+  const decision = WIP_DECISIONS[vertical].find(d => d.id === req.params.id);
+  if (!decision) return res.status(404).json({ ok: false, error: 'decision not found' });
+  decision.status = status;
+  decision.decidedAt = status === 'PENDING' ? null : Date.now();
+  res.json({ ok: true, decision });
 });
 
-app.use((req,res) => res.status(404).send('Not found: '+req.path));
+// ── TREND INTELLIGENCE ─────────────────────────────────────────────────────────
+app.post('/api/wip/trend', (req, res) => {
+  const { vertical, event, date, resolutionHours, notes } = req.body || {};
+  if (!ensureWipVertical(vertical)) return res.status(400).json({ ok: false, error: 'valid vertical required' });
+  if (!event) return res.status(400).json({ ok: false, error: 'event required' });
+  const trend = {
+    id: wipId('trend'), event, date: date || new Date().toISOString().slice(0, 10),
+    resolutionHours: resolutionHours != null ? resolutionHours : null, notes: notes || '', createdAt: Date.now()
+  };
+  WIP_TRENDS[vertical].unshift(trend);
+  res.json({ ok: true, trend });
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ── END WIP / EXECUTION COMMAND CENTER ────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── HEALTH & STUB ROUTES ──────────────────────────────────────────────────────
+app.use((err, req, res, next) => {
+  console.error('[TSM GLOBAL ERROR]', err.message, err.stack);
+  if (res.headersSent) return next(err);
+  res.status(500).json({ ok: false, error: err.message || 'Internal server error' });
+});
+
+// ── START ─────────────────────────────────────────────────────────────────────
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`TSM Platform Core Engine listening on port ${PORT}`);
+});
+
+server.on('error', (err) => {
+  console.error('💥 SERVER ERROR:', err.message, err.stack);
+});

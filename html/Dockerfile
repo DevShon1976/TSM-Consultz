@@ -5,6 +5,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
+ARG CACHE_BUST=1
 COPY . .
 
 ENV NODE_PORT=8080

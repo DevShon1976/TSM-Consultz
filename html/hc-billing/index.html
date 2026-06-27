@@ -416,7 +416,7 @@ window.__HC_LOCK__ = true;
     out.innerHTML = '<span style="color:#00ffc6;">TSM Neural processing...</span>';
 
     try{
-      const res = await runHCNodeAI, {
+      const res = await fetch(runHCNodeAI, {
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
@@ -455,6 +455,8 @@ window.__HC_LOCK__ = true;
 
 
 <script src="/healthcare/js/hc-node-universal-controller.js?v=hc-universal-fix" defer></script>
+<script src="/healthcare/js/tsm-mission-system.js"></script>
+<script src="/healthcare/js/tsm-mission-objectives.js"></script>
 
 <script id="tsm-hc-node-real-tabs">
 (function(){
@@ -566,7 +568,7 @@ CONFIDENCE
         body:JSON.stringify({payload:{sector:"Healthcare HC Node",lane:key,context:ctx,priority:"HIGH"}})
       });
       const d = await r.json();
-      out.textContent = d.reply || d.content || "No response.";
+      out.textContent = d.reply || d.content || (d.choices && d.choices[0]?.message?.content) || "No response.";
     }catch(e){
       out.textContent = `TOP ISSUE
 ${key} requires operating review.

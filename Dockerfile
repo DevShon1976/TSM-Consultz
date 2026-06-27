@@ -3,6 +3,7 @@ RUN apk add --no-cache bash
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
+ARG CACHE_BUST=2
 COPY . .
 RUN printf '#!/bin/bash\n\
 echo "--- Initializing TSM Suite Persistence ---"\n\

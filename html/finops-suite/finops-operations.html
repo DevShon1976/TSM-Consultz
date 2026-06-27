@@ -283,12 +283,8 @@ async function getVaultPrompt(key) {
     console.warn(`[Vault] "${key}" failed — continuing without system prompt.`);
     return '';
   }
-},
-    body: JSON.stringify({ key })
-  });
-  const d = await r.json();
-  return d.system;
 }
+
 </script>
 <script>
 async function tsmAI(s,u,m){try{const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:s?(s+'\n\n'+u):u,maxTokens:m||1024})});if(!r.ok)throw new Error('Server '+r.status);const d=await r.json();return d.answer||'No response.';}catch(e){return'[AI Error] '+e.message;}}
@@ -772,14 +768,25 @@ let aiModel = localStorage.getItem('finops_groq_model') || 'llama3-70b-8192';
 let aiHistory = [], aiCtx = 'general', currentMod = 'cashiering';
 
 const CTX_PROMPTS = {
-  general: await getVaultPrompt('ops_general'),
-  cashiering: await getVaultPrompt('ops_cashiering'),
-  requests: await getVaultPrompt('ops_requests'),
-  inbox: await getVaultPrompt('ops_inbox'),
-  clients: await getVaultPrompt('ops_clients'),
-  portfolio: await getVaultPrompt('ops_portfolio'),
-  compliance: await getVaultPrompt('ops_compliance'),
+  general: '',
+  cashiering: '',
+  requests: '',
+  inbox: '',
+  clients: '',
+  portfolio: '',
+  compliance: '',
 };
+
+async function loadCtxPrompts(){
+  CTX_PROMPTS.general = await getVaultPrompt('ops_general');
+  CTX_PROMPTS.cashiering = await getVaultPrompt('ops_cashiering');
+  CTX_PROMPTS.requests = await getVaultPrompt('ops_requests');
+  CTX_PROMPTS.inbox = await getVaultPrompt('ops_inbox');
+  CTX_PROMPTS.clients = await getVaultPrompt('ops_clients');
+  CTX_PROMPTS.portfolio = await getVaultPrompt('ops_portfolio');
+  CTX_PROMPTS.compliance = await getVaultPrompt('ops_compliance');
+}
+loadCtxPrompts();
 
 const CTX_LABELS = {cashiering:'Cashiering',requests:'Service Requests',inbox:'Client Inbox',clients:'Client Records',portfolio:'Portfolio Prep',compliance:'Compliance'};
 
@@ -1676,5 +1683,10 @@ document.addEventListener('click', function(e){
 
 });
 })();</script>
+<script src="/finops-suite/js/finops-mission-workflow.js"></script>
+<script src="/finops-suite/js/finops-node-mission.js"></script>
+</script>
+<script src="/shared/tsm-cure-cheatsheet.js"></script>
+
 </body>
 </html>

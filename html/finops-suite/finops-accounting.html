@@ -3,1316 +3,1090 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>TSM FinOps · Financial Accounting POC</title>
+<title>TSM FinOps · Financial Accounting Command</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
 :root{
-  --bg:#07090f;--surface:#0d1117;--surface2:#111827;--surface3:#1a2235;
-  --border:#1e2d45;--border2:#2a3f5f;
-  --cyan:#00d4ff;--cyan2:#00a3c4;--cyan-lo:#003344;--cyan-faint:#001a24;
-  --amber:#f5a623;--amber2:#7a4f00;--amber-lo:#2a1800;
-  --green:#00e676;--green-lo:#003320;--red:#ff3d3d;--purple:#a855f7;
-  --text:#e2e8f0;--text-dim:#8fa3bc;--text-mute:#3d5470;
-  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+  --bg:#05080f;
+  --s1:#080d18;
+  --s2:#0c1220;
+  --s3:#111928;
+  --border:#1a2540;
+  --border2:#243055;
+  --amber:#f0a500;
+  --amber-dim:#7a5000;
+  --amber-glow:rgba(240,165,0,.12);
+  --amber-faint:rgba(240,165,0,.05);
+  --green:#00d68f;
+  --green-lo:rgba(0,214,143,.08);
+  --red:#ff4560;
+  --red-lo:rgba(255,69,96,.08);
+  --cyan:#00c8ff;
+  --cyan-lo:rgba(0,200,255,.06);
+  --purple:#8b5cf6;
+  --text:#dde6f5;
+  --text-dim:#8097b8;
+  --text-mute:#364d6e;
+  --mono:'Space Mono',monospace;
+  --sans:'Space Grotesk',sans-serif;
+  --r:3px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;min-height:100vh}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px}
 
-/* TOPBAR */
-.topbar{align-items:center;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:12px;padding:0 20px;height:48px;position:sticky;top:0;z-index:100}
-.brand{align-items:center;display:flex;gap:8px}
-.brand-dot{background:var(--amber);border-radius:50%;height:7px;width:7px;animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(245,166,35,.4)}50%{box-shadow:0 0 0 5px rgba(245,166,35,0)}}
-.brand-name{color:var(--text);font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:2px;text-transform:uppercase}
-.brand-name span{color:var(--amber)}
-.topbar-right{display:flex;align-items:center;gap:8px;margin-left:auto}
-.back-link{border:1px solid var(--border);color:var(--text-dim);font-family:var(--mono);font-size:9px;letter-spacing:1px;padding:4px 10px;text-decoration:none;text-transform:uppercase;transition:all .15s}
-.back-link:hover{border-color:var(--cyan);color:var(--cyan)}
-#ai-status{font-family:var(--mono);font-size:9px;color:var(--text-mute)}
-.key-btn{background:none;border:1px solid var(--amber2);color:var(--amber);cursor:pointer;font-family:var(--mono);font-size:9px;letter-spacing:1px;padding:4px 10px;text-transform:uppercase;transition:all .15s}
-.key-btn:hover{background:var(--amber-lo)}
+/* ── TOPBAR ── */
+.topbar{
+  height:44px;background:var(--s1);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:0;
+  padding:0;position:sticky;top:0;z-index:200;
+}
+.topbar-brand{
+  display:flex;align-items:center;gap:10px;
+  padding:0 18px;border-right:1px solid var(--border);height:100%;
+}
+.brand-mark{
+  width:22px;height:22px;background:var(--amber);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:9px;font-weight:700;color:#000;
+}
+.brand-label{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:2px;color:var(--text)}
+.brand-label span{color:var(--amber)}
+.topbar-pills{display:flex;align-items:center;gap:0;height:100%;padding:0 12px;border-right:1px solid var(--border)}
+.t-pill{
+  font-family:var(--mono);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;
+  padding:3px 10px;border:1px solid transparent;border-radius:2px;cursor:pointer;
+  color:var(--text-mute);background:none;transition:all .15s;
+}
+.t-pill.on{color:var(--amber);border-color:var(--amber-dim);background:var(--amber-faint)}
+.t-pill:hover:not(.on){color:var(--text-dim);border-color:var(--border2)}
+.topbar-right{display:flex;align-items:center;gap:8px;margin-left:auto;padding:0 14px}
+.tb-link{
+  font-family:var(--mono);font-size:8px;letter-spacing:1px;text-transform:uppercase;
+  color:var(--text-mute);text-decoration:none;border:1px solid var(--border);
+  padding:4px 10px;border-radius:var(--r);transition:all .15s;
+}
+.tb-link:hover{color:var(--text);border-color:var(--border2)}
+.ai-badge{
+  font-family:var(--mono);font-size:8px;letter-spacing:1px;
+  padding:3px 10px;border-radius:var(--r);border:1px solid;
+}
+.ai-badge.off{color:var(--text-mute);border-color:var(--border)}
+.ai-badge.on{color:var(--green);border-color:rgba(0,214,143,.3);background:var(--green-lo);animation:pulse-g 3s infinite}
+@keyframes pulse-g{0%,100%{box-shadow:none}50%{box-shadow:0 0 8px rgba(0,214,143,.2)}}
 
-/* HERO */
-.hero{border-bottom:1px solid var(--border);padding:28px 24px 20px}
-.hero-badge{color:var(--amber);font-family:var(--mono);font-size:9px;letter-spacing:3px;margin-bottom:8px;text-transform:uppercase}
-.hero-title{font-size:28px;font-weight:700;color:var(--text);margin-bottom:6px}
-.hero-title span{color:var(--amber)}
-.hero-sub{color:var(--text-dim);font-size:13px;max-width:600px;line-height:1.6}
-.hero-stats{display:flex;gap:0;margin-top:16px;background:var(--border)}
-.hero-stat{background:var(--surface);padding:10px 20px;text-align:center;flex:1}
-.hero-stat-val{color:var(--amber);font-family:var(--mono);font-size:16px;font-weight:700;margin-bottom:2px}
-.hero-stat-lbl{color:var(--text-mute);font-family:var(--mono);font-size:8px;letter-spacing:1.5px;text-transform:uppercase}
+/* ── LAYOUT ── */
+.shell{display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 44px)}
 
-/* MAIN LAYOUT */
-.main{display:grid;grid-template-columns:320px 1fr;height:calc(100vh - 48px - 120px)}
+/* ── SIDEBAR ── */
+.sidebar{
+  background:var(--s1);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.sidebar-top{padding:14px 14px 10px;border-bottom:1px solid var(--border)}
+.sidebar-eyebrow{font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--text-mute);text-transform:uppercase;margin-bottom:5px}
+.sidebar-title{font-size:13px;font-weight:600;color:var(--text)}
 
-/* SIDEBAR */
-.sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
-.sidebar-hdr{border-bottom:1px solid var(--border);padding:11px 14px}
-.sidebar-label{color:var(--text-mute);font-family:var(--mono);font-size:8px;letter-spacing:2px;margin-bottom:2px;text-transform:uppercase}
-.sidebar-title{color:var(--amber);font-size:12px;font-weight:600}
+/* DOC GRID */
+.doc-grid{
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;
+  background:var(--border);border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.doc-btn{
+  background:var(--s1);border:none;cursor:pointer;
+  font-family:var(--mono);font-size:8px;letter-spacing:.5px;text-transform:uppercase;
+  color:var(--text-mute);padding:10px 6px;text-align:center;
+  transition:all .12s;line-height:1.4;
+}
+.doc-btn:hover{background:var(--s2);color:var(--text-dim)}
+.doc-btn.active{background:var(--amber-faint);color:var(--amber);border-bottom:2px solid var(--amber)}
+.doc-btn .doc-icon{font-size:14px;display:block;margin-bottom:3px;opacity:.7}
 
-/* DOC TYPE SELECTOR */
-.doc-tabs{border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:0;padding:8px}
-.doc-tab{background:none;border:1px solid var(--border);color:var(--text-mute);cursor:pointer;font-family:var(--mono);font-size:8px;letter-spacing:.5px;margin:2px;padding:4px 8px;text-transform:uppercase;transition:all .15s}
-.doc-tab:hover{border-color:var(--amber2);color:var(--amber)}
-.doc-tab.active{background:var(--amber-lo);border-color:var(--amber);color:var(--amber)}
+/* FORM */
+.form-scroll{flex:1;overflow-y:auto;padding:12px}
+.form-scroll::-webkit-scrollbar{width:3px}
+.form-scroll::-webkit-scrollbar-thumb{background:var(--border2)}
+.field-group{margin-bottom:9px}
+.flbl{font-family:var(--mono);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-mute);margin-bottom:3px}
+.fi{
+  width:100%;background:var(--bg);border:1px solid var(--border);
+  color:var(--text);font-family:var(--mono);font-size:11px;
+  padding:6px 9px;outline:none;border-radius:var(--r);
+  transition:border-color .15s;
+}
+.fi:focus{border-color:var(--amber)}
+.fi::placeholder{color:var(--text-mute)}
+select.fi option{background:var(--s2)}
+.fi-row{display:grid;gap:7px}
+.fi-row-2{grid-template-columns:1fr 1fr}
+.fi-row-3{grid-template-columns:1fr 1fr 1fr}
+.fi-ta{
+  width:100%;background:var(--bg);border:1px solid var(--border);
+  color:var(--text);font-family:var(--mono);font-size:11px;
+  padding:7px 9px;outline:none;resize:vertical;line-height:1.6;
+  border-radius:var(--r);transition:border-color .15s;
+}
+.fi-ta:focus{border-color:var(--amber)}
+.sec-label{
+  font-family:var(--mono);font-size:8px;letter-spacing:2px;
+  text-transform:uppercase;color:var(--amber);margin:12px 0 7px;
+  border-top:1px solid var(--border);padding-top:10px;
+}
+.totals-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0}
+.t-lbl{font-family:var(--mono);font-size:9px;color:var(--text-dim)}
+.t-val{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text)}
+.t-val.big{color:var(--amber);font-size:13px}
+.line-row{
+  display:grid;gap:5px;background:var(--bg);
+  border:1px solid var(--border);padding:5px 7px;
+  margin-bottom:4px;align-items:center;border-radius:var(--r);
+}
+.lr-4{grid-template-columns:1fr 55px 75px 80px 22px}
+.lr-3{grid-template-columns:75px 1fr 75px 22px}
+.lr-2{grid-template-columns:90px 1fr 80px 75px 22px}
+.rm-btn{background:none;border:none;color:var(--text-mute);cursor:pointer;font-size:13px;line-height:1;padding:0 2px}
+.rm-btn:hover{color:var(--red)}
+.add-btn{
+  width:100%;background:none;border:1px dashed var(--border2);
+  color:var(--text-mute);cursor:pointer;font-family:var(--mono);
+  font-size:8px;letter-spacing:1px;padding:5px;text-transform:uppercase;
+  border-radius:var(--r);transition:all .12s;margin-top:4px;
+}
+.add-btn:hover{border-color:var(--amber);color:var(--amber)}
 
-/* FORM AREA */
-.form-area{flex:1;overflow-y:auto;padding:12px}
-.field-group{margin-bottom:10px}
-.field-lbl{color:var(--text-dim);font-family:var(--mono);font-size:8px;letter-spacing:1px;margin-bottom:3px;text-transform:uppercase}
-.field{background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;outline:none;padding:6px 9px;transition:border-color .15s;width:100%}
-.field:focus{border-color:var(--amber)}
-.field::placeholder{color:var(--text-mute)}
-select.field option{background:var(--surface2)}
-.field-row{display:grid;gap:8px}
-.field-row-2{grid-template-columns:1fr 1fr}
-.field-row-3{grid-template-columns:1fr 1fr 1fr}
-.field-row-4{grid-template-columns:1fr 1fr 1fr 1fr}
-.textarea-field{background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;line-height:1.6;outline:none;padding:7px 9px;resize:vertical;transition:border-color .15s;width:100%}
-.textarea-field:focus{border-color:var(--amber)}
-.line-item-row{align-items:center;background:var(--bg);border:1px solid var(--border);display:grid;gap:6px;margin-bottom:4px;padding:5px 8px}
-.line-item-row-4{grid-template-columns:1fr 60px 80px 90px 28px}
-.line-item-row-3{grid-template-columns:80px 1fr 80px 28px}
-.line-item-row-2{grid-template-columns:100px 1fr 90px 80px 28px}
-.remove-btn{background:none;border:none;color:var(--text-mute);cursor:pointer;font-size:14px;transition:color .15s}
-.remove-btn:hover{color:var(--red)}
-.add-line-btn{background:none;border:1px dashed var(--border2);color:var(--text-mute);cursor:pointer;font-family:var(--mono);font-size:9px;letter-spacing:1px;padding:5px;text-transform:uppercase;transition:all .15s;width:100%}
-.add-line-btn:hover{border-color:var(--amber);color:var(--amber)}
-.section-divider{border-top:1px solid var(--border);margin:12px 0;padding-top:10px}
-.section-lbl{color:var(--amber);font-family:var(--mono);font-size:8px;letter-spacing:2px;margin-bottom:8px;text-transform:uppercase}
-.totals-row{align-items:center;display:flex;justify-content:space-between;padding:3px 0}
-.totals-lbl{color:var(--text-dim);font-family:var(--mono);font-size:10px}
-.totals-val{color:var(--text);font-family:var(--mono);font-size:11px;font-weight:600}
-.totals-val.total{color:var(--amber);font-size:13px}
-.chk-row{align-items:center;border-bottom:1px solid var(--border);display:flex;gap:9px;padding:7px 0}
-.chk{-webkit-appearance:none;appearance:none;background:var(--bg);border:1px solid var(--border2);cursor:pointer;flex-shrink:0;height:14px;position:relative;width:14px}
-.chk:checked{background:var(--green);border-color:var(--green)}
-.chk:checked::after{color:var(--bg);content:'✓';font-size:9px;left:2px;position:absolute;top:-1px}
-.chk-lbl{color:var(--text-dim);font-size:11px;flex:1}
-.chk-status{font-family:var(--mono);font-size:9px}
+/* FIRE BAR */
+.fire-bar{
+  background:var(--s1);border-top:1px solid var(--border);
+  padding:10px 12px;
+}
+.fire-status{font-family:var(--mono);font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--text-mute);text-align:center;margin-bottom:7px}
+.fire-btn{
+  width:100%;background:var(--amber);border:none;color:#000;
+  font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;padding:11px;cursor:pointer;border-radius:var(--r);
+  transition:all .2s;display:flex;align-items:center;justify-content:center;gap:7px;
+}
+.fire-btn:hover{background:#d49200;box-shadow:0 0 24px rgba(240,165,0,.25)}
+.fire-btn:disabled{background:var(--amber-dim);cursor:default;opacity:.7}
 
-/* FIRE BUTTON */
-.fire-bar{border-top:1px solid var(--border);padding:10px 12px;background:var(--surface)}
-.fire-btn{align-items:center;background:var(--amber);border:none;color:var(--bg);cursor:pointer;display:flex;font-family:var(--mono);font-size:11px;font-weight:700;gap:8px;justify-content:center;letter-spacing:2px;padding:11px;text-transform:uppercase;transition:all .2s;width:100%}
-.fire-btn:hover{background:#d48b1a;box-shadow:0 0 20px rgba(245,166,35,.3)}
-.fire-btn:disabled{background:var(--amber2);cursor:default}
+/* ── OUTPUT PANEL ── */
+.output{display:flex;flex-direction:column;overflow:hidden}
 
-/* OUTPUT PANEL */
-.output-panel{display:flex;flex-direction:column;overflow:hidden}
-.output-hdr{align-items:center;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:10px;padding:10px 16px;position:sticky;top:0;z-index:10}
-.output-hdr-title{color:var(--text);font-size:12px;font-weight:600}
-.pipeline{align-items:center;display:flex;gap:0;margin-left:auto}
-.pipe-node{align-items:center;background:var(--surface2);border:1px solid var(--border);display:flex;flex-direction:column;padding:5px 10px;min-width:70px;text-align:center}
-.pipe-node.active{border-color:var(--amber);background:var(--amber-lo)}
-.pipe-node.done{border-color:var(--green);background:var(--green-lo)}
-.pipe-node-name{color:var(--text-mute);font-family:var(--mono);font-size:8px;letter-spacing:1px;text-transform:uppercase;margin-top:2px}
-.pipe-node-icon{font-size:14px}
-.pipe-arrow{color:var(--border2);font-size:10px;padding:0 2px}
-.pipe-arrow.active{color:var(--amber)}
+/* PIPELINE STRIP */
+.pipeline{
+  background:var(--s1);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:0;padding:0 16px;height:42px;
+  flex-shrink:0;
+}
+.pipe-stage{
+  display:flex;align-items:center;gap:6px;padding:0 12px;
+  border-right:1px solid var(--border);height:100%;
+}
+.pipe-stage:last-child{border-right:none}
+.pipe-dot{width:6px;height:6px;border-radius:50%;background:var(--border2);flex-shrink:0;transition:background .3s}
+.pipe-dot.active{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.pipe-dot.done{background:var(--green)}
+.pipe-name{font-family:var(--mono);font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--text-mute)}
+.pipe-name.active{color:var(--amber)}
+.pipe-name.done{color:var(--green)}
+.pipe-progress{
+  margin-left:auto;font-family:var(--mono);font-size:8px;
+  letter-spacing:1px;color:var(--text-mute);
+}
 
-/* OUTPUT APPS */
-.output-apps{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);flex:1;overflow:auto}
-.app-card{background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
-.app-card-hdr{align-items:center;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:8px;padding:9px 13px}
-.app-num{color:var(--text-mute);font-family:var(--mono);font-size:9px;letter-spacing:1px}
-.app-name{color:var(--text);font-size:11px;font-weight:600;flex:1}
-.app-badge{font-family:var(--mono);font-size:8px;letter-spacing:1px;padding:2px 7px;text-transform:uppercase}
-.badge-standby{background:var(--surface3);border:1px solid var(--border2);color:var(--text-mute)}
-.badge-active{background:var(--amber-lo);border:1px solid var(--amber2);color:var(--amber);animation:badge-pulse .8s infinite}
-@keyframes badge-pulse{0%,100%{opacity:1}50%{opacity:.5}}
-.badge-done{background:var(--green-lo);border:1px solid rgba(0,230,118,.3);color:var(--green)}
-.app-body{flex:1;overflow-y:auto;padding:12px}
-.app-idle{align-items:center;display:flex;flex-direction:column;gap:8px;justify-content:center;min-height:120px;opacity:.4}
-.app-idle-icon{font-size:24px}
-.app-idle-txt{color:var(--text-mute);font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase}
-.app-output{color:var(--text-dim);font-size:11px;line-height:1.8;white-space:pre-wrap;word-break:break-word}
-.app-footer{align-items:center;background:var(--surface);border-top:1px solid var(--border);display:flex;gap:8px;padding:7px 11px}
-.copy-btn{background:none;border:1px solid var(--border2);color:var(--text-mute);cursor:pointer;font-family:var(--mono);font-size:8px;letter-spacing:1px;padding:3px 9px;text-transform:uppercase;transition:all .15s}
-.copy-btn:hover{border-color:var(--cyan);color:var(--cyan)}
-.token-count{color:var(--text-mute);font-family:var(--mono);font-size:9px;margin-left:auto}
+/* ENGINE GRID */
+.engines{
+  display:grid;grid-template-columns:1fr 1fr;
+  grid-template-rows:1fr 1fr;
+  gap:1px;background:var(--border);
+  flex:1;overflow:hidden;
+}
+.engine{display:flex;flex-direction:column;background:var(--bg);overflow:hidden}
+.engine-hdr{
+  background:var(--s1);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;padding:8px 12px;
+  flex-shrink:0;
+}
+.engine-num{
+  font-family:var(--mono);font-size:8px;font-weight:700;
+  color:var(--bg);background:var(--text-mute);
+  width:16px;height:16px;border-radius:2px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:background .3s;
+}
+.engine-num.active{background:var(--amber)}
+.engine-num.done{background:var(--green)}
+.engine-name{font-size:11px;font-weight:600;color:var(--text);flex:1}
+.engine-tag{
+  font-family:var(--mono);font-size:7px;letter-spacing:1px;
+  text-transform:uppercase;padding:2px 7px;border-radius:2px;border:1px solid;
+}
+.tag-standby{color:var(--text-mute);border-color:var(--border)}
+.tag-active{
+  color:var(--amber);border-color:var(--amber-dim);background:var(--amber-faint);
+  animation:tag-blink .9s infinite;
+}
+@keyframes tag-blink{0%,100%{opacity:1}50%{opacity:.4}}
+.tag-done{color:var(--green);border-color:rgba(0,214,143,.3);background:var(--green-lo)}
+.tag-error{color:var(--red);border-color:rgba(255,69,96,.3);background:var(--red-lo)}
+
+.engine-body{flex:1;overflow-y:auto;padding:12px}
+.engine-body::-webkit-scrollbar{width:3px}
+.engine-body::-webkit-scrollbar-thumb{background:var(--border2)}
+.engine-idle{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;gap:7px;opacity:.3;
+}
+.idle-glyph{font-size:22px}
+.idle-txt{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-mute)}
+.engine-out{font-size:11px;line-height:1.85;color:var(--text-dim);white-space:pre-wrap;word-break:break-word}
+.engine-out b,.engine-out strong{color:var(--text);font-weight:600}
+
+.engine-foot{
+  background:var(--s1);border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:6px;padding:6px 10px;flex-shrink:0;
+}
+.cp-btn{
+  background:none;border:1px solid var(--border);color:var(--text-mute);
+  font-family:var(--mono);font-size:7px;letter-spacing:1px;text-transform:uppercase;
+  padding:3px 9px;border-radius:2px;cursor:pointer;transition:all .12s;
+}
+.cp-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+.tok-ct{font-family:var(--mono);font-size:8px;color:var(--text-mute);margin-left:auto}
 
 /* STATUS BAR */
-.status-bar{align-items:center;background:var(--surface);border-top:1px solid var(--border);display:flex;gap:10px;padding:6px 16px;position:sticky;bottom:0}
-.status-dot{background:var(--green);border-radius:50%;height:6px;width:6px;animation:pulse 2s infinite}
-.status-seg{color:var(--text-mute);font-family:var(--mono);font-size:9px;letter-spacing:1px}
-.status-seg span{color:var(--amber)}
+.statusbar{
+  background:var(--s1);border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;padding:5px 14px;flex-shrink:0;
+  height:30px;
+}
+.sb-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse-g 3s infinite}
+.sb-seg{font-family:var(--mono);font-size:8px;letter-spacing:1px;color:var(--text-mute)}
+.sb-seg span{color:var(--amber)}
+.sb-div{color:var(--border2)}
+
+/* DROP ZONE */
+.drop-zone{
+  border:1px dashed var(--border2);border-radius:var(--r);
+  padding:12px;text-align:center;cursor:pointer;margin-bottom:10px;
+  transition:all .15s;background:var(--bg);
+}
+.drop-zone:hover,.drop-zone.drag{border-color:var(--amber);background:var(--amber-faint)}
+.drop-icon{font-size:18px;margin-bottom:4px;opacity:.5}
+.drop-txt{font-family:var(--mono);font-size:8px;letter-spacing:1px;color:var(--text-mute);text-transform:uppercase}
+.file-list{font-family:var(--mono);font-size:9px;color:var(--green);margin-top:5px}
 
 /* MODAL */
-.modal-bg{background:rgba(0,0,0,.7);bottom:0;display:none;left:0;position:fixed;right:0;top:0;z-index:800}
-.modal-bg.open{display:block}
-.modal{background:var(--surface);border:1px solid var(--border);left:50%;max-width:420px;padding:20px;position:fixed;top:50%;transform:translate(-50%,-50%);width:90%;z-index:801}
-.modal-title{color:var(--amber);font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:1px;margin-bottom:14px}
+.modal-bg{
+  position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;
+  display:none;align-items:center;justify-content:center;
+}
+.modal-bg.open{display:flex}
+.modal{
+  background:var(--s2);border:1px solid var(--border2);
+  padding:22px;width:380px;border-radius:4px;
+}
+.modal-title{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--amber);letter-spacing:1px;margin-bottom:14px}
+.modal-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.modal-cancel{background:none;border:1px solid var(--border);color:var(--text-dim);font-family:var(--mono);font-size:9px;padding:8px;cursor:pointer;border-radius:var(--r)}
+.modal-save{background:var(--amber);border:none;color:#000;font-family:var(--mono);font-size:9px;font-weight:700;padding:8px;cursor:pointer;border-radius:var(--r)}
 
 /* TOAST */
-.toast{background:var(--surface);border:1px solid var(--amber);bottom:16px;color:var(--amber);display:none;font-family:var(--mono);font-size:10px;left:50%;letter-spacing:1px;padding:9px 18px;position:fixed;transform:translateX(-50%);z-index:999}
-.toast.show{display:block;animation:tin .2s ease}
-@keyframes tin{from{transform:translateX(-50%) translateY(8px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
-.cursor{animation:blink .6s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
-</style>
-<script src="/tsm-bnca-bridge.js"></script>
-
-<script>
-window.TSM_UI = {
-    runAudit: async (sector, factor) => {
-        const feed = document.querySelector('.intelligence-feed-output') || document.getElementById('intelligence-feed-output');
-        if (feed) feed.innerHTML = '<span style="color: #00ffff;">[STRATEGIST] Internal Link: Processing...</span>';
-        try {
-            const res = await fetch('/api/financial/query', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query: `auditops "${sector}" --factor "${factor}" --logic strategist` })
-            });
-            const data = await res.json();
-            if (feed) feed.innerText = `[STRATEGIST] ${data.output || "Analysis Complete."}`;
-        } catch (e) {
-            if (feed) feed.innerText = "[STRATEGIST] Local API Bridge Failed.";
-        }
-    }
-};
-// Wire the sector cards to the auto-fill search prompt logic
-document.addEventListener('click', (e) => {
-    const card = e.target.closest('.module-card');
-    if (card) {
-        const sector = card.dataset.sector || "Construction";
-        const factor = card.querySelector('h3')?.innerText || "General Audit";
-        TSM_UI.runAudit(sector, factor);
-    }
-});
-console.log("TSM_UI: Direct Neural Link Established.");
-</script>
-<script>
-async function getVaultPrompt(key) {
-  try {
-    const r = await fetch('/api/prompt', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ key })
-    });
-    if (!r.ok) throw new Error(r.status);
-    const d = await r.json();
-    return d.system || d.prompt || '';
-  } catch(e) {
-    console.warn(`[Vault] "${key}" failed — continuing without system prompt.`);
-    return '';
-  }
-},
-    body: JSON.stringify({ key })
-  });
-  const d = await r.json();
-  return d.system;
+.toast{
+  position:fixed;bottom:18px;left:50%;transform:translateX(-50%);
+  background:var(--s2);border:1px solid var(--amber-dim);
+  color:var(--amber);font-family:var(--mono);font-size:9px;letter-spacing:1px;
+  padding:8px 16px;z-index:999;display:none;border-radius:var(--r);
+  white-space:nowrap;
 }
-</script>
-<script>
-async function tsmAI(s,u,m){try{const r=await fetch('/api/financial/query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:s?(s+'\n\n'+u):u,maxTokens:m||1024})});if(!r.ok)throw new Error('Server '+r.status);const d=await r.json();return d.answer||'No response.';}catch(e){return'[AI Error] '+e.message;}}
-</script>
-  <link rel="stylesheet" href="/shared/tsm-shared.css">
-  <script src="/shared/tsm-shared.js"></script>
+.toast.show{display:block;animation:toast-in .15s ease}
+@keyframes toast-in{from{opacity:0;transform:translateX(-50%) translateY(6px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 
-<style id="tsm-uploader-css">
-#tsm-drop-zone{margin:16px 0;border:2px dashed rgba(0,255,198,0.25);border-radius:8px;padding:28px 20px;text-align:center;background:rgba(0,255,198,0.03);cursor:pointer;transition:all .2s;position:relative}
-#tsm-drop-zone.drag-over{border-color:rgba(0,255,198,0.7);background:rgba(0,255,198,0.07)}
-#tsm-drop-zone .dz-icon{font-size:28px;margin-bottom:8px}
-#tsm-drop-zone .dz-title{font-weight:800;font-size:13px;color:#e0f7ef}
-#tsm-drop-zone .dz-sub{font-size:10px;color:#5a7a6a;margin-top:4px}
-#tsm-drop-zone .dz-progress{display:none;margin-top:12px;height:3px;background:rgba(0,255,198,0.15);border-radius:2px;overflow:hidden}
-#tsm-drop-zone .dz-progress-bar{height:100%;width:0;background:#00ffc6;transition:width .3s}
-#tsm-file-list{margin-top:8px;font-size:10px;color:#00ffc6;font-family:monospace;max-height:60px;overflow-y:auto}
+/* RELAY BANNER */
+.relay-banner{
+  background:var(--s1);border-bottom:1px solid var(--border);
+  padding:6px 14px;display:flex;align-items:center;gap:10px;
+  flex-shrink:0;display:none;
+}
+.relay-banner.show{display:flex}
+.rb-tag{font-family:var(--mono);font-size:7px;letter-spacing:2px;color:#000;background:var(--amber);padding:2px 7px;border-radius:2px;font-weight:700}
+.rb-txt{font-family:var(--mono);font-size:9px;color:var(--text-dim)}
+.rb-dismiss{background:none;border:none;color:var(--text-mute);font-size:12px;cursor:pointer;margin-left:auto;padding:0 2px}
+
+/* CLOSE TASKS */
+.chk-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
+.chk-row:last-child{border-bottom:none}
+.chk{
+  -webkit-appearance:none;appearance:none;width:13px;height:13px;
+  border:1px solid var(--border2);background:var(--bg);flex-shrink:0;
+  cursor:pointer;border-radius:2px;position:relative;
+}
+.chk:checked{background:var(--green);border-color:var(--green)}
+.chk:checked::after{content:'✓';position:absolute;top:-1px;left:2px;font-size:9px;color:#000}
+.chk-lbl{font-size:11px;color:var(--text-dim);flex:1}
+.chk-sel{
+  background:var(--bg);border:1px solid var(--border);color:var(--text-mute);
+  font-family:var(--mono);font-size:8px;padding:2px 5px;outline:none;
+}
+
+/* RELAY NAV BUTTONS */
+.relay-nav{
+  background:var(--s1);border-top:1px solid var(--border);
+  padding:8px 12px;display:flex;gap:6px;flex-shrink:0;
+}
+.relay-btn{
+  flex:1;padding:7px;border:1px solid;border-radius:var(--r);
+  font-family:var(--mono);font-size:8px;letter-spacing:1px;text-transform:uppercase;
+  cursor:pointer;font-weight:700;transition:all .15s;text-align:center;
+  text-decoration:none;display:block;
+}
+.relay-strat{background:var(--amber-faint);border-color:var(--amber-dim);color:var(--amber)}
+.relay-strat:hover{background:var(--amber-glow);border-color:var(--amber)}
+.relay-exec{background:var(--cyan-lo);border-color:rgba(0,200,255,.2);color:var(--cyan)}
+.relay-exec:hover{background:rgba(0,200,255,.1)}
 </style>
 </head>
 <body>
 
-<section id="finops-accounting-node01-banner" style="
-margin:20px;
-padding:20px;
-background:linear-gradient(135deg,rgba(0,170,255,.09),rgba(0,255,198,.04));
-border:1px solid rgba(0,170,255,.28);
-border-radius:18px;
-">
-  <div style="color:#00aaff;font-weight:950;letter-spacing:.14em;font-size:12px;text-transform:uppercase">
-    NODE 01 · FINANCIAL ACCOUNTING + WIP COMMAND
-  </div>
-  <h2 style="margin:8px 0;color:#fff">Reports to FinOps Strategist</h2>
-  <p style="color:#9fb8c8;line-height:1.55;max-width:900px">
-    This node now owns accounting WIP, reconciliation variance, AP/AR exposure, close-readiness,
-    controller action planning, executive exports, and BNCA strategist relay.
-  </p>
-  <button data-tsm-action="runFinopsAccountingStrategist" data-tsm-args="" style="background:#00ffc6;color:#001;border:0;border-radius:10px;padding:11px 14px;font-weight:900;cursor:pointer">Report Node 01 to Strategist</button>
-  <button onclick="location.href='/finops-suite/financial-ui.html?v=node01'" style="background:#102030;color:#dff;border:1px solid rgba(0,255,198,.25);border-radius:10px;padding:11px 14px;font-weight:900;cursor:pointer">Back to FinOps Hub</button>
-  <pre id="finopsAccountingStrategistOutput" style="white-space:pre-wrap;margin-top:14px;padding:14px;border-radius:14px;background:#050c13;border:1px solid rgba(0,255,198,.14);color:#dff">Ready.</pre>
-</section>
-<script id="finops-accounting-node01-relay">
-async function runFinopsAccountingStrategist(){
-  const out=document.getElementById("finopsAccountingStrategistOutput");
-  if(out) out.textContent="Running Node 01 strategist synthesis...";
-  try{
-    const r=await fetch("/api/finance/query",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({payload:{
-      sector:"FINOPS",
-      node:"NODE 01 · FINANCIAL ACCOUNTING",
-      context:"Generate BNCA for accounting WIP: AP/AR exposure, reconciliation variance, close readiness, controller ownership, executive risk, and next action.",
-      executive:true, hitl:true, relay_to_strategist:true
-    }})});
-    const d=await r.json();
-    if(out) out.textContent=d.reply||d.content||JSON.stringify(d,null,2);
-  }catch(e){
-    if(out) out.textContent="FinOps Strategist unavailable.";
-  }
-}
-</script>
-
-
-
+<!-- TOPBAR -->
 <div class="topbar">
-  <div class="brand">
-    <div class="brand-dot"></div>
-    <div class="brand-name">TSM · <span>FinOps</span> · Accounting POC</div>
+  <div class="topbar-brand">
+    <div class="brand-mark">F</div>
+    <div class="brand-label">TSM · <span>FinOps</span></div>
+  </div>
+  <div class="topbar-pills">
+    <button class="t-pill on">Accounting</button>
+    <button class="t-pill" onclick="window.location.href='/html/finops-suite/finops-war-room.html'">War Room</button>
+    <button class="t-pill" onclick="window.location.href='/html/finops-suite/finops-main-strategist.html'">Strategist</button>
+    <button class="t-pill" onclick="window.location.href='/html/healthcare/executive-portal.html'">Exec Portal</button>
   </div>
   <div class="topbar-right">
-    <span id="ai-status">GROQ: NO KEY</span>
-    <button class="key-btn" data-tsm-action="openModal" data-tsm-args="">⚙ GROQ KEY</button>
-    <a class="back-link" href="/finops-suite/financial-ui.html?v=enterprise-ready">← FinOps Hub</a>
-    <a class="back-link" href="/finops-operations.html">← Operations Suite</a>
+    <span class="ai-badge off" id="ai-badge">● GROQ OFF</span>
+    <button onclick="openModal()" style="background:none;border:1px solid var(--border);color:var(--text-mute);font-family:var(--mono);font-size:8px;letter-spacing:1px;padding:4px 10px;cursor:pointer;border-radius:var(--r)">⚙ KEY</button>
+    <a class="tb-link" href="/html/finops-suite/finops-war-room.html">← War Room</a>
   </div>
 </div>
 
-<!-- HERO -->
-<div class="hero">
-  <div class="hero-badge">⚡ Financial Accounting · AI Document POC</div>
-  <div class="hero-title">Drop Any Accounting Doc. <span>Get Best Next Actions.</span></div>
-
-<div id="tsm-drop-zone"
-     ondragover="tsmDragOver(event)"
-     ondragleave="tsmDragLeave(event)"
-     ondrop="tsmDrop(event)"
-     onclick="document.getElementById('tsm-file-input').click()">
-  <input type="file" id="tsm-file-input" multiple accept=".pdf,.jpg,.jpeg,.png,.csv,.xlsx,.tiff" style="display:none" onchange="tsmHandleFiles(this.files)">
-  <div class="dz-icon">📄</div>
-  <div class="dz-title">Click or Drag Documents Here to Ingest</div>
-  <div class="dz-sub">PDF · JPG/PNG scans · CSV · XLSX · TIFF — up to 20MB per file</div>
-  <div class="dz-progress" id="tsm-dz-progress"><div class="dz-progress-bar" id="tsm-dz-bar"></div></div>
-</div>
-<div id="tsm-file-list"></div>
-<script id="tsm-uploader-js">
-function tsmDragOver(e){e.preventDefault();document.getElementById('tsm-drop-zone').classList.add('drag-over');}
-function tsmDragLeave(e){document.getElementById('tsm-drop-zone').classList.remove('drag-over');}
-function tsmDrop(e){e.preventDefault();tsmDragLeave(e);tsmHandleFiles(e.dataTransfer.files);}
-async function tsmHandleFiles(files){
-  if(!files||!files.length) return;
-  const list = document.getElementById('tsm-file-list');
-  const bar  = document.getElementById('tsm-dz-bar');
-  const prog = document.getElementById('tsm-dz-progress');
-  list.innerHTML='';
-  prog.style.display='block';
-  bar.style.width='0%';
-  for(let i=0;i<files.length;i++){
-    const f=files[i];
-    list.innerHTML+=`<div>↳ ${f.name} (${(f.size/1024).toFixed(1)}KB)</div>`;
-    bar.style.width=((i+1)/files.length*40)+'%';
-    const fd=new FormData();
-    fd.append('file',f);
-    fd.append('docType', document.querySelector('.doc-type-active,.active-doc,[class*="active"]')?.textContent?.trim()||'AUTO');
-    try{
-      const res=await fetch('/api/finops/ingest',{method:'POST',body:fd});
-      bar.style.width=((i+1)/files.length*100)+'%';
-      if(res.ok){
-        const d=await res.json();
-        // Push content into engine panels if they exist
-        ['engine-1','engine-2','engine-3','engine-4'].forEach((id,idx)=>{
-          const el=document.getElementById(id)||document.querySelectorAll('[id*="engine"],[class*="engine-output"],[class*="panel-body"]')[idx];
-          if(el&&d.results&&d.results[idx]) el.textContent=d.results[idx];
-        });
-      }
-    }catch(e){list.innerHTML+=`<div style="color:#f66">✗ ${f.name}: ${e.message}</div>`;}
-  }
-  setTimeout(()=>{prog.style.display='none';bar.style.width='0%';},2000);
-}
-</script>
-
-  <div class="hero-sub">10 financial document types processed through 4 AI engines — triage, variance analysis, compliance flags, and CFO-ready action plans. Instantly.</div>
-  <div class="hero-stats">
-    <div class="hero-stat"><div class="hero-stat-val">10</div><div class="hero-stat-lbl">Doc Types</div></div>
-    <div class="hero-stat"><div class="hero-stat-val">4</div><div class="hero-stat-lbl">AI Engines</div></div>
-    <div class="hero-stat"><div class="hero-stat-val">&lt;30s</div><div class="hero-stat-lbl">Processing Time</div></div>
-    <div class="hero-stat"><div class="hero-stat-val">100%</div><div class="hero-stat-lbl">Structured Output</div></div>
-  </div>
+<!-- RELAY BANNER -->
+<div class="relay-banner" id="relay-banner">
+  <div class="rb-tag">RELAY IN</div>
+  <div class="rb-txt" id="relay-banner-txt">Document received from War Room</div>
+  <button class="rb-dismiss" onclick="document.getElementById('relay-banner').classList.remove('show')">✕</button>
 </div>
 
-<!-- MAIN -->
-<div class="main">
+<!-- SHELL -->
+<div class="shell">
 
-  <!-- SIDEBAR: DOC INPUT -->
+  <!-- SIDEBAR -->
   <div class="sidebar">
-    <div class="sidebar-hdr">
-      <div class="sidebar-label">Step 1 · Select Document Type</div>
-      <div class="sidebar-title">Financial Accounting Documents</div>
+    <div class="sidebar-top">
+      <div class="sidebar-eyebrow">Step 1 · Select Document</div>
+      <div class="sidebar-title">Financial Document Analysis</div>
     </div>
 
-    <div class="doc-tabs">
-      <button class="doc-tab active" data-tsm-action="setDoc" data-tsm-args="'invoice',this">AP Invoice</button>
-      <button class="doc-tab" data-tsm-action="setDoc" data-tsm-args="'po',this">Purchase Order</button>
-      <button class="doc-tab" data-tsm-action="setDoc" data-tsm-args="'expense',this">Expense Report</button>
-      <button class="doc-tab" data-tsm-action="setDoc" data-tsm-args="'bankrec',this">Bank Recon</button>
-      <button class="doc-tab" data-tsm-action="setDoc" data-tsm-args="'cc',this">Credit Card</button>
-      <button class="doc-tab" data-tsm-action="setDoc" data-tsm-args="'balance',this">Balance Sheet</button>
-      <button class="doc-tab" data-tsm-action="setDoc" data-tsm-args="'pl',this">P&amp;L</button>
-      <button class="doc-tab" data-tsm-action="setDoc" data-tsm-args="'je',this">Journal Entry</button>
-      <button class="doc-tab" data-tsm-action="setDoc" data-tsm-args="'ar',this">AR Invoice</button>
-      <button class="doc-tab" data-tsm-action="setDoc" data-tsm-args="'close',this">Month-End Close</button>
-      <button class="doc-tab" data-tsm-action="setDoc" data-tsm-args="'interco',this">Intercompany</button>
-      <button class="doc-tab" data-tsm-action="setDoc" data-tsm-args="'fixedassets',this">Fixed Assets</button>
+    <!-- DOC GRID -->
+    <div class="doc-grid">
+      <button class="doc-btn active" onclick="setDoc('invoice',this)"><span class="doc-icon">📄</span>AP Invoice</button>
+      <button class="doc-btn" onclick="setDoc('po',this)"><span class="doc-icon">📋</span>Purchase Order</button>
+      <button class="doc-btn" onclick="setDoc('expense',this)"><span class="doc-icon">🧾</span>Expense</button>
+      <button class="doc-btn" onclick="setDoc('bankrec',this)"><span class="doc-icon">🏦</span>Bank Recon</button>
+      <button class="doc-btn" onclick="setDoc('cc',this)"><span class="doc-icon">💳</span>Credit Card</button>
+      <button class="doc-btn" onclick="setDoc('balance',this)"><span class="doc-icon">⚖️</span>Balance Sheet</button>
+      <button class="doc-btn" onclick="setDoc('pl',this)"><span class="doc-icon">📈</span>P&amp;L</button>
+      <button class="doc-btn" onclick="setDoc('je',this)"><span class="doc-icon">📓</span>Journal Entry</button>
+      <button class="doc-btn" onclick="setDoc('ar',this)"><span class="doc-icon">💰</span>AR Invoice</button>
+      <button class="doc-btn" onclick="setDoc('close',this)"><span class="doc-icon">✅</span>Month-End</button>
+      <button class="doc-btn" onclick="setDoc('interco',this)"><span class="doc-icon">🔗</span>Intercompany</button>
+      <button class="doc-btn" onclick="setDoc('fixedassets',this)"><span class="doc-icon">🏗️</span>Fixed Assets</button>
     </div>
 
-    <div class="form-area" id="form-area"></div>
+    <!-- DROP ZONE -->
+    <div style="padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0">
+      <div class="drop-zone" id="dz" onclick="document.getElementById('fi').click()"
+           ondragover="event.preventDefault();this.classList.add('drag')"
+           ondragleave="this.classList.remove('drag')"
+           ondrop="event.preventDefault();this.classList.remove('drag');handleFiles(event.dataTransfer.files)">
+        <input type="file" id="fi" style="display:none" multiple accept=".pdf,.jpg,.jpeg,.png,.csv,.xlsx" onchange="handleFiles(this.files)">
+        <div class="drop-icon">⬆</div>
+        <div class="drop-txt">Drop or click to upload doc</div>
+      </div>
+      <div class="file-list" id="file-list"></div>
+    </div>
 
+    <!-- FORM -->
+    <div class="form-scroll" id="form-area"></div>
+
+    <!-- FIRE BAR -->
     <div class="fire-bar">
-      <div id="doc-status" style="color:var(--text-mute);font-family:var(--mono);font-size:9px;letter-spacing:1px;margin-bottom:7px;text-align:center">FILL DOCUMENT TO BEGIN PROCESSING</div>
-      <button class="fire-btn" id="fire-btn" data-tsm-action="fireAll" data-tsm-args="">⚡ PROCESS DOCUMENT — FIRE ALL 4 ENGINES</button>
+      <div class="fire-status" id="fire-status">FILL DOCUMENT TO PROCESS</div>
+      <button class="fire-btn" id="fire-btn" onclick="fireAll()">
+        ⚡ FIRE ALL 4 ENGINES
+      </button>
+    </div>
+
+    <!-- RELAY BUTTONS -->
+    <div class="relay-nav">
+      <a class="relay-btn relay-strat" href="/html/finops-suite/finops-main-strategist.html">→ Strategist</a>
+      <a class="relay-btn relay-exec" href="/html/healthcare/executive-portal.html">↑ Exec Portal</a>
     </div>
   </div>
 
   <!-- OUTPUT PANEL -->
-  <div class="output-panel">
-    <div class="output-hdr">
-      <div class="output-hdr-title" id="output-title">Step 2 · Live AI Output — All 4 Engines</div>
-      <div class="pipeline">
-        <div class="pipe-node" id="pipe1"><div class="pipe-node-icon">📥</div><div class="pipe-node-name">Ingest</div></div>
-        <div class="pipe-arrow" id="arr1">›</div>
-        <div class="pipe-node" id="pipe2"><div class="pipe-node-icon">🔍</div><div class="pipe-node-name">Parse</div></div>
-        <div class="pipe-arrow" id="arr2">›</div>
-        <div class="pipe-node" id="pipe3"><div class="pipe-node-icon">🧠</div><div class="pipe-node-name">AI Analysis</div></div>
-        <div class="pipe-arrow" id="arr3">›</div>
-        <div class="pipe-node" id="pipe4"><div class="pipe-node-icon">⚡</div><div class="pipe-node-name">BNCA</div></div>
-        <div class="pipe-arrow" id="arr4">›</div>
-        <div class="pipe-node" id="pipe5"><div class="pipe-node-icon">📊</div><div class="pipe-node-name">Report</div></div>
+  <div class="output">
+
+    <!-- PIPELINE -->
+    <div class="pipeline">
+      <div class="pipe-stage">
+        <div class="pipe-dot" id="pd1"></div>
+        <div class="pipe-name" id="pn1">Ingest</div>
       </div>
+      <div class="pipe-stage">
+        <div class="pipe-dot" id="pd2"></div>
+        <div class="pipe-name" id="pn2">Parse</div>
+      </div>
+      <div class="pipe-stage">
+        <div class="pipe-dot" id="pd3"></div>
+        <div class="pipe-name" id="pn3">Triage</div>
+      </div>
+      <div class="pipe-stage">
+        <div class="pipe-dot" id="pd4"></div>
+        <div class="pipe-name" id="pn4">Variance</div>
+      </div>
+      <div class="pipe-stage">
+        <div class="pipe-dot" id="pd5"></div>
+        <div class="pipe-name" id="pn5">Action Plan</div>
+      </div>
+      <div class="pipe-stage">
+        <div class="pipe-dot" id="pd6"></div>
+        <div class="pipe-name" id="pn6">CFO Report</div>
+      </div>
+      <div class="pipe-progress" id="pipe-prog">Ready</div>
     </div>
 
-    <div class="output-apps">
-      <!-- APP 01 -->
-      <div class="app-card">
-        <div class="app-card-hdr">
-          <span class="app-num">01</span>
-          <span class="app-name">Document Triage &amp; Flag Analysis</span>
-          <span class="app-badge badge-standby" id="badge1">STANDBY</span>
+    <!-- ENGINES -->
+    <div class="engines">
+
+      <!-- ENGINE 01 -->
+      <div class="engine">
+        <div class="engine-hdr">
+          <div class="engine-num" id="en1">01</div>
+          <div class="engine-name">Document Triage &amp; Flag Analysis</div>
+          <div class="engine-tag tag-standby" id="et1">STANDBY</div>
         </div>
-        <div class="app-body" id="body1">
-          <div class="app-idle"><div class="app-idle-icon">◈</div><div class="app-idle-txt">Awaiting Document</div></div>
+        <div class="engine-body" id="eb1">
+          <div class="engine-idle"><div class="idle-glyph">◈</div><div class="idle-txt">Awaiting document</div></div>
         </div>
-        <div class="app-footer">
-          <button class="copy-btn" data-tsm-action="copyOut" data-tsm-args="1">Copy</button>
-          <span class="token-count" id="tok1"></span>
+        <div class="engine-foot">
+          <button class="cp-btn" onclick="copyOut(1)">Copy</button>
+          <span class="tok-ct" id="tc1"></span>
         </div>
       </div>
 
-      <!-- APP 02 -->
-      <div class="app-card">
-        <div class="app-card-hdr">
-          <span class="app-num">02</span>
-          <span class="app-name">Variance &amp; Risk Intelligence</span>
-          <span class="app-badge badge-standby" id="badge2">STANDBY</span>
+      <!-- ENGINE 02 -->
+      <div class="engine">
+        <div class="engine-hdr">
+          <div class="engine-num" id="en2">02</div>
+          <div class="engine-name">Variance &amp; Risk Intelligence</div>
+          <div class="engine-tag tag-standby" id="et2">STANDBY</div>
         </div>
-        <div class="app-body" id="body2">
-          <div class="app-idle"><div class="app-idle-icon">◈</div><div class="app-idle-txt">Awaiting Document</div></div>
+        <div class="engine-body" id="eb2">
+          <div class="engine-idle"><div class="idle-glyph">◈</div><div class="idle-txt">Awaiting document</div></div>
         </div>
-        <div class="app-footer">
-          <button class="copy-btn" data-tsm-action="copyOut" data-tsm-args="2">Copy</button>
-          <span class="token-count" id="tok2"></span>
-        </div>
-      </div>
-
-      <!-- APP 03 -->
-      <div class="app-card">
-        <div class="app-card-hdr">
-          <span class="app-num">03</span>
-          <span class="app-name">Best Next Actions — Controller Plan</span>
-          <span class="app-badge badge-standby" id="badge3">STANDBY</span>
-        </div>
-        <div class="app-body" id="body3">
-          <div class="app-idle"><div class="app-idle-icon">◈</div><div class="app-idle-txt">Awaiting Document</div></div>
-        </div>
-        <div class="app-footer">
-          <button class="copy-btn" data-tsm-action="copyOut" data-tsm-args="3">Copy Action Plan</button>
-          <span class="token-count" id="tok3"></span>
+        <div class="engine-foot">
+          <button class="cp-btn" onclick="copyOut(2)">Copy</button>
+          <span class="tok-ct" id="tc2"></span>
         </div>
       </div>
 
-      <!-- APP 04 -->
-      <div class="app-card">
-        <div class="app-card-hdr">
-          <span class="app-num">04</span>
-          <span class="app-name">CFO Executive Intelligence</span>
-          <span class="app-badge badge-standby" id="badge4">STANDBY</span>
+      <!-- ENGINE 03 -->
+      <div class="engine">
+        <div class="engine-hdr">
+          <div class="engine-num" id="en3">03</div>
+          <div class="engine-name">Controller Action Plan</div>
+          <div class="engine-tag tag-standby" id="et3">STANDBY</div>
         </div>
-        <div class="app-body" id="body4">
-          <div class="app-idle"><div class="app-idle-icon">◈</div><div class="app-idle-txt">Awaiting Document</div></div>
+        <div class="engine-body" id="eb3">
+          <div class="engine-idle"><div class="idle-glyph">◈</div><div class="idle-txt">Awaiting document</div></div>
         </div>
-        <div class="app-footer">
-          <button class="copy-btn" data-tsm-action="copyOut" data-tsm-args="4">Copy CFO Report</button>
-          <button class="copy-btn" data-tsm-action="exportAll" data-tsm-args="" style="border-color:var(--amber2);color:var(--amber)">⬇ Export All</button>
-          <span class="token-count" id="tok4"></span>
+        <div class="engine-foot">
+          <button class="cp-btn" onclick="copyOut(3)">Copy action plan</button>
+          <span class="tok-ct" id="tc3"></span>
         </div>
       </div>
+
+      <!-- ENGINE 04 -->
+      <div class="engine">
+        <div class="engine-hdr">
+          <div class="engine-num" id="en4">04</div>
+          <div class="engine-name">CFO Executive Intelligence</div>
+          <div class="engine-tag tag-standby" id="et4">STANDBY</div>
+        </div>
+        <div class="engine-body" id="eb4">
+          <div class="engine-idle"><div class="idle-glyph">◈</div><div class="idle-txt">Awaiting document</div></div>
+        </div>
+        <div class="engine-foot">
+          <button class="cp-btn" onclick="copyOut(4)">Copy CFO report</button>
+          <button class="cp-btn" onclick="exportAll()" style="border-color:var(--amber-dim);color:var(--amber)">⬇ Export All</button>
+          <span class="tok-ct" id="tc4"></span>
+        </div>
+      </div>
+
     </div>
 
-    <div class="status-bar">
-      <div class="status-dot"></div>
-      <span class="status-seg">TSM FINOPS NEURAL BRIDGE</span>
-      <span style="color:var(--border2)">·</span>
-      <span class="status-seg" id="apps-active">0 / 4 Engines Active</span>
-      <span style="color:var(--border2)">·</span>
-      <span class="status-seg" id="doc-type-status">No document loaded</span>
-      <span style="color:var(--border2)">·</span>
-      <span class="status-seg" id="model-status" style="color:var(--amber)">groq: not connected</span>
-      <div style="margin-left:auto">
-        <span class="status-seg" id="global-progress"></span>
-      </div>
+    <!-- STATUS BAR -->
+    <div class="statusbar">
+      <div class="sb-dot"></div>
+      <span class="sb-seg">TSM FINOPS NEURAL BRIDGE</span>
+      <span class="sb-div">·</span>
+      <span class="sb-seg" id="sb-engines">0 / 4 engines active</span>
+      <span class="sb-div">·</span>
+      <span class="sb-seg" id="sb-doctype">No document loaded</span>
+      <span class="sb-div">·</span>
+      <span class="sb-seg" id="sb-model" style="color:var(--text-mute)">groq: offline</span>
+      <span style="margin-left:auto">
+        <span class="sb-seg" id="sb-prog"></span>
+      </span>
     </div>
+
   </div>
 </div>
 
 <!-- MODAL -->
-<div class="modal-bg" id="modal-bg" data-tsm-action="closeModal" data-tsm-args="">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-title">⚙ GROQ AI — API KEY</div>
-    <div style="margin-bottom:8px">
-      <div class="field-lbl">Groq API Key</div>
-      <input class="field" id="key-input" type="password" placeholder="gsk_…"/>
-      <div style="color:var(--text-mute);font-size:10px;margin-top:3px">Free key at console.groq.com</div>
+<div class="modal-bg" id="modal-bg" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-title">⚙ GROQ API KEY</div>
+    <div class="field-group">
+      <div class="flbl">API Key</div>
+      <input class="fi" id="key-inp" type="password" placeholder="gsk_…"/>
     </div>
-    <div style="margin-bottom:14px">
-      <div class="field-lbl">Model</div>
-      <select class="field" id="model-select">
-        <option value="llama-3.1-8b-instant">llama-3.1-8b-instant (fastest)</option>
-        <option value="llama3-70b-8192" selected>llama3-70b-8192 (recommended)</option>
-        <option value="mixtral-8x7b-32768">mixtral-8x7b-32768 (longest context)</option>
+    <div class="field-group">
+      <div class="flbl">Model</div>
+      <select class="fi" id="model-sel">
+        <option value="llama-3.1-8b-instant">llama-3.1-8b-instant · fastest</option>
+        <option value="llama-3.3-70b-versatile" selected>llama-3.3-70b-versatile · recommended</option>
       </select>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <button class="copy-btn" data-tsm-action="closeModal" data-tsm-args="" style="padding:8px">Cancel</button>
-      <button class="fire-btn" style="padding:8px;font-size:9px" data-tsm-action="saveKey" data-tsm-args="">Save &amp; Activate</button>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-save" onclick="saveKey()">Save &amp; Activate</button>
     </div>
   </div>
 </div>
 
-<div class="toast" id="toast-el"></div>
+<div class="toast" id="toast"></div>
 
 <script>
 // ── STATE ──
 let groqKey = localStorage.getItem('finops_groq_key') || '';
-let groqModel = localStorage.getItem('finops_groq_model') || 'llama3-70b-8192';
+let groqModel = localStorage.getItem('finops_groq_model') || 'llama-3.3-70b-versatile';
 let currentDoc = 'invoice';
 let outputs = {1:'',2:'',3:'',4:''};
 
 // ── INIT ──
-if (groqKey) updateKeyStatus(true);
+if (groqKey) setKeyStatus(true);
+checkRelayIn();
 
-// ── MODAL ──
-function openModal() { document.getElementById('modal-bg').classList.add('open'); document.getElementById('key-input').value = groqKey; document.getElementById('model-select').value = groqModel; }
+// ── KEY MODAL ──
+function openModal() {
+  document.getElementById('modal-bg').classList.add('open');
+  document.getElementById('key-inp').value = groqKey;
+  document.getElementById('model-sel').value = groqModel;
+}
 function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
 function saveKey() {
-  groqKey = document.getElementById('key-input').value.trim();
-  groqModel = document.getElementById('model-select').value;
+  groqKey = document.getElementById('key-inp').value.trim();
+  groqModel = document.getElementById('model-sel').value;
   localStorage.setItem('finops_groq_key', groqKey);
   localStorage.setItem('finops_groq_model', groqModel);
-  updateKeyStatus(!!groqKey);
+  setKeyStatus(!!groqKey);
   closeModal();
-  toast(groqKey ? '✓ Groq key saved — AI ready' : 'Key cleared');
+  toast(groqKey ? '✓ Groq connected' : 'Key cleared');
 }
-function updateKeyStatus(ok) {
-  const el = document.getElementById('ai-status');
-  el.textContent = ok ? 'GROQ: CONNECTED' : 'GROQ: NO KEY';
-  el.style.color = ok ? 'var(--green)' : 'var(--text-mute)';
-  document.getElementById('model-status').textContent = ok ? `groq: ${groqModel}` : 'groq: not connected';
-  document.getElementById('model-status').style.color = ok ? 'var(--green)' : 'var(--amber)';
+function setKeyStatus(ok) {
+  const b = document.getElementById('ai-badge');
+  b.textContent = ok ? '● GROQ ON' : '● GROQ OFF';
+  b.className = 'ai-badge ' + (ok ? 'on' : 'off');
+  document.getElementById('sb-model').textContent = ok ? `groq: ${groqModel}` : 'groq: offline';
+  document.getElementById('sb-model').style.color = ok ? 'var(--green)' : 'var(--text-mute)';
 }
 
 // ── TOAST ──
 function toast(msg) {
-  const el = document.getElementById('toast-el');
+  const el = document.getElementById('toast');
   el.textContent = msg; el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), 2800);
 }
 
-// ══════════════════════════════════════════════
-// DOCUMENT FORMS
-// ══════════════════════════════════════════════
-const DOC_FORMS = {
-
-invoice: `
-<div class="field-group"><div class="field-lbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;padding:6px 0;letter-spacing:1px">VENDOR INVOICE (AP)</div></div>
-<div class="field-row field-row-2 mb8">
-  <div class="field-group"><div class="field-lbl">Invoice #</div><input class="field" placeholder="INV-00001" id="inv-num"/></div>
-  <div class="field-group"><div class="field-lbl">PO #</div><input class="field" placeholder="PO-00001" id="inv-po"/></div>
-</div>
-<div class="field-group mb8"><div class="field-lbl">Vendor</div><input class="field" placeholder="Vendor name" id="inv-vendor"/></div>
-<div class="field-group mb8"><div class="field-lbl">Bill To</div><input class="field" placeholder="Company / Dept" id="inv-billto"/></div>
-<div class="field-row field-row-2 mb8">
-  <div class="field-group"><div class="field-lbl">Invoice Date</div><input class="field" type="date" id="inv-date"/></div>
-  <div class="field-group"><div class="field-lbl">Due Date</div><input class="field" type="date" id="inv-due"/></div>
-</div>
-<div class="field-row field-row-2 mb8">
-  <div class="field-group"><div class="field-lbl">Terms</div><select class="field" id="inv-terms"><option>Net 30</option><option>Net 15</option><option>Net 60</option><option>Due on Receipt</option></select></div>
-  <div class="field-group"><div class="field-lbl">Status</div><select class="field" id="inv-status"><option>Pending Approval</option><option>Approved</option><option>On Hold</option><option>Disputed</option></select></div>
-</div>
-<div class="section-divider"><div class="section-lbl">Line Items</div>
-<div id="inv-lines"></div>
-<button class="add-line-btn" data-tsm-action="addLine" data-tsm-args="'inv'">+ Add Line Item</button>
-</div>
-<div class="section-divider">
-<div class="totals-row"><span class="totals-lbl">Subtotal</span><span class="totals-val" id="inv-sub">$0.00</span></div>
-<div class="totals-row"><span class="totals-lbl">Tax (%)</span><input class="field" type="number" style="width:80px;display:inline" value="8.5" id="inv-tax-pct" oninput="calcInvTotal()"/></div>
-<div class="totals-row"><span class="totals-lbl">Tax Amount</span><span class="totals-val" id="inv-tax">$0.00</span></div>
-<div class="totals-row"><span class="totals-lbl">TOTAL DUE</span><span class="totals-val total" id="inv-total">$0.00</span></div>
-</div>
-<div class="field-group"><div class="field-lbl">Notes / Flags</div><textarea class="textarea-field" rows="2" placeholder="Missing receiving report, PO mismatch, etc." id="inv-notes"></textarea></div>`,
-
-po: `
-<div class="field-group"><div class="field-lbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;padding:6px 0;letter-spacing:1px">PURCHASE ORDER</div></div>
-<div class="field-row field-row-2 mb8">
-  <div class="field-group"><div class="field-lbl">PO #</div><input class="field" placeholder="PO-00001" id="po-num"/></div>
-  <div class="field-group"><div class="field-lbl">Date Issued</div><input class="field" type="date" id="po-date"/></div>
-</div>
-<div class="field-group mb8"><div class="field-lbl">Vendor</div><input class="field" placeholder="Vendor name" id="po-vendor"/></div>
-<div class="field-row field-row-2 mb8">
-  <div class="field-group"><div class="field-lbl">Project / Dept</div><input class="field" placeholder="Department or Project" id="po-dept"/></div>
-  <div class="field-group"><div class="field-lbl">Requested By</div><input class="field" placeholder="Name" id="po-reqby"/></div>
-</div>
-<div class="field-group mb8"><div class="field-lbl">Approved By</div><input class="field" placeholder="Approver name" id="po-approver"/></div>
-<div class="field-group mb8"><div class="field-lbl">Status</div><select class="field" id="po-status"><option>Pending Approval</option><option>Approved</option><option>Sent to Vendor</option><option>Partially Received</option><option>Closed</option></select></div>
-<div class="section-divider"><div class="section-lbl">Items Ordered</div>
-<div id="po-lines"></div>
-<button class="add-line-btn" data-tsm-action="addLine" data-tsm-args="'po'">+ Add Item</button>
-</div>
-<div class="section-divider">
-<div class="totals-row"><span class="totals-lbl">PO Total</span><span class="totals-val total" id="po-total">$0.00</span></div>
-</div>
-<div class="field-group"><div class="field-lbl">Notes</div><textarea class="textarea-field" rows="2" placeholder="Delivery instructions, budget notes…" id="po-notes"></textarea></div>`,
-
-expense: `
-<div class="field-group"><div class="field-lbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;padding:6px 0;letter-spacing:1px">EMPLOYEE EXPENSE REPORT</div></div>
-<div class="field-row field-row-2 mb8">
-  <div class="field-group"><div class="field-lbl">Employee</div><input class="field" placeholder="Full name" id="exp-name"/></div>
-  <div class="field-group"><div class="field-lbl">Department</div><input class="field" placeholder="Department" id="exp-dept"/></div>
-</div>
-<div class="field-row field-row-2 mb8">
-  <div class="field-group"><div class="field-lbl">Report Date</div><input class="field" type="date" id="exp-date"/></div>
-  <div class="field-group"><div class="field-lbl">Manager</div><input class="field" placeholder="Approving manager" id="exp-mgr"/></div>
-</div>
-<div class="section-divider"><div class="section-lbl">Expense Line Items</div>
-<div id="exp-lines"></div>
-<button class="add-line-btn" data-tsm-action="addLine" data-tsm-args="'exp'">+ Add Expense</button>
-</div>
-<div class="section-divider">
-<div class="totals-row"><span class="totals-lbl">TOTAL CLAIMED</span><span class="totals-val total" id="exp-total">$0.00</span></div>
-</div>
-<div class="field-group"><div class="field-lbl">Receipts Status</div><select class="field" id="exp-receipts"><option>All receipts attached</option><option>Some receipts missing</option><option>No receipts attached</option></select></div>
-<div class="field-group"><div class="field-lbl">Notes</div><textarea class="textarea-field" rows="2" placeholder="Policy exceptions, unusual items…" id="exp-notes"></textarea></div>`,
-
-bankrec: `
-<div class="field-group"><div class="field-lbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;padding:6px 0;letter-spacing:1px">BANK RECONCILIATION STATEMENT</div></div>
-<div class="field-row field-row-2 mb8">
-  <div class="field-group"><div class="field-lbl">Account</div><input class="field" placeholder="Operating Checking" id="br-acct"/></div>
-  <div class="field-group"><div class="field-lbl">Statement Date</div><input class="field" type="date" id="br-date"/></div>
-</div>
-<div class="section-divider"><div class="section-lbl">Bank Side</div>
-<div class="field-row field-row-2 mb8">
-  <div class="field-group"><div class="field-lbl">Bank Balance ($)</div><input class="field" type="number" placeholder="0.00" id="br-bank" oninput="calcBankRec()"/></div>
-  <div class="field-group"><div class="field-lbl">Deposits in Transit ($)</div><input class="field" type="number" placeholder="0.00" id="br-deposits" oninput="calcBankRec()"/></div>
-</div>
-<div class="field-group mb8"><div class="field-lbl">Outstanding Checks ($)</div><input class="field" type="number" placeholder="0.00" id="br-checks" oninput="calcBankRec()"/></div>
-<div class="totals-row"><span class="totals-lbl">Adjusted Bank Balance</span><span class="totals-val" id="br-adj-bank">$0.00</span></div>
-</div>
-<div class="section-divider"><div class="section-lbl">Book Side</div>
-<div class="field-row field-row-2 mb8">
-  <div class="field-group"><div class="field-lbl">Book Balance ($)</div><input class="field" type="number" placeholder="0.00" id="br-book" oninput="calcBankRec()"/></div>
-  <div class="field-group"><div class="field-lbl">Bank Fees ($)</div><input class="field" type="number" placeholder="0.00" id="br-fees" oninput="calcBankRec()"/></div>
-</div>
-<div class="totals-row"><span class="totals-lbl">Adjusted Book Balance</span><span class="totals-val" id="br-adj-book">$0.00</span></div>
-<div class="totals-row" style="margin-top:6px"><span class="totals-lbl">DIFFERENCE</span><span class="totals-val total" id="br-diff">$0.00</span></div>
-</div>
-<div class="field-group"><div class="field-lbl">Accounts Flagged</div><input class="field" type="number" placeholder="0" id="br-flags"/></div>
-<div class="field-group"><div class="field-lbl">Notes / Discrepancies</div><textarea class="textarea-field" rows="3" placeholder="Describe any discrepancies, missing deposits, timing differences…" id="br-notes"></textarea></div>`,
-
-cc: `
-<div class="field-group"><div class="field-lbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;padding:6px 0;letter-spacing:1px">CORPORATE CREDIT CARD STATEMENT</div></div>
-<div class="field-group mb8"><div class="field-lbl">Cardholder</div><input class="field" placeholder="Employee name" id="cc-holder"/></div>
-<div class="field-row field-row-2 mb8">
-  <div class="field-group"><div class="field-lbl">Period Start</div><input class="field" type="date" id="cc-start"/></div>
-  <div class="field-group"><div class="field-lbl">Period End</div><input class="field" type="date" id="cc-end"/></div>
-</div>
-<div class="field-row field-row-2 mb8">
-  <div class="field-group"><div class="field-lbl">Total Due ($)</div><input class="field" type="number" placeholder="0.00" id="cc-total"/></div>
-  <div class="field-group"><div class="field-lbl">Due Date</div><input class="field" type="date" id="cc-due"/></div>
-</div>
-<div class="section-divider"><div class="section-lbl">Transactions</div>
-<div id="cc-lines"></div>
-<button class="add-line-btn" data-tsm-action="addLine" data-tsm-args="'cc'">+ Add Transaction</button>
-</div>
-<div class="field-group"><div class="field-lbl">Receipts Matched</div><select class="field" id="cc-receipts"><option>All matched</option><option>Some missing</option><option>Major gaps</option></select></div>
-<div class="field-group"><div class="field-lbl">Unapproved Vendors / Flags</div><textarea class="textarea-field" rows="2" placeholder="Flag any unapproved vendors, personal charges, policy violations…" id="cc-flags"></textarea></div>`,
-
-balance: `
-<div class="field-group"><div class="field-lbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;padding:6px 0;letter-spacing:1px">BALANCE SHEET</div></div>
-<div class="field-row field-row-2 mb8">
-  <div class="field-group"><div class="field-lbl">Company</div><input class="field" placeholder="Company name" id="bs-company"/></div>
-  <div class="field-group"><div class="field-lbl">Period Ending</div><input class="field" type="date" id="bs-date"/></div>
-</div>
-<div class="section-divider"><div class="section-lbl">Assets</div>
-<div class="field-row field-row-2 mb8">
-  <div class="field-group"><div class="field-lbl">Cash ($)</div><input class="field" type="number" placeholder="0.00" id="bs-cash" oninput="calcBS()"/></div>
-  <div class="field-group"><div class="field-lbl">Accounts Receivable ($)</div><input class="field" type="number" placeholder="0.00" id="bs-ar" oninput="calcBS()"/></div>
-</div>
-<div class="field-row field-row-2 mb8">
-  <div class="field-group"><div class="field-lbl">Inventory ($)</div><input class="field" type="number" placeholder="0.00" id="bs-inv" oninput="calcBS()"/></div>
-  <div class="field-group"><div class="field-lbl">Fixed Assets ($)</div><input class="field" type="number" placeholder="0.00" id="bs-fixed" oninput="calcBS()"/></div>
-</div>
-<div class="totals-row"><span class="totals-lbl">Total Assets</span><span class="totals-val" id="bs-total-assets">$0.00</span></div>
-</div>
-<div class="section-divider"><div class="section-lbl">Liabilities</div>
-<div class="field-row field-row-2 mb8">
-  <div class="field-group"><div class="field-lbl">Accounts Payable ($)</div><input class="field" type="number" placeholder="0.00" id="bs-ap" oninput="calcBS()"/></div>
-  <div class="field-group"><div class="field-lbl">Accrued Expenses ($)</div><input class="field" type="number" placeholder="0.00" id="bs-accrued" oninput="calcBS()"/></div>
-</div>
-<div class="field-group mb8"><div class="field-lbl">Long-Term Debt ($)</div><input class="field" type="number" placeholder="0.00" id="bs-debt" oninput="calcBS()"/></div>
-<div class="totals-row"><span class="totals-lbl">Total Liabilities</span><span class="totals-val" id="bs-total-liab">$0.00</span></div>
-</div>
-<div class="section-divider"><div class="section-lbl">Equity</div>
-<div class="field-row field-row-2 mb8">
-  <div class="field-group"><div class="field-lbl">Retained Earnings ($)</div><input class="field" type="number" placeholder="0.00" id="bs-retained" oninput="calcBS()"/></div>
-  <div class="field-group"><div class="field-lbl">Paid-In Capital ($)</div><input class="field" type="number" placeholder="0.00" id="bs-capital" oninput="calcBS()"/></div>
-</div>
-<div class="totals-row"><span class="totals-lbl">Total Equity</span><span class="totals-val" id="bs-total-eq">$0.00</span></div>
-<div class="totals-row" style="margin-top:6px"><span class="totals-lbl">Balance Check (Assets = Liab + Equity)</span><span class="totals-val total" id="bs-check">—</span></div>
-</div>
-<div class="field-group"><div class="field-lbl">Prior Period Notes / MoM Changes</div><textarea class="textarea-field" rows="2" placeholder="AP increased 14% MoM, cash decreased, etc." id="bs-notes"></textarea></div>`,
-
-pl: `
-<div class="field-group"><div class="field-lbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;padding:6px 0;letter-spacing:1px">INCOME STATEMENT (P&amp;L)</div></div>
-<div class="field-row field-row-2 mb8">
-  <div class="field-group"><div class="field-lbl">Company</div><input class="field" placeholder="Company name" id="pl-company"/></div>
-  <div class="field-group"><div class="field-lbl">Period</div><input class="field" placeholder="Q2 2026 / May 2026" id="pl-period"/></div>
-</div>
-<div class="section-divider"><div class="section-lbl">Revenue</div>
-<div class="field-row field-row-2 mb8">
-  <div class="field-group"><div class="field-lbl">Total Revenue ($)</div><input class="field" type="number" placeholder="0.00" id="pl-rev" oninput="calcPL()"/></div>
-  <div class="field-group"><div class="field-lbl">Revenue Budget ($)</div><input class="field" type="number" placeholder="0.00" id="pl-rev-bud" oninput="calcPL()"/></div>
-</div>
-<div class="field-group mb8"><div class="field-lbl">COGS ($)</div><input class="field" type="number" placeholder="0.00" id="pl-cogs" oninput="calcPL()"/></div>
-<div class="totals-row"><span class="totals-lbl">Gross Profit</span><span class="totals-val" id="pl-gross">$0.00</span></div>
-<div class="totals-row"><span class="totals-lbl">Gross Margin %</span><span class="totals-val" id="pl-margin">0%</span></div>
-</div>
-<div class="section-divider"><div class="section-lbl">Operating Expenses</div>
-<div class="field-row field-row-2 mb8">
-  <div class="field-group"><div class="field-lbl">Payroll ($)</div><input class="field" type="number" placeholder="0.00" id="pl-payroll" oninput="calcPL()"/></div>
-  <div class="field-group"><div class="field-lbl">Rent ($)</div><input class="field" type="number" placeholder="0.00" id="pl-rent" oninput="calcPL()"/></div>
-</div>
-<div class="field-row field-row-2 mb8">
-  <div class="field-group"><div class="field-lbl">Utilities ($)</div><input class="field" type="number" placeholder="0.00" id="pl-util" oninput="calcPL()"/></div>
-  <div class="field-group"><div class="field-lbl">Other OpEx ($)</div><input class="field" type="number" placeholder="0.00" id="pl-other" oninput="calcPL()"/></div>
-</div>
-<div class="totals-row"><span class="totals-lbl">Total OpEx</span><span class="totals-val" id="pl-total-opex">$0.00</span></div>
-<div class="totals-row" style="margin-top:6px"><span class="totals-lbl">NET INCOME</span><span class="totals-val total" id="pl-net">$0.00</span></div>
-</div>
-<div class="field-group"><div class="field-lbl">Variance Notes</div><textarea class="textarea-field" rows="2" placeholder="Gross margin below target, OpEx over budget, etc." id="pl-notes"></textarea></div>`,
-
-je: `
-<div class="field-group"><div class="field-lbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;padding:6px 0;letter-spacing:1px">JOURNAL ENTRY</div></div>
-<div class="field-row field-row-2 mb8">
-  <div class="field-group"><div class="field-lbl">JE #</div><input class="field" placeholder="JE-00001" id="je-num"/></div>
-  <div class="field-group"><div class="field-lbl">Date</div><input class="field" type="date" id="je-date"/></div>
-</div>
-<div class="field-row field-row-2 mb8">
-  <div class="field-group"><div class="field-lbl">Prepared By</div><input class="field" placeholder="Name" id="je-prep"/></div>
-  <div class="field-group"><div class="field-lbl">Approved By</div><input class="field" placeholder="Approver (required)" id="je-approver"/></div>
-</div>
-<div class="field-group mb8"><div class="field-lbl">Description / Purpose</div><input class="field" placeholder="Accrual entry, depreciation, correction, etc." id="je-desc"/></div>
-<div class="field-group mb8"><div class="field-lbl">Type</div><select class="field" id="je-type"><option>Accrual</option><option>Correction / Reversal</option><option>Depreciation</option><option>Payroll</option><option>Prepaid Amortization</option><option>Reclassification</option><option>Other</option></select></div>
-<div class="section-divider"><div class="section-lbl">Debit / Credit Lines</div>
-<div id="je-lines"></div>
-<button class="add-line-btn" data-tsm-action="addLine" data-tsm-args="'je'">+ Add Line</button>
-</div>
-<div class="section-divider">
-<div class="totals-row"><span class="totals-lbl">Total Debits</span><span class="totals-val" id="je-debits">$0.00</span></div>
-<div class="totals-row"><span class="totals-lbl">Total Credits</span><span class="totals-val" id="je-credits">$0.00</span></div>
-<div class="totals-row"><span class="totals-lbl">BALANCE CHECK</span><span class="totals-val total" id="je-balance">—</span></div>
-</div>
-<div class="field-group"><div class="field-lbl">Supporting Documentation</div><select class="field" id="je-docs"><option>All supporting docs attached</option><option>Partial documentation</option><option>No documentation attached</option></select></div>`,
-
-ar: `
-<div class="field-group"><div class="field-lbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;padding:6px 0;letter-spacing:1px">ACCOUNTS RECEIVABLE INVOICE</div></div>
-<div class="field-row field-row-2 mb8">
-  <div class="field-group"><div class="field-lbl">Invoice #</div><input class="field" placeholder="AR-00001" id="ar-num"/></div>
-  <div class="field-group"><div class="field-lbl">Customer</div><input class="field" placeholder="Customer name" id="ar-customer"/></div>
-</div>
-<div class="field-row field-row-2 mb8">
-  <div class="field-group"><div class="field-lbl">Invoice Date</div><input class="field" type="date" id="ar-date"/></div>
-  <div class="field-group"><div class="field-lbl">Due Date</div><input class="field" type="date" id="ar-due"/></div>
-</div>
-<div class="field-group mb8"><div class="field-lbl">Status</div><select class="field" id="ar-status"><option>Sent</option><option>Pending</option><option>Overdue — 1-30 days</option><option>Overdue — 31-60 days</option><option>Overdue — 60+ days</option><option>Paid</option><option>Disputed</option></select></div>
-<div class="section-divider"><div class="section-lbl">Invoice Line Items</div>
-<div id="ar-lines"></div>
-<button class="add-line-btn" data-tsm-action="addLine" data-tsm-args="'ar'">+ Add Line</button>
-</div>
-<div class="section-divider">
-<div class="totals-row"><span class="totals-lbl">INVOICE TOTAL</span><span class="totals-val total" id="ar-total">$0.00</span></div>
-</div>
-<div class="field-group"><div class="field-lbl">Days Overdue</div><input class="field" type="number" placeholder="0" id="ar-days"/></div>
-<div class="field-group"><div class="field-lbl">Collection Notes</div><textarea class="textarea-field" rows="2" placeholder="Contact attempts, disputes, payment arrangements…" id="ar-notes"></textarea></div>`,
-
-close: `
-<div class="field-group"><div class="field-lbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;padding:6px 0;letter-spacing:1px">MONTH-END CLOSE CHECKLIST</div></div>
-<div class="field-row field-row-2 mb8">
-  <div class="field-group"><div class="field-lbl">Period</div><input class="field" placeholder="May 2026" id="cl-period"/></div>
-  <div class="field-group"><div class="field-lbl">Close Owner</div><input class="field" placeholder="Controller name" id="cl-owner"/></div>
-</div>
-<div class="field-row field-row-2 mb8">
-  <div class="field-group"><div class="field-lbl">Target Close Date</div><input class="field" type="date" id="cl-target"/></div>
-  <div class="field-group"><div class="field-lbl">Current Status</div><select class="field" id="cl-status"><option>In Progress</option><option>On Track</option><option>At Risk</option><option>Complete</option></select></div>
-</div>
-<div class="section-divider"><div class="section-lbl">Close Tasks</div>
-<div id="close-tasks"></div>
-</div>
-<div class="section-divider">
-<div class="totals-row"><span class="totals-lbl">Tasks Complete</span><span class="totals-val" id="cl-complete">0 / 9</span></div>
-<div class="totals-row"><span class="totals-lbl">% Complete</span><span class="totals-val total" id="cl-pct">0%</span></div>
-</div>
-<div class="field-group"><div class="field-lbl">Blockers / Open Issues</div><textarea class="textarea-field" rows="3" placeholder="Waiting on payroll accrual, AR aging dispute, missing JE approval…" id="cl-blockers"></textarea></div>`,
-
-};
-
-// ── SET DOC TYPE ──
-function setDoc(type, btn) {
-  currentDoc = type;
-  document.querySelectorAll('.doc-tab').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  document.getElementById('form-area').innerHTML = DOC_FORMS[type] || '';
-  // Initialize dynamic elements
-  if (type === 'invoice') { addLine('inv'); addLine('inv'); }
-  else if (type === 'po') { addLine('po'); addLine('po'); }
-  else if (type === 'expense') { addLine('exp'); addLine('exp'); addLine('exp'); }
-  else if (type === 'cc') { addLine('cc'); addLine('cc'); addLine('cc'); }
-  else if (type === 'je') { addLine('je'); addLine('je'); }
-  else if (type === 'ar') { addLine('ar'); addLine('ar'); }
-  else if (type === 'close') { initCloseTasks(); }
-  document.getElementById('doc-status').textContent = 'FILL DOCUMENT FIELDS TO PROCESS';
-  document.getElementById('doc-type-status').textContent = type.toUpperCase() + ' loaded';
+// ── RELAY CHECK ──
+function checkRelayIn() {
+  try {
+    const r = JSON.parse(localStorage.getItem('tsm_remediation_relay') || 'null');
+    if (!r || !r.doc) return;
+    const age = (Date.now() - r.timestamp) / 1000 / 60;
+    if (age > 60) return;
+    document.getElementById('relay-banner').classList.add('show');
+    document.getElementById('relay-banner-txt').textContent =
+      `Doc received from ${r.appName || 'War Room'} · ${r.docType?.toUpperCase() || 'DOCUMENT'} · ${Math.round(age)}m ago`;
+  } catch(e) {}
 }
 
-// ── LINE ITEM MANAGEMENT ──
-const lineConfigs = {
-  inv: {cols:['Description','Qty','Unit Cost ($)','Total'],types:['text','number','number','readonly'],id:'inv-lines',onchange:'calcInvTotal'},
-  po: {cols:['Item','Qty','Unit Cost ($)','Total'],types:['text','number','number','readonly'],id:'po-lines',onchange:'calcPOTotal'},
-  exp: {cols:['Date','Category','Description','Amount ($)'],types:['date','select-exp','text','number'],id:'exp-lines',onchange:'calcExpTotal'},
-  cc: {cols:['Date','Vendor','Amount ($)','Description','Receipt?'],types:['date','text','number','text','select-yn'],id:'cc-lines',onchange:null},
-  je: {cols:['Account','Debit ($)','Credit ($)'],types:['text','number','number'],id:'je-lines',onchange:'calcJE'},
-  ar: {cols:['Item / Service','Qty','Rate ($)','Total'],types:['text','number','number','readonly'],id:'ar-lines',onchange:'calcARTotal'},
+// ── FILE UPLOAD ──
+function handleFiles(files) {
+  const list = document.getElementById('file-list');
+  list.innerHTML = '';
+  Array.from(files).forEach(f => {
+    list.innerHTML += `<div>↳ ${f.name} (${(f.size/1024).toFixed(1)}KB)</div>`;
+  });
+  toast(`${files.length} file${files.length>1?'s':''} ready`);
+}
+
+// ════════════════════════════════════
+// DOCUMENT FORMS
+// ════════════════════════════════════
+const FORMS = {
+invoice:`
+<div class="field-group"><div class="flbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;letter-spacing:1px">VENDOR INVOICE (AP)</div></div>
+<div class="fi-row fi-row-2"><div class="field-group"><div class="flbl">Invoice #</div><input class="fi" placeholder="INV-00001" id="inv-num"/></div><div class="field-group"><div class="flbl">PO #</div><input class="fi" placeholder="PO-00001" id="inv-po"/></div></div>
+<div class="field-group"><div class="flbl">Vendor</div><input class="fi" placeholder="Vendor name" id="inv-vendor"/></div>
+<div class="field-group"><div class="flbl">Bill To</div><input class="fi" placeholder="Company / Dept" id="inv-billto"/></div>
+<div class="fi-row fi-row-2"><div class="field-group"><div class="flbl">Invoice Date</div><input class="fi" type="date" id="inv-date"/></div><div class="field-group"><div class="flbl">Due Date</div><input class="fi" type="date" id="inv-due"/></div></div>
+<div class="fi-row fi-row-2"><div class="field-group"><div class="flbl">Terms</div><select class="fi" id="inv-terms"><option>Net 30</option><option>Net 15</option><option>Net 60</option><option>Due on Receipt</option></select></div><div class="field-group"><div class="flbl">Status</div><select class="fi" id="inv-status"><option>Pending Approval</option><option>Approved</option><option>On Hold</option><option>Disputed</option></select></div></div>
+<div class="sec-label">Line Items</div>
+<div id="inv-lines"></div>
+<button class="add-btn" onclick="addLine('inv')">+ Add Line Item</button>
+<div class="sec-label">Totals</div>
+<div class="totals-row"><span class="t-lbl">Subtotal</span><span class="t-val" id="inv-sub">$0.00</span></div>
+<div class="totals-row"><span class="t-lbl">Tax %</span><input class="fi" type="number" style="width:70px" value="8.5" id="inv-tax-pct" oninput="calcInv()"/></div>
+<div class="totals-row"><span class="t-lbl">Tax</span><span class="t-val" id="inv-tax">$0.00</span></div>
+<div class="totals-row"><span class="t-lbl">TOTAL DUE</span><span class="t-val big" id="inv-total">$0.00</span></div>
+<div class="field-group" style="margin-top:8px"><div class="flbl">Notes / Flags</div><textarea class="fi-ta" rows="2" placeholder="PO mismatch, missing receiving report…" id="inv-notes"></textarea></div>`,
+
+po:`
+<div class="field-group"><div class="flbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;letter-spacing:1px">PURCHASE ORDER</div></div>
+<div class="fi-row fi-row-2"><div class="field-group"><div class="flbl">PO #</div><input class="fi" placeholder="PO-00001" id="po-num"/></div><div class="field-group"><div class="flbl">Date</div><input class="fi" type="date" id="po-date"/></div></div>
+<div class="field-group"><div class="flbl">Vendor</div><input class="fi" placeholder="Vendor name" id="po-vendor"/></div>
+<div class="fi-row fi-row-2"><div class="field-group"><div class="flbl">Dept / Project</div><input class="fi" placeholder="Department" id="po-dept"/></div><div class="field-group"><div class="flbl">Requested By</div><input class="fi" placeholder="Name" id="po-reqby"/></div></div>
+<div class="fi-row fi-row-2"><div class="field-group"><div class="flbl">Approved By</div><input class="fi" placeholder="Approver" id="po-approver"/></div><div class="field-group"><div class="flbl">Status</div><select class="fi" id="po-status"><option>Pending Approval</option><option>Approved</option><option>Sent to Vendor</option><option>Partially Received</option><option>Closed</option></select></div></div>
+<div class="sec-label">Items Ordered</div>
+<div id="po-lines"></div>
+<button class="add-btn" onclick="addLine('po')">+ Add Item</button>
+<div class="sec-label">Total</div>
+<div class="totals-row"><span class="t-lbl">PO TOTAL</span><span class="t-val big" id="po-total">$0.00</span></div>
+<div class="field-group" style="margin-top:8px"><div class="flbl">Notes</div><textarea class="fi-ta" rows="2" placeholder="Delivery instructions, budget notes…" id="po-notes"></textarea></div>`,
+
+expense:`
+<div class="field-group"><div class="flbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;letter-spacing:1px">EMPLOYEE EXPENSE REPORT</div></div>
+<div class="fi-row fi-row-2"><div class="field-group"><div class="flbl">Employee</div><input class="fi" placeholder="Full name" id="exp-name"/></div><div class="field-group"><div class="flbl">Department</div><input class="fi" placeholder="Department" id="exp-dept"/></div></div>
+<div class="fi-row fi-row-2"><div class="field-group"><div class="flbl">Report Date</div><input class="fi" type="date" id="exp-date"/></div><div class="field-group"><div class="flbl">Manager</div><input class="fi" placeholder="Approving manager" id="exp-mgr"/></div></div>
+<div class="sec-label">Expense Lines</div>
+<div id="exp-lines"></div>
+<button class="add-btn" onclick="addLine('exp')">+ Add Expense</button>
+<div class="sec-label">Total</div>
+<div class="totals-row"><span class="t-lbl">TOTAL CLAIMED</span><span class="t-val big" id="exp-total">$0.00</span></div>
+<div class="fi-row fi-row-2" style="margin-top:8px"><div class="field-group"><div class="flbl">Receipts</div><select class="fi" id="exp-receipts"><option>All attached</option><option>Some missing</option><option>None attached</option></select></div></div>
+<div class="field-group"><div class="flbl">Notes</div><textarea class="fi-ta" rows="2" placeholder="Policy exceptions, unusual items…" id="exp-notes"></textarea></div>`,
+
+bankrec:`
+<div class="field-group"><div class="flbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;letter-spacing:1px">BANK RECONCILIATION</div></div>
+<div class="fi-row fi-row-2"><div class="field-group"><div class="flbl">Account</div><input class="fi" placeholder="Operating Checking" id="br-acct"/></div><div class="field-group"><div class="flbl">Statement Date</div><input class="fi" type="date" id="br-date"/></div></div>
+<div class="sec-label">Bank Side</div>
+<div class="fi-row fi-row-2"><div class="field-group"><div class="flbl">Bank Balance ($)</div><input class="fi" type="number" placeholder="0.00" id="br-bank" oninput="calcBR()"/></div><div class="field-group"><div class="flbl">Deposits in Transit ($)</div><input class="fi" type="number" placeholder="0.00" id="br-dep" oninput="calcBR()"/></div></div>
+<div class="field-group"><div class="flbl">Outstanding Checks ($)</div><input class="fi" type="number" placeholder="0.00" id="br-chk" oninput="calcBR()"/></div>
+<div class="totals-row"><span class="t-lbl">Adjusted Bank Balance</span><span class="t-val" id="br-adj-bank">$0.00</span></div>
+<div class="sec-label">Book Side</div>
+<div class="fi-row fi-row-2"><div class="field-group"><div class="flbl">Book Balance ($)</div><input class="fi" type="number" placeholder="0.00" id="br-book" oninput="calcBR()"/></div><div class="field-group"><div class="flbl">Bank Fees ($)</div><input class="fi" type="number" placeholder="0.00" id="br-fees" oninput="calcBR()"/></div></div>
+<div class="totals-row"><span class="t-lbl">Adjusted Book Balance</span><span class="t-val" id="br-adj-book">$0.00</span></div>
+<div class="totals-row" style="margin-top:4px"><span class="t-lbl">DIFFERENCE</span><span class="t-val big" id="br-diff">$0.00</span></div>
+<div class="field-group" style="margin-top:8px"><div class="flbl">Notes / Discrepancies</div><textarea class="fi-ta" rows="3" placeholder="Timing differences, missing deposits…" id="br-notes"></textarea></div>`,
+
+cc:`
+<div class="field-group"><div class="flbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;letter-spacing:1px">CORP CREDIT CARD STATEMENT</div></div>
+<div class="field-group"><div class="flbl">Cardholder</div><input class="fi" placeholder="Employee name" id="cc-holder"/></div>
+<div class="fi-row fi-row-2"><div class="field-group"><div class="flbl">Period Start</div><input class="fi" type="date" id="cc-start"/></div><div class="field-group"><div class="flbl">Period End</div><input class="fi" type="date" id="cc-end"/></div></div>
+<div class="fi-row fi-row-2"><div class="field-group"><div class="flbl">Total Due ($)</div><input class="fi" type="number" placeholder="0.00" id="cc-total"/></div><div class="field-group"><div class="flbl">Due Date</div><input class="fi" type="date" id="cc-due"/></div></div>
+<div class="sec-label">Transactions</div>
+<div id="cc-lines"></div>
+<button class="add-btn" onclick="addLine('cc')">+ Add Transaction</button>
+<div class="field-group" style="margin-top:8px"><div class="flbl">Receipt Status</div><select class="fi" id="cc-receipts"><option>All matched</option><option>Some missing</option><option>Major gaps</option></select></div>
+<div class="field-group"><div class="flbl">Flags</div><textarea class="fi-ta" rows="2" placeholder="Unapproved vendors, personal charges, policy violations…" id="cc-flags"></textarea></div>`,
+
+balance:`
+<div class="field-group"><div class="flbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;letter-spacing:1px">BALANCE SHEET</div></div>
+<div class="fi-row fi-row-2"><div class="field-group"><div class="flbl">Company</div><input class="fi" placeholder="Company name" id="bs-company"/></div><div class="field-group"><div class="flbl">Period Ending</div><input class="fi" type="date" id="bs-date"/></div></div>
+<div class="sec-label">Assets</div>
+<div class="fi-row fi-row-2"><div class="field-group"><div class="flbl">Cash ($)</div><input class="fi" type="number" placeholder="0" id="bs-cash" oninput="calcBS()"/></div><div class="field-group"><div class="flbl">Accounts Receivable ($)</div><input class="fi" type="number" placeholder="0" id="bs-ar" oninput="calcBS()"/></div></div>
+<div class="fi-row fi-row-2"><div class="field-group"><div class="flbl">Inventory ($)</div><input class="fi" type="number" placeholder="0" id="bs-inv" oninput="calcBS()"/></div><div class="field-group"><div class="flbl">Fixed Assets ($)</div><input class="fi" type="number" placeholder="0" id="bs-fixed" oninput="calcBS()"/></div></div>
+<div class="totals-row"><span class="t-lbl">Total Assets</span><span class="t-val" id="bs-ta">$0.00</span></div>
+<div class="sec-label">Liabilities</div>
+<div class="fi-row fi-row-2"><div class="field-group"><div class="flbl">Accounts Payable ($)</div><input class="fi" type="number" placeholder="0" id="bs-ap" oninput="calcBS()"/></div><div class="field-group"><div class="flbl">Accrued Expenses ($)</div><input class="fi" type="number" placeholder="0" id="bs-acc" oninput="calcBS()"/></div></div>
+<div class="field-group"><div class="flbl">Long-Term Debt ($)</div><input class="fi" type="number" placeholder="0" id="bs-debt" oninput="calcBS()"/></div>
+<div class="totals-row"><span class="t-lbl">Total Liabilities</span><span class="t-val" id="bs-tl">$0.00</span></div>
+<div class="sec-label">Equity</div>
+<div class="fi-row fi-row-2"><div class="field-group"><div class="flbl">Retained Earnings ($)</div><input class="fi" type="number" placeholder="0" id="bs-ret" oninput="calcBS()"/></div><div class="field-group"><div class="flbl">Paid-In Capital ($)</div><input class="fi" type="number" placeholder="0" id="bs-cap" oninput="calcBS()"/></div></div>
+<div class="totals-row"><span class="t-lbl">Total Equity</span><span class="t-val" id="bs-te">$0.00</span></div>
+<div class="totals-row" style="margin-top:4px"><span class="t-lbl">Balance Check</span><span class="t-val big" id="bs-chk">—</span></div>
+<div class="field-group" style="margin-top:8px"><div class="flbl">Notes</div><textarea class="fi-ta" rows="2" placeholder="MoM changes, variances…" id="bs-notes"></textarea></div>`,
+
+pl:`
+<div class="field-group"><div class="flbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;letter-spacing:1px">INCOME STATEMENT (P&amp;L)</div></div>
+<div class="fi-row fi-row-2"><div class="field-group"><div class="flbl">Company</div><input class="fi" placeholder="Company name" id="pl-co"/></div><div class="field-group"><div class="flbl">Period</div><input class="fi" placeholder="Q2 2026" id="pl-period"/></div></div>
+<div class="sec-label">Revenue</div>
+<div class="fi-row fi-row-2"><div class="field-group"><div class="flbl">Total Revenue ($)</div><input class="fi" type="number" placeholder="0" id="pl-rev" oninput="calcPL()"/></div><div class="field-group"><div class="flbl">Revenue Budget ($)</div><input class="fi" type="number" placeholder="0" id="pl-bud" oninput="calcPL()"/></div></div>
+<div class="field-group"><div class="flbl">COGS ($)</div><input class="fi" type="number" placeholder="0" id="pl-cogs" oninput="calcPL()"/></div>
+<div class="totals-row"><span class="t-lbl">Gross Profit</span><span class="t-val" id="pl-gross">$0.00</span></div>
+<div class="totals-row"><span class="t-lbl">Gross Margin</span><span class="t-val" id="pl-margin">0%</span></div>
+<div class="sec-label">Operating Expenses</div>
+<div class="fi-row fi-row-2"><div class="field-group"><div class="flbl">Payroll ($)</div><input class="fi" type="number" placeholder="0" id="pl-pay" oninput="calcPL()"/></div><div class="field-group"><div class="flbl">Rent ($)</div><input class="fi" type="number" placeholder="0" id="pl-rent" oninput="calcPL()"/></div></div>
+<div class="fi-row fi-row-2"><div class="field-group"><div class="flbl">Utilities ($)</div><input class="fi" type="number" placeholder="0" id="pl-util" oninput="calcPL()"/></div><div class="field-group"><div class="flbl">Other OpEx ($)</div><input class="fi" type="number" placeholder="0" id="pl-other" oninput="calcPL()"/></div></div>
+<div class="totals-row"><span class="t-lbl">Total OpEx</span><span class="t-val" id="pl-opex">$0.00</span></div>
+<div class="totals-row" style="margin-top:4px"><span class="t-lbl">NET INCOME</span><span class="t-val big" id="pl-net">$0.00</span></div>
+<div class="field-group" style="margin-top:8px"><div class="flbl">Variance Notes</div><textarea class="fi-ta" rows="2" placeholder="Gross margin below target, OpEx over budget…" id="pl-notes"></textarea></div>`,
+
+je:`
+<div class="field-group"><div class="flbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;letter-spacing:1px">JOURNAL ENTRY</div></div>
+<div class="fi-row fi-row-2"><div class="field-group"><div class="flbl">JE #</div><input class="fi" placeholder="JE-00001" id="je-num"/></div><div class="field-group"><div class="flbl">Date</div><input class="fi" type="date" id="je-date"/></div></div>
+<div class="fi-row fi-row-2"><div class="field-group"><div class="flbl">Prepared By</div><input class="fi" placeholder="Name" id="je-prep"/></div><div class="field-group"><div class="flbl">Approved By</div><input class="fi" placeholder="Required" id="je-approver"/></div></div>
+<div class="fi-row fi-row-2"><div class="field-group"><div class="flbl">Type</div><select class="fi" id="je-type"><option>Accrual</option><option>Correction / Reversal</option><option>Depreciation</option><option>Payroll</option><option>Prepaid Amortization</option><option>Reclassification</option><option>Other</option></select></div><div class="field-group"><div class="flbl">Documentation</div><select class="fi" id="je-docs"><option>All attached</option><option>Partial</option><option>None attached</option></select></div></div>
+<div class="field-group"><div class="flbl">Description</div><input class="fi" placeholder="Accrual entry, depreciation, correction…" id="je-desc"/></div>
+<div class="sec-label">Debit / Credit Lines</div>
+<div id="je-lines"></div>
+<button class="add-btn" onclick="addLine('je')">+ Add Line</button>
+<div class="sec-label">Balance</div>
+<div class="totals-row"><span class="t-lbl">Total Debits</span><span class="t-val" id="je-deb">$0.00</span></div>
+<div class="totals-row"><span class="t-lbl">Total Credits</span><span class="t-val" id="je-cre">$0.00</span></div>
+<div class="totals-row"><span class="t-lbl">BALANCE CHECK</span><span class="t-val big" id="je-bal">—</span></div>`,
+
+ar:`
+<div class="field-group"><div class="flbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;letter-spacing:1px">AR INVOICE</div></div>
+<div class="fi-row fi-row-2"><div class="field-group"><div class="flbl">Invoice #</div><input class="fi" placeholder="AR-00001" id="ar-num"/></div><div class="field-group"><div class="flbl">Customer</div><input class="fi" placeholder="Customer name" id="ar-cust"/></div></div>
+<div class="fi-row fi-row-2"><div class="field-group"><div class="flbl">Invoice Date</div><input class="fi" type="date" id="ar-date"/></div><div class="field-group"><div class="flbl">Due Date</div><input class="fi" type="date" id="ar-due"/></div></div>
+<div class="field-group"><div class="flbl">Status</div><select class="fi" id="ar-status"><option>Sent</option><option>Pending</option><option>Overdue — 1-30 days</option><option>Overdue — 31-60 days</option><option>Overdue — 60+ days</option><option>Paid</option><option>Disputed</option></select></div>
+<div class="sec-label">Line Items</div>
+<div id="ar-lines"></div>
+<button class="add-btn" onclick="addLine('ar')">+ Add Line</button>
+<div class="sec-label">Total</div>
+<div class="totals-row"><span class="t-lbl">INVOICE TOTAL</span><span class="t-val big" id="ar-total">$0.00</span></div>
+<div class="fi-row fi-row-2" style="margin-top:8px"><div class="field-group"><div class="flbl">Days Overdue</div><input class="fi" type="number" placeholder="0" id="ar-days"/></div></div>
+<div class="field-group"><div class="flbl">Collection Notes</div><textarea class="fi-ta" rows="2" placeholder="Contact attempts, disputes, payment plans…" id="ar-notes"></textarea></div>`,
+
+close:`
+<div class="field-group"><div class="flbl">Document Type</div><div style="color:var(--amber);font-family:var(--mono);font-size:10px;letter-spacing:1px">MONTH-END CLOSE CHECKLIST</div></div>
+<div class="fi-row fi-row-2"><div class="field-group"><div class="flbl">Period</div><input class="fi" placeholder="May 2026" id="cl-period"/></div><div class="field-group"><div class="flbl">Close Owner</div><input class="fi" placeholder="Controller name" id="cl-owner"/></div></div>
+<div class="fi-row fi-row-2"><div class="field-group"><div class="flbl">Target Close Date</div><input class="fi" type="date" id="cl-target"/></div><div class="field-group"><div class="flbl">Status</div><select class="fi" id="cl-status"><option>In Progress</option><option>On Track</option><option>At Risk</option><option>Complete</option></select></div></div>
+<div class="sec-label">Close Tasks</div>
+<div id="close-tasks"></div>
+<div class="sec-label">Progress</div>
+<div class="totals-row"><span class="t-lbl">Tasks Complete</span><span class="t-val" id="cl-done">0 / 9</span></div>
+<div class="totals-row"><span class="t-lbl">% Complete</span><span class="t-val big" id="cl-pct">0%</span></div>
+<div class="field-group" style="margin-top:8px"><div class="flbl">Blockers</div><textarea class="fi-ta" rows="2" placeholder="Waiting on payroll accrual, AR aging dispute…" id="cl-blockers"></textarea></div>`,
+
+interco:`<div style="padding:4px 0 8px"><div style="color:var(--amber);font-family:var(--mono);font-size:10px;letter-spacing:1px;margin-bottom:10px">INTERCOMPANY MATRIX</div>
+<div style="background:var(--s2);border:1px solid rgba(255,69,96,.25);border-left:3px solid var(--red);padding:10px;margin-bottom:10px;border-radius:var(--r)">
+  <div style="color:var(--red);font-family:var(--mono);font-size:8px;letter-spacing:1.5px;margin-bottom:3px">OUT OF BALANCE</div>
+  <div style="color:var(--red);font-size:20px;font-weight:700;font-family:var(--mono)">$3,200</div>
+  <div style="color:var(--text-mute);font-size:9px;margin-top:2px">BK #1042 vs BK #1103 timing difference</div>
+</div>
+<div style="overflow-x:auto;font-family:var(--mono);font-size:10px">
+<table style="width:100%;border-collapse:collapse">
+<thead><tr style="background:var(--s2)"><th style="text-align:left;padding:6px 8px;border:1px solid var(--border);color:var(--text-mute);font-size:8px">FROM / TO</th><th style="padding:6px;border:1px solid var(--border);color:var(--amber);font-size:8px">BK #1042</th><th style="padding:6px;border:1px solid var(--border);color:var(--amber);font-size:8px">BK #1087</th><th style="padding:6px;border:1px solid var(--border);color:var(--amber);font-size:8px">HoldCo</th><th style="padding:6px;border:1px solid var(--border);color:var(--text-mute);font-size:8px">NET</th></tr></thead>
+<tbody>
+<tr><td style="padding:6px 8px;border:1px solid var(--border);color:var(--amber)">BK #1042</td><td style="padding:6px;border:1px solid var(--border);text-align:center;color:var(--text-mute)">—</td><td style="padding:6px;border:1px solid var(--border);text-align:center">(12,400)</td><td style="padding:6px;border:1px solid var(--border);text-align:center">(45,000)</td><td style="padding:6px;border:1px solid var(--border);text-align:center;color:var(--red);font-weight:700">(57,400)</td></tr>
+<tr style="background:rgba(255,255,255,.01)"><td style="padding:6px 8px;border:1px solid var(--border);color:var(--amber)">BK #1087</td><td style="padding:6px;border:1px solid var(--border);text-align:center">12,400</td><td style="padding:6px;border:1px solid var(--border);text-align:center;color:var(--text-mute)">—</td><td style="padding:6px;border:1px solid var(--border);text-align:center">(45,000)</td><td style="padding:6px;border:1px solid var(--border);text-align:center;color:var(--red);font-weight:700">(32,600)</td></tr>
+<tr><td style="padding:6px 8px;border:1px solid var(--border);color:var(--amber)">HoldCo</td><td style="padding:6px;border:1px solid var(--border);text-align:center">45,000</td><td style="padding:6px;border:1px solid var(--border);text-align:center">45,000</td><td style="padding:6px;border:1px solid var(--border);text-align:center;color:var(--text-mute)">—</td><td style="padding:6px;border:1px solid var(--border);text-align:center;color:var(--green);font-weight:700">90,000</td></tr>
+</tbody></table></div>
+<div style="margin-top:10px;display:flex;gap:6px">
+<button onclick="toast('Auto-match: 8/9 pairs matched')" style="background:var(--amber-faint);border:1px solid var(--amber-dim);color:var(--amber);font-family:var(--mono);font-size:8px;padding:6px 12px;cursor:pointer;border-radius:var(--r)">⚡ AUTO-MATCH</button>
+<button onclick="toast('AJE generated')" style="background:none;border:1px solid var(--border);color:var(--text-mute);font-family:var(--mono);font-size:8px;padding:6px 12px;cursor:pointer;border-radius:var(--r)">+ GEN AJE</button>
+</div></div>`,
+
+fixedassets:`<div style="padding:4px 0 8px"><div style="color:var(--amber);font-family:var(--mono);font-size:10px;letter-spacing:1px;margin-bottom:10px">FIXED ASSET ROSTER</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+<div style="background:var(--s2);border:1px solid var(--border);padding:9px;border-radius:var(--r)"><div style="color:var(--text-mute);font-family:var(--mono);font-size:8px;letter-spacing:1px;margin-bottom:3px">TOTAL COST BASIS</div><div style="color:var(--amber);font-size:17px;font-weight:700;font-family:var(--mono)">$2,847,400</div></div>
+<div style="background:var(--s2);border:1px solid var(--border);padding:9px;border-radius:var(--r)"><div style="color:var(--text-mute);font-family:var(--mono);font-size:8px;letter-spacing:1px;margin-bottom:3px">NET BOOK VALUE</div><div style="color:var(--amber);font-size:17px;font-weight:700;font-family:var(--mono)">$1,722,600</div></div>
+<div style="background:var(--s2);border:1px solid var(--border);padding:9px;border-radius:var(--r)"><div style="color:var(--text-mute);font-family:var(--mono);font-size:8px;letter-spacing:1px;margin-bottom:3px">ACCUM. DEPR.</div><div style="color:var(--text-dim);font-size:17px;font-weight:700;font-family:var(--mono)">(1,124,800)</div></div>
+<div style="background:var(--s2);border:1px solid var(--border);padding:9px;border-radius:var(--r)"><div style="color:var(--text-mute);font-family:var(--mono);font-size:8px;letter-spacing:1px;margin-bottom:3px">YR DEPRECIATION</div><div style="color:var(--text-dim);font-size:17px;font-weight:700;font-family:var(--mono)">$187,320</div></div>
+</div>
+<div style="overflow-x:auto;font-family:var(--mono);font-size:9px;margin-bottom:10px">
+<table style="width:100%;border-collapse:collapse">
+<thead><tr style="background:var(--s2);color:var(--text-mute);font-size:8px;text-transform:uppercase"><th style="text-align:left;padding:6px 8px;border:1px solid var(--border)">Asset</th><th style="padding:6px;border:1px solid var(--border)">Method</th><th style="text-align:right;padding:6px 8px;border:1px solid var(--border)">Cost</th><th style="text-align:right;padding:6px 8px;border:1px solid var(--border)">Net BV</th><th style="text-align:right;padding:6px 8px;border:1px solid var(--border)">Yr Depr</th></tr></thead>
+<tbody>
+<tr style="border-bottom:1px solid rgba(255,255,255,.04)"><td style="padding:6px 8px;border:1px solid var(--border)">BK #1042 Build-Out</td><td style="padding:6px;border:1px solid var(--border);color:var(--text-mute);text-align:center">SL 15yr</td><td style="padding:6px 8px;border:1px solid var(--border);text-align:right">$480K</td><td style="padding:6px 8px;border:1px solid var(--border);text-align:right;color:var(--amber)">$307K</td><td style="padding:6px 8px;border:1px solid var(--border);text-align:right">$32K</td></tr>
+<tr style="border-bottom:1px solid rgba(255,255,255,.04);background:rgba(255,255,255,.01)"><td style="padding:6px 8px;border:1px solid var(--border)">Kitchen Equipment Pkg</td><td style="padding:6px;border:1px solid var(--border);color:var(--text-mute);text-align:center">DDB 7yr</td><td style="padding:6px 8px;border:1px solid var(--border);text-align:right">$240K</td><td style="padding:6px 8px;border:1px solid var(--border);text-align:right;color:var(--amber)">$103K</td><td style="padding:6px 8px;border:1px solid var(--border);text-align:right">$48K</td></tr>
+<tr><td style="padding:6px 8px;border:1px solid var(--border)">POS System — All Stores</td><td style="padding:6px;border:1px solid var(--border);color:var(--text-mute);text-align:center">SL 3yr</td><td style="padding:6px 8px;border:1px solid var(--border);text-align:right">$84K</td><td style="padding:6px 8px;border:1px solid var(--border);text-align:right;color:var(--amber)">$37K</td><td style="padding:6px 8px;border:1px solid var(--border);text-align:right">$28K</td></tr>
+</tbody></table></div>
+<div style="display:flex;gap:6px">
+<button onclick="toast('Depreciation: $15,610 posted')" style="background:var(--amber);border:none;color:#000;font-family:var(--mono);font-size:8px;font-weight:700;padding:7px 14px;cursor:pointer;border-radius:var(--r)">⚡ RUN DEPRECIATION</button>
+<button onclick="toast('Roster exported')" style="background:none;border:1px solid var(--border);color:var(--text-mute);font-family:var(--mono);font-size:8px;padding:7px 14px;cursor:pointer;border-radius:var(--r)">↓ EXPORT</button>
+</div></div>`
 };
 
-function addLine(prefix) {
-  const cfg = lineConfigs[prefix]; if (!cfg) return;
-  const container = document.getElementById(cfg.id); if (!container) return;
-  const row = document.createElement('div');
-  row.className = 'line-item-row ' + (cfg.cols.length === 4 ? 'line-item-row-4' : cfg.cols.length === 5 ? 'line-item-row-2' : 'line-item-row-3');
-  row.innerHTML = cfg.types.map((t, i) => {
-    if (t === 'readonly') return `<input class="field" readonly placeholder="$0.00" style="color:var(--amber)"/>`;
-    if (t === 'select-exp') return `<select class="field" style="font-size:10px"><option>Travel</option><option>Meals</option><option>Lodging</option><option>Supplies</option><option>Software</option><option>Other</option></select>`;
-    if (t === 'select-yn') return `<select class="field" style="font-size:10px"><option>✓ Yes</option><option>✗ Missing</option></select>`;
-    if (t === 'number') return `<input class="field" type="number" placeholder="0" oninput="${cfg.onchange?cfg.onchange+'()':''}"/>`;
-    if (t === 'date') return `<input class="field" type="date"/>`;
-    return `<input class="field" type="text" placeholder="${cfg.cols[i]}"/>`;
-  }).join('') + `<button class="remove-btn" onclick="this.parentElement.remove();${cfg.onchange?cfg.onchange+'()':''}">✕</button>`;
-  container.appendChild(row);
+// ── SET DOC ──
+function setDoc(type, btn) {
+  currentDoc = type;
+  document.querySelectorAll('.doc-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.getElementById('form-area').innerHTML = FORMS[type] || '';
+  if (type==='invoice'){addLine('inv');addLine('inv');}
+  else if(type==='po'){addLine('po');addLine('po');}
+  else if(type==='expense'){addLine('exp');addLine('exp');addLine('exp');}
+  else if(type==='cc'){addLine('cc');addLine('cc');addLine('cc');}
+  else if(type==='je'){addLine('je');addLine('je');}
+  else if(type==='ar'){addLine('ar');addLine('ar');}
+  else if(type==='close'){initClose();}
+  document.getElementById('fire-status').textContent = 'FILL DOCUMENT TO PROCESS';
+  document.getElementById('sb-doctype').textContent = type.toUpperCase() + ' loaded';
+}
+
+// ── LINE ITEMS ──
+const LINE_CFG = {
+  inv:{cols:['Description','Qty','Unit ($)','Total'],types:['text','number','number','ro'],id:'inv-lines',cb:'calcInv'},
+  po:{cols:['Item','Qty','Unit ($)','Total'],types:['text','number','number','ro'],id:'po-lines',cb:'calcPO'},
+  exp:{cols:['Date','Category','Description','Amount'],types:['date','sel-exp','text','number'],id:'exp-lines',cb:'calcExp'},
+  cc:{cols:['Date','Vendor','Amount','Description','Receipt'],types:['date','text','number','text','sel-yn'],id:'cc-lines',cb:null},
+  je:{cols:['Account','Debit ($)','Credit ($)'],types:['text','number','number'],id:'je-lines',cb:'calcJE'},
+  ar:{cols:['Item','Qty','Rate ($)','Total'],types:['text','number','number','ro'],id:'ar-lines',cb:'calcAR'},
+};
+function addLine(prefix){
+  const cfg=LINE_CFG[prefix]; if(!cfg) return;
+  const c=document.getElementById(cfg.id); if(!c) return;
+  const ncols=cfg.cols.length;
+  const row=document.createElement('div');
+  row.className='line-row '+(ncols===5?'lr-2':ncols===4?'lr-4':'lr-3');
+  row.innerHTML=cfg.types.map((t,i)=>{
+    if(t==='ro') return `<input class="fi" readonly placeholder="$0.00" style="color:var(--amber)"/>`;
+    if(t==='sel-exp') return `<select class="fi" style="font-size:10px"><option>Travel</option><option>Meals</option><option>Lodging</option><option>Supplies</option><option>Software</option><option>Other</option></select>`;
+    if(t==='sel-yn') return `<select class="fi" style="font-size:10px"><option>✓ Yes</option><option>✗ Missing</option></select>`;
+    if(t==='number') return `<input class="fi" type="number" placeholder="0" oninput="${cfg.cb?cfg.cb+'()':''}"/>`;
+    if(t==='date') return `<input class="fi" type="date"/>`;
+    return `<input class="fi" type="text" placeholder="${cfg.cols[i]}"/>`;
+  }).join('')+`<button class="rm-btn" onclick="this.parentElement.remove();${cfg.cb?cfg.cb+'()':''}">✕</button>`;
+  c.appendChild(row);
 }
 
 // ── CALCULATIONS ──
-function calcInvTotal() {
-  let sub = 0;
-  document.querySelectorAll('#inv-lines .line-item-row').forEach(row => {
-    const inputs = row.querySelectorAll('input[type="number"]');
-    if (inputs.length >= 2) {
-      const qty = parseFloat(inputs[0].value) || 0;
-      const unit = parseFloat(inputs[1].value) || 0;
-      const total = qty * unit;
-      if (row.querySelector('input[readonly]')) row.querySelector('input[readonly]').value = '$' + total.toFixed(2);
-      sub += total;
-    }
+function calcInv(){
+  let sub=0;
+  document.querySelectorAll('#inv-lines .line-row').forEach(r=>{
+    const n=r.querySelectorAll('input[type="number"]');
+    if(n.length>=2){const t=(parseFloat(n[0].value)||0)*(parseFloat(n[1].value)||0);const ro=r.querySelector('input[readonly]');if(ro)ro.value='$'+t.toFixed(2);sub+=t;}
   });
-  const taxPct = parseFloat(document.getElementById('inv-tax-pct')?.value) || 0;
-  const tax = sub * taxPct / 100;
-  if(document.getElementById('inv-sub')) document.getElementById('inv-sub').textContent = '$' + sub.toFixed(2);
-  if(document.getElementById('inv-tax')) document.getElementById('inv-tax').textContent = '$' + tax.toFixed(2);
-  if(document.getElementById('inv-total')) document.getElementById('inv-total').textContent = '$' + (sub + tax).toFixed(2);
+  const pct=parseFloat(document.getElementById('inv-tax-pct')?.value)||0;
+  const tax=sub*pct/100;
+  const s=id=>document.getElementById(id);
+  if(s('inv-sub'))s('inv-sub').textContent='$'+sub.toFixed(2);
+  if(s('inv-tax'))s('inv-tax').textContent='$'+tax.toFixed(2);
+  if(s('inv-total'))s('inv-total').textContent='$'+(sub+tax).toFixed(2);
 }
-function calcPOTotal() {
-  let total = 0;
-  document.querySelectorAll('#po-lines .line-item-row').forEach(row => {
-    const inputs = row.querySelectorAll('input[type="number"]');
-    if (inputs.length >= 2) { const t = (parseFloat(inputs[0].value)||0) * (parseFloat(inputs[1].value)||0); if(row.querySelector('input[readonly]')) row.querySelector('input[readonly]').value = '$'+t.toFixed(2); total += t; }
-  });
-  if(document.getElementById('po-total')) document.getElementById('po-total').textContent = '$' + total.toFixed(2);
+function calcPO(){
+  let t=0;document.querySelectorAll('#po-lines .line-row').forEach(r=>{const n=r.querySelectorAll('input[type="number"]');if(n.length>=2){const v=(parseFloat(n[0].value)||0)*(parseFloat(n[1].value)||0);const ro=r.querySelector('input[readonly]');if(ro)ro.value='$'+v.toFixed(2);t+=v;}});
+  const el=document.getElementById('po-total');if(el)el.textContent='$'+t.toFixed(2);
 }
-function calcExpTotal() {
-  let total = 0;
-  document.querySelectorAll('#exp-lines .line-item-row').forEach(row => {
-    const nums = row.querySelectorAll('input[type="number"]');
-    if (nums.length) total += parseFloat(nums[0].value) || 0;
-  });
-  if(document.getElementById('exp-total')) document.getElementById('exp-total').textContent = '$' + total.toFixed(2);
+function calcExp(){
+  let t=0;document.querySelectorAll('#exp-lines .line-row').forEach(r=>{const n=r.querySelectorAll('input[type="number"]');if(n.length)t+=parseFloat(n[0].value)||0;});
+  const el=document.getElementById('exp-total');if(el)el.textContent='$'+t.toFixed(2);
 }
-function calcARTotal() {
-  let total = 0;
-  document.querySelectorAll('#ar-lines .line-item-row').forEach(row => {
-    const inputs = row.querySelectorAll('input[type="number"]');
-    if (inputs.length >= 2) { const t = (parseFloat(inputs[0].value)||0) * (parseFloat(inputs[1].value)||0); if(row.querySelector('input[readonly]')) row.querySelector('input[readonly]').value = '$'+t.toFixed(2); total += t; }
-  });
-  if(document.getElementById('ar-total')) document.getElementById('ar-total').textContent = '$' + total.toFixed(2);
+function calcAR(){
+  let t=0;document.querySelectorAll('#ar-lines .line-row').forEach(r=>{const n=r.querySelectorAll('input[type="number"]');if(n.length>=2){const v=(parseFloat(n[0].value)||0)*(parseFloat(n[1].value)||0);const ro=r.querySelector('input[readonly]');if(ro)ro.value='$'+v.toFixed(2);t+=v;}});
+  const el=document.getElementById('ar-total');if(el)el.textContent='$'+t.toFixed(2);
 }
-function calcBankRec() {
-  const bank = parseFloat(document.getElementById('br-bank')?.value) || 0;
-  const dep = parseFloat(document.getElementById('br-deposits')?.value) || 0;
-  const chk = parseFloat(document.getElementById('br-checks')?.value) || 0;
-  const book = parseFloat(document.getElementById('br-book')?.value) || 0;
-  const fees = parseFloat(document.getElementById('br-fees')?.value) || 0;
-  const adjBank = bank + dep - chk;
-  const adjBook = book - fees;
-  const diff = adjBank - adjBook;
-  if(document.getElementById('br-adj-bank')) document.getElementById('br-adj-bank').textContent = '$' + adjBank.toFixed(2);
-  if(document.getElementById('br-adj-book')) document.getElementById('br-adj-book').textContent = '$' + adjBook.toFixed(2);
-  const diffEl = document.getElementById('br-diff');
-  if(diffEl) { diffEl.textContent = '$' + Math.abs(diff).toFixed(2) + (diff !== 0 ? ' ⚠' : ' ✓'); diffEl.style.color = diff !== 0 ? 'var(--red)' : 'var(--green)'; }
+function calcBR(){
+  const g=id=>parseFloat(document.getElementById(id)?.value)||0;
+  const abank=g('br-bank')+g('br-dep')-g('br-chk');
+  const abook=g('br-book')-g('br-fees');
+  const diff=abank-abook;
+  const s=id=>document.getElementById(id);
+  if(s('br-adj-bank'))s('br-adj-bank').textContent='$'+abank.toFixed(2);
+  if(s('br-adj-book'))s('br-adj-book').textContent='$'+abook.toFixed(2);
+  const de=s('br-diff');
+  if(de){de.textContent='$'+Math.abs(diff).toFixed(2)+(diff!==0?' ⚠':' ✓');de.style.color=diff!==0?'var(--red)':'var(--green)';}
 }
-function calcBS() {
-  const cash = parseFloat(document.getElementById('bs-cash')?.value) || 0;
-  const ar = parseFloat(document.getElementById('bs-ar')?.value) || 0;
-  const inv = parseFloat(document.getElementById('bs-inv')?.value) || 0;
-  const fixed = parseFloat(document.getElementById('bs-fixed')?.value) || 0;
-  const ap = parseFloat(document.getElementById('bs-ap')?.value) || 0;
-  const acc = parseFloat(document.getElementById('bs-accrued')?.value) || 0;
-  const debt = parseFloat(document.getElementById('bs-debt')?.value) || 0;
-  const ret = parseFloat(document.getElementById('bs-retained')?.value) || 0;
-  const cap = parseFloat(document.getElementById('bs-capital')?.value) || 0;
-  const assets = cash + ar + inv + fixed;
-  const liab = ap + acc + debt;
-  const eq = ret + cap;
-  if(document.getElementById('bs-total-assets')) document.getElementById('bs-total-assets').textContent = '$' + assets.toFixed(2);
-  if(document.getElementById('bs-total-liab')) document.getElementById('bs-total-liab').textContent = '$' + liab.toFixed(2);
-  if(document.getElementById('bs-total-eq')) document.getElementById('bs-total-eq').textContent = '$' + eq.toFixed(2);
-  const chk = document.getElementById('bs-check');
-  if(chk) { const balanced = Math.abs(assets - liab - eq) < 0.01; chk.textContent = balanced ? '✓ BALANCED' : `⚠ OFF BY $${Math.abs(assets - liab - eq).toFixed(2)}`; chk.style.color = balanced ? 'var(--green)' : 'var(--red)'; }
+function calcBS(){
+  const g=id=>parseFloat(document.getElementById(id)?.value)||0;
+  const a=g('bs-cash')+g('bs-ar')+g('bs-inv')+g('bs-fixed');
+  const l=g('bs-ap')+g('bs-acc')+g('bs-debt');
+  const e=g('bs-ret')+g('bs-cap');
+  const s=id=>document.getElementById(id);
+  if(s('bs-ta'))s('bs-ta').textContent='$'+a.toFixed(2);
+  if(s('bs-tl'))s('bs-tl').textContent='$'+l.toFixed(2);
+  if(s('bs-te'))s('bs-te').textContent='$'+e.toFixed(2);
+  const ce=s('bs-chk');
+  if(ce){const ok=Math.abs(a-l-e)<0.01;ce.textContent=ok?'✓ BALANCED':'⚠ OFF BY $'+Math.abs(a-l-e).toFixed(2);ce.style.color=ok?'var(--green)':'var(--red)';}
 }
-function calcPL() {
-  const rev = parseFloat(document.getElementById('pl-rev')?.value) || 0;
-  const revBud = parseFloat(document.getElementById('pl-rev-bud')?.value) || 0;
-  const cogs = parseFloat(document.getElementById('pl-cogs')?.value) || 0;
-  const payroll = parseFloat(document.getElementById('pl-payroll')?.value) || 0;
-  const rent = parseFloat(document.getElementById('pl-rent')?.value) || 0;
-  const util = parseFloat(document.getElementById('pl-util')?.value) || 0;
-  const other = parseFloat(document.getElementById('pl-other')?.value) || 0;
-  const gross = rev - cogs;
-  const margin = rev > 0 ? (gross / rev * 100).toFixed(1) : 0;
-  const opex = payroll + rent + util + other;
-  const net = gross - opex;
-  if(document.getElementById('pl-gross')) document.getElementById('pl-gross').textContent = '$' + gross.toFixed(2);
-  if(document.getElementById('pl-margin')) { document.getElementById('pl-margin').textContent = margin + '%'; document.getElementById('pl-margin').style.color = margin < 30 ? 'var(--red)' : margin < 50 ? 'var(--amber)' : 'var(--green)'; }
-  if(document.getElementById('pl-total-opex')) document.getElementById('pl-total-opex').textContent = '$' + opex.toFixed(2);
-  if(document.getElementById('pl-net')) { document.getElementById('pl-net').textContent = '$' + net.toFixed(2); document.getElementById('pl-net').style.color = net < 0 ? 'var(--red)' : 'var(--green)'; }
+function calcPL(){
+  const g=id=>parseFloat(document.getElementById(id)?.value)||0;
+  const rev=g('pl-rev'),cogs=g('pl-cogs'),pay=g('pl-pay'),rent=g('pl-rent'),util=g('pl-util'),other=g('pl-other');
+  const gross=rev-cogs,margin=rev>0?(gross/rev*100).toFixed(1):0,opex=pay+rent+util+other,net=gross-opex;
+  const s=id=>document.getElementById(id);
+  if(s('pl-gross'))s('pl-gross').textContent='$'+gross.toFixed(2);
+  if(s('pl-margin')){s('pl-margin').textContent=margin+'%';s('pl-margin').style.color=margin<30?'var(--red)':margin<50?'var(--amber)':'var(--green)';}
+  if(s('pl-opex'))s('pl-opex').textContent='$'+opex.toFixed(2);
+  if(s('pl-net')){s('pl-net').textContent='$'+net.toFixed(2);s('pl-net').style.color=net<0?'var(--red)':'var(--green)';}
 }
-function calcJE() {
-  let debits = 0, credits = 0;
-  document.querySelectorAll('#je-lines .line-item-row').forEach(row => {
-    const nums = row.querySelectorAll('input[type="number"]');
-    if (nums.length >= 2) { debits += parseFloat(nums[0].value) || 0; credits += parseFloat(nums[1].value) || 0; }
-  });
-  if(document.getElementById('je-debits')) document.getElementById('je-debits').textContent = '$' + debits.toFixed(2);
-  if(document.getElementById('je-credits')) document.getElementById('je-credits').textContent = '$' + credits.toFixed(2);
-  const balEl = document.getElementById('je-balance');
-  if(balEl) { const balanced = Math.abs(debits - credits) < 0.01; balEl.textContent = balanced ? '✓ BALANCED' : `⚠ OUT OF BALANCE $${Math.abs(debits-credits).toFixed(2)}`; balEl.style.color = balanced ? 'var(--green)' : 'var(--red)'; }
+function calcJE(){
+  let d=0,c=0;document.querySelectorAll('#je-lines .line-row').forEach(r=>{const n=r.querySelectorAll('input[type="number"]');if(n.length>=2){d+=parseFloat(n[0].value)||0;c+=parseFloat(n[1].value)||0;}});
+  const s=id=>document.getElementById(id);
+  if(s('je-deb'))s('je-deb').textContent='$'+d.toFixed(2);
+  if(s('je-cre'))s('je-cre').textContent='$'+c.toFixed(2);
+  const be=s('je-bal');
+  if(be){const ok=Math.abs(d-c)<0.01;be.textContent=ok?'✓ BALANCED':'⚠ OUT OF BALANCE $'+Math.abs(d-c).toFixed(2);be.style.color=ok?'var(--green)':'var(--red)';}
 }
 
 // ── CLOSE TASKS ──
-const CLOSE_TASKS = ['Bank Reconciliation','AP Reconciliation','AR Aging Review','Credit Card Reconciliation','Prepaid Amortization Entries','Accrual Journal Entries','Payroll Posting & Verification','Financial Statements Drafted','Management Approvals Completed'];
-function initCloseTasks() {
-  const el = document.getElementById('close-tasks'); if (!el) return;
-  el.innerHTML = CLOSE_TASKS.map((t, i) => `
-    <div class="chk-row">
-      <input type="checkbox" class="chk" id="cl${i}" onchange="updateCloseProgress()"/>
-      <span class="chk-lbl">${t}</span>
-      <select style="background:var(--bg);border:1px solid var(--border);color:var(--text-mute);font-family:var(--mono);font-size:8px;padding:2px 5px;outline:none">
-        <option>Pending</option><option>In Progress</option><option>Complete</option><option>Blocked</option>
-      </select>
-    </div>`).join('');
+const CLOSE_TASKS=['Bank Reconciliation','AP Reconciliation','AR Aging Review','Credit Card Reconciliation','Prepaid Amortization Entries','Accrual Journal Entries','Payroll Posting & Verification','Financial Statements Drafted','Management Approvals Completed'];
+function initClose(){
+  const el=document.getElementById('close-tasks');if(!el)return;
+  el.innerHTML=CLOSE_TASKS.map((t,i)=>`<div class="chk-row"><input type="checkbox" class="chk" id="cl${i}" onchange="updateClose()"/><span class="chk-lbl">${t}</span><select class="chk-sel"><option>Pending</option><option>In Progress</option><option>Complete</option><option>Blocked</option></select></div>`).join('');
 }
-function updateCloseProgress() {
-  const done = document.querySelectorAll('.chk:checked').length;
-  const total = CLOSE_TASKS.length;
-  if(document.getElementById('cl-complete')) document.getElementById('cl-complete').textContent = done + ' / ' + total;
-  if(document.getElementById('cl-pct')) { const pct = Math.round(done/total*100); document.getElementById('cl-pct').textContent = pct + '%'; document.getElementById('cl-pct').style.color = pct === 100 ? 'var(--green)' : pct > 60 ? 'var(--amber)' : 'var(--text)'; }
+function updateClose(){
+  const done=document.querySelectorAll('.chk:checked').length;
+  const pct=Math.round(done/CLOSE_TASKS.length*100);
+  const s=id=>document.getElementById(id);
+  if(s('cl-done'))s('cl-done').textContent=done+' / '+CLOSE_TASKS.length;
+  if(s('cl-pct')){s('cl-pct').textContent=pct+'%';s('cl-pct').style.color=pct===100?'var(--green)':pct>60?'var(--amber)':'var(--text)';}
 }
 
-// ══════════════════════════════════════════════
-// DOCUMENT SERIALIZER — builds prompt text
-// ══════════════════════════════════════════════
-function serializeDoc() {
-  const g = id => document.getElementById(id)?.value || '';
-  const gText = id => document.getElementById(id)?.textContent || '';
-  const docTypes = {
-    invoice:`DOCUMENT TYPE: Vendor Invoice (AP)\nInvoice #: ${g('inv-num')}\nVendor: ${g('inv-vendor')}\nBill To: ${g('inv-billto')}\nDate: ${g('inv-date')} | Due: ${g('inv-due')}\nPO #: ${g('inv-po')} | Terms: ${g('inv-terms')} | Status: ${g('inv-status')}\nSubtotal: ${gText('inv-sub')} | Tax: ${gText('inv-tax')} | TOTAL DUE: ${gText('inv-total')}\nNotes: ${g('inv-notes')}`,
-    po:`DOCUMENT TYPE: Purchase Order\nPO #: ${g('po-num')}\nVendor: ${g('po-vendor')}\nDept/Project: ${g('po-dept')}\nRequested By: ${g('po-reqby')} | Approved By: ${g('po-approver')}\nStatus: ${g('po-status')}\nPO Total: ${gText('po-total')}\nNotes: ${g('po-notes')}`,
-    expense:`DOCUMENT TYPE: Employee Expense Report\nEmployee: ${g('exp-name')} | Dept: ${g('exp-dept')}\nDate: ${g('exp-date')} | Manager: ${g('exp-mgr')}\nTotal Claimed: ${gText('exp-total')}\nReceipts: ${g('exp-receipts')}\nNotes: ${g('exp-notes')}`,
-    bankrec:`DOCUMENT TYPE: Bank Reconciliation Statement\nAccount: ${g('br-acct')} | Date: ${g('br-date')}\nBank Balance → Adjusted: ${gText('br-adj-bank')}\nBook Balance → Adjusted: ${gText('br-adj-book')}\nDifference: ${gText('br-diff')}\nFlags: ${g('br-flags')} accounts\nNotes: ${g('br-notes')}`,
-    cc:`DOCUMENT TYPE: Corporate Credit Card Statement\nCardholder: ${g('cc-holder')}\nPeriod: ${g('cc-start')} to ${g('cc-end')}\nTotal Due: $${g('cc-total')} | Due: ${g('cc-due')}\nReceipts: ${g('cc-receipts')}\nFlags: ${g('cc-flags')}`,
-    balance:`DOCUMENT TYPE: Balance Sheet\nCompany: ${g('bs-company')} | Period: ${g('bs-date')}\nTotal Assets: ${gText('bs-total-assets')}\nTotal Liabilities: ${gText('bs-total-liab')}\nTotal Equity: ${gText('bs-total-eq')}\nBalance Check: ${gText('bs-check')}\nNotes: ${g('bs-notes')}`,
-    pl:`DOCUMENT TYPE: Income Statement (P&L)\nCompany: ${g('pl-company')} | Period: ${g('pl-period')}\nRevenue: $${g('pl-rev')} (Budget: $${g('pl-rev-bud')})\nGross Profit: ${gText('pl-gross')} | Margin: ${gText('pl-margin')}\nTotal OpEx: ${gText('pl-total-opex')}\nNet Income: ${gText('pl-net')}\nNotes: ${g('pl-notes')}`,
-    je:`DOCUMENT TYPE: Journal Entry\nJE #: ${g('je-num')} | Date: ${g('je-date')}\nPrepared By: ${g('je-prep')} | Approved By: ${g('je-approver') || 'MISSING — NOT APPROVED'}\nType: ${g('je-type')} | Description: ${g('je-desc')}\nTotal Debits: ${gText('je-debits')} | Total Credits: ${gText('je-credits')}\nBalance: ${gText('je-balance')}\nDocumentation: ${g('je-docs')}`,
-    ar:`DOCUMENT TYPE: Accounts Receivable Invoice\nInvoice #: ${g('ar-num')} | Customer: ${g('ar-customer')}\nDate: ${g('ar-date')} | Due: ${g('ar-due')}\nStatus: ${g('ar-status')} | Days Overdue: ${g('ar-days') || '0'}\nInvoice Total: ${gText('ar-total')}\nNotes: ${g('ar-notes')}`,
-    close:`DOCUMENT TYPE: Month-End Close Checklist\nPeriod: ${g('cl-period')} | Owner: ${g('cl-owner')}\nTarget Close: ${g('cl-target')} | Status: ${g('cl-status')}\nCompletion: ${gText('cl-complete')} (${gText('cl-pct')})\nBlockers: ${g('cl-blockers')}`,
+// ── SERIALIZER ──
+function serializeDoc(){
+  const g=id=>document.getElementById(id)?.value||'';
+  const gt=id=>document.getElementById(id)?.textContent||'';
+  const docs={
+    invoice:`AP Invoice · ${g('inv-num')} · Vendor: ${g('inv-vendor')} · Total: ${gt('inv-total')} · Status: ${g('inv-status')} · Notes: ${g('inv-notes')}`,
+    po:`Purchase Order · ${g('po-num')} · Vendor: ${g('po-vendor')} · Total: ${gt('po-total')} · Status: ${g('po-status')}`,
+    expense:`Expense Report · ${g('exp-name')} · Dept: ${g('exp-dept')} · Total: ${gt('exp-total')} · Receipts: ${g('exp-receipts')} · Notes: ${g('exp-notes')}`,
+    bankrec:`Bank Reconciliation · ${g('br-acct')} · Adj Bank: ${gt('br-adj-bank')} · Adj Book: ${gt('br-adj-book')} · Diff: ${gt('br-diff')} · Notes: ${g('br-notes')}`,
+    cc:`Credit Card · ${g('cc-holder')} · Period: ${g('cc-start')} to ${g('cc-end')} · Total: $${g('cc-total')} · Receipts: ${g('cc-receipts')} · Flags: ${g('cc-flags')}`,
+    balance:`Balance Sheet · ${g('bs-company')} · Assets: ${gt('bs-ta')} · Liabilities: ${gt('bs-tl')} · Equity: ${gt('bs-te')} · ${gt('bs-chk')} · Notes: ${g('bs-notes')}`,
+    pl:`P&L · ${g('pl-co')} · ${g('pl-period')} · Revenue: $${g('pl-rev')} (Budget: $${g('pl-bud')}) · Gross: ${gt('pl-gross')} @ ${gt('pl-margin')} · OpEx: ${gt('pl-opex')} · Net: ${gt('pl-net')} · Notes: ${g('pl-notes')}`,
+    je:`Journal Entry · ${g('je-num')} · ${g('je-type')} · Prepared: ${g('je-prep')} · Approved: ${g('je-approver')||'MISSING'} · Debits: ${gt('je-deb')} · Credits: ${gt('je-cre')} · ${gt('je-bal')}`,
+    ar:`AR Invoice · ${g('ar-num')} · Customer: ${g('ar-cust')} · Total: ${gt('ar-total')} · Status: ${g('ar-status')} · Days Overdue: ${g('ar-days')||'0'} · Notes: ${g('ar-notes')}`,
+    close:`Month-End Close · ${g('cl-period')} · Owner: ${g('cl-owner')} · Status: ${g('cl-status')} · Progress: ${gt('cl-done')} (${gt('cl-pct')}) · Blockers: ${g('cl-blockers')}`,
+    interco:`Intercompany Matrix · Out of balance: $3,200 between BK #1042 and BK #1103 · 8/9 pairs matched · AJE required: Dr Due From BK#1042 $3,200 / Cr Due To BK#1103 $3,200`,
+    fixedassets:`Fixed Asset Roster · Total Cost: $2,847,400 · Accum Depr: ($1,124,800) · Net BV: $1,722,600 · Yr Depr: $187,320 · 4 assets on roster`
   };
-  return docTypes[currentDoc] || 'Unknown document type';
+  return docs[currentDoc]||'Document type: '+currentDoc;
 }
 
-// ══════════════════════════════════════════════
-// AI PROMPTS PER APP
-// ══════════════════════════════════════════════
-const APP_PROMPTS = {
-  app1: { user: doc => `Analyze and triage this financial document:\n\n${doc}`, key: 'doc_triage' },
-  app2: { user: doc => `Perform variance and risk analysis on this financial document:\n\n${doc}`, key: 'doc_variance' },
-  app3: { user: doc => `Generate a Controller Action Plan for this financial document:\n\n${doc}`, key: 'doc_controller' },
-  app4: { user: doc => `Generate CFO executive intelligence from this financial document:\n\n${doc}`, key: 'doc_cfo' }
-};
-async function getAppPrompt(appKey) {
-  const p = APP_PROMPTS[appKey];
-  p.system = p.system || await getVaultPrompt(p.key);
-  return p;
+// ── PIPELINE ──
+function setPipe(idx,state){
+  const dot=document.getElementById('pd'+idx);
+  const nm=document.getElementById('pn'+idx);
+  if(!dot)return;
+  dot.className='pipe-dot'+(state==='active'?' active':state==='done'?' done':'');
+  if(nm){nm.className='pipe-name'+(state==='active'?' active':state==='done'?' done':'');}
+}
+function setEngine(num,state,text){
+  const numEl=document.getElementById('en'+num);
+  const tagEl=document.getElementById('et'+num);
+  const body=document.getElementById('eb'+num);
+  if(numEl)numEl.className='engine-num'+(state==='active'?' active':state==='done'?' done':'');
+  if(tagEl){
+    tagEl.className='engine-tag';
+    if(state==='active'){tagEl.classList.add('tag-active');tagEl.textContent='RUNNING';}
+    else if(state==='done'){tagEl.classList.add('tag-done');tagEl.textContent='COMPLETE';}
+    else if(state==='error'){tagEl.classList.add('tag-error');tagEl.textContent='ERROR';}
+    else{tagEl.classList.add('tag-standby');tagEl.textContent='STANDBY';}
+  }
+  if(body&&text!==undefined){
+    if(state==='running-idle'){
+      body.innerHTML='<div class="engine-idle" style="opacity:.6"><div class="idle-glyph" style="animation:spin .8s linear infinite;display:inline-block">⟳</div><div class="idle-txt">Processing…</div></div>';
+    } else if(text){
+      const rendered=text.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+      body.innerHTML='<div class="engine-out">'+rendered+'</div>';
+    }
+  }
 }
 
-// ══════════════════════════════════════════════
-// FIRE ALL 4 ENGINES
-// ══════════════════════════════════════════════
-async function fireAll() {
-  if (!groqKey) { openModal(); return; }
-  const docText = serializeDoc();
-
-  // Reset outputs
-  outputs = {1:'',2:'',3:'',4:''};
-  [1,2,3,4].forEach(n => {
-    document.getElementById('body'+n).innerHTML = '<div class="app-idle"><div class="app-idle-icon" style="opacity:.6">⟳</div><div class="app-idle-txt">Processing…</div></div>';
-    document.getElementById('badge'+n).className = 'app-badge badge-active';
-    document.getElementById('badge'+n).textContent = 'ACTIVE';
-    document.getElementById('tok'+n).textContent = '';
-  });
+// ── FIRE ALL ──
+async function fireAll(){
+  const docText=serializeDoc();
+  outputs={1:'',2:'',3:'',4:''};
+  document.getElementById('fire-status').textContent='RUNNING — 4 ENGINES ACTIVE';
+  document.getElementById('sb-engines').textContent='4 / 4 engines active';
+  document.getElementById('sb-prog').textContent='Firing…';
 
   // Pipeline animation
-  ['pipe1','pipe2','pipe3','pipe4','pipe5'].forEach((id,i) => setTimeout(() => { document.getElementById(id).className = 'pipe-node active'; setTimeout(() => document.getElementById(id).className = 'pipe-node done', 1500); }, i*300));
-  ['arr1','arr2','arr3','arr4'].forEach((id,i) => setTimeout(() => document.getElementById(id).className = 'pipe-arrow active', i*300+200));
+  for(let i=1;i<=6;i++) setPipe(i,'');
+  [1,2,3,4].forEach(n=>setEngine(n,'active','running-idle'));
+  [1,2,3,4].forEach(n=>{document.getElementById('tc'+n).textContent='';});
+  setTimeout(()=>setPipe(1,'active'),0);
+  setTimeout(()=>{setPipe(1,'done');setPipe(2,'active');},600);
+  setTimeout(()=>{setPipe(2,'done');setPipe(3,'active');},1200);
 
-  document.getElementById('apps-active').textContent = '4 / 4 Engines Active';
-  document.getElementById('global-progress').textContent = 'Firing all 4 engines…';
-  document.getElementById('output-title').textContent = `Processing: ${currentDoc.toUpperCase()} — All 4 Engines Live`;
+  const SYSTEMS=[
+    'You are a financial document triage AI for a CFO-level accounting operations platform. Classify the document type, extract all key fields and dollar values, flag anomalies, missing data, or compliance risks. Be precise and specific to the document provided.',
+    'You are a variance and risk intelligence AI. Analyze this financial document for budget variances, anomalies, discrepancies, and financial risks. Quantify each risk by dollar impact and probability. Recommend corrective actions ranked by priority.',
+    'You are a financial controller AI. Generate a detailed Controller Action Plan for this document. List specific tasks, owners, deadlines, and expected outcomes. Focus on close readiness, compliance, and error remediation.',
+    'You are a CFO-level financial intelligence AI. Produce an executive-ready summary of this document with strategic recommendations, risk assessment, and 3 key decisions required from leadership.'
+  ];
+  const MAXT=[450,450,600,600];
 
-  const engines = [1,2,3,4].map(n => runEngine(n, docText));
-  await Promise.all(engines);
-
-  document.getElementById('global-progress').textContent = '✓ All 4 engines complete';
-  document.getElementById('apps-active').textContent = '4 / 4 Complete';
-  toast('✓ Document processed — all 4 engines complete');
-}
-
-async function runEngine(num, docText) {
-  const prompt = await getAppPrompt('app'+num);
-  const bodyEl = document.getElementById('body'+num);
-  const badgeEl = document.getElementById('badge'+num);
-  const tokEl = document.getElementById('tok'+num);
-
-  bodyEl.innerHTML = '';
-  const outDiv = document.createElement('div');
-  outDiv.className = 'app-output';
-  bodyEl.appendChild(outDiv);
-
-  let full = '', tokens = 0;
-  try {
-    const resp = await fetch('/api/financial/query', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + groqKey },
-      body: JSON.stringify({
-        model: groqModel, max_tokens: 700, stream: true,
-        messages: [{ role: 'system', content: prompt.system }, { role: 'user', content: prompt.user(docText) }]
-      })
-    });
-    const reader = resp.body.getReader(), dec = new TextDecoder();
-    while (true) {
-      const { done, value } = await reader.read(); if (done) break;
-      for (const line of dec.decode(value).split('\n')) {
-        if (!line.startsWith('data: ') || line.includes('[DONE]')) continue;
-        try {
-          const chunk = JSON.parse(line.slice(6)).choices?.[0]?.delta?.content || '';
-          full += chunk; tokens++;
-          outDiv.textContent = full + '▌';
-          bodyEl.scrollTop = bodyEl.scrollHeight;
-        } catch {}
-      }
+  let done=0;
+  for(const n of [1,2,3,4]){
+    setPipe(n+2,'active');
+    try{
+      const resp=await fetch('/api/financial/query',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({system:SYSTEMS[n-1],question:`Analyze this financial document:\n\n${docText}`,maxTokens:MAXT[n-1]})
+      });
+      if(!resp.ok) throw new Error('API '+resp.status);
+      const data=await resp.json();
+      const text=data.answer||data.response||data.output||'';
+      outputs[n]=text;
+      setEngine(n,'done',text);
+      document.getElementById('tc'+n).textContent=Math.ceil(text.length/4)+' tokens';
+      setPipe(n+2,'done');
+      done++;
+      document.getElementById('sb-engines').textContent=done+' / 4 complete';
+    }catch(e){
+      setEngine(n,'error','Error: '+e.message);
+      document.getElementById('et'+n).textContent='ERROR';
     }
-    outDiv.textContent = full;
-    outputs[num] = full;
-    badgeEl.className = 'app-badge badge-done';
-    badgeEl.textContent = 'COMPLETE';
-    tokEl.textContent = tokens + ' tokens';
-  } catch(e) {
-    outDiv.textContent = 'Error: ' + e.message;
-    badgeEl.className = 'app-badge badge-standby';
-    badgeEl.textContent = 'ERROR';
+    if(n<4) await new Promise(r=>setTimeout(r,1200));
   }
+
+  setPipe(6,'done');
+  document.getElementById('sb-prog').textContent='✓ Complete';
+  document.getElementById('fire-status').textContent='ALL 4 ENGINES COMPLETE';
+  toast('✓ Document processed — 4 engines complete');
+
+  // Write relay
+  try{
+    localStorage.setItem('tsm_remediation_relay',JSON.stringify({
+      appName:'FinOps Accounting',docType:currentDoc,doc:docText,
+      outputs:{e1:outputs[1],e2:outputs[2],e3:outputs[3],e4:outputs[4]},
+      timestamp:Date.now(),chainStep:'remediation'
+    }));
+  }catch(e){}
 }
 
 // ── COPY / EXPORT ──
-function copyOut(num) {
-  if (outputs[num]) { navigator.clipboard.writeText(outputs[num]); toast('✓ Copied App 0' + num + ' output'); }
+function copyOut(n){
+  if(outputs[n]){navigator.clipboard.writeText(outputs[n]);toast('✓ Engine 0'+n+' copied');}
   else toast('No output yet — process a document first');
 }
-function exportAll() {
-  const doc = serializeDoc();
-  const all = `TSM FINOPS ACCOUNTING POC EXPORT\n${new Date().toLocaleString()}\nDocument Type: ${currentDoc.toUpperCase()}\n\n${'='.repeat(60)}\nDOCUMENT DATA:\n${'='.repeat(60)}\n${doc}\n\n${'='.repeat(60)}\nAPP 01 — TRIAGE & FLAGS:\n${'='.repeat(60)}\n${outputs[1]||'No output'}\n\n${'='.repeat(60)}\nAPP 02 — VARIANCE & RISK:\n${'='.repeat(60)}\n${outputs[2]||'No output'}\n\n${'='.repeat(60)}\nAPP 03 — CONTROLLER ACTION PLAN:\n${'='.repeat(60)}\n${outputs[3]||'No output'}\n\n${'='.repeat(60)}\nAPP 04 — CFO EXECUTIVE INTELLIGENCE:\n${'='.repeat(60)}\n${outputs[4]||'No output'}`;
-  const blob = new Blob([all], {type:'text/plain'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `finops-poc-${currentDoc}-${Date.now()}.txt`; a.click();
+function exportAll(){
+  const doc=serializeDoc();
+  const all=`TSM FINOPS ACCOUNTING EXPORT\n${new Date().toLocaleString()}\nDocument: ${currentDoc.toUpperCase()}\n\n${'═'.repeat(60)}\nDOCUMENT DATA\n${'═'.repeat(60)}\n${doc}\n\n${'═'.repeat(60)}\nENGINE 01 — TRIAGE & FLAGS\n${'═'.repeat(60)}\n${outputs[1]||'No output'}\n\n${'═'.repeat(60)}\nENGINE 02 — VARIANCE & RISK\n${'═'.repeat(60)}\n${outputs[2]||'No output'}\n\n${'═'.repeat(60)}\nENGINE 03 — CONTROLLER ACTION PLAN\n${'═'.repeat(60)}\n${outputs[3]||'No output'}\n\n${'═'.repeat(60)}\nENGINE 04 — CFO EXECUTIVE INTELLIGENCE\n${'═'.repeat(60)}\n${outputs[4]||'No output'}`;
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([all],{type:'text/plain'}));a.download=`finops-${currentDoc}-${Date.now()}.txt`;a.click();
   toast('✓ Full report exported');
 }
 
+// ── SPIN KEYFRAME ──
+const style=document.createElement('style');
+style.textContent='@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}';
+document.head.appendChild(style);
+
 // ── INIT ──
-setDoc('invoice', document.querySelector('.doc-tab.active'));
-</script>
-<script>
-// BNCA NODE REPORT — Accounting POC
-(function(){
-  function reportBNCA(){
-    if(typeof TSM_BNCA === 'undefined') return;
-    // Read last processed doc from localStorage if available
-    const lastDoc = localStorage.getItem('finops_last_doc_type') || 'none';
-    const lastProcessed = localStorage.getItem('finops_last_processed') || 'No document processed yet';
-    TSM_BNCA.report('accounting_poc', {
-      name: 'Accounting Doc POC',
-      subtitle: '10 doc types · 4 AI engines · Best Next Actions',
-      status: lastDoc !== 'none' ? 'READY' : 'STANDBY',
-      metrics: {
-        last_doc_type: lastDoc,
-        engines_available: '4',
-        doc_types: '10'
-      },
-      flags: lastDoc !== 'none' ? ['Last document: ' + lastDoc + ' processed successfully'] : ['No document processed yet'],
-      priority: 'LOW'
-    });
-  }
-  setInterval(reportBNCA, 5000);
-  setTimeout(reportBNCA, 1000);
-})();
-</script>
-<script>
-(function(){
-  const _orig = window.setDoc;
-  const DOCS = {
-    interco: `<div style="padding:12px">
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-  <div style="color:var(--amber);font-size:11px;font-weight:700;letter-spacing:.06em;font-family:var(--mono)">INTERCOMPANY MATRIX — DUE TO / DUE FROM</div>
-  <div style="display:flex;gap:6px">
-    <button data-tsm-action="if" data-tsm-args="window.toast)toast('Auto-match: 8/9 pairs matched'" style="background:var(--amber);border:none;color:#000;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.1em;padding:5px 12px;cursor:pointer">⚡ AUTO-MATCH</button>
-    <button data-tsm-action="if" data-tsm-args="window.toast)toast('AJE generated'" style="background:transparent;border:1px solid var(--amber);color:var(--amber);font-family:var(--mono);font-size:9px;padding:5px 12px;cursor:pointer">+ GEN AJE</button>
-  </div>
-</div>
-<div style="overflow-x:auto;margin-bottom:14px">
-<table style="width:100%;border-collapse:collapse;font-size:10px;font-family:var(--mono)">
-  <thead><tr style="background:var(--surface2)">
-    <th style="text-align:left;padding:7px 10px;border:1px solid var(--border);color:var(--text-mute);font-size:9px">FROM / TO</th>
-    <th style="padding:7px 10px;border:1px solid var(--border);color:var(--amber);font-size:9px;text-align:center">BK #1042</th>
-    <th style="padding:7px 10px;border:1px solid var(--border);color:var(--amber);font-size:9px;text-align:center">BK #1087</th>
-    <th style="padding:7px 10px;border:1px solid var(--border);color:var(--amber);font-size:9px;text-align:center">BK #1103</th>
-    <th style="padding:7px 10px;border:1px solid var(--border);color:var(--amber);font-size:9px;text-align:center">HoldCo</th>
-    <th style="padding:7px 10px;border:1px solid var(--border);color:var(--text-mute);font-size:9px;text-align:center">NET</th>
-  </tr></thead>
-  <tbody>
-    <tr><td style="padding:7px 10px;border:1px solid var(--border);color:var(--amber);font-weight:700">BK #1042</td><td style="padding:7px 10px;border:1px solid var(--border);text-align:center;color:var(--text-mute)">—</td><td style="padding:7px 10px;border:1px solid var(--border);text-align:center">(12,400)</td><td style="padding:7px 10px;border:1px solid var(--border);text-align:center">8,200</td><td style="padding:7px 10px;border:1px solid var(--border);text-align:center">(45,000)</td><td style="padding:7px 10px;border:1px solid var(--border);text-align:center;color:#ff5c5c;font-weight:700">(49,200)</td></tr>
-    <tr style="background:rgba(255,255,255,.02)"><td style="padding:7px 10px;border:1px solid var(--border);color:var(--amber);font-weight:700">BK #1087</td><td style="padding:7px 10px;border:1px solid var(--border);text-align:center">12,400</td><td style="padding:7px 10px;border:1px solid var(--border);text-align:center;color:var(--text-mute)">—</td><td style="padding:7px 10px;border:1px solid var(--border);text-align:center;color:var(--text-mute)">—</td><td style="padding:7px 10px;border:1px solid var(--border);text-align:center">(45,000)</td><td style="padding:7px 10px;border:1px solid var(--border);text-align:center;color:#ff5c5c;font-weight:700">(32,600)</td></tr>
-    <tr><td style="padding:7px 10px;border:1px solid var(--border);color:var(--amber);font-weight:700">HoldCo</td><td style="padding:7px 10px;border:1px solid var(--border);text-align:center">45,000</td><td style="padding:7px 10px;border:1px solid var(--border);text-align:center">45,000</td><td style="padding:7px 10px;border:1px solid var(--border);text-align:center">45,000</td><td style="padding:7px 10px;border:1px solid var(--border);text-align:center;color:var(--text-mute)">—</td><td style="padding:7px 10px;border:1px solid var(--border);text-align:center;color:#00c864;font-weight:700">135,000</td></tr>
-  </tbody>
-</table></div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-  <div style="background:rgba(255,92,92,.06);border:1px solid rgba(255,92,92,.25);border-left:3px solid #ff5c5c;padding:10px"><div style="color:#ff5c5c;font-size:9px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px;font-family:var(--mono)">OUT OF BALANCE</div><div style="color:#ff5c5c;font-size:18px;font-weight:700;font-family:var(--mono)">$3,200</div><div style="color:var(--text-mute);font-size:9px;margin-top:2px">BK #1042 vs BK #1103 timing diff</div></div>
-  <div style="background:rgba(0,200,100,.05);border:1px solid rgba(0,200,100,.2);border-left:3px solid #00c864;padding:10px"><div style="color:#00c864;font-size:9px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px;font-family:var(--mono)">MATCHED PAIRS</div><div style="color:#00c864;font-size:18px;font-weight:700;font-family:var(--mono)">8 / 9</div><div style="color:var(--text-mute);font-size:9px;margin-top:2px">1 pair needs adjusting entry</div></div>
-</div>
-<div style="background:var(--surface2);border:1px solid var(--border);padding:12px">
-  <div style="color:var(--amber);font-size:9px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;font-family:var(--mono)">ADJUSTING JOURNAL ENTRY</div>
-  <table style="width:100%;border-collapse:collapse;font-size:10px;font-family:var(--mono)">
-    <thead><tr style="color:var(--text-mute);font-size:9px;text-transform:uppercase;letter-spacing:.08em"><th style="text-align:left;padding:5px 8px">ACCOUNT</th><th style="text-align:left;padding:5px 8px">ENTITY</th><th style="text-align:right;padding:5px 8px">DEBIT</th><th style="text-align:right;padding:5px 8px">CREDIT</th></tr></thead>
-    <tbody>
-      <tr style="border-bottom:1px solid rgba(255,255,255,.04)"><td style="padding:6px 8px">Due From — BK #1042</td><td style="padding:6px 8px;color:var(--text-mute)">BK #1103</td><td style="padding:6px 8px;text-align:right">3,200</td><td style="padding:6px 8px;text-align:right;color:var(--text-mute)">—</td></tr>
-      <tr><td style="padding:6px 8px">Due To — BK #1103</td><td style="padding:6px 8px;color:var(--text-mute)">BK #1042</td><td style="padding:6px 8px;text-align:right;color:var(--text-mute)">—</td><td style="padding:6px 8px;text-align:right">3,200</td></tr>
-    </tbody>
-  </table>
-  <button data-tsm-action="if" data-tsm-args="window.toast)toast('AJE posted to GL'" style="margin-top:8px;background:var(--amber);border:none;color:#000;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.1em;padding:7px 18px;cursor:pointer">POST ADJUSTING ENTRY</button>
-</div></div>`,
-
-    fixedassets: `<div style="padding:12px">
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-  <div style="color:var(--amber);font-size:11px;font-weight:700;letter-spacing:.06em;font-family:var(--mono)">FIXED ASSET ROSTER</div>
-  <div style="display:flex;gap:6px">
-    <button data-tsm-action="if" data-tsm-args="window.toast)toast('Add asset — coming soon'" style="background:var(--amber);border:none;color:#000;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.1em;padding:5px 12px;cursor:pointer">+ ADD ASSET</button>
-    <button data-tsm-action="if" data-tsm-args="window.toast)toast('Depreciation: $15,610 this month'" style="background:transparent;border:1px solid var(--amber);color:var(--amber);font-family:var(--mono);font-size:9px;padding:5px 12px;cursor:pointer">⚡ RUN DEPRECIATION</button>
-    <button data-tsm-action="if" data-tsm-args="window.toast)toast('Roster exported'" style="background:transparent;border:1px solid var(--border);color:var(--text-mute);font-family:var(--mono);font-size:9px;padding:5px 12px;cursor:pointer">↓ EXPORT</button>
-  </div>
-</div>
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
-  <div style="background:var(--surface2);border:1px solid var(--border);padding:10px"><div style="color:var(--text-mute);font-size:9px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;font-family:var(--mono)">TOTAL COST BASIS</div><div style="color:var(--amber);font-size:17px;font-weight:700;font-family:var(--mono)">$2,847,400</div></div>
-  <div style="background:var(--surface2);border:1px solid var(--border);padding:10px"><div style="color:var(--text-mute);font-size:9px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;font-family:var(--mono)">ACCUM. DEPRECIATION</div><div style="color:var(--amber);font-size:17px;font-weight:700;font-family:var(--mono)">(1,124,800)</div></div>
-  <div style="background:var(--surface2);border:1px solid var(--border);padding:10px"><div style="color:var(--text-mute);font-size:9px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;font-family:var(--mono)">NET BOOK VALUE</div><div style="color:var(--amber);font-size:17px;font-weight:700;font-family:var(--mono)">$1,722,600</div></div>
-  <div style="background:var(--surface2);border:1px solid var(--border);padding:10px"><div style="color:var(--text-mute);font-size:9px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;font-family:var(--mono)">YR DEPRECIATION</div><div style="color:var(--amber);font-size:17px;font-weight:700;font-family:var(--mono)">$187,320</div></div>
-</div>
-<table style="width:100%;border-collapse:collapse;font-size:10px;font-family:var(--mono);margin-bottom:14px">
-  <thead><tr style="background:var(--surface2);color:var(--text-mute);font-size:9px;text-transform:uppercase;letter-spacing:.08em">
-    <th style="text-align:left;padding:7px 8px;border-bottom:1px solid var(--border)">ASSET</th><th style="text-align:left;padding:7px 8px;border-bottom:1px solid var(--border)">ENTITY</th><th style="text-align:left;padding:7px 8px;border-bottom:1px solid var(--border)">TYPE</th><th style="text-align:left;padding:7px 8px;border-bottom:1px solid var(--border)">METHOD</th><th style="text-align:left;padding:7px 8px;border-bottom:1px solid var(--border)">LIFE</th><th style="text-align:right;padding:7px 8px;border-bottom:1px solid var(--border)">COST</th><th style="text-align:right;padding:7px 8px;border-bottom:1px solid var(--border)">ACCUM DEPR</th><th style="text-align:right;padding:7px 8px;border-bottom:1px solid var(--border)">NET BV</th><th style="text-align:right;padding:7px 8px;border-bottom:1px solid var(--border)">YR DEPR</th>
-  </tr></thead>
-  <tbody>
-    <tr style="border-bottom:1px solid rgba(255,255,255,.04)"><td style="padding:7px 8px">BK #1042 — Build-Out</td><td style="padding:7px 8px;color:var(--text-mute)">BK #1042</td><td style="padding:7px 8px;color:var(--text-mute)">Leasehold Impr.</td><td style="padding:7px 8px;color:var(--text-mute)">SL</td><td style="padding:7px 8px;color:var(--text-mute)">15yr</td><td style="padding:7px 8px;text-align:right">$480,000</td><td style="padding:7px 8px;text-align:right">(172,800)</td><td style="padding:7px 8px;text-align:right;color:var(--amber)">$307,200</td><td style="padding:7px 8px;text-align:right">$32,000</td></tr>
-    <tr style="border-bottom:1px solid rgba(255,255,255,.04);background:rgba(255,255,255,.015)"><td style="padding:7px 8px">Kitchen Equipment Pkg</td><td style="padding:7px 8px;color:var(--text-mute)">BK #1087</td><td style="padding:7px 8px;color:var(--text-mute)">Equipment</td><td style="padding:7px 8px;color:var(--text-mute)">DDB</td><td style="padding:7px 8px;color:var(--text-mute)">7yr</td><td style="padding:7px 8px;text-align:right">$240,000</td><td style="padding:7px 8px;text-align:right">(137,143)</td><td style="padding:7px 8px;text-align:right;color:var(--amber)">$102,857</td><td style="padding:7px 8px;text-align:right">$48,000</td></tr>
-    <tr style="border-bottom:1px solid rgba(255,255,255,.04)"><td style="padding:7px 8px">POS System — All Stores</td><td style="padding:7px 8px;color:var(--text-mute)">HoldCo</td><td style="padding:7px 8px;color:var(--text-mute)">Software</td><td style="padding:7px 8px;color:var(--text-mute)">SL</td><td style="padding:7px 8px;color:var(--text-mute)">3yr</td><td style="padding:7px 8px;text-align:right">$84,000</td><td style="padding:7px 8px;text-align:right">(46,667)</td><td style="padding:7px 8px;text-align:right;color:var(--amber)">$37,333</td><td style="padding:7px 8px;text-align:right">$28,000</td></tr>
-    <tr><td style="padding:7px 8px">Drive-Through Equipment</td><td style="padding:7px 8px;color:var(--text-mute)">BK #1103</td><td style="padding:7px 8px;color:var(--text-mute)">Equipment</td><td style="padding:7px 8px;color:var(--text-mute)">SL</td><td style="padding:7px 8px;color:var(--text-mute)">5yr</td><td style="padding:7px 8px;text-align:right">$62,000</td><td style="padding:7px 8px;text-align:right">(22,320)</td><td style="padding:7px 8px;text-align:right;color:var(--amber)">$39,680</td><td style="padding:7px 8px;text-align:right">$12,400</td></tr>
-  </tbody>
-</table>
-<div style="background:var(--surface2);border:1px solid var(--border);padding:12px">
-  <div style="color:var(--amber);font-size:9px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;font-family:var(--mono)">MONTHLY DEPRECIATION ENTRY</div>
-  <table style="width:100%;border-collapse:collapse;font-size:10px;font-family:var(--mono)">
-    <thead><tr style="color:var(--text-mute);font-size:9px;text-transform:uppercase;letter-spacing:.08em"><th style="text-align:left;padding:5px 8px">ACCOUNT</th><th style="text-align:right;padding:5px 8px">DEBIT</th><th style="text-align:right;padding:5px 8px">CREDIT</th></tr></thead>
-    <tbody>
-      <tr style="border-bottom:1px solid rgba(255,255,255,.04)"><td style="padding:6px 8px">Depreciation Expense</td><td style="padding:6px 8px;text-align:right">15,610</td><td style="padding:6px 8px;text-align:right;color:var(--text-mute)">—</td></tr>
-      <tr><td style="padding:6px 8px">Accumulated Depreciation</td><td style="padding:6px 8px;text-align:right;color:var(--text-mute)">—</td><td style="padding:6px 8px;text-align:right">15,610</td></tr>
-    </tbody>
-  </table>
-  <button data-tsm-action="if" data-tsm-args="window.toast)toast('Depreciation posted to GL'" style="margin-top:8px;background:var(--amber);border:none;color:#000;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.1em;padding:7px 18px;cursor:pointer">POST DEPRECIATION ENTRY</button>
-</div></div>`
-  };
-
-  window.setDoc = function(key, el) {
-    if (DOCS[key]) {
-      document.querySelectorAll('.doc-tab').forEach(b => b.classList.remove('active'));
-      if (el) el.classList.add('active');
-      const panel = document.querySelector('.output-panel') || document.getElementById('outputPanel');
-      if (panel) panel.innerHTML = '<div style="padding:0;overflow-y:auto;height:100%">' + DOCS[key] + '</div>';
-      return;
-    }
-    if (typeof _orig === 'function') _orig(key, el);
-  };
-})();
+setDoc('invoice', document.querySelector('.doc-btn.active'));
 </script>
 
-<script id="tsm-universal-wip-ai">
-(function(){
-
-window.runSectorAI = async function(sector, question){
-
-  const out =
-    document.querySelector("#narrative-output") ||
-    document.querySelector("#strategist-output") ||
-    document.querySelector(".narrative") ||
-    document.querySelector("#ai-output");
-
-  if(out){
-    out.innerHTML = "Running strategist synthesis...";
-  }
-
-  try{
-
-    const res = await fetch("/api/wip/sector-ai",{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({
-        sector,
-        question
-      })
-    });
-
-    const data = await res.json();
-
-    if(out){
-      out.innerHTML =
-        "<pre style='white-space:pre-wrap;font-family:inherit'>" +
-        (data.content || "No AI response") +
-        "</pre>";
-    }
-
-    console.log("WIP strategist complete", data);
-
-    return data;
-
-  }catch(e){
-
-    console.error(e);
-
-    if(out){
-      out.innerHTML = "AI route unavailable";
-    }
-  }
-};
-
-})();
-</script>
-
-
-<div style="
-position:fixed;
-right:18px;
-bottom:18px;
-z-index:9999;
-display:flex;
-gap:8px;
-flex-wrap:wrap;
-background:#06111b;
-border:1px solid rgba(0,255,200,.3);
-padding:12px;
-border-radius:14px;
-">
-<button data-tsm-action="runSectorAI" data-tsm-args="'FINOPS','Analyze financial WIP portfolio risk and executive exposure'" style="background:#00ffc6;color:#001;font-weight:800;border:0;padding:10px 14px;border-radius:10px;cursor:pointer">
-Generate BNCA
-</button>
-
-<button data-tsm-action="runSectorAI" data-tsm-args="'FINOPS','Generate CFO-ready portfolio summary'" style="background:#ffd84d;color:#111;font-weight:800;border:0;padding:10px 14px;border-radius:10px;cursor:pointer">
-CFO Summary
-</button>
-
-<button onclick="window.print()" style="background:#b56cff;color:white;font-weight:800;border:0;padding:10px 14px;border-radius:10px;cursor:pointer">
-Export PDF
-</button>
-</div>
-
-<div id="narrative-output" style="
-margin:20px;
-padding:20px;
-background:#07131d;
-border:1px solid rgba(0,255,200,.15);
-border-radius:14px;
-color:#dff;
-"></div>
-
-<script src="/shared/tsm-operational-mesh.js?v=mesh1"></script>
+<!-- TSM SHARED SCRIPTS -->
+<script src="/shared/tsm-shared.js?v=phase6"></script>
 <script src="/shared/tsm-relay-bus.js?v=relay2"></script>
-<script src="/shared/tsm-memory-engine.js?v=phase3"></script>
-<script src="/shared/tsm-global-command.js?v=phase4"></script>
-<script src="/shared/tsm-sector-intelligence.js?v=phase5si"></script>
-<script src="/shared/tsm-autonomous-execution.js?v=phase5"></script>
+<script src="/shared/tsm-relay-populate.js"></script>
+<script src="/shared/tsm-cure-cheatsheet.js"></script>
 
-<script>(function(){
-document.addEventListener('click', function(e){
-
-  const el = e.target.closest('[data-tsm-action]');
-  if(!el) return;
-
-  const action = el.getAttribute('data-tsm-action');
-  const args = el.getAttribute('data-tsm-args');
-
-  if(window.TSM && TSM.launcher && TSM.launcher.run){
-    TSM.launcher.run(action, args);
-  } else {
-    console.warn('[TSM] launcher missing:', action, args);
-  }
-
-});
-})();</script>
 </body>
 </html>
