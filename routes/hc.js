@@ -2,20 +2,6 @@
 const express = require('express');
 const router  = express.Router();
 const fs = require('fs');
-const path = require('path');
-const DATA_DIR = path.join(__dirname, '..', 'data');
-const HC_NODE_STATE_FILE = path.join(DATA_DIR, 'hc-node-state.json');
-const HC_REPORTS_FILE = path.join(DATA_DIR, 'hc-reports.json');
-const HC_PROFILES_FILE = path.join(DATA_DIR, 'hc-profiles.json');
-function readJson(f, def) { try { return JSON.parse(require('fs').readFileSync(f,'utf8')); } catch(e) { return def; } }
-function writeJson(f, d) { try { require('fs').mkdirSync(path.dirname(f),{recursive:true}); require('fs').writeFileSync(f, JSON.stringify(d)); } catch(e) {} }
-const GROQ_KEY = process.env.GROQ_API_KEY;
-const SP = { healthcare: 'You are the TSM Healthcare Neural Strategist. Analyze HC operations, billing, compliance, clinical, and revenue cycle. Be specific and actionable.' };
-async function groqChat(system, prompt, maxTokens=800) {
-  const r = await fetch('https://api.groq.com/openai/v1/chat/completions', { method:'POST', headers:{'Authorization':'Bearer '+GROQ_KEY,'Content-Type':'application/json'}, body: JSON.stringify({ model: process.env.TSM_MODEL||'llama-3.3-70b-versatile', max_tokens: maxTokens, messages:[{role:'system',content:system},{role:'user',content:prompt}] }) });
-  const d = await r.json();
-  return d.choices?.[0]?.message?.content || '';
-}
 
 router.get('/api/hc/reports', (req, res) => {
   const reports = readJson(HC_REPORTS_FILE, []);
@@ -658,6 +644,5 @@ router.post('/api/hc/query', async function(req, res) {
   try { var a = await groqChat(SP.healthcare, body.question||body.query||'', body.maxTokens||1024); return res.json({ ok:true, answer:a, createdAt:new Date().toISOString() }); }
   catch(e) { return res.status(500).json({ ok:false, error:e.message }); }
 });
-router.post('/api/hc/ask', async (req, res) => { req.body.question = req.body.question||req.body.prompt||req.body.query||''; try { const a = await groqChat(SP.healthcare, req.body.question, req.body.maxTokens||1024); return res.json({ok:true, answer:a, createdAt:new Date().toISOString()}); } catch(e) { return res.status(500).json({ok:false, error:e.message}); } });
 
 module.exports = router;
