@@ -9,6 +9,13 @@ const HC_REPORTS_FILE = path.join(DATA_DIR, 'hc-reports.json');
 const HC_PROFILES_FILE = path.join(DATA_DIR, 'hc-profiles.json');
 function readJson(f, def) { try { return JSON.parse(require('fs').readFileSync(f,'utf8')); } catch(e) { return def; } }
 function writeJson(f, d) { try { require('fs').mkdirSync(path.dirname(f),{recursive:true}); require('fs').writeFileSync(f, JSON.stringify(d)); } catch(e) {} }
+const GROQ_KEY = process.env.GROQ_API_KEY;
+const SP = { healthcare: 'You are the TSM Healthcare Neural Strategist. Analyze HC operations, billing, compliance, clinical, and revenue cycle. Be specific and actionable.' };
+async function groqChat(system, prompt, maxTokens=800) {
+  const r = await fetch('https://api.groq.com/openai/v1/chat/completions', { method:'POST', headers:{'Authorization':'Bearer '+GROQ_KEY,'Content-Type':'application/json'}, body: JSON.stringify({ model: process.env.TSM_MODEL||'llama-3.3-70b-versatile', max_tokens: maxTokens, messages:[{role:'system',content:system},{role:'user',content:prompt}] }) });
+  const d = await r.json();
+  return d.choices?.[0]?.message?.content || '';
+}
 
 router.get('/api/hc/reports', (req, res) => {
   const reports = readJson(HC_REPORTS_FILE, []);
