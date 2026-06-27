@@ -188,6 +188,7 @@
   </div>
 </div>
 
+<script src="../js/sweet-music-engine.js"></script>
 <script>
 let totalChecks = 0, doneChecks = 0;
 
@@ -216,14 +217,10 @@ async function generateBio() {
   bioWrap.style.display = 'block';
   bioOut.innerHTML = '<span class="spinner"></span>';
 
+  SMOS.releaseMeta.save({ title, artist, genre, explicit, releaseDate, concept });
+
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-6',max_tokens:1000,
-        system:'You are a music publicist and playlist pitching expert. Write professional, compelling copy. No markdown. Plain text only.',
-        messages:[{role:'user',content:`Write two things for this release:
+    const text = await SMOS.ask(`Write two things for this release:
 
 1. A 3-sentence press bio paragraph for the song (professional, compelling, 3rd person)
 2. A Spotify editorial pitch (under 150 words, must include: song title, artist, genre, release date, concept, and why listeners will connect)
@@ -234,11 +231,8 @@ Explicit: ${explicit}
 Release Date: ${releaseDate}
 Concept: ${concept}
 
-Label each section clearly with "PRESS BIO:" and "SPOTIFY PITCH:"`}]
-      })
-    });
-    const data = await res.json();
-    bioOut.textContent = data.content[0].text;
+Label each section clearly with "PRESS BIO:" and "SPOTIFY PITCH:"`, 'You are a music publicist and playlist pitching expert. Write professional, compelling copy. No markdown. Plain text only.');
+    bioOut.textContent = text;
   } catch(e) {
     bioOut.textContent = 'Connection error. Ensure TSM Neural Core is online.';
   }
