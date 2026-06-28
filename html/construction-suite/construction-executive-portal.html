@@ -392,11 +392,12 @@ function populateFromRelay(d) {
   const e6 = d.engines?.e6 || '';
   const combined = e3 + ' ' + e4 + ' ' + e5 + ' ' + e6;
 
-  const riskM = combined.match(/(?:OVERALL RISK SCORE|FINANCIAL RISK SCORE|RISK SCORE)[:\s]+(\d+)/i);
-  const expM = combined.match(/EXPOSURE RANGE[:\s]+([^\n]+)/i);
-  const safetyM = combined.match(/FIELDOPS RISK LEVEL[:\s]+([^\n]+)/i);
-  const compM = combined.match(/COMPLIANCE RISK LEVEL[:\s]+([^\n]+)/i);
-  const legalM = combined.match(/LEGAL RISK LEVEL[:\s]+([^\n]+)/i);
+  const fullText = combined + ' ' + (d.summary||'') + ' ' + (d.bncaText||'');
+  const riskM = fullText.match(/(?:OVERALL RISK SCORE|FINANCIAL RISK SCORE|RISK SCORE)[:\s]+(\d+)/i);
+  const expM = fullText.match(/(?:EXPOSURE RANGE|EXPOSURE|FINANCIAL EXPOSURE)[:\s]+([^\n]+)/i);
+  const safetyM = fullText.match(/(?:FIELDOPS RISK LEVEL|SAFETY RISK|OSHA RISK)[:\s]+([^\n]+)/i);
+  const compM = fullText.match(/(?:COMPLIANCE RISK LEVEL|COMPLIANCE RISK|COMPLIANCE STATUS)[:\s]+([^\n]+)/i);
+  const legalM = fullText.match(/(?:LEGAL RISK LEVEL|LEGAL RISK|PRIMARY LEGAL RISK)[:\s]+([^\n]+)/i);
 
   if (snap.risk || riskM) document.getElementById('kpiRisk').textContent = snap.risk || riskM[1] + '/100';
   if (snap.exposure || expM) { const expVal = (snap.exposure || expM[1]).trim(); document.getElementById('kpiExposure').textContent = expVal.slice(0,22); if (expVal.length > 12) document.getElementById('kpiExposure').style.fontSize = '13px'; }
@@ -520,3 +521,43 @@ setInterval(() => { loadRelay(); }, 15000);
 </script>
 </body>
 </html>
+
+<script>
+// ===== TSM_AUTONOMY_STANDARDIZED =====
+window.TSM_AUTONOMY_STANDARDIZED = true;
+</script>
+
+<!-- TSM ENFORCER BOOT -->
+<script src="../../core/tsm-enforcer.js"></script>
+
+
+<script>
+// ===== TSM WAR ROOM SCOPED RELAY FIX =====
+window.tsmMission = window.tsmMission || {
+  id: "CONSTRUCTION-SUITE-" + Date.now().toString(36),
+  vertical: "construction-suite",
+  
+};
+
+function tsmWriteRelay(payload){
+  TSM_KERNEL.setRelay("construction-suite", JSON.stringify(payload));
+}
+</script>
+
+
+<script>
+// ===== TSM EXEC BRIDGE LAYER =====
+
+function tsmWriteScopedExec(vertical, missionId){
+  localStorage.setItem("TSM_EXEC_CONFIRMED_construction-suite_" + vertical, JSON.stringify({
+    vertical,
+    missionId,
+    timestamp: Date.now()
+  }));
+}
+</script>
+
+
+<!-- TSM KERNEL ENGINE -->
+<script src="../../core/tsm-kernel.js"></script>
+
