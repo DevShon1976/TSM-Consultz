@@ -150,8 +150,39 @@ const suites = [
 ];
 
 // ── HEALTH & STUB ROUTES ──────────────────────────────────────────────────────
+app.post('/api/re/query', async (req, res) => {
+  try { const a = await groqChat(SP.mortgage, req.body.message||req.body.question||req.body.query||'', req.body.maxTokens||1024); return res.json({ ok:true, answer:a, output:a }); }
+  catch(e){ return res.status(500).json({ ok:false, error:e.message }); }
+});
+app.post('/api/education/query', async (req, res) => {
+  try { const a = await groqChat(SP.education, req.body.message||req.body.question||req.body.query||'', req.body.maxTokens||1024); return res.json({ ok:true, answer:a, output:a }); }
+  catch(e){ return res.status(500).json({ ok:false, error:e.message }); }
+});
+app.post('/api/enterprise/query', async (req, res) => {
+  try { const a = await groqChat(SP.enterprise, req.body.message||req.body.question||req.body.query||'', req.body.maxTokens||1024); return res.json({ ok:true, answer:a, output:a }); }
+  catch(e){ return res.status(500).json({ ok:false, error:e.message }); }
+});
+app.post('/api/re/query', async (req, res) => {
+  try { const a = await groqChat(SP.mortgage, req.body.message||req.body.question||req.body.query||'', req.body.maxTokens||1024); return res.json({ ok:true, answer:a, output:a, reply:a }); }
+  catch(e){ return res.status(500).json({ ok:false, error:e.message }); }
+});
+app.post('/api/education/query', async (req, res) => {
+  try { const a = await groqChat(SP.education, req.body.message||req.body.question||req.body.query||'', req.body.maxTokens||1024); return res.json({ ok:true, answer:a, output:a, reply:a }); }
+  catch(e){ return res.status(500).json({ ok:false, error:e.message }); }
+});
+app.post('/api/enterprise/query', async (req, res) => {
+  try { const a = await groqChat(SP.enterprise, req.body.message||req.body.question||req.body.query||'', req.body.maxTokens||1024); return res.json({ ok:true, answer:a, output:a, reply:a }); }
+  catch(e){ return res.status(500).json({ ok:false, error:e.message }); }
+});
 app.get('/health', (req, res) => res.json({ status: 'ok', v: 3 }));
-app.post('/api/bpo/query', (req, res) => res.json({ reply: 'ok' }));
+app.post('/api/bpo/query', async (req, res) => {
+  try {
+    const sys = 'You are a BPO operations intelligence AI for TSM Command. Expert in BPO, workforce management, SLA performance, staffing ops. Be direct.';
+    const msg = req.body.message || req.body.question || req.body.query || '';
+    const a = await groqChat(sys, msg, req.body.maxTokens || 1024);
+    return res.json({ ok: true, reply: a, answer: a, output: a, createdAt: new Date().toISOString() });
+  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
 app.post('/api/wip/sector-ai', (req, res) => res.json({ content: 'ok' }));
 
 app.get('/api/hc/strategist-rollup', (req, res) => {

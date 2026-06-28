@@ -109,6 +109,18 @@ function buildLocalMission(vertical, anomaly) {
 
 // ── AI MISSION BUILDER ───────────────────────────────────────
 
+// Each vertical has its own server-side proxy route. Without this map,
+// every vertical's mission-generation call hits /api/hc/query.
+const VERTICAL_ENDPOINTS = {
+  healthcare: '/api/hc/query',
+  insurance: '/api/insurance/query',
+  legal: '/api/legal/query',
+  construction: '/api/construction/query',
+  'real-estate': '/api/re/query',
+  finops: '/api/financial/query',
+  bpo: '/api/bpo/query',
+};
+
 /**
  * Calls Groq via the TSM proxy and asks the AI to return
  * a structured step-by-step remediation mission.
@@ -165,7 +177,8 @@ ${appCatalog}
 Build the remediation mission. Return JSON only.`;
 
   try {
-    const res = await fetch('/api/hc/query', {
+    const endpoint = VERTICAL_ENDPOINTS[vertical] || '/api/hc/query';
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

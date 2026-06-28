@@ -1045,7 +1045,7 @@ async function finopsQuickMission(appName, appUrl, howto) {
   document.body.appendChild(modal);
 
   const anomaly = `App: ${appName}\nHow to use: ${howto}\nDoc type: ${selectedDocType}`;
-  const mission = await finopsGenerateMissionSteps(anomaly, docText);
+  const mission = await window.TSMMission.buildAIMission('finops', anomaly, groqKey || localStorage.getItem('tsm_groq_key') || '');
   const body = document.getElementById('finops-modal-body');
   if (body) {
     body.innerHTML = `<div style="color:#00d4aa;font-size:10px;font-weight:700;margin-bottom:8px;">${mission.missionTitle}</div><div style="color:#7a8898;font-size:9px;line-height:1.6;">${mission.summary}</div><div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:4px;">${(mission.steps||[]).map((s,i)=>`<span style="font-size:8px;padding:2px 8px;border:1px solid rgba(0,212,170,.2);color:rgba(0,212,170,.6);">${i+1}. ${s.appName}</span>`).join('')}</div>`;
@@ -1206,87 +1206,6 @@ function finopsResolveApp(text) {
   return { app:'FinOps Strategist', url:'/html/finops/finops-strategist.html', reason:'General FinOps anomaly — strategist review required' };
 }
  
-async function finopsGenerateMissionSteps(anomalyText, docText) {
-  const route = finopsResolveApp(anomalyText+' '+docText);
-  const FINOPS_APPS = [
-    'FinOps War Room | /html/finops-suite/finops-war-room.html',
-    'FinOps Strategist | /html/finops-suite/finops-main-strategist.html',
-    'FinOps Executive Portal | /html/finops-suite/finops-executive-portal.html',
-    'FinOps Accounting | /html/finops-suite/finops-accounting.html',
-    'FinOps Operations | /html/finops-suite/finops-operations.html',
-  ].join('\n');
- 
-  const sys=`You are TSM Neural Core. Generate a step-by-step FinOps cost anomaly remediation mission. Respond ONLY with valid JSON. No markdown.`;
-  const msg=`Anomaly:\n"${anomalyText.slice(0,600)}"\n\nDoc context:\n${(docText||'').slice(0,400)}\n\nAvailable apps:\n${FINOPS_APPS}\n\nGenerate 4-6 steps. Return ONLY:\n{"missionTitle":"...","summary":"...","steps":[{"id":"step-1","title":"...","appName":"...","appUrl":"...","objective":"...","instructions":"...","expectedOutput":"...","completionCriteria":"..."}]}`;
- 
-  try {
-    const res=await fetch('/api/financial/query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:msg})});
-    const data=await res.json();
-    const raw=(data.answer||data.response||data.content||'').replace(/```json|```/g,'').trim();
-    const parsed=JSON.parse(raw);
-    return {missionId:'FINOPS-'+Date.now(),...parsed,steps:(parsed.steps||[]).map((s,i)=>({...s,status:i===0?'active':'pending'}))};
-  } catch(e) {
-    return {
-      missionId:'FINOPS-'+Date.now(),missionTitle:'FinOps Anomaly Remediation',
-      summary:'Resolve the flagged financial anomaly using the recommended workflow.',
-      steps:[
-        {id:'step-1',title:route.app,appName:route.app,appUrl:route.url,objective:route.reason,
-          instructions:`Open ${route.app}. Load the financial document and review the flagged anomaly. Run the relevant analysis engine for this cost type.`,
-          expectedOutput:'Anomaly root cause confirmed and remediation path identified',completionCriteria:'Findings documented',status:'active'},
-        {id:'step-2',title:'FinOps Strategist',appName:'FinOps Strategist',appUrl:'/html/finops-suite/finops-main-strategist.html',
-          objective:'Generate cost optimization brief',
-          instructions:'Open FinOps Strategist. Relay the anomaly findings and generate a structured optimization brief with savings recommendations ranked by impact.',
-          expectedOutput:'Optimization brief with ranked recommendations',completionCriteria:'Brief reviewed and actions assigned',status:'pending'}
-      ]
-    };
-  }
-}
- 
-function renderFinopsMissionGuide(mission, container) {
-  function completeStep(stepId) {
-    const idx=mission.steps.findIndex(s=>s.id===stepId);
-    if(idx<0)return;
-    mission.steps[idx].status='complete';
-    if(idx+1<mission.steps.length)mission.steps[idx+1].status='active';
-    renderGuide();
-    if(mission.steps.every(s=>s.status==='complete')){setTimeout(()=>{const d=document.createElement('div');d.style.cssText='margin-top:10px;padding:10px;background:rgba(0,212,170,.06);border:1px solid rgba(0,212,170,.2);color:var(--cyan,#00d4aa);font-size:9px;letter-spacing:1px;text-align:center;';d.textContent='⬡ MISSION COMPLETE — ANOMALY RESOLVED';container.appendChild(d);},300);}
-  }
-  window._finopsMissionComplete=completeStep;
- 
-  function renderGuide(){
-    const step=mission.steps.find(s=>s.status==='active');
-    const done=mission.steps.filter(s=>s.status==='complete').length;
-    const pct=Math.round((done/mission.steps.length)*100);
-    const accent='var(--cyan,#00d4aa)';
-    container.innerHTML=`
-      <div style="border-top:1px solid rgba(0,212,170,.15);margin-top:10px;padding-top:10px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <span style="color:${accent};font-size:9px;letter-spacing:1px;font-weight:700;">⚡ REMEDIATION MISSION</span>
-          <span style="color:rgba(0,212,170,.4);font-size:9px;">${done}/${mission.steps.length} · ${pct}%</span>
-        </div>
-        <div style="height:2px;background:rgba(0,212,170,.1);margin-bottom:10px;"><div style="height:100%;width:${pct}%;background:${accent};transition:width .3s;"></div></div>
-        <div style="font-size:10px;color:#7a8898;margin-bottom:10px;line-height:1.5;">${mission.summary||''}</div>
-        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">
-          ${mission.steps.map((s,i)=>`<span style="font-size:8px;padding:2px 7px;border-radius:2px;background:${s.status==='complete'?'rgba(0,212,170,.12)':s.status==='active'?'rgba(0,212,170,.06)':'rgba(255,255,255,.02)'};border:1px solid ${s.status==='complete'?'rgba(0,212,170,.3)':s.status==='active'?'rgba(0,212,170,.15)':'rgba(255,255,255,.05)'};color:${s.status==='complete'?accent:s.status==='active'?'#e4eaf4':'#445'}">${s.status==='complete'?'✓ ':s.status==='active'?'▶ ':`${i+1}. `}${s.appName}</span>`).join('')}
-        </div>
-        ${step?`
-        <div style="background:#0d1117;border:1px solid rgba(0,212,170,.12);border-radius:4px;padding:10px;margin-bottom:8px;">
-          <div style="font-size:8px;color:rgba(0,212,170,.5);letter-spacing:1px;margin-bottom:4px;">STEP ${mission.steps.indexOf(step)+1} OF ${mission.steps.length}</div>
-          <div style="font-size:11px;color:#e4eaf4;font-weight:700;margin-bottom:8px;">${step.title}</div>
-          <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(0,212,170,.04);border:1px solid rgba(0,212,170,.1);border-radius:3px;padding:7px 10px;margin-bottom:8px;">
-            <div><div style="font-size:8px;color:rgba(0,212,170,.5);margin-bottom:2px;">APP</div><div style="font-size:10px;color:${accent};font-weight:700;">${step.appName}</div><div style="font-size:8px;color:#445;">${step.appUrl}</div></div>
-            <a href="${step.appUrl}" target="_blank" style="background:${accent};color:#000;font-size:9px;font-weight:700;padding:6px 10px;text-decoration:none;letter-spacing:1px;border-radius:3px;white-space:nowrap;">OPEN ↗</a>
-          </div>
-          <div style="font-size:9px;color:#7a8898;margin-bottom:6px;line-height:1.6;"><span style="color:rgba(0,212,170,.5);font-size:8px;display:block;margin-bottom:2px;">OBJECTIVE</span>${step.objective}</div>
-          <div style="background:#080d12;border:1px solid rgba(255,255,255,.05);border-radius:3px;padding:8px;margin-bottom:8px;font-size:9px;color:#7a8898;line-height:1.7;white-space:pre-wrap;"><span style="color:rgba(0,212,170,.5);font-size:8px;display:block;margin-bottom:3px;">ACTIONS</span>${step.instructions}</div>
-          <div style="border-left:2px solid rgba(0,212,170,.3);padding:5px 8px;margin-bottom:8px;font-size:9px;color:#7a8898;"><span style="color:rgba(0,212,170,.5);font-size:8px;display:block;margin-bottom:2px;">EXPECTED OUTPUT</span>${step.expectedOutput}</div>
-          <button onclick="window._finopsMissionComplete('${step.id}')" style="width:100%;background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.2);color:${accent};font-family:'Orbitron',monospace;font-size:9px;font-weight:700;letter-spacing:1px;padding:9px;cursor:pointer;text-transform:uppercase;" onmouseover="this.style.background='rgba(0,212,170,.15)'" onmouseout="this.style.background='rgba(0,212,170,.08)'">✓ COMPLETE STEP ${mission.steps.indexOf(step)+1}</button>
-        </div>`:''}
-      </div>`;
-  }
-  renderGuide();
-}
- 
 function showAnomalyAdvisorPanel(outputs, docText) {
   const existing = document.getElementById('anomaly-slide-panel');
   if (existing) existing.remove();
@@ -1351,9 +1270,16 @@ async function finopsLaunchMission(){
   const container=document.getElementById('finops-mission-container');
   if(!btn||!container)return;
   document.getElementById('finops-mission-btn-wrap').style.display='none';
-  container.innerHTML='<div style="padding:10px 0;color:rgba(0,212,170,.5);font-size:9px;letter-spacing:1px;text-align:center;">⬡ BUILDING REMEDIATION MISSION...</div>';
-  const mission=await finopsGenerateMissionSteps(btn.dataset.anomaly||'',btn.dataset.doc||'');
-  renderFinopsMissionGuide(mission,container);
+  if (window.TSMMission) {
+    await window.TSMMission.launch({
+      vertical: 'finops',
+      anomaly: btn.dataset.anomaly || '',
+      container: container,
+      apiKey: groqKey || localStorage.getItem('tsm_groq_key') || ''
+    });
+  } else {
+    container.innerHTML = '<div style="padding:10px 0;color:#ff4d6d;font-size:9px;letter-spacing:1px;text-align:center;">⬡ MISSION ORCHESTRATOR UNAVAILABLE — refresh and retry</div>';
+  }
 }
 </script>
 
@@ -1521,7 +1447,6 @@ window.addEventListener('DOMContentLoaded', () => {
 window.startTour = startTour;
 window.howtoOpen = () => document.getElementById('howtoOverlay').classList.add('active');
 </script>
-<div id="tsm-mission-guide-panel" style="display:none;padding:0 14px 14px;"></div>
 <script src="/html/tsm-mission-orchestrator.js"></script>
 </body>
 </html>
