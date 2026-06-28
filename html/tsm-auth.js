@@ -150,7 +150,7 @@ const LOGIN_HTML = `<!DOCTYPE html>
       const btn = this.querySelector('button');
       btn.textContent = 'AUTHENTICATING...';
       btn.disabled = true;
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch('/api/auth/login' + window.location.search, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: document.getElementById('code').value })
