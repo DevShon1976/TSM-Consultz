@@ -92,25 +92,9 @@ Never mention AI provider names, model names, or technical infrastructure in res
     const model = extra.model || _model || 'llama-3.3-70b-versatile';
 
     try {
-<<<<<<< HEAD
-        const res = await fetch("/api/v1/bridge", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                model: "llama-3.3-70b-versatile",
-                messages: [
-                    { role: "system", content: systemContext },
-                    { role: "user", content: userPrompt }
-                ],
-                temperature: 0.1
-            })
-=======
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      const res = await fetch('/api/v1/bridge', {
         method: 'POST',
-        headers: {
-          'Content-Type':  'application/json',
-          'Authorization': 'Bearer ' + key
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model,
           max_tokens:  1024,
@@ -183,7 +167,7 @@ Never mention AI provider names, model names, or technical infrastructure in res
           const input  = sel ? document.querySelector(sel) : null;
           const prompt = input?.value || input?.innerText || 'Run analysis';
           askHC(prompt);
->>>>>>> origin/main
+        });
         });
         return;
       }
