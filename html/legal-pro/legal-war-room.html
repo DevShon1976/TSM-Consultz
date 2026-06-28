@@ -1798,6 +1798,26 @@ function speechSetState(state){const pb=document.getElementById('speechPlayBtn')
 <script src="/js/tsm-mission-guide.js"></script>
 <script src="../..//js/tsm-mission-conductor.js"></script>
 <script src="/html/tsm-mission-orchestrator.js"></script>
+
+<script>
+/* TSM AUTO-FIRE: read docsearch relay and fire engines */
+(function tsmAutoFire(){
+  try {
+    const raw = localStorage.getItem('tsm_legal_docsearch_relay');
+    if (!raw) return;
+    const relay = JSON.parse(raw);
+    if (!relay.summary && !relay.doc) return;
+    localStorage.removeItem('tsm_legal_docsearch_relay');
+    const summary = relay.summary || (relay.doc ? JSON.stringify(relay.doc).slice(0,800) : '');
+    const ta = document.getElementById('docPaste') || document.querySelector('textarea');
+    if (ta) {
+      ta.value = summary;
+      ta.dispatchEvent(new Event('input'));
+    }
+    setTimeout(() => { if (typeof fireEngines === 'function') fireEngines(); }, 900);
+  } catch(e) { console.warn('[TSM AutoFire]', e); }
+})();
+</script>
 </body>
 </html>
 
