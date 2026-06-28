@@ -54,6 +54,7 @@ const PUBLIC_EXACT = new Set([
   '/api/auth/logout',
   '/html/tsm-doc-search-multi.html',
   '/html/tsm-career-training-platform.html',
+  '/html/war-room-prep.html',
 ]);
 
 const PUBLIC_PREFIXES = [
