@@ -732,6 +732,7 @@ if (window.pdfjsLib) {
       <a href="/html/tsm-wip-command-center.html" class="btn-nav">📋 WIP Command</a>
       <a href="/html/war-room-prep.html" class="btn-nav">🛡 War Room Prep</a>
       <a href="/html/bpo/suite-hub.html" class="btn-nav">← Suite Hub</a>
+      <button id="auto-mode-toggle" onclick="toggleAutoMode()" style="font-family:var(--mono);font-size:.48rem;letter-spacing:.08em;padding:4px 10px;border-radius:3px;border:1px solid #1ee8b633;background:#080c14;color:#1ee8b6;cursor:pointer;">⚡ AUTO</button>
     </div>
   </div>
 
@@ -2311,5 +2312,28 @@ window.openHcNodeWithDoc = openHcNodeWithDoc;
 
 <script src="/html/tsm-mission-orchestrator.js"></script>
 <script src="/shared/tsm-cure-cheatsheet.js"></script>
+
+<script>
+/* TSM AUTO-MODE TOGGLE */
+(function(){
+  const KEY = 'tsm_auto_mode';
+  function getMode(){ return localStorage.getItem(KEY) !== 'off'; }
+  function updateBtn(){
+    const btn = document.getElementById('auto-mode-toggle');
+    if (!btn) return;
+    const on = getMode();
+    btn.textContent = on ? '⚡ AUTO' : '◎ MANUAL';
+    btn.style.color  = on ? '#1ee8b6' : '#94a3b8';
+    btn.style.border = on ? '1px solid #1ee8b633' : '1px solid #94a3b833';
+    btn.title = on ? 'Auto mode: upload fires full chain automatically' : 'Manual mode: upload routes to war room, you control each step';
+  }
+  window.toggleAutoMode = function(){
+    localStorage.setItem(KEY, getMode() ? 'off' : 'on');
+    updateBtn();
+  };
+  window.tsmIsAutoMode = getMode;
+  document.addEventListener('DOMContentLoaded', updateBtn);
+})();
+</script>
 </body>
 </html>
