@@ -6,7 +6,7 @@
  *
  * PUBLIC routes (no auth required):
  *   /                          — portfolio landing page
- *   /html/tsm-consultz-portfolio.html
+ *   /html/tsm-doc-search-multi.html
  *   /html/tsm-career-training-platform.html
  *   /login                     — login page
  *   /api/auth/login            — login POST endpoint
@@ -52,7 +52,7 @@ const PUBLIC_EXACT = new Set([
   '/health',
   '/api/auth/login',
   '/api/auth/logout',
-  '/html/tsm-consultz-portfolio.html',
+  '/html/tsm-doc-search-multi.html',
   '/html/tsm-career-training-platform.html',
 ]);
 
@@ -157,7 +157,7 @@ const LOGIN_HTML = `<!DOCTYPE html>
       });
       if (res.ok) {
         const { redirect } = await res.json();
-        window.location.href = redirect || '/html/tsm-consultz-portfolio.html';
+        window.location.href = redirect || '/html/tsm-doc-search-multi.html';
       } else {
         document.getElementById('err').classList.add('show');
         btn.textContent = 'AUTHENTICATE →';
@@ -179,7 +179,7 @@ function tsmAuthMiddleware(app) {
       return res.status(401).json({ error: 'Invalid access code' });
     }
     const token    = generateToken();
-    const redirect = req.query.redirect || '/html/tsm-consultz-portfolio.html';
+    const redirect = req.query.redirect || '/html/tsm-doc-search-multi.html';
     res.setHeader('Set-Cookie',
       `${COOKIE_NAME}=${encodeURIComponent(token)}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESSION_DURATION_MS / 1000}`
     );
