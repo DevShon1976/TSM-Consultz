@@ -695,7 +695,7 @@
         </div>
         <div class="crisis-cta-row">
           <a class="crisis-cta" href="/html/bpo/bpo-situation-room.html" target="_blank">Launch Situation Room ↗</a>
-          <a class="crisis-cta" href="/html/bpo/bpo-strategist-v2.html" target="_blank">Open Strategist V2 ↗</a>
+          <a class="crisis-cta" href="/html/bpo/bpo-strategist.html" target="_blank">Open Strategist V2 ↗</a>
           <a class="crisis-cta" href="/html/bpo/bpo-executive-portal.html" target="_blank">Open Executive Portal ↗</a>
           <a class="crisis-cta" href="#" onclick="switchTo('bpo');return false;">View Full BPO Chain →</a>
         </div>
@@ -740,7 +740,8 @@
       <div class="wr-grid" id="ov-grid"></div>
 
       <div class="checklist-group">
-        <div class="cg-label">PRE-DEMO SYSTEM CHECKS</div>
+        <div class="cg-label">PRE-DEMO SYSTEM CHECKS <span id="sys-pct" style="color:var(--green);margin-left:.5rem;">0%</span></div>
+        <div style="height:2px;background:var(--border2);border-radius:1px;margin-bottom:.75rem;"><div id="sys-fill" style="height:2px;background:var(--green);border-radius:1px;width:0%;transition:width .3s;"></div></div>
         <div class="cg-item"><div class="cg-check"><input type="checkbox" id="sys-1" onchange="checkSys('sys-1',this.checked)"></div><div class="cg-text">Fly.io deployment live — confirm at tsm-shell.fly.dev</div></div>
         <div class="cg-item"><div class="cg-check"><input type="checkbox" id="sys-2" onchange="checkSys('sys-2',this.checked)"></div><div class="cg-text"><a href="/html/tsm-doc-search-multi.html" target="_blank" style="color:var(--purple);text-decoration:none">tsm-doc-search-multi.html ↗</a> loads — central entry point for all sectors</div></div>
         <div class="cg-item"><div class="cg-check"><input type="checkbox" id="sys-3" onchange="checkSys('sys-3',this.checked)"></div><div class="cg-text">GROQ_API_KEY set as Fly.io secret — AI calls streaming in all sectors</div></div>
@@ -1080,7 +1081,7 @@
         <div class="panel-url">
           <a href="/html/bpo/bpo-situation-room.html" target="_blank">bpo-situation-room.html ↗</a>
           &nbsp;·&nbsp;
-          <a href="/html/bpo/bpo-strategist-v2.html" target="_blank">bpo-strategist.html ↗</a>
+          <a href="/html/bpo/bpo-strategist.html" target="_blank">bpo-strategist.html ↗</a>
           &nbsp;·&nbsp;
           <a href="/html/bpo/bpo-executive-portal.html" target="_blank">bpo-executive-portal.html ↗</a>
         </div>
@@ -1289,7 +1290,16 @@ function renderOverviewGrid(){
 }
 
 function check(id,i,val){ state[id][i]=val; updateAll(); }
-function checkSys(id,val){ sysChecks[id]=val; }
+function checkSys(id,val){
+  sysChecks[id]=val;
+  // Feed sys checks into overview display
+  const total = 7; // sys-1 through sys-7
+  const done = Object.values(sysChecks).filter(Boolean).length;
+  const el = document.getElementById('sys-pct');
+  if(el) el.textContent = Math.round(done/total*100)+'%';
+  const bar = document.getElementById('sys-fill');
+  if(bar) bar.style.width = Math.round(done/total*100)+'%';
+}
 function resetWr(id){ for(let i=0;i<STEPS[id];i++){ state[id][i]=false; const cb=document.getElementById('chk-'+id+'-'+i); if(cb)cb.checked=false; } updateAll(); }
 
 function switchTo(id){
@@ -1325,14 +1335,8 @@ function toggleNarr(id) {
   body.classList.toggle('open', !isOpen);
   toggle.classList.toggle('open', !isOpen);
 }
-// Auto-open narrative for active panel on switch
-const _origSwitchTo = switchTo;
-
-<script>
-/* ─────────────────────────────────────────────────────────────
-   TSM WAR ROOM PREP → DOC SEARCH LAUNCH BRIDGE
-   Makes War Room Prep an actual launcher, not just a narrative page.
-───────────────────────────────────────────────────────────── */
+// TSM WAR ROOM PREP → DOC SEARCH LAUNCH BRIDGE
+// Makes War Room Prep an actual launcher, not just a narrative page.
 window.TSM_WRP = {
   routes: {
     hc: 'healthcare',
