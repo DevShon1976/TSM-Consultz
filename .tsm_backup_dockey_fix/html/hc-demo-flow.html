@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HC Presentation Flow · Tomorrow's Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Epilogue:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f4f0;--surface:#fff;--border:#e2e0d8;--text:#1a1a18;--muted:#6b6b64;
+  --green:#0a7c4a;--green-bg:#edf7f1;--green-border:#a7f3d0;
+  --red:#c0392b;--red-bg:#fdf2f1;--red-border:#fecaca;
+  --amber:#b45309;--amber-bg:#fef9ed;--amber-border:#fde68a;
+  --blue:#1d4ed8;--blue-bg:#eff4ff;--blue-border:#bfdbfe;
+  --purple:#7c3aed;--purple-bg:#faf5ff;--purple-border:#ddd6fe;
+  --mono:'DM Mono',monospace;--display:'Epilogue',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--display);font-size:14px;line-height:1.6;padding-bottom:80px}
+
+/* HEADER */
+.header{background:var(--text);color:#fff;padding:2rem 3rem;position:relative;overflow:hidden}
+.header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#0a7c4a,#34d399,#3b82f6,#0a7c4a)}
+.header-tag{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:#34d399;text-transform:uppercase;margin-bottom:.5rem}
+.header-title{font-weight:900;font-size:clamp(1.6rem,3.5vw,2.5rem);line-height:1.05;letter-spacing:-.02em;margin-bottom:.4rem}
+.header-title span{color:#34d399}
+.header-sub{font-weight:300;font-size:.9rem;color:#9ca3af;max-width:600px;margin-bottom:1.2rem}
+.header-meta{display:flex;gap:1.5rem;flex-wrap:wrap}
+.hm{font-family:var(--mono);font-size:11px;color:#6b7280;display:flex;align-items:center;gap:.3rem}
+.hm span{color:#34d399}
+
+/* CONTAINER */
+.container{max-width:960px;margin:0 auto;padding:2rem 1.5rem}
+
+/* FLOW MAP */
+.flow-map{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.25rem 1.5rem;margin-bottom:2rem;overflow-x:auto}
+.flow-map-label{font-family:var(--mono);font-size:10px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;margin-bottom:1rem}
+.flow-nodes{display:flex;align-items:center;gap:0;flex-wrap:nowrap;min-width:600px}
+.flow-node{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.6rem .9rem;text-align:center;flex-shrink:0;cursor:pointer;transition:all .15s;position:relative}
+.flow-node:hover{border-color:var(--green);background:var(--green-bg)}
+.flow-node-num{font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:.2rem}
+.flow-node-name{font-size:.75rem;font-weight:700;color:var(--text);line-height:1.2}
+.flow-node-sub{font-size:.65rem;color:var(--muted);margin-top:.15rem}
+.flow-arrow{color:var(--border);font-size:1.2rem;padding:0 .3rem;flex-shrink:0}
+.flow-node.crit{border-color:var(--red);background:var(--red-bg)}
+.flow-node.crit .flow-node-name{color:var(--red)}
+.flow-node.key{border-color:var(--green);background:var(--green-bg)}
+.flow-node.key .flow-node-name{color:var(--green)}
+
+/* SECTION LABEL */
+.section-label{font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:.75rem;display:flex;align-items:center;gap:.75rem}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* OPENING */
+.opening{background:var(--green-bg);border:1px solid var(--green-border);border-radius:8px;padding:1.25rem 1.5rem;margin-bottom:2rem}
+.opening-label{font-family:var(--mono);font-size:10px;letter-spacing:.15em;color:var(--green);text-transform:uppercase;margin-bottom:.6rem}
+.opening-quote{font-size:1.05rem;font-weight:700;color:var(--text);line-height:1.5;border-left:3px solid var(--green);padding-left:1rem;margin-bottom:.6rem}
+.opening-note{font-size:.82rem;color:var(--muted);font-style:italic}
+
+/* STEP */
+.step{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:1rem;overflow:hidden}
+.step-header{display:flex;align-items:center;gap:.75rem;padding:.85rem 1.1rem;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;transition:background .1s}
+.step-header:hover{background:#fafaf8}
+.step-num{width:28px;height:28px;border-radius:50%;background:var(--text);color:#fff;font-family:var(--mono);font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step.active .step-num{background:var(--green)}
+.step.done .step-num{background:#6b7280}
+.step-title{font-weight:700;font-size:.95rem;flex:1}
+.step-page{font-family:var(--mono);font-size:10px;padding:.2rem .6rem;border-radius:3px;background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+.step-page.hc{background:var(--green-bg);color:var(--green);border-color:var(--green-border)}
+.step-page.exec{background:var(--purple-bg);color:var(--purple);border-color:var(--purple-border)}
+.step-page.wip{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-border)}
+.step-page.cmd{background:var(--red-bg);color:var(--red);border-color:var(--red-border)}
+.step-dur{font-family:var(--mono);font-size:10px;color:var(--muted);background:var(--bg);padding:.2rem .5rem;border-radius:999px;border:1px solid var(--border);white-space:nowrap}
+.step-body{padding:1.1rem 1.25rem;display:none}
+.step.open .step-body{display:block}
+
+/* URL BAR */
+.url-bar{font-family:var(--mono);font-size:.78rem;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:.4rem .8rem;color:var(--blue);margin:.4rem 0 .6rem;display:flex;align-items:center;gap:.4rem}
+.url-bar::before{content:'🌐';font-size:11px}
+.url-bar a{color:inherit;text-decoration:none}
+.url-bar a:hover{text-decoration:underline}
+
+/* ACTION */
+.action{display:flex;gap:.6rem;align-items:flex-start;padding:.55rem 0;border-bottom:1px solid var(--border)}
+.action:last-child{border-bottom:none}
+.badge{font-family:var(--mono);font-size:9px;letter-spacing:.06em;padding:.2rem .5rem;border-radius:2px;text-transform:uppercase;flex-shrink:0;margin-top:2px;min-width:50px;text-align:center}
+.badge-click{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+.badge-say{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.badge-watch{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.badge-pause{background:#f3f4f6;color:#6b7280;border:1px solid #e5e7eb}
+.badge-tip{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border)}
+.badge-qa{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.action-main{font-size:.875rem;color:var(--text);line-height:1.5}
+.action-main strong{font-weight:700}
+.action-main code{font-family:var(--mono);font-size:.78rem;background:var(--bg);border:1px solid var(--border);padding:.1rem .3rem;border-radius:2px;color:var(--blue)}
+.action-sub{font-size:.78rem;color:var(--muted);margin-top:.15rem;font-style:italic}
+
+/* CALLOUT */
+.callout{border-radius:5px;padding:.8rem 1rem;margin:.6rem 0;font-size:.85rem;line-height:1.55;display:flex;gap:.5rem;align-items:flex-start}
+.callout-icon{flex-shrink:0;font-size:14px;margin-top:1px}
+.callout.green{background:var(--green-bg);color:#065f46;border:1px solid var(--green-border)}
+.callout.amber{background:var(--amber-bg);color:#78350f;border:1px solid var(--amber-border)}
+.callout.blue{background:var(--blue-bg);color:#1e3a8a;border:1px solid var(--blue-border)}
+.callout.red{background:var(--red-bg);color:#7f1d1d;border:1px solid var(--red-border)}
+.callout.purple{background:var(--purple-bg);color:#4c1d95;border:1px solid var(--purple-border)}
+
+/* OBJECTION */
+.objection{background:var(--red-bg);border:1px solid var(--red-border);border-radius:5px;padding:.8rem 1rem;margin:.4rem 0}
+.objection-q{font-weight:700;font-size:.85rem;color:var(--red);margin-bottom:.3rem}
+.objection-a{font-size:.85rem;color:var(--text);line-height:1.5}
+
+/* PROGRESS TRACKER */
+.progress-tracker{display:flex;gap:6px;margin-bottom:1.5rem;flex-wrap:wrap}
+.pt-step{font-family:var(--mono);font-size:10px;padding:.3rem .7rem;border-radius:3px;border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:all .15s}
+.pt-step:hover{border-color:var(--green);color:var(--green)}
+.pt-step.active{background:var(--green);color:#fff;border-color:var(--green)}
+.pt-step.done{background:var(--bg);color:var(--muted);text-decoration:line-through}
+
+/* CLOSE */
+.close-box{background:var(--text);color:#fff;border-radius:8px;padding:1.5rem;margin-top:1.5rem}
+.close-label{font-family:var(--mono);font-size:10px;letter-spacing:.15em;color:#34d399;margin-bottom:.6rem;text-transform:uppercase}
+.close-title{font-weight:800;font-size:1.2rem;margin-bottom:.8rem}
+.close-ask{display:flex;align-items:flex-start;gap:.6rem;font-size:.875rem;color:#d1fae5;margin-bottom:.4rem;line-height:1.5}
+.close-ask::before{content:'→';color:#34d399;font-weight:700;font-family:var(--mono);flex-shrink:0;margin-top:2px}
+
+/* TIMER */
+.timer{position:fixed;bottom:0;left:0;right:0;background:var(--text);padding:.5rem 1.5rem;display:flex;align-items:center;justify-content:space-between;z-index:100;font-family:var(--mono);font-size:12px}
+.timer-time{color:#34d399;font-size:15px;font-weight:600;min-width:60px}
+.timer-btns{display:flex;gap:.4rem}
+.timer-btn{background:transparent;border:1px solid #374151;color:#9ca3af;padding:.3rem .7rem;border-radius:3px;cursor:pointer;font-family:var(--mono);font-size:11px;transition:all .15s}
+.timer-btn:hover,.timer-btn.on{border-color:#34d399;color:#34d399}
+.timer-label{color:#6b7280;font-size:11px}
+
+/* PROGRESS BAR */
+.pbar{position:fixed;top:0;left:0;right:0;height:3px;background:#374151;z-index:200}
+.pbar-fill{height:100%;background:linear-gradient(90deg,#0a7c4a,#34d399);transition:width .3s}
+
+@media print{.timer,.pbar{display:none}.step-body{display:block!important}body{padding-bottom:0}}
+</style>
+</head>
+<body>
+
+<div class="pbar"><div class="pbar-fill" id="pbarFill" style="width:0%"></div></div>
+
+<div class="header">
+  <div class="header-tag">🏥 Healthcare Demo Script · Presentation Tomorrow</div>
+  <h1 class="header-title">HC Sovereign Mesh<br><span>Full Demo Flow</span></h1>
+  <p class="header-sub">Click-by-click walkthrough across all 6 healthcare pages. Clinical & Ops leadership audience. Every click, word, and transition scripted.</p>
+  <div class="header-meta">
+    <div class="hm">⏱ Total <span>20–25 min</span></div>
+    <div class="hm">📄 Pages <span>6 screens</span></div>
+    <div class="hm">👥 Audience <span>Clinical / Ops Leadership</span></div>
+    <div class="hm">🌐 Base <span>tsm-shell.fly.dev</span></div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- FLOW MAP -->
+  <div class="flow-map">
+    <div class="flow-map-label">Presentation Page Flow — click any node to jump to that step</div>
+    <div class="flow-nodes">
+      <div class="flow-node key" data-tsm-action="jumpTo" data-tsm-args="1">
+        <div class="flow-node-num">START</div>
+        <div class="flow-node-name">HC Command</div>
+        <div class="flow-node-sub">index.html</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" data-tsm-action="jumpTo" data-tsm-args="2">
+        <div class="flow-node-num">02</div>
+        <div class="flow-node-name">WIP Dashboard</div>
+        <div class="flow-node-sub">wip-dashboard.html</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node crit" data-tsm-action="jumpTo" data-tsm-args="3">
+        <div class="flow-node-num">03</div>
+        <div class="flow-node-name">HC Strategist</div>
+        <div class="flow-node-sub">hc-main-strategist</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" data-tsm-action="jumpTo" data-tsm-args="4">
+        <div class="flow-node-num">04</div>
+        <div class="flow-node-name">WIP Detail</div>
+        <div class="flow-node-sub">healthcare/wip</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" data-tsm-action="jumpTo" data-tsm-args="5">
+        <div class="flow-node-num">05</div>
+        <div class="flow-node-name">Executive Portal</div>
+        <div class="flow-node-sub">executive-portal</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node key" data-tsm-action="jumpTo" data-tsm-args="6">
+        <div class="flow-node-num">CLOSE</div>
+        <div class="flow-node-name">HC Command</div>
+        <div class="flow-node-sub">Return + Ask</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROGRESS TRACKER -->
+  <div class="progress-tracker" id="progressTracker">
+    <div class="pt-step active" data-tsm-action="jumpTo" data-tsm-args="1" id="pt1">1 · HC Command</div>
+    <div class="pt-step" data-tsm-action="jumpTo" data-tsm-args="2" id="pt2">2 · WIP Dashboard</div>
+    <div class="pt-step" data-tsm-action="jumpTo" data-tsm-args="3" id="pt3">3 · HC Strategist</div>
+    <div class="pt-step" data-tsm-action="jumpTo" data-tsm-args="4" id="pt4">4 · WIP Detail</div>
+    <div class="pt-step" data-tsm-action="jumpTo" data-tsm-args="5" id="pt5">5 · Executive Portal</div>
+    <div class="pt-step" data-tsm-action="jumpTo" data-tsm-args="6" id="pt6">6 · Close</div>
+  </div>
+
+  <!-- OPENING -->
+  <div class="opening">
+    <div class="opening-label">🎤 Say this before touching the screen — 30 seconds</div>
+    <div class="opening-quote">"Every day your clinical team delivers care that never gets fully captured in revenue. Not because of mistakes — because the gap between care delivered and money collected is invisible. Today I'm going to show you exactly where that gap is, what's causing it, and what this system does about it automatically."</div>
+    <div class="opening-note">Pause 3 seconds. Then open the browser to HC Command Chain.</div>
+  </div>
+
+  <!-- STEP 1: HC COMMAND CHAIN -->
+  <div class="section-label">Step 1 of 6</div>
+  <div class="step open active" id="step1">
+    <div class="step-header" data-tsm-action="toggleStep" data-tsm-args="1">
+      <div class="step-num">1</div>
+      <div class="step-title">HC Command Chain — The Nerve Center</div>
+      <span class="step-page hc">index.html</span>
+      <span class="step-dur">3 min</span>
+    </div>
+    <div class="step-body">
+      <div class="url-bar"><a href="https://tsm-shell.fly.dev/healthcare/index.html" target="_blank">tsm-shell.fly.dev/healthcare/index.html</a></div>
+
+      <div class="action">
+        <div class="badge badge-watch">Watch</div>
+        <div>
+          <div class="action-main">Page loads. Point to the top bar: <strong>11/11 NODES LIVE</strong> and the scrolling ticker showing <strong>247 PENDING ADJUDICATIONS · DENIAL RATE 18.4% · PRIOR AUTH FRICTION HIGH</strong>.</div>
+        </div>
+      </div>
+      <div class="action">
+        <div class="badge badge-say">Say</div>
+        <div><div class="action-main">"This is your command chain. 11 operational nodes, all live, all reporting in real time. That ticker at the top — those aren't projections. That's what's happening in your revenue cycle right now."</div></div>
+      </div>
+      <div class="action">
+        <div class="badge badge-watch">Watch</div>
+        <div><div class="action-main">Point to the KPI row: <strong>NODES LIVE 11/11 · BNCA MESH ONLINE</strong>. Let them read it for 5 seconds.</div></div>
+      </div>
+      <div class="action">
+        <div class="badge badge-say">Say</div>
+        <div><div class="action-main">"Each node represents a department in your operation — billing, compliance, medical, pharmacy, operations. They're all connected. When one node has a problem, every other node knows about it."</div></div>
+      </div>
+      <div class="action">
+        <div class="badge badge-click">Click</div>
+        <div><div class="action-main">Click the <strong>WIP INTELLIGENCE</strong> banner or the green <strong>VIEW WIP DASHBOARD</strong> button.</div><div class="action-sub">If no WIP banner visible, navigate directly to wip-dashboard.html?sector=healthcare</div></div>
+      </div>
+      <div class="callout green">
+        <span class="callout-icon">💡</span>
+        <span><strong>Ops hook:</strong> The 18.4% denial rate vs 9% target will land hard with ops leadership. Pause on that number. "You're running at double your target denial rate. This system tells you why — by name, by encounter, by dollar amount."</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: WIP DASHBOARD -->
+  <div class="section-label">Step 2 of 6</div>
+  <div class="step" id="step2">
+    <div class="step-header" data-tsm-action="toggleStep" data-tsm-args="2">
+      <div class="step-num">2</div>
+      <div class="step-title">Universal WIP Dashboard — Healthcare Sector</div>
+      <span class="step-page wip">wip-dashboard.html</span>
+      <span class="step-dur">4 min</span>
+    </div>
+    <div class="step-body">
+      <div class="url-bar"><a href="https://tsm-shell.fly.dev/wip-dashboard.html?sector=healthcare" target="_blank">tsm-shell.fly.dev/wip-dashboard.html?sector=healthcare</a></div>
+
+      <div class="action">
+        <div class="badge badge-watch">Watch</div>
+        <div><div class="action-main">Healthcare sector loads. Point to the 6 KPI cards: <strong>$2.8M Expected · $2.1M Submitted · $1.65M Collected · $189K Aging Gap · 148 Unbilled · 23% Denial Risk</strong>.</div></div>
+      </div>
+      <div class="action">
+        <div class="badge badge-say">Say</div>
+        <div><div class="action-main">"Six numbers. That's your entire revenue cycle health in one view. $189K aging gap — that's care already delivered, not yet collected. 148 services rendered with no claim submitted. And 23% denial risk on the claims that are in flight."</div></div>
+      </div>
+      <div class="action">
+        <div class="badge badge-watch">Watch</div>
+        <div><div class="action-main">Point to the two red alert bars: <strong>ENC-8821 Prior Auth Denial</strong> and <strong>ENC-8912 Scrubbing Hold</strong>.</div></div>
+      </div>
+      <div class="action">
+        <div class="badge badge-say">Say</div>
+        <div><div class="action-main">"ENC-8821 — $4,200 at risk. 52 days in AR. The appeal window closes in 30 days. Without this dashboard, your team finds this at day 60 when the window is gone. This finds it day one."</div></div>
+      </div>
+      <div class="action">
+        <div class="badge badge-click">Click</div>
+        <div><div class="action-main">Click <strong>⚡ RUN BNCA</strong> button. Wait 2 seconds for the API response alert.</div></div>
+      </div>
+      <div class="action">
+        <div class="badge badge-watch">Watch</div>
+        <div><div class="action-main">Alert shows: <strong>"148 claims queued. Net recovery: $1,771,000."</strong></div></div>
+      </div>
+      <div class="action">
+        <div class="badge badge-say">Say</div>
+        <div><div class="action-main">"$1.77 million in recoverable revenue. One button. That's what BNCA does — it identifies every unbilled service and queues them for submission automatically."</div></div>
+      </div>
+      <div class="callout amber">
+        <span class="callout-icon">⚠</span>
+        <span><strong>If asked "what's BNCA?"</strong> — "Bill Not Coded / Audited. It's the reconciliation logic that matches every care event against a submitted claim. If there's no claim, it flags it. If the claim is wrong, it flags that too."</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3: HC MAIN STRATEGIST -->
+  <div class="section-label">Step 3 of 6 — THE POWER MOMENT</div>
+  <div class="step" id="step3">
+    <div class="step-header" data-tsm-action="toggleStep" data-tsm-args="3">
+      <div class="step-num">3</div>
+      <div class="step-title">HC Main Strategist — Neural Core AI</div>
+      <span class="step-page cmd">hc-main-strategist.html</span>
+      <span class="step-dur">5 min</span>
+    </div>
+    <div class="step-body">
+      <div class="url-bar"><a href="https://tsm-shell.fly.dev/healthcare/hc-main-strategist.html" target="_blank">tsm-shell.fly.dev/healthcare/hc-main-strategist.html</a></div>
+
+      <div class="action">
+        <div class="badge badge-say">Say</div>
+        <div><div class="action-main">"Now I want to show you what happens when the AI analyzes a specific denial. This is the Neural Core — it reads your claim data and generates a complete executive action plan."</div></div>
+      </div>
+      <div class="action">
+        <div class="badge badge-watch">Watch</div>
+        <div><div class="action-main">Page loads showing the strategist interface with node sidebar. Point to the <strong>HC Strategist · Healthcare · Neural Core</strong> title and the node list.</div></div>
+      </div>
+      <div class="action">
+        <div class="badge badge-click">Click</div>
+        <div><div class="action-main">Select <strong>BILLING</strong> or <strong>PRIOR AUTH</strong> node from the sidebar. Then click <strong>GENERATE</strong> or the AI synthesis button.</div><div class="action-sub">Wait 3–5 seconds for the narrative to generate.</div></div>
+      </div>
+      <div class="action">
+        <div class="badge badge-watch">Watch</div>
+        <div><div class="action-main">The BNCA Synthesis narrative appears. Point to: <strong>TOP ISSUE · WHY IT MATTERS · BEST NEXT ACTIONS · OWNER LANE · CONTROLLER · ENTERPRISE RISKS · CONFIDENCE 94%</strong>.</div></div>
+      </div>
+      <div class="action">
+        <div class="badge badge-say">Say</div>
+        <div><div class="action-main">"Read what it just generated. It identified the top issue, explained why it matters in financial terms, gave your team 4 specific actions to take today, assigned an owner lane, and gave a 94% confidence score. Your billing coordinator opens this at 8am and knows exactly what to do."</div></div>
+      </div>
+      <div class="action">
+        <div class="badge badge-pause">Pause</div>
+        <div><div class="action-main">Let the room read the narrative for 10–15 seconds. Don't talk. This is your strongest moment — silence sells it.</div></div>
+      </div>
+      <div class="action">
+        <div class="badge badge-click">Click</div>
+        <div><div class="action-main">Click <strong>Export TXT</strong> or <strong>Export JSON</strong> to show the output is portable.</div></div>
+      </div>
+      <div class="action">
+        <div class="badge badge-say">Say</div>
+        <div><div class="action-main">"This exports directly to your existing workflow tools. It's not locked in here — it goes wherever your team works."</div></div>
+      </div>
+      <div class="callout green">
+        <span class="callout-icon">🎯</span>
+        <span><strong>This is your peak moment.</strong> The AI narrative with OWNER LANE, CONTROLLER, and CONFIDENCE score is the most impressive thing in the demo. Slow down here. Let them absorb it. Clinical ops leaders respond to specificity — "HC Strategist" and "Healthcare Command" as named roles will resonate.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4: WIP DETAIL PAGE -->
+  <div class="section-label">Step 4 of 6</div>
+  <div class="step" id="step4">
+    <div class="step-header" data-tsm-action="toggleStep" data-tsm-args="4">
+      <div class="step-num">4</div>
+      <div class="step-title">Healthcare WIP Detail — Encounter Level View</div>
+      <span class="step-page wip">healthcare/wip</span>
+      <span class="step-dur">3 min</span>
+    </div>
+    <div class="step-body">
+      <div class="url-bar"><a href="https://tsm-shell.fly.dev/healthcare/wip/" target="_blank">tsm-shell.fly.dev/healthcare/wip/</a></div>
+
+      <div class="action">
+        <div class="badge badge-say">Say</div>
+        <div><div class="action-main">"The strategist gives you the narrative. This page gives you the granular encounter-level data — every patient visit tracked through the revenue cycle."</div></div>
+      </div>
+      <div class="action">
+        <div class="badge badge-watch">Watch</div>
+        <div><div class="action-main">Point to the WIP matrix table showing encounter IDs, RCM stage percentages, expected vs collected amounts, and denial gaps.</div></div>
+      </div>
+      <div class="action">
+        <div class="badge badge-say">Say</div>
+        <div><div class="action-main">"ENC-8821 — 85% complete, $4,200 expected, $0 collected. That red BAD status means your team needs to act today. The system doesn't just show the problem — it shows the exact dollar amount and the exact reason."</div></div>
+      </div>
+      <div class="action">
+        <div class="badge badge-watch">Watch</div>
+        <div><div class="action-main">Point to <strong>ENC-8801 · Payment Posted · 100% · GOOD</strong> — contrast with the red ones.</div></div>
+      </div>
+      <div class="action">
+        <div class="badge badge-say">Say</div>
+        <div><div class="action-main">"And here's what clean looks like. 100% collected. Green across the board. This is the standard we're working toward for every single encounter."</div></div>
+      </div>
+      <div class="callout blue">
+        <span class="callout-icon">📊</span>
+        <span><strong>Transition line:</strong> "The data you're seeing here feeds directly into the financial charts we're about to look at in the executive portal. What's a BAD status here becomes a red bar on the CFO's dashboard."</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 5: EXECUTIVE PORTAL -->
+  <div class="section-label">Step 5 of 6</div>
+  <div class="step" id="step5">
+    <div class="step-header" data-tsm-action="toggleStep" data-tsm-args="5">
+      <div class="step-num">5</div>
+      <div class="step-title">Executive Portal — CFO View with Financial Charts</div>
+      <span class="step-page exec">executive-portal.html</span>
+      <span class="step-dur">4 min</span>
+    </div>
+    <div class="step-body">
+      <div class="url-bar"><a href="https://tsm-shell.fly.dev/healthcare/executive-portal.html" target="_blank">tsm-shell.fly.dev/healthcare/executive-portal.html</a></div>
+
+      <div class="action">
+        <div class="badge badge-say">Say</div>
+        <div><div class="action-main">"This is what your CFO and board see. Same data — different lens. Everything we just looked at rolls up into this executive view."</div></div>
+      </div>
+      <div class="action">
+        <div class="badge badge-click">Click</div>
+        <div><div class="action-main">Click <strong>SYNC MEDICAL WIP</strong> then <strong>SYNC CONSTRUCTION WIP</strong>. Watch the audit workspace populate.</div></div>
+      </div>
+      <div class="action">
+        <div class="badge badge-watch">Watch</div>
+        <div><div class="action-main">Point to the Audit Workspace table: <strong>Ameris Job #203 · -$900,000 RECOUP · PENDING CFO</strong> and <strong>99214 Upcoding · 14 INSTANCES · FLAGGED</strong>.</div></div>
+      </div>
+      <div class="action">
+        <div class="badge badge-say">Say</div>
+        <div><div class="action-main">"Two line items. $900K construction recoup pending CFO approval. And 14 instances of upcoding flagged — before they become a compliance problem. This is what a real-time audit operation looks like."</div></div>
+      </div>
+      <div class="action">
+        <div class="badge badge-watch">Watch</div>
+        <div><div class="action-main">Point to <strong>SOVEREIGN MESH: ACTIVE · 11/11 NODES ONLINE</strong> in the header.</div></div>
+      </div>
+      <div class="action">
+        <div class="badge badge-say">Say</div>
+        <div><div class="action-main">"11 nodes. All online. All reporting. Construction, healthcare, insurance, finance — one mesh, one view, one source of truth for your entire organization's financial health."</div></div>
+      </div>
+      <div class="callout purple">
+        <span class="callout-icon">🏆</span>
+        <span><strong>The upcoding flag is gold for this audience.</strong> Clinical ops leaders fear compliance exposure more than revenue loss. "14 instances flagged automatically — before an auditor finds them — is worth more than the $900K recoup to the right person in the room."</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 6: CLOSE -->
+  <div class="section-label">Step 6 of 6</div>
+  <div class="step" id="step6">
+    <div class="step-header" data-tsm-action="toggleStep" data-tsm-args="6">
+      <div class="step-num">6</div>
+      <div class="step-title">Q&A Prep + Close</div>
+      <span class="step-page hc">Return to HC Command</span>
+      <span class="step-dur">3–5 min</span>
+    </div>
+    <div class="step-body">
+
+      <div class="action">
+        <div class="badge badge-click">Click</div>
+        <div><div class="action-main">Navigate back to <code>tsm-shell.fly.dev/healthcare/index.html</code>. Leave the ticker running. Leave 11/11 nodes visible on screen during Q&A.</div></div>
+      </div>
+
+      <div style="margin:1rem 0 .5rem;font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em">Anticipated Questions</div>
+
+      <div class="objection">
+        <div class="objection-q">"How does it connect to our EHR?"</div>
+        <div class="objection-a">"It reads claim-level data via API — the same export your clearinghouse already produces. No EHR integration required on day one. We can run parallel to your existing system with zero clinical workflow disruption."</div>
+      </div>
+      <div class="objection">
+        <div class="objection-q">"Our billing team already works denials."</div>
+        <div class="objection-a">"Your team is excellent at the denials they know about. The gap is speed — ENC-8821 at 52 days AR is approaching the appeal window. This surfaces it day one. The appeal window is still open. That's the entire value."</div>
+      </div>
+      <div class="objection">
+        <div class="objection-q">"What does implementation look like?"</div>
+        <div class="objection-a">"No IT project. This is a web application — your team opens a URL. The API connects to your existing claims export. Live with your real data in 2 weeks, not 2 quarters."</div>
+      </div>
+      <div class="objection">
+        <div class="objection-q">"Is the AI narrative accurate?"</div>
+        <div class="objection-a">"The narrative is generated from your actual claim data — every dollar amount and denial code is real. The AI structures and prioritizes. Your team reviews and executes. It's a copilot, not an autopilot. 94% confidence means it's right 94 times out of 100 — your team catches the other 6."</div>
+      </div>
+      <div class="objection">
+        <div class="objection-q">"What about HIPAA?"</div>
+        <div class="objection-a">"We process claim-level financial data — the same category your clearinghouse and billing vendor handle today. Same BAA framework. Happy to walk through the security documentation after the meeting."</div>
+      </div>
+      <div class="objection">
+        <div class="objection-q">"What does this cost?"</div>
+        <div class="objection-a">"Let's talk about what $1.77M in recovered revenue looks like against the investment. But first — who in your organization owns the denial management workflow? That's the conversation I want to have next."</div>
+      </div>
+
+      <div class="close-box">
+        <div class="close-label">🎤 Closing Statement</div>
+        <div class="close-title">"Your clinical team is delivering excellent care. This system makes sure the revenue follows — automatically, in real time, before the window closes."</div>
+        <div class="close-ask">Ask for a 2-week pilot with their real claims data — no IT project, no disruption to clinical workflow</div>
+        <div class="close-ask">Ask: "Who owns denial management here?" — that person is your internal champion</div>
+        <div class="close-ask">Offer to generate a live narrative on one of their actual denial codes before leaving the room</div>
+        <div class="close-ask">Leave <strong>tsm-shell.fly.dev/healthcare/hc-main-strategist.html</strong> on screen — the Neural Core running live is your leave-behind</div>
+        <div class="close-ask">Send the WIP dashboard link after: <strong>tsm-shell.fly.dev/wip-dashboard.html?sector=healthcare</strong></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="timer">
+  <div class="timer-label">Demo Timer</div>
+  <div class="timer-time" id="timerDisplay">00:00</div>
+  <div class="timer-btns">
+    <button class="timer-btn" id="startBtn" data-tsm-action="toggleTimer" data-tsm-args="">▶ Start</button>
+    <button class="timer-btn" data-tsm-action="resetTimer" data-tsm-args="">↺ Reset</button>
+    <button class="timer-btn" onclick="window.print()">🖨 Print</button>
+  </div>
+</div>
+
+<script>
+var steps = 6;
+var openStep = 1;
+
+function toggleStep(n) {
+  var el = document.getElementById('step'+n);
+  var isOpen = el.classList.contains('open');
+  // close all
+  for(var i=1;i<=steps;i++){
+    document.getElementById('step'+i).classList.remove('open','active');
+  }
+  if(!isOpen){ el.classList.add('open','active'); openStep=n; }
+  updateProgress();
+}
+
+function jumpTo(n) {
+  for(var i=1;i<=steps;i++){
+    document.getElementById('step'+i).classList.remove('open','active');
+    document.getElementById('pt'+i).classList.remove('active','done');
+    if(i<n) document.getElementById('pt'+i).classList.add('done');
+  }
+  document.getElementById('step'+n).classList.add('open','active');
+  document.getElementById('pt'+n).classList.add('active');
+  document.getElementById('step'+n).scrollIntoView({behavior:'smooth',block:'start'});
+  openStep = n;
+  updateProgress();
+}
+
+function updateProgress() {
+  document.getElementById('pbarFill').style.width = (openStep/steps*100)+'%';
+}
+
+// Timer
+var sec=0, running=false, iv=null;
+function toggleTimer(){
+  var btn=document.getElementById('startBtn');
+  if(running){clearInterval(iv);running=false;btn.textContent='▶ Start';btn.classList.remove('on');}
+  else{
+    iv=setInterval(function(){
+      sec++;
+      var m=String(Math.floor(sec/60)).padStart(2,'0');
+      var s=String(sec%60).padStart(2,'0');
+      document.getElementById('timerDisplay').textContent=m+':'+s;
+      var el=document.getElementById('timerDisplay');
+      if(sec>=1500) el.style.color='#ef4444';
+      else if(sec>=1200) el.style.color='#f59e0b';
+      else el.style.color='#34d399';
+    },1000);
+    running=true;btn.textContent='⏸ Pause';btn.classList.add('on');
+  }
+}
+function resetTimer(){
+  clearInterval(iv);running=false;sec=0;
+  document.getElementById('timerDisplay').textContent='00:00';
+  document.getElementById('timerDisplay').style.color='#34d399';
+  document.getElementById('startBtn').textContent='▶ Start';
+  document.getElementById('startBtn').classList.remove('on');
+}
+
+updateProgress();
+</script>
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
+</body>
+</html>

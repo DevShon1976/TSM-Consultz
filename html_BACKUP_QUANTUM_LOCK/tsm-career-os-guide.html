@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TSM Career OS — User Guide</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+:root{
+  --bg:#06080a;--bg2:#0c0f12;--bg3:#111518;--bg4:#161c20;
+  --border:#1c2428;--border2:#243028;
+  --g:#00e676;--g2:#00c060;--g3:#007a3d;
+  --a:#ffb300;--r:#ff4444;--b:#40a9ff;--p:#b48aff;--c:#00cfff;
+  --text:#cdd5cc;--muted:#4a5e52;--muted2:#7a9080;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;line-height:1.7;}
+
+/* HEADER */
+.hdr{background:var(--bg2);border-bottom:2px solid var(--g3);padding:28px 40px 22px;position:sticky;top:0;z-index:100;}
+.hdr-row{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;}
+.hdr-logo{font-family:var(--mono);font-size:11px;letter-spacing:3px;color:var(--g);font-weight:600;}
+.hdr-logo span{color:var(--text);}
+.hdr-logo small{display:block;color:var(--muted2);font-size:9px;letter-spacing:2px;margin-top:3px;}
+.hdr-doc{text-align:right;}
+.hdr-doc-title{font-size:18px;font-weight:300;color:var(--text);letter-spacing:-.3px;}
+.hdr-doc-title strong{color:var(--g);font-weight:600;}
+.hdr-doc-sub{font-size:10px;color:var(--muted2);letter-spacing:1px;margin-top:3px;font-family:var(--mono);}
+.progress-bar{height:2px;background:var(--border2);margin-top:14px;border-radius:1px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--g3),var(--g));width:0;transition:width .4s;}
+
+/* LAYOUT */
+.layout{display:flex;min-height:calc(100vh - 110px);}
+.sidebar{width:220px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);padding:20px 0;position:sticky;top:110px;height:calc(100vh - 110px);overflow-y:auto;}
+.content{flex:1;max-width:820px;padding:36px 44px 80px;}
+
+/* SIDEBAR NAV */
+.nav-section{margin-bottom:4px;}
+.nav-section-lbl{font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--muted);padding:8px 20px 4px;text-transform:uppercase;}
+.nav-link{display:flex;align-items:center;gap:8px;padding:5px 20px;font-size:11px;color:var(--muted2);text-decoration:none;transition:all .12s;border-left:2px solid transparent;font-family:var(--mono);}
+.nav-link:hover{color:var(--text);background:rgba(0,230,118,.04);}
+.nav-link.active{color:var(--g);border-left-color:var(--g);background:rgba(0,230,118,.06);}
+.nav-num{font-size:9px;color:var(--muted);width:16px;flex-shrink:0;}
+
+/* SECTION HEADERS */
+.sec-header{margin-bottom:24px;padding-bottom:14px;border-bottom:1px solid var(--border2);}
+.sec-num{font-family:var(--mono);font-size:9px;color:var(--g3);letter-spacing:2px;margin-bottom:6px;}
+.sec-title{font-size:22px;font-weight:300;color:var(--text);letter-spacing:-.4px;}
+.sec-title strong{color:var(--g);font-weight:600;}
+.sec-desc{font-size:13px;color:var(--muted2);margin-top:6px;max-width:580px;line-height:1.7;}
+
+/* CALLOUT BLOCKS */
+.callout{border-radius:4px;padding:12px 16px;margin:16px 0;border-left:3px solid;}
+.callout-tip{background:rgba(0,207,255,.06);border-color:var(--c);}
+.callout-warn{background:rgba(255,179,0,.06);border-color:var(--a);}
+.callout-action{background:rgba(0,230,118,.06);border-color:var(--g);}
+.callout-note{background:rgba(180,138,255,.06);border-color:var(--p);}
+.callout-lbl{font-family:var(--mono);font-size:8px;letter-spacing:2px;margin-bottom:5px;}
+.callout-tip .callout-lbl{color:var(--c);}
+.callout-warn .callout-lbl{color:var(--a);}
+.callout-action .callout-lbl{color:var(--g);}
+.callout-note .callout-lbl{color:var(--p);}
+.callout p{font-size:12px;color:var(--muted2);line-height:1.6;}
+.callout code{font-family:var(--mono);font-size:11px;background:rgba(255,255,255,.07);padding:1px 5px;border-radius:2px;color:var(--text);}
+
+/* UI LABELS */
+.ui-ref{display:inline-block;background:var(--bg3);border:1px solid var(--border2);border-radius:3px;font-family:var(--mono);font-size:10px;color:var(--g);padding:1px 7px;vertical-align:1px;}
+.ui-key{display:inline-block;background:var(--bg4);border:1px solid var(--border2);border-radius:3px;font-family:var(--mono);font-size:10px;color:var(--text);padding:1px 7px;vertical-align:1px;}
+.ui-btn{display:inline-block;background:rgba(0,122,61,.2);border:1px solid var(--g3);border-radius:3px;font-family:var(--mono);font-size:10px;color:var(--g);padding:1px 8px;vertical-align:1px;}
+.ui-tag{display:inline-block;border-radius:3px;font-family:var(--mono);font-size:9px;padding:2px 7px;vertical-align:1px;}
+.tag-g{background:rgba(0,230,118,.1);color:var(--g);border:1px solid rgba(0,230,118,.25);}
+.tag-a{background:rgba(255,179,0,.1);color:var(--a);border:1px solid rgba(255,179,0,.25);}
+.tag-r{background:rgba(255,68,68,.1);color:var(--r);border:1px solid rgba(255,68,68,.25);}
+.tag-b{background:rgba(64,169,255,.1);color:var(--b);border:1px solid rgba(64,169,255,.25);}
+.tag-p{background:rgba(180,138,255,.1);color:var(--p);border:1px solid rgba(180,138,255,.25);}
+.tag-c{background:rgba(0,207,255,.1);color:var(--c);border:1px solid rgba(0,207,255,.25);}
+
+/* STEP BLOCKS */
+.steps{display:flex;flex-direction:column;gap:2px;margin:16px 0;}
+.step{display:flex;gap:16px;padding:12px 0;border-bottom:1px solid var(--border);}
+.step:last-child{border-bottom:none;}
+.step-num{width:26px;height:26px;border-radius:50%;border:1px solid var(--g3);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--g);flex-shrink:0;margin-top:2px;}
+.step-body{}
+.step-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:4px;}
+.step-desc{font-size:12px;color:var(--muted2);line-height:1.6;}
+.step-desc code{font-family:var(--mono);font-size:11px;background:rgba(255,255,255,.07);padding:1px 5px;border-radius:2px;color:var(--c);}
+
+/* ANATOMY DIAGRAM */
+.anatomy{background:var(--bg2);border:1px solid var(--border2);border-radius:6px;overflow:hidden;margin:16px 0;}
+.anatomy-header{padding:8px 14px;background:var(--bg3);border-bottom:1px solid var(--border);font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--muted);}
+.anatomy-body{padding:14px;display:flex;flex-direction:column;gap:4px;}
+.az{display:flex;align-items:flex-start;gap:12px;padding:7px 10px;border-radius:3px;background:var(--bg3);border:1px solid var(--border);}
+.az-zone{font-family:var(--mono);font-size:9px;width:120px;flex-shrink:0;}
+.az-desc{font-size:11px;color:var(--muted2);line-height:1.5;}
+.az-desc strong{font-size:11px;font-weight:500;color:var(--text);}
+
+/* ROLE CARDS GRID */
+.role-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:16px 0;}
+.role-card{background:var(--bg2);border:1px solid var(--border2);border-radius:4px;padding:12px 14px;}
+.role-card-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.role-card-tag{font-family:var(--mono);font-size:8px;letter-spacing:1px;color:var(--g2);margin-bottom:8px;}
+.role-card-desc{font-size:11px;color:var(--muted2);line-height:1.5;}
+.role-card-focus{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:7px;border-top:1px solid var(--border);padding-top:6px;}
+.role-card-focus span{color:var(--c);}
+
+/* SCENARIO TABLE */
+.scen-table{width:100%;border-collapse:collapse;margin:12px 0;}
+.scen-table th{text-align:left;font-family:var(--mono);font-size:9px;letter-spacing:1px;color:var(--muted);padding:6px 10px;border-bottom:1px solid var(--border2);}
+.scen-table td{padding:7px 10px;border-bottom:1px solid var(--border);font-size:11px;color:var(--muted2);vertical-align:top;}
+.scen-table td:first-child{font-family:var(--mono);color:var(--a);font-size:10px;white-space:nowrap;}
+.scen-table tr:last-child td{border-bottom:none;}
+
+/* TAB GUIDE */
+.tab-guide{display:flex;flex-direction:column;gap:6px;margin:16px 0;}
+.tg-row{display:grid;grid-template-columns:130px 1fr;gap:12px;align-items:start;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:3px;}
+.tg-tab{font-family:var(--mono);font-size:10px;}
+.tg-desc{font-size:11px;color:var(--muted2);line-height:1.5;}
+
+/* TRAINING LOOP */
+.loop-steps{display:flex;flex-direction:column;gap:0;margin:16px 0;border:1px solid var(--border2);border-radius:5px;overflow:hidden;}
+.lp{display:flex;gap:14px;padding:11px 14px;border-bottom:1px solid var(--border);}
+.lp:last-child{border-bottom:none;}
+.lp-num{font-family:var(--mono);font-size:9px;color:var(--muted);width:50px;flex-shrink:0;padding-top:1px;}
+.lp-body{}
+.lp-title{font-size:12px;font-weight:500;margin-bottom:3px;}
+.lp-desc{font-size:11px;color:var(--muted2);line-height:1.5;}
+.lp-new{color:var(--p);}
+
+/* TIPS LIST */
+.tips{display:flex;flex-direction:column;gap:8px;margin:12px 0;}
+.tip-row{display:flex;gap:10px;align-items:flex-start;}
+.tip-icon{font-family:var(--mono);font-size:9px;color:var(--g);flex-shrink:0;margin-top:3px;width:14px;}
+.tip-text{font-size:12px;color:var(--muted2);line-height:1.5;}
+.tip-text strong{color:var(--text);font-weight:500;}
+
+/* FAQ */
+.faq{display:flex;flex-direction:column;gap:2px;margin:16px 0;}
+.faq-item{border:1px solid var(--border);border-radius:3px;overflow:hidden;}
+.faq-q{padding:10px 14px;font-size:12px;font-weight:500;color:var(--text);cursor:pointer;user-select:none;display:flex;justify-content:space-between;align-items:center;background:var(--bg2);}
+.faq-q:hover{background:var(--bg3);}
+.faq-q::after{content:'▾';font-size:10px;color:var(--muted);flex-shrink:0;}
+.faq-a{padding:10px 14px 12px;font-size:12px;color:var(--muted2);line-height:1.6;border-top:1px solid var(--border);background:var(--bg3);display:none;}
+.faq-a.open{display:block;}
+.faq-a code{font-family:var(--mono);font-size:11px;background:rgba(255,255,255,.07);padding:1px 5px;border-radius:2px;color:var(--c);}
+
+/* INTERVIEW WALKTHROUGH */
+.int-flow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0;}
+.int-card{background:var(--bg2);border:1px solid var(--border2);border-radius:4px;padding:10px 12px;}
+.int-card-lbl{font-family:var(--mono);font-size:8px;letter-spacing:1px;color:var(--p);margin-bottom:5px;}
+.int-card-title{font-size:12px;font-weight:500;color:var(--text);margin-bottom:4px;}
+.int-card-desc{font-size:11px;color:var(--muted2);line-height:1.5;}
+
+/* PORTFOLIO OUTPUT */
+.portfolio-block{background:var(--bg3);border:1px solid var(--border2);border-radius:4px;padding:14px 16px;margin:12px 0;position:relative;}
+.portfolio-block-lbl{font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--muted2);margin-bottom:8px;}
+.portfolio-block-text{font-size:12px;color:var(--text);line-height:1.7;font-style:italic;}
+.copy-hint{position:absolute;top:10px;right:12px;font-family:var(--mono);font-size:8px;color:var(--muted);border:1px solid var(--border);border-radius:2px;padding:2px 6px;cursor:pointer;}
+.copy-hint:hover{color:var(--g);border-color:var(--g3);}
+
+/* SECTION DIVIDER */
+.section{padding:36px 0;border-top:1px solid var(--border);}
+.section:first-child{padding-top:0;border-top:none;}
+
+/* INLINE CODE */
+code{font-family:var(--mono);font-size:11px;background:rgba(255,255,255,.07);padding:1px 5px;border-radius:2px;color:var(--c);}
+
+/* BREADCRUMB */
+.breadcrumb{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:8px;}
+.breadcrumb span{color:var(--g2);}
+
+/* BOTTOM NAV */
+.bottom-nav{display:flex;justify-content:space-between;margin-top:40px;padding-top:20px;border-top:1px solid var(--border);}
+.bnav-btn{display:flex;flex-direction:column;gap:2px;cursor:pointer;padding:8px 12px;border:1px solid var(--border2);border-radius:3px;text-decoration:none;transition:all .15s;}
+.bnav-btn:hover{border-color:var(--g3);}
+.bnav-lbl{font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:1px;}
+.bnav-title{font-size:12px;color:var(--text);}
+
+/* QUICK REF */
+.qref-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0;}
+.qref-card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:10px 12px;}
+.qref-lbl{font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;}
+.qref-items{display:flex;flex-direction:column;gap:3px;}
+.qref-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;}
+.qref-key{color:var(--muted2);}
+.qref-val{font-family:var(--mono);font-size:10px;color:var(--g);}
+
+/* scrollbar */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-row">
+    <div class="hdr-logo">TSM <span>CAREER OS</span><small>HEALTHCARE OPS SIMULATOR · RAILWAY + GROQ llama-3.3-70b</small></div>
+    <div class="hdr-doc">
+      <div class="hdr-doc-title"><strong>How-To Guide</strong> — End User Navigation</div>
+      <div class="hdr-doc-sub">COMPLETE REFERENCE · ALL ROLES · ALL FEATURES</div>
+    </div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+</div>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="nav-section">
+    <div class="nav-section-lbl">Getting Started</div>
+    <a class="nav-link active" href="#overview"><span class="nav-num">00</span>Overview</a>
+    <a class="nav-link" href="#setup"><span class="nav-num">01</span>First-Time Setup</a>
+    <a class="nav-link" href="#anatomy"><span class="nav-num">02</span>Screen Anatomy</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-lbl">Core Features</div>
+    <a class="nav-link" href="#roles"><span class="nav-num">03</span>Role Lenses</a>
+    <a class="nav-link" href="#scenarios"><span class="nav-num">04</span>Scenarios</a>
+    <a class="nav-link" href="#output-tabs"><span class="nav-num">05</span>Output Tabs</a>
+    <a class="nav-link" href="#training-loop"><span class="nav-num">06</span>Training Loop</a>
+    <a class="nav-link" href="#query-bar"><span class="nav-num">07</span>Query Bar</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-lbl">Advanced</div>
+    <a class="nav-link" href="#interview"><span class="nav-num">08</span>Interview Mode</a>
+    <a class="nav-link" href="#toolkit"><span class="nav-num">09</span>App Toolkit</a>
+    <a class="nav-link" href="#portfolio"><span class="nav-num">10</span>Portfolio Output</a>
+    <a class="nav-link" href="#faq"><span class="nav-num">11</span>FAQ</a>
+    <a class="nav-link" href="#quickref"><span class="nav-num">12</span>Quick Reference</a>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content" id="content">
+
+<!-- 00 OVERVIEW -->
+<div class="section" id="overview">
+  <div class="breadcrumb">TSM CAREER OS <span>›</span> USER GUIDE <span>›</span> OVERVIEW</div>
+  <div class="sec-header">
+    <div class="sec-num">SECTION 00</div>
+    <div class="sec-title">What is <strong>TSM Career OS</strong>?</div>
+    <div class="sec-desc">A real-time healthcare operations simulator that puts you inside the KPI dashboards, denial management crises, and strategic decisions that healthcare ops professionals face every day — with AI-powered analysis scored by Groq's llama-3.3-70b model.</div>
+  </div>
+
+  <div class="callout callout-action">
+    <div class="callout-lbl">PURPOSE</div>
+    <p>This tool is not a quiz or a passive tutorial. It simulates real work scenarios so you can practice the thinking, language, and decisions you'll need to demonstrate in interviews and on the job. Every output you generate can be converted into a resume bullet or interview story.</p>
+  </div>
+
+  <div class="tips">
+    <div class="tip-row"><div class="tip-icon">◆</div><div class="tip-text"><strong>Six role lenses</strong> — switch between Business Analyst, Revenue Cycle, Process Improvement, Implementation Spec, Solutions Engineer, and Customer Success to see how the same data is interpreted differently by each role.</div></div>
+    <div class="tip-row"><div class="tip-icon">◆</div><div class="tip-text"><strong>Six live scenarios</strong> — denial spikes, AR aging crises, RAC audits, timely filing deadlines, upcoding flags, and no-show revenue loss. Each resets the KPIs and triggers fresh AI analysis.</div></div>
+    <div class="tip-row"><div class="tip-icon">◆</div><div class="tip-text"><strong>AI-powered outputs</strong> — every analysis is generated live by Groq llama-3.3-70b through your Railway endpoint — not pre-written templates.</div></div>
+    <div class="tip-row"><div class="tip-icon">◆</div><div class="tip-text"><strong>Interview Mode</strong> — AI-scored answers using the OBSERVE → DIAGNOSE → IMPACT → SOLVE → REPORT framework.</div></div>
+    <div class="tip-row"><div class="tip-icon">◆</div><div class="tip-text"><strong>Portfolio export</strong> — every analysis you run can be turned into a copy-ready resume bullet or LinkedIn post.</div></div>
+  </div>
+
+</div>
+
+<!-- 01 SETUP -->
+<div class="section" id="setup">
+  <div class="breadcrumb">TSM CAREER OS <span>›</span> USER GUIDE <span>›</span> FIRST-TIME SETUP</div>
+  <div class="sec-header">
+    <div class="sec-num">SECTION 01</div>
+    <div class="sec-title"><strong>First-Time Setup</strong> — Connecting Groq</div>
+    <div class="sec-desc">The app requires a live Groq API connection to generate AI analysis. Check the status pill in the top-right corner before running anything.</div>
+  </div>
+
+  <div class="anatomy-body" style="padding:0;margin:0 0 16px">
+    <div class="az">
+      <div class="az-zone"><span class="ui-ref">GROQ: CHECKING...</span></div>
+      <div class="az-desc">App is testing your Railway endpoint on load. Wait 2–3 seconds.</div>
+    </div>
+    <div class="az" style="margin-top:4px">
+      <div class="az-zone"><span class="ui-tag tag-g">✓ GROQ: LIVE</span></div>
+      <div class="az-desc"><strong>You're connected.</strong> Railway endpoint responded. All AI features are active. No action needed.</div>
+    </div>
+    <div class="az" style="margin-top:4px">
+      <div class="az-zone"><span class="ui-tag tag-r">⚠ GROQ: OFFLINE</span></div>
+      <div class="az-desc"><strong>Railway endpoint not responding.</strong> Follow the steps below to reconnect.</div>
+    </div>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-title">Verify your Railway environment variable</div>
+        <div class="step-desc">Open <code>railway.com</code> → your TSM project → Variables tab → confirm <code>GROQ_API_KEY</code> is set to a valid <code>gsk_...</code> key from console.groq.com.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-title">For instant local testing — browser console fallback</div>
+        <div class="step-desc">Open browser DevTools (F12) → Console tab → paste: <code>window.GROQ_API_KEY = "gsk_your_key_here"</code> and press Enter. The app will immediately detect and use this key without a page reload.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-title">Confirm connection</div>
+        <div class="step-desc">The top-right pill should change to <span class="ui-tag tag-g">✓ GROQ: LIVE</span> within a few seconds. The banner at the top of the left panel will also update to confirm.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-warn">
+    <div class="callout-lbl">IMPORTANT</div>
+    <p>The console fallback (<code>window.GROQ_API_KEY</code>) only lasts for the current browser session. For persistent access, set the variable in Railway and redeploy.</p>
+  </div>
+</div>
+
+<!-- 02 ANATOMY -->
+<div class="section" id="anatomy">
+  <div class="breadcrumb">TSM CAREER OS <span>›</span> USER GUIDE <span>›</span> SCREEN ANATOMY</div>
+  <div class="sec-header">
+    <div class="sec-num">SECTION 02</div>
+    <div class="sec-title">Screen <strong>Anatomy</strong></div>
+    <div class="sec-desc">The app is divided into five zones. Understanding each zone helps you navigate without confusion.</div>
+  </div>
+
+  <div class="anatomy">
+    <div class="anatomy-header">◆ ZONE MAP — TSM CAREER OS</div>
+    <div class="anatomy-body">
+      <div class="az">
+        <div class="az-zone" style="color:var(--g)">① TOP BAR</div>
+        <div class="az-desc"><strong>Logo + Status Pills.</strong> Shows your current role mode, training loop step (e.g. STEP 3 OF 8), and Groq connection status. These update automatically as you work.</div>
+      </div>
+      <div class="az">
+        <div class="az-zone" style="color:var(--b)">② ROLE BAR</div>
+        <div class="az-desc"><strong>Role Lens switcher.</strong> Seven buttons — one per role. Click to switch your analytical perspective. The entire app re-orients: KPI focus, AI system prompt, interview questions, career language, and app toolkit all update.</div>
+      </div>
+      <div class="az">
+        <div class="az-zone" style="color:var(--a)">③ LEFT PANEL</div>
+        <div class="az-desc"><strong>Main workspace.</strong> Contains the KPI grid, system events feed, analyst output tabs, and (in Interview Mode) the question bank and answer scorer. This is where all analysis is displayed.</div>
+      </div>
+      <div class="az">
+        <div class="az-zone" style="color:var(--p)">④ RIGHT PANEL</div>
+        <div class="az-desc"><strong>Training Loop + Scenario Launcher.</strong> Shows your 8-step daily training progression, scenario buttons, quick-launch app links, and career language examples. Always visible alongside your main workspace.</div>
+      </div>
+      <div class="az">
+        <div class="az-zone" style="color:var(--c)">⑤ BOTTOM BAR</div>
+        <div class="az-desc"><strong>AI Query Input.</strong> The command line at the very bottom. Type any custom question, then press Enter or click <span class="ui-btn">RUN ⏎</span>. The placeholder text updates to reflect your active role.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-tip">
+    <div class="callout-lbl">ORIENTATION TIP</div>
+    <p>The left panel scrolls independently. If you don't see output after running a query, scroll up in the left panel — the KPI grid and events section sit above the output area.</p>
+  </div>
+</div>
+
+<!-- 03 ROLES -->
+<div class="section" id="roles">
+  <div class="breadcrumb">TSM CAREER OS <span>›</span> USER GUIDE <span>›</span> ROLE LENSES</div>
+  <div class="sec-header">
+    <div class="sec-num">SECTION 03</div>
+    <div class="sec-title"><strong>Role Lenses</strong> — Switching Perspectives</div>
+    <div class="sec-desc">Each role lens transforms the entire app. The same 18.4% denial rate looks completely different to a Business Analyst versus a Revenue Cycle Analyst versus a Solutions Engineer.</div>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">→</div>
+      <div class="step-body">
+        <div class="step-title">How to switch roles</div>
+        <div class="step-desc">Click any button in the <strong>Role Bar</strong> (the second bar from the top). The active role highlights in green. Everything updates immediately — no page reload needed.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="role-grid">
+    <div class="role-card">
+      <div class="role-card-name">Business Analyst</div>
+      <div class="role-card-tag">BA MODE</div>
+      <div class="role-card-desc">KPI variance, root cause analysis, executive summaries, and benchmark comparisons. Default starting role.</div>
+      <div class="role-card-focus">Focus: <span>KPI trends · variance · business impact</span></div>
+    </div>
+    <div class="role-card">
+      <div class="role-card-name">Revenue Cycle Analyst</div>
+      <div class="role-card-tag">RCM MODE</div>
+      <div class="role-card-desc">Claim lifecycle, denial codes, modifier errors, timely filing deadlines, AR recovery.</div>
+      <div class="role-card-focus">Focus: <span>denial codes · claim lifecycle · AR</span></div>
+    </div>
+    <div class="role-card">
+      <div class="role-card-name">Process Improvement</div>
+      <div class="role-card-tag">OPS MODE</div>
+      <div class="role-card-desc">Workflow bottlenecks, lean/six sigma analysis, throughput optimization, cycle time.</div>
+      <div class="role-card-focus">Focus: <span>bottlenecks · waste · throughput</span></div>
+    </div>
+    <div class="role-card">
+      <div class="role-card-name">Implementation Spec</div>
+      <div class="role-card-tag">IMPL MODE</div>
+      <div class="role-card-desc">System configuration, client onboarding, go-live readiness, UAT, integration validation.</div>
+      <div class="role-card-focus">Focus: <span>requirements · config · go-live</span></div>
+    </div>
+    <div class="role-card">
+      <div class="role-card-name">Solutions Engineer</div>
+      <div class="role-card-tag">SE MODE</div>
+      <div class="role-card-desc">System architecture, data flow, API design, business rules engines, integration strategy.</div>
+      <div class="role-card-focus">Focus: <span>architecture · data flow · APIs</span></div>
+    </div>
+    <div class="role-card">
+      <div class="role-card-name">Customer Success</div>
+      <div class="role-card-tag">CS MODE</div>
+      <div class="role-card-desc">Client health scores, adoption metrics, escalation protocols, QBR preparation, churn prevention.</div>
+      <div class="role-card-focus">Focus: <span>health scores · adoption · renewal</span></div>
+    </div>
+    <div class="role-card" style="border-color:rgba(180,138,255,.3)">
+      <div class="role-card-name" style="color:var(--p)">🎯 Interview Mode</div>
+      <div class="role-card-tag" style="color:var(--p)">INT MODE</div>
+      <div class="role-card-desc">Activates the full interview panel — question bank, STAR+C answer scoring, AI coach feedback. Replaces the analyst output panel.</div>
+      <div class="role-card-focus">Focus: <span>STAR+C framework · scored answers</span></div>
+    </div>
+  </div>
+
+  <div class="callout callout-note">
+    <div class="callout-lbl">PRACTICE TIP</div>
+    <p>Run the same scenario (e.g. "Denial spike +7pt") under two different role lenses back-to-back. Notice how a BA describes it in terms of benchmark gaps while an RCM Analyst zeroes in on specific denial codes and resubmission windows. This is exactly the kind of nuance hiring managers test for.</p>
+  </div>
+</div>
+
+<!-- 04 SCENARIOS -->
+<div class="section" id="scenarios">
+  <div class="breadcrumb">TSM CAREER OS <span>›</span> USER GUIDE <span>›</span> SCENARIOS</div>
+  <div class="sec-header">
+    <div class="sec-num">SECTION 04</div>
+    <div class="sec-title">Running <strong>Scenarios</strong></div>
+    <div class="sec-desc">Scenarios simulate a specific crisis or event hitting the system. When you run one, the KPI grid updates, the events feed shows new alerts, and the AI generates a role-specific analysis automatically.</div>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">→</div>
+      <div class="step-body">
+        <div class="step-title">How to run a scenario</div>
+        <div class="step-desc">Find the <strong>◆ RUN A SCENARIO</strong> section in the right panel → click any scenario button. The left panel immediately updates. The AI query bar also pre-fills — click <span class="ui-btn">RUN ⏎</span> to generate analysis, or edit the query first.</div>
+      </div>
+    </div>
+  </div>
+
+  <table class="scen-table">
+    <thead>
+      <tr><th>SCENARIO</th><th>SEVERITY</th><th>WHAT CHANGES</th><th>KEY SKILL TESTED</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>⚡ Denial spike +7pt</td>
+        <td><span class="ui-tag tag-r">CRITICAL</span></td>
+        <td>Denial rate jumps to 22.4%. CO-4 modifier denials flood the events feed. $62K stalled.</td>
+        <td>Denial root cause, modifier compliance, payer pattern analysis</td>
+      </tr>
+      <tr>
+        <td>⚡ AR aging crosses 60d</td>
+        <td><span class="ui-tag tag-r">HIGH</span></td>
+        <td>Days in AR moves to 63d. $31K aged >90 days. UHC payment delays appear.</td>
+        <td>AR management, payer dispute, ERA posting workflow</td>
+      </tr>
+      <tr>
+        <td>⚡ RAC audit notice</td>
+        <td><span class="ui-tag tag-r">URGENT</span></td>
+        <td>14-day response window starts. CPT 99215 upcoding flag on 23 claims, $12K exposure.</td>
+        <td>Compliance response, documentation review, audit defense</td>
+      </tr>
+      <tr>
+        <td>⚡ CLM-0334 timely filing</td>
+        <td><span class="ui-tag tag-r">48HR</span></td>
+        <td>A specific claim ($3,800) faces CO-29 write-off in 48 hours. 5 more approaching the window.</td>
+        <td>Urgency triage, timely filing appeal, deadline management</td>
+      </tr>
+      <tr>
+        <td>⚡ CPT 99215 upcoding</td>
+        <td><span class="ui-tag tag-a">REVIEW</span></td>
+        <td>OIG Work Plan flag. 14 of 23 claims lack MDM support. Modifier -25 pattern emerges.</td>
+        <td>Compliance risk assessment, documentation audit, MDM analysis</td>
+      </tr>
+      <tr>
+        <td>⚡ No-show 18% · $22K/mo</td>
+        <td><span class="ui-tag tag-a">MEDIUM</span></td>
+        <td>18% no-show rate vs 8-10% benchmark. Transportation barrier pattern identified.</td>
+        <td>Revenue leakage analysis, process improvement, patient access</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-tip">
+    <div class="callout-lbl">PRO MOVE</div>
+    <p>After running a scenario and getting AI output, immediately switch to a different role lens and re-read the same output panel. Then click <span class="ui-btn">RUN ⏎</span> again to generate a fresh analysis from that role's perspective. This builds your fluency in code-switching between operational viewpoints.</p>
+  </div>
+</div>
+
+<!-- 05 OUTPUT TABS -->
+<div class="section" id="output-tabs">
+  <div class="breadcrumb">TSM CAREER OS <span>›</span> USER GUIDE <span>›</span> OUTPUT TABS</div>
+  <div class="sec-header">
+    <div class="sec-num">SECTION 05</div>
+    <div class="sec-title"><strong>Output Tabs</strong> — Reading Your Analysis</div>
+    <div class="sec-desc">After running a query or scenario, the analyst output section shows multiple tabs. Each one surfaces a different dimension of the same analysis.</div>
+  </div>
+
+  <div class="tab-guide">
+    <div class="tg-row">
+      <div class="tg-tab"><span class="ui-ref">EXEC SUMMARY</span></div>
+      <div class="tg-desc">The default view. A 150–200 word executive-level summary of current state, key metrics, and bottom-line assessment. Written in the voice of your active role. <strong>Use this as your LinkedIn post or interview talking point.</strong></div>
+    </div>
+    <div class="tg-row">
+      <div class="tg-tab"><span class="ui-ref">ROOT CAUSE</span></div>
+      <div class="tg-desc">Primary, secondary, and tertiary root causes of the current KPI problem. Includes causal chain explanation (e.g. EHR template → auto-applies modifier → CO-4 denial pattern).</div>
+    </div>
+    <div class="tg-row">
+      <div class="tg-tab"><span class="ui-ref">IMPACT</span></div>
+      <div class="tg-desc">Full financial and operational exposure quantified in $, %, staff hours, and compliance risk. This is what you cite in interviews when asked "how did you quantify the problem?"</div>
+    </div>
+    <div class="tg-row">
+      <div class="tg-tab"><span class="ui-ref">RECOMMENDATION</span></div>
+      <div class="tg-desc">Prioritized action plan with 48hr / Week 1 / Month 1 / Month 3 timeframes. Named owners per action. Projected outcome in $ and %.</div>
+    </div>
+    <div class="tg-row">
+      <div class="tg-tab"><span class="ui-tag tag-p">🛠 APP TOOLKIT</span></div>
+      <div class="tg-desc">Two-part view. Left: role-specific app suite (your personal toolbox). Right: recommended solution stack for this specific scenario. Each app card shows how you'd use it and includes a potential interview question about it. Click any card to expand the detail.</div>
+    </div>
+    <div class="tg-row">
+      <div class="tg-tab"><span class="ui-tag tag-c">HOW TO SOLVE</span></div>
+      <div class="tg-desc">Step-by-step execution workflow. Each step tells you which app to open, what to review, and what you should find. Click <span class="ui-btn">OPEN APP ↗</span> to mark a step complete and simulate working through the workflow.</div>
+    </div>
+    <div class="tg-row">
+      <div class="tg-tab"><span class="ui-tag tag-a">KPI FORECAST</span></div>
+      <div class="tg-desc">Animated bar chart showing current KPIs vs projected post-remediation state. Includes denial rate, AR days, clean claim rate, revenue recovery, and appeal win rate projections. The <span class="ui-btn">⬇ EXPORT EXECUTIVE SUMMARY</span> button simulates handing this to leadership.</div>
+    </div>
+    <div class="tg-row">
+      <div class="tg-tab"><span class="ui-ref">PORTFOLIO</span></div>
+      <div class="tg-desc">Copy-ready resume bullet + LinkedIn post angle + interview STAR story. Directly usable in job applications. See Section 10 for full detail.</div>
+    </div>
+  </div>
+
+  <div class="callout callout-action">
+    <div class="callout-lbl">WORKFLOW SUGGESTION</div>
+    <p>For each scenario you run: start at EXEC SUMMARY → drill to ROOT CAUSE → check IMPACT for the dollar figure → go to RECOMMENDATION for your action plan. Then click HOW TO SOLVE to understand the execution steps, and KPI FORECAST to see the projected outcome. This mirrors exactly what you'd present in a real operations role or interview.</p>
+  </div>
+</div>
+
+<!-- 06 TRAINING LOOP -->
+<div class="section" id="training-loop">
+  <div class="breadcrumb">TSM CAREER OS <span>›</span> USER GUIDE <span>›</span> TRAINING LOOP</div>
+  <div class="sec-header">
+    <div class="sec-num">SECTION 06</div>
+    <div class="sec-title">The <strong>Daily Training Loop</strong></div>
+    <div class="sec-desc">The right panel tracks your progress through an 8-step training sequence. The current active step is highlighted. Steps advance automatically as you use the app.</div>
+  </div>
+
+  <div class="loop-steps">
+    <div class="lp">
+      <div class="lp-num">STEP 1</div>
+      <div class="lp-body">
+        <div class="lp-title">OBSERVE</div>
+        <div class="lp-desc">Review the KPI grid. Identify what's abnormal — which number is red, which is trending wrong, what's the magnitude of the variance. This step activates on load.</div>
+      </div>
+    </div>
+    <div class="lp">
+      <div class="lp-num">STEP 2</div>
+      <div class="lp-body">
+        <div class="lp-title">ROLE LENS</div>
+        <div class="lp-desc">Click a role button. Ask yourself: what does someone in this role focus on first? A BA looks at benchmark gaps; an RCM analyst looks at denial codes. This step advances when you switch roles.</div>
+      </div>
+    </div>
+    <div class="lp">
+      <div class="lp-num">STEP 3</div>
+      <div class="lp-body">
+        <div class="lp-title">AI ANALYSIS</div>
+        <div class="lp-desc">Run a query or scenario. Read the output. Look for: 1 key insight, 1 identified problem, 1 recommendation. This step marks complete when Groq returns analysis.</div>
+      </div>
+    </div>
+    <div class="lp">
+      <div class="lp-num">STEP 4</div>
+      <div class="lp-body">
+        <div class="lp-title">CONSULTANT OUTPUT</div>
+        <div class="lp-desc">Check the EXEC SUMMARY and RECOMMENDATION tabs. These show you how a consultant would present this. Practice re-reading them out loud as if presenting to a client. Advances when you open a tab.</div>
+      </div>
+    </div>
+    <div class="lp">
+      <div class="lp-num">STEP 5</div>
+      <div class="lp-body">
+        <div class="lp-title">IMPROVE THE SYSTEM</div>
+        <div class="lp-desc">Type your own product improvement idea into the query bar. Prompt: "As a [role], what one feature would I add to this system to prevent this problem?" This builds product thinking alongside domain knowledge.</div>
+      </div>
+    </div>
+    <div class="lp">
+      <div class="lp-num">STEP 6</div>
+      <div class="lp-body">
+        <div class="lp-title lp-new">APP SELECTION QUIZ</div>
+        <div class="lp-desc">A three-option multiple-choice question appears in the right panel. Which app do you open first for this type of problem? Click your answer. Correct answer unlocks Step 7.</div>
+      </div>
+    </div>
+    <div class="lp">
+      <div class="lp-num">STEP 7</div>
+      <div class="lp-body">
+        <div class="lp-title lp-new" style="color:var(--c)">EXECUTION PLAN QUIZ</div>
+        <div class="lp-desc">A second question: once inside the app, what do you review first? Tests procedural knowledge, not just tool selection. Unlocks after Step 6 correct answer.</div>
+      </div>
+    </div>
+    <div class="lp">
+      <div class="lp-num">STEP 8</div>
+      <div class="lp-body">
+        <div class="lp-title lp-new" style="color:var(--g)">BUSINESS OUTCOME</div>
+        <div class="lp-desc">The KPI outcomes panel appears showing exactly which metrics improve and by how much after the recommended workflow. This is your "result" for any STAR answer: denial rate drops, revenue recovers, AR normalizes.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-note">
+    <div class="callout-lbl">LOOP RESET</div>
+    <p>The loop does not reset automatically between scenarios. To restart, refresh the page. The top-right pill shows your current step at all times (e.g. <span class="ui-key">STEP 4 OF 8</span>). Steps 6–8 only appear once per session — they're designed to be completed in sequence after running at least one scenario.</p>
+  </div>
+</div>
+
+<!-- 07 QUERY BAR -->
+<div class="section" id="query-bar">
+  <div class="breadcrumb">TSM CAREER OS <span>›</span> USER GUIDE <span>›</span> QUERY BAR</div>
+  <div class="sec-header">
+    <div class="sec-num">SECTION 07</div>
+    <div class="sec-title">The <strong>AI Query Bar</strong></div>
+    <div class="sec-desc">The bottom bar is your direct line to Groq. Ask anything — custom analysis, specific scenarios not in the preset list, improvement proposals, or clarifying questions.</div>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-title">Type your query</div>
+        <div class="step-desc">Click the input field at the bottom. The placeholder shows a suggested prompt for your current role (e.g. "Analyze this system as a Business Analyst — what do you see and what would you fix?"). You can use this prompt as-is or replace it entirely.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-title">Submit</div>
+        <div class="step-desc">Press <span class="ui-key">Enter</span> or click <span class="ui-btn">RUN ⏎</span>. The button briefly shows "RUNNING..." in amber, and a loading indicator appears above the output area.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-title">Read the output</div>
+        <div class="step-desc">Results appear in the EXEC SUMMARY tab. The output is generated fresh each time — it is not a cached response. Scroll up in the left panel if you don't immediately see it.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tips" style="margin-top:16px">
+    <div class="tip-row"><div class="tip-icon">→</div><div class="tip-text"><strong>Effective prompt patterns to try:</strong></div></div>
+    <div class="tip-row"><div class="tip-icon">•</div><div class="tip-text">"As a Revenue Cycle Analyst, diagnose the CO-4 denial pattern and give me a 3-step recovery plan."</div></div>
+    <div class="tip-row"><div class="tip-icon">•</div><div class="tip-text">"What would a Solutions Engineer build to prevent modifier -25 errors from reaching the payer?"</div></div>
+    <div class="tip-row"><div class="tip-icon">•</div><div class="tip-text">"Write a 90-second executive brief I could deliver to a CFO about our current AR position."</div></div>
+    <div class="tip-row"><div class="tip-icon">•</div><div class="tip-text">"As a Customer Success Manager, write a 48-hour response plan for a client whose denial rate just spiked 7 points."</div></div>
+    <div class="tip-row"><div class="tip-icon">•</div><div class="tip-text">"What is one product improvement I should recommend as a Process Improvement Analyst for this system?"</div></div>
+  </div>
+</div>
+
+<!-- 08 INTERVIEW MODE -->
+<div class="section" id="interview">
+  <div class="breadcrumb">TSM CAREER OS <span>›</span> USER GUIDE <span>›</span> INTERVIEW MODE</div>
+  <div class="sec-header">
+    <div class="sec-num">SECTION 08</div>
+    <div class="sec-title"><strong>Interview Mode</strong> — AI-Scored Practice</div>
+    <div class="sec-desc">Interview Mode replaces the analyst output panel with a full interview drill experience. Your answers are scored live by Groq using the OBSERVE → DIAGNOSE → IMPACT → SOLVE → REPORT framework.</div>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-title">Activate Interview Mode</div>
+        <div class="step-desc">Click the <span class="ui-btn">🎯 Interview Mode</span> button in the Role Bar. The analyst output section hides and an interview panel appears below the events feed.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-title">Choose a question from the question bank</div>
+        <div class="step-desc">The question bank at the top of the interview panel lists 5–6 questions. Questions tagged <span class="ui-tag tag-p">🛠 APP</span> have a direct connection to a specific app or tool you've built — use these for your strongest STAR stories. Click any question to load it.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-title">Review the framework steps</div>
+        <div class="step-desc">Below the question, five framework steps appear (Situation → Task → Action → Result → Connect). These are your answer structure. Read them before writing.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <div class="step-title">Write your answer</div>
+        <div class="step-desc">Type in the answer textarea. Aim for 100–200 words. Use the framework steps as your guide. Be specific — name the metric, name the action, name the outcome in % or $.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <div class="step-title">Score, hint, or advance</div>
+        <div class="step-desc">Click <span class="ui-btn">SCORE MY ANSWER</span> for AI feedback. Click <span class="ui-btn">GET HINT</span> for a 3-bullet coaching hint without revealing the full answer. Click <strong>NEXT QUESTION ›</strong> to advance to the next question in the bank.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="int-flow">
+    <div class="int-card">
+      <div class="int-card-lbl">OBSERVE</div>
+      <div class="int-card-title">Set the scene</div>
+      <div class="int-card-desc">1–2 sentences max. What system or process? What metric was off? Avoid over-explaining context — interviewers want to hear what you did, not what the company was.</div>
+    </div>
+    <div class="int-card">
+      <div class="int-card-lbl">DIAGNOSE</div>
+      <div class="int-card-title">Name the root cause</div>
+      <div class="int-card-desc">What was the actual cause — not just the symptom? Name the process failure, the data gap, or the system limitation. "Denial rate was high" is a symptom; "modifier -25 was auto-applied by EHR template" is a diagnosis.</div>
+    </div>
+    <div class="int-card">
+      <div class="int-card-lbl">IMPACT</div>
+      <div class="int-card-title">Quantify everything</div>
+      <div class="int-card-desc">$ at risk, % gap, days delayed, claims affected, staff hours consumed. If you don't have a real number, use the simulator's data: "18.4% denial rate — 3.4pt above CMS threshold — $48K stalled."</div>
+    </div>
+    <div class="int-card">
+      <div class="int-card-lbl">SOLVE</div>
+      <div class="int-card-title">Describe your action</div>
+      <div class="int-card-desc">What specifically did you do? Name the tool, the method, the timeline, and who you worked with. Vague verbs ("I helped improve...") lose points. Specific verbs ("I built a pre-submission edit rule that caught...") win them.</div>
+    </div>
+    <div class="int-card">
+      <div class="int-card-lbl">REPORT</div>
+      <div class="int-card-title">State the result</div>
+      <div class="int-card-desc">Outcome in measurable terms. "Denial rate dropped from 18.4% to 12% in 60 days." Then connect: "This is the same analysis I would apply on Day 1 in this role."</div>
+    </div>
+    <div class="int-card" style="border-color:rgba(180,138,255,.3)">
+      <div class="int-card-lbl" style="color:var(--p)">CONNECT-TO-ROLE</div>
+      <div class="int-card-title">Bridge to the job</div>
+      <div class="int-card-desc">The "C" in STAR+C. After your result, add one sentence that directly connects your experience to the role you're interviewing for. This is the difference between a good answer and a great one.</div>
+    </div>
+  </div>
+
+  <div class="callout callout-warn">
+    <div class="callout-lbl">COMMON MISTAKE</div>
+    <p>Most users write their OBSERVE section too long and their SOLVE section too short. Interviewers already know the healthcare context — they want to hear what <em>you</em> did. Spend 70% of your word count on SOLVE and REPORT.</p>
+  </div>
+</div>
+
+<!-- 09 TOOLKIT -->
+<div class="section" id="toolkit">
+  <div class="breadcrumb">TSM CAREER OS <span>›</span> USER GUIDE <span>›</span> APP TOOLKIT</div>
+  <div class="sec-header">
+    <div class="sec-num">SECTION 09</div>
+    <div class="sec-title">The <strong>App Toolkit</strong> Panels</div>
+    <div class="sec-desc">Clicking the 🛠 APP TOOLKIT tab reveals two side-by-side panels — your role's app suite, and a scenario-specific recommended stack with selection rationale for each tool.</div>
+  </div>
+
+  <div class="anatomy">
+    <div class="anatomy-header">◆ APP TOOLKIT — TWO PANELS EXPLAINED</div>
+    <div class="anatomy-body">
+      <div class="az">
+        <div class="az-zone" style="color:var(--p)">APP SUITE<br><small style="font-size:8px;color:var(--muted)">(Role-specific)</small></div>
+        <div class="az-desc"><strong>Your personal tool portfolio.</strong> 3 apps specific to your active role — the tools someone in that role actually uses. Each card shows: what the tool does, exactly how you'd use it for this scenario, a link if available, and a potential interview question. Click a card to expand the "HOW I USE IT" detail.</div>
+      </div>
+      <div class="az">
+        <div class="az-zone" style="color:var(--p)">RECOMMENDED STACK<br><small style="font-size:8px;color:var(--muted)">(Scenario-specific)</small></div>
+        <div class="az-desc"><strong>Best tools for this specific crisis.</strong> 4 app cards in a 2×2 grid — Financial Intelligence, Doc Analysis Engine, Financial Operations, FinOps Accounting. Click a card to highlight (select) it. Click WHY THIS APP? to see a structured rationale: Observation → Cause → Impact → Outcome.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-action">
+    <div class="callout-lbl">HOW TO USE THIS IN AN INTERVIEW</div>
+    <p>When asked "what tools do you use in your current work?" — do not just list software names. Use the WHY THIS APP rationale structure: "I use Financial Intelligence when I see a denial spike because it lets me isolate the top denial code by payer within 10 minutes, which is the fastest path to root cause." That is a demonstrably better answer than "I use Excel and a clearinghouse portal."</p>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">→</div>
+      <div class="step-body">
+        <div class="step-title">Using the HOW TO SOLVE panel</div>
+        <div class="step-desc">Click the <span class="ui-tag tag-c">HOW TO SOLVE</span> tab to see the 4-step execution workflow. Each step has an <span class="ui-btn">OPEN APP ↗</span> button — click it to mark the step complete (it turns green with a ✓). Work through all 4 steps to simulate completing the full remediation workflow. This trains muscle memory for how professional ops workflows are sequenced.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 10 PORTFOLIO -->
+<div class="section" id="portfolio">
+  <div class="breadcrumb">TSM CAREER OS <span>›</span> USER GUIDE <span>›</span> PORTFOLIO OUTPUT</div>
+  <div class="sec-header">
+    <div class="sec-num">SECTION 10</div>
+    <div class="sec-title"><strong>Portfolio Output</strong> — Building Your Story</div>
+    <div class="sec-desc">Every scenario you run can be converted into usable job search assets. The PORTFOLIO tab under Analyst Output provides three ready-to-use formats.</div>
+  </div>
+
+  <div class="portfolio-block">
+    <div class="portfolio-block-lbl">FORMAT 1 — RESUME BULLET</div>
+    <div class="portfolio-block-text">"Analyzed 18.4% denial rate across 1,256 monthly claims; identified modifier compliance failure as primary driver across 47 claims; developed 30-day remediation plan projecting 6.4pt denial rate reduction and $15K/month revenue recovery."</div>
+    <div class="copy-hint">COPY</div>
+  </div>
+
+  <div class="portfolio-block">
+    <div class="portfolio-block-lbl">FORMAT 2 — LINKEDIN POST HOOK</div>
+    <div class="portfolio-block-text">"When denial rates exceed CMS thresholds, it's rarely one problem — it's a system failure. Here's how I'd diagnose it and fix it in 30 days..."</div>
+    <div class="copy-hint">COPY</div>
+  </div>
+
+  <div class="portfolio-block">
+    <div class="portfolio-block-lbl">FORMAT 3 — INTERVIEW STAR STORY</div>
+    <div class="portfolio-block-text">"I identified a 3.4pt denial rate gap above CMS threshold, traced the root cause to modifier -25 overuse via denial code analysis, and recommended a pre-submission edit that reduced CO-4 denials 40% in 60 days — recovering $15K/month in previously stalled revenue."</div>
+    <div class="copy-hint">COPY</div>
+  </div>
+
+  <div class="callout callout-note">
+    <div class="callout-lbl">PORTFOLIO STRATEGY</div>
+    <p>Run all 6 scenarios under your primary target role, then visit the PORTFOLIO tab after each one. You'll leave with 6 distinct quantified bullets, 6 STAR stories, and 6 LinkedIn post hooks — enough to vary your application materials across multiple applications without repeating yourself.</p>
+  </div>
+
+  <div class="tips">
+    <div class="tip-row"><div class="tip-icon">→</div><div class="tip-text"><strong>Custom analysis → custom bullet:</strong> After running a custom query in the query bar, scroll to the PORTFOLIO tab. The AI output from your custom prompt can be reformatted by asking in the query bar: "Convert your last analysis into a single quantified resume bullet."</div></div>
+    <div class="tip-row"><div class="tip-icon">→</div><div class="tip-text"><strong>Use the simulator's data honestly:</strong> These numbers are simulation-based, not from real clients. For applications, describe the simulator as a training tool: "Through structured healthcare ops simulation, I practiced analyzing a denial rate scenario with $48K at risk and produced a remediation plan projecting a 6.4pt improvement."</div></div>
+  </div>
+</div>
+
+<!-- 11 FAQ -->
+<div class="section" id="faq">
+  <div class="breadcrumb">TSM CAREER OS <span>›</span> USER GUIDE <span>›</span> FAQ</div>
+  <div class="sec-header">
+    <div class="sec-num">SECTION 11</div>
+    <div class="sec-title">Frequently Asked <strong>Questions</strong></div>
+  </div>
+
+  <div class="faq" id="faq-list">
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">The AI output didn't appear. What happened?</div>
+      <div class="faq-a">First check the <span class="ui-tag tag-r">⚠ GROQ: OFFLINE</span> pill in the top right. If offline, follow the setup steps in Section 01. If the pill shows connected but output is blank, scroll up in the left panel — the output box sits below the KPI grid and events feed. Also check the error message that sometimes appears in red below the output area.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">The KPI numbers didn't change when I ran a scenario.</div>
+      <div class="faq-a">Only certain KPIs update per scenario. For example, the denial spike scenario updates the denial rate (K1) and stalled revenue (K4), but not days in AR or clean claim rate. This is intentional — not every scenario affects every metric. Look at the events feed for what changed.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">How do I reset the KPIs back to the default state?</div>
+      <div class="faq-a">Refresh the page (<span class="ui-key">F5</span> or <span class="ui-key">Cmd+R</span>). The app reinitializes with the default KPI state: 18.4% denial rate, 52 days in AR, 94.2% clean claim rate, $48K stalled revenue, 68% appeal win rate, 1,256 claims/month.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Interview Mode questions aren't showing up.</div>
+      <div class="faq-a">Confirm you clicked the <span class="ui-btn">🎯 Interview Mode</span> button in the role bar (not just any other role button). The interview panel appears at the bottom of the left panel — you may need to scroll down past the events section to see it.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">The training loop is stuck on Step 1 / Step 2.</div>
+      <div class="faq-a">Steps advance based on specific actions: Step 2 requires a role switch, Step 3 requires a query run, Step 4 requires clicking an output tab. If you land on Step 1, try switching roles first (advances to Step 2), then run a scenario (advances to Step 3).</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Steps 6–8 aren't appearing in the right panel.</div>
+      <div class="faq-a">Steps 6–8 are quiz steps that become visible once you reach Step 6. They're always present in the right panel DOM — scroll down in the right panel past the visible training steps. The Step 6 quiz (App Selection) appears after you've completed Step 5.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Can I add my own scenarios or questions?</div>
+      <div class="faq-a">Not from within the app UI. However, the app's source code is in your GitHub repository (Torreyw94/tsm-shell). You can add scenarios to the <code>SCENARIOS</code> object and questions to each role's <code>questions</code> array in the script section. See the existing entries for the exact structure to follow.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">The KPI Forecast bars aren't animating.</div>
+      <div class="faq-a">The bars animate with a CSS transition on a 300ms delay after the panel opens. If they appear static, try clicking off the KPI FORECAST tab and back onto it. The animation only triggers once per tab open via <code>setTimeout(animateBars, 100)</code>.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Is the AI output different every time I run the same query?</div>
+      <div class="faq-a">Yes. Groq llama-3.3-70b generates a fresh completion each time with default temperature settings. The PRELOADED output (visible before any AI call) is static and serves as a benchmark, but once you run a query or scenario, all subsequent output is live-generated.</div>
+    </div>
+  </div>
+</div>
+
+<!-- 12 QUICK REFERENCE -->
+<div class="section" id="quickref">
+  <div class="breadcrumb">TSM CAREER OS <span>›</span> USER GUIDE <span>›</span> QUICK REFERENCE</div>
+  <div class="sec-header">
+    <div class="sec-num">SECTION 12</div>
+    <div class="sec-title"><strong>Quick Reference</strong> — Cheat Sheet</div>
+  </div>
+
+  <div class="qref-grid">
+    <div class="qref-card">
+      <div class="qref-lbl">KEYBOARD SHORTCUTS</div>
+      <div class="qref-items">
+        <div class="qref-row"><span class="qref-key">Enter in query bar</span><span class="qref-val">Run query</span></div>
+        <div class="qref-row"><span class="qref-key">F5 / Cmd+R</span><span class="qref-val">Reset KPIs</span></div>
+        <div class="qref-row"><span class="qref-key">Click role button</span><span class="qref-val">Switch perspective</span></div>
+        <div class="qref-row"><span class="qref-key">Click FAQ item</span><span class="qref-val">Toggle answer</span></div>
+      </div>
+    </div>
+    <div class="qref-card">
+      <div class="qref-lbl">DEFAULT KPI STATE</div>
+      <div class="qref-items">
+        <div class="qref-row"><span class="qref-key">Denial Rate</span><span class="qref-val">18.4%</span></div>
+        <div class="qref-row"><span class="qref-key">Days in AR</span><span class="qref-val">52d</span></div>
+        <div class="qref-row"><span class="qref-key">Clean Claim Rate</span><span class="qref-val">94.2%</span></div>
+        <div class="qref-row"><span class="qref-key">Stalled Revenue</span><span class="qref-val">$48K</span></div>
+        <div class="qref-row"><span class="qref-key">Appeal Win Rate</span><span class="qref-val">68%</span></div>
+        <div class="qref-row"><span class="qref-key">Claims / Month</span><span class="qref-val">1,256</span></div>
+      </div>
+    </div>
+    <div class="qref-card">
+      <div class="qref-lbl">GROQ TROUBLESHOOTING</div>
+      <div class="qref-items">
+        <div class="qref-row"><span class="qref-key">Railway key location</span><span class="qref-val">Variables tab</span></div>
+        <div class="qref-row"><span class="qref-key">Console fallback</span><span class="qref-val">window.GROQ_API_KEY</span></div>
+        <div class="qref-row"><span class="qref-key">Key prefix</span><span class="qref-val">gsk_...</span></div>
+        <div class="qref-row"><span class="qref-key">Railway endpoint</span><span class="qref-val">/api/hc/query</span></div>
+      </div>
+    </div>
+    <div class="qref-card">
+      <div class="qref-lbl">OUTPUT TAB QUICK PICKS</div>
+      <div class="qref-items">
+        <div class="qref-row"><span class="qref-key">Prep for interview</span><span class="qref-val">PORTFOLIO tab</span></div>
+        <div class="qref-row"><span class="qref-key">Explain the problem</span><span class="qref-val">ROOT CAUSE</span></div>
+        <div class="qref-row"><span class="qref-key">Show business impact</span><span class="qref-val">IMPACT tab</span></div>
+        <div class="qref-row"><span class="qref-key">Show you can execute</span><span class="qref-val">HOW TO SOLVE</span></div>
+        <div class="qref-row"><span class="qref-key">Show ROI</span><span class="qref-val">KPI FORECAST</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-action" style="margin-top:28px">
+    <div class="callout-lbl">DAILY PRACTICE RECOMMENDATION</div>
+    <p>15 minutes/day: pick one role → run one scenario → read ROOT CAUSE + RECOMMENDATION → write one interview answer using the STAR+C framework → score it → copy the best bullet to your notes. Six sessions = six distinct scenarios, six quantified bullets, six scored answers. That's a full interview prep bank.</p>
+  </div>
+
+  <div style="margin-top:28px;padding:16px;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;">
+    <div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:2px;margin-bottom:8px;">◆ QUICK-LAUNCH LINKS</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+      <a href="https://tsm-shell-production-57da.up.railway.app" target="_blank" style="text-decoration:none;"><span class="ui-btn">🖥 Open TSM Career OS</span></a>
+      <a href="https://railway.com" target="_blank" style="text-decoration:none;"><span class="ui-tag tag-b">🚂 Railway Dashboard</span></a>
+      <a href="https://console.groq.com" target="_blank" style="text-decoration:none;"><span class="ui-tag tag-p">🧠 Groq Console</span></a>
+      <a href="https://github.com/Torreyw94/tsm-shell" target="_blank" style="text-decoration:none;"><span class="ui-tag tag-c">⚙ GitHub Repo</span></a>
+    </div>
+  </div>
+
+</div>
+
+</div><!-- end content -->
+</div><!-- end layout -->
+
+<script>
+function toggleFaq(el){
+  const ans=el.nextElementSibling;
+  const isOpen=ans.classList.contains('open');
+  document.querySelectorAll('.faq-a').forEach(a=>a.classList.remove('open'));
+  if(!isOpen) ans.classList.add('open');
+}
+
+const navLinks=document.querySelectorAll('.nav-link');
+const sections=document.querySelectorAll('.section');
+const progressFill=document.getElementById('progress-fill');
+const content=document.getElementById('content');
+
+function updateNav(){
+  let cur='';
+  sections.forEach(s=>{
+    const rect=s.getBoundingClientRect();
+    if(rect.top<=160) cur=s.id;
+  });
+  navLinks.forEach(l=>{
+    l.classList.remove('active');
+    if(l.getAttribute('href')==='#'+cur) l.classList.add('active');
+  });
+  const st=content.scrollTop;
+  const sh=content.scrollHeight-content.clientHeight;
+  if(sh>0) progressFill.style.width=Math.min(100,(st/sh*100))+'%';
+}
+
+content.addEventListener('scroll',updateNav);
+
+document.querySelectorAll('.copy-hint').forEach(btn=>{
+  btn.addEventListener('click',function(){
+    const txt=this.previousElementSibling.textContent;
+    navigator.clipboard.writeText(txt).then(()=>{
+      this.textContent='✓ COPIED';
+      this.style.color='var(--g)';
+      setTimeout(()=>{this.textContent='COPY';this.style.color='';},1800);
+    });
+  });
+});
+</script>
+</body>
+</html>

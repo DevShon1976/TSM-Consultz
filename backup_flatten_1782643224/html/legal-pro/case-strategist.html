@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TSM Legal Main Strategist</title>
+<style>
+:root{
+  --a:#00ffc6;--a2:#00d4a8;--bg:#04080e;--p:#07121d;--p2:#0a1826;
+  --b:rgba(0,255,198,.1);--b2:rgba(255,255,255,.06);--t:#e2f3ff;
+  --m:#7a9db5;--red:#ff4d6a;--amber:#f5a623;--blue:#3d9be9;
+  --purple:#9b7cff;--gold:#ffd166;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--t);font-family:'Courier New',monospace;min-height:100vh;
+  background-image:radial-gradient(ellipse at 20% 0%,rgba(0,255,198,.07) 0%,transparent 50%),
+    radial-gradient(ellipse at 80% 100%,rgba(61,155,233,.05) 0%,transparent 50%)}
+a{color:var(--a);text-decoration:none}
+
+/* HEADER */
+header{
+  background:rgba(7,18,29,.97);border-bottom:1px solid var(--b);
+  padding:0 24px;display:flex;align-items:center;justify-content:space-between;
+  height:64px;position:sticky;top:0;z-index:100;
+  backdrop-filter:blur(12px);
+}
+.logo-block{display:flex;align-items:center;gap:14px}
+.logo-mark{
+  width:38px;height:38px;border:1.5px solid var(--a);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:900;color:var(--a);font-size:14px;letter-spacing:2px;
+  background:rgba(0,255,198,.06);
+}
+.logo-text{font-size:13px;font-weight:900;letter-spacing:.22em;color:var(--a)}
+.logo-sub{font-size:10px;color:var(--m);letter-spacing:.18em;margin-top:2px}
+.header-nav{display:flex;gap:6px}
+.hn{
+  background:transparent;color:var(--m);border:1px solid transparent;
+  border-radius:7px;padding:7px 12px;font-size:11px;font-weight:700;
+  letter-spacing:.12em;cursor:pointer;transition:.2s;font-family:inherit;
+}
+.hn:hover,.hn.active{color:var(--a);border-color:var(--b);background:rgba(0,255,198,.06)}
+.header-status{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--m)}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--a);
+  animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+
+/* CHAIN NAV */
+.chain-bar{
+  background:rgba(7,18,29,.95);border-bottom:1px solid var(--b2);
+  padding:10px 24px;display:flex;align-items:center;gap:8px;overflow-x:auto;
+  scrollbar-width:none;
+}
+.chain-bar::-webkit-scrollbar{display:none}
+.chain-node{
+  display:flex;align-items:center;gap:6px;background:rgba(10,24,38,.8);
+  border:1px solid var(--b2);border-radius:8px;padding:7px 14px;
+  font-size:11px;font-weight:700;letter-spacing:.1em;white-space:nowrap;
+  cursor:pointer;transition:.2s;color:var(--m);
+}
+.chain-node:hover{border-color:var(--b);color:var(--t)}
+.chain-node.current{border-color:var(--a);color:var(--a);background:rgba(0,255,198,.06)}
+.chain-node.relay{border-color:rgba(61,155,233,.4);color:var(--blue)}
+.chain-arrow{color:var(--m);font-size:14px;flex-shrink:0}
+
+/* LAYOUT */
+.page{padding:24px;max-width:1600px;margin:0 auto}
+
+/* COMMAND HEADER */
+.cmd-header{
+  background:linear-gradient(135deg,rgba(7,18,29,.98),rgba(10,24,38,.95));
+  border:1px solid var(--b);border-radius:16px;padding:28px 32px;
+  margin-bottom:20px;display:flex;gap:32px;align-items:flex-start;
+  position:relative;overflow:hidden;
+}
+.cmd-header::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--a),transparent);
+}
+.cmd-title{flex:1}
+.cmd-title h1{font-size:26px;color:#fff;font-weight:900;letter-spacing:.06em;line-height:1.2}
+.cmd-title h1 span{color:var(--a)}
+.cmd-title p{color:var(--m);font-size:13px;margin-top:8px;line-height:1.7;max-width:680px}
+.cmd-meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.badge{
+  background:rgba(0,255,198,.08);border:1px solid rgba(0,255,198,.2);
+  color:var(--a);border-radius:999px;padding:4px 12px;font-size:10px;
+  font-weight:700;letter-spacing:.14em;
+}
+.badge.red{background:rgba(255,77,106,.08);border-color:rgba(255,77,106,.2);color:var(--red)}
+.badge.amber{background:rgba(245,166,35,.08);border-color:rgba(245,166,35,.2);color:var(--amber)}
+.badge.blue{background:rgba(61,155,233,.08);border-color:rgba(61,155,233,.2);color:var(--blue)}
+.badge.purple{background:rgba(155,124,255,.08);border-color:rgba(155,124,255,.2);color:var(--purple)}
+.cmd-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;min-width:340px}
+.cstat{
+  background:rgba(4,8,14,.7);border:1px solid var(--b2);border-radius:10px;
+  padding:14px;text-align:center;
+}
+.cstat .val{font-size:24px;font-weight:900;color:var(--a);display:block}
+.cstat .lbl{font-size:10px;color:var(--m);letter-spacing:.14em;margin-top:4px;display:block}
+
+/* SCENARIO SELECTOR */
+.scenario-bar{
+  background:rgba(7,18,29,.9);border:1px solid var(--b2);border-radius:12px;
+  padding:16px 20px;margin-bottom:20px;
+}
+.scenario-bar h3{font-size:11px;color:var(--m);letter-spacing:.2em;margin-bottom:12px}
+.scenario-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.scenario-card{
+  background:rgba(4,8,14,.8);border:1px solid var(--b2);border-radius:10px;
+  padding:14px;cursor:pointer;transition:.2s;
+}
+.scenario-card:hover{border-color:var(--b);background:rgba(0,255,198,.04)}
+.scenario-card.active{border-color:var(--a);background:rgba(0,255,198,.07)}
+.sc-header{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.sc-icon{
+  width:28px;height:28px;border-radius:6px;display:flex;align-items:center;
+  justify-content:center;font-size:14px;flex-shrink:0;
+}
+.sc-name{font-size:12px;font-weight:700;color:var(--t);letter-spacing:.08em}
+.sc-desc{font-size:10px;color:var(--m);line-height:1.5}
+.sc-risk{font-size:9px;font-weight:700;letter-spacing:.1em;margin-top:6px}
+
+/* MAIN GRID */
+.main-grid{display:grid;grid-template-columns:1fr 380px;gap:20px;margin-bottom:20px}
+
+/* NODES PANEL */
+.nodes-panel{
+  background:rgba(7,18,29,.9);border:1px solid var(--b2);border-radius:12px;
+  padding:20px;
+}
+.panel-title{
+  font-size:11px;color:var(--m);letter-spacing:.2em;margin-bottom:16px;
+  display:flex;align-items:center;gap:8px;
+}
+.panel-title::before{content:'';width:12px;height:1px;background:var(--a)}
+.node-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.node-card{
+  background:rgba(4,8,14,.8);border:1px solid var(--b2);border-radius:10px;
+  padding:14px;cursor:pointer;transition:.2s;position:relative;overflow:hidden;
+}
+.node-card::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--node-color,var(--a));opacity:.4;
+  transition:.2s;
+}
+.node-card:hover{border-color:rgba(0,255,198,.2)}
+.node-card:hover::after{opacity:1}
+.node-card.active{border-color:var(--node-color,var(--a));background:rgba(0,255,198,.05)}
+.node-card.active::after{opacity:1}
+.node-name{font-size:11px;font-weight:700;color:var(--t);letter-spacing:.1em;margin-bottom:4px}
+.node-status{font-size:10px;color:var(--m);margin-bottom:8px}
+.node-score{
+  font-size:18px;font-weight:900;color:var(--node-color,var(--a));
+  font-family:'Courier New',monospace;
+}
+.node-label{font-size:9px;color:var(--m);letter-spacing:.1em}
+
+/* BNCA PANEL */
+.bnca-panel{
+  background:rgba(7,18,29,.9);border:1px solid var(--b2);border-radius:12px;
+  padding:20px;
+}
+.bnca-output{
+  background:rgba(4,8,14,.9);border:1px solid rgba(0,255,198,.15);
+  border-left:3px solid var(--a);border-radius:10px;padding:16px;
+  font-family:'Courier New',monospace;font-size:12px;line-height:1.7;
+  color:#c8e8f8;min-height:280px;margin-top:12px;position:relative;
+  overflow-y:auto;max-height:420px;
+  white-space:pre-wrap;
+}
+.bnca-output .typing::after{
+  content:'▋';animation:blink .8s step-end infinite;color:var(--a);
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.bnca-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.act-btn{
+  background:rgba(0,255,198,.08);border:1px solid rgba(0,255,198,.2);
+  color:var(--a);border-radius:8px;padding:8px 14px;font-size:11px;
+  font-weight:700;letter-spacing:.1em;cursor:pointer;font-family:inherit;
+  transition:.2s;
+}
+.act-btn:hover{background:rgba(0,255,198,.15);border-color:var(--a)}
+.act-btn.red{background:rgba(255,77,106,.08);border-color:rgba(255,77,106,.2);color:var(--red)}
+.act-btn.red:hover{background:rgba(255,77,106,.15)}
+.act-btn.blue{background:rgba(61,155,233,.08);border-color:rgba(61,155,233,.2);color:var(--blue)}
+.act-btn.blue:hover{background:rgba(61,155,233,.15)}
+
+/* BOTTOM GRID */
+.bottom-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:20px}
+
+/* MATTER QUEUE */
+.matter-queue{
+  background:rgba(7,18,29,.9);border:1px solid var(--b2);border-radius:12px;
+  padding:20px;
+}
+.matter-item{
+  background:rgba(4,8,14,.7);border:1px solid var(--b2);border-radius:8px;
+  padding:12px;margin-top:8px;cursor:pointer;transition:.2s;
+  border-left:3px solid var(--item-color,var(--b2));
+}
+.matter-item:hover{border-color:rgba(0,255,198,.3);background:rgba(0,255,198,.03)}
+.mi-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
+.mi-name{font-size:12px;font-weight:700;color:var(--t)}
+.mi-risk{font-size:10px;font-weight:700;letter-spacing:.1em}
+.mi-desc{font-size:10px;color:var(--m);line-height:1.5}
+.mi-meta{display:flex;gap:8px;margin-top:6px}
+.mi-tag{font-size:9px;background:rgba(255,255,255,.06);border-radius:4px;
+  padding:2px 7px;color:var(--m)}
+
+/* SLA TABLE */
+.sla-table{
+  background:rgba(7,18,29,.9);border:1px solid var(--b2);border-radius:12px;
+  padding:20px;
+}
+.sla-row{
+  display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;
+  padding:8px 0;border-bottom:1px solid var(--b2);font-size:11px;
+}
+.sla-row:last-child{border-bottom:none}
+.sla-name{color:var(--t);font-weight:700}
+.sla-age{color:var(--m)}
+.sla-dot{width:8px;height:8px;border-radius:50%;background:var(--dot-color)}
+
+/* RELAY PANEL */
+.relay-panel{
+  background:rgba(7,18,29,.9);border:1px solid rgba(61,155,233,.2);border-radius:12px;
+  padding:20px;position:relative;overflow:hidden;
+}
+.relay-panel::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--blue),transparent);
+}
+.relay-header{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;
+}
+.relay-dest{
+  font-size:11px;color:var(--blue);letter-spacing:.12em;font-weight:700;
+}
+.relay-status{
+  font-size:10px;padding:3px 10px;border-radius:999px;
+  background:rgba(61,155,233,.1);border:1px solid rgba(61,155,233,.25);
+  color:var(--blue);
+}
+.relay-report{
+  background:rgba(4,8,14,.9);border:1px solid rgba(61,155,233,.15);
+  border-radius:8px;padding:14px;font-size:11px;line-height:1.8;
+  color:#b8d8f0;min-height:160px;max-height:240px;overflow-y:auto;
+}
+.relay-btn{
+  width:100%;margin-top:12px;background:rgba(61,155,233,.1);
+  border:1px solid rgba(61,155,233,.3);color:var(--blue);border-radius:8px;
+  padding:10px;font-size:11px;font-weight:700;letter-spacing:.12em;
+  cursor:pointer;font-family:inherit;transition:.2s;
+}
+.relay-btn:hover{background:rgba(61,155,233,.2);border-color:var(--blue)}
+
+/* WORKFLOW TIMELINE */
+.timeline{
+  background:rgba(7,18,29,.9);border:1px solid var(--b2);border-radius:12px;
+  padding:20px;margin-bottom:20px;
+}
+.timeline-track{display:flex;gap:0;align-items:center;overflow-x:auto;padding-bottom:4px}
+.tl-step{
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  min-width:120px;position:relative;
+}
+.tl-step::after{
+  content:'';position:absolute;top:16px;left:60px;width:calc(100% - 20px);
+  height:1px;background:var(--b2);z-index:0;
+}
+.tl-step:last-child::after{display:none}
+.tl-dot{
+  width:32px;height:32px;border-radius:50%;border:2px solid var(--b2);
+  display:flex;align-items:center;justify-content:center;font-size:11px;
+  font-weight:900;color:var(--m);background:var(--bg);z-index:1;
+  transition:.3s;position:relative;
+}
+.tl-step.done .tl-dot{border-color:var(--a);color:var(--a);background:rgba(0,255,198,.08)}
+.tl-step.active .tl-dot{
+  border-color:var(--a);color:#001;background:var(--a);
+  box-shadow:0 0 12px rgba(0,255,198,.4);
+}
+.tl-step.active::after{background:var(--a);opacity:.3}
+.tl-step.done::after{background:var(--a);opacity:.5}
+.tl-label{font-size:10px;color:var(--m);text-align:center;letter-spacing:.08em}
+.tl-step.done .tl-label,.tl-step.active .tl-label{color:var(--a)}
+
+/* INTAKE FORM */
+.intake-form{
+  background:rgba(7,18,29,.9);border:1px solid var(--b2);border-radius:12px;
+  padding:20px;margin-bottom:20px;
+}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.form-full{grid-column:1/-1}
+label{font-size:10px;color:var(--m);letter-spacing:.14em;display:block;margin-bottom:4px}
+input,select,textarea{
+  width:100%;background:#020608;color:#dff7ff;
+  border:1px solid var(--b2);border-radius:8px;padding:10px 12px;
+  font-family:'Courier New',monospace;font-size:12px;transition:.2s;
+  outline:none;
+}
+textarea{min-height:100px;resize:vertical}
+input:focus,select:focus,textarea:focus{border-color:rgba(0,255,198,.35);background:#030a0f}
+select option{background:#071220}
+.run-btn{
+  width:100%;background:var(--a);color:#001;border:none;border-radius:10px;
+  padding:14px;font-size:13px;font-weight:900;letter-spacing:.18em;
+  cursor:pointer;font-family:inherit;transition:.2s;margin-top:4px;
+}
+.run-btn:hover{background:var(--a2);transform:translateY(-1px)}
+.run-btn:active{transform:translateY(0)}
+.run-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+/* CONFIDENCE BAR */
+.confidence-bar{margin-top:16px}
+.cb-label{display:flex;justify-content:space-between;font-size:10px;color:var(--m);
+  letter-spacing:.12em;margin-bottom:6px}
+.cb-track{height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden}
+.cb-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--a2),var(--a));
+  transition:width 1s ease;width:0%}
+
+/* EP LINK */
+.ep-link{
+  background:linear-gradient(135deg,rgba(61,155,233,.08),rgba(155,124,255,.05));
+  border:1px solid rgba(61,155,233,.2);border-radius:12px;
+  padding:20px;display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:20px;
+}
+.ep-info h3{font-size:14px;font-weight:900;letter-spacing:.12em;color:var(--t);margin-bottom:4px}
+.ep-info p{font-size:11px;color:var(--m);line-height:1.6}
+.ep-btn{
+  background:var(--blue);color:#fff;border:none;border-radius:9px;
+  padding:11px 22px;font-size:12px;font-weight:700;letter-spacing:.1em;
+  cursor:pointer;font-family:inherit;white-space:nowrap;transition:.2s;
+}
+.ep-btn:hover{background:#2a89d8;transform:translateY(-1px)}
+
+/* THINKING */
+.thinking{display:none;font-size:11px;color:var(--a);letter-spacing:.1em;
+  animation:thinking 1.5s ease-in-out infinite}
+@keyframes thinking{0%,100%{opacity:.4}50%{opacity:1}}
+.thinking.show{display:block}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(0,255,198,.2);border-radius:2px}
+
+/* RESPONSIVE */
+@media(max-width:1100px){
+  .main-grid{grid-template-columns:1fr}
+  .bottom-grid{grid-template-columns:1fr 1fr}
+  .cmd-stats{grid-template-columns:repeat(2,1fr)}
+  .cmd-header{flex-direction:column}
+}
+@media(max-width:700px){
+  .bottom-grid{grid-template-columns:1fr}
+  .form-grid{grid-template-columns:1fr}
+  .header-nav{display:none}
+  .chain-bar{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-block">
+    <div class="logo-mark">TSM</div>
+    <div>
+      <div class="logo-text">LEGAL MAIN STRATEGIST</div>
+      <div class="logo-sub">INTELLIGENCE COMMAND · LEGAL SUITE</div>
+    </div>
+  </div>
+  <nav class="header-nav">
+    <button class="hn active">STRATEGIST</button>
+    <button class="hn" onclick="scrollTo(0,0)">NODES</button>
+    <button class="hn" onclick="document.getElementById('queue-section').scrollIntoView({behavior:'smooth'})">QUEUE</button>
+    <button class="hn" onclick="document.getElementById('relay-section').scrollIntoView({behavior:'smooth'})">RELAY</button>
+  </nav>
+  <div class="header-status">
+    <div class="pulse"></div>
+    <span>LIVE · LEGAL INTELLIGENCE ACTIVE</span>
+  </div>
+</header>
+
+<!-- CHAIN NAV -->
+<div class="chain-bar">
+  <div class="chain-node" onclick="window.location.href='/legal-pro/index.html'">⚖ LEGAL-PRO HUB</div>
+  <span class="chain-arrow">→</span>
+  <div class="chain-node" onclick="window.location.href='/legal-pro/nodes/matter.html'">MATTER NODE</div>
+  <span class="chain-arrow">→</span>
+  <div class="chain-node" onclick="window.location.href='/legal-pro/nodes/billing.html'">BILLING NODE</div>
+  <span class="chain-arrow">→</span>
+  <div class="chain-node" onclick="window.location.href='/legal-pro/nodes/compliance.html'">COMPLIANCE NODE</div>
+  <span class="chain-arrow">→</span>
+  <div class="chain-node" onclick="window.location.href='/legal-pro/nodes/contracts.html'">CONTRACTS NODE</div>
+  <span class="chain-arrow">→</span>
+  <div class="chain-node" onclick="window.location.href='/legal-pro/strategist.html'">LEGAL STRATEGIST</div>
+  <span class="chain-arrow">→</span>
+  <div class="chain-node current">⬡ MAIN STRATEGIST</div>
+  <span class="chain-arrow">→</span>
+  <div class="chain-node relay" onclick="window.location.href='/legal-pro/ep1.html'">▶ EXECUTIVE PORTAL</div>
+</div>
+
+<!-- PAGE -->
+<div class="page">
+
+<!-- CMD HEADER -->
+<div class="cmd-header">
+  <div class="cmd-title">
+    <h1>TSM LEGAL <span>MAIN STRATEGIST</span></h1>
+    <p>Cross-node intelligence aggregator. Synthesizes matter intake, billing audit, contracts, compliance, and trust accounting signals into unified risk posture, escalation routing, and executive relay packages for legal operations leadership.</p>
+    <div class="cmd-meta">
+      <span class="badge">⚙ GROQ LLAMA-3.3-70B</span>
+      <span class="badge blue">MULTI-NODE SYNTHESIS</span>
+      <span class="badge purple">BNCA ENGINE</span>
+      <span class="badge amber" id="risk-badge">RISK: ASSESSING</span>
+      <span class="badge red" id="sla-badge">SLA: MONITORING</span>
+    </div>
+  </div>
+  <div class="cmd-stats">
+    <div class="cstat"><span class="val" id="stat-nodes">6</span><span class="lbl">ACTIVE NODES</span></div>
+    <div class="cstat"><span class="val" id="stat-matters">—</span><span class="lbl">MATTERS OPEN</span></div>
+    <div class="cstat"><span class="val" id="stat-risk">—</span><span class="lbl">RISK SCORE</span></div>
+    <div class="cstat"><span class="val" id="stat-conf">—%</span><span class="lbl">CONFIDENCE</span></div>
+  </div>
+</div>
+
+<!-- SCENARIO SELECTOR -->
+<div class="scenario-bar">
+  <h3>SELECT SCENARIO · LEGAL INTELLIGENCE MODE</h3>
+  <div class="scenario-grid" id="scenario-grid">
+    <div class="scenario-card active" data-scenario="billing" onclick="selectScenario(this)">
+      <div class="sc-header">
+        <div class="sc-icon" style="background:rgba(245,166,35,.1);color:#f5a623">$</div>
+        <div class="sc-name">BILLING LEAKAGE</div>
+      </div>
+      <div class="sc-desc">Unbilled time, write-down exposure, invoice dispute chain, and client trust account variance.</div>
+      <div class="sc-risk" style="color:#f5a623">⬆ FINANCIAL RISK</div>
+    </div>
+    <div class="scenario-card" data-scenario="compliance" onclick="selectScenario(this)">
+      <div class="sc-header">
+        <div class="sc-icon" style="background:rgba(255,77,106,.1);color:#ff4d6a">!</div>
+        <div class="sc-name">COMPLIANCE BREACH</div>
+      </div>
+      <div class="sc-desc">Bar compliance deadlines, file retention failures, ethics wall breach, and conflict check gaps.</div>
+      <div class="sc-risk" style="color:#ff4d6a">⚠ CRITICAL RISK</div>
+    </div>
+    <div class="scenario-card" data-scenario="matter" onclick="selectScenario(this)">
+      <div class="sc-header">
+        <div class="sc-icon" style="background:rgba(61,155,233,.1);color:#3d9be9">≡</div>
+        <div class="sc-name">MATTER BOTTLENECK</div>
+      </div>
+      <div class="sc-desc">Stalled discovery, staffing gaps on active matters, deadline pressure across litigation portfolio.</div>
+      <div class="sc-risk" style="color:#3d9be9">↔ OPERATIONAL RISK</div>
+    </div>
+    <div class="scenario-card" data-scenario="contract" onclick="selectScenario(this)">
+      <div class="sc-header">
+        <div class="sc-icon" style="background:rgba(155,124,255,.1);color:#9b7cff">◈</div>
+        <div class="sc-name">CONTRACT EXPOSURE</div>
+      </div>
+      <div class="sc-desc">Auto-renewal traps, missing executed copies, indemnity clause gaps, and SLA commitments at risk.</div>
+      <div class="sc-risk" style="color:#9b7cff">◆ LIABILITY RISK</div>
+    </div>
+    <div class="scenario-card" data-scenario="trust" onclick="selectScenario(this)">
+      <div class="sc-header">
+        <div class="sc-icon" style="background:rgba(0,255,198,.1);color:#00ffc6">⊕</div>
+        <div class="sc-name">TRUST ACCOUNTING</div>
+      </div>
+      <div class="sc-desc">IOLTA discrepancy, three-way reconciliation failure, client fund disbursement exception.</div>
+      <div class="sc-risk" style="color:#00ffc6">⬡ FIDUCIARY RISK</div>
+    </div>
+    <div class="scenario-card" data-scenario="discovery" onclick="selectScenario(this)">
+      <div class="sc-header">
+        <div class="sc-icon" style="background:rgba(255,209,102,.1);color:#ffd166">⊞</div>
+        <div class="sc-name">DISCOVERY CRISIS</div>
+      </div>
+      <div class="sc-desc">eDiscovery backlog, spoliation risk, document hold failures, opposing counsel pressure.</div>
+      <div class="sc-risk" style="color:#ffd166">⬥ LITIGATION RISK</div>
+    </div>
+  </div>
+</div>
+
+<!-- INTAKE FORM -->
+<div class="intake-form">
+  <div class="panel-title">MATTER INTELLIGENCE INTAKE</div>
+  <div class="form-grid">
+    <div>
+      <label>MATTER / CLIENT NAME</label>
+      <input type="text" id="matter-name" placeholder="Acme Corp v. Smith — Employment Matter #447">
+    </div>
+    <div>
+      <label>MATTER TYPE</label>
+      <select id="matter-type">
+        <option>Litigation — Employment</option>
+        <option>Litigation — Commercial</option>
+        <option>Transactional — M&A</option>
+        <option>Transactional — Real Estate</option>
+        <option>Regulatory / Compliance</option>
+        <option>Intellectual Property</option>
+        <option>Bankruptcy / Restructuring</option>
+        <option>Trust &amp; Estate</option>
+        <option>Criminal Defense</option>
+      </select>
+    </div>
+    <div>
+      <label>RESPONSIBLE PARTNER</label>
+      <input type="text" id="responsible-partner" placeholder="Partner / Team Lead">
+    </div>
+    <div>
+      <label>SLA / DEADLINE PRESSURE</label>
+      <select id="sla-pressure">
+        <option value="critical">CRITICAL — 24–48 hrs</option>
+        <option value="high">HIGH — This week</option>
+        <option value="medium" selected>MEDIUM — 2–4 weeks</option>
+        <option value="low">LOW — No immediate deadline</option>
+      </select>
+    </div>
+    <div class="form-full">
+      <label>OPERATIONAL CONTEXT · ISSUES / EXCEPTIONS / FLAGS</label>
+      <textarea id="context-input" placeholder="Describe the current operational situation, issues identified across nodes, exceptions flagged, missing documents, billing discrepancies, compliance gaps, or any escalation-worthy conditions..."></textarea>
+    </div>
+    <div>
+      <label>NODES FLAGGING ISSUES</label>
+      <select id="flagging-nodes" multiple style="min-height:88px">
+        <option>Matter Intake</option>
+        <option>Billing Audit</option>
+        <option>Compliance</option>
+        <option>Contracts</option>
+        <option>Trust Accounting</option>
+        <option>eDiscovery</option>
+      </select>
+    </div>
+    <div>
+      <label>BILLABLE HOURS AT RISK ($)</label>
+      <input type="text" id="hours-risk" placeholder="e.g. $24,000 — 40 hrs unrealized">
+      <label style="margin-top:12px">ESCALATION PRIORITY</label>
+      <select id="escalation-priority">
+        <option>P1 — IMMEDIATE</option>
+        <option>P2 — URGENT</option>
+        <option selected>P3 — STANDARD</option>
+        <option>P4 — MONITORING</option>
+      </select>
+    </div>
+  </div>
+  <button class="run-btn" id="run-bnca" onclick="runBNCA()">⚡ RUN LEGAL MAIN STRATEGIST BNCA</button>
+</div>
+
+<!-- WORKFLOW TIMELINE -->
+<div class="timeline">
+  <div class="panel-title">STRATEGIC WORKFLOW TIMELINE</div>
+  <div class="timeline-track">
+    <div class="tl-step done" id="tl-1">
+      <div class="tl-dot">✓</div>
+      <div class="tl-label">NODE SIGNALS<br>RECEIVED</div>
+    </div>
+    <div class="tl-step done" id="tl-2">
+      <div class="tl-dot">✓</div>
+      <div class="tl-label">SCENARIO<br>CLASSIFIED</div>
+    </div>
+    <div class="tl-step" id="tl-3">
+      <div class="tl-dot">3</div>
+      <div class="tl-label">BNCA<br>ENGINE</div>
+    </div>
+    <div class="tl-step" id="tl-4">
+      <div class="tl-dot">4</div>
+      <div class="tl-label">RISK<br>SCORED</div>
+    </div>
+    <div class="tl-step" id="tl-5">
+      <div class="tl-dot">5</div>
+      <div class="tl-label">OWNER<br>ASSIGNED</div>
+    </div>
+    <div class="tl-step" id="tl-6">
+      <div class="tl-dot">6</div>
+      <div class="tl-label">STRATEGIST<br>RELAY</div>
+    </div>
+    <div class="tl-step" id="tl-7">
+      <div class="tl-dot">7</div>
+      <div class="tl-label">EXECUTIVE<br>PORTAL</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN GRID -->
+<div class="main-grid">
+  <!-- NODE STATUS PANEL -->
+  <div class="nodes-panel">
+    <div class="panel-title">NODE INTELLIGENCE STATUS</div>
+    <div class="node-grid" id="node-grid">
+      <div class="node-card" style="--node-color:#f5a623" onclick="pingNode('billing')">
+        <div class="node-name">BILLING AUDIT</div>
+        <div class="node-status">Monitoring unbilled time</div>
+        <div class="node-score" id="ns-billing">—</div>
+        <div class="node-label">RISK SCORE</div>
+      </div>
+      <div class="node-card" style="--node-color:#ff4d6a" onclick="pingNode('compliance')">
+        <div class="node-name">COMPLIANCE</div>
+        <div class="node-status">Bar deadline tracking</div>
+        <div class="node-score" id="ns-compliance">—</div>
+        <div class="node-label">RISK SCORE</div>
+      </div>
+      <div class="node-card" style="--node-color:#3d9be9" onclick="pingNode('matter')">
+        <div class="node-name">MATTER INTAKE</div>
+        <div class="node-status">Open matters queue</div>
+        <div class="node-score" id="ns-matter">—</div>
+        <div class="node-label">RISK SCORE</div>
+      </div>
+      <div class="node-card" style="--node-color:#9b7cff" onclick="pingNode('contracts')">
+        <div class="node-name">CONTRACTS</div>
+        <div class="node-status">Renewal & execution gaps</div>
+        <div class="node-score" id="ns-contracts">—</div>
+        <div class="node-label">RISK SCORE</div>
+      </div>
+      <div class="node-card" style="--node-color:#00ffc6" onclick="pingNode('trust')">
+        <div class="node-name">TRUST ACCOUNTING</div>
+        <div class="node-status">IOLTA reconciliation</div>
+        <div class="node-score" id="ns-trust">—</div>
+        <div class="node-label">RISK SCORE</div>
+      </div>
+      <div class="node-card" style="--node-color:#ffd166" onclick="pingNode('discovery')">
+        <div class="node-name">eDISCOVERY</div>
+        <div class="node-status">Document hold status</div>
+        <div class="node-score" id="ns-discovery">—</div>
+        <div class="node-label">RISK SCORE</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BNCA PANEL -->
+  <div class="bnca-panel">
+    <div class="panel-title">BNCA OUTPUT · BEST NEXT COMMAND ACTIONS</div>
+    <div class="thinking show" id="thinking-indicator">AWAITING INTAKE DATA...</div>
+    <div class="bnca-output" id="bnca-output">TSM LEGAL MAIN STRATEGIST READY.
+
+Complete the intake form and run BNCA analysis to receive:
+— Cross-node risk synthesis
+— Prioritized best next actions
+— Owner lane assignments
+— SLA pressure assessment
+— Executive relay package
+
+Select a scenario above to pre-configure the intelligence context.</div>
+    <div class="confidence-bar">
+      <div class="cb-label"><span>AI CONFIDENCE</span><span id="conf-pct">0%</span></div>
+      <div class="cb-track"><div class="cb-fill" id="conf-fill"></div></div>
+    </div>
+    <div class="bnca-actions">
+      <button class="act-btn" onclick="assignOwner()">ASSIGN OWNER</button>
+      <button class="act-btn amber" onclick="escalateStrategist()">ESCALATE</button>
+      <button class="act-btn red" onclick="clearBlocker()">CLEAR BLOCKER</button>
+      <button class="act-btn blue" onclick="sendToRelay()">→ SEND TO EP</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM GRID -->
+<div class="bottom-grid" id="queue-section">
+
+  <!-- MATTER QUEUE -->
+  <div class="matter-queue">
+    <div class="panel-title">ACTIVE MATTER QUEUE</div>
+    <div id="matter-list">
+      <div class="matter-item" style="--item-color:#ff4d6a">
+        <div class="mi-top">
+          <span class="mi-name">Thornton v. Pacific Brands</span>
+          <span class="mi-risk" style="color:#ff4d6a">P1 CRITICAL</span>
+        </div>
+        <div class="mi-desc">eDiscovery hold challenged. Opposing counsel filing spoliation motion. Partner unavailable.</div>
+        <div class="mi-meta">
+          <span class="mi-tag">LITIGATION</span>
+          <span class="mi-tag">eDiscovery</span>
+          <span class="mi-tag">48 HRS</span>
+        </div>
+      </div>
+      <div class="matter-item" style="--item-color:#f5a623">
+        <div class="mi-top">
+          <span class="mi-name">Meridian Capital — Engagement</span>
+          <span class="mi-risk" style="color:#f5a623">P2 URGENT</span>
+        </div>
+        <div class="mi-desc">$44K in unbilled time. Invoice dispute unresolved 47 days. Trust account variance $1,200.</div>
+        <div class="mi-meta">
+          <span class="mi-tag">BILLING</span>
+          <span class="mi-tag">TRUST</span>
+          <span class="mi-tag">OVERDUE</span>
+        </div>
+      </div>
+      <div class="matter-item" style="--item-color:#9b7cff">
+        <div class="mi-top">
+          <span class="mi-name">Harlow Group — MSA Renewal</span>
+          <span class="mi-risk" style="color:#9b7cff">P2 CONTRACT</span>
+        </div>
+        <div class="mi-desc">Auto-renewal clause triggers in 9 days. No executed amendment. Indemnity terms disputed.</div>
+        <div class="mi-meta">
+          <span class="mi-tag">CONTRACTS</span>
+          <span class="mi-tag">AUTO-RENEW</span>
+          <span class="mi-tag">9 DAYS</span>
+        </div>
+      </div>
+      <div class="matter-item" style="--item-color:#3d9be9">
+        <div class="mi-top">
+          <span class="mi-name">Sunrise Health — Reg. Review</span>
+          <span class="mi-risk" style="color:#3d9be9">P3 STANDARD</span>
+        </div>
+        <div class="mi-desc">Compliance review 3 weeks overdue. Ethics wall documentation incomplete. File retention gap.</div>
+        <div class="mi-meta">
+          <span class="mi-tag">COMPLIANCE</span>
+          <span class="mi-tag">ETHICS</span>
+          <span class="mi-tag">3 WKS LATE</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLA TABLE -->
+  <div class="sla-table">
+    <div class="panel-title">SLA PRESSURE TRACKER</div>
+    <div class="sla-row">
+      <span class="sla-name">Thornton Spoliation Resp.</span>
+      <span class="sla-age">48 hrs</span>
+      <div class="sla-dot" style="--dot-color:#ff4d6a"></div>
+    </div>
+    <div class="sla-row">
+      <span class="sla-name">Harlow MSA Auto-Renewal</span>
+      <span class="sla-age">9 days</span>
+      <div class="sla-dot" style="--dot-color:#ff4d6a"></div>
+    </div>
+    <div class="sla-row">
+      <span class="sla-name">Meridian Invoice Response</span>
+      <span class="sla-age">47 days</span>
+      <div class="sla-dot" style="--dot-color:#f5a623"></div>
+    </div>
+    <div class="sla-row">
+      <span class="sla-name">Sunrise Compliance Review</span>
+      <span class="sla-age">3 wks late</span>
+      <div class="sla-dot" style="--dot-color:#f5a623"></div>
+    </div>
+    <div class="sla-row">
+      <span class="sla-name">Q4 Trust Reconciliation</span>
+      <span class="sla-age">14 days</span>
+      <div class="sla-dot" style="--dot-color:#3d9be9"></div>
+    </div>
+    <div class="sla-row">
+      <span class="sla-name">Bar CLE Deadline — M.Torres</span>
+      <span class="sla-age">22 days</span>
+      <div class="sla-dot" style="--dot-color:#3d9be9"></div>
+    </div>
+    <div class="sla-row">
+      <span class="sla-name">IP Portfolio Review</span>
+      <span class="sla-age">5 wks</span>
+      <div class="sla-dot" style="--dot-color:#00ffc6"></div>
+    </div>
+    <div class="sla-row">
+      <span class="sla-name">Bankruptcy Filing — Chen</span>
+      <span class="sla-age">6 wks</span>
+      <div class="sla-dot" style="--dot-color:#00ffc6"></div>
+    </div>
+  </div>
+
+  <!-- RELAY PANEL -->
+  <div class="relay-panel" id="relay-section">
+    <div class="relay-header">
+      <div class="panel-title" style="margin-bottom:0">EXECUTIVE PORTAL RELAY</div>
+      <div class="relay-status" id="relay-status">AWAITING BNCA</div>
+    </div>
+    <div class="relay-dest">→ DESTINATION: legal-pro/ep1.html</div>
+    <div class="relay-report" id="relay-report">
+Executive relay package not yet generated.
+
+Run BNCA analysis and click [→ SEND TO EP] to compile the executive intelligence package for the Legal Executive Portal.
+
+The relay will include:
+— Risk posture summary
+— Priority action items
+— Owner lane assignments
+— Financial exposure estimate
+— Recommended board-level decisions</div>
+    <button class="relay-btn" onclick="launchEP()">▶ LAUNCH EXECUTIVE PORTAL</button>
+  </div>
+
+</div>
+
+<!-- EP LINK -->
+<div class="ep-link">
+  <div class="ep-info">
+    <h3>EXECUTIVE PORTAL · ep1.html</h3>
+    <p>Send synthesized legal intelligence to leadership. Executive-ready risk summaries, financial exposure, board action items, and matter portfolio rollup — generated from this strategist session.</p>
+  </div>
+  <button class="ep-btn" onclick="launchEP()">OPEN EXECUTIVE PORTAL →</button>
+</div>
+
+</div><!-- /page -->
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
+// Uses Railway env var GROQ_API_KEY via your backend proxy at /api/groq
+// For direct use, replace with your key or proxy endpoint
+const API_ENDPOINT = '/api/groq'; // your Railway proxy
+
+const SCENARIOS = {
+  billing: {
+    name: 'Billing Leakage',
+    color: '#f5a623',
+    nodes: ['billing', 'trust'],
+    risk: 'FINANCIAL',
+    scores: { billing: 78, compliance: 42, matter: 55, contracts: 30, trust: 81, discovery: 20 }
+  },
+  compliance: {
+    name: 'Compliance Breach',
+    color: '#ff4d6a',
+    nodes: ['compliance'],
+    risk: 'CRITICAL',
+    scores: { billing: 40, compliance: 91, matter: 65, contracts: 55, trust: 45, discovery: 35 }
+  },
+  matter: {
+    name: 'Matter Bottleneck',
+    color: '#3d9be9',
+    nodes: ['matter', 'discovery'],
+    risk: 'OPERATIONAL',
+    scores: { billing: 60, compliance: 55, matter: 84, contracts: 40, trust: 30, discovery: 76 }
+  },
+  contract: {
+    name: 'Contract Exposure',
+    color: '#9b7cff',
+    nodes: ['contracts'],
+    risk: 'LIABILITY',
+    scores: { billing: 50, compliance: 60, matter: 45, contracts: 88, trust: 35, discovery: 25 }
+  },
+  trust: {
+    name: 'Trust Accounting',
+    color: '#00ffc6',
+    nodes: ['trust', 'billing'],
+    risk: 'FIDUCIARY',
+    scores: { billing: 72, compliance: 80, matter: 40, contracts: 30, trust: 94, discovery: 15 }
+  },
+  discovery: {
+    name: 'Discovery Crisis',
+    color: '#ffd166',
+    nodes: ['discovery', 'matter'],
+    risk: 'LITIGATION',
+    scores: { billing: 35, compliance: 60, matter: 75, contracts: 45, trust: 40, discovery: 92 }
+  }
+};
+
+let currentScenario = 'billing';
+let lastBNCA = '';
+
+// ============================================================
+// SCENARIO SELECTION
+// ============================================================
+function selectScenario(card) {
+  document.querySelectorAll('.scenario-card').forEach(c => c.classList.remove('active'));
+  card.classList.add('active');
+  currentScenario = card.dataset.scenario;
+  updateNodeScores();
+}
+
+function updateNodeScores() {
+  const s = SCENARIOS[currentScenario];
+  if (!s) return;
+  const keys = ['billing','compliance','matter','contracts','trust','discovery'];
+  keys.forEach(k => {
+    const el = document.getElementById('ns-' + k);
+    if (el) {
+      el.textContent = s.scores[k];
+      // Color based on score
+      const score = s.scores[k];
+      el.style.color = score >= 80 ? '#ff4d6a' : score >= 60 ? '#f5a623' : '#00ffc6';
+    }
+  });
+  // Highlight active nodes
+  document.querySelectorAll('.node-card').forEach(nc => {
+    nc.classList.remove('active');
+  });
+}
+
+// ============================================================
+// NODE PING
+// ============================================================
+function pingNode(node) {
+  const el = document.querySelector(`[onclick="pingNode('${node}')"]`);
+  if (el) el.classList.toggle('active');
+}
+
+// ============================================================
+// BNCA ENGINE
+// ============================================================
+async function runBNCA() {
+  const matterName = document.getElementById('matter-name').value || 'General Legal Matter';
+  const matterType = document.getElementById('matter-type').value;
+  const partner = document.getElementById('responsible-partner').value || 'Unassigned';
+  const sla = document.getElementById('sla-pressure').value;
+  const context = document.getElementById('context-input').value || '(No additional context provided)';
+  const hoursRisk = document.getElementById('hours-risk').value || 'Not specified';
+  const escalation = document.getElementById('escalation-priority').value;
+  const scenario = SCENARIOS[currentScenario];
+
+  // Update UI state
+  const btn = document.getElementById('run-bnca');
+  btn.disabled = true;
+  btn.textContent = '⚡ ANALYZING...';
+
+  document.getElementById('thinking-indicator').textContent = 'CROSS-NODE SYNTHESIS RUNNING...';
+  setTimeline(3);
+
+  const outputEl = document.getElementById('bnca-output');
+  outputEl.textContent = '';
+  outputEl.classList.add('typing');
+
+  document.getElementById('conf-fill').style.width = '0%';
+  document.getElementById('conf-pct').textContent = '0%';
+
+  const nodeScores = Object.entries(scenario.scores)
+    .map(([k,v]) => `${k.toUpperCase()}: ${v}/100`)
+    .join(' | ');
+
+  const systemPrompt = `You are the TSM Legal Main Strategist — a senior AI operations intelligence engine for a legal BPO platform. You receive cross-node signals from legal operations nodes (billing, compliance, matter intake, contracts, trust accounting, eDiscovery) and synthesize them into a unified BNCA (Best Next Command Actions) report for legal operations leadership.
+
+Your output format is ALWAYS structured as:
+
+LEGAL MAIN STRATEGIST BNCA REPORT
+══════════════════════════════════
+SCENARIO: [name]
+MATTER: [name]
+RISK LEVEL: [CRITICAL/HIGH/MEDIUM/LOW]
+SLA PRESSURE: [assessment]
+
+CROSS-NODE RISK SYNTHESIS
+─────────────────────────
+[2-3 sentences synthesizing signals across all flagged nodes into unified risk narrative]
+
+TOP OPERATIONAL BLOCKER
+────────────────────────
+[Single most critical issue requiring immediate action]
+
+BEST NEXT ACTIONS
+──────────────────
+1. [Most urgent — who does what by when]
+2. [Second priority action]
+3. [Third priority action]
+4. [Strategist relay or escalation action]
+5. [Executive notification if warranted]
+
+OWNER LANE ASSIGNMENT
+──────────────────────
+Primary: [Role/team]
+Secondary: [Role/team]
+Escalation Path: Strategist → Managing Partner / Executive Portal
+
+FINANCIAL EXPOSURE
+───────────────────
+[Quantified risk or leakage estimate if applicable]
+
+EXECUTIVE RELAY STATUS
+───────────────────────
+[Ready for EP relay / Escalation warranted / Monitor and report]
+
+CONFIDENCE: [85-96]%
+
+Use professional legal operations language. Be specific. Be urgent where warranted. Max 400 words total.`;
+
+  const userPrompt = `Run BNCA analysis on the following legal matter:
+
+SCENARIO: ${scenario.name} (${scenario.risk} RISK)
+MATTER: ${matterName}
+TYPE: ${matterType}
+PARTNER: ${partner}
+SLA PRESSURE: ${sla}
+ESCALATION PRIORITY: ${escalation}
+HOURS/FINANCIAL AT RISK: ${hoursRisk}
+
+NODE RISK SCORES: ${nodeScores}
+
+OPERATIONAL CONTEXT:
+${context}
+
+Generate the full BNCA report with cross-node synthesis, prioritized actions, owner assignment, and executive relay status.`;
+
+  try {
+    // Try Groq via Railway proxy
+    const response = await fetch(API_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        max_tokens: 800,
+        temperature: 0.4,
+        stream: false
+      })
+    });
+
+    if (!response.ok) throw new Error('proxy_failed');
+
+    const data = await response.json();
+    const text = data.choices?.[0]?.message?.content || '';
+    await streamText(text, outputEl);
+    finalizeBNCA(text);
+
+  } catch (err) {
+    // Fallback: rich mock BNCA
+    const mockBNCA = generateMockBNCA(matterName, matterType, partner, sla, scenario, hoursRisk);
+    await streamText(mockBNCA, outputEl);
+    finalizeBNCA(mockBNCA);
+  }
+}
+
+function generateMockBNCA(matter, type, partner, sla, scenario, hours) {
+  const risk = sla === 'critical' ? 'CRITICAL' : sla === 'high' ? 'HIGH' : 'MEDIUM';
+  const conf = 88 + Math.floor(Math.random() * 8);
+  return `LEGAL MAIN STRATEGIST BNCA REPORT
+══════════════════════════════════
+SCENARIO: ${scenario.name}
+MATTER: ${matter}
+RISK LEVEL: ${risk}
+SLA PRESSURE: ${sla.toUpperCase()} — Immediate cross-node response warranted
+
+CROSS-NODE RISK SYNTHESIS
+─────────────────────────
+Node signals across billing, compliance, and matter operations indicate a converging risk event. The ${scenario.name.toLowerCase()} scenario is compounding standard operational exposure into elevated fiduciary and reputational risk. Partner accountability gap and aging SLA items are the primary accelerants.
+
+TOP OPERATIONAL BLOCKER
+────────────────────────
+${scenario.risk} RISK ACTIVE: Missing owner lane accountability across ${scenario.nodes.join(', ')} nodes is preventing resolution sequencing. Without immediate assignment, SLA breach becomes probable.
+
+BEST NEXT ACTIONS
+──────────────────
+1. ASSIGN primary owner to ${partner || 'available senior associate'} within 2 hours — confirm via matter management system
+2. Pull all flagged node artifacts: billing export, compliance checklist, matter notes — consolidate into review packet
+3. Execute three-way reconciliation on ${scenario.name.toLowerCase()} items — document all variances with timestamps
+4. Escalate to Strategist layer: generate formal exception report with evidence trail for managing partner review
+5. Prepare Executive Portal relay package — financial exposure, risk posture, recommended board-level action
+
+OWNER LANE ASSIGNMENT
+──────────────────────
+Primary: ${partner || 'Operations Manager'} — immediate action
+Secondary: Billing / Compliance Coordinator — evidence gathering
+Escalation Path: Strategist → Managing Partner / Executive Portal
+
+FINANCIAL EXPOSURE
+───────────────────
+Estimated exposure: ${hours || '$20,000–$50,000 unbilled / at-risk revenue'} plus potential regulatory penalty if compliance items remain unresolved beyond SLA window.
+
+EXECUTIVE RELAY STATUS
+───────────────────────
+RELAY READY — Risk posture exceeds P2 threshold. Executive Portal notification recommended. Board action item: authorize emergency review protocol.
+
+CONFIDENCE: ${conf}%`;
+}
+
+async function streamText(text, el) {
+  el.textContent = '';
+  const chunks = text.split('');
+  const speed = 8; // chars per frame
+  for (let i = 0; i < chunks.length; i += speed) {
+    el.textContent += chunks.slice(i, i + speed).join('');
+    el.scrollTop = el.scrollHeight;
+    await sleep(16);
+  }
+  el.classList.remove('typing');
+}
+
+function finalizeBNCA(text) {
+  lastBNCA = text;
+
+  // Extract confidence
+  const confMatch = text.match(/CONFIDENCE:\s*(\d+)%/i);
+  const conf = confMatch ? parseInt(confMatch[1]) : 89;
+
+  // Update stats
+  document.getElementById('stat-matters').textContent = '4';
+  document.getElementById('stat-risk').textContent = conf > 88 ? 'HIGH' : 'MED';
+  document.getElementById('stat-conf').textContent = conf + '%';
+  document.getElementById('conf-pct').textContent = conf + '%';
+  document.getElementById('conf-fill').style.width = conf + '%';
+
+  // Risk badge
+  const riskBadge = document.getElementById('risk-badge');
+  const slaBadge = document.getElementById('sla-badge');
+  riskBadge.textContent = 'RISK: HIGH';
+  riskBadge.style.color = '#ff4d6a';
+  riskBadge.style.borderColor = 'rgba(255,77,106,.3)';
+  slaBadge.textContent = 'SLA: PRESSURED';
+  slaBadge.style.color = '#f5a623';
+
+  document.getElementById('thinking-indicator').textContent = 'BNCA COMPLETE · ACTIONS READY';
+  document.getElementById('relay-status').textContent = 'READY TO RELAY';
+
+  setTimeline(5);
+
+  // Re-enable btn
+  const btn = document.getElementById('run-bnca');
+  btn.disabled = false;
+  btn.textContent = '⚡ RUN LEGAL MAIN STRATEGIST BNCA';
+
+  // Auto-prep relay
+  prepRelay(text);
+}
+
+// ============================================================
+// ACTION BUTTONS
+// ============================================================
+function assignOwner() {
+  const output = document.getElementById('bnca-output');
+  output.textContent += '\n\n──────────────────────────────\n[ACTION EXECUTED] OWNER ASSIGNED\nOperations Manager confirmed as primary lane owner. Matter management system notified. Accountability trail logged.\n──────────────────────────────';
+  output.scrollTop = output.scrollHeight;
+  setTimeline(5);
+}
+
+function escalateStrategist() {
+  const output = document.getElementById('bnca-output');
+  output.textContent += '\n\n──────────────────────────────\n[ESCALATION TRIGGERED] → STRATEGIST LAYER\nFormal escalation sent to Legal Strategist. Exception report generated. Managing partner notification queued.\n──────────────────────────────';
+  output.scrollTop = output.scrollHeight;
+  document.getElementById('relay-status').textContent = 'ESCALATED';
+  setTimeline(6);
+}
+
+function clearBlocker() {
+  const output = document.getElementById('bnca-output');
+  output.textContent += '\n\n──────────────────────────────\n[BLOCKER CLEARED] WORKFLOW STABILIZED\nPrimary operational blocker resolved. SLA clock reset. Matter queue updated. Recovery mode active.\n──────────────────────────────';
+  output.scrollTop = output.scrollHeight;
+  const slaBadge = document.getElementById('sla-badge');
+  slaBadge.textContent = 'SLA: STABILIZED';
+  slaBadge.style.color = '#00ffc6';
+}
+
+function sendToRelay() {
+  if (!lastBNCA) {
+    alert('Run BNCA analysis first before sending to Executive Portal.');
+    return;
+  }
+  prepRelay(lastBNCA);
+  document.getElementById('relay-status').textContent = 'RELAY SENT ✓';
+  setTimeline(7);
+  document.getElementById('relay-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+function prepRelay(bnca) {
+  const scenario = SCENARIOS[currentScenario];
+  const matterName = document.getElementById('matter-name').value || 'Active Legal Matter';
+  const date = new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+
+  const relayText = `EXECUTIVE PORTAL RELAY PACKAGE
+Generated: ${date} · TSM Legal Main Strategist
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+MATTER: ${matterName}
+SCENARIO: ${scenario.name}
+RISK CLASSIFICATION: ${scenario.risk}
+
+EXECUTIVE SUMMARY
+──────────────────
+Legal operations intelligence has identified a ${scenario.risk.toLowerCase()} risk event across the firm's matter portfolio. The Main Strategist has synthesized cross-node signals and generated prioritized action recommendations requiring managing partner review.
+
+KEY FINANCIALS AT RISK
+───────────────────────
+${document.getElementById('hours-risk').value || 'See BNCA report for full financial exposure analysis'}
+
+STRATEGIC RECOMMENDATIONS
+──────────────────────────
+1. Authorize emergency review protocol for flagged matters
+2. Confirm owner lane assignments at senior level
+3. Review compliance posture before external reporting
+4. Schedule executive briefing within 48 hours
+
+STATUS: RELAY COMPLETE → EXECUTIVE PORTAL READY
+→ Open ep1.html to review full executive dashboard`;
+
+  document.getElementById('relay-report').textContent = relayText;
+}
+
+function launchEP() {
+  // Store relay data for EP
+  const scenario = SCENARIOS[currentScenario];
+  const payload = {
+    bnca: lastBNCA,
+    scenario: scenario.name,
+    risk: scenario.risk,
+    matter: document.getElementById('matter-name').value || '',
+    relayTime: new Date().toISOString()
+  };
+  try { sessionStorage.setItem('tsm_legal_relay', JSON.stringify(payload)); } catch(e){}
+  window.location.href = '/legal-pro/ep1.html';
+}
+
+// ============================================================
+// TIMELINE
+// ============================================================
+function setTimeline(step) {
+  for (let i = 1; i <= 7; i++) {
+    const el = document.getElementById('tl-' + i);
+    if (!el) continue;
+    el.classList.remove('done', 'active');
+    const dot = el.querySelector('.tl-dot');
+    if (i < step) {
+      el.classList.add('done');
+      dot.textContent = '✓';
+    } else if (i === step) {
+      el.classList.add('active');
+      dot.textContent = i;
+    } else {
+      dot.textContent = i;
+    }
+  }
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  updateNodeScores();
+  setTimeline(2);
+  document.getElementById('thinking-indicator').textContent = 'READY · AWAITING INTAKE';
+});
+</script>
+</body>
+</html>
+<script>
+// ===== TSM_AUTONOMY_STANDARDIZED =====
+window.TSM_AUTONOMY_STANDARDIZED = true;
+</script>
+
+<!-- TSM ENFORCER BOOT -->
+<script src="../../core/tsm-enforcer.js"></script>
+
+
+<script>
+// ===== TSM WAR ROOM SCOPED RELAY FIX =====
+window.tsmMission = window.tsmMission || {
+  id: "LEGAL-PRO-" + Date.now().toString(36),
+  vertical: "legal-pro",
+  relayKey: undefined
+};
+
+function tsmWriteRelay(payload){
+  TSM_KERNEL.setRelay("legal-pro", JSON.stringify(payload));
+}
+</script>
+
+
+<script>
+// ===== TSM STRATEGIST BRIDGE LAYER =====
+
+function tsmReadScopedRelay(vertical){
+  const key = "tsm_war_relay_" + vertical;
+  try {
+    return JSON.parse(localStorage.getItem(key));
+  } catch(e){
+    return null;
+  }
+}
+
+function tsmWriteScopedStrat(vertical, missionId){
+  localStorage.setItem("TSM_STRAT_CONFIRMED_legal-pro_" + vertical, JSON.stringify({
+    vertical,
+    missionId,
+    timestamp: Date.now()
+  }));
+}
+</script>
+
+
+<!-- TSM KERNEL ENGINE -->
+<script src="../../core/tsm-kernel.js"></script>
+

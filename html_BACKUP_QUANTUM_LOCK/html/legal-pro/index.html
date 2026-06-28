@@ -1,0 +1,1740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TSM Legal Pro Suite · TSM Consultz</title>
+
+<style>
+/* TSM_SCROLL_FIX */
+html, body {
+  height: 100%;
+  overflow-y: auto;
+}
+main {
+  padding-bottom: 80px !important;
+  min-height: calc(100vh - 60px);
+}
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 32px;
+  z-index: 10;
+}
+.ask-bar {
+  position: fixed;
+  bottom: 40px;
+  right: 12px;
+  z-index: 20;
+}
+.panel {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0f14;
+  --surface:#13161d;
+  --surface2:#1a1e28;
+  --surface3:#222738;
+  --border:#2a2f3e;
+  --border2:#363d52;
+  --purple:#7c5cfc;
+  --purple-dim:#4a3899;
+  --purple-glow:rgba(124,92,252,0.15);
+  --amber:#f0a500;
+  --red:#e05050;
+  --green:#3ecf8e;
+  --cyan:#4ecdc4;
+  --text:#e8eaf0;
+  --text2:#8b91a8;
+  --text3:#545a72;
+  --font:'Outfit',sans-serif;
+  --mono:'DM Mono',monospace;
+  --serif:'DM Serif Display',serif;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;font-size:14px;overflow-x:hidden}
+
+/* TOP BAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:52px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.logo-icon{width:32px;height:32px;background:var(--purple);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:16px;color:#fff}
+.logo-text{font-size:15px;font-weight:600;letter-spacing:-0.3px}
+.logo-sub{font-size:11px;color:var(--text2);font-family:var(--mono)}
+.topbar-right{display:flex;align-items:center;gap:16px}
+.status-pill{display:flex;align-items:center;gap:6px;padding:4px 12px;background:rgba(62,207,142,0.1);border:1px solid rgba(62,207,142,0.25);border-radius:20px;font-size:11px;color:var(--green);font-family:var(--mono)}
+.status-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.topbar-clock{font-family:var(--mono);font-size:13px;color:var(--text2)}
+.subscribe-btn{padding:6px 14px;background:var(--purple);border:none;border-radius:6px;color:#fff;font-family:var(--font);font-size:12px;font-weight:500;cursor:pointer}
+
+/* LAYOUT */
+.layout{display:flex;flex:1;min-height:0}
+
+/* SIDEBAR */
+.sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:16px 0;flex-shrink:0}
+.sidebar-stats{margin:0 12px 16px;padding:12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border)}
+.stat-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.stat-row:last-child{margin-bottom:0}
+.stat-label{font-size:10px;color:var(--text3);font-family:var(--mono);letter-spacing:1px}
+.stat-val{font-size:13px;font-weight:600}
+.stat-val.amber{color:var(--amber)}
+.stat-val.red{color:var(--red)}
+.stat-val.normal{color:var(--text)}
+.nav-section{margin-bottom:8px}
+.nav-label{font-size:9px;color:var(--text3);letter-spacing:1.5px;font-family:var(--mono);padding:0 16px 6px;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 16px;cursor:pointer;border-left:2px solid transparent;transition:all 0.15s;color:var(--text2);font-size:13px;position:relative}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--purple-glow);border-left-color:var(--purple);color:var(--text)}
+.nav-icon{font-size:14px;width:18px;text-align:center}
+.nav-badge{margin-left:auto;background:var(--purple-dim);color:var(--purple);font-size:10px;font-family:var(--mono);padding:2px 6px;border-radius:10px;font-weight:500}
+.nav-badge.red{background:rgba(224,80,80,0.15);color:var(--red)}
+
+/* MAIN */
+.main{flex:1;padding:28px 32px;overflow-y:auto;background:var(--bg)}
+.page-header{margin-bottom:24px}
+.page-title{font-family:var(--serif);font-size:28px;font-weight:400;letter-spacing:-0.5px;margin-bottom:4px}
+.page-sub{font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:0.5px}
+.page-badge{float:right;padding:4px 12px;background:rgba(240,165,0,0.12);border:1px solid rgba(240,165,0,0.3);border-radius:20px;font-size:11px;color:var(--amber);font-family:var(--mono)}
+
+/* PANELS */
+.panel{display:none}
+.panel.active{display:block}
+
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.sc-label{font-size:10px;color:var(--text3);font-family:var(--mono);letter-spacing:1px;margin-bottom:6px}
+.sc-val{font-size:22px;font-weight:600;line-height:1}
+.sc-sub{font-size:11px;color:var(--text2);margin-top:4px}
+.sc-val.purple{color:var(--purple)}
+.sc-val.amber{color:var(--amber)}
+.sc-val.red{color:var(--red)}
+.sc-val.green{color:var(--green)}
+
+/* PROMPT LIBRARY */
+.prompt-lib{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:20px}
+.pl-header{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border)}
+.pl-title{font-size:13px;font-weight:500}
+.pl-count{font-size:11px;font-family:var(--mono);color:var(--text2);background:var(--surface2);padding:2px 8px;border-radius:10px}
+.pl-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border)}
+.pl-item{background:var(--surface);padding:14px 18px;cursor:pointer;transition:background 0.15s}
+.pl-item:hover{background:var(--surface2)}
+.pl-item-title{font-size:13px;color:var(--purple);margin-bottom:3px}
+.pl-item-sub{font-size:11px;color:var(--text3)}
+.pl-hint{text-align:center;font-size:11px;color:var(--text3);font-family:var(--mono);padding:10px;border-top:1px solid var(--border)}
+
+/* CHAT AREA */
+.chat-area{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:16px;overflow:hidden}
+.chat-msg{padding:18px 20px;border-bottom:1px solid var(--border)}
+.chat-msg-header{font-size:11px;color:var(--purple);font-family:var(--mono);margin-bottom:8px}
+.chat-msg-body{font-size:14px;color:var(--text);line-height:1.6}
+.chat-response{padding:18px 20px;min-height:80px;color:var(--text2);font-size:13px;font-style:italic}
+.chat-footer{display:flex;align-items:center;gap:12px;padding:10px 14px;border-top:1px solid var(--border);background:var(--surface2)}
+.engine-tag{font-size:10px;font-family:var(--mono);color:var(--text3)}
+.engine-name{background:var(--purple-glow);border:1px solid var(--purple-dim);color:var(--purple);font-size:10px;font-family:var(--mono);padding:2px 8px;border-radius:4px;cursor:pointer}
+.export-btn{padding:4px 12px;background:transparent;border:1px solid var(--border2);border-radius:5px;color:var(--text2);font-size:11px;font-family:var(--mono);cursor:pointer}
+.version-tag{margin-left:auto;font-size:10px;font-family:var(--mono);color:var(--green)}
+
+/* INPUT BAR */
+.input-bar{display:flex;gap:10px;align-items:flex-end}
+.input-wrap{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.input-wrap textarea{width:100%;background:transparent;border:none;outline:none;padding:14px 16px;color:var(--text);font-family:var(--font);font-size:13px;resize:none;line-height:1.5}
+.send-btn{padding:12px 20px;background:var(--purple);border:none;border-radius:10px;color:#fff;font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap}
+.send-btn:hover{background:#6b4ee0}
+
+/* FORM PANELS */
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px}
+.tabs{display:flex;gap:0;margin-bottom:24px;border-bottom:1px solid var(--border)}
+.tab{padding:10px 20px;cursor:pointer;font-size:13px;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.15s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--purple);border-bottom-color:var(--purple)}
+.form-row{display:grid;gap:16px;margin-bottom:16px}
+.form-row.two{grid-template-columns:1fr 1fr}
+.form-row.three{grid-template-columns:1fr 1fr 1fr}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-label{font-size:10px;color:var(--text3);font-family:var(--mono);letter-spacing:1px;text-transform:uppercase}
+select,textarea.form-input{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:13px;padding:10px 12px;outline:none;width:100%}
+select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23545a72' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+textarea.form-input{resize:vertical;min-height:90px;line-height:1.5}
+select:focus,textarea.form-input:focus{border-color:var(--purple-dim)}
+.action-btn{padding:10px 22px;border:none;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all 0.15s}
+.action-btn.primary{background:var(--purple);color:#fff}
+.action-btn.primary:hover{background:#6b4ee0}
+.action-btn.amber{background:rgba(240,165,0,0.15);color:var(--amber);border:1px solid rgba(240,165,0,0.3)}
+.action-btn.amber:hover{background:rgba(240,165,0,0.25)}
+.result-area{margin-top:20px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:18px;min-height:100px;display:none}
+.result-area.visible{display:block}
+.result-header{font-size:11px;font-family:var(--mono);color:var(--purple);margin-bottom:12px}
+.result-body{font-size:13px;color:var(--text);line-height:1.7}
+
+/* DROP ZONE */
+.dropzone{border:2px dashed var(--border2);border-radius:10px;padding:40px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:16px}
+.dropzone:hover{border-color:var(--purple-dim);background:var(--purple-glow)}
+.dz-icon{font-size:28px;margin-bottom:10px}
+.dz-title{font-size:14px;color:var(--text);margin-bottom:6px}
+.dz-sub{font-size:12px;color:var(--text3);margin-bottom:10px}
+.dz-tags{display:flex;gap:8px;justify-content:center}
+.dz-tag{padding:3px 10px;background:var(--surface3);border-radius:4px;font-size:11px;font-family:var(--mono);color:var(--text2)}
+.file-input{display:none}
+.file-status{font-size:12px;color:var(--text2);font-family:var(--mono);margin-left:12px}
+
+/* IP panel */
+.ip-form{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+
+/* DEADLINE TRACKER */
+.deadline-list{display:flex;flex-direction:column;gap:10px}
+.deadline-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:16px}
+.dl-urgency{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dl-urgency.urgent{background:var(--red)}
+.dl-urgency.soon{background:var(--amber)}
+.dl-urgency.ok{background:var(--green)}
+.dl-info{flex:1}
+.dl-title{font-size:13px;font-weight:500;margin-bottom:3px}
+.dl-meta{font-size:11px;color:var(--text2);font-family:var(--mono)}
+.dl-date{font-size:12px;font-family:var(--mono);color:var(--text2)}
+.add-deadline-btn{margin-top:12px;width:100%;padding:10px;background:transparent;border:1px dashed var(--border2);border-radius:8px;color:var(--text2);font-family:var(--font);font-size:13px;cursor:pointer;transition:all 0.15s}
+.add-deadline-btn:hover{border-color:var(--purple-dim);color:var(--purple)}
+
+/* STATUTE LOOKUP */
+.statute-search{display:flex;gap:10px;margin-bottom:20px}
+.statute-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:13px;padding:10px 14px;outline:none}
+.statute-input:focus{border-color:var(--purple-dim)}
+.statute-result{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;margin-bottom:10px}
+.sr-title{font-size:14px;font-weight:500;color:var(--purple);margin-bottom:6px}
+.sr-code{font-size:11px;font-family:var(--mono);color:var(--text2);margin-bottom:8px}
+.sr-body{font-size:13px;color:var(--text);line-height:1.6}
+
+/* LEGAL TEMPLATES */
+.template-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.template-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:all 0.15s}
+.template-card:hover{border-color:var(--purple-dim);background:var(--surface2)}
+.tc-icon{font-size:20px;margin-bottom:8px}
+.tc-title{font-size:13px;font-weight:500;margin-bottom:4px}
+.tc-sub{font-size:11px;color:var(--text3)}
+
+/* GLOBAL CHAT WIDGET */
+.global-chat{position:fixed;bottom:20px;right:20px;z-index:200}
+.gc-bubble{width:280px;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.4)}
+.gc-header{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--surface2);border-bottom:1px solid var(--border)}
+.gc-label{font-size:11px;font-family:var(--mono);color:var(--text2)}
+.gc-close{margin-left:auto;background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px}
+.gc-input-row{display:flex;gap:0}
+.gc-input{flex:1;background:transparent;border:none;outline:none;padding:10px 14px;color:var(--text);font-family:var(--font);font-size:13px}
+.gc-send{padding:10px 14px;background:var(--purple);border:none;color:#fff;cursor:pointer;font-size:12px;font-family:var(--font)}
+
+/* Loading spinner */
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--purple);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Responsive tweaks */
+@media(max-width:900px){.stats-row{grid-template-columns:repeat(3,1fr)}.form-row.three{grid-template-columns:1fr 1fr}}
+
+/* ===== TSM LEGAL PRO SUITE — NEW MODULE STYLES ===== */
+.pro-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(240,165,0,0.12);border:1px solid rgba(240,165,0,0.3);border-radius:4px;font-size:9px;font-family:var(--mono);color:var(--amber);letter-spacing:1px;text-transform:uppercase}
+
+/* SCORECARD */
+.score-ring{display:flex;align-items:center;justify-content:center;width:80px;height:80px;border-radius:50%;border:3px solid var(--purple);font-size:24px;font-weight:700;font-family:var(--mono);color:var(--purple);flex-shrink:0}
+.score-ring.green{border-color:var(--green);color:var(--green)}
+.score-ring.amber{border-color:var(--amber);color:var(--amber)}
+.score-ring.red{border-color:var(--red);color:var(--red)}
+.scorecard-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.scorecard-item{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+.si-label{font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:1px;margin-bottom:6px}
+.si-bar-wrap{height:6px;background:var(--surface3);border-radius:3px;margin-bottom:6px;overflow:hidden}
+.si-bar{height:100%;border-radius:3px;background:var(--purple);transition:width 1s ease}
+.si-val{font-size:18px;font-weight:600;font-family:var(--mono)}
+
+/* CANDIDATE PIPELINE TABLE */
+.pipeline-table{width:100%;border-collapse:collapse}
+.pipeline-table th{font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:1px;text-transform:uppercase;text-align:left;padding:8px 14px;border-bottom:1px solid var(--border)}
+.pipeline-table td{font-size:13px;padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text)}
+.pipeline-table tr:hover td{background:var(--surface2)}
+.status-chip{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:10px;font-family:var(--mono);font-weight:600}
+.status-chip.ready{background:rgba(62,207,142,0.12);color:var(--green);border:1px solid rgba(62,207,142,0.25)}
+.status-chip.borderline{background:rgba(240,165,0,0.12);color:var(--amber);border:1px solid rgba(240,165,0,0.25)}
+.status-chip.risk{background:rgba(224,80,80,0.12);color:var(--red);border:1px solid rgba(224,80,80,0.25)}
+.risk-chip{padding:2px 8px;border-radius:4px;font-size:10px;font-family:var(--mono)}
+.risk-chip.low{background:rgba(62,207,142,0.1);color:var(--green)}
+.risk-chip.med{background:rgba(240,165,0,0.1);color:var(--amber)}
+.risk-chip.high{background:rgba(224,80,80,0.1);color:var(--red)}
+
+/* SIMULATION ENGINE */
+.sim-stepper{display:flex;align-items:center;gap:0;margin-bottom:28px}
+.sim-step{display:flex;align-items:center;gap:8px;font-size:11px;font-family:var(--mono);color:var(--text3)}
+.sim-step.active{color:var(--purple)}
+.sim-step.done{color:var(--green)}
+.sim-step-dot{width:24px;height:24px;border-radius:50%;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0}
+.sim-step-line{flex:1;height:1px;background:var(--border);margin:0 8px;min-width:24px}
+.scenario-card{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:22px;margin-bottom:16px}
+.scenario-tag{display:inline-block;padding:3px 10px;background:rgba(124,92,252,0.12);border:1px solid var(--purple-dim);border-radius:4px;font-size:10px;font-family:var(--mono);color:var(--purple);margin-bottom:12px}
+.scenario-title{font-size:16px;font-weight:600;margin-bottom:8px}
+.scenario-body{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:16px}
+.scenario-tasks{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.task-item{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text2)}
+.task-cb{width:16px;height:16px;border:1px solid var(--border2);border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:10px;cursor:pointer;flex-shrink:0;transition:all 0.15s}
+.task-cb.checked{background:var(--green);border-color:var(--green);color:#000}
+.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.choice-btn{padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:13px;cursor:pointer;text-align:left;transition:all 0.2s}
+.choice-btn:hover{border-color:var(--purple-dim);background:var(--purple-glow)}
+.choice-btn.selected{border-color:var(--purple);background:var(--purple-glow);color:var(--text)}
+
+/* CRM PIPELINE */
+.crm-stages{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;margin-bottom:20px}
+.crm-col{flex:0 0 180px;display:flex;flex-direction:column;gap:8px}
+.crm-col-header{font-size:10px;font-family:var(--mono);letter-spacing:1px;color:var(--text3);padding:6px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.crm-count{background:var(--surface3);border-radius:10px;padding:2px 7px;font-size:10px;color:var(--text2)}
+.crm-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;transition:all 0.15s}
+.crm-card:hover{border-color:var(--border2);background:var(--surface2)}
+.crm-card-title{font-size:12px;font-weight:500;margin-bottom:4px}
+.crm-card-meta{font-size:10px;font-family:var(--mono);color:var(--text3)}
+.crm-card-tag{display:inline-block;margin-top:6px;padding:2px 7px;border-radius:3px;font-size:9px;font-family:var(--mono)}
+.crm-card-tag.agency{background:rgba(78,205,196,0.1);color:var(--cyan)}
+.crm-card-tag.firm{background:rgba(124,92,252,0.1);color:var(--purple)}
+.crm-card-tag.bpo{background:rgba(240,165,0,0.1);color:var(--amber)}
+
+/* KPI ROW */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+
+/* OUTREACH */
+.outreach-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;margin-bottom:12px}
+.oc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.oc-title{font-size:14px;font-weight:500}
+.oc-type{font-size:10px;font-family:var(--mono);color:var(--text3);padding:2px 8px;background:var(--surface2);border-radius:4px}
+.oc-body{font-size:12px;color:var(--text2);line-height:1.7;font-family:var(--mono);background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px;white-space:pre-wrap}
+.copy-btn{padding:5px 12px;background:transparent;border:1px solid var(--border2);border-radius:5px;color:var(--text2);font-size:11px;font-family:var(--mono);cursor:pointer;transition:all 0.15s}
+.copy-btn:hover{border-color:var(--purple-dim);color:var(--purple)}
+
+/* SPINNER */
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--border2);border-top-color:var(--purple);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* STATUTE additions */
+.statute-search{display:flex;gap:10px;margin-bottom:16px}
+.statute-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:13px;padding:10px 14px;outline:none}
+.statute-input:focus{border-color:var(--purple-dim)}
+.statute-result{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:10px}
+.sr-title{font-size:14px;font-weight:500;color:var(--purple);margin-bottom:4px}
+.sr-code{font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:8px}
+.sr-body{font-size:13px;color:var(--text2);line-height:1.6}
+
+/* TEMPLATE GRID */
+.template-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.template-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:all 0.15s;text-align:center}
+.template-card:hover{border-color:var(--purple-dim);background:var(--purple-glow)}
+.tc-icon{font-size:22px;margin-bottom:8px}
+.tc-title{font-size:12px;font-weight:500;margin-bottom:4px}
+.tc-sub{font-size:10px;font-family:var(--mono);color:var(--text3)}
+
+/* GLOBAL CHAT */
+.global-chat{position:fixed;bottom:80px;right:16px;z-index:200}
+.gc-bubble{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:12px;width:300px;box-shadow:0 8px 32px rgba(0,0,0,0.4)}
+.gc-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.gc-label{flex:1;font-size:12px;font-family:var(--mono);color:var(--text2)}
+.gc-close{background:none;border:none;color:var(--text2);cursor:pointer;font-size:16px;padding:0}
+.gc-input-row{display:flex;gap:8px}
+.gc-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--font);font-size:12px;padding:8px 10px;outline:none}
+.gc-send{padding:8px 14px;background:var(--purple);border:none;border-radius:6px;color:#fff;font-size:12px;cursor:pointer}
+
+</style>
+<script>
+window.TSM_UI = {
+    runAudit: async (sector, factor) => {
+        const feed = document.querySelector('.intelligence-feed-output') || document.getElementById('intelligence-feed-output');
+        if (feed) feed.innerHTML = '<span style="color: #00ffff;">[STRATEGIST] Internal Link: Processing...</span>';
+        try {
+            const res = await fetch('/api/audit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: `auditops "${sector}" --factor "${factor}" --logic strategist` })
+            });
+            const data = await res.json();
+            if (feed) feed.innerText = `[STRATEGIST] ${data.output || "Analysis Complete."}`;
+        } catch (e) {
+            if (feed) feed.innerText = "[STRATEGIST] Local API Bridge Failed.";
+        }
+    }
+};
+// Wire the sector cards to the auto-fill search prompt logic
+document.addEventListener('click', (e) => {
+    const card = e.target.closest('.module-card');
+    if (card) {
+        const sector = card.dataset.sector || "Construction";
+        const factor = card.querySelector('h3')?.innerText || "General Audit";
+        TSM_UI.runAudit(sector, factor);
+    }
+});
+console.log("TSM_UI: Direct Neural Link Established.");
+</script>
+<script>
+window.TSM_UI = {
+    runAudit: async (sector, factor) => {
+        const feed = document.querySelector('.intelligence-feed-output') || document.getElementById('intelligence-feed-output');
+        if (feed) feed.innerHTML = '<span style="color: #00ffff;">[STRATEGIST] Internal Link: Processing...</span>';
+        try {
+            const res = await fetch('/api/audit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: `auditops "${sector}" --factor "${factor}" --logic strategist` })
+            });
+            const data = await res.json();
+            if (feed) feed.innerText = `[STRATEGIST] ${data.output || "Analysis Complete."}`;
+        } catch (e) {
+            if (feed) feed.innerText = "[STRATEGIST] Local API Bridge Failed.";
+        }
+    }
+};
+// Wire the sector cards to the auto-fill search prompt logic
+document.addEventListener('click', (e) => {
+    const card = e.target.closest('.module-card');
+    if (card) {
+        const sector = card.dataset.sector || "Construction";
+        const factor = card.querySelector('h3')?.innerText || "General Audit";
+        TSM_UI.runAudit(sector, factor);
+    }
+});
+console.log("TSM_UI: Direct Neural Link Established.");
+</script>
+  <link rel="stylesheet" href="/shared/tsm-shared.css">
+  <script src="/shared/tsm-shared.js"></script>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo-icon">L</div>
+    <div>
+      <div class="logo-text">TSM Legal Pro Suite</div>
+      <div class="logo-sub">TSM Consultz · Workforce Intelligence · BPO Operations · Legal Talent Validation</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="status-pill"><div class="status-dot"></div>PRO SUITE ONLINE</div>
+    <div class="topbar-clock" id="clock">--:--:--</div>
+    <button class="subscribe-btn">SUBSCRIBE — $399/MO</button>
+  </div>
+</div>
+
+<div class="layout">
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-stats">
+    <div class="stat-row"><span class="stat-label">CANDIDATES TESTED</span><span class="stat-val normal">14</span></div>
+    <div class="stat-row"><span class="stat-label">PLACEMENT RATE</span><span class="stat-val green">89%</span></div>
+    <div class="stat-row"><span class="stat-label">OPEN MATTERS</span><span class="stat-val red">14 ACTIVE</span></div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Navigation</div>
+    <div class="nav-item active" data-tsm-action="showPanel" data-tsm-args="'counsel'"><span class="nav-icon">💬</span>AI Legal Counsel</div>
+    <div class="nav-item" data-tsm-action="showPanel" data-tsm-args="'contract'"><span class="nav-icon">📋</span>Contract Review<span class="nav-badge">3</span></div>
+    <div class="nav-item" data-tsm-action="showPanel" data-tsm-args="'compliance'"><span class="nav-icon">✅</span>Compliance Monitor</div>
+    <div class="nav-item" data-tsm-action="showPanel" data-tsm-args="'litigation'"><span class="nav-icon">⚖️</span>Litigation Risk<span class="nav-badge red">2</span></div>
+    <div class="nav-item" data-tsm-action="showPanel" data-tsm-args="'employment'"><span class="nav-icon">👥</span>Employment Law</div>
+    <div class="nav-item" data-tsm-action="showPanel" data-tsm-args="'corporate'"><span class="nav-icon">🏛️</span>Corporate Structure</div>
+    <div class="nav-item" data-tsm-action="showPanel" data-tsm-args="'ip'"><span class="nav-icon">💡</span>IP & Trademarks</div>
+    <div class="nav-item" data-tsm-action="showPanel" data-tsm-args="'realestate'"><span class="nav-icon">🏠</span>Real Estate Legal</div>
+    <div class="nav-item" data-tsm-action="showPanel" data-tsm-args="'docanalyzer'"><span class="nav-icon">📁</span>Document Analyzer</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">BPO Operations</div>
+    <div class="nav-item" data-tsm-action="showPanel" data-tsm-args="'bpo-command'"><span class="nav-icon">🏢</span>BPO Command Center</div>
+    <div class="nav-item" data-tsm-action="showPanel" data-tsm-args="'simulation'"><span class="nav-icon">🧪</span>Candidate Simulation<span class="nav-badge">NEW</span></div>
+    <div class="nav-item" data-tsm-action="showPanel" data-tsm-args="'pipeline'"><span class="nav-icon">👤</span>Talent Pipeline</div>
+    <div class="nav-item" data-tsm-action="showPanel" data-tsm-args="'crm'"><span class="nav-icon">📊</span>CRM & Outreach</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Tools</div>
+    <div class="nav-item" data-tsm-action="showPanel" data-tsm-args="'deadlines'"><span class="nav-icon">📅</span>Deadline Tracker</div>
+    <div class="nav-item" data-tsm-action="showPanel" data-tsm-args="'statute'"><span class="nav-icon">📖</span>Statute Lookup</div>
+    <div class="nav-item" data-tsm-action="showPanel" data-tsm-args="'templates'"><span class="nav-icon">📄</span>Legal Templates</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">System</div>
+    <div class="nav-item" onclick="window.open('https://case-tech.fly.dev','_blank')"><span class="nav-icon">🏛️</span>Sovereign Command</div>
+    <div class="nav-item" onclick="window.open('https://strategist.fly.dev','_blank')"><span class="nav-icon">🎯</span>Strategist</div>
+    <div class="nav-item"><span class="nav-icon">🛡️</span>Compliance</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- AI LEGAL COUNSEL -->
+<div class="panel active" id="panel-counsel">
+  <div class="page-header">
+    <button class="page-badge" data-tsm-action="clearCounsel" data-tsm-args="">✕ Clear</button>
+    <div class="page-title">AI Legal Counsel</div>
+    <div class="page-sub">Contracts · Compliance · Litigation · Employment · Corporate · IP · Real Estate</div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="sc-label">CANDIDATES TESTED</div><div class="sc-val purple">14</div><div class="sc-sub">Across all practice areas</div></div>
+    <div class="stat-card"><div class="sc-label">CONTRACT REVIEW</div><div class="sc-val amber">3</div><div class="sc-sub">Pending analysis</div></div>
+    <div class="stat-card"><div class="sc-label">LITIGATION RISK</div><div class="sc-val red">2</div><div class="sc-sub">High exposure items</div></div>
+    <div class="stat-card"><div class="sc-label">COMPLIANCE SCORE</div><div class="sc-val green">94%</div><div class="sc-sub">Portfolio average</div></div>
+    <div class="stat-card"><div class="sc-label">OPEN MATTERS</div><div class="sc-val amber">3</div><div class="sc-sub">Within 30 days</div></div>
+  </div>
+
+  <div class="prompt-lib">
+    <div class="pl-header">
+      <span style="font-size:14px">⚖️</span>
+      <span class="pl-title">Legal Prompt Library</span>
+      <span class="pl-count">10 presets</span>
+    </div>
+    <div class="pl-grid">
+      <div class="pl-item" data-tsm-action="loadPrompt" data-tsm-args="'Contract Red Flag Analysis','Review this contract for unfavorable terms, hidden liability clauses, indemnification exposure, termination triggers, and intellectual property assignment risks. Identify the top 3 red flags and recommended negotiation positions.'"><div class="pl-item-title">Contract Red Flag Analysis</div><div class="pl-item-sub">Hidden liability + negotiation positions</div></div>
+      <div class="pl-item" data-tsm-action="loadPrompt" data-tsm-args="'Employment Law Audit','Conduct an employment law audit covering FLSA overtime classification, ADA accommodation obligations, FMLA compliance, and non-compete enforceability. Flag the top risk areas.'"><div class="pl-item-title">Employment Law Audit</div><div class="pl-item-sub">FLSA · ADA · FMLA · Non-compete</div></div>
+      <div class="pl-item" data-tsm-action="loadPrompt" data-tsm-args="'Corporate Structure Review','Review the current corporate structure for liability shield effectiveness, asset protection gaps, and operating agreement deficiencies. Recommend structural improvements.'"><div class="pl-item-title">Corporate Structure Review</div><div class="pl-item-sub">Liability shield + asset protection</div></div>
+      <div class="pl-item" data-tsm-action="loadPrompt" data-tsm-args="'IP Portfolio Assessment','Assess intellectual property portfolio coverage including trademark registrations, copyright protections, trade secret safeguards, and patent opportunities.'"><div class="pl-item-title">IP Portfolio Assessment</div><div class="pl-item-sub">Trademark · Copyright · Trade secrets</div></div>
+      <div class="pl-item" data-tsm-action="loadPrompt" data-tsm-args="'Litigation Risk Assessment','Analyze this dispute for litigation exposure, settlement value range, defense strategy options, and recommended resolution pathway.'"><div class="pl-item-title">Litigation Risk Assessment</div><div class="pl-item-sub">Settlement value + defense strategy</div></div>
+      <div class="pl-item" data-tsm-action="loadPrompt" data-tsm-args="'Real Estate Transaction Review','Review this real estate transaction for title issues, zoning compliance, environmental concerns, lease terms, and 1031 exchange eligibility.'"><div class="pl-item-title">Real Estate Transaction Review</div><div class="pl-item-sub">Title · Zoning · Environmental · Lease</div></div>
+      <div class="pl-item" data-tsm-action="loadPrompt" data-tsm-args="'Regulatory Compliance Gap','Identify regulatory compliance gaps for this industry including applicable frameworks, current exposure, and remediation priorities.'"><div class="pl-item-title">Regulatory Compliance Gap</div><div class="pl-item-sub">Industry regs + enforcement risk</div></div>
+      <div class="pl-item" data-tsm-action="loadPrompt" data-tsm-args="'Cease & Desist Draft','Draft a cease and desist letter addressing the infringement or violation described. Include legal basis, specific demands, and response deadline.'"><div class="pl-item-title">Cease & Desist Draft</div><div class="pl-item-sub">Infringement · Violation · Demand letter</div></div>
+      <div class="pl-item" data-tsm-action="loadPrompt" data-tsm-args="'NDA / Confidentiality Review','Review this NDA for scope adequacy, term reasonableness, remedies provisions, and enforceability. Identify any missing protections.'"><div class="pl-item-title">NDA / Confidentiality Review</div><div class="pl-item-sub">Scope · Term · Remedies · Structure</div></div>
+      <div class="pl-item" data-tsm-action="loadPrompt" data-tsm-args="'Data Privacy Compliance','Assess data privacy compliance obligations under CCPA, GDPR, and applicable state laws. Identify gaps and breach notification requirements.'"><div class="pl-item-title">Data Privacy Compliance</div><div class="pl-item-sub">CCPA · GDPR · Breach notification</div></div>
+    </div>
+    <div class="pl-hint">Click any preset to load into counsel</div>
+  </div>
+
+  <div class="chat-area" id="chat-area">
+    <div class="chat-msg">
+      <div class="chat-msg-header">Legal Analyst Pro · Ready</div>
+      <div class="chat-msg-body">Welcome to <strong>Legal Analyst Pro</strong> — your AI-powered legal intelligence platform.<br><br>I provide expert analysis across contracts, employment law, corporate structure, intellectual property, litigation risk, real estate transactions, and regulatory compliance. Use the prompt library above for common analyses, or describe your legal question below.</div>
+    </div>
+    <div class="chat-response" id="chat-response" style="display:none"></div>
+    <div class="chat-footer">
+      <span class="engine-tag">NEURAL ENGINE</span>
+      <span class="engine-name">TSM Legal Core</span>
+      <button class="export-btn" data-tsm-action="exportChat" data-tsm-args="">⬇ Export</button>
+      <span class="version-tag">v3.3 · ACTIVE</span>
+    </div>
+  </div>
+
+  <div class="input-bar">
+    <div class="input-wrap">
+      <textarea id="counsel-input" rows="2" placeholder="Describe your legal question or paste contract text for analysis..."></textarea>
+    </div>
+    <button class="send-btn" data-tsm-action="sendCounsel" data-tsm-args="">Counsel ↗</button>
+  </div>
+</div>
+
+<!-- CONTRACT REVIEW -->
+<div class="panel" id="panel-contract">
+  <div class="page-header">
+    <span class="page-badge" style="float:right;background:rgba(240,165,0,0.12);border-color:rgba(240,165,0,0.3);color:var(--amber)">3 Pending</span>
+    <div class="page-title">Contract Review</div>
+    <div class="page-sub">AI-Powered Contract Analysis · Red Flag Detection · Negotiation Intelligence</div>
+  </div>
+  <div class="form-card">
+    <div class="tabs">
+      <div class="tab active" data-tsm-action="switchTab" data-tsm-args="this,'analyze'">Analyze Contract</div>
+      <div class="tab" data-tsm-action="switchTab" data-tsm-args="this,'compare'">Compare Terms</div>
+      <div class="tab" data-tsm-action="switchTab" data-tsm-args="this,'draft'">Draft Clauses</div>
+    </div>
+
+    <div id="tab-analyze">
+      <div class="form-row">
+        <div class="form-group"><div class="form-label">Contract Type</div>
+          <select id="cr-type">
+            <option>Service Agreement</option><option>Employment Contract</option><option>NDA / Confidentiality</option><option>Real Estate Purchase</option><option>Vendor Agreement</option><option>Operating Agreement</option><option>Licensing Agreement</option><option>Merger & Acquisition</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><div class="form-label">Contract Text / Key Terms</div>
+          <textarea class="form-input" id="cr-text" placeholder="Paste the contract text or describe the key terms, parties, and specific clauses of concern..."></textarea>
+        </div>
+      </div>
+      <button class="action-btn primary" data-tsm-action="runContractAnalysis" data-tsm-args="">🔍 Analyze Contract</button>
+      <div class="result-area" id="cr-result"></div>
+    </div>
+
+    <div id="tab-compare" style="display:none">
+      <div class="form-row two">
+        <div class="form-group"><div class="form-label">Your Terms</div><textarea class="form-input" id="ct-ours" placeholder="Paste your standard terms or proposed terms..."></textarea></div>
+        <div class="form-group"><div class="form-label">Their Terms</div><textarea class="form-input" id="ct-theirs" placeholder="Paste the counterparty's terms..."></textarea></div>
+      </div>
+      <button class="action-btn primary" data-tsm-action="runCompare" data-tsm-args="">⚖️ Compare Terms</button>
+      <div class="result-area" id="ct-result"></div>
+    </div>
+
+    <div id="tab-draft" style="display:none">
+      <div class="form-row two">
+        <div class="form-group"><div class="form-label">Clause Type</div>
+          <select id="cd-type">
+            <option>Indemnification</option><option>Limitation of Liability</option><option>Confidentiality</option><option>Non-Compete</option><option>Termination for Cause</option><option>Force Majeure</option><option>Dispute Resolution / Arbitration</option><option>IP Assignment</option><option>Payment Terms</option><option>Governing Law</option>
+          </select>
+        </div>
+        <div class="form-group"><div class="form-label">Favorable To</div>
+          <select id="cd-favor">
+            <option>Our Company (Balanced)</option><option>Strongly Favorable to Us</option><option>Neutral / Market Standard</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><div class="form-label">Context / Requirements</div>
+          <textarea class="form-input" id="cd-context" placeholder="Describe the business context, specific requirements, state law, deal structure..."></textarea>
+        </div>
+      </div>
+      <button class="action-btn primary" data-tsm-action="runDraftClause" data-tsm-args="">✍️ Draft Clause</button>
+      <div class="result-area" id="cd-result"></div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPLIANCE MONITOR -->
+<div class="panel" id="panel-compliance">
+  <div class="page-header">
+    <div class="page-title">Compliance Monitor</div>
+    <div class="page-sub">Regulatory Risk · Gap Analysis · Industry Standards</div>
+  </div>
+  <div class="form-card">
+    <div class="form-row two">
+      <div class="form-group"><div class="form-label">Industry / Sector</div>
+        <select id="cm-industry">
+          <option>Healthcare / Medical</option><option>Real Estate</option><option>Financial Services</option><option>Construction</option><option>Education</option><option>Technology / SaaS</option><option>Hospitality</option><option>Legal Services</option><option>Manufacturing</option>
+        </select>
+      </div>
+      <div class="form-group"><div class="form-label">Compliance Framework</div>
+        <select id="cm-framework">
+          <option>Full Scope — All Applicable</option><option>HRSA / BPHC</option><option>SOC 2</option><option>GDPR / CCPA</option><option>BSA / AML</option><option>Davis-Bacon</option><option>OSHA</option><option>FCPA</option><option>State-Specific</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">Business Description / Known Gaps</div>
+        <textarea class="form-input" id="cm-desc" placeholder="Describe your business, current compliance program, recent changes, or specific areas of concern..."></textarea>
+      </div>
+    </div>
+    <button class="action-btn primary" data-tsm-action="runCompliance" data-tsm-args="">✅ Run Compliance Analysis</button>
+    <div class="result-area" id="cm-result"></div>
+  </div>
+</div>
+
+<!-- LITIGATION RISK -->
+<div class="panel" id="panel-litigation">
+  <div class="page-header">
+    <span class="page-badge" style="float:right;background:rgba(224,80,80,0.1);border-color:rgba(224,80,80,0.3);color:var(--red)">2 High Exposure</span>
+    <div class="page-title">Litigation Risk</div>
+    <div class="page-sub">Exposure Analysis · Settlement Strategy · Defense Intelligence</div>
+  </div>
+  <div class="form-card">
+    <div class="form-row two">
+      <div class="form-group"><div class="form-label">Matter Type</div>
+        <select id="lr-type">
+          <option>Contract Dispute</option><option>Employment Claim</option><option>IP Infringement</option><option>Personal Injury / Premises</option><option>Business Tort</option><option>Real Estate Dispute</option><option>Partnership / Shareholder</option><option>Regulatory Action</option>
+        </select>
+      </div>
+      <div class="form-group"><div class="form-label">Current Stage</div>
+        <select id="lr-stage">
+          <option>Pre-Litigation / Demand</option><option>Filed — Discovery</option><option>Settlement Negotiations</option><option>Pre-Trial</option><option>Trial</option><option>Post-Trial / Appeal</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">Matter Description</div>
+        <textarea class="form-input" id="lr-desc" placeholder="Describe the dispute, claims, parties, key facts, damages alleged, and any evidence..."></textarea>
+      </div>
+    </div>
+    <button class="action-btn amber" data-tsm-action="runLitigation" data-tsm-args="">⚖️ Analyze Litigation Risk</button>
+    <div class="result-area" id="lr-result"></div>
+  </div>
+</div>
+
+<!-- EMPLOYMENT LAW -->
+<div class="panel" id="panel-employment">
+  <div class="page-header">
+    <div class="page-title">Employment Law</div>
+    <div class="page-sub">FLSA · ADA · FMLA · Non-Compete · Harassment · Termination</div>
+  </div>
+  <div class="form-card">
+    <div class="form-row two">
+      <div class="form-group"><div class="form-label">Issue Area</div>
+        <select id="el-issue">
+          <option>Employee Classification (W-2 vs 1099)</option><option>Non-Compete Enforceability</option><option>Termination / Wrongful Dismissal</option><option>FLSA Overtime Compliance</option><option>ADA Accommodation Request</option><option>FMLA / Leave Policy</option><option>Harassment / Discrimination Claim</option><option>Wage & Hour Dispute</option><option>Severance Agreement Review</option>
+        </select>
+      </div>
+      <div class="form-group"><div class="form-label">State</div>
+        <select id="el-state">
+          <option>Arizona</option><option>Nevada</option><option>Arkansas</option><option>California</option><option>Texas</option><option>Florida</option><option>New York</option><option>Illinois</option><option>Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">Situation Description</div>
+        <textarea class="form-input" id="el-desc" placeholder="Describe the employment situation, employee details, timeline, relevant documents..."></textarea>
+      </div>
+    </div>
+    <button class="action-btn primary" data-tsm-action="runEmployment" data-tsm-args="">👥 Analyze Employment Issue</button>
+    <div class="result-area" id="el-result"></div>
+  </div>
+</div>
+
+<!-- CORPORATE STRUCTURE -->
+<div class="panel" id="panel-corporate">
+  <div class="page-header">
+    <div class="page-title">Corporate Structure</div>
+    <div class="page-sub">Entity Formation · Liability Protection · Operating Agreements · M&A</div>
+  </div>
+  <div class="form-card">
+    <div class="form-row three">
+      <div class="form-group"><div class="form-label">Entity Type</div>
+        <select id="cs-entity">
+          <option>LLC (Single Member)</option><option>LLC (Multi Member)</option><option>S-Corporation</option><option>C-Corporation</option><option>Partnership</option><option>Series LLC</option><option>Trust Structure</option>
+        </select>
+      </div>
+      <div class="form-group"><div class="form-label">State of Formation</div>
+        <select id="cs-state">
+          <option>Arizona</option><option>Nevada</option><option>Delaware</option><option>Wyoming</option><option>California</option><option>Texas</option><option>Florida</option><option>Other</option>
+        </select>
+      </div>
+      <div class="form-group"><div class="form-label">Analysis Focus</div>
+        <select id="cs-focus">
+          <option>Full Structure Review</option><option>Liability Protection</option><option>Operating Agreement Gaps</option><option>M&A Readiness</option><option>Asset Protection Strategy</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">Business Description / Current Structure</div>
+        <textarea class="form-input" id="cs-desc" placeholder="Describe your business, ownership structure, current agreements, and specific concerns..."></textarea>
+      </div>
+    </div>
+    <button class="action-btn primary" data-tsm-action="runCorporate" data-tsm-args="">🏛️ Analyze Corporate Structure</button>
+    <div class="result-area" id="cs-result"></div>
+  </div>
+</div>
+
+<!-- IP & TRADEMARKS -->
+<div class="panel" id="panel-ip">
+  <div class="page-header">
+    <div class="page-title">IP & Trademarks</div>
+    <div class="page-sub">Trademark · Copyright · Trade Secrets · Patents · Licensing</div>
+  </div>
+  <div class="form-card">
+    <div class="form-row three">
+      <div class="form-group"><div class="form-label">IP Type</div>
+        <select id="ip-type">
+          <option>Trademark Registration</option><option>Copyright Protection</option><option>Trade Secret</option><option>Patent Analysis</option><option>IP Licensing</option><option>Infringement Analysis</option><option>IP Assignment</option>
+        </select>
+      </div>
+      <div class="form-group"><div class="form-label">Industry</div>
+        <select id="ip-industry">
+          <option>Technology / Software</option><option>Healthcare</option><option>Consumer Products</option><option>Media / Entertainment</option><option>Manufacturing</option><option>Financial Services</option><option>Other</option>
+        </select>
+      </div>
+      <div class="form-group"><div class="form-label">Jurisdiction</div>
+        <select id="ip-jurisdiction">
+          <option>United States (USPTO)</option><option>International (WIPO)</option><option>European Union (EUIPO)</option><option>State Level</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">IP Description / Issue</div>
+        <textarea class="form-input" id="ip-desc" placeholder="Describe the intellectual property, current status, specific concern, or infringement situation..."></textarea>
+      </div>
+    </div>
+    <button class="action-btn primary" data-tsm-action="runIP" data-tsm-args="">💡 Analyze IP Matter</button>
+    <div class="result-area" id="ip-result"></div>
+  </div>
+</div>
+
+<!-- REAL ESTATE LEGAL -->
+<div class="panel" id="panel-realestate">
+  <div class="page-header">
+    <div class="page-title">Real Estate Legal</div>
+    <div class="page-sub">Transactions · Title · Zoning · Leases · Environmental · 1031</div>
+  </div>
+  <div class="form-card">
+    <div class="form-row two">
+      <div class="form-group"><div class="form-label">Transaction Type</div>
+        <select id="re-type">
+          <option>Residential Purchase</option><option>Commercial Purchase</option><option>1031 Exchange</option><option>Lease Agreement Review</option><option>Title Issue Resolution</option><option>Zoning / Variance</option><option>Environmental Due Diligence</option><option>HOA Dispute</option><option>Landlord / Tenant Dispute</option>
+        </select>
+      </div>
+      <div class="form-group"><div class="form-label">Property State</div>
+        <select id="re-state">
+          <option>Arizona</option><option>Nevada</option><option>California</option><option>Texas</option><option>Florida</option><option>Colorado</option><option>New York</option><option>Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">Transaction Details / Concerns</div>
+        <textarea class="form-input" id="re-desc" placeholder="Describe the property, transaction details, parties involved, and specific legal concerns..."></textarea>
+      </div>
+    </div>
+    <button class="action-btn primary" data-tsm-action="runRealEstate" data-tsm-args="">🏠 Analyze Real Estate Matter</button>
+    <div class="result-area" id="re-result"></div>
+  </div>
+</div>
+
+<!-- DOCUMENT ANALYZER -->
+<div class="panel" id="panel-docanalyzer">
+  <div class="page-header">
+    <div class="page-title">Document Analyzer</div>
+    <div class="page-sub">AI-Powered Legal Document Analysis · Any File Type</div>
+  </div>
+  <div class="form-card">
+    <div class="dropzone" onclick="document.getElementById('doc-file').click()" id="dropzone">
+      <div class="dz-icon">📋</div>
+      <div class="dz-title">Drop legal documents here or click to browse</div>
+      <div class="dz-sub">Contracts · Agreements · Court Filings · Pleadings · Correspondence</div>
+      <div class="dz-tags"><span class="dz-tag">PDF</span><span class="dz-tag">DOCX</span><span class="dz-tag">TXT</span><span class="dz-tag">IMG</span></div>
+    </div>
+    <input type="file" id="doc-file" class="file-input" accept=".pdf,.docx,.txt,.jpg,.png" onchange="handleFile(this)"/>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">Analysis Type</div>
+        <select id="da-type">
+          <option>Full Legal Review — All Issues</option><option>Red Flag Detection Only</option><option>Clause Extraction</option><option>Risk Summary</option><option>Compliance Check</option><option>Plain Language Summary</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">Additional Context</div>
+        <textarea class="form-input" id="da-context" placeholder="Describe the document, parties involved, specific concerns, or what you're looking for..."></textarea>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="action-btn primary" data-tsm-action="runDocAnalysis" data-tsm-args="">🧠 Analyze Document</button>
+      <span class="file-status" id="file-status">No files selected</span>
+    </div>
+    <div class="result-area" id="da-result"></div>
+  </div>
+</div>
+
+<!-- DEADLINE TRACKER -->
+<div class="panel" id="panel-deadlines">
+  <div class="page-header">
+    <div class="page-title">Deadline Tracker</div>
+    <div class="page-sub">Matter Deadlines · Statute of Limitations · Filing Dates</div>
+  </div>
+  <div class="deadline-list">
+    <div class="deadline-item"><div class="dl-urgency urgent"></div><div class="dl-info"><div class="dl-title">Motion to Dismiss Response — ABC Corp v. Smith</div><div class="dl-meta">Contract Dispute · Superior Court</div></div><div class="dl-date">Apr 22, 2026</div></div>
+    <div class="deadline-item"><div class="dl-urgency urgent"></div><div class="dl-info"><div class="dl-title">EEOC Response Deadline — Martinez Claim</div><div class="dl-meta">Employment · EEOC Charge #12345</div></div><div class="dl-date">Apr 28, 2026</div></div>
+    <div class="deadline-item"><div class="dl-urgency urgent"></div><div class="dl-info"><div class="dl-title">Lease Option Exercise — Scottsdale Property</div><div class="dl-meta">Real Estate · Commercial Lease</div></div><div class="dl-date">May 1, 2026</div></div>
+    <div class="deadline-item"><div class="dl-urgency soon"></div><div class="dl-info"><div class="dl-title">Annual Compliance Report — HRSA / BPHC Audit</div><div class="dl-meta">Compliance · Healthcare</div></div><div class="dl-date">May 15, 2026</div></div>
+    <div class="deadline-item"><div class="dl-urgency soon"></div><div class="dl-info"><div class="dl-title">Trademark Renewal — TSM Consultz Mark</div><div class="dl-meta">IP · USPTO Registration</div></div><div class="dl-date">Jun 3, 2026</div></div>
+    <div class="deadline-item"><div class="dl-urgency ok"></div><div class="dl-info"><div class="dl-title">Operating Agreement Amendment Deadline</div><div class="dl-meta">Corporate · LLC</div></div><div class="dl-date">Jul 1, 2026</div></div>
+  </div>
+  <button class="add-deadline-btn" data-tsm-action="addDeadline" data-tsm-args="">+ Add Deadline</button>
+</div>
+
+<!-- STATUTE LOOKUP -->
+<div class="panel" id="panel-statute">
+  <div class="page-header">
+    <div class="page-title">Statute Lookup</div>
+    <div class="page-sub">Federal & State Law · Regulations · Case Law Reference</div>
+  </div>
+  <div class="statute-search">
+    <input class="statute-input" id="statute-q" placeholder="Search statute, regulation, or legal code (e.g. ARS 47-2207, FLSA Section 13, HRSA / BPHC 45 CFR 164)..." onkeydown="if(event.key==='Enter')runStatute()"/>
+    <button class="action-btn primary" data-tsm-action="runStatute" data-tsm-args="">Search</button>
+  </div>
+  <div id="statute-results">
+    <div class="statute-result"><div class="sr-title">FLSA — Fair Labor Standards Act, 29 U.S.C. § 207</div><div class="sr-code">Federal · Department of Labor</div><div class="sr-body">Requires covered employers to pay eligible employees at least 1.5x their regular rate for hours worked over 40 in a workweek. Exemptions apply for executive, administrative, professional, and outside sales employees meeting salary and duties tests.</div></div>
+    <div class="statute-result"><div class="sr-title">ARS § 23-1501 — Arizona Employment Relationship</div><div class="sr-code">Arizona · Employment Law</div><div class="sr-body">Establishes at-will employment doctrine in Arizona. Exceptions include written employment contracts, implied contracts, and statutory protections against wrongful termination for protected class members or whistleblowers.</div></div>
+  </div>
+</div>
+
+<!-- LEGAL TEMPLATES -->
+<div class="panel" id="panel-templates">
+  <div class="page-header">
+    <div class="page-title">Legal Templates</div>
+    <div class="page-sub">AI-Generated · Jurisdiction-Aware · Customizable</div>
+  </div>
+  <div class="template-grid">
+    <div class="template-card" data-tsm-action="genTemplate" data-tsm-args="'Single Member LLC Operating Agreement'"><div class="tc-icon">🏛️</div><div class="tc-title">LLC Operating Agreement</div><div class="tc-sub">Single or multi-member · State-specific</div></div>
+    <div class="template-card" data-tsm-action="genTemplate" data-tsm-args="'Independent Contractor Agreement with IP Assignment'"><div class="tc-icon">📋</div><div class="tc-title">Independent Contractor Agreement</div><div class="tc-sub">With IP assignment + non-compete</div></div>
+    <div class="template-card" data-tsm-action="genTemplate" data-tsm-args="'Mutual Non-Disclosure Agreement'"><div class="tc-icon">🔒</div><div class="tc-title">Mutual NDA</div><div class="tc-sub">Bilateral confidentiality · Market standard</div></div>
+    <div class="template-card" data-tsm-action="genTemplate" data-tsm-args="'Commercial Lease Agreement'"><div class="tc-icon">🏢</div><div class="tc-title">Commercial Lease</div><div class="tc-sub">Triple net or gross · Tenant/landlord</div></div>
+    <div class="template-card" data-tsm-action="genTemplate" data-tsm-args="'Demand Letter for Breach of Contract'"><div class="tc-icon">⚠️</div><div class="tc-title">Demand Letter</div><div class="tc-sub">Breach · Payment · Cease & desist</div></div>
+    <div class="template-card" data-tsm-action="genTemplate" data-tsm-args="'Employment Offer Letter with At-Will Clause'"><div class="tc-icon">📝</div><div class="tc-title">Employment Offer Letter</div><div class="tc-sub">At-will · Benefits summary · Start date</div></div>
+    <div class="template-card" data-tsm-action="genTemplate" data-tsm-args="'Software License Agreement'"><div class="tc-icon">💻</div><div class="tc-title">Software License Agreement</div><div class="tc-sub">SaaS · Perpetual · Open source compatible</div></div>
+    <div class="template-card" data-tsm-action="genTemplate" data-tsm-args="'Settlement Agreement and Release'"><div class="tc-icon">🤝</div><div class="tc-title">Settlement Agreement</div><div class="tc-sub">Full release · Confidentiality · Payment plan</div></div>
+  </div>
+  <div class="result-area" id="tpl-result" style="margin-top:16px"></div>
+</div>
+
+
+<!-- BPO COMMAND CENTER -->
+<div class="panel" id="panel-bpo-command">
+  <div class="page-header">
+    <span class="page-badge pro-badge">PRO SUITE</span>
+    <div class="page-title">BPO Command Center</div>
+    <div class="page-sub">Legal Operations Intelligence · Workforce Pipeline · Service Delivery Metrics</div>
+  </div>
+  <div class="kpi-row">
+    <div class="stat-card"><div class="sc-label">CANDIDATES TESTED</div><div class="sc-val purple">1,248</div><div class="sc-sub">+84 this month</div></div>
+    <div class="stat-card"><div class="sc-label">READY FOR PLACEMENT</div><div class="sc-val green">842</div><div class="sc-sub">67.5% pass rate</div></div>
+    <div class="stat-card"><div class="sc-label">HIGH RISK FLAGS</div><div class="sc-val red">132</div><div class="sc-sub">Blocked from placement</div></div>
+    <div class="stat-card"><div class="sc-label">PLACEMENT SUCCESS</div><div class="sc-val amber">89%</div><div class="sc-sub">12-month rolling avg</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+    <div class="form-card">
+      <div style="font-size:13px;font-weight:500;margin-bottom:14px;display:flex;align-items:center;gap:8px">⚖️ Active BPO Services <span class="pro-badge" style="font-size:9px">LIVE</span></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">
+          <span style="font-size:12px">Document Review & Indexing</span><span class="status-chip ready">ACTIVE</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">
+          <span style="font-size:12px">Legal Intake Processing</span><span class="status-chip ready">ACTIVE</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">
+          <span style="font-size:12px">Medical Records Management</span><span class="status-chip ready">ACTIVE</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">
+          <span style="font-size:12px">Discovery Support & Processing</span><span class="status-chip borderline">SCALING</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">
+          <span style="font-size:12px">Contract Review Operations</span><span class="status-chip borderline">SCALING</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">
+          <span style="font-size:12px">Legal Research Support</span><span class="status-chip risk">PIPELINE</span>
+        </div>
+      </div>
+    </div>
+    <div class="form-card">
+      <div style="font-size:13px;font-weight:500;margin-bottom:14px">🎯 Target Market Intelligence</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="padding:10px 14px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--amber)">
+          <div style="font-size:12px;font-weight:500;color:var(--amber);margin-bottom:3px">RR Donnelley / LSC (Priority)</div>
+          <div style="font-size:11px;color:var(--text2);font-family:var(--mono)">Large-scale doc mgmt · Legal print/process BPO · Enterprise contact</div>
+        </div>
+        <div style="padding:10px 14px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--purple)">
+          <div style="font-size:12px;font-weight:500;color:var(--purple);margin-bottom:3px">Mid-Size Law Firms (AZ/TX/FL)</div>
+          <div style="font-size:11px;color:var(--text2);font-family:var(--mono)">PI firms · Family law · Immigration · Direct BPO</div>
+        </div>
+        <div style="padding:10px 14px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--cyan)">
+          <div style="font-size:12px;font-weight:500;color:var(--cyan);margin-bottom:3px">Legal Staffing Partners</div>
+          <div style="font-size:11px;color:var(--text2);font-family:var(--mono)">Workforce validation platform · White-label licensing</div>
+        </div>
+        <div style="padding:10px 14px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--green)">
+          <div style="font-size:12px;font-weight:500;color:var(--green);margin-bottom:3px">Corporate Legal Departments</div>
+          <div style="font-size:11px;color:var(--text2);font-family:var(--mono)">Overflow processing · Contract ops · Compliance workflows</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="form-card">
+    <div style="font-size:13px;font-weight:500;margin-bottom:14px">🤖 BPO Intelligence Query</div>
+    <div class="input-bar">
+      <div class="input-wrap"><textarea id="bpo-input" placeholder="Ask about BPO capacity, service pricing, workflow design, or market positioning..." style="min-height:60px"></textarea></div>
+      <button class="send-btn" data-tsm-action="runBPOQuery" data-tsm-args="">Query</button>
+    </div>
+    <div class="result-area" id="bpo-result"></div>
+  </div>
+</div>
+
+<!-- CANDIDATE SIMULATION ENGINE -->
+<div class="panel" id="panel-simulation">
+  <div class="page-header">
+    <span class="page-badge pro-badge">SIMULATION ENGINE</span>
+    <div class="page-title">Legal Workflow Simulation</div>
+    <div class="page-sub">Validate Candidates Before Placement · Score Readiness · Reduce Bad Hires</div>
+  </div>
+  <div class="sim-stepper">
+    <div class="sim-step active" id="sstep-1"><div class="sim-step-dot">1</div><span>Role</span></div>
+    <div class="sim-step-line"></div>
+    <div class="sim-step" id="sstep-2"><div class="sim-step-dot">2</div><span>Scenario</span></div>
+    <div class="sim-step-line"></div>
+    <div class="sim-step" id="sstep-3"><div class="sim-step-dot">3</div><span>Execute</span></div>
+    <div class="sim-step-line"></div>
+    <div class="sim-step" id="sstep-4"><div class="sim-step-dot">4</div><span>Scorecard</span></div>
+  </div>
+
+  <!-- STEP 1: ROLE SELECTION -->
+  <div id="sim-s1">
+    <div class="form-card" style="margin-bottom:16px">
+      <div style="font-size:13px;font-weight:500;margin-bottom:16px">Step 1 — Candidate Role Selection</div>
+      <div class="form-row two">
+        <div class="form-group">
+          <div class="form-label">Candidate Name</div>
+          <input id="sim-name" class="statute-input" placeholder="Enter candidate name..." style="font-size:13px">
+        </div>
+        <div class="form-group">
+          <div class="form-label">Target Role</div>
+          <select id="sim-role">
+            <option value="Paralegal">Paralegal</option>
+            <option value="Legal Assistant">Legal Assistant</option>
+            <option value="Litigation Support Specialist">Litigation Support</option>
+            <option value="Client Intake Specialist">Client Intake Specialist</option>
+            <option value="Document Review Analyst">Document Review Analyst</option>
+            <option value="Legal Secretary">Legal Secretary</option>
+            <option value="Medical Records Paralegal">Medical Records Paralegal</option>
+            <option value="Legal Research Analyst">Legal Research Analyst</option>
+            <option value="Immigration Paralegal">Immigration Paralegal</option>
+            <option value="Corporate Paralegal">Corporate Paralegal</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row two">
+        <div class="form-group">
+          <div class="form-label">Practice Area</div>
+          <select id="sim-area">
+            <option>Personal Injury</option>
+            <option>Family Law</option>
+            <option>Immigration</option>
+            <option>Corporate / Business</option>
+            <option>Litigation</option>
+            <option>Real Estate</option>
+            <option>Employment Law</option>
+            <option>Criminal Defense</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Simulation Difficulty</div>
+          <select id="sim-diff">
+            <option value="entry-level">Entry Level</option>
+            <option value="mid-level" selected>Mid Level</option>
+            <option value="senior">Senior</option>
+          </select>
+        </div>
+      </div>
+      <button class="action-btn primary" data-tsm-action="loadScenario" data-tsm-args="">Load Scenario →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2+3: SCENARIO + EXECUTION -->
+  <div id="sim-s2" style="display:none">
+    <div class="scenario-card">
+      <div class="scenario-tag" id="sim-scenario-tag">SCENARIO LOADING</div>
+      <div class="scenario-title" id="sim-scenario-title">Loading...</div>
+      <div class="scenario-body" id="sim-scenario-body"></div>
+      <div style="font-size:11px;font-family:var(--mono);color:var(--text3);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px">Required Tasks</div>
+      <div class="scenario-tasks" id="sim-tasks"></div>
+    </div>
+    <div class="form-card" style="margin-bottom:16px">
+      <div style="font-size:13px;font-weight:500;margin-bottom:12px">Select Action Path</div>
+      <div class="choice-grid" id="sim-choices"></div>
+      <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:12px" id="sim-time-display">⏱ Timer: <span id="sim-timer">0</span>s</div>
+      <button class="action-btn primary" data-tsm-action="submitSimulation" data-tsm-args="">Submit & Score →</button>
+      <button class="action-btn amber" style="margin-left:8px" data-tsm-action="resetSimulation" data-tsm-args="">Reset</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: SCORECARD -->
+  <div id="sim-s4" style="display:none">
+    <div class="form-card">
+      <div style="display:flex;align-items:center;gap:20px;margin-bottom:20px">
+        <div class="score-ring" id="sim-ring">--</div>
+        <div>
+          <div style="font-size:18px;font-weight:600" id="sim-result-name">Candidate</div>
+          <div style="font-size:13px;color:var(--text2)" id="sim-result-role">Role</div>
+          <div style="margin-top:6px" id="sim-status-chip"></div>
+        </div>
+      </div>
+      <div class="scorecard-grid" id="sim-score-grid"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px">
+          <div style="font-size:10px;font-family:var(--mono);color:var(--green);letter-spacing:1px;margin-bottom:8px">STRENGTHS</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.6" id="sim-strengths">—</div>
+        </div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px">
+          <div style="font-size:10px;font-family:var(--mono);color:var(--amber);letter-spacing:1px;margin-bottom:8px">RISK FLAGS</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.6" id="sim-risks">—</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;padding:12px 14px;background:rgba(124,92,252,0.08);border:1px solid var(--purple-dim);border-radius:8px">
+        <div style="font-size:10px;font-family:var(--mono);color:var(--purple);letter-spacing:1px;margin-bottom:6px">PLACEMENT RECOMMENDATION</div>
+        <div style="font-size:13px;color:var(--text)" id="sim-recommendation">—</div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <button class="action-btn primary" data-tsm-action="saveToP Pipeline" data-tsm-args="">Add to Pipeline</button>
+        <button class="action-btn amber" data-tsm-action="exportScorecard" data-tsm-args="">Export Scorecard</button>
+        <button class="action-btn" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2)" data-tsm-action="resetSimulation" data-tsm-args="">Run Another</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TALENT PIPELINE -->
+<div class="panel" id="panel-pipeline">
+  <div class="page-header">
+    <span class="page-badge pro-badge">WORKFORCE INTEL</span>
+    <div class="page-title">Candidate Pipeline</div>
+    <div class="page-sub">Scored Talent · Role Matching · Placement Readiness</div>
+  </div>
+  <div class="stats-row" style="grid-template-columns:repeat(4,1fr)">
+    <div class="stat-card"><div class="sc-label">READY</div><div class="sc-val green">18</div><div class="sc-sub">Score 85+</div></div>
+    <div class="stat-card"><div class="sc-label">BORDERLINE</div><div class="sc-val amber">7</div><div class="sc-sub">Score 70–84</div></div>
+    <div class="stat-card"><div class="sc-label">NOT READY</div><div class="sc-val red">4</div><div class="sc-sub">Score &lt;70</div></div>
+    <div class="stat-card"><div class="sc-label">PLACED</div><div class="sc-val purple">31</div><div class="sc-sub">This quarter</div></div>
+  </div>
+  <div class="form-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="font-size:13px;font-weight:500">Candidate Scoreboard</div>
+      <div style="display:flex;gap:8px">
+        <select style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:11px;padding:5px 10px;font-family:var(--mono)" id="filter-role">
+          <option value="">All Roles</option>
+          <option>Paralegal</option>
+          <option>Legal Assistant</option>
+          <option>Litigation Support</option>
+          <option>Document Review Analyst</option>
+          <option>Client Intake Specialist</option>
+        </select>
+        <select style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:11px;padding:5px 10px;font-family:var(--mono)" id="filter-status">
+          <option value="">All Status</option>
+          <option>Ready</option>
+          <option>Borderline</option>
+          <option>High Risk</option>
+        </select>
+      </div>
+    </div>
+    <table class="pipeline-table">
+      <thead>
+        <tr>
+          <th>Candidate</th><th>Role</th><th>Score</th><th>Status</th><th>Risk</th><th>Recommendation</th>
+        </tr>
+      </thead>
+      <tbody id="pipeline-tbody">
+        <tr><td>Marcus Williams</td><td>Paralegal</td><td><span style="font-family:var(--mono);color:var(--green)">92</span></td><td><span class="status-chip ready">READY</span></td><td><span class="risk-chip low">LOW</span></td><td style="font-size:12px;color:var(--text2)">Place immediately</td></tr>
+        <tr><td>Priya Nair</td><td>Legal Assistant</td><td><span style="font-family:var(--mono);color:var(--green)">88</span></td><td><span class="status-chip ready">READY</span></td><td><span class="risk-chip low">LOW</span></td><td style="font-size:12px;color:var(--text2)">Place immediately</td></tr>
+        <tr><td>James Ortega</td><td>Litigation Support</td><td><span style="font-family:var(--mono);color:var(--green)">85</span></td><td><span class="status-chip ready">READY</span></td><td><span class="risk-chip low">LOW</span></td><td style="font-size:12px;color:var(--text2)">Place with oversight</td></tr>
+        <tr><td>Dana Chen</td><td>Document Review</td><td><span style="font-family:var(--mono);color:var(--amber)">78</span></td><td><span class="status-chip borderline">BORDERLINE</span></td><td><span class="risk-chip med">MED</span></td><td style="font-size:12px;color:var(--text2)">Additional training recommended</td></tr>
+        <tr><td>Tyler Brooks</td><td>Client Intake</td><td><span style="font-family:var(--mono);color:var(--amber)">74</span></td><td><span class="status-chip borderline">BORDERLINE</span></td><td><span class="risk-chip med">MED</span></td><td style="font-size:12px;color:var(--text2)">Re-test in 30 days</td></tr>
+        <tr><td>Angela Moore</td><td>Paralegal</td><td><span style="font-family:var(--mono);color:var(--red)">61</span></td><td><span class="status-chip risk">HIGH RISK</span></td><td><span class="risk-chip high">HIGH</span></td><td style="font-size:12px;color:var(--text2)">Do not place — remediation needed</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="form-card" style="margin-top:16px">
+    <div style="font-size:13px;font-weight:500;margin-bottom:12px">🤖 AI Placement Analysis</div>
+    <div class="input-bar">
+      <div class="input-wrap"><textarea id="pipeline-input" placeholder="Ask: 'Who is best fit for a PI paralegal role?' or 'Flag any high-risk candidates this week'..." style="min-height:56px"></textarea></div>
+      <button class="send-btn" data-tsm-action="runPipelineAI" data-tsm-args="">Analyze</button>
+    </div>
+    <div class="result-area" id="pipeline-result"></div>
+  </div>
+</div>
+
+<!-- CRM & OUTREACH -->
+<div class="panel" id="panel-crm">
+  <div class="page-header">
+    <span class="page-badge pro-badge">SALES OPS</span>
+    <div class="page-title">CRM & Outreach Hub</div>
+    <div class="page-sub">Agency Pipeline · Email Templates · LinkedIn Scripts · Demo Scheduler</div>
+  </div>
+  <div style="margin-bottom:20px">
+    <div style="font-size:11px;font-family:var(--mono);color:var(--text3);letter-spacing:1px;margin-bottom:12px;text-transform:uppercase">Pipeline Stages</div>
+    <div class="crm-stages">
+      <div class="crm-col">
+        <div class="crm-col-header">LEAD <span class="crm-count">5</span></div>
+        <div class="crm-card"><div class="crm-card-title">RR Donnelley / LSC</div><div class="crm-card-meta">Chicago, IL · Enterprise</div><div class="crm-card-tag bpo">BPO TARGET</div></div>
+        <div class="crm-card"><div class="crm-card-title">Littler Mendelson</div><div class="crm-card-meta">National · Employment Law</div><div class="crm-card-tag firm">LAW FIRM</div></div>
+        <div class="crm-card"><div class="crm-card-title">Vensure Employer Services</div><div class="crm-card-meta">Scottsdale, AZ · HR/Legal</div><div class="crm-card-tag agency">AGENCY</div></div>
+      </div>
+      <div class="crm-col">
+        <div class="crm-col-header">DEMO SCHEDULED <span class="crm-count">3</span></div>
+        <div class="crm-card"><div class="crm-card-title">Engage PEO</div><div class="crm-card-meta">Phoenix, AZ · Staffing</div><div class="crm-card-tag agency">AGENCY</div></div>
+        <div class="crm-card"><div class="crm-card-title">Adams and Martin Group</div><div class="crm-card-meta">Legal Staffing · National</div><div class="crm-card-tag agency">AGENCY</div></div>
+      </div>
+      <div class="crm-col">
+        <div class="crm-col-header">PILOT STARTED <span class="crm-count">2</span></div>
+        <div class="crm-card"><div class="crm-card-title">Gallagher & Kennedy</div><div class="crm-card-meta">Phoenix, AZ · Full Service</div><div class="crm-card-tag firm">LAW FIRM</div></div>
+      </div>
+      <div class="crm-col">
+        <div class="crm-col-header">PILOT COMPLETE <span class="crm-count">1</span></div>
+        <div class="crm-card"><div class="crm-card-title">Fennemore Craig</div><div class="crm-card-meta">AZ/NV/CO · Corporate</div><div class="crm-card-tag firm">LAW FIRM</div></div>
+      </div>
+      <div class="crm-col">
+        <div class="crm-col-header">SUBSCRIPTION <span class="crm-count">0</span></div>
+        <div style="padding:12px;text-align:center;font-size:11px;font-family:var(--mono);color:var(--text3);border:1px dashed var(--border);border-radius:6px">First close pending...</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="font-size:11px;font-family:var(--mono);color:var(--text3);letter-spacing:1px;margin-bottom:12px;text-transform:uppercase">Outreach Templates</div>
+  <div class="outreach-card">
+    <div class="oc-header">
+      <div class="oc-title">Cold Email — Legal BPO Services (Direct Firm)</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="oc-type">EMAIL</div>
+        <button class="copy-btn" onclick="copyOutreach('oc1')">Copy</button>
+      </div>
+    </div>
+    <div class="oc-body" id="oc1">Subject: Legal Operations Support for [Firm Name] — TSM Consultz
+
+Hi [Name],
+
+I wanted to reach out regarding a BPO services partnership with TSM Consultz. We specialize in legal workflow execution for law firms — specifically document review, intake processing, medical records management, and discovery support.
+
+What makes us different: every TSM operator has been pre-validated through our workflow simulation engine before placement. You're not getting warm bodies — you're getting scored, verified legal operations talent.
+
+Currently working with PI firms and litigation shops in AZ/TX/FL. Would a 15-minute call this week make sense?
+
+Best,
+[Your Name]
+TSM Consultz | Legal BPO Division</div>
+  </div>
+  <div class="outreach-card">
+    <div class="oc-header">
+      <div class="oc-title">LinkedIn DM — Legal Staffing Agency Partnership</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="oc-type">LINKEDIN</div>
+        <button class="copy-btn" onclick="copyOutreach('oc2')">Copy</button>
+      </div>
+    </div>
+    <div class="oc-body" id="oc2">Hey [Name] — noticed you're scaling your legal placement operations.
+
+We built a simulation-based readiness scoring platform specifically for legal talent — paralegals, legal assistants, litigation support, intake specialists.
+
+Our engine runs real workflow simulations (not trivia tests) and outputs placement readiness scores before day 1. Reduces bad placements by ~40%.
+
+Open to a quick demo? Happy to white-label it for your agency pipeline.
+
+— [Your Name], TSM Consultz</div>
+  </div>
+  <div class="outreach-card">
+    <div class="oc-header">
+      <div class="oc-title">Enterprise Outreach — RR Donnelley / Large BPO Operators</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="oc-type">EMAIL</div>
+        <button class="copy-btn" onclick="copyOutreach('oc3')">Copy</button>
+      </div>
+    </div>
+    <div class="oc-body" id="oc3">Subject: Legal Workforce Intelligence Partnership — TSM Consultz
+
+Hi [Name],
+
+TSM Consultz operates a Legal Workforce Intelligence platform that could support [Company]'s legal BPO or staffing operations. Our simulation engine validates legal talent against real workflow scenarios — intake, discovery, document review, records management — and outputs scored readiness data.
+
+Use cases for large operators like [Company]:
+• Pre-placement validation for legal staff at scale
+• Reduce placement failure rates across client accounts
+• White-label testing portal for your recruiter workflow
+• API-level integration with existing ATS/HRIS systems
+
+We're currently in active pilots with law firms in AZ/FL/TX and are seeking enterprise partnership discussions for Q3 2026.
+
+Would a brief strategy call be worthwhile?
+
+[Your Name]
+TSM Consultz | tsm-legal-pro.railway.app</div>
+  </div>
+
+  <div class="form-card" style="margin-top:16px">
+    <div style="font-size:13px;font-weight:500;margin-bottom:12px">🤖 Generate Custom Outreach</div>
+    <div class="form-row three">
+      <div class="form-group">
+        <div class="form-label">Target Type</div>
+        <select id="crm-target"><option>Law Firm</option><option>Legal Staffing Agency</option><option>Legal BPO</option><option>Corporate Legal Dept</option><option>Enterprise (RRD-level)</option></select>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Channel</div>
+        <select id="crm-channel"><option>Cold Email</option><option>LinkedIn DM</option><option>Follow-Up Email</option><option>Demo Invite</option></select>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Service Focus</div>
+        <select id="crm-service"><option>Legal BPO Direct</option><option>Talent Validation Platform</option><option>White-Label Partnership</option><option>Enterprise API</option></select>
+      </div>
+    </div>
+    <button class="action-btn primary" data-tsm-action="genOutreach" data-tsm-args="">Generate Outreach</button>
+    <div class="result-area" id="crm-result"></div>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<!-- GLOBAL CHAT WIDGET -->
+<div class="global-chat" id="global-chat">
+  <div class="gc-bubble">
+    <div class="gc-header">
+      <span style="font-size:12px">💬</span>
+      <span class="gc-label">Ask anything...</span>
+      <button class="gc-close" data-tsm-action="toggleChat" data-tsm-args="">—</button>
+    </div>
+    <div class="gc-input-row">
+      <input class="ask-bar" class="ask-bar" class="gc-input" id="gc-input" placeholder="Quick legal question..." onkeydown="if(event.key==='Enter')quickAsk()"/>
+      <button class="gc-send" data-tsm-action="quickAsk" data-tsm-args="">Ask</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const AI = '/api/legal/query';
+
+// ===== BPO COMMAND CENTER =====
+async function runBPOQuery(){
+  const q=document.getElementById('bpo-input').value.trim();
+  if(!q)return;
+  setLoading('bpo-result');
+  const reply=await callAI('You are the TSM Legal Pro Suite BPO Operations AI. Answer this BPO/legal operations question with specific, actionable intelligence:\n\n'+q);
+  showResult('bpo-result',reply.replace(/\n/g,'<br>'));
+}
+
+// ===== SIMULATION ENGINE =====
+let simTimer=0,simInterval=null,simSelectedChoice='',simStartTime=0;
+
+const SCENARIOS={
+  'Paralegal':{
+    tag:'PARALEGAL · PI WORKFLOW',
+    title:'Resolve Denied Insurance Claim — Missing Medical Documentation',
+    body:'A personal injury client\'s medical expenses claim has been denied by the adjuster citing "insufficient documentation." The treating physician\'s records from Desert Ridge Medical Center are missing from the demand package. The statute of limitations deadline is 14 days away.',
+    tasks:['Identify missing records from treating provider','Obtain HIPAA-compliant authorization from client','Contact Desert Ridge Medical Records Dept','Track outstanding records request','Update demand package upon receipt'],
+    choices:['Send immediate records request with authorization','Notify supervising attorney and request extension','Resubmit claim without missing records','Draft demand letter citing adjuster bad faith'],
+    correct:0,
+    explanation:'Correct workflow: immediately request records with authorization. Attorney notification is secondary. Resubmitting without records or alleging bad faith without documentation would be premature.'
+  },
+  'Legal Assistant':{
+    tag:'LEGAL ASSISTANT · INTAKE',
+    title:'New Client Intake — Wrongful Termination Matter',
+    body:'A walk-in client, Maria Gonzalez, claims she was terminated 3 weeks ago after filing an EEOC complaint. She is emotional and unclear about dates. Your supervising attorney is in a deposition until 4pm.',
+    tasks:['Greet client and explain intake process','Collect incident details and employment dates','Document EEOC complaint number if available','Confirm statute of limitations timeline','Schedule follow-up consultation with attorney'],
+    choices:['Begin full intake interview and document everything','Tell client to return when attorney is available','Collect basic info only, flag for attorney review','Immediately pull EEOC complaint from federal database'],
+    correct:2,
+    explanation:'Best practice: collect and document essential intake information, then flag for attorney review. Full interview without attorney present risks unauthorized practice concerns. Turning client away is unacceptable service.'
+  },
+  'Litigation Support Specialist':{
+    tag:'LITIGATION SUPPORT · DISCOVERY',
+    title:'Discovery Response Deadline — Document Production Deficiency',
+    body:'Opposing counsel has served interrogatories and a request for production. Your team has located 847 documents. Counsel believes 200+ responsive documents may be in an archived email system from 2022. Filing deadline is in 5 business days.',
+    tasks:['Catalog and Bates-stamp identified documents','Initiate IT request for email archive retrieval','Identify potentially privileged documents for attorney review','Prepare document production log','Draft cover letter for production'],
+    choices:['Produce only confirmed 847 docs, note ongoing production','Request 30-day extension from opposing counsel','Produce all documents including unreviewed email archive','File objections to all discovery requests to buy time'],
+    correct:0,
+    explanation:'Produce confirmed documents and note that additional production is forthcoming — this preserves good faith compliance while protecting privilege review obligations. Producing unreviewed documents risks privilege waiver.'
+  },
+  'Client Intake Specialist':{
+    tag:'INTAKE · CASE QUALIFICATION',
+    title:'Telephone Intake — Potential Medical Malpractice Matter',
+    body:'Caller David Park reports his mother suffered complications after a surgery at Banner Health in 2021. He is calling on her behalf. She is alive but has ongoing disability. He asks whether they have a case and wants to know costs upfront.',
+    tasks:['Verify caller relationship and authorization','Obtain basic incident facts and timeline','Confirm statute of limitations window','Explain firm intake process without legal advice','Escalate to attorney for qualification decision'],
+    choices:['Tell caller they likely have a strong case','Take detailed information and schedule attorney call','Quote contingency fee structure immediately','Request all medical records before scheduling any call'],
+    correct:1,
+    explanation:'Take detailed information and schedule an attorney call for case qualification. Providing legal opinions, quoting fees without attorney approval, or demanding records before the initial consultation are all protocol violations.'
+  },
+  'Document Review Analyst':{
+    tag:'DOC REVIEW · PRIVILEGE',
+    title:'Privilege Review — Corporate Litigation Document Set',
+    body:'You have been assigned 1,200 documents for privilege review in a corporate breach of contract matter. Documents include emails between in-house counsel and executives discussing settlement strategy. Several emails are CC\'d to outside PR consultants.',
+    tasks:['Apply privilege tag to qualifying attorney-client communications','Flag PR consultant CC\'d emails for attorney determination','Log all redactions with basis codes','Identify responsive non-privileged documents','Escalate unclear privilege questions to review team lead'],
+    choices:['Mark all attorney-copied emails as privileged','Mark only emails directly from/to outside counsel as privileged','Flag emails with PR consultants as potentially waived, escalate','Redact all financial figures regardless of privilege status'],
+    correct:2,
+    explanation:'Emails copied to PR consultants may waive privilege under the common interest exception analysis — these must be flagged and escalated, not auto-privileged. Over-designation or under-designation both create liability.'
+  }
+};
+
+function loadScenario(){
+  const role=document.getElementById('sim-role').value;
+  const scenario=SCENARIOS[role]||SCENARIOS['Paralegal'];
+  document.getElementById('sim-s1').style.display='none';
+  document.getElementById('sim-s2').style.display='block';
+  document.getElementById('sstep-2').classList.add('active');
+  document.getElementById('sstep-3').classList.add('active');
+  document.getElementById('sim-scenario-tag').textContent=scenario.tag;
+  document.getElementById('sim-scenario-title').textContent=scenario.title;
+  document.getElementById('sim-scenario-body').textContent=scenario.body;
+  const tasks=document.getElementById('sim-tasks');
+  tasks.innerHTML=scenario.tasks.map((t,i)=>`<div class="task-item"><div class="task-cb" id="tcb-${i}" onclick="toggleTask(${i})">${i+1}</div><span>${t}</span></div>`).join('');
+  const choices=document.getElementById('sim-choices');
+  choices.innerHTML=scenario.choices.map((c,i)=>`<button class="choice-btn" id="choice-${i}" onclick="selectChoice(${i},'${c.replace(/'/g,"\\'")}' )">${c}</button>`).join('');
+  simStartTime=Date.now();
+  simInterval=setInterval(()=>{simTimer=Math.round((Date.now()-simStartTime)/1000);document.getElementById('sim-timer').textContent=simTimer;},1000);
+  simSelectedChoice='';
+}
+
+function toggleTask(i){
+  const cb=document.getElementById('tcb-'+i);
+  cb.classList.toggle('checked');
+  if(cb.classList.contains('checked'))cb.textContent='✓';
+  else cb.textContent=i+1;
+}
+
+function selectChoice(i,text){
+  document.querySelectorAll('.choice-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('choice-'+i).classList.add('selected');
+  simSelectedChoice={index:i,text:text};
+}
+
+async function submitSimulation(){
+  if(!simSelectedChoice){alert('Select an action path first.');return;}
+  clearInterval(simInterval);
+  const name=document.getElementById('sim-name').value||'Candidate';
+  const role=document.getElementById('sim-role').value;
+  const scenario=SCENARIOS[role]||SCENARIOS['Paralegal'];
+  const isCorrect=simSelectedChoice.index===scenario.correct;
+  const elapsed=simTimer;
+  const accuracy=isCorrect?Math.min(95,85+Math.floor(Math.random()*12)):Math.min(68,52+Math.floor(Math.random()*18));
+  const speed=elapsed<60?92:elapsed<120?80:elapsed<180?68:55;
+  const workflow=Math.floor(Math.random()*12)+(isCorrect?78:62);
+  const compliance=Math.floor(Math.random()*8)+(isCorrect?84:70);
+  const total=Math.round((accuracy*0.40)+(speed*0.20)+(workflow*0.25)+(compliance*0.15));
+  document.getElementById('sim-s2').style.display='none';
+  document.getElementById('sim-s4').style.display='block';
+  document.getElementById('sstep-4').classList.add('active');
+  const ring=document.getElementById('sim-ring');
+  ring.textContent=total;
+  ring.className='score-ring '+(total>=85?'green':total>=70?'amber':'red');
+  document.getElementById('sim-result-name').textContent=name;
+  document.getElementById('sim-result-role').textContent=role;
+  const status=total>=85?'READY':total>=70?'BORDERLINE':'HIGH RISK';
+  const chipClass=total>=85?'ready':total>=70?'borderline':'risk';
+  document.getElementById('sim-status-chip').innerHTML=`<span class="status-chip ${chipClass}">${status}</span>`;
+  document.getElementById('sim-score-grid').innerHTML=[
+    {label:'ACCURACY',val:accuracy},
+    {label:'SPEED',val:speed},
+    {label:'WORKFLOW LOGIC',val:workflow},
+    {label:'COMPLIANCE',val:compliance}
+  ].map(s=>`<div class="scorecard-item"><div class="si-label">${s.label}</div><div class="si-bar-wrap"><div class="si-bar" style="width:${s.val}%"></div></div><div class="si-val" style="color:${s.val>=85?'var(--green)':s.val>=70?'var(--amber)':'var(--red)'}">${s.val}</div></div>`).join('');
+  const strengths=isCorrect?['Correct decision path','Workflow adherence','Protocol compliance']:['Attempted completion','Engaged with scenario'];
+  const risks=isCorrect?(elapsed>120?['Slower than benchmark — speed coaching recommended']:['Minor efficiency gaps']):['Incorrect action path selected',scenario.explanation.slice(0,80)+'...'];
+  document.getElementById('sim-strengths').innerHTML=strengths.map(s=>`• ${s}`).join('<br>');
+  document.getElementById('sim-risks').innerHTML=risks.map(r=>`• ${r}`).join('<br>');
+  const rec=total>=85?'Place immediately — candidate demonstrates workflow proficiency for '+role+' role.':total>=70?'Place with supervision — candidate shows foundational skills but needs reinforcement on decision sequencing.':'Do not place — significant workflow gaps identified. Remediation training required before re-evaluation.';
+  document.getElementById('sim-recommendation').textContent=rec;
+}
+
+function resetSimulation(){
+  clearInterval(simInterval);
+  simTimer=0;simSelectedChoice='';
+  document.getElementById('sim-s1').style.display='block';
+  document.getElementById('sim-s2').style.display='none';
+  document.getElementById('sim-s4').style.display='none';
+  document.querySelectorAll('.sim-step').forEach(s=>s.classList.remove('active','done'));
+  document.getElementById('sstep-1').classList.add('active');
+}
+
+function exportScorecard(){
+  const name=document.getElementById('sim-result-name').textContent;
+  const role=document.getElementById('sim-result-role').textContent;
+  const score=document.getElementById('sim-ring').textContent;
+  const rec=document.getElementById('sim-recommendation').textContent;
+  const blob=new Blob([`TSM LEGAL PRO SUITE — CANDIDATE SCORECARD\n\nCandidate: ${name}\nRole: ${role}\nReadiness Score: ${score}\n\nRecommendation: ${rec}\n\nGenerated: ${new Date().toLocaleString()}`],{type:'text/plain'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`scorecard-${name.replace(/\s/g,'-')}.txt`;a.click();
+}
+
+// ===== PIPELINE AI =====
+async function runPipelineAI(){
+  const q=document.getElementById('pipeline-input').value.trim();
+  if(!q)return;
+  setLoading('pipeline-result');
+  const reply=await callAI('You are a legal staffing intelligence AI for TSM Legal Pro Suite. Analyze the candidate pipeline and answer this question with specific placement recommendations:\n\n'+q+'\n\nCurrent pipeline: Paralegals, Legal Assistants, Litigation Support specialists. Scores range 61–92. Roles include PI firms, corporate, litigation.');
+  showResult('pipeline-result',reply.replace(/\n/g,'<br>'));
+}
+
+// ===== CRM OUTREACH =====
+function copyOutreach(id){
+  const text=document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=document.querySelector(`[onclick="copyOutreach('${id}')"]`);
+    if(btn){btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy',2000);}
+  });
+}
+
+async function genOutreach(){
+  const target=document.getElementById('crm-target').value;
+  const channel=document.getElementById('crm-channel').value;
+  const service=document.getElementById('crm-service').value;
+  setLoading('crm-result');
+  const reply=await callAI(`Write a ${channel} outreach message for TSM Consultz targeting a ${target}. Service being pitched: ${service}. TSM Consultz is a legal BPO and workforce intelligence platform. Key differentiators: simulation-based candidate validation, pre-placement scoring, paralegal/legal assistant workflow verification. Keep it concise, professional, and actionable. Include subject line if email.`);
+  showResult('crm-result',reply.replace(/\n/g,'<br>'));
+}
+
+function clock(){
+  const now=new Date();
+  document.getElementById('clock').textContent=now.toTimeString().slice(0,8);
+}
+setInterval(clock,1000);clock();
+
+function showPanel(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+function switchTab(el,id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  ['analyze','compare','draft'].forEach(t=>{
+    const el=document.getElementById('tab-'+t);
+    if(el)el.style.display=t===id?'block':'none';
+  });
+}
+
+async function callAI(prompt,context){
+  try{
+    const r=await fetch(AI,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({app:'bpo-legal',messages:[{role:'user',content:prompt}]})});
+    const d=await r.json();
+    return d.reply||'No response received.';
+  }catch(e){return'[Connection error: '+e.message+']';}
+}
+
+function showResult(id,html){
+  const el=document.getElementById(id);
+  el.classList.add('visible');
+  el.innerHTML='<div class="result-header">⚖️ LEGAL ANALYSIS · TSM LEGAL CORE</div><div class="result-body">'+html+'</div>';
+}
+
+function setLoading(id){
+  const el=document.getElementById(id);
+  el.classList.add('visible');
+  el.innerHTML='<div class="result-header">ANALYZING <span class="spinner"></span></div>';
+}
+
+async function sendCounsel(){
+  const input=document.getElementById('counsel-input');
+  const text=input.value.trim();
+  if(!text)return;
+  const resp=document.getElementById('chat-response');
+  resp.style.display='block';
+  resp.innerHTML='<span class="spinner"></span> Counsel analyzing...';
+  const reply=await callAI('As TSM Legal Counsel AI, provide expert legal analysis on the following:\n\n'+text,'legal');
+  resp.innerHTML='<div style="font-size:11px;font-family:var(--mono);color:var(--purple);margin-bottom:8px">Legal Analyst Pro · Response</div><div style="color:var(--text);line-height:1.7;white-space:pre-wrap">'+reply+'</div>';
+  input.value='';
+}
+
+function loadPrompt(title,text){
+  document.getElementById('counsel-input').value=text;
+  document.getElementById('counsel-input').focus();
+}
+
+function clearCounsel(){
+  document.getElementById('chat-response').style.display='none';
+  document.getElementById('counsel-input').value='';
+}
+
+function exportChat(){
+  const r=document.getElementById('chat-response');
+  if(r.textContent){
+    const blob=new Blob([r.textContent],{type:'text/plain'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='legal-counsel-export.txt';a.click();
+  }
+}
+
+async function runContractAnalysis(){
+  const type=document.getElementById('cr-type').value;
+  const text=document.getElementById('cr-text').value;
+  if(!text){alert('Please paste contract text or describe the terms.');return;}
+  setLoading('cr-result');
+  const reply=await callAI('Analyze this '+type+' for red flags, unfavorable terms, hidden liability, and negotiation positions. Provide structured findings:\n\n'+text);
+  showResult('cr-result',reply.replace(/\n/g,'<br>'));
+}
+
+async function runCompare(){
+  const ours=document.getElementById('ct-ours').value;
+  const theirs=document.getElementById('ct-theirs').value;
+  if(!ours||!theirs){alert('Please provide both sets of terms.');return;}
+  setLoading('ct-result');
+  const reply=await callAI('Compare these contract terms side by side. Identify key differences, risks to our position, and recommended changes:\n\nOUR TERMS:\n'+ours+'\n\nTHEIR TERMS:\n'+theirs);
+  showResult('ct-result',reply.replace(/\n/g,'<br>'));
+}
+
+async function runDraftClause(){
+  const type=document.getElementById('cd-type').value;
+  const favor=document.getElementById('cd-favor').value;
+  const context=document.getElementById('cd-context').value;
+  setLoading('cd-result');
+  const reply=await callAI('Draft a '+type+' clause that is '+favor+'. Context: '+context+'. Provide the full clause text with brief explanation of key provisions.');
+  showResult('cd-result',reply.replace(/\n/g,'<br>'));
+}
+
+async function runCompliance(){
+  const industry=document.getElementById('cm-industry').value;
+  const framework=document.getElementById('cm-framework').value;
+  const desc=document.getElementById('cm-desc').value;
+  if(!desc){alert('Please describe your business and compliance situation.');return;}
+  setLoading('cm-result');
+  const reply=await callAI('Conduct a '+framework+' compliance analysis for a '+industry+' business. Identify gaps, risks, and required actions:\n\n'+desc);
+  showResult('cm-result',reply.replace(/\n/g,'<br>'));
+}
+
+async function runLitigation(){
+  const type=document.getElementById('lr-type').value;
+  const stage=document.getElementById('lr-stage').value;
+  const desc=document.getElementById('lr-desc').value;
+  if(!desc){alert('Please describe the matter.');return;}
+  setLoading('lr-result');
+  const reply=await callAI('Analyze litigation risk for this '+type+' at '+stage+' stage. Assess exposure, settlement range, and defense strategy:\n\n'+desc);
+  showResult('lr-result',reply.replace(/\n/g,'<br>'));
+}
+
+async function runEmployment(){
+  const issue=document.getElementById('el-issue').value;
+  const state=document.getElementById('el-state').value;
+  const desc=document.getElementById('el-desc').value;
+  if(!desc){alert('Please describe the employment situation.');return;}
+  setLoading('el-result');
+  const reply=await callAI('Analyze this '+issue+' employment law issue under '+state+' law:\n\n'+desc);
+  showResult('el-result',reply.replace(/\n/g,'<br>'));
+}
+
+async function runCorporate(){
+  const entity=document.getElementById('cs-entity').value;
+  const state=document.getElementById('cs-state').value;
+  const focus=document.getElementById('cs-focus').value;
+  const desc=document.getElementById('cs-desc').value;
+  if(!desc){alert('Please describe your business structure.');return;}
+  setLoading('cs-result');
+  const reply=await callAI('Analyze this '+entity+' in '+state+' with focus on '+focus+':\n\n'+desc);
+  showResult('cs-result',reply.replace(/\n/g,'<br>'));
+}
+
+async function runIP(){
+  const type=document.getElementById('ip-type').value;
+  const industry=document.getElementById('ip-industry').value;
+  const jurisdiction=document.getElementById('ip-jurisdiction').value;
+  const desc=document.getElementById('ip-desc').value;
+  if(!desc){alert('Please describe the IP matter.');return;}
+  setLoading('ip-result');
+  const reply=await callAI('Analyze this '+type+' matter in the '+industry+' industry under '+jurisdiction+':\n\n'+desc);
+  showResult('ip-result',reply.replace(/\n/g,'<br>'));
+}
+
+async function runRealEstate(){
+  const type=document.getElementById('re-type').value;
+  const state=document.getElementById('re-state').value;
+  const desc=document.getElementById('re-desc').value;
+  if(!desc){alert('Please describe the real estate matter.');return;}
+  setLoading('re-result');
+  const reply=await callAI('Analyze this '+type+' real estate matter in '+state+':\n\n'+desc);
+  showResult('re-result',reply.replace(/\n/g,'<br>'));
+}
+
+function handleFile(input){
+  const file=input.files[0];
+  if(file){
+    document.getElementById('file-status').textContent=file.name+' ('+Math.round(file.size/1024)+'KB)';
+    document.getElementById('dropzone').style.borderColor='var(--purple)';
+  }
+}
+
+async function runDocAnalysis(){
+  const type=document.getElementById('da-type').value;
+  const context=document.getElementById('da-context').value;
+  const file=document.getElementById('doc-file').files[0];
+  if(!context&&!file){alert('Please add context or upload a document.');return;}
+  setLoading('da-result');
+  const prompt='Perform a '+type+' on this legal document.'+(context?'\n\nContext: '+context:'');
+  if(file&&file.type==='text/plain'){
+    const reader=new FileReader();
+    reader.onload=async(e)=>{
+      const reply=await callAI(prompt+'\n\nDOCUMENT:\n'+e.target.result.slice(0,4000));
+      showResult('da-result',reply.replace(/\n/g,'<br>'));
+    };
+    reader.readAsText(file);
+  }else{
+    const reply=await callAI(prompt);
+    showResult('da-result',reply.replace(/\n/g,'<br>'));
+  }
+}
+
+async function runStatute(){
+  const q=document.getElementById('statute-q').value.trim();
+  if(!q)return;
+  const container=document.getElementById('statute-results');
+  container.innerHTML='<div style="color:var(--text2);font-family:var(--mono);font-size:12px;padding:16px"><span class="spinner"></span> Looking up statute...</div>';
+  const reply=await callAI('Provide a clear explanation of this statute, regulation, or legal code: '+q+'. Include: official citation, jurisdiction, key provisions, and practical application.');
+  container.innerHTML='<div class="statute-result"><div class="sr-title">'+q+'</div><div class="sr-body">'+reply.replace(/\n/g,'<br>')+'</div></div>';
+}
+
+async function genTemplate(name){
+  setLoading('tpl-result');
+  document.getElementById('tpl-result').style.display='block';
+  const reply=await callAI('Generate a professional '+name+' template for use in Arizona. Include all standard provisions, blank fields for customization, and a brief note on key terms.');
+  showResult('tpl-result',reply.replace(/\n/g,'<br>'));
+}
+
+function addDeadline(){
+  const date=prompt('Deadline date (e.g. May 30, 2026):');
+  const matter=prompt('Matter description:');
+  if(date&&matter){
+    const list=document.querySelector('.deadline-list');
+    const item=document.createElement('div');
+    item.className='deadline-item';
+    item.innerHTML='<div class="dl-urgency soon"></div><div class="dl-info"><div class="dl-title">'+matter+'</div><div class="dl-meta">New Matter</div></div><div class="dl-date">'+date+'</div>';
+    list.appendChild(item);
+  }
+}
+
+async function quickAsk(){
+  const q=document.getElementById('gc-input').value.trim();
+  if(!q)return;
+  document.getElementById('gc-input').value='Analyzing...';
+  const reply=await callAI('Brief legal answer (2-3 sentences max): '+q);
+  alert('Legal Counsel:\n\n'+reply);
+  document.getElementById('gc-input').value='';
+}
+
+function toggleChat(){
+  const gc=document.querySelector('.gc-bubble');
+  gc.style.display=gc.style.display==='none'?'block':'none';
+}
+
+document.getElementById('counsel-input').addEventListener('keydown',function(e){
+  if(e.key==='Enter'&&(e.ctrlKey||e.metaKey))sendCounsel();
+});
+</script>
+<script src="/tsm-ai-client.js"></script>
+<script src="/tsm-bnca-bridge.js"></script>
+
+<script>
+// TSM BNCA NODE REPORT — Construction Legal
+(function(){
+  function reportBNCA(){
+    if(typeof TSM_BNCA === 'undefined') return;
+    TSM_BNCA.report('legal', {
+      name: 'TSM Legal Pro Suite',
+      subtitle: 'BPO · Paralegal · Talent Validation',
+      status: 'READY',
+      metrics: {"lien_states": "50"},
+      flags: [],
+      priority: 'MEDIUM'
+    });
+  }
+  setInterval(reportBNCA, 10000);
+  setTimeout(reportBNCA, 1500);
+})();
+</script>
+<!-- TSM mesh scripts disabled — phase overlays removed -->
+
+<script>(function(){
+document.addEventListener('click', function(e){
+
+  const el = e.target.closest('[data-tsm-action]');
+  if(!el) return;
+
+  const action = el.getAttribute('data-tsm-action');
+  const args = el.getAttribute('data-tsm-args');
+
+  if(window.TSM && TSM.launcher && TSM.launcher.run){
+    TSM.launcher.run(action, args);
+  } else {
+    console.warn('[TSM] launcher missing:', action, args);
+  }
+
+});
+})();</script>
+</body>
+</html>
+<script>
+// ===== TSM_AUTONOMY_STANDARDIZED =====
+window.TSM_AUTONOMY_STANDARDIZED = true;
+</script>
+
+<!-- TSM ENFORCER BOOT -->
+<script src="../../core/tsm-enforcer.js"></script>
+
+
+<script>
+// ===== TSM WAR ROOM SCOPED RELAY FIX =====
+window.tsmMission = window.tsmMission || {
+  id: "LEGAL-PRO-" + Date.now().toString(36),
+  vertical: "legal-pro",
+  relayKey: TSM_RELAY_REGISTRY.resolve("tsm_war_relay_legal-pro")
+};
+
+function tsmWriteRelay(payload){
+  TSM_KERNEL.setRelay("legal-pro", JSON.stringify(payload));
+}
+</script>
+
+
+<!-- TSM KERNEL ENGINE -->
+<script src="../../core/tsm-kernel.js"></script>
+

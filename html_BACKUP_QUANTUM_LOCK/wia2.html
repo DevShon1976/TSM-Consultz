@@ -1,0 +1,1646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate,max-age=0">
+<title>WIA · Workforce Intelligence Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#060a10;--bg2:#0a1018;--bg3:#0d1520;--panel:#0e1822;
+  --border:rgba(100,200,255,.1);--border2:rgba(201,168,76,.3);
+  --gold:#c9a84c;--gold2:#e8c87a;--gold3:rgba(201,168,76,.08);
+  --green:#10b981;--green2:rgba(16,185,129,.1);
+  --teal:#14b8a6;--teal2:rgba(20,184,166,.1);
+  --red:#ef4444;--red2:rgba(239,68,68,.1);
+  --amber:#f59e0b;--amber2:rgba(245,158,11,.1);
+  --blue:#3b82f6;--blue2:rgba(59,130,246,.1);
+  --text:#bfcfe4;--dim:#4a5a70;--bright:#eef2ff;
+  --mono:'DM Mono',monospace;--display:'Bebas Neue',sans-serif;
+  --bar:'Barlow',sans-serif;
+  --radius:6px;--radius-lg:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:100vh;overflow-x:hidden;}
+
+/* ── TENANT GATE ── */
+#tenant-gate{position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;}
+.gate-logo{font-family:var(--display);font-size:48px;color:var(--gold);letter-spacing:4px;margin-bottom:6px;}
+.gate-sub{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--dim);margin-bottom:48px;}
+.gate-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:16px;}
+.gate-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:640px;}
+.gate-card{border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:28px 24px;cursor:pointer;background:var(--panel);transition:all .2s;position:relative;overflow:hidden;}
+.gate-card:hover{border-color:var(--gold);background:var(--gold3);transform:translateY(-2px);}
+.gate-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:0;transition:opacity .2s;}
+.gate-card:hover::before{opacity:1;}
+.gate-card-icon{font-size:28px;margin-bottom:14px;}
+.gate-card-title{font-family:var(--display);font-size:22px;color:var(--bright);letter-spacing:1px;margin-bottom:6px;}
+.gate-card-desc{font-size:10px;color:var(--dim);line-height:1.7;margin-bottom:14px;}
+.gate-card-tag{display:inline-block;font-size:8px;letter-spacing:2px;text-transform:uppercase;padding:3px 8px;border-radius:3px;}
+.tag-staffing{border:0.5px solid var(--gold);color:var(--gold);background:var(--gold3);}
+.tag-health{border:0.5px solid var(--teal);color:var(--teal);background:var(--teal2);}
+.gate-divider{display:flex;align-items:center;gap:12px;margin:28px 0 0;width:640px;}
+.gate-divider-line{flex:1;height:0.5px;background:var(--border);}
+.gate-divider-text{font-size:9px;color:var(--dim);letter-spacing:2px;}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 22px;border-bottom:0.5px solid var(--border);background:var(--bg2);}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.logo{font-family:var(--display);font-size:20px;color:var(--gold);letter-spacing:2px;}
+.topbar-title{font-size:10px;color:var(--text);letter-spacing:2px;}
+.topbar-sub{font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.tenant-switcher{display:flex;border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.ts-btn{padding:5px 12px;font-family:var(--mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;background:transparent;color:var(--dim);border:none;transition:all .15s;}
+.ts-btn.active-staffing{background:var(--gold3);color:var(--gold);border-right:0.5px solid var(--border2);}
+.ts-btn.active-health{background:var(--teal2);color:var(--teal);}
+.sdot{width:5px;height:5px;border-radius:50%;background:var(--green);}
+.status-pill{display:flex;align-items:center;gap:5px;font-size:9px;color:var(--dim);padding:4px 9px;border:0.5px solid var(--border);border-radius:20px;}
+
+/* ── LAYOUT ── */
+.main{display:flex;height:calc(100vh - 49px);}
+.sidebar{width:200px;flex-shrink:0;border-right:0.5px solid var(--border);background:var(--bg2);overflow-y:auto;padding:12px 8px;}
+.content{flex:1;overflow-y:auto;padding:18px 20px;}
+
+/* ── SIDEBAR NAV ── */
+.snav-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);padding:0 6px;margin:14px 0 5px;}
+.snav-label:first-child{margin-top:0;}
+.snav-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--radius);cursor:pointer;font-size:10px;color:var(--dim);transition:all .12s;border:0.5px solid transparent;}
+.snav-item:hover{background:var(--bg3);color:var(--text);}
+.snav-item.active{color:var(--gold);background:var(--gold3);border-color:var(--border2);}
+.snav-item.active-t{color:var(--teal);background:var(--teal2);border-color:rgba(20,184,166,.3);}
+.snav-dot{width:4px;height:4px;border-radius:50%;background:currentColor;flex-shrink:0;}
+.snav-badge{margin-left:auto;font-size:8px;padding:1px 5px;border-radius:3px;background:var(--red2);color:var(--red);}
+.snav-badge-g{background:var(--green2);color:var(--green);}
+
+/* ── PANELS ── */
+.view{display:none;}
+.view.active{display:block;}
+
+/* ── STAT CARDS ── */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;}
+.stat-card{background:var(--panel);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;}
+.stat-val{font-family:var(--display);font-size:28px;color:var(--bright);letter-spacing:1px;}
+.stat-lbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-top:2px;}
+.stat-delta{font-size:9px;margin-top:6px;}
+.delta-up{color:var(--green);}
+.delta-dn{color:var(--red);}
+.stat-bar{height:2px;background:var(--border);border-radius:1px;margin-top:8px;overflow:hidden;}
+.stat-bar-fill{height:100%;border-radius:1px;}
+
+/* ── SECTION HEADERS ── */
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.sec-title{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--dim);}
+.sec-action{font-size:9px;color:var(--gold);cursor:pointer;padding:3px 8px;border:0.5px solid var(--border2);border-radius:3px;background:var(--gold3);}
+.sec-action-t{color:var(--teal);border-color:rgba(20,184,166,.3);background:var(--teal2);}
+
+/* ── CANDIDATE TABLE ── */
+.ctable{width:100%;border-collapse:collapse;margin-bottom:18px;}
+.ctable th{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);padding:6px 10px;border-bottom:0.5px solid var(--border);text-align:left;font-weight:400;}
+.ctable td{padding:8px 10px;border-bottom:0.5px solid rgba(100,200,255,.05);font-size:10px;vertical-align:middle;}
+.ctable tr:hover td{background:var(--bg3);}
+.cname{font-size:11px;color:var(--bright);}
+.crole{font-size:9px;color:var(--dim);}
+
+/* ── SCORE BADGES ── */
+.score{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-family:var(--mono);}
+.score-bar{width:48px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;display:inline-block;vertical-align:middle;}
+.score-fill{height:100%;border-radius:2px;}
+.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:3px;font-size:8px;letter-spacing:1px;text-transform:uppercase;}
+.badge-ready{background:var(--green2);color:var(--green);border:0.5px solid rgba(16,185,129,.3);}
+.badge-risk{background:var(--red2);color:var(--red);border:0.5px solid rgba(239,68,68,.3);}
+.badge-review{background:var(--amber2);color:var(--amber);border:0.5px solid rgba(245,158,11,.3);}
+.badge-pending{background:var(--border);color:var(--dim);border:0.5px solid var(--border);}
+.badge-clear{background:var(--green2);color:var(--green);border:0.5px solid rgba(16,185,129,.3);}
+.badge-flagged{background:var(--red2);color:var(--red);border:0.5px solid rgba(239,68,68,.3);}
+.badge-progress{background:var(--blue2);color:var(--blue);border:0.5px solid rgba(59,130,246,.3);}
+
+/* ── GHOST RISK ── */
+.ghost-row{padding:10px 12px;border:0.5px solid var(--border);border-radius:var(--radius);margin-bottom:6px;display:flex;align-items:center;gap:12px;background:var(--panel);}
+.ghost-row.high{border-left:3px solid var(--red);}
+.ghost-row.med{border-left:3px solid var(--amber);}
+.ghost-row.low{border-left:3px solid var(--green);}
+.ghost-name{font-size:11px;color:var(--bright);flex:1;}
+.ghost-sub{font-size:9px;color:var(--dim);}
+.ghost-timer{font-family:var(--mono);font-size:10px;color:var(--red);}
+.ghost-timer-y{color:var(--amber);}
+.ghost-timer-g{color:var(--green);}
+
+/* ── READINESS REPORT ── */
+.report-card{background:var(--panel);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:20px 22px;margin-bottom:14px;}
+.report-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;}
+.report-name{font-family:var(--bar);font-size:18px;font-weight:600;color:var(--bright);}
+.report-role{font-size:10px;color:var(--dim);margin-top:2px;}
+.report-score-circle{width:72px;height:72px;border-radius:50%;border:3px solid var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;}
+.report-score-val{font-family:var(--display);font-size:22px;color:var(--gold);line-height:1;}
+.report-score-lbl{font-size:7px;letter-spacing:1px;color:var(--dim);margin-top:1px;}
+.report-dims{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.rdim{background:var(--bg3);border-radius:var(--radius);padding:10px 12px;}
+.rdim-label{font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px;}
+.rdim-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:4px;}
+.rdim-fill{height:100%;border-radius:3px;}
+.rdim-val{font-size:10px;color:var(--text);}
+.report-reco{padding:12px 14px;border-radius:var(--radius);border-left:3px solid var(--green);background:var(--green2);margin-bottom:14px;}
+.report-reco-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:4px;}
+.report-reco-val{font-size:12px;color:var(--green);}
+.report-btns{display:flex;gap:8px;}
+.rbtn{padding:7px 14px;border-radius:var(--radius);font-family:var(--mono);font-size:9px;letter-spacing:1px;cursor:pointer;transition:all .15s;}
+.rbtn-gold{border:0.5px solid var(--gold);color:var(--gold);background:var(--gold3);}
+.rbtn-gold:hover{background:rgba(201,168,76,.15);}
+.rbtn-dim{border:0.5px solid var(--border);color:var(--dim);background:transparent;}
+.rbtn-dim:hover{color:var(--text);}
+
+/* ── PILOT SCENARIO ── */
+.scenario-flow{display:flex;align-items:center;gap:0;margin:14px 0;overflow-x:auto;padding-bottom:4px;}
+.sf-step{background:var(--panel);border:0.5px solid var(--border);border-radius:var(--radius);padding:10px 14px;text-align:center;min-width:130px;flex-shrink:0;}
+.sf-step.active-step{border-color:var(--gold);background:var(--gold3);}
+.sf-step.done-step{border-color:rgba(16,185,129,.3);background:var(--green2);}
+.sf-num{font-size:8px;color:var(--dim);margin-bottom:4px;}
+.sf-label{font-size:10px;color:var(--bright);}
+.sf-arrow{color:var(--dim);font-size:16px;padding:0 6px;flex-shrink:0;}
+
+/* ── PSV TABLE ── */
+.psv-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border:0.5px solid var(--border);border-radius:var(--radius);margin-bottom:5px;background:var(--panel);}
+.psv-name{font-size:11px;color:var(--bright);flex:1;}
+.psv-type{font-size:9px;color:var(--dim);width:120px;}
+.psv-date{font-family:var(--mono);font-size:9px;color:var(--dim);width:80px;}
+
+/* ── UNIT CHECKLIST ── */
+.unit-card{border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:10px;}
+.unit-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg2);border-bottom:0.5px solid var(--border);}
+.unit-title{font-size:11px;color:var(--bright);}
+.unit-prog{font-size:9px;color:var(--teal);}
+.unit-items{padding:10px 14px;}
+.unit-item{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:10px;color:var(--text);}
+.unit-item.done{color:var(--dim);text-decoration:line-through;}
+.unit-check{width:14px;height:14px;border-radius:2px;border:0.5px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;}
+.unit-check.checked{background:var(--green);border-color:var(--green);color:#000;}
+
+/* ── ROSTER TABLE ── */
+.ready-roster{background:var(--panel);border:0.5px solid rgba(16,185,129,.3);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:14px;}
+.rr-hdr{background:var(--green2);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;}
+.rr-title{font-size:10px;color:var(--green);letter-spacing:2px;text-transform:uppercase;}
+.rr-count{font-family:var(--display);font-size:18px;color:var(--green);}
+
+/* ── COMPLIANCE LOG ── */
+.clog-item{padding:9px 12px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:10px;font-size:10px;}
+.clog-item:last-child{border-bottom:none;}
+.clog-time{font-family:var(--mono);font-size:9px;color:var(--dim);width:80px;flex-shrink:0;}
+.clog-event{flex:1;color:var(--text);}
+.clog-actor{font-size:9px;color:var(--dim);}
+
+/* ── FAST TRACK CARDS ── */
+.ft-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;}
+.ft-card{border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;background:var(--panel);cursor:pointer;transition:all .15s;}
+.ft-card:hover{border-color:var(--border2);background:var(--gold3);}
+.ft-card.active{border-color:var(--gold);background:var(--gold3);}
+.ft-icon{font-size:20px;margin-bottom:8px;}
+.ft-title{font-size:11px;color:var(--bright);margin-bottom:3px;}
+.ft-desc{font-size:9px;color:var(--dim);line-height:1.6;}
+.ft-count{font-family:var(--display);font-size:22px;color:var(--gold);margin-top:8px;}
+
+/* ── ROW UTILS ── */
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;}
+.panel-box{background:var(--panel);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;}
+.panel-box-title{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:12px;}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+/* ── ANIMATIONS ── */
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.view.active{animation:fadein .2s ease;}
+.gate-card{animation:fadein .3s ease both;}
+.gate-card:nth-child(2){animation-delay:.08s;}
+
+/* == GUIDE OVERLAY == */
+#guide-overlay{position:fixed;inset:0;z-index:9999;background:rgba(5,7,10,.97);display:none;flex-direction:row;}
+#guide-overlay.open{display:flex;}
+.guide-close{position:absolute;top:14px;right:18px;background:none;border:0.5px solid var(--border);color:var(--dim);font-size:13px;cursor:pointer;padding:4px 8px;border-radius:var(--radius);}
+.guide-close:hover{color:var(--bright);border-color:var(--dim);}
+.guide-sidebar{width:230px;flex-shrink:0;border-right:0.5px solid var(--border);padding:20px 0;overflow-y:auto;background:#08090c;}
+.guide-main{flex:1;overflow-y:auto;padding:28px 36px;}
+.guide-nav-label{font-size:7px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;padding:10px 16px 4px;}
+.guide-nav-item{font-size:10px;color:#4a5568;padding:5px 16px;cursor:pointer;letter-spacing:.3px;}
+.guide-nav-item:hover{color:var(--text);}
+.guide-nav-item.g-active{color:var(--gold);border-left:2px solid var(--gold);padding-left:14px;}
+.guide-nav-item.g-active-t{color:var(--teal);border-left:2px solid var(--teal);padding-left:14px;}
+.guide-section{display:none;max-width:760px;}
+.guide-section.active{display:block;}
+.guide-tag{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:6px;}
+.guide-tag-t{color:var(--teal);}
+.guide-h1{font-family:var(--display);font-size:22px;color:var(--bright);letter-spacing:1px;margin-bottom:8px;}
+.guide-h2{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin:18px 0 8px;}
+.guide-desc{font-size:11px;color:var(--text);line-height:1.8;margin-bottom:4px;}
+.guide-step{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start;}
+.guide-step-num{width:20px;height:20px;border-radius:50%;background:var(--border);color:var(--dim);font-size:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.guide-step-title{font-size:11px;color:var(--bright);margin-bottom:3px;}
+.guide-step-text{font-size:10px;color:var(--text);line-height:1.7;}
+.guide-tip{display:flex;gap:10px;padding:10px 14px;border:0.5px solid rgba(201,168,76,.3);border-radius:var(--radius);background:var(--gold3);margin-top:16px;}
+.guide-tip-icon{color:var(--gold);font-size:12px;flex-shrink:0;}
+.guide-tip-icon-t{color:var(--teal);}
+.guide-feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px;}
+.guide-feature{background:var(--panel);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px 14px;}
+.guide-feature-title{font-size:10px;color:var(--bright);margin-bottom:4px;font-weight:600;}
+.guide-feature-text{font-size:10px;color:var(--text);line-height:1.7;}
+.kbd{display:inline-block;padding:1px 5px;background:var(--border);border-radius:3px;font-size:9px;color:var(--text);font-family:var(--mono);}
+.badge-demo{display:inline-block;padding:2px 7px;border-radius:2px;font-size:9px;font-weight:700;letter-spacing:.5px;}
+.bd-ready{background:rgba(16,185,129,.15);color:var(--green);border:0.5px solid rgba(16,185,129,.3);}
+.bd-review{background:rgba(245,158,11,.12);color:var(--amber);border:0.5px solid rgba(245,158,11,.3);}
+.bd-risk{background:rgba(239,68,68,.12);color:var(--red);border:0.5px solid rgba(239,68,68,.3);}
+.bd-pending{background:rgba(148,163,184,.1);color:#94a3b8;border:0.5px solid rgba(148,163,184,.2);}
+.bd-clear{background:rgba(16,185,129,.1);color:var(--green);border:0.5px solid rgba(16,185,129,.2);}
+.bd-flagged{background:rgba(239,68,68,.15);color:var(--red);border:0.5px solid rgba(239,68,68,.4);}
+</style>
+</head>
+<body>
+
+<!-- ══ TENANT GATE ══ -->
+<div id="tenant-gate">
+  <div class="gate-logo">WIA</div>
+  <div class="gate-sub">Workforce Intelligence &amp; Automation Platform</div>
+  <div class="gate-label">Select your deployment context</div>
+  <div class="gate-cards">
+    <div class="gate-card" onclick="setTenant('staffing')">
+      <div class="gate-card-icon">◈</div>
+      <div class="gate-card-title">The Placement Academy</div>
+      <div class="gate-card-desc">Staffing agency readiness engine. Ghost-risk analytics, candidate fast-tracks, ready-to-submit roster, and branch recruiter portal for high-volume placement operations.</div>
+      <span class="gate-card-tag tag-staffing">Staffing Agency</span>
+    </div>
+    <div class="gate-card" onclick="setTenant('health')">
+      <div class="gate-card-icon">◉</div>
+      <div class="gate-card-title">The Shift-Ready Bridge</div>
+      <div class="gate-card-desc">Enterprise healthcare onboarding bridge. Primary source verification, Joint Commission compliance logging, unit-level orientation, and multi-facility RBAC for Banner Health, HonorHealth &amp; peers.</div>
+      <span class="gate-card-tag tag-health">Healthcare Enterprise</span>
+    </div>
+  </div>
+  <div class="gate-divider" style="width:640px;margin-top:20px;">
+    <div class="gate-divider-line"></div>
+    <div class="gate-divider-text">TSM · WIA v2.0</div>
+    <div class="gate-divider-line"></div>
+  </div>
+</div>
+
+<!-- ══ APP SHELL ══ -->
+<div id="app-shell" style="display:none;">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="logo">WIA</div>
+      <div>
+        <div class="topbar-title" id="topbar-title">WORKFORCE INTELLIGENCE</div>
+        <div class="topbar-sub" id="topbar-sub">Placement Academy · Staffing Branch</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="tenant-switcher">
+        <button class="ts-btn" id="ts-staffing" onclick="setTenant('staffing')">◈ Staffing</button>
+        <button class="ts-btn" id="ts-health" onclick="setTenant('health')">◉ Healthcare</button>
+      </div>
+      <button class="rbtn rbtn-dim" style="font-size:8px;padding:4px 10px;letter-spacing:1px;" onclick="openGuide()">? How-To Guide</button>
+      <div class="status-pill"><div class="sdot"></div><span id="status-text">Live</span></div>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar"></div>
+
+    <!-- CONTENT -->
+    <div class="content" id="content"></div>
+
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════
+   TENANT STATE
+══════════════════════════════════════════ */
+let tenant = null;
+let activeView = null;
+
+function setTenant(t){
+  tenant = t;
+  document.getElementById('tenant-gate').style.display='none';
+  document.getElementById('app-shell').style.display='block';
+
+  const ts = document.getElementById('ts-staffing');
+  const th = document.getElementById('ts-health');
+  ts.classList.remove('active-staffing'); th.classList.remove('active-health');
+
+  if(t==='staffing'){
+    ts.classList.add('active-staffing');
+    document.getElementById('topbar-title').textContent='PLACEMENT ACADEMY';
+    document.getElementById('topbar-sub').textContent='Staffing Branch Operations · WIA';
+    renderSidebar(STAFFING_NAV, 'staffing');
+    renderEcosystemNav();
+    showView('s-overview');
+  } else {
+    th.classList.add('active-health');
+    document.getElementById('topbar-title').textContent='SHIFT-READY BRIDGE';
+    document.getElementById('topbar-sub').textContent='Healthcare Enterprise · WIA';
+    renderSidebar(HEALTH_NAV, 'health');
+    renderEcosystemNav();
+    showView('h-overview');
+  }
+}
+
+/* ══════════════════════════════════════════
+   NAV CONFIGS
+══════════════════════════════════════════ */
+const STAFFING_NAV = [
+  { label:'Operations', items:[
+    {id:'s-overview', label:'Branch Overview', badge:null},
+    {id:'s-roster', label:'Ready-to-Submit', badge:'14', badgeType:'g'},
+    {id:'s-ghost', label:'Ghost Risk Tracker', badge:'3', badgeType:'r'},
+  ]},
+  { label:'Candidate Pipeline', items:[
+    {id:'s-pipeline', label:'Active Applicants', badge:null},
+    {id:'s-fasttracks', label:'Fast Track Roles', badge:null},
+    {id:'s-report', label:'Readiness Reports', badge:null},
+  ]},
+  { label:'Pilot Mode', items:[
+    {id:'s-pilot', label:'Randstad Pilot Scenario', badge:null},
+    {id:'s-analytics', label:'Branch Analytics', badge:null},
+  ]},
+  { label:'Live Portal Feed', items:[
+    {id:'s-livefeed', label:'Candidate Portal Feed', badge:'0', badgeType:'g', badgeId:'live-feed-badge'},
+  ]},
+];
+
+const HEALTH_NAV = [
+  { label:'Operations', items:[
+    {id:'h-overview', label:'System Overview', badge:null},
+    {id:'h-psv', label:'PSV Tracker', badge:'2', badgeType:'r'},
+    {id:'h-compliance', label:'Compliance Audit Log', badge:null},
+  ]},
+  { label:'Staff Onboarding', items:[
+    {id:'h-units', label:'Unit Orientation', badge:null},
+    {id:'h-staff', label:'Staff Readiness', badge:null},
+    {id:'h-competency', label:'Competency Blueprints', badge:null},
+  ]},
+  { label:'Facilities', items:[
+    {id:'h-facilities', label:'Multi-Facility RBAC', badge:null},
+  ]},
+];
+
+function renderSidebar(nav, type){
+  const sb = document.getElementById('sidebar');
+  let html='';
+  nav.forEach(section=>{
+    html+=`<div class="snav-label">${section.label}</div>`;
+    section.items.forEach(item=>{
+      const badge = item.badge
+        ? `<span class="snav-badge${item.badgeType==='g'?' snav-badge-g':''}">${item.badge}</span>`
+        : '';
+      html+=`<div class="snav-item" id="nav-${item.id}" onclick="showView('${item.id}')">
+        <span class="snav-dot"></span>${item.label}${badge}
+      </div>`;
+    });
+  });
+  sb.innerHTML=html;
+}
+
+function showView(id){
+  activeView=id;
+  document.querySelectorAll('.snav-item').forEach(el=>{
+    el.classList.remove('active','active-t');
+  });
+  const navEl=document.getElementById('nav-'+id);
+  if(navEl) navEl.classList.add(tenant==='health'?'active-t':'active');
+
+  const content=document.getElementById('content');
+  const renderer = VIEWS[id];
+  if(renderer) content.innerHTML=renderer();
+  else content.innerHTML=`<div style="padding:40px;color:var(--dim);font-size:11px;">View: ${id}</div>`;
+}
+
+/* ══════════════════════════════════════════
+   ECOSYSTEM NAV — CORRECTED LINKS
+══════════════════════════════════════════ */
+const ECOSYSTEM_NAV = [
+  {
+    id: 'eco-01', num: '01', label: 'Executive Command', color: '#ff6b35',
+    summary: 'Run the entire TSM ecosystem. Executive oversight, cross-suite routing, business intelligence & workforce planning.',
+    apps: [
+      {name:'Executive Portal Live',url:'/html/executive-portal-live.html'},
+      {name:'Executive Portal v1',url:'/html/ep1.html'},
+      {name:'Strategist Command Center',url:'/html/strategist-index.html'},
+      {name:'Suite Builder',url:'/html/suite-builder.html'},
+      {name:'Client Access Portal',url:'/html/client-access.html'},
+      {name:'WIA Workforce Intelligence',url:'/html/wia.html'},
+      {name:'Enterprise WIP Dashboard',url:'/html/wip-dashboard.html'},
+      {name:'DOC1 Enterprise Search',url:'/html/doc1-search.html'},
+    ],
+    locked: [],
+  },
+  {
+    id: 'eco-02', num: '02', label: 'Workforce Intelligence', color: '#00b4b4',
+    summary: 'Candidate readiness, simulation-based eval, skill gap analysis, placement scoring & career pathways.',
+    apps: [
+      {name:'Healthcare Demo Trail',url:'/html/healthcare/tsm-hc-demo-trail.html'},
+      {name:'Healthcare Academy',url:'/html/healthcare/hc-academy.html'},
+      {name:'CRCR Scenario Simulator',url:'/html/healthcare/crcr-scenarios.html'},
+      {name:'Financial Scenarios',url:'/html/finops-suite/finops-scenarios.html'},
+      {name:'Insurance Portal',url:'/html/tsm-insurance/insurance-portal.html'},
+    ],
+    locked: [],
+  },
+  {
+    id: 'eco-03', num: '03', label: 'Healthcare Ops', color: '#22c55e',
+    summary: 'Revenue Cycle Management, Denials, Prior Authorization, Compliance, Patient Financial Services & BPO.',
+    apps: [
+      {name:'Healthcare Workbench',url:'/html/healthcare/healthcare-wip.html'},
+      {name:'Healthcare Academy',url:'/html/healthcare/hc-academy.html'},
+      {name:'Healthcare Academy Pro',url:'/html/healthcare/tsm_healthcare_academy.html'},
+      {name:'CRC Practice Lab',url:'/html/healthcare/crc-hc-practice.html'},
+      {name:'CRCR Scenario Simulator',url:'/html/healthcare/crcr-scenarios.html'},
+      {name:'Healthcare Demo Trail',url:'/html/healthcare/tsm-hc-demo-trail.html'},
+      {name:'Healthcare Demo Script',url:'/html/healthcare/healthcare-demo-script.html'},
+    ],
+    locked: [],
+  },
+  {
+    id: 'eco-04', num: '04', label: 'Insurance Ops', color: '#3b82f6',
+    summary: 'Claims, Benefits, Enrollment, Licensing, CE Compliance & Carrier Operations.',
+    apps: [
+      {name:'Insurance Portal',url:'/html/tsm-insurance/insurance-portal.html'},
+      {name:'Insurance Hub',url:'/html/tsm-insurance/ins-hub1.html'},
+      {name:'Claims Pro',url:'/html/tsm-insurance/insurance-claims-pro.html'},
+      {name:'Insurance CE Command',url:'/html/tsm-insurance/insurance-ce-command.html'},
+      {name:'CE Study Prep',url:'/html/tsm-insurance/ce-study-prep.html'},
+      {name:'AHIP Certification Prep',url:'/html/tsm-insurance/ahip.html'},
+      {name:'Insurance Presentation',url:'/html/tsm-insurance/ins-presentation.html'},
+      {name:'Insurance Demo Trail',url:'/html/tsm-insurance/tsm-ins-demo-trail.html'},
+    ],
+    locked: [],
+  },
+  {
+    id: 'eco-05', num: '05', label: 'Financial Ops', color: '#eab308',
+    summary: 'Accounting, Bookkeeping, Financial Analysis, AR/AP, Reporting & Audit Readiness.',
+    apps: [
+      {name:'FinOps Presentation',url:'/html/finops-suite/finops-presentation.html'},
+      {name:'TSM Financial Presentation',url:'/html/finops-suite/tsm-presentation.html'},
+      {name:'Financial Scenarios',url:'/html/finops-suite/finops-scenarios.html'},
+      {name:'Document Analysis',url:'/html/finops-suite/doc-analysis-tab.html'},
+      {name:'Accounting Study Guide',url:'/html/finops-suite/study-guide.html'},
+      {name:'Interview Prep',url:'/html/finops-suite/staff-accountant-interview.html'},
+      {name:'CRCR Study Mode',url:'/html/finops-suite/crcr-study-mode.html'},
+    ],
+    locked: [],
+  },
+  {
+    id: 'eco-06', num: '06', label: 'Legal Ops', color: '#a855f7',
+    summary: 'Legal BPO, Document Review, Contract Analysis, Case Preparation & Compliance.',
+    apps: [
+      {name:'Healthcare Workbench',url:'/html/healthcare/healthcare-wip.html'},
+      {name:'DOC1 Enterprise Search',url:'/html/doc1-search.html'},
+    ],
+    locked: [],
+  },
+  {
+    id: 'eco-07', num: '07', label: 'Construction Ops', color: '#ef4444',
+    summary: 'Project Documentation, Compliance, Contract Review & Construction Administration.',
+    apps: [
+      {name:'Construction Pitch',url:'/html/construction-suite/construct-pitch.html'},
+      {name:'Document Showcase',url:'/html/construction-suite/document-showcase.html'},
+      {name:'Construction Workbench',url:'/html/construction-suite/construction-wip.html'},
+    ],
+    locked: [],
+  },
+  {
+    id: 'eco-08', num: '08', label: 'BPO Delivery Network', color: '#6366f1',
+    summary: 'Client Delivery, Workflow Routing, Escalations, Service Monitoring & Quality Assurance.',
+    apps: [
+      {name:'BPO Suite Hub',url:'/html/bpo/suite-hub.html'},
+      {name:'BPO Command Center',url:'/html/bpo/bpo-command-center.html'},
+      {name:'Internal Operations',url:'/html/bpo/bpo-internal1.html'},
+      {name:'Healthcare Suite',url:'/html/bpo/tsm-bpo-personal-manual.html'},
+      {name:'Workforce Intelligence Ops',url:'/html/bpo/tsm-bpo-competitive-playbook'},
+      {name:'BPO Scenarios',url:'/html/bpo/html/bpo-scenarios-demo'},
+    ],
+    locked: [],
+  },
+  {
+    id: 'eco-09', num: '09', label: 'AI Intelligence Layer', color: '#ec4899',
+    summary: 'Document Intelligence, Workflow Automation, Enterprise Search, Knowledge Retrieval & Workforce Analytics.',
+    apps: [
+      {name:'DOC1 Enterprise Search',url:'/html/doc1-search.html'},
+      {name:'Financial Document Analysis',url:'/html/finops-suite/doc-analysis-tab.html'},
+      {name:'Construction Document Showcase',url:'/html/construction-suite/document-showcase.html'},
+      {name:'WIA Workforce Intelligence',url:'/html/wia.html'},
+    ],
+    locked: [],
+  },
+];
+
+/* ══════════════════════════════════════════
+   RENDER ECOSYSTEM NAV — FIXED
+══════════════════════════════════════════ */
+function renderEcosystemNav() {
+  const sb = document.getElementById('sidebar');
+  const divider = document.createElement('div');
+  divider.innerHTML = `
+    <div style="height:1px;background:#1e2530;margin:10px 0 0;"></div>
+    <div class="snav-label" style="margin-top:10px;">TSM Ecosystem</div>
+  `;
+  sb.appendChild(divider);
+  ECOSYSTEM_NAV.forEach(layer => {
+    const c = layer.color;
+    const hex22 = c + '22';
+    const wrapper = document.createElement('div');
+    wrapper.className = 'eco-item';
+    wrapper.id = `eco-wrapper-${layer.id}`;
+    const header = document.createElement('div');
+    header.className = 'snav-item eco-header';
+    header.id = `eco-header-${layer.id}`;
+    header.style.cssText = `display:flex;align-items:center;justify-content:space-between;padding:6px 16px;cursor:pointer;`;
+    header.innerHTML = `
+      <div style="display:flex;align-items:center;gap:7px;min-width:0;flex:1;">
+        <span class="snav-dot" style="background:${c};flex-shrink:0;"></span>
+        <span style="font-size:10px;font-weight:600;letter-spacing:.5px;color:#9aa5b4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${layer.label}</span>
+      </div>
+      <span style="font-size:8px;padding:1px 5px;border-radius:2px;background:${hex22};color:${c};font-weight:700;flex-shrink:0;margin-right:4px;">${layer.num}</span>
+      <span class="eco-chevron" id="eco-chev-${layer.id}" style="font-size:9px;color:#3a4252;transition:transform .2s;flex-shrink:0;">›</span>
+    `;
+    header.onclick = () => toggleEco(layer.id);
+    const drop = document.createElement('div');
+    drop.className = 'eco-drop';
+    drop.id = `eco-drop-${layer.id}`;
+    drop.style.cssText = `display:none;background:#0b0d10;border-left:2px solid ${c};margin:0 4px 4px 16px;padding:8px 0 6px;`;
+    drop.innerHTML += `<div style="font-size:9px;color:#4a5568;padding:0 10px 6px;line-height:1.5;border-bottom:1px solid #1a1f28;">${layer.summary}</div>`;
+    drop.innerHTML += `<div style="font-size:7.5px;letter-spacing:2px;color:#2d3748;padding:5px 10px 3px;text-transform:uppercase;">Apps</div>`;
+    layer.apps.forEach(app => {
+      const isLocked = layer.locked.includes(app.url);
+      if (isLocked) {
+        drop.innerHTML += `<div style="display:flex;align-items:center;gap:5px;padding:3px 10px;font-size:9px;color:#2d3748;opacity:.4;cursor:default;"><span style="color:#2d3748;font-size:9px;">›</span>${app.name} <span style="font-size:8px;color:#2d3748;margin-left:auto;">🔒</span></div>`;
+      } else {
+        drop.innerHTML += `<a href="${app.url}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:5px;padding:3px 10px;font-size:9px;color:#4a5568;cursor:pointer;text-decoration:none;transition:color .12s;" onmouseover="this.style.color='#8ab4d4'" onmouseout="this.style.color='#4a5568'"><span style="color:#2d3748;font-size:9px;">›</span>${app.name}</a>`;
+      }
+    });
+    wrapper.appendChild(header);
+    wrapper.appendChild(drop);
+    sb.appendChild(wrapper);
+  });
+}
+
+function toggleEco(id) {
+  const drop = document.getElementById(`eco-drop-${id}`);
+  const chev = document.getElementById(`eco-chev-${id}`);
+  const header = document.getElementById(`eco-header-${id}`);
+  const isOpen = drop.style.display !== 'none';
+  document.querySelectorAll('.eco-drop').forEach(d => d.style.display = 'none');
+  document.querySelectorAll('.eco-chevron').forEach(c => c.style.transform = '');
+  document.querySelectorAll('.eco-header').forEach(h => h.style.background = '');
+  if (!isOpen) {
+    drop.style.display = 'block';
+    chev.style.transform = 'rotate(90deg)';
+    header.style.background = '#141820';
+  }
+}
+
+/* ══════════════════════════════════════════
+   SHARED DATA
+══════════════════════════════════════════ */
+const CANDIDATES = [
+  {name:'Maria T.',role:'Medical Billing Specialist',readiness:88,workflow:84,compliance:91,comm:79,status:'ready',lastSeen:'2h ago',track:'Healthcare Admin'},
+  {name:'James R.',role:'Prior Auth Coordinator',readiness:74,workflow:69,compliance:78,comm:82,status:'review',lastSeen:'5h ago',track:'Healthcare Admin'},
+  {name:'Priya K.',role:'AR Analyst',readiness:92,workflow:90,compliance:95,comm:87,status:'ready',lastSeen:'1h ago',track:'FinOps'},
+  {name:'Derek M.',role:'Light Industrial / Forklift',readiness:61,workflow:55,compliance:70,comm:58,status:'risk',lastSeen:'14h ago',track:'Light Industrial'},
+  {name:'Sandra L.',role:'Office Support Admin',readiness:95,workflow:94,compliance:97,comm:91,status:'ready',lastSeen:'30m ago',track:'Admin'},
+  {name:'Chris W.',role:'Insurance Compliance',readiness:83,workflow:80,compliance:88,comm:77,status:'ready',lastSeen:'3h ago',track:'Insurance'},
+  {name:'Aaliyah J.',role:'Healthcare Admin',readiness:45,workflow:42,compliance:50,comm:51,status:'risk',lastSeen:'26h ago',track:'Healthcare Admin'},
+  {name:'Tom B.',role:'Logistics Coordinator',readiness:78,workflow:75,compliance:80,comm:73,status:'review',lastSeen:'7h ago',track:'Light Industrial'},
+];
+
+const STAFF_HEALTH = [
+  {name:'Nurse C. Rivera',unit:'ICU',license:'RN-AZ-4421',oig:'Clear',bgc:'Clear',psv:'Verified',status:'ready'},
+  {name:'Tech M. Okafor',unit:'Med-Surg',license:'CNA-AZ-8812',oig:'Clear',bgc:'Pending',psv:'In Review',status:'review'},
+  {name:'PA D. Nguyen',unit:'ER',license:'PA-AZ-1193',oig:'Flagged',bgc:'Clear',psv:'Hold',status:'flagged'},
+  {name:'Nurse J. Estrada',unit:'ICU',license:'RN-AZ-3309',oig:'Clear',bgc:'Clear',psv:'Verified',status:'ready'},
+  {name:'Tech R. Patel',unit:'Radiology',license:'RT-AZ-5571',oig:'Clear',bgc:'Clear',psv:'Verified',status:'ready'},
+];
+
+function scoreColor(s){ return s>=85?'var(--green)':s>=65?'var(--amber)':'var(--red)'; }
+function scoreBar(s,color){ return `<div class="score-bar"><div class="score-fill" style="width:${s}%;background:${color};"></div></div>`; }
+function statusBadge(s){
+  const m={ready:'badge-ready',review:'badge-review',risk:'badge-risk',pending:'badge-pending',flagged:'badge-flagged',clear:'badge-clear',progress:'badge-progress'};
+  const t={ready:'READY',review:'REVIEW',risk:'GHOST RISK',pending:'PENDING',flagged:'FLAGGED',clear:'CLEAR',progress:'IN PROGRESS'};
+  return `<span class="badge ${m[s]||'badge-pending'}">${t[s]||s}</span>`;
+}
+
+/* ══════════════════════════════════════════
+   STAFFING VIEWS
+══════════════════════════════════════════ */
+const VIEWS = {
+
+'s-overview': ()=>`
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-val">47</div>
+      <div class="stat-lbl">Active Applicants</div>
+      <div class="stat-delta delta-up">↑ 8 this week</div>
+      <div class="stat-bar"><div class="stat-bar-fill" style="width:78%;background:var(--gold);"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">14</div>
+      <div class="stat-lbl">Ready to Submit</div>
+      <div class="stat-delta delta-up">↑ 3 since yesterday</div>
+      <div class="stat-bar"><div class="stat-bar-fill" style="width:30%;background:var(--green);"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">3</div>
+      <div class="stat-lbl">Ghost Risk</div>
+      <div class="stat-delta delta-dn">⚠ 2 over 12h threshold</div>
+      <div class="stat-bar"><div class="stat-bar-fill" style="width:10%;background:var(--red);"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">82%</div>
+      <div class="stat-lbl">Avg Readiness Score</div>
+      <div class="stat-delta" style="color:var(--teal);">▲ +4pts from last cycle</div>
+      <div class="stat-bar"><div class="stat-bar-fill" style="width:82%;background:var(--teal);"></div></div>
+    </div>
+  </div>
+
+  <div class="sec-hdr"><span class="sec-title">Branch Pulse · Today</span><span class="sec-action" onclick="showView('s-pipeline')">View All →</span></div>
+  <table class="ctable">
+    <thead><tr><th>Candidate</th><th>Track</th><th>Readiness</th><th>Last Active</th><th>Status</th></tr></thead>
+    <tbody>
+    ${CANDIDATES.slice(0,5).map(c=>`<tr>
+      <td><div class="cname">${c.name}</div><div class="crole">${c.role}</div></td>
+      <td style="font-size:9px;color:var(--dim);">${c.track}</td>
+      <td><span class="score">${scoreBar(c.readiness,scoreColor(c.readiness))} <span style="color:${scoreColor(c.readiness)};font-size:10px;">${c.readiness}%</span></span></td>
+      <td style="font-size:9px;color:var(--dim);">${c.lastSeen}</td>
+      <td>${statusBadge(c.status)}</td>
+    </tr>`).join('')}
+    </tbody>
+  </table>
+
+  <div class="row2">
+    <div class="panel-box">
+      <div class="panel-box-title">Ghost Risk Summary</div>
+      <div class="ghost-row high">
+        <div><div class="ghost-name">Derek M.</div><div class="ghost-sub">Light Industrial · No response</div></div>
+        <span class="ghost-timer">14h silent</span>
+      </div>
+      <div class="ghost-row high">
+        <div><div class="ghost-name">Aaliyah J.</div><div class="ghost-sub">Healthcare Admin · Unresponsive</div></div>
+        <span class="ghost-timer">26h silent</span>
+      </div>
+      <div class="ghost-row med">
+        <div><div class="ghost-name">Tom B.</div><div class="ghost-sub">Logistics · Partial completion</div></div>
+        <span class="ghost-timer ghost-timer-y">7h silent</span>
+      </div>
+    </div>
+    <div class="panel-box">
+      <div class="panel-box-title">Time-to-Submit Trend</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">
+        ${[['Healthcare Admin','2.1 days','85%'],['Light Industrial','1.4 days','72%'],['Office Support','1.8 days','91%'],['Insurance','2.6 days','68%']].map(([role,days,pct])=>`
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:10px;color:var(--text);width:120px;">${role}</span>
+          <div style="flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden;"><div style="height:100%;width:${pct};background:var(--gold);border-radius:2px;"></div></div>
+          <span style="font-size:9px;color:var(--gold);font-family:var(--mono);width:50px;text-align:right;">${days}</span>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>
+`,
+
+'s-roster': ()=>`
+  <div class="ready-roster">
+    <div class="rr-hdr">
+      <span class="rr-title">Ready-to-Submit Roster</span>
+      <span class="rr-count">14</span>
+    </div>
+    <table class="ctable" style="margin-bottom:0;">
+      <thead><tr><th>Candidate</th><th>Target Role</th><th>Readiness</th><th>Workflow</th><th>Compliance</th><th>Action</th></tr></thead>
+      <tbody>
+      ${CANDIDATES.filter(c=>c.status==='ready').concat(CANDIDATES.filter(c=>c.status==='ready')).slice(0,8).map((c,i)=>`<tr>
+        <td><div class="cname">${c.name}</div><div class="crole">${c.role}</div></td>
+        <td style="font-size:9px;color:var(--dim);">${c.track}</td>
+        <td><span style="color:${scoreColor(c.readiness)};font-size:11px;font-family:var(--mono);">${c.readiness}%</span></td>
+        <td>${scoreBar(c.workflow,scoreColor(c.workflow))}</td>
+        <td>${scoreBar(c.compliance,scoreColor(c.compliance))}</td>
+        <td><button class="rbtn rbtn-gold" style="padding:4px 10px;font-size:8px;">Submit ↗</button></td>
+      </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:4px;">
+    <button class="rbtn rbtn-gold">Export Roster CSV</button>
+    <button class="rbtn rbtn-dim">Send to Requisition Board</button>
+  </div>
+`,
+
+'s-ghost': ()=>`
+  <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);">
+    <div class="stat-card"><div class="stat-val" style="color:var(--red);">3</div><div class="stat-lbl">High Risk (12h+)</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:var(--amber);">7</div><div class="stat-lbl">Medium Risk (6–12h)</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:var(--green);">31</div><div class="stat-lbl">Engaged (&lt;6h)</div></div>
+  </div>
+  <div class="sec-hdr"><span class="sec-title">Ghost Risk Tracker · All Candidates</span><span class="sec-action" style="border-color:rgba(239,68,68,.3);color:var(--red);background:var(--red2);">Trigger SMS Blast</span></div>
+  ${[
+    {name:'Aaliyah J.',role:'Healthcare Admin',track:'HC Admin',silent:'26h',risk:'high',reason:'No login after initial intake'},
+    {name:'Derek M.',role:'Light Industrial',track:'Industrial',silent:'14h',risk:'high',reason:'Incomplete skills verification'},
+    {name:'Marcus T.',role:'Office Support',track:'Admin',silent:'13h',risk:'high',reason:'Document upload stalled'},
+    {name:'Tom B.',role:'Logistics Coord.',track:'Industrial',silent:'7h',risk:'med',reason:'Stage 2 incomplete'},
+    {name:'Lisa F.',role:'Medical Billing',track:'HC Admin',silent:'6h',risk:'med',reason:'Assessment not started'},
+    {name:'Kevin P.',role:'AR Analyst',track:'FinOps',silent:'5h',risk:'med',reason:'Background check pending response'},
+  ].map(c=>`
+    <div class="ghost-row ${c.risk}">
+      <div style="width:160px;"><div class="ghost-name">${c.name}</div><div class="ghost-sub">${c.role} · ${c.track}</div></div>
+      <div style="flex:1;font-size:10px;color:var(--dim);">${c.reason}</div>
+      <span class="ghost-timer${c.risk==='med'?' ghost-timer-y':''}">${c.silent} silent</span>
+      <button class="rbtn rbtn-dim" style="font-size:8px;padding:3px 8px;">SMS Ping</button>
+    </div>`).join('')}
+`,
+
+'s-pipeline': ()=>`
+  <div class="sec-hdr"><span class="sec-title">All Active Applicants (${CANDIDATES.length})</span><span class="sec-action">Filter ▾</span></div>
+  <table class="ctable">
+    <thead><tr><th>#</th><th>Candidate</th><th>Track</th><th>Readiness</th><th>Workflow</th><th>Compliance</th><th>Comm</th><th>Last Active</th><th>Status</th></tr></thead>
+    <tbody>
+    ${CANDIDATES.map((c,i)=>`<tr>
+      <td style="color:var(--dim);font-size:9px;">${String(i+1).padStart(2,'0')}</td>
+      <td><div class="cname">${c.name}</div><div class="crole">${c.role}</div></td>
+      <td style="font-size:9px;color:var(--dim);">${c.track}</td>
+      <td><span style="color:${scoreColor(c.readiness)};font-family:var(--mono);">${c.readiness}%</span></td>
+      <td>${scoreBar(c.workflow,scoreColor(c.workflow))}</td>
+      <td>${scoreBar(c.compliance,scoreColor(c.compliance))}</td>
+      <td>${scoreBar(c.comm,scoreColor(c.comm))}</td>
+      <td style="font-size:9px;color:var(--dim);">${c.lastSeen}</td>
+      <td>${statusBadge(c.status)}</td>
+    </tr>`).join('')}
+    </tbody>
+  </table>
+`,
+
+'s-fasttracks': ()=>`
+  <div class="sec-hdr"><span class="sec-title">Role-Specific Fast Tracks</span></div>
+  <div class="ft-grid">
+    <div class="ft-card active" onclick="this.classList.toggle('active')">
+      <div class="ft-icon">🏥</div>
+      <div class="ft-title">Healthcare Admin</div>
+      <div class="ft-desc">Prior auth, medical billing, AR recovery. Compliance-first 48h sprint track.</div>
+      <div class="ft-count">18</div>
+      <div style="font-size:8px;color:var(--dim);">active candidates</div>
+    </div>
+    <div class="ft-card" onclick="this.classList.toggle('active')">
+      <div class="ft-icon">📦</div>
+      <div class="ft-title">Light Industrial / Logistics</div>
+      <div class="ft-desc">Forklift cert, warehouse safety, logistics coordination. Speed-to-floor priority.</div>
+      <div class="ft-count">11</div>
+      <div style="font-size:8px;color:var(--dim);">active candidates</div>
+    </div>
+    <div class="ft-card" onclick="this.classList.toggle('active')">
+      <div class="ft-icon">🖥</div>
+      <div class="ft-title">Allied Health / Admin</div>
+      <div class="ft-desc">EMR navigation, scheduling, patient coordination. Hybrid clinical + admin track.</div>
+      <div class="ft-count">9</div>
+      <div style="font-size:8px;color:var(--dim);">active candidates</div>
+    </div>
+    <div class="ft-card" onclick="this.classList.toggle('active')">
+      <div class="ft-icon">💼</div>
+      <div class="ft-title">Office Support Admin</div>
+      <div class="ft-desc">Data entry, document management, customer communications. High-volume track.</div>
+      <div class="ft-count">6</div>
+      <div style="font-size:8px;color:var(--dim);">active candidates</div>
+    </div>
+    <div class="ft-card" onclick="this.classList.toggle('active')">
+      <div class="ft-icon">📊</div>
+      <div class="ft-title">FinOps / Accounting</div>
+      <div class="ft-desc">AP/AR ledger validation, reconciliation workflows, interview simulation.</div>
+      <div class="ft-count">4</div>
+      <div style="font-size:8px;color:var(--dim);">active candidates</div>
+    </div>
+    <div class="ft-card" onclick="this.classList.toggle('active')">
+      <div class="ft-icon">🛡</div>
+      <div class="ft-title">Insurance Compliance</div>
+      <div class="ft-desc">CE validation, state licensing checks, AHIP prep, P&amp;C code fluency.</div>
+      <div class="ft-count">5</div>
+      <div style="font-size:8px;color:var(--dim);">active candidates</div>
+    </div>
+  </div>
+`,
+
+'s-report': ()=>`
+  <div class="sec-hdr"><span class="sec-title">Workforce Readiness Reports</span><span class="sec-action">Export All PDF</span></div>
+  <div class="report-card">
+    <div class="report-header">
+      <div>
+        <div class="report-name">Maria T. — Sample Report</div>
+        <div class="report-role">Role Path: Medical Billing / Healthcare Admin</div>
+        <div style="margin-top:8px;display:flex;gap:6px;">${statusBadge('ready')}<span class="badge badge-clear">PLACEMENT APPROVED</span></div>
+      </div>
+      <div class="report-score-circle">
+        <div class="report-score-val">88%</div>
+        <div class="report-score-lbl">READINESS</div>
+      </div>
+    </div>
+    <div class="report-dims">
+      <div class="rdim"><div class="rdim-label">Workflow Accuracy</div><div class="rdim-bar"><div class="rdim-fill" style="width:84%;background:var(--green);"></div></div><div class="rdim-val">84% — Strong</div></div>
+      <div class="rdim"><div class="rdim-label">Compliance Understanding</div><div class="rdim-bar"><div class="rdim-fill" style="width:91%;background:var(--green);"></div></div><div class="rdim-val">91% — High</div></div>
+      <div class="rdim"><div class="rdim-label">Communication Skills</div><div class="rdim-bar"><div class="rdim-fill" style="width:79%;background:var(--amber);"></div></div><div class="rdim-val">79% — Medium</div></div>
+      <div class="rdim"><div class="rdim-label">Adaptability Index</div><div class="rdim-bar"><div class="rdim-fill" style="width:82%;background:var(--green);"></div></div><div class="rdim-val">82% — Good</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+      <div class="panel-box" style="padding:10px 12px;">
+        <div class="panel-box-title">Strengths</div>
+        ${['Denial code navigation (ICD-10)','Prior auth escalation handling','HIPAA documentation accuracy','Multi-payer claim submission'].map(s=>`<div class="unit-item"><div class="unit-check checked">✓</div>${s}</div>`).join('')}
+      </div>
+      <div class="panel-box" style="padding:10px 12px;">
+        <div class="panel-box-title">Skill Gaps — Development Plan</div>
+        ${[['EMR cross-system navigation','Target: 2 module sessions'],['Verbal communication under pressure','Target: 1 coaching session'],['Advanced AR recovery protocols','Target: Practice Lab x3']].map(([g,p])=>`<div style="padding:5px 0;border-bottom:0.5px solid var(--border);"><div style="font-size:10px;color:var(--text);">${g}</div><div style="font-size:9px;color:var(--dim);">${p}</div></div>`).join('')}
+      </div>
+    </div>
+    <div class="report-reco">
+      <div class="report-reco-label">Placement Recommendation</div>
+      <div class="report-reco-val">✓ Placement Ready — with 1 coaching session on verbal communication before client interview</div>
+    </div>
+    <div class="report-btns">
+      <button class="rbtn rbtn-gold" onclick="downloadReadinessPDF()">Download PDF Report</button>
+      <button class="rbtn rbtn-dim">Submit to Requisition</button>
+      <button class="rbtn rbtn-dim">Add to Roster</button>
+    </div>
+  </div>
+
+  <div style="border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;background:var(--panel);">
+    <div class="panel-box-title" style="margin-bottom:10px;">All Candidate Reports</div>
+    <table class="ctable" style="margin-bottom:0;">
+      <thead><tr><th>Candidate</th><th>Role Path</th><th>Score</th><th>Rec.</th><th>Report</th></tr></thead>
+      <tbody>${CANDIDATES.map(c=>`<tr>
+        <td><div class="cname">${c.name}</div></td>
+        <td style="font-size:9px;color:var(--dim);">${c.track}</td>
+        <td><span style="color:${scoreColor(c.readiness)};font-family:var(--mono);">${c.readiness}%</span></td>
+        <td>${statusBadge(c.status)}</td>
+        <td><button class="rbtn rbtn-dim" style="font-size:8px;padding:3px 8px;">View ↗</button></td>
+      </tr>`).join('')}</tbody>
+    </table>
+  </div>
+`,
+
+'s-pilot': ()=>`
+  <div class="sec-hdr"><span class="sec-title">Randstad Pilot Scenario Mode</span></div>
+  <div class="panel-box" style="margin-bottom:14px;">
+    <div class="row3" style="margin-bottom:0;">
+      <div><div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:4px;">Organization</div><div style="font-size:12px;color:var(--bright);">Randstad Workforce Solutions</div></div>
+      <div><div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:4px;">Division</div><div style="font-size:12px;color:var(--bright);">Healthcare &amp; Administrative Staffing</div></div>
+      <div><div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:4px;">Use Case</div><div style="font-size:12px;color:var(--bright);">Pre-Placement Readiness Validation</div></div>
+    </div>
+  </div>
+
+  <div class="sec-hdr"><span class="sec-title">Deployment Flow</span></div>
+  <div class="scenario-flow">
+    <div class="sf-step done-step"><div class="sf-num">STEP 01</div><div class="sf-label">Candidate Intake</div></div>
+    <div class="sf-arrow">→</div>
+    <div class="sf-step done-step"><div class="sf-num">STEP 02</div><div class="sf-label">Simulation Tasks</div></div>
+    <div class="sf-arrow">→</div>
+    <div class="sf-step active-step"><div class="sf-num">STEP 03</div><div class="sf-label">Readiness Scoring</div></div>
+    <div class="sf-arrow">→</div>
+    <div class="sf-step"><div class="sf-num">STEP 04</div><div class="sf-label">Recruiter Review</div></div>
+    <div class="sf-arrow">→</div>
+    <div class="sf-step"><div class="sf-num">STEP 05</div><div class="sf-label">Submit to Client</div></div>
+  </div>
+
+  <div class="row2" style="margin-top:14px;">
+    <div class="panel-box">
+      <div class="panel-box-title">Phase Rollout Plan</div>
+      ${[
+        ['Phase 1','14-Day Ghost Buster Proof','Free — 1 job order','Completed'],
+        ['Phase 2','Pilot Month','$1,500 onboarding rate','Active'],
+        ['Phase 3','Standard Rate','$2,500/month SaaS','Pending'],
+      ].map(([ph,name,price,status])=>`
+        <div style="padding:9px 0;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:10px;">
+          <span style="font-size:9px;color:var(--gold);font-family:var(--mono);width:60px;">${ph}</span>
+          <div style="flex:1;"><div style="font-size:11px;color:var(--text);">${name}</div><div style="font-size:9px;color:var(--dim);">${price}</div></div>
+          ${statusBadge(status==='Completed'?'ready':status==='Active'?'progress':'pending')}
+        </div>`).join('')}
+    </div>
+    <div class="panel-box">
+      <div class="panel-box-title">ROI Snapshot</div>
+      ${[
+        ['Candidates processed this cycle','23'],
+        ['Interview-ready delivered','14'],
+        ['Estimated recruiter hours saved','38h'],
+        ['Ghost-offs prevented (estimated)','5'],
+        ['Projected monthly margin lift','$3,200'],
+      ].map(([k,v])=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--border);">
+          <span style="font-size:10px;color:var(--dim);">${k}</span>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--gold);">${v}</span>
+        </div>`).join('')}
+    </div>
+  </div>
+
+  <div style="margin-top:6px;padding:14px 16px;border:0.5px solid var(--border2);border-radius:var(--radius-lg);background:var(--gold3);">
+    <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:6px;">Trust Positioning Statement</div>
+    <div style="font-size:12px;color:var(--text);line-height:1.8;">TSM is designed to support staffing organizations in improving placement outcomes, strengthening client trust, and reinforcing employee confidence by investing in readiness and long-term development.</div>
+    <div style="margin-top:12px;font-size:11px;color:var(--gold);font-style:italic;">"We are invested in your success, not just your placement."</div>
+  </div>
+
+  <div style="display:flex;gap:8px;margin-top:14px;">
+    <button class="rbtn rbtn-gold">Request Pilot Discussion</button>
+    <button class="rbtn rbtn-dim">Explore Workforce Readiness Integration</button>
+    <button class="rbtn rbtn-dim">Review Staffing Deployment Use Cases</button>
+  </div>
+`,
+
+'s-analytics': ()=>`
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-val">35%</div><div class="stat-lbl">Time-to-Submit Reduction</div><div class="stat-delta delta-up">vs manual baseline</div></div>
+    <div class="stat-card"><div class="stat-val">82%</div><div class="stat-lbl">Avg Branch Readiness</div><div class="stat-delta delta-up">↑ 4pts this cycle</div></div>
+    <div class="stat-card"><div class="stat-val">$3.2K</div><div class="stat-lbl">Est. Monthly Margin Lift</div><div class="stat-delta delta-up">↑ from 4 extra placements</div></div>
+    <div class="stat-card"><div class="stat-val">38h</div><div class="stat-lbl">Recruiter Hours Saved</div><div class="stat-delta delta-up">this cycle</div></div>
+  </div>
+  <div class="row2">
+    <div class="panel-box">
+      <div class="panel-box-title">Placement Funnel</div>
+      ${[['Applicants Entered','47','100%'],['Completed Intake','39','83%'],['Passed Assessment','28','60%'],['Ready-to-Submit','14','30%'],['Submitted to Client','9','19%']].map(([s,n,p])=>`
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;">
+          <span style="font-size:10px;color:var(--text);width:130px;">${s}</span>
+          <div style="flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden;"><div style="height:100%;width:${p};background:var(--gold);"></div></div>
+          <span style="font-family:var(--mono);font-size:9px;color:var(--gold);width:30px;text-align:right;">${n}</span>
+        </div>`).join('')}
+    </div>
+    <div class="panel-box">
+      <div class="panel-box-title">Track Performance</div>
+      ${[['HC Admin','88%','var(--green)'],['Office Support','91%','var(--green)'],['FinOps','83%','var(--green)'],['Insurance','79%','var(--amber)'],['Light Industrial','61%','var(--red)']].map(([t,s,c])=>`
+        <div style="display:flex;align-items:center;gap:8px;padding:5px 0;">
+          <span style="font-size:10px;color:var(--text);width:120px;">${t}</span>
+          <div style="flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden;"><div style="height:100%;width:${s};background:${c};"></div></div>
+          <span style="font-size:10px;font-family:var(--mono);color:${c};">${s}</span>
+        </div>`).join('')}
+    </div>
+  </div>
+`,
+
+'h-overview': ()=>`
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-val">28</div>
+      <div class="stat-lbl">Staff in Pipeline</div>
+      <div class="stat-delta delta-up">↑ 6 this week</div>
+      <div class="stat-bar"><div class="stat-bar-fill" style="width:70%;background:var(--teal);"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">19</div>
+      <div class="stat-lbl">PSV Verified</div>
+      <div class="stat-delta delta-up">↑ 4 cleared today</div>
+      <div class="stat-bar"><div class="stat-bar-fill" style="width:68%;background:var(--green);"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">2</div>
+      <div class="stat-lbl">OIG Flags</div>
+      <div class="stat-delta delta-dn">⚠ Requires immediate review</div>
+      <div class="stat-bar"><div class="stat-bar-fill" style="width:7%;background:var(--red);"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">1.8d</div>
+      <div class="stat-lbl">Avg Time to Floor</div>
+      <div class="stat-delta" style="color:var(--teal);">▲ −3.2d vs standard</div>
+      <div class="stat-bar"><div class="stat-bar-fill" style="width:55%;background:var(--teal);"></div></div>
+    </div>
+  </div>
+
+  <div class="sec-hdr"><span class="sec-title">Staff Readiness · Current Cycle</span><span class="sec-action sec-action-t" onclick="showView('h-staff')">View All →</span></div>
+  <table class="ctable">
+    <thead><tr><th>Staff Member</th><th>Unit</th><th>License</th><th>OIG</th><th>Background</th><th>PSV Status</th></tr></thead>
+    <tbody>${STAFF_HEALTH.map(s=>`<tr>
+      <td><div class="cname">${s.name}</div></td>
+      <td style="font-size:9px;color:var(--dim);">${s.unit}</td>
+      <td style="font-family:var(--mono);font-size:9px;color:var(--dim);">${s.license}</td>
+      <td>${statusBadge(s.oig.toLowerCase()==='clear'?'clear':'flagged')}</td>
+      <td>${statusBadge(s.bgc.toLowerCase()==='clear'?'clear':s.bgc.toLowerCase()==='pending'?'pending':'review')}</td>
+      <td>${statusBadge(s.psv.toLowerCase()==='verified'?'ready':s.psv.toLowerCase()==='in review'?'review':'risk')}</td>
+    </tr>`).join('')}</tbody>
+  </table>
+
+  <div class="row2">
+    <div class="panel-box">
+      <div class="panel-box-title">Facility Compliance Summary</div>
+      ${[['Banner Health — Phoenix','Joint Commission','Active','94%'],['HonorHealth — Scottsdale','Joint Commission','Active','91%'],['Banner Health — Mesa','CMS','Active','88%']].map(([f,std,st,comp])=>`
+        <div style="padding:8px 0;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:8px;">
+          <div style="flex:1;"><div style="font-size:11px;color:var(--text);">${f}</div><div style="font-size:9px;color:var(--dim);">${std} · ${st}</div></div>
+          <span style="font-family:var(--mono);font-size:11px;color:${parseFloat(comp)>=90?'var(--green)':'var(--amber)'};">${comp}</span>
+        </div>`).join('')}
+    </div>
+    <div class="panel-box">
+      <div class="panel-box-title">Unit Orientation Status</div>
+      ${[['ICU','7/8 complete','88%','var(--green)'],['Med-Surg','5/6 complete','83%','var(--green)'],['ER','4/6 complete','67%','var(--amber)'],['Radiology','3/3 complete','100%','var(--green)']].map(([u,s,p,c])=>`
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;">
+          <span style="font-size:10px;color:var(--text);width:80px;">${u}</span>
+          <div style="flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden;"><div style="height:100%;width:${p};background:${c};"></div></div>
+          <span style="font-size:9px;color:${c};font-family:var(--mono);width:70px;text-align:right;">${s}</span>
+        </div>`).join('')}
+    </div>
+  </div>
+`,
+
+'h-psv': ()=>`
+  <div class="sec-hdr"><span class="sec-title">Primary Source Verification Tracker</span><span class="sec-action sec-action-t">Run Batch Verify</span></div>
+  <div style="margin-bottom:14px;padding:10px 14px;border:0.5px solid rgba(239,68,68,.3);border-radius:var(--radius);background:var(--red2);display:flex;align-items:center;gap:10px;">
+    <span style="color:var(--red);font-size:10px;">⚠ 2 OIG exclusion flags require immediate review before scheduling floor shifts.</span>
+  </div>
+  <table class="ctable">
+    <thead><tr><th>Staff Member</th><th>Unit</th><th>License #</th><th>State License</th><th>OIG Check</th><th>Background</th><th>PSV</th><th>Verified Date</th></tr></thead>
+    <tbody>${[
+      ...STAFF_HEALTH,
+      {name:'Coord. B. Thompson',unit:'Med-Surg',license:'HCA-AZ-7723',oig:'Clear',bgc:'Clear',psv:'Verified'},
+      {name:'Tech A. Morales',unit:'ER',license:'EMT-AZ-4401',oig:'Flagged',bgc:'Pending',psv:'Hold'},
+    ].map(s=>`<tr>
+      <td><div class="cname">${s.name}</div></td>
+      <td style="font-size:9px;color:var(--dim);">${s.unit}</td>
+      <td style="font-family:var(--mono);font-size:9px;color:var(--dim);">${s.license}</td>
+      <td>${statusBadge('clear')}</td>
+      <td>${statusBadge(s.oig.toLowerCase()==='clear'?'clear':'flagged')}</td>
+      <td>${statusBadge(s.bgc.toLowerCase()==='clear'?'clear':s.bgc.toLowerCase()==='pending'?'pending':'review')}</td>
+      <td>${statusBadge(s.psv.toLowerCase()==='verified'?'ready':s.psv.toLowerCase()==='in review'?'review':'risk')}</td>
+      <td style="font-size:9px;color:var(--dim);">${s.psv==='Verified'?'Jun 1, 2026':'Pending'}</td>
+    </tr>`).join('')}</tbody>
+  </table>
+`,
+
+'h-compliance': ()=>`
+  <div class="sec-hdr"><span class="sec-title">Joint Commission Compliance Audit Log</span><span class="sec-action sec-action-t">Export Audit PDF</span></div>
+  <div style="background:var(--panel);border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:14px;">
+    ${[
+      ['08:14','License verification logged — C. Rivera RN-AZ-4421','System','Jun 3'],
+      ['08:32','OIG exclusion check completed — CLEAR — J. Estrada','System','Jun 3'],
+      ['09:01','Unit orientation module assigned — Med-Surg — M. Okafor','Admin: L. Torres','Jun 3'],
+      ['09:15','OIG FLAG RAISED — D. Nguyen PA-AZ-1193 — hold issued','System','Jun 3'],
+      ['09:44','Background check initiated — M. Okafor CNA-AZ-8812','System','Jun 3'],
+      ['10:02','Joint Commission checklist completed — ICU — C. Rivera','Staff','Jun 3'],
+      ['10:28','Credential expiry alert — license renewal due in 14 days — R. Patel','System','Jun 3'],
+      ['11:05','Floor clearance approved — Radiology — R. Patel','Admin: L. Torres','Jun 3'],
+      ['11:30','Audit log exported — Banner Health Phoenix Q2 review','Admin: L. Torres','Jun 3'],
+    ].map(([time,event,actor,date])=>`
+      <div class="clog-item">
+        <span class="clog-time">${time}</span>
+        <span class="clog-event">${event}</span>
+        <span class="clog-actor">${actor}</span>
+        <span style="font-size:9px;color:var(--dim);width:50px;text-align:right;">${date}</span>
+      </div>`).join('')}
+  </div>
+  <div style="padding:12px 14px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--gold3);font-size:11px;color:var(--text);line-height:1.7;">
+    All log entries are unalterable digital audit records meeting Joint Commission documentation standards. Logs are timestamped, actor-attributed, and exportable for facility quality audits.
+  </div>
+`,
+
+'h-units': ()=>`
+  <div class="sec-hdr"><span class="sec-title">Unit-Level Orientation Checklists</span></div>
+  ${[
+    {unit:'ICU — Intensive Care',staff:'C. Rivera · J. Estrada',pct:88,items:[['Critical care EMR navigation (Cerner)',true],['Medication reconciliation protocol',true],['Code Blue response positioning',true],['Floating staff badge access clearance',true],['Unit-specific escalation chain',false]]},
+    {unit:'Med-Surg — Floor 3',staff:'M. Okafor',pct:60,items:[['ADT workflow orientation (AppCentral)',true],['Shift handoff documentation standards',true],['Patient observation rounding protocol',false],['Infection control attestation',false],['Charge nurse introduction & assignment',false]]},
+    {unit:'Emergency Room',staff:'D. Nguyen',pct:33,items:[['Triage intake system walkthrough',true],['HIPAA verbal communication compliance',false],['Trauma bay staging orientation',false],['On-call chain of command review',false],['Badge clearance — ER secure zones',false]]},
+  ].map(u=>`
+    <div class="unit-card">
+      <div class="unit-hdr">
+        <span class="unit-title">${u.unit}</span>
+        <span class="unit-prog">${u.pct}% complete · ${u.staff}</span>
+      </div>
+      <div class="unit-items">
+        ${u.items.map(([label,done])=>`<div class="unit-item ${done?'done':''}"><div class="unit-check ${done?'checked':''}">${done?'✓':''}</div>${label}</div>`).join('')}
+      </div>
+    </div>`).join('')}
+`,
+
+'h-staff': ()=>`
+  <div class="sec-hdr"><span class="sec-title">Clinical &amp; Non-Clinical Staff Readiness</span></div>
+  <table class="ctable">
+    <thead><tr><th>Staff Member</th><th>Unit</th><th>Competency</th><th>Orientation</th><th>PSV</th><th>Floor Ready</th></tr></thead>
+    <tbody>${[
+      ...STAFF_HEALTH,
+      {name:'Coord. B. Thompson',unit:'Med-Surg',psv:'Verified',oig:'Clear',bgc:'Clear',comp:78,orient:60,floor:'review'},
+      {name:'Tech A. Morales',unit:'ER',psv:'Hold',oig:'Flagged',bgc:'Pending',comp:45,orient:33,floor:'risk'},
+    ].map((s,i)=>{
+      const comp = s.comp||[88,72,95,91,85][i]||75;
+      const orient = s.orient||[88,60,100,88,100][i]||70;
+      const floorStatus = s.floor||(comp>80&&orient>80&&s.psv==='Verified'?'ready':comp>60?'review':'risk');
+      return `<tr>
+        <td><div class="cname">${s.name}</div></td>
+        <td style="font-size:9px;color:var(--dim);">${s.unit}</td>
+        <td>${scoreBar(comp,scoreColor(comp))} <span style="font-size:9px;color:${scoreColor(comp)};">${comp}%</span></td>
+        <td>${scoreBar(orient,scoreColor(orient))} <span style="font-size:9px;color:${scoreColor(orient)};">${orient}%</span></td>
+        <td>${statusBadge(s.psv.toLowerCase()==='verified'?'ready':s.psv.toLowerCase()==='in review'?'review':'risk')}</td>
+        <td>${statusBadge(floorStatus)}</td>
+      </tr>`;}).join('')}
+    </tbody>
+  </table>
+`,
+
+'h-competency': ()=>`
+  <div class="sec-hdr"><span class="sec-title">System-Specific Competency Blueprints</span></div>
+  <div class="row2">
+    <div class="panel-box">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <span style="font-size:14px;">🏥</span>
+        <div><div style="font-size:12px;color:var(--bright);">Banner Health</div><div style="font-size:9px;color:var(--dim);">Oracle Cerner EMR · AZ Region</div></div>
+      </div>
+      ${[['Cerner PowerChart Navigation','Completed by 7/8 staff'],['Order Entry & Medication Reconciliation','Completed by 6/8 staff'],['Patient ADT Workflow','Completed by 8/8 staff'],['Clinical Documentation Standards','Completed by 5/8 staff'],['Cerner Imaging & Results Review','Completed by 4/8 staff']].map(([m,s])=>`
+        <div style="padding:7px 0;border-bottom:0.5px solid var(--border);"><div style="font-size:11px;color:var(--text);">${m}</div><div style="font-size:9px;color:var(--dim);">${s}</div></div>`).join('')}
+    </div>
+    <div class="panel-box">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <span style="font-size:14px;">🏨</span>
+        <div><div style="font-size:12px;color:var(--bright);">HonorHealth</div><div style="font-size:9px;color:var(--dim);">AppCentral Credentialing · Scottsdale</div></div>
+      </div>
+      ${[['AppCentral Credential Entry & Validation','Completed by 5/5 staff'],['HonorHealth Policy Attestation','Completed by 4/5 staff'],['Unit Float Pool Orientation Modules','Completed by 3/5 staff'],['Incident Reporting System Walkthrough','Completed by 5/5 staff'],['Patient Satisfaction Protocol Review','Completed by 2/5 staff']].map(([m,s])=>`
+        <div style="padding:7px 0;border-bottom:0.5px solid var(--border);"><div style="font-size:11px;color:var(--text);">${m}</div><div style="font-size:9px;color:var(--dim);">${s}</div></div>`).join('')}
+    </div>
+  </div>
+`,
+
+'h-facilities': ()=>`
+  <div class="sec-hdr"><span class="sec-title">Multi-Facility RBAC · Access Control</span></div>
+  <div style="margin-bottom:14px;">
+    ${[
+      {facility:'Banner Health — Phoenix',role:'Regional Admin',users:3,active:28,compliance:'Joint Commission',status:'active'},
+      {facility:'Banner Health — Mesa',role:'Facility Admin',users:2,active:12,compliance:'CMS',status:'active'},
+      {facility:'HonorHealth — Scottsdale',role:'Credential Manager',users:2,active:9,compliance:'Joint Commission',status:'active'},
+      {facility:'HonorHealth — North Mountain',role:'Unit Coordinator',users:1,active:4,compliance:'Joint Commission',status:'review'},
+    ].map(f=>`
+      <div style="background:var(--panel);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;gap:14px;">
+        <div style="flex:1;">
+          <div style="font-size:12px;color:var(--bright);margin-bottom:2px;">${f.facility}</div>
+          <div style="font-size:9px;color:var(--dim);">${f.role} · ${f.compliance}</div>
+        </div>
+        <div style="text-align:center;"><div style="font-family:var(--mono);font-size:14px;color:var(--teal);">${f.users}</div><div style="font-size:8px;color:var(--dim);">Admins</div></div>
+        <div style="text-align:center;"><div style="font-family:var(--mono);font-size:14px;color:var(--text);">${f.active}</div><div style="font-size:8px;color:var(--dim);">Active Staff</div></div>
+        ${statusBadge(f.status==='active'?'ready':'review')}
+        <button class="rbtn rbtn-dim" style="font-size:8px;padding:3px 8px;">Manage ↗</button>
+      </div>`).join('')}
+  </div>
+  <div style="padding:12px 14px;border:0.5px solid rgba(20,184,166,.3);border-radius:var(--radius);background:var(--teal2);font-size:10px;color:var(--text);line-height:1.8;">
+    Role-based access control ensures each facility admin can monitor only their assigned clinic or regional center. All cross-facility data access is logged, audited, and requires elevated permissions.
+  </div>
+`,
+
+'s-livefeed': ()=>{
+  clearNewFlags();
+  const candidates = getLiveCandidates();
+  const readyCount = candidates.filter(c=>c.status==='ready').length;
+  const reviewCount = candidates.filter(c=>c.status==='review').length;
+  const avgScore = candidates.length ? Math.round(candidates.reduce((a,c)=>a+c.overall,0)/candidates.length) : 0;
+
+  setTimeout(renderLiveFeed, 50);
+
+  return `
+  <div class="stat-grid" style="grid-template-columns:repeat(4,1fr);">
+    <div class="stat-card">
+      <div class="stat-val">${candidates.length}</div>
+      <div class="stat-lbl">Portal Submissions</div>
+      <div class="stat-delta" style="color:var(--teal);">via candidate-intake.html</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--green);">${readyCount}</div>
+      <div class="stat-lbl">Placement Ready</div>
+      <div class="stat-bar"><div class="stat-bar-fill" style="width:${candidates.length?Math.round(readyCount/candidates.length*100):0}%;background:var(--green);"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--amber);">${reviewCount}</div>
+      <div class="stat-lbl">Needs Review</div>
+      <div class="stat-bar"><div class="stat-bar-fill" style="width:${candidates.length?Math.round(reviewCount/candidates.length*100):0}%;background:var(--amber);"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">${avgScore||'—'}${avgScore?'%':''}</div>
+      <div class="stat-lbl">Avg Readiness Score</div>
+      <div class="stat-bar"><div class="stat-bar-fill" style="width:${avgScore}%;background:var(--gold);"></div></div>
+    </div>
+  </div>
+
+  <div class="sec-hdr">
+    <span class="sec-title">Live Portal Submissions</span>
+    <div style="display:flex;gap:8px;">
+      <span style="font-size:9px;color:var(--dim);padding:3px 10px;border:0.5px solid var(--border);border-radius:3px;">Auto-refreshes every 15s</span>
+      <span class="sec-action" onclick="clearLiveFeed()">Clear All</span>
+    </div>
+  </div>
+
+  <div style="background:var(--panel);border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:16px;">
+    <div style="padding:8px 14px;background:var(--bg2);border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);">Candidate · Track · Score · Status · Time</span>
+      <span style="font-size:8px;color:var(--dim);">Source: candidate-intake.html</span>
+    </div>
+    <div id="live-feed-list"></div>
+  </div>
+
+  <div style="padding:12px 16px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--gold3);">
+    <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:6px;">Share Candidate Portal Link</div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--gold);margin-bottom:10px;">${window.location.origin}/html/candidate-intake.html</div>
+    <button class="rbtn rbtn-gold" onclick="navigator.clipboard.writeText('${window.location.origin}/html/candidate-intake.html').then(()=>alert('Link copied!'))">Copy Link</button>
+  </div>
+`;
+},
+
+};
+
+/* ══════════════════════════════════════════
+   PDF EXPORT
+══════════════════════════════════════════ */
+function downloadReadinessPDF(){
+  const css = `body{font-family:'Segoe UI',sans-serif;color:#1a2332;padding:40px;max-width:720px;margin:0 auto;}.hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #c9a84c;padding-bottom:16px;margin-bottom:24px;}.logo{font-size:28px;font-weight:900;letter-spacing:3px;color:#c9a84c;}.badge{display:inline-block;padding:4px 12px;border-radius:3px;font-size:11px;font-weight:700;letter-spacing:1px;background:#d1fae5;color:#065f46;}h2{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#6b7280;margin:20px 0 10px;border-bottom:1px solid #e5e7eb;padding-bottom:6px;}.score-row{display:flex;align-items:center;gap:12px;margin:8px 0;}.score-label{width:180px;font-size:13px;color:#374151;}.score-bar{flex:1;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;}.score-fill{height:100%;border-radius:4px;}.score-val{width:40px;text-align:right;font-size:13px;font-weight:700;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:12px 0;}.box{background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:14px 16px;}.box h3{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin-bottom:10px;}.item{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#374151;margin-bottom:6px;}.check{color:#10b981;font-weight:700;flex-shrink:0;}.gap-item{margin-bottom:8px;}.gap-title{font-size:12px;color:#374151;}.gap-sub{font-size:11px;color:#9ca3af;}.reco{background:#f0fdf4;border-left:4px solid #10b981;padding:12px 16px;border-radius:0 6px 6px 0;margin:12px 0;}.reco-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#6b7280;margin-bottom:4px;}.reco-val{font-size:13px;color:#065f46;font-weight:600;}.trust{background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:14px 16px;margin-top:20px;font-size:12px;color:#92400e;line-height:1.7;font-style:italic;}.footer{margin-top:28px;padding-top:14px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;font-size:10px;color:#9ca3af;}`;
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  const timeStr = now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>TSM Workforce Readiness Report</title><style>${css}</style></head><body><div class="hdr"><div><div class="logo">TSM</div><div style="font-size:11px;color:#6b7280;letter-spacing:2px;margin-top:2px;">WORKFORCE INTELLIGENCE SYSTEM</div><div style="margin-top:8px;"><span class="badge">✓ PLACEMENT APPROVED</span></div></div><div style="text-align:right;font-size:11px;color:#6b7280;"><div style="font-size:16px;font-weight:700;color:#1a2332;">Workforce Readiness Report</div><div style="margin-top:4px;">Generated: ${dateStr} · ${timeStr}</div><div>Report ID: TSM-${Math.floor(Math.random()*90000)+10000}</div></div></div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;"><div><div style="font-size:22px;font-weight:700;color:#1a2332;">Maria T.</div><div style="font-size:13px;color:#6b7280;margin-top:2px;">Role Path: Medical Billing / Healthcare Admin</div></div><div style="text-align:center;width:80px;height:80px;border-radius:50%;border:3px solid #c9a84c;display:flex;flex-direction:column;align-items:center;justify-content:center;"><div style="font-size:24px;font-weight:900;color:#c9a84c;line-height:1;">88%</div><div style="font-size:9px;color:#9ca3af;letter-spacing:1px;">READINESS</div></div></div><h2>Readiness Dimensions</h2>${[['Workflow Accuracy',84,'#10b981'],['Compliance Understanding',91,'#10b981'],['Communication Skills',79,'#f59e0b'],['Adaptability Index',82,'#10b981']].map(([l,v,c])=>`<div class="score-row"><div class="score-label">${l}</div><div class="score-bar"><div class="score-fill" style="width:${v}%;background:${c};"></div></div><div class="score-val" style="color:${c};">${v}%</div></div>`).join('')}<div class="two-col"><div class="box"><h3>Strengths</h3>${['Denial code navigation (ICD-10)','Prior auth escalation handling','HIPAA documentation accuracy','Multi-payer claim submission'].map(s=>`<div class="item"><span class="check">✓</span>${s}</div>`).join('')}</div><div class="box"><h3>Skill Gaps</h3>${[['EMR cross-system navigation','Target: 2 module sessions'],['Verbal communication under pressure','Target: 1 coaching session'],['Advanced AR recovery protocols','Target: Practice Lab ×3']].map(([g,p])=>`<div class="gap-item"><div class="gap-title">→ ${g}</div><div class="gap-sub">${p}</div></div>`).join('')}</div></div><h2>Placement Recommendation</h2><div class="reco"><div class="reco-label">Recommendation</div><div class="reco-val">✓ Placement Ready — with 1 coaching session on verbal communication before client interview</div></div><div class="trust">"TSM is designed to support staffing organizations in improving placement outcomes, strengthening client trust, and reinforcing employee confidence by investing in readiness and long-term development."</div><div class="footer"><div>TSM Workforce Intelligence System</div><div>CONFIDENTIAL — For recruiter and client use only</div></div></body></html>`;
+  const blob = new Blob([html], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `TSM-Readiness-Report-MariaT-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.html`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ══════════════════════════════════════════
+   LIVE FEED
+══════════════════════════════════════════ */
+function getLiveCandidates(){
+  try { return JSON.parse(localStorage.getItem('tsm_candidates')||'[]'); }
+  catch(e){ return []; }
+}
+function clearNewFlags(){
+  try {
+    const c = getLiveCandidates();
+    c.forEach(x=>x.new=false);
+    localStorage.setItem('tsm_candidates', JSON.stringify(c));
+  } catch(e){}
+}
+function renderLiveFeed(){
+  const candidates = getLiveCandidates();
+  const container = document.getElementById('live-feed-list');
+  if(!container) return;
+  if(!candidates.length){
+    container.innerHTML=`<div style="padding:20px;text-align:center;font-size:10px;color:var(--dim);">No portal submissions yet.<br>Share the candidate intake link to start.</div>`;
+    return;
+  }
+  container.innerHTML = candidates.map(c=>{
+    const time = new Date(c.timestamp);
+    const timeAgo = getTimeAgo(time);
+    const sc = c.overall>=85?'var(--green)':c.overall>=70?'var(--amber)':'var(--red)';
+    const statusMap = {ready:'badge-ready',review:'badge-review',risk:'badge-risk'};
+    const statusLabel = {ready:'READY',review:'REVIEW',risk:'GHOST RISK'};
+    return `<div style="padding:10px 14px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:12px;${c.new?'background:rgba(201,168,76,.04);border-left:2px solid var(--gold);':''}">
+      ${c.new?`<span style="font-size:7px;letter-spacing:1px;color:var(--gold);background:var(--gold3);border:0.5px solid var(--border2);padding:2px 5px;border-radius:2px;flex-shrink:0;">NEW</span>`:''}
+      <div style="flex:1;min-width:0;"><div style="font-size:11px;color:var(--bright);">${c.fname} ${c.lname}</div><div style="font-size:9px;color:var(--dim);">${c.track}</div></div>
+      <span style="font-family:var(--mono);font-size:11px;color:${sc};flex-shrink:0;">${c.overall}%</span>
+      <span class="badge ${statusMap[c.status]||'badge-pending'}" style="flex-shrink:0;">${statusLabel[c.status]||c.status}</span>
+      <span style="font-size:9px;color:var(--dim);flex-shrink:0;width:52px;text-align:right;">${timeAgo}</span>
+    </div>`;
+  }).join('');
+  const newCount = candidates.filter(c=>c.new).length;
+  const badge = document.getElementById('live-feed-badge');
+  if(badge){ badge.textContent=newCount; badge.style.display=newCount>0?'inline':'none'; }
+}
+function getTimeAgo(date){
+  const diff = Math.floor((Date.now()-date)/1000);
+  if(diff<60) return 'just now';
+  if(diff<3600) return Math.floor(diff/60)+'m ago';
+  if(diff<86400) return Math.floor(diff/3600)+'h ago';
+  return Math.floor(diff/86400)+'d ago';
+}
+function clearLiveFeed(){
+  if(confirm('Clear all portal submissions from this device?')){
+    localStorage.removeItem('tsm_candidates');
+    renderLiveFeed();
+  }
+}
+setInterval(renderLiveFeed, 15000);
+
+const urlParams = new URLSearchParams(window.location.search);
+const autoTenant = urlParams.get('tenant');
+if(autoTenant==='staffing'||autoTenant==='health') setTenant(autoTenant);
+</script>
+
+<!-- TSM AI WIDGET -->
+<div id="tsm-ai-widget" style="position:fixed;bottom:16px;right:16px;z-index:9999;width:340px;font-family:'DM Mono',monospace">
+  <div onclick="document.getElementById('tsm-ai-panel').style.display=document.getElementById('tsm-ai-panel').style.display==='none'?'flex':'none'" style="background:#0a1628;border:1px solid rgba(0,229,255,0.3);border-radius:3px;padding:7px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:9px;color:#00e5ff;letter-spacing:.1em;box-shadow:0 0 20px rgba(0,229,255,0.1)">
+    <span style="width:6px;height:6px;border-radius:50%;background:#00e676;animation:tsmpulse 2s infinite;flex-shrink:0"></span>
+    TSM AI · ENTERPRISE NODE · LIVE
+  </div>
+  <div id="tsm-ai-panel" style="display:none;flex-direction:column;gap:0;background:#070d18;border:1px solid rgba(0,229,255,0.2);border-radius:3px;margin-top:4px;overflow:hidden;box-shadow:0 0 40px rgba(0,0,0,0.6)">
+    <div style="padding:8px 12px;border-bottom:1px solid rgba(0,229,255,0.08);font-size:8px;color:#5a7a9a;letter-spacing:.1em">// TSM AI COMMAND · /api/strategist/query</div>
+    <div id="tsm-ai-msgs" style="max-height:240px;overflow-y:auto;padding:8px 12px;display:flex;flex-direction:column;gap:6px;font-size:10px;line-height:1.6;scrollbar-width:thin;scrollbar-color:rgba(0,229,255,0.1) transparent"></div>
+    <div id="tsm-ai-think" style="display:none;padding:4px 12px;font-size:8px;color:#00b8d4;letter-spacing:.08em;animation:tsmpulse 1s infinite">// AI PROCESSING…</div>
+    <div style="display:flex;gap:0;border-top:1px solid rgba(0,229,255,0.08)">
+      <input id="tsm-ai-input" placeholder="Ask enterprise AI…" onkeydown="if(event.key==='Enter')tsmAsk()" style="flex:1;background:transparent;border:none;outline:none;padding:8px 12px;font-family:'DM Mono',monospace;font-size:10px;color:#c8d8e8;caret-color:#00e5ff"/>
+      <button onclick="tsmAsk()" style="background:transparent;border:none;border-left:1px solid rgba(0,229,255,0.08);padding:8px 12px;font-family:'DM Mono',monospace;font-size:8px;color:#00e5ff;cursor:pointer;letter-spacing:.08em">SEND</button>
+    </div>
+  </div>
+</div>
+<style>@keyframes tsmpulse{0%,100%{opacity:1}50%{opacity:.3}}#tsm-ai-msgs::-webkit-scrollbar{width:2px}#tsm-ai-msgs::-webkit-scrollbar-thumb{background:rgba(0,229,255,0.15)}</style>
+<script>
+async function tsmAsk(){
+  var input=document.getElementById('tsm-ai-input');
+  var msgs=document.getElementById('tsm-ai-msgs');
+  var think=document.getElementById('tsm-ai-think');
+  var q=input.value.trim();if(!q)return;input.value='';
+  var uDiv=document.createElement('div');
+  uDiv.style.cssText='color:#00b8d4;border-left:2px solid rgba(0,229,255,0.3);padding-left:6px';
+  uDiv.textContent=q;msgs.appendChild(uDiv);
+  think.style.display='block';msgs.scrollTop=msgs.scrollHeight;
+  try{
+    var res=await fetch('/api/hc/query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      system:`You are the TSM Workforce Intelligence Engine — an enterprise AI embedded inside the TSM Workforce Readiness Platform. You assist staffing agency recruiters and healthcare enterprise HR directors with candidate evaluation, placement decisions, compliance questions, and workforce strategy. Your tone is precise, professional, and data-driven. Current platform context: Live simulation mode. Tenant: ${tenant==='health'?'Healthcare Enterprise — Shift-Ready Bridge':'Staffing Agency — Placement Academy'}.`,
+      message:q,
+      stream:false,
+      max_tokens:1024
+    })});
+    var data=await res.json();
+    var text=data.response||data.content||data.answer||(data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content)||'No response.';
+    think.style.display='none';
+    var aDiv=document.createElement('div');
+    aDiv.style.cssText='color:#c8d8e8;border-left:2px solid rgba(0,229,255,0.08);padding-left:6px;white-space:pre-wrap';
+    msgs.appendChild(aDiv);
+    var words=text.split(' ');
+    for(var i=0;i<words.length;i++){
+      aDiv.textContent+=(i===0?'':' ')+words[i];
+      msgs.scrollTop=msgs.scrollHeight;
+      if(i%8===0) await new Promise(function(r){setTimeout(r,15);});
+    }
+  }catch(e){
+    think.style.display='none';
+    var eDiv=document.createElement('div');eDiv.style.color='#ff4d6d';eDiv.textContent='Error: '+e.message;msgs.appendChild(eDiv);
+  }
+}
+</script>
+<!-- ══ HOW-TO GUIDE OVERLAY ══ -->
+<div id="guide-overlay">
+  <button class="guide-close" onclick="closeGuide()">✕</button>
+  <div class="guide-sidebar">
+    <div style="font-family:var(--display);font-size:18px;color:var(--gold);letter-spacing:2px;margin-bottom:4px;padding:0 16px;">WIA GUIDE</div>
+    <div style="font-size:8px;color:var(--dim);letter-spacing:1px;margin-bottom:16px;padding:0 16px;">Workforce Intelligence Platform</div>
+    <div class="guide-nav-label">Getting Started</div>
+    <div class="guide-nav-item g-active" onclick="showGuide('g-start',this)">◈ Platform Overview</div>
+    <div class="guide-nav-item" onclick="showGuide('g-gate',this)">◈ Tenant Selection</div>
+    <div class="guide-nav-item" onclick="showGuide('g-nav',this)">◈ Navigation & Layout</div>
+    <div class="guide-nav-label">Staffing Mode</div>
+    <div class="guide-nav-item" onclick="showGuide('g-s-overview',this)">◈ Branch Overview</div>
+    <div class="guide-nav-item" onclick="showGuide('g-s-roster',this)">◈ Ready-to-Submit Roster</div>
+    <div class="guide-nav-item" onclick="showGuide('g-s-ghost',this)">◈ Ghost Risk Tracker</div>
+    <div class="guide-nav-item" onclick="showGuide('g-s-pipeline',this)">◈ Candidate Pipeline</div>
+    <div class="guide-nav-item" onclick="showGuide('g-s-fasttracks',this)">◈ Fast Track Roles</div>
+    <div class="guide-nav-item" onclick="showGuide('g-s-report',this)">◈ Readiness Reports</div>
+    <div class="guide-nav-item" onclick="showGuide('g-s-pilot',this)">◈ Randstad Pilot Mode</div>
+    <div class="guide-nav-item" onclick="showGuide('g-s-analytics',this)">◈ Branch Analytics</div>
+    <div class="guide-nav-label">Healthcare Mode</div>
+    <div class="guide-nav-item" onclick="showGuide('g-h-overview',this)">◉ System Overview</div>
+    <div class="guide-nav-item" onclick="showGuide('g-h-psv',this)">◉ PSV Tracker</div>
+    <div class="guide-nav-item" onclick="showGuide('g-h-compliance',this)">◉ Compliance Audit Log</div>
+    <div class="guide-nav-item" onclick="showGuide('g-h-units',this)">◉ Unit Orientation</div>
+    <div class="guide-nav-item" onclick="showGuide('g-h-staff',this)">◉ Staff Readiness</div>
+    <div class="guide-nav-item" onclick="showGuide('g-h-competency',this)">◉ Competency Blueprints</div>
+    <div class="guide-nav-item" onclick="showGuide('g-h-facilities',this)">◉ Multi-Facility RBAC</div>
+    <div class="guide-nav-label">Tips & Reference</div>
+    <div class="guide-nav-item" onclick="showGuide('g-badges',this)">◈ Badge Reference</div>
+    <div class="guide-nav-item" onclick="showGuide('g-tips',this)">◈ Power User Tips</div>
+  </div>
+  <div class="guide-main">
+
+    <div class="guide-section active" id="g-start">
+      <div class="guide-tag">Getting Started</div>
+      <div class="guide-h1">WIA Platform Overview</div>
+      <div class="guide-desc">WIA — Workforce Intelligence &amp; Automation — is a unified operational platform with two deployment modes: <strong style="color:var(--gold)">The Placement Academy</strong> for staffing agencies and <strong style="color:var(--teal)">The Shift-Ready Bridge</strong> for healthcare enterprises.</div>
+      <div class="guide-h2">What This Platform Does</div>
+      <div class="guide-feature-grid">
+        <div class="guide-feature"><div class="guide-feature-title" style="color:var(--gold);">◈ Staffing Mode</div><div class="guide-feature-text">Moves candidates from raw applicant to interview-ready in under 72 hours. Tracks readiness scores, flags ghost risk, maintains a filtered ready-to-submit roster, and generates placement reports.</div></div>
+        <div class="guide-feature"><div class="guide-feature-title" style="color:var(--teal);">◉ Healthcare Mode</div><div class="guide-feature-text">Bridges the gap between credentialing approval and floor deployment. Tracks primary source verification, OIG flags, unit orientation checklists, and Joint Commission compliance logs.</div></div>
+        <div class="guide-feature"><div class="guide-feature-title">Tenant Switching</div><div class="guide-feature-text">Switch between modes using the toggle in the top-right corner. All views, sidebar items, and data update instantly.</div></div>
+        <div class="guide-feature"><div class="guide-feature-title">TSM AI Widget</div><div class="guide-feature-text">The teal bar at the bottom-right is always available. Click it to open the AI command panel and ask any question about your workforce data or workflows.</div></div>
+      </div>
+      <div class="guide-tip"><div class="guide-tip-icon">◈</div><div>Use the left navigation to jump directly to any section. Each section explains what the view shows, how to use it, and what actions you can take.</div></div>
+    </div>
+
+    <div class="guide-section" id="g-gate">
+      <div class="guide-tag">Getting Started</div>
+      <div class="guide-h1">Tenant Selection</div>
+      <div class="guide-desc">When you first open WIA, you land on the Tenant Gate — a selection screen asking which mode you need.</div>
+      <div class="guide-h2">How to Select Your Tenant</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Read the two cards</div><div class="guide-step-text"><strong style="color:var(--gold)">The Placement Academy</strong> is for staffing agency branch operations. <strong style="color:var(--teal)">The Shift-Ready Bridge</strong> is for healthcare enterprise onboarding.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Click your mode</div><div class="guide-step-text">Click the card that matches your role. The platform loads with the correct sidebar, views, and data.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div><div class="guide-step-title">Switch modes any time</div><div class="guide-step-text">The <span class="kbd">◈ Staffing</span> / <span class="kbd">◉ Healthcare</span> toggle in the top-right lets you switch modes without returning to the gate.</div></div></div>
+      <div class="guide-tip"><div class="guide-tip-icon">◈</div><div>Force a specific mode on load by adding <span class="kbd">?tenant=staffing</span> or <span class="kbd">?tenant=health</span> to the URL.</div></div>
+    </div>
+
+    <div class="guide-section" id="g-nav">
+      <div class="guide-tag">Getting Started</div>
+      <div class="guide-h1">Navigation &amp; Layout</div>
+      <div class="guide-desc">WIA has a consistent three-zone layout: the top bar, left sidebar, and main content area.</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Top Bar</div><div class="guide-step-text">Shows the current mode name on the left. Right side has the tenant switcher, live status pill, and this How-To Guide button.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Left Sidebar</div><div class="guide-step-text">All views for the current mode, grouped by category. Active item highlighted in gold (staffing) or teal (healthcare). Red badge numbers indicate items requiring attention.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div><div class="guide-step-title">Main Content Area</div><div class="guide-step-text">Stat cards at the top give headline numbers. Tables, cards, and charts give the detail. Scrolls independently of the sidebar.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">4</div><div><div class="guide-step-title">TSM AI Widget</div><div class="guide-step-text">Fixed to the bottom-right corner. Click the teal bar to expand. Type any question and press <span class="kbd">Enter</span> or click <span class="kbd">SEND</span>.</div></div></div>
+    </div>
+
+    <div class="guide-section" id="g-s-overview">
+      <div class="guide-tag">Staffing Mode</div>
+      <div class="guide-h1">Branch Overview</div>
+      <div class="guide-desc">Your daily command center. Opens by default when you enter Staffing mode. Shows real-time pipeline health and surfaces urgent items requiring recruiter attention.</div>
+      <div class="guide-h2">Stat Cards</div>
+      <div class="guide-feature-grid">
+        <div class="guide-feature"><div class="guide-feature-title">Active Applicants</div><div class="guide-feature-text">Total candidates in your pipeline across all stages. Delta shows change since last week.</div></div>
+        <div class="guide-feature"><div class="guide-feature-title">Ready to Submit</div><div class="guide-feature-text">Candidates who passed every onboarding metric and are cleared for client submission. Your daily deliverable number.</div></div>
+        <div class="guide-feature"><div class="guide-feature-title">Ghost Risk</div><div class="guide-feature-text">Candidates flagged as unresponsive past the 12-hour threshold. Red = urgent intervention needed.</div></div>
+        <div class="guide-feature"><div class="guide-feature-title">Avg Readiness Score</div><div class="guide-feature-text">Composite readiness index across your active pipeline. Trend delta shows improvement vs last cycle.</div></div>
+      </div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Branch Pulse Table</div><div class="guide-step-text">Shows the 5 most recent candidates with track, readiness score bar, last-active timestamp, and status badge. Green = strong, amber = borderline, red = at risk.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Lower Panels</div><div class="guide-step-text">Ghost Risk Summary shows top unresponsive candidates with silence duration. Time-to-Submit Trend shows avg days from intake to submission per track.</div></div></div>
+    </div>
+
+    <div class="guide-section" id="g-s-roster">
+      <div class="guide-tag">Staffing Mode</div>
+      <div class="guide-h1">Ready-to-Submit Roster</div>
+      <div class="guide-desc">Shows only candidates who have cleared every metric. Your daily submission queue — no filtering required.</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Review the roster</div><div class="guide-step-text">Every candidate shown has passed readiness scoring, workflow accuracy, and compliance thresholds. Green border confirms this is a filtered, cleared list.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Check scores</div><div class="guide-step-text">Readiness % as a number. Workflow and Compliance as score bars. Rank candidates based on client requirements.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div><div class="guide-step-title">Submit to client</div><div class="guide-step-text">Click <span class="kbd">Submit ↗</span> on any row. Use <span class="kbd">Export Roster CSV</span> to download, or <span class="kbd">Send to Requisition Board</span> to push all ready candidates.</div></div></div>
+      <div class="guide-tip"><div class="guide-tip-icon">◈</div><div>Morning routine: Open Roster → review count → submit to open reqs. Under 5 minutes.</div></div>
+    </div>
+
+    <div class="guide-section" id="g-s-ghost">
+      <div class="guide-tag">Staffing Mode</div>
+      <div class="guide-h1">Ghost Risk Tracker</div>
+      <div class="guide-desc">Predictive drop-off monitor. Flags candidates who have gone silent past defined time thresholds.</div>
+      <div class="guide-feature-grid">
+        <div class="guide-feature"><div class="guide-feature-title" style="color:var(--red);">High Risk (12h+)</div><div class="guide-feature-text">Red border. Immediate SMS outreach recommended. Pipeline loss likely without intervention within 2 hours.</div></div>
+        <div class="guide-feature"><div class="guide-feature-title" style="color:var(--amber);">Medium Risk (6–12h)</div><div class="guide-feature-text">Amber border. Proactive ping now prevents escalation. Usually a stage-stall rather than true disengagement.</div></div>
+      </div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">SMS Ping (individual)</div><div class="guide-step-text">Click <span class="kbd">SMS Ping</span> on any row to trigger an automated text to that candidate.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Trigger SMS Blast</div><div class="guide-step-text">The red <span class="kbd">Trigger SMS Blast</span> button sends a re-engagement message to all high-risk candidates simultaneously.</div></div></div>
+    </div>
+
+    <div class="guide-section" id="g-s-pipeline">
+      <div class="guide-tag">Staffing Mode</div>
+      <div class="guide-h1">Active Applicants Pipeline</div>
+      <div class="guide-desc">The full unfiltered view of every active candidate across all tracks and stages.</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Column structure</div><div class="guide-step-text">Each row: candidate number, name + role, track, readiness % (color-coded), workflow bar, compliance bar, communication bar, last-active timestamp, status badge.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Score bars</div><div class="guide-step-text">Green (85%+) = strong. Amber (65–84%) = adequate. Red (&lt;65%) = needs improvement before submission.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div><div class="guide-step-title">Status badges</div><div class="guide-step-text"><span class="badge-demo bd-ready">READY</span> = cleared. <span class="badge-demo bd-review">REVIEW</span> = borderline. <span class="badge-demo bd-risk">GHOST RISK</span> = unresponsive. Use Filter to narrow by status.</div></div></div>
+    </div>
+
+    <div class="guide-section" id="g-s-fasttracks">
+      <div class="guide-tag">Staffing Mode</div>
+      <div class="guide-h1">Fast Track Roles</div>
+      <div class="guide-desc">Pre-configured role-specific workflows that run only the assessments and compliance checks relevant to that role category.</div>
+      <div class="guide-feature-grid">
+        <div class="guide-feature"><div class="guide-feature-title">Healthcare Admin</div><div class="guide-feature-text">Prior auth, medical billing, revenue cycle, HIPAA. 48-hour compliance-first sprint.</div></div>
+        <div class="guide-feature"><div class="guide-feature-title">Light Industrial / Logistics</div><div class="guide-feature-text">Forklift cert, warehouse safety, task sequencing. Speed-to-floor priority.</div></div>
+        <div class="guide-feature"><div class="guide-feature-title">FinOps / Accounting</div><div class="guide-feature-text">AP/AR ledger validation, reconciliation workflows, interview simulation.</div></div>
+        <div class="guide-feature"><div class="guide-feature-title">Insurance Compliance</div><div class="guide-feature-text">CE validation, state licensing, AHIP preparation, P&amp;C code fluency.</div></div>
+      </div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Click a track card</div><div class="guide-step-text">Highlights it (gold border) and filters the candidate pipeline to that track. The candidate count on each card is live.</div></div></div>
+    </div>
+
+    <div class="guide-section" id="g-s-report">
+      <div class="guide-tag">Staffing Mode</div>
+      <div class="guide-h1">Readiness Reports</div>
+      <div class="guide-desc">Individual candidate report cards — a structured, data-backed document justifying every placement recommendation.</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Header</div><div class="guide-step-text">Candidate name, role path, and status badges. The circle score is the composite Readiness Score.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Dimension Scores</div><div class="guide-step-text">Four scored dimensions: Workflow Accuracy, Compliance Understanding, Communication Skills, Adaptability Index — each with % and plain-language rating.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div><div class="guide-step-title">Strengths &amp; Gaps</div><div class="guide-step-text">Left panel lists validated competencies. Right panel lists identified gaps with a specific development plan for each.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">4</div><div><div class="guide-step-title">Actions</div><div class="guide-step-text"><span class="kbd">Download PDF Report</span> exports a formatted document. <span class="kbd">Submit to Requisition</span> flags for placement. <span class="kbd">Add to Roster</span> adds to ready list.</div></div></div>
+    </div>
+
+    <div class="guide-section" id="g-s-pilot">
+      <div class="guide-tag">Staffing Mode</div>
+      <div class="guide-h1">Randstad Pilot Scenario</div>
+      <div class="guide-desc">Enterprise demonstration mode showing a structured deployment scenario configured for Randstad Workforce Solutions.</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">5-Step Deployment Flow</div><div class="guide-step-text">Intake → Simulation Tasks → Readiness Scoring → Recruiter Review → Submit to Client. Active step highlighted in gold.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Phase Rollout Plan</div><div class="guide-step-text">Three-phase rollout: 14-Day Proof (free), Pilot Month ($1,500), Standard Rate ($2,500/mo). Track where a prospect is in the sales process.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div><div class="guide-step-title">ROI Snapshot</div><div class="guide-step-text">Candidates processed, interview-ready delivered, recruiter hours saved, ghost-offs prevented, projected margin lift.</div></div></div>
+    </div>
+
+    <div class="guide-section" id="g-s-analytics">
+      <div class="guide-tag">Staffing Mode</div>
+      <div class="guide-h1">Branch Analytics</div>
+      <div class="guide-desc">Performance summary for the current branch cycle. Use for weekly reviews and identifying underperforming tracks or stages.</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Time-to-Submit Reduction</div><div class="guide-step-text">% improvement vs your manual baseline. Your headline ROI metric for every client or manager conversation.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Placement Funnel</div><div class="guide-step-text">Conversion at each stage: Entered → Intake → Assessment → Ready → Submitted. The biggest drop between two stages identifies your primary bottleneck.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div><div class="guide-step-title">Track Performance</div><div class="guide-step-text">Each track shows avg readiness score. Green (85%+) = performing well. Red (&lt;65%) = investigate intake quality or candidate sourcing.</div></div></div>
+    </div>
+
+    <div class="guide-section" id="g-h-overview">
+      <div class="guide-tag guide-tag-t">Healthcare Mode</div>
+      <div class="guide-h1">System Overview</div>
+      <div class="guide-desc">The healthcare operations command center. Real-time snapshot of staff pipeline health, verification status, compliance scores, and unit orientation progress.</div>
+      <div class="guide-feature-grid">
+        <div class="guide-feature"><div class="guide-feature-title">Staff in Pipeline</div><div class="guide-feature-text">Total clinical and non-clinical staff in the onboarding and verification process across all facilities.</div></div>
+        <div class="guide-feature"><div class="guide-feature-title">PSV Verified</div><div class="guide-feature-text">Staff who completed Primary Source Verification — license confirmed, OIG cleared, background complete. Your deployable pool.</div></div>
+        <div class="guide-feature"><div class="guide-feature-title">OIG Flags</div><div class="guide-feature-text">Staff with active OIG exclusion flags. No flagged staff can be scheduled until resolved.</div></div>
+        <div class="guide-feature"><div class="guide-feature-title">Avg Time to Floor</div><div class="guide-feature-text">Average days from credential submission to floor-ready status. Negative delta shows improvement vs standard hospital onboarding.</div></div>
+      </div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Staff Readiness Table</div><div class="guide-step-text">Each row: name, unit, license, OIG badge, background badge, PSV badge. Any non-green badge requires action before scheduling.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Lower Panels</div><div class="guide-step-text">Facility Compliance Summary shows score per facility. Unit Orientation Status shows fraction of staff completed per unit.</div></div></div>
+    </div>
+
+    <div class="guide-section" id="g-h-psv">
+      <div class="guide-tag guide-tag-t">Healthcare Mode</div>
+      <div class="guide-h1">PSV Tracker</div>
+      <div class="guide-desc">Primary Source Verification tracking table. The most compliance-critical view in the platform.</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">State License</div><div class="guide-step-text">Verification via the issuing state licensing board — not self-reported. Shows <span class="badge-demo bd-clear">CLEAR</span> when verified.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">OIG Check</div><div class="guide-step-text"><span class="badge-demo bd-flagged">FLAGGED</span> = individual is on the OIG exclusion list. Cannot be employed in any federally-funded healthcare program until resolved. Immediate scheduling hold.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div><div class="guide-step-title">PSV Status</div><div class="guide-step-text"><span class="badge-demo bd-ready">READY</span> = all checks clear. <span class="badge-demo bd-review">REVIEW</span> = checks in progress. <span class="badge-demo bd-risk">HOLD</span> = OIG flag — cannot proceed.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">4</div><div><div class="guide-step-title">Run Batch Verify</div><div class="guide-step-text">Initiates a batch re-check of all pending PSV items simultaneously. Use at the start of each shift or after a bulk onboarding event.</div></div></div>
+      <div class="guide-tip" style="border-color:rgba(20,184,166,.3);background:var(--teal2);"><div class="guide-tip-icon guide-tip-icon-t">◉</div><div>Any OIG flag automatically sets PSV to "Hold" — non-overridable. Resolve the OIG issue before any other steps.</div></div>
+    </div>
+
+    <div class="guide-section" id="g-h-compliance">
+      <div class="guide-tag guide-tag-t">Healthcare Mode</div>
+      <div class="guide-h1">Compliance Audit Log</div>
+      <div class="guide-desc">An unalterable, timestamped record of every credentialing, verification, and training event. Built to Joint Commission documentation standards.</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Columns</div><div class="guide-step-text">Time, Event description, Actor (System or Admin name), and Date. System events are automated; Admin events are human-initiated.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Export Audit PDF</div><div class="guide-step-text">Generates a formatted, dated compliance report suitable for Joint Commission or CMS surveyors. All entries included with full actor attribution and timestamps.</div></div></div>
+      <div class="guide-tip" style="border-color:rgba(20,184,166,.3);background:var(--teal2);"><div class="guide-tip-icon guide-tip-icon-t">◉</div><div>Log entries cannot be edited or deleted — by design for regulatory compliance. Export before audit visits for a static record at that point in time.</div></div>
+    </div>
+
+    <div class="guide-section" id="g-h-units">
+      <div class="guide-tag guide-tag-t">Healthcare Mode</div>
+      <div class="guide-h1">Unit Orientation</div>
+      <div class="guide-desc">Floor-specific onboarding checklists by unit (ICU, Med-Surg, ER, etc.). Ensures staff complete unit-specific protocols before their first scheduled shift.</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Unit cards</div><div class="guide-step-text">Each unit shows name, assigned staff, and completion percentage. Below the header is the checklist of orientation items specific to that unit.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Checklist items</div><div class="guide-step-text">Green checkmark + strikethrough = completed. Empty checkbox = outstanding. Outstanding items block floor-ready status for that staff member in that unit.</div></div></div>
+      <div class="guide-tip" style="border-color:rgba(20,184,166,.3);background:var(--teal2);"><div class="guide-tip-icon guide-tip-icon-t">◉</div><div>Staff floating between units must complete the orientation checklist for each unit independently. Completion does not transfer between units.</div></div>
+    </div>
+
+    <div class="guide-section" id="g-h-staff">
+      <div class="guide-tag guide-tag-t">Healthcare Mode</div>
+      <div class="guide-h1">Staff Readiness</div>
+      <div class="guide-desc">Full clinical and non-clinical staff readiness table. Combines competency score, orientation progress, and PSV status into a single floor-ready determination.</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Competency Score</div><div class="guide-step-text">Performance across competency blueprints for that staff member's system (Cerner, AppCentral, etc.).</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Orientation %</div><div class="guide-step-text">Percentage of unit-specific orientation items completed. Must reach 100% for full floor clearance in most facilities.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div><div class="guide-step-title">Floor Ready</div><div class="guide-step-text"><span class="badge-demo bd-ready">READY</span> requires: competency ≥80%, orientation ≥80%, PSV = Verified. Any shortfall shows <span class="badge-demo bd-review">REVIEW</span> or <span class="badge-demo bd-risk">HOLD</span>. Schedulers use this column to confirm eligibility before assigning a shift.</div></div></div>
+    </div>
+
+    <div class="guide-section" id="g-h-competency">
+      <div class="guide-tag guide-tag-t">Healthcare Mode</div>
+      <div class="guide-h1">Competency Blueprints</div>
+      <div class="guide-desc">System-specific training modules tailored to the EMR and workflow systems used by each facility.</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Banner Health — Oracle Cerner</div><div class="guide-step-text">PowerChart navigation, order entry and medication reconciliation, patient ADT workflow, clinical documentation standards, imaging and results review.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">HonorHealth — AppCentral</div><div class="guide-step-text">Credential entry and validation, HonorHealth policy attestation, unit float pool orientation, incident reporting walkthrough, patient satisfaction protocol.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div><div class="guide-step-title">Completion rates</div><div class="guide-step-text">Each module shows "X/Y staff" completion. Low completion identifies a targeted training gap — schedule that session before the next deployment wave.</div></div></div>
+    </div>
+
+    <div class="guide-section" id="g-h-facilities">
+      <div class="guide-tag guide-tag-t">Healthcare Mode</div>
+      <div class="guide-h1">Multi-Facility RBAC</div>
+      <div class="guide-desc">Role-Based Access Control management. Controls which administrators can see data for which facilities.</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Role hierarchy</div><div class="guide-step-text">Regional Admin = sees all facilities in region. Facility Admin = assigned facility only. Credential Manager = PSV and compliance data only. Unit Coordinator = orientation and scheduling data only.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Manage button</div><div class="guide-step-text">Click <span class="kbd">Manage ↗</span> on any facility to open access control settings — add or remove admins, adjust role assignments, audit recent access events.</div></div></div>
+    </div>
+
+    <div class="guide-section" id="g-badges">
+      <div class="guide-tag">Reference</div>
+      <div class="guide-h1">Badge Reference</div>
+      <div class="guide-desc">Every status badge in WIA follows a consistent color and meaning system.</div>
+      <div style="display:flex;flex-direction:column;gap:0;margin-top:8px;">
+        <div style="display:flex;align-items:flex-start;gap:14px;padding:10px 0;border-bottom:0.5px solid var(--border);"><span class="badge-demo bd-ready" style="flex-shrink:0;margin-top:2px;">READY</span><span style="font-size:11px;color:var(--text);line-height:1.7;">All required checks complete. Safe to proceed — submit, schedule, or deploy.</span></div>
+        <div style="display:flex;align-items:flex-start;gap:14px;padding:10px 0;border-bottom:0.5px solid var(--border);"><span class="badge-demo bd-review" style="flex-shrink:0;margin-top:2px;">REVIEW</span><span style="font-size:11px;color:var(--text);line-height:1.7;">Borderline or incomplete. Requires human judgment before next action.</span></div>
+        <div style="display:flex;align-items:flex-start;gap:14px;padding:10px 0;border-bottom:0.5px solid var(--border);"><span class="badge-demo bd-risk" style="flex-shrink:0;margin-top:2px;">GHOST RISK</span><span style="font-size:11px;color:var(--text);line-height:1.7;">Staffing: candidate unresponsive 12h+. Healthcare: OIG flag or hold status.</span></div>
+        <div style="display:flex;align-items:flex-start;gap:14px;padding:10px 0;border-bottom:0.5px solid var(--border);"><span class="badge-demo bd-pending" style="flex-shrink:0;margin-top:2px;">PENDING</span><span style="font-size:11px;color:var(--text);line-height:1.7;">Check initiated but not yet returned. Monitor — no action required yet.</span></div>
+        <div style="display:flex;align-items:flex-start;gap:14px;padding:10px 0;border-bottom:0.5px solid var(--border);"><span class="badge-demo bd-clear" style="flex-shrink:0;margin-top:2px;">CLEAR</span><span style="font-size:11px;color:var(--text);line-height:1.7;">Specific check (OIG, background) passed cleanly. Component-level confirmation.</span></div>
+        <div style="display:flex;align-items:flex-start;gap:14px;padding:10px 0;"><span class="badge-demo bd-flagged" style="flex-shrink:0;margin-top:2px;">FLAGGED</span><span style="font-size:11px;color:var(--text);line-height:1.7;">Specific check failed or returned a disqualifying result. Immediate review required.</span></div>
+      </div>
+    </div>
+
+    <div class="guide-section" id="g-tips">
+      <div class="guide-tag">Reference</div>
+      <div class="guide-h1">Power User Tips</div>
+      <div class="guide-h2">Staffing Mode</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div><div class="guide-step-title">Daily recruiter routine (5 min)</div><div class="guide-step-text">Branch Overview → note Ready count → Ghost Risk → SMS Ping high-risk → Ready Roster → submit to open reqs. Done without manual candidate calls.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div><div class="guide-step-title">Force a mode via URL</div><div class="guide-step-text">Bookmark <span class="kbd">wia2.html?tenant=staffing</span> or <span class="kbd">wia2.html?tenant=health</span> to skip the gate every time.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div><div class="guide-step-title">Read the funnel weekly</div><div class="guide-step-text">Branch Analytics every Monday morning. The biggest stage drop tells you exactly where to focus training or sourcing changes for the week.</div></div></div>
+      <div class="guide-h2">Healthcare Mode</div>
+      <div class="guide-step"><div class="guide-step-num">4</div><div><div class="guide-step-title">Pre-audit checklist</div><div class="guide-step-text">Compliance Log → Export Audit PDF. PSV Tracker → confirm zero HOLD statuses. Unit Orientation → confirm all units at 100%. These three cover the majority of surveyor documentation requests.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">5</div><div><div class="guide-step-title">OIG flag protocol</div><div class="guide-step-text">1) Do not schedule. 2) Confirm flag is timestamped in Compliance Log. 3) Contact staff for documentation. 4) Re-run batch verify. 5) Confirm PSV updates to READY before any scheduling.</div></div></div>
+      <div class="guide-step"><div class="guide-step-num">6</div><div><div class="guide-step-title">Ask the AI</div><div class="guide-step-text">The TSM AI widget knows the platform. Ask: "Which staff are at risk of missing their floor date?" or "Walk me through the Ghost Risk tracker."</div></div></div>
+      <div class="guide-tip"><div class="guide-tip-icon">◈</div><div>This guide is always one click away — the <span class="kbd">? How-To Guide</span> button in the top-right corner opens it from any view in either mode.</div></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function openGuide(){ document.getElementById('guide-overlay').classList.add('open'); }
+function closeGuide(){ document.getElementById('guide-overlay').classList.remove('open'); }
+function showGuide(id, el){
+  document.querySelectorAll('.guide-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.guide-nav-item').forEach(n => n.classList.remove('g-active','g-active-t'));
+  var sec = document.getElementById(id);
+  if(sec) sec.classList.add('active');
+  if(el){
+    var isHealth = id.indexOf('g-h') === 0;
+    el.classList.add(isHealth ? 'g-active-t' : 'g-active');
+  }
+  document.querySelector('.guide-main').scrollTop = 0;
+}
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeGuide(); });
+</script>
+
+</body>
+</html>

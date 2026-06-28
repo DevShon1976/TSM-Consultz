@@ -1165,7 +1165,7 @@ function showRelayToast(msg){
 // ═══ FINOPS ISSUE PACK ═══
 (function(){
   try {
-    const raw = sessionStorage.getItem('TSM_FINOPS_WAR_RELAY') || localStorage.getItem('tsm_finops_war_relay');
+    const raw = sessionStorage.getItem('tsm_war_relay_finops-suite') || localStorage.getItem('tsm_war_relay_finops-suite');
     if (!raw) return;
     const brief = JSON.parse(raw);
     if (!brief) return;
@@ -1240,6 +1240,9 @@ function showRelayToast(msg){
     };
     // Auto-inject on load
     setTimeout(() => window.injectFinOpsContext(), 600);
+    if (localStorage.getItem('tsm_auto_mode') !== 'off') {
+      setTimeout(() => { if (typeof generateReport === 'function') generateReport(); }, 2200);
+    }
 
     window.runFinOpsIssuePack = function(){
       const groqKeyVal = localStorage.getItem('tsm_groq_key') || 'server';
@@ -1535,3 +1538,96 @@ function managerExport(){
 </script>
 </body>
 </html>
+<script>
+// ===== TSM AUTONOMY PATCH (FINOPS MISSION CORE) =====
+window.tsmMission = window.tsmMission || {
+  id: "FIN-" + Date.now().toString(36),
+  vertical: "FINOPS",
+  createdAt: Date.now(),
+  relay: sessionStorage.getItem("tsm_war_relay_finops-suite") || localStorage.getItem("tsm_war_relay_finops-suite")
+};
+</script>
+
+<script>
+// ===== TSM FINOPS AUTONOMY ENGINE =====
+function tsmAutoRunFinOps() {
+
+  console.log("[TSM] FinOps Autonomy Engine Fired");
+
+  if (typeof window.injectFinOpsContext === "function") {
+    window.injectFinOpsContext();
+  }
+
+  setTimeout(() => {
+    if (typeof runFinOpsStrategist === "function") {
+      runFinOpsStrategist();
+    } else if (typeof runStrategist === "function") {
+      runStrategist();
+    }
+  }, 900);
+
+  setTimeout(() => {
+    localStorage.setItem("TSM_STRAT_CONFIRMED_finops-suite", JSON.stringify({
+      vertical: "FINOPS",
+      timestamp: Date.now(),
+      missionId: window.tsmMission?.id
+    }));
+  }, 2500);
+
+  setTimeout(() => {
+    window.location.href = "finops-executive-portal.html";
+  }, 3200);
+}
+
+// AUTO FIRE HOOK
+setTimeout(tsmAutoRunFinOps, 600);
+</script>
+
+<script>
+// ===== TSM_AUTONOMY_STANDARDIZED =====
+window.TSM_AUTONOMY_STANDARDIZED = true;
+</script>
+
+<!-- TSM ENFORCER BOOT -->
+<script src="../../core/tsm-enforcer.js"></script>
+
+
+<script>
+// ===== TSM WAR ROOM SCOPED RELAY FIX =====
+window.tsmMission = window.tsmMission || {
+  id: "FINOPS-SUITE-" + Date.now().toString(36),
+  vertical: "finops-suite",
+  
+};
+
+function tsmWriteRelay(payload){
+  TSM_KERNEL.setRelay("finops-suite", JSON.stringify(payload));
+}
+</script>
+
+
+<script>
+// ===== TSM STRATEGIST BRIDGE LAYER =====
+
+function tsmReadScopedRelay(vertical){
+  const key = "tsm_war_relay_" + vertical;
+  try {
+    return JSON.parse(localStorage.getItem(key));
+  } catch(e){
+    return null;
+  }
+}
+
+function tsmWriteScopedStrat(vertical, missionId){
+  localStorage.setItem("TSM_STRAT_CONFIRMED_finops-suite_" + vertical, JSON.stringify({
+    vertical,
+    missionId,
+    timestamp: Date.now()
+  }));
+}
+</script>
+
+
+<!-- TSM KERNEL ENGINE -->
+<script src="../../core/tsm-kernel.js"></script>
+

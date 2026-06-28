@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TSM Workforce Intelligence Academy</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;500;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#03060d; --surface:#080f1a; --card:#0b1422; --raised:#0f1c30;
+  --border:#152035; --border2:#0c1826; --text:#a8c0d8; --muted:#2e4a68; --dim:#1e3550;
+  --cyan:#00cfff; --green:#00e87a; --amber:#ffb400; --red:#ff2d50;
+  --blue:#3b82f6; --purple:#a855f7; --teal:#14b8a6; --orange:#f97316;
+  --g-glow:0 0 18px #00e87a44; --c-glow:0 0 18px #00cfff44;
+  --a-glow:0 0 18px #ffb40044; --r-glow:0 0 18px #ff2d5044;
+  --font-mono:'Share Tech Mono',monospace;
+  --font-cond:'Barlow Condensed',sans-serif;
+  --font-body:'Barlow',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:14px;line-height:1.6;min-height:100vh;overflow-x:hidden}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.04) 3px,rgba(0,0,0,.04) 4px)}
+
+/* ══════════ HEADER ══════════ */
+.hdr{background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;height:52px;position:sticky;top:0;z-index:400}
+.hdr-brand{display:flex;align-items:center;gap:12px}
+.hdr-gem{width:32px;height:32px;position:relative;flex-shrink:0}
+.hdr-gem svg{width:100%;height:100%}
+.hdr-wordmark{display:flex;flex-direction:column;line-height:1.1}
+.hdr-wordmark-top{font-family:var(--font-cond);font-weight:900;font-size:16px;
+  letter-spacing:.2em;text-transform:uppercase;color:#fff}
+.hdr-wordmark-top span{color:var(--cyan)}
+.hdr-wordmark-sub{font-family:var(--font-mono);font-size:9px;color:var(--muted);
+  letter-spacing:.15em;text-transform:uppercase}
+.hdr-right{display:flex;align-items:center;gap:16px}
+.status-chip{display:flex;align-items:center;gap:6px;
+  background:var(--card);border:1px solid var(--border);border-radius:2px;
+  padding:5px 10px;font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+.status-dot{width:6px;height:6px;border-radius:50%}
+.status-dot.live{background:var(--green);box-shadow:var(--g-glow);animation:blink 2s infinite}
+.status-dot.ai{background:var(--cyan);box-shadow:var(--c-glow);animation:blink 2.5s infinite .5s}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+#clock{font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+
+/* ── API BANNER ── */
+#api-banner{background:#06100a;border-bottom:1px solid #0b2015;padding:9px 24px;
+  display:flex;align-items:center;gap:12px}
+#api-banner.hidden{display:none}
+#api-banner label{font-size:10px;color:var(--green);letter-spacing:.14em;
+  text-transform:uppercase;font-family:var(--font-mono);white-space:nowrap}
+#groq-key-input{flex:1;max-width:360px;background:var(--bg);border:1px solid #0b2015;
+  border-radius:2px;color:#fff;font-family:var(--font-mono);font-size:12px;
+  padding:5px 10px;outline:none;transition:border-color .15s}
+#groq-key-input:focus{border-color:var(--green)}
+#save-key-btn{background:var(--green);color:#000;border:none;padding:5px 16px;
+  border-radius:2px;cursor:pointer;font-family:var(--font-cond);font-weight:800;
+  font-size:11px;letter-spacing:.12em;text-transform:uppercase;transition:all .15s}
+#save-key-btn:hover{background:#00ffaa}
+.key-hint{font-size:11px;color:var(--muted)}
+
+/* ══════════ MISSION BAR ══════════ */
+.mission-bar{background:var(--surface);border-bottom:1px solid var(--border2);
+  padding:0 24px;display:flex;align-items:stretch;gap:0;height:38px;overflow-x:auto}
+.mission-bar::-webkit-scrollbar{height:2px}
+.mb-item{display:flex;align-items:center;gap:8px;padding:0 16px;
+  border-right:1px solid var(--border2);font-family:var(--font-mono);
+  font-size:10px;white-space:nowrap;cursor:default;transition:all .15s}
+.mb-item:first-child{padding-left:0}
+.mb-label{color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.mb-val{color:#fff;font-size:11px}
+.mb-val.green{color:var(--green)}
+.mb-val.amber{color:var(--amber)}
+.mb-val.cyan{color:var(--cyan)}
+.xp-bar-wrap{flex:1;display:flex;align-items:center;gap:10px;padding:0 16px}
+.xp-bar-bg{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.xp-bar-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--green));
+  border-radius:2px;transition:width .5s ease}
+
+/* ══════════ SCREENS ══════════ */
+.screen{display:none}
+.screen.active{display:block}
+#screen-scenario{display:none;flex-direction:column}
+#screen-scenario.active{display:flex;height:calc(100vh - 52px - 38px)}
+
+/* ══════════ HUB / SELECT SCREEN ══════════ */
+#screen-hub main{max-width:1280px;margin:0 auto;padding:32px 24px 80px}
+
+.hub-masthead{margin-bottom:36px;text-align:center;position:relative;padding:48px 24px 36px}
+.hub-masthead::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 0%,rgba(0,207,255,.06) 0%,transparent 70%);
+  pointer-events:none}
+.hub-tagline{font-family:var(--font-mono);font-size:10px;color:var(--cyan);
+  letter-spacing:.2em;text-transform:uppercase;margin-bottom:12px}
+.hub-title{font-family:var(--font-cond);font-weight:900;font-size:clamp(28px,5vw,52px);
+  letter-spacing:.06em;text-transform:uppercase;color:#fff;line-height:1;margin-bottom:10px}
+.hub-title span{color:var(--cyan)}
+.hub-sub{font-size:13px;color:var(--muted);max-width:600px;margin:0 auto 24px}
+.hub-pipeline{display:flex;align-items:center;justify-content:center;gap:0;
+  flex-wrap:wrap;margin-bottom:0}
+.pipe-step{display:flex;align-items:center;gap:6px;padding:7px 14px;
+  background:var(--card);border:1px solid var(--border);border-radius:2px;
+  font-family:var(--font-cond);font-size:12px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted)}
+.pipe-step.active-pipe{color:var(--cyan);border-color:var(--dim)}
+.pipe-arrow{font-family:var(--font-mono);font-size:10px;color:var(--muted);padding:0 6px}
+
+/* TIER LEGEND */
+.tier-legend{display:flex;align-items:center;justify-content:center;gap:8px;
+  margin-bottom:32px;flex-wrap:wrap}
+.tier-chip{display:flex;align-items:center;gap:6px;padding:5px 12px;
+  border-radius:2px;font-family:var(--font-cond);font-size:11px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;border:1px solid}
+.tier-chip.bronze{background:#1a0e00;border-color:#4a2a00;color:#cd7f32}
+.tier-chip.silver{background:#0e111a;border-color:#2a3050;color:#a0aec0}
+.tier-chip.gold{background:#1a1400;border-color:#4a3800;color:var(--amber)}
+.tier-chip.plat{background:#001018;border-color:#003050;color:var(--cyan)}
+
+/* ACADEMY GRID */
+.academy-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+@media(max-width:900px){.academy-grid{grid-template-columns:1fr}}
+
+.academy-card{background:var(--card);border:1px solid var(--border);border-radius:3px;
+  overflow:hidden;cursor:pointer;transition:all .2s;position:relative}
+.academy-card:hover:not(.locked){transform:translateY(-2px);border-color:var(--dim);
+  box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.academy-card.locked{opacity:.4;cursor:not-allowed}
+.ac-stripe{height:3px;width:100%}
+.ac-hc .ac-stripe{background:linear-gradient(90deg,var(--blue),var(--cyan))}
+.ac-ins .ac-stripe{background:linear-gradient(90deg,var(--green),var(--teal))}
+.ac-fin .ac-stripe{background:linear-gradient(90deg,var(--amber),var(--orange))}
+.ac-con .ac-stripe{background:linear-gradient(90deg,var(--purple),var(--blue))}
+
+.ac-inner{padding:20px}
+.ac-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.ac-icon-wrap{display:flex;align-items:center;gap:10px}
+.ac-icon{font-size:24px}
+.ac-badge-wrap{display:flex;flex-direction:column;gap:4px}
+.ac-title{font-family:var(--font-cond);font-weight:800;font-size:17px;
+  letter-spacing:.08em;text-transform:uppercase;color:#fff;line-height:1.1}
+.ac-sub{font-size:11px;color:var(--muted);letter-spacing:.04em}
+.ac-status-badge{font-family:var(--font-mono);font-size:9px;padding:2px 6px;
+  border-radius:1px;text-transform:uppercase;letter-spacing:.1em}
+.ac-status-badge.avail{background:#001830;color:var(--cyan);border:1px solid #003060}
+.ac-status-badge.done{background:#002014;color:var(--green);border:1px solid #004020}
+.ac-status-badge.locked{background:#1a1400;color:var(--amber);border:1px solid #332800}
+
+/* Module track list */
+.ac-modules{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.ac-module{display:flex;align-items:center;gap:10px;padding:8px 12px;
+  background:var(--surface);border:1px solid var(--border2);border-radius:2px;
+  transition:all .15s}
+.ac-module:hover{border-color:var(--dim)}
+.ac-module.mod-done{border-color:#004020;background:#001a0e}
+.ac-module.mod-curr{border-color:var(--dim)}
+.ac-module.mod-locked{opacity:.4}
+.am-icon{font-size:14px;flex-shrink:0}
+.am-info{flex:1;min-width:0}
+.am-title{font-family:var(--font-cond);font-size:13px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.06em;color:#fff;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.am-desc{font-size:11px;color:var(--muted)}
+.am-tier{flex-shrink:0}
+.am-tier-dot{width:8px;height:8px;border-radius:50%}
+.am-tier-dot.bronze{background:#cd7f32}
+.am-tier-dot.silver{background:#a0aec0}
+.am-tier-dot.gold{background:var(--amber)}
+.am-tier-dot.plat{background:var(--cyan);box-shadow:var(--c-glow)}
+.am-check{font-size:12px;color:var(--green)}
+
+/* Academy footer */
+.ac-footer{display:flex;align-items:center;justify-content:space-between;
+  padding-top:14px;border-top:1px solid var(--border2)}
+.ac-progress-wrap{flex:1;margin-right:16px}
+.ac-progress-label{font-family:var(--font-mono);font-size:9px;color:var(--muted);
+  margin-bottom:4px;display:flex;justify-content:space-between}
+.ac-progress-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.ac-progress-fill{height:100%;border-radius:2px;transition:width .4s ease}
+.ac-hc .ac-progress-fill{background:linear-gradient(90deg,var(--blue),var(--cyan))}
+.ac-ins .ac-progress-fill{background:linear-gradient(90deg,var(--green),var(--teal))}
+.ac-fin .ac-progress-fill{background:linear-gradient(90deg,var(--amber),var(--orange))}
+.ac-con .ac-progress-fill{background:linear-gradient(90deg,var(--purple),var(--blue))}
+.ac-xp{font-family:var(--font-mono);font-size:11px;color:var(--amber);white-space:nowrap}
+.ac-enter-btn{font-family:var(--font-cond);font-size:12px;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;padding:6px 14px;border-radius:2px;
+  border:1px solid;cursor:pointer;background:transparent;transition:all .15s;white-space:nowrap}
+.ac-enter-btn.go{border-color:var(--cyan);color:var(--cyan)}
+.ac-enter-btn.go:hover{background:var(--cyan);color:#000}
+.ac-enter-btn.review{border-color:var(--green);color:var(--green)}
+.ac-enter-btn.locked-btn{border-color:var(--muted);color:var(--muted);cursor:not-allowed}
+
+/* ══════════ SCENARIO SCREEN — SPLIT ══════════ */
+.sc-topbar{background:var(--surface);border-bottom:1px solid var(--border);
+  padding:10px 18px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.back-btn{background:var(--card);border:1px solid var(--border);border-radius:2px;
+  color:var(--muted);padding:5px 12px;cursor:pointer;font-family:var(--font-cond);
+  font-size:11px;letter-spacing:.12em;text-transform:uppercase;transition:all .15s}
+.back-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+.sc-info{flex:1}
+.sc-label-top{font-family:var(--font-mono);font-size:9px;color:var(--cyan);
+  text-transform:uppercase;letter-spacing:.14em}
+.sc-name{font-family:var(--font-cond);font-size:17px;font-weight:800;
+  color:#fff;letter-spacing:.06em;text-transform:uppercase}
+.sc-pips{display:flex;align-items:center;gap:5px}
+.tpip{width:36px;height:3px;border-radius:1px;background:var(--border);transition:background .3s}
+.tpip.done{background:var(--green);box-shadow:var(--g-glow)}
+.tpip.curr{background:var(--cyan);box-shadow:var(--c-glow);animation:pip-pulse 2s infinite}
+@keyframes pip-pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.tpip-label{font-family:var(--font-mono);font-size:9px;color:var(--muted)}
+
+.sc-body{display:flex;flex:1;overflow:hidden}
+
+/* TASK PANEL */
+.task-panel{flex:1;overflow-y:auto;padding:18px;min-width:0}
+
+/* RESEARCH PANEL */
+.research-panel{width:0;overflow:hidden;transition:width .3s ease;
+  background:var(--surface);border-left:1px solid var(--border);
+  flex-shrink:0;display:flex;flex-direction:column}
+.research-panel.open{width:48%;min-width:320px}
+.rp-header{background:var(--raised);border-bottom:1px solid var(--border);
+  padding:11px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.rp-app-name{font-family:var(--font-cond);font-weight:800;font-size:13px;
+  text-transform:uppercase;letter-spacing:.08em;color:#fff;flex:1}
+.rp-hint-badge{font-family:var(--font-mono);font-size:9px;padding:2px 6px;
+  background:#001830;border:1px solid #003060;color:var(--cyan);border-radius:1px}
+.rp-tier-badge{font-family:var(--font-mono);font-size:9px;padding:2px 6px;
+  border-radius:1px;border:1px solid}
+.rp-tier-badge.bronze{background:#1a0e00;border-color:#4a2a00;color:#cd7f32}
+.rp-tier-badge.silver{background:#0e111a;border-color:#2a3050;color:#a0aec0}
+.rp-tier-badge.gold{background:#1a1400;border-color:#4a3800;color:var(--amber)}
+.rp-tier-badge.plat{background:#001018;border-color:#003050;color:var(--cyan)}
+.rp-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;
+  padding:0 4px;transition:color .15s}
+.rp-close:hover{color:var(--red)}
+.rp-hint{background:#000e1a;border-bottom:1px solid var(--border2);
+  padding:10px 14px;font-size:12px;color:var(--text);line-height:1.6;flex-shrink:0}
+.rp-hint strong{color:var(--amber)}
+.rp-content{flex:1;overflow-y:auto;padding:14px}
+.rp-content::-webkit-scrollbar{width:3px}
+.rp-open-tab{padding:8px 14px;background:var(--card);border-top:1px solid var(--border2);flex-shrink:0}
+.open-tab-btn{font-family:var(--font-cond);font-size:11px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);background:transparent;
+  border:1px solid var(--border);border-radius:2px;padding:5px 12px;
+  cursor:pointer;transition:all .15s;text-decoration:none;display:inline-block}
+.open-tab-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+
+/* TASK CARD */
+.task-card{background:var(--card);border:1px solid var(--border);border-radius:3px;
+  overflow:hidden;margin-bottom:14px;transition:border-color .2s}
+.task-card.locked-card{opacity:.28;pointer-events:none}
+.task-card.active-card{border-color:var(--dim)}
+.tc-head{padding:14px 16px 12px;border-bottom:1px solid var(--border2);
+  display:flex;align-items:flex-start;gap:10px}
+.tnum{width:28px;height:28px;border-radius:2px;display:flex;align-items:center;
+  justify-content:center;font-family:var(--font-mono);font-size:11px;font-weight:700;flex-shrink:0}
+.tnum.curr{background:var(--cyan);color:#000}
+.tnum.done{background:#002014;color:var(--green);border:1px solid #004020}
+.tnum.locked{background:var(--border2);color:var(--muted)}
+.tc-title-block{flex:1}
+.tc-tier{font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;
+  text-transform:uppercase;margin-bottom:2px}
+.tc-tier.bronze{color:#cd7f32}.tc-tier.silver{color:#a0aec0}
+.tc-tier.gold{color:var(--amber)}.tc-tier.plat{color:var(--cyan)}
+.tc-title{font-family:var(--font-cond);font-size:15px;font-weight:700;
+  color:#fff;letter-spacing:.06em;text-transform:uppercase;margin-bottom:1px}
+.tc-domain{font-size:11px;color:var(--muted)}
+.tc-xp{font-family:var(--font-mono);font-size:10px;color:var(--amber);
+  background:#1a1200;border:1px solid #332600;padding:2px 6px;border-radius:1px;flex-shrink:0}
+
+/* Pipeline breadcrumb on task */
+.tc-pipeline{display:flex;align-items:center;gap:6px;padding:8px 16px;
+  background:var(--surface);border-bottom:1px solid var(--border2);
+  font-family:var(--font-mono);font-size:10px;color:var(--muted)}
+.tcp-step{color:var(--muted);transition:color .15s}
+.tcp-step.active-step{color:var(--cyan)}
+.tcp-step.done-step{color:var(--green)}
+.tcp-arrow{color:var(--border)}
+
+.tc-body{padding:14px 16px}
+.scenario-box{background:var(--surface);border-left:3px solid var(--cyan);
+  padding:12px 14px;border-radius:0 2px 2px 0;margin-bottom:12px;
+  font-size:13px;color:var(--text);line-height:1.7}
+.scenario-box strong{color:#fff}
+.dp{display:inline-block;background:#001830;border:1px solid #003060;
+  border-radius:1px;padding:1px 5px;font-family:var(--font-mono);
+  font-size:11px;color:var(--cyan);margin:0 2px}
+
+/* Research launch */
+.research-launch{display:flex;align-items:center;gap:10px;padding:10px 14px;
+  background:#000e1a;border:1px solid #003060;border-radius:2px;margin-bottom:12px}
+.rl-icon{font-size:18px;flex-shrink:0}
+.rl-text{flex:1}
+.rl-label{font-family:var(--font-cond);font-size:12px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.08em;color:var(--cyan);margin-bottom:1px}
+.rl-sub{font-size:11px;color:var(--muted)}
+.rl-btn{font-family:var(--font-cond);font-size:11px;font-weight:800;
+  letter-spacing:.1em;text-transform:uppercase;background:var(--cyan);color:#000;
+  border:none;padding:7px 14px;border-radius:2px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.rl-btn:hover{background:#00e8ff}
+.rl-btn.open{background:#002014;color:var(--green);border:1px solid #004020}
+
+/* App launch (cross-routing) */
+.app-launch{display:flex;align-items:center;gap:10px;padding:10px 14px;
+  background:#0a0014;border:1px solid #2a0050;border-radius:2px;margin-bottom:12px}
+.al-icon{font-size:18px;flex-shrink:0}
+.al-text{flex:1}
+.al-label{font-family:var(--font-cond);font-size:12px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.08em;color:var(--purple);margin-bottom:1px}
+.al-sub{font-size:11px;color:var(--muted)}
+.al-btn{font-family:var(--font-cond);font-size:11px;font-weight:800;
+  letter-spacing:.1em;text-transform:uppercase;background:var(--purple);color:#fff;
+  border:none;padding:7px 14px;border-radius:2px;cursor:pointer;transition:all .15s;white-space:nowrap;text-decoration:none;display:inline-block}
+.al-btn:hover{background:#c084fc}
+
+.task-obj{font-family:var(--font-cond);font-size:12px;color:var(--amber);
+  text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.task-resp{width:100%;min-height:110px;background:var(--bg);border:1px solid var(--border);
+  border-radius:2px;color:#fff;font-family:var(--font-body);font-size:13px;
+  padding:10px 12px;resize:vertical;outline:none;line-height:1.6;transition:border-color .15s}
+.task-resp:focus{border-color:var(--cyan)}
+.task-resp:disabled{opacity:.3;cursor:not-allowed}
+.task-foot{display:flex;align-items:center;gap:8px;padding-top:10px}
+.submit-btn{background:var(--cyan);color:#000;border:none;padding:8px 20px;
+  border-radius:2px;cursor:pointer;font-family:var(--font-cond);font-weight:800;
+  font-size:12px;letter-spacing:.12em;text-transform:uppercase;transition:all .15s}
+.submit-btn:hover:not(:disabled){background:#00e8ff}
+.submit-btn:disabled{opacity:.3;cursor:not-allowed}
+.char-hint{font-size:11px;color:var(--muted)}
+
+/* MC */
+.mc-opts{display:flex;flex-direction:column;gap:6px;margin-bottom:4px}
+.mc-opt{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;
+  background:var(--surface);border:1px solid var(--border2);border-radius:2px;
+  cursor:pointer;transition:all .15s;font-size:13px}
+.mc-opt:hover:not(.locked-opt){background:var(--raised);border-color:var(--dim)}
+.mc-opt.correct{background:#002014;border-color:var(--green);color:var(--green)}
+.mc-opt.wrong{background:#1a0408;border-color:var(--red);color:var(--red)}
+.mc-opt.locked-opt{pointer-events:none}
+.mc-let{width:22px;height:22px;border-radius:2px;background:var(--border2);
+  display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);
+  font-size:10px;flex-shrink:0;margin-top:1px}
+.mc-opt.correct .mc-let{background:var(--green);color:#000}
+.mc-opt.wrong .mc-let{background:var(--red);color:#fff}
+
+/* EVAL PANEL */
+.eval-panel{display:none;border:1px solid var(--border);border-radius:3px;overflow:hidden;margin-top:12px}
+.eval-panel.show{display:block}
+.ep-head{padding:11px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border2)}
+.ep-head.pass{background:#002014}.ep-head.fail{background:#1a0408}.ep-head.loading{background:#001830}
+.ep-icon{font-size:16px}
+.ep-title{font-family:var(--font-cond);font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+.ep-head.pass .ep-title{color:var(--green)}.ep-head.fail .ep-title{color:var(--red)}.ep-head.loading .ep-title{color:var(--cyan)}
+.ep-score{margin-left:auto;font-family:var(--font-mono);font-size:20px;font-weight:700}
+.ep-head.pass .ep-score{color:var(--green)}.ep-head.fail .ep-score{color:var(--red)}
+.ep-body{padding:12px 14px;background:var(--surface)}
+.ep-feedback{font-size:13px;color:var(--text);line-height:1.7;margin-bottom:10px}
+.ep-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
+.ep-tag{font-size:11px;padding:3px 8px;border-radius:2px;font-family:var(--font-cond);letter-spacing:.06em}
+.ep-tag.str{background:#002014;color:var(--green);border:1px solid #004020}
+.ep-tag.gap{background:#1a0408;color:var(--red);border:1px solid #3a0c10}
+.ep-actions{display:flex;gap:8px}
+.next-btn{display:none;background:var(--green);color:#000;border:none;
+  padding:8px 20px;border-radius:2px;cursor:pointer;font-family:var(--font-cond);
+  font-weight:800;font-size:12px;letter-spacing:.12em;text-transform:uppercase;transition:all .15s}
+.next-btn.show{display:inline-flex;align-items:center;gap:6px}
+.next-btn:hover{background:#00ffaa}
+.retry-btn{display:none;background:transparent;color:var(--red);border:1px solid var(--red);
+  padding:8px 16px;border-radius:2px;cursor:pointer;font-family:var(--font-cond);
+  font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;transition:all .15s}
+.retry-btn.show{display:inline-flex;align-items:center;gap:5px}
+.retry-btn:hover{background:#1a0408}
+.loading-dots::after{content:'';animation:dots 1.2s infinite}
+@keyframes dots{0%{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}}
+
+/* SECTOR COMPLETE */
+.sec-complete{display:none;background:linear-gradient(135deg,#002014,#00100a);
+  border:1px solid #004020;border-radius:3px;padding:28px;text-align:center;margin-top:16px}
+.sec-complete.show{display:block}
+.sco-icon{font-size:40px;margin-bottom:12px}
+.sco-title{font-family:var(--font-cond);font-size:24px;font-weight:900;
+  color:var(--green);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
+.sco-cert{font-family:var(--font-mono);font-size:11px;color:var(--cyan);
+  letter-spacing:.15em;text-transform:uppercase;margin-bottom:4px}
+.sco-sub{font-size:13px;color:var(--text);margin-bottom:12px}
+.sco-xp{font-family:var(--font-mono);font-size:30px;color:var(--amber);margin-bottom:20px}
+.sco-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.sco-next{background:var(--green);color:#000;border:none;padding:10px 28px;
+  border-radius:2px;cursor:pointer;font-family:var(--font-cond);font-weight:900;
+  font-size:13px;letter-spacing:.15em;text-transform:uppercase;transition:all .15s}
+.sco-next:hover{background:#00ffaa}
+.sco-back{background:transparent;color:var(--text);border:1px solid var(--border);
+  padding:10px 22px;border-radius:2px;cursor:pointer;font-family:var(--font-cond);
+  font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;transition:all .15s}
+.sco-back:hover{border-color:var(--cyan);color:var(--cyan)}
+
+/* REFERENCE DATA */
+.ref-section{margin-bottom:16px}
+.ref-section h4{font-family:var(--font-cond);font-size:11px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--cyan);margin-bottom:8px;
+  padding-bottom:5px;border-bottom:1px solid var(--border2)}
+.ref-table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:4px}
+.ref-table th{background:var(--raised);color:var(--muted);font-family:var(--font-mono);
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:6px 8px;
+  text-align:left;border-bottom:1px solid var(--border)}
+.ref-table td{padding:6px 8px;border-bottom:1px solid var(--border2);vertical-align:top}
+.ref-table tr:last-child td{border-bottom:none}
+.ref-table .hl{color:#fff;font-weight:500}
+.ref-table .code{font-family:var(--font-mono);font-size:10px;color:var(--cyan)}
+.ref-table .green{color:var(--green)}.ref-table .red{color:var(--red)}.ref-table .amber{color:var(--amber)}
+.ref-alert{background:#000e1a;border-left:3px solid var(--amber);padding:9px 12px;
+  border-radius:0 2px 2px 0;font-size:12px;margin-bottom:10px;line-height:1.7}
+.ref-alert strong{color:var(--amber)}
+.ref-steps{list-style:none;display:flex;flex-direction:column;gap:6px}
+.ref-steps li{display:flex;gap:8px;font-size:12px}
+.ref-steps .step-n{font-family:var(--font-mono);font-size:10px;color:var(--cyan);
+  background:#001830;border:1px solid #003060;padding:1px 5px;border-radius:1px;
+  flex-shrink:0;margin-top:2px}
+.ref-kv{display:flex;flex-direction:column;gap:5px}
+.ref-kv-row{display:flex;justify-content:space-between;align-items:flex-start;
+  padding:6px 0;border-bottom:1px solid var(--border2);font-size:12px;gap:12px}
+.ref-kv-row:last-child{border-bottom:none}
+.ref-kv-key{color:var(--muted);flex:1}
+.ref-kv-val{color:#fff;font-family:var(--font-mono);font-size:11px;text-align:right}
+
+/* Workflow validator block */
+.workflow-validator{background:#050014;border:1px solid #1a0050;border-radius:2px;
+  padding:12px 14px;margin-top:10px;margin-bottom:4px}
+.wv-title{font-family:var(--font-cond);font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.1em;color:var(--purple);margin-bottom:8px}
+.wv-steps{display:flex;flex-direction:column;gap:4px}
+.wv-step{display:flex;align-items:center;gap:8px;padding:5px 8px;
+  background:var(--bg);border:1px solid #1a0050;border-radius:1px;
+  font-size:12px;color:var(--muted);transition:all .3s}
+.wv-step.wv-active{border-color:var(--purple);color:#fff}
+.wv-step.wv-done{border-color:#004020;background:#000e08;color:var(--green)}
+.wv-step-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex-shrink:0}
+.wv-step.wv-active .wv-step-dot{background:var(--purple);box-shadow:0 0 8px #a855f788}
+.wv-step.wv-done .wv-step-dot{background:var(--green)}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header class="hdr">
+  <div class="hdr-brand">
+    <div class="hdr-gem">
+      <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="16,2 30,10 30,22 16,30 2,22 2,10" fill="url(#ggrad)" opacity=".9"/>
+        <polygon points="16,2 30,10 16,16" fill="rgba(0,207,255,.15)"/>
+        <polygon points="16,16 30,22 16,30" fill="rgba(0,232,122,.1)"/>
+        <text x="16" y="19" text-anchor="middle" font-family="monospace" font-size="8" font-weight="900" fill="#000">TSM</text>
+        <defs><linearGradient id="ggrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#00cfff"/><stop offset="100%" stop-color="#00e87a"/>
+        </linearGradient></defs>
+      </svg>
+    </div>
+    <div class="hdr-wordmark">
+      <div class="hdr-wordmark-top">TSM <span>Workforce</span> Intelligence</div>
+      <div class="hdr-wordmark-sub">Academy · Certification Platform</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div class="status-chip"><span class="status-dot live"></span><span id="groq-status">AI READY</span></div>
+    <div class="status-chip"><span class="status-dot ai"></span><span>GROQ LIVE</span></div>
+    <div id="clock">--:-- --</div>
+  </div>
+</header>
+
+<!-- ══ API BANNER ══ -->
+<div id="api-banner">
+  <label>⚡ Groq API Key</label>
+  <input id="groq-key-input" type="password" placeholder="gsk_..." />
+  <button id="save-key-btn" onclick="saveKey()">ACTIVATE</button>
+  <span class="key-hint">Free → console.groq.com · No card required</span>
+</div>
+
+<!-- ══ MISSION BAR ══ -->
+<div class="mission-bar">
+  <div class="mb-item">
+    <span class="mb-label">XP</span>
+    <span class="mb-val amber" id="mb-xp">0</span>
+  </div>
+  <div class="mb-item">
+    <span class="mb-label">Modules</span>
+    <span class="mb-val cyan" id="mb-mods">0 / 16</span>
+  </div>
+  <div class="mb-item">
+    <span class="mb-label">Academies</span>
+    <span class="mb-val green" id="mb-acs">0 / 4</span>
+  </div>
+  <div class="mb-item">
+    <span class="mb-label">Tier</span>
+    <span class="mb-val" id="mb-tier" style="color:#cd7f32">Bronze</span>
+  </div>
+  <div class="xp-bar-wrap">
+    <div class="xp-bar-bg">
+      <div class="xp-bar-fill" id="xp-bar-fill" style="width:0%"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCREEN: HUB ══ -->
+<div id="screen-hub" class="screen active">
+<main>
+  <div class="hub-masthead">
+    <div class="hub-tagline">Workforce Intelligence Platform · v3.0</div>
+    <div class="hub-title">TSM <span>Academy</span></div>
+    <div class="hub-sub">Enterprise-grade simulation training. Complete operational missions, not memorization tests. Earn certification through demonstrated competency in live workflows.</div>
+    <div class="hub-pipeline">
+      <div class="pipe-step active-pipe">📘 Learn</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step active-pipe">🔬 Practice</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step active-pipe">⚙️ Operate</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step active-pipe">🧪 Simulate</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step active-pipe">🎯 Certify</div>
+    </div>
+  </div>
+
+  <div class="tier-legend">
+    <div class="tier-chip bronze">🥉 Bronze · Terminology</div>
+    <div class="tier-chip silver">🥈 Silver · Scenario Workflows</div>
+    <div class="tier-chip gold">🥇 Gold · Live Operational Sims</div>
+    <div class="tier-chip plat">💎 Platinum · AI-Guided Enterprise Resolution</div>
+  </div>
+
+  <div class="academy-grid" id="academy-grid"></div>
+</main>
+</div>
+
+<!-- ══ SCREEN: SCENARIO ══ -->
+<div id="screen-scenario" class="screen">
+  <div class="sc-topbar">
+    <button class="back-btn" onclick="goBack()">← Academy Hub</button>
+    <div class="sc-info">
+      <div class="sc-label-top" id="sc-label">Academy · Module 1</div>
+      <div class="sc-name" id="sc-name">–</div>
+    </div>
+    <div class="sc-pips" id="sc-pips"></div>
+  </div>
+  <div class="sc-body">
+    <div class="task-panel" id="task-panel">
+      <div id="sector-complete-banner" class="sec-complete">
+        <div class="sco-icon">🎯</div>
+        <div class="sco-title" id="sco-title">Module Complete!</div>
+        <div class="sco-cert" id="sco-cert">Certificate Earned</div>
+        <div class="sco-sub" id="sco-sub">All objectives passed.</div>
+        <div class="sco-xp" id="sco-xp">+000 XP</div>
+        <div class="sco-actions">
+          <button class="sco-next" id="sco-next-btn">Next Module →</button>
+          <button class="sco-back" onclick="goBack()">Return to Hub</button>
+        </div>
+      </div>
+    </div>
+    <div class="research-panel" id="research-panel">
+      <div class="rp-header">
+        <div class="rp-app-name" id="rp-app-name">Reference Data</div>
+        <span class="rp-hint-badge" id="rp-tier-badge">BRONZE</span>
+        <button class="rp-close" onclick="closeResearch()" title="Close panel">✕</button>
+      </div>
+      <div class="rp-hint" id="rp-hint">Loading...</div>
+      <div class="rp-content" id="rp-content"></div>
+      <div class="rp-open-tab" id="rp-open-tab"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── RESEARCH DATA ── */
+const RESEARCH = {
+  'hc-t1':{appName:'HC Academy · CRCR Terminology',tier:'bronze',appUrl:'crc-hc-practice.html',
+    hint:'<strong>LEARN Stage:</strong> Review these CRCR core terms. Each acronym represents a real operational concept you will encounter in live simulations later.',
+    html:`<div class="ref-section"><h4>CRCR Core Terminology</h4>
+      <table class="ref-table"><tr><th>Term</th><th>Full Name</th><th>Function</th></tr>
+        <tr><td class="code">EFT</td><td class="hl">Electronic Funds Transfer</td><td>Moves payment from payer to provider via banking system</td></tr>
+        <tr><td class="code">ERA</td><td class="hl">Electronic Remittance Advice</td><td>835 transaction — explains how claims were paid/adjusted</td></tr>
+        <tr><td class="code">APC</td><td class="hl">Ambulatory Payment Classification</td><td>Outpatient prospective payment grouper (Medicare)</td></tr>
+        <tr><td class="code">DRG</td><td class="hl">Diagnosis Related Group</td><td>Inpatient prospective payment grouper (Medicare)</td></tr>
+        <tr><td class="code">SNF</td><td class="hl">Skilled Nursing Facility</td><td>Post-acute care facility, covered under Medicare Part A</td></tr>
+        <tr><td class="code">ABN</td><td class="hl">Advance Beneficiary Notice</td><td>Notice to patient that Medicare may deny — patient may be liable</td></tr>
+        <tr><td class="code">COB</td><td class="hl">Coordination of Benefits</td><td>Rules for billing when patient has multiple insurance</td></tr>
+        <tr><td class="code">MSP</td><td class="hl">Medicare Secondary Payer</td><td>Rules on when Medicare is NOT primary payer</td></tr>
+      </table></div>
+      <div class="ref-section"><h4>Medicare Rule Quick Reference</h4>
+      <div class="ref-kv">
+        <div class="ref-kv-row"><span class="ref-kv-key">Medicare timely filing</span><span class="ref-kv-val red">1 year from DOS — hard limit</span></div>
+        <div class="ref-kv-row"><span class="ref-kv-key">MSP: Auto/liability accident</span><span class="ref-kv-val">Liability primary; Medicare secondary after 120 days</span></div>
+        <div class="ref-kv-row"><span class="ref-kv-key">DRG 3-day window</span><span class="ref-kv-val">Diagnostic services bundled within 3 days of IP admit</span></div>
+        <div class="ref-kv-row"><span class="ref-kv-key">Dual eligible (Medicare+Medicaid)</span><span class="ref-kv-val green">Patient owes $0; Medicaid is payer of last resort</span></div>
+      </div></div>`},
+
+  'hc-t2':{appName:'HC Academy · Operational Workflow',tier:'silver',appUrl:'crc-hc-practice.html',
+    hint:'<strong>PRACTICE Stage:</strong> Trace the full patient encounter from registration to payment. Each node is a workflow step you must be able to execute operationally.',
+    html:`<div class="ref-section"><h4>Patient Encounter Workflow</h4>
+      <ol class="ref-steps">
+        <li><span class="step-n">1</span><strong>Registration:</strong> Collect demographics, insurance cards, photo ID, signed consent</li>
+        <li><span class="step-n">2</span><strong>Eligibility Verification:</strong> 270/271 EDI transaction → confirm active coverage, copay, deductible, auth requirements</li>
+        <li><span class="step-n">3</span><strong>Authorization:</strong> 278 transaction → submit prior auth for services requiring pre-approval</li>
+        <li><span class="step-n">4</span><strong>Claim Routing:</strong> 837P (professional) or 837I (institutional) → clearinghouse → payer</li>
+        <li><span class="step-n">5</span><strong>Denial Review:</strong> 835 EOB arrives → identify denial codes (CO, PR, OA) → route to appropriate queue</li>
+        <li><span class="step-n">6</span><strong>ERA/EFT Posting:</strong> Match 835 ERA to EFT deposit → post payments and adjustments</li>
+      </ol></div>
+      <div class="ref-section"><h4>Denial Code Categories</h4>
+      <table class="ref-table"><tr><th>Prefix</th><th>Meaning</th><th>Responsible Party</th></tr>
+        <tr><td class="code">CO</td><td class="hl">Contractual Obligation</td><td>Provider write-off (not billable to patient)</td></tr>
+        <tr><td class="code">PR</td><td class="hl">Patient Responsibility</td><td>Bill to patient</td></tr>
+        <tr><td class="code">OA</td><td class="hl">Other Adjustment</td><td>Various — review individually</td></tr>
+        <tr><td class="code">PI</td><td class="hl">Payer Initiated</td><td>Payer adjusts without provider action</td></tr>
+      </table></div>`},
+
+  'hc-t3':{appName:'Claims Lab · Live Simulation',tier:'gold',appUrl:'insurance-claims-pro.html',
+    hint:'<strong>OPERATE Stage:</strong> You are now working live claims. Use the Claims Lab to resolve the denial, then document your resolution steps below.',
+    html:`<div class="ref-section"><h4>Live Claims Simulation — CO-4 + CO-16</h4>
+      <div class="ref-alert"><strong>Claim:</strong> CPT 99215 denied CO-4 (modifier mismatch) + CO-16 (missing info). DOS 03/15/2026. Medicare. Timely filing window open.</div>
+      <table class="ref-table"><tr><th>Code</th><th>Cause</th><th>Fix</th></tr>
+        <tr><td class="code">CO-4</td><td class="hl">E/M billed same-day as procedure without modifier 25</td><td>Append modifier 25 to CPT 99215</td></tr>
+        <tr><td class="code">CO-16</td><td class="hl">Missing or invalid information on claim</td><td>Verify all required fields; correct and resubmit</td></tr>
+      </table>
+      <div class="ref-section"><h4>Resolution Steps</h4>
+      <ol class="ref-steps">
+        <li><span class="step-n">1</span>Pull claim from system; identify all denial codes</li>
+        <li><span class="step-n">2</span>Confirm same-day procedure was performed</li>
+        <li><span class="step-n">3</span>Add modifier 25 to 99215 (separate, significant E/M)</li>
+        <li><span class="step-n">4</span>Correct CO-16 missing fields; resubmit within timely filing window</li>
+        <li><span class="step-n">5</span>Log correction in denial tracking system</li>
+      </ol></div>`},
+
+  'hc-t4':{appName:'HC Academy · Certification Exam',tier:'plat',appUrl:'crcr-scenarios.html',
+    hint:'<strong>CERTIFY Stage:</strong> This is the final competency gate. Your response must demonstrate mastery of the full HC intelligence workflow — terminology → operations → appeals → compliance.',
+    html:`<div class="ref-section"><h4>Certification Competency Domains</h4>
+      <table class="ref-table"><tr><th>Domain</th><th>Weight</th><th>Assessed By</th></tr>
+        <tr><td class="hl">Terminology Mastery</td><td>20%</td><td>Multiple choice + definition tasks</td></tr>
+        <tr><td class="hl">Operational Routing</td><td>30%</td><td>Workflow simulation tasks</td></tr>
+        <tr><td class="hl">Denial Resolution</td><td>25%</td><td>Live claim correction in Claims Lab</td></tr>
+        <tr><td class="hl">Appeals & Escalation</td><td>25%</td><td>Written appeal + escalation path</td></tr>
+      </table></div>
+      <div class="ref-alert"><strong>Passing threshold:</strong> 85/100 weighted average across all domains. Score below 70 in any single domain requires remediation before certification is issued.</div>
+      <div class="ref-section"><h4>DRG Appeal — Clinical Evidence</h4>
+      <div class="ref-kv">
+        <div class="ref-kv-row"><span class="ref-kv-key">KOOS Score benchmark</span><span class="ref-kv-val red">&lt;45 qualifies; patient: 28/100 ✓</span></div>
+        <div class="ref-kv-row"><span class="ref-kv-key">Failed conservative tx required</span><span class="ref-kv-val">3–6 months; patient: 18 months ✓</span></div>
+        <div class="ref-kv-row"><span class="ref-kv-key">Appeal window</span><span class="ref-kv-val amber">14 days from denial — file immediately</span></div>
+        <div class="ref-kv-row"><span class="ref-kv-key">Escalation path</span><span class="ref-kv-val">Level 1 → Peer-to-Peer → Level 2 → IRO</span></div>
+      </div></div>`},
+
+  'ins-t1':{appName:'Insurance Academy · Core Concepts',tier:'bronze',appUrl:'insurance-ce-command.html',
+    hint:'<strong>Module A — Core Concepts:</strong> Master policy structures, EDI transactions, and claim lifecycle before moving to live operations.',
+    html:`<div class="ref-section"><h4>EDI Transaction Set Reference</h4>
+      <table class="ref-table"><tr><th>TX Set</th><th>Name</th><th>Direction</th></tr>
+        <tr><td class="code cyan">837</td><td class="hl">Claim submission</td><td>Provider → Payer</td></tr>
+        <tr><td class="code green">835</td><td class="hl">Remittance Advice (ERA)</td><td>Payer → Provider</td></tr>
+        <tr><td class="code amber">278</td><td class="hl">Prior Authorization</td><td>Provider → Payer</td></tr>
+        <tr><td class="code">270/271</td><td class="hl">Eligibility Inquiry / Response</td><td>Provider ↔ Payer</td></tr>
+        <tr><td class="code">277CA</td><td class="hl">Claim Acknowledgement</td><td>Payer → Provider</td></tr>
+        <tr><td class="code">834</td><td class="hl">Enrollment / Disenrollment</td><td>Employer → Payer</td></tr>
+      </table></div>
+      <div class="ref-section"><h4>Rejection vs Denial</h4>
+      <table class="ref-table"><tr><th>Factor</th><th>Rejection</th><th>Denial</th></tr>
+        <tr><td>When</td><td class="hl">Before adjudication (front-end)</td><td class="hl">After adjudication</td></tr>
+        <tr><td>Transaction</td><td class="code">277CA</td><td class="code">835 EOB</td></tr>
+        <tr><td>Entered payer system?</td><td class="red">NO</td><td class="green">YES</td></tr>
+        <tr><td>Resolution</td><td>Correct & resubmit as new claim</td><td>Appeal or write-off</td></tr>
+      </table></div>`},
+
+  'ins-t2':{appName:'CE Study Prep · Operational Tasks',tier:'silver',appUrl:'ce-study-prep.html',
+    hint:'<strong>Module B — Operations:</strong> Work through COB logic, authorization routing, and underpayment analysis inside the CE Study Prep hub.',
+    html:`<div class="ref-section"><h4>COB — Primary vs Secondary Determination</h4>
+      <ol class="ref-steps">
+        <li><span class="step-n">1</span>Identify all active insurance plans for the patient</li>
+        <li><span class="step-n">2</span>Apply COB rules: employer plan vs individual, birthday rule for dependents</li>
+        <li><span class="step-n">3</span>Bill primary payer first; receive EOB</li>
+        <li><span class="step-n">4</span>Bill secondary with primary EOB attached</li>
+        <li><span class="step-n">5</span>Balance bill patient for remaining co-pay/deductible (if applicable)</li>
+      </ol></div>
+      <div class="ref-section"><h4>Underpayment Analysis</h4>
+      <div class="ref-alert"><strong>Process:</strong> Compare 835 payment amount against contracted fee schedule rate. Any gap &gt;5% requires investigation. Document discrepancy; file underpayment appeal within payer's window (typically 60–180 days).</div>
+      <div class="ref-kv">
+        <div class="ref-kv-row"><span class="ref-kv-key">Contracted rate</span><span class="ref-kv-val">Pull from fee schedule by CPT + payer</span></div>
+        <div class="ref-kv-row"><span class="ref-kv-key">Paid amount (835)</span><span class="ref-kv-val">From ERA remittance</span></div>
+        <div class="ref-kv-row"><span class="ref-kv-key">Variance threshold</span><span class="ref-kv-val amber">&gt;5% or &gt;$50 → investigate</span></div>
+        <div class="ref-kv-row"><span class="ref-kv-key">Appeal type</span><span class="ref-kv-val">Underpayment appeal with contracted rate documentation</span></div>
+      </div></div>`},
+
+  'ins-t3':{appName:'Insurance Claims Pro · Simulation Lab',tier:'gold',appUrl:'insurance-claims-pro.html',
+    hint:'<strong>Module C — Live Simulation:</strong> Launch the Claims Pro app and resolve the live queue. Your workflow path, click sequence, and resolution time are tracked.',
+    html:`<div class="ref-section"><h4>Live Queue Resolution Protocol</h4>
+      <div class="ref-alert"><strong>Scenario:</strong> Aetna denied MRI CPT 70553 — no prior auth. DOS: 05/20/2026. Exposure: $1,840. Appeal window: 30 days.</div>
+      <ol class="ref-steps">
+        <li><span class="step-n">1</span>Verify auth requirement in payer portal for CPT 70553</li>
+        <li><span class="step-n">2</span>Check Aetna retro-authorization eligibility (contact provider relations)</li>
+        <li><span class="step-n">3</span>Collect clinical documentation from ordering physician</li>
+        <li><span class="step-n">4</span>Submit retro-auth request with clinical notes + ordering physician statement</li>
+        <li><span class="step-n">5</span>If denied → file Level 1 appeal + request peer-to-peer</li>
+      </ol></div>
+      <div class="ref-section"><h4>Payer Escalation Ladder</h4>
+      <div class="ref-kv">
+        <div class="ref-kv-row"><span class="ref-kv-key">Level 1</span><span class="ref-kv-val">Written appeal with documentation</span></div>
+        <div class="ref-kv-row"><span class="ref-kv-key">Peer-to-Peer</span><span class="ref-kv-val">Ordering physician + payer medical director</span></div>
+        <div class="ref-kv-row"><span class="ref-kv-key">Level 2</span><span class="ref-kv-val">External review board</span></div>
+        <div class="ref-kv-row"><span class="ref-kv-key">IRO</span><span class="ref-kv-val amber">Independent Review Organization — binding on payer</span></div>
+      </div></div>`},
+
+  'ins-t4':{appName:'Insurance CE · Certification Exam',tier:'plat',appUrl:'insurance-ce-command.html',
+    hint:'<strong>Module D — Certification:</strong> Demonstrate mastery of the full insurance operations workflow. Your response is evaluated on accuracy, workflow logic, and compliance knowledge.',
+    html:`<div class="ref-section"><h4>MSP — Medicare Secondary Payer Rules</h4>
+      <div class="ref-alert"><strong>Auto/liability accident:</strong> Liability insurance is ALWAYS primary. Medicare is secondary. Bill liability first. Medicare accepts after 120-day waiting period if liability has not paid.</div>
+      <table class="ref-table"><tr><th>Scenario</th><th>Primary</th><th>Secondary</th></tr>
+        <tr><td>Working-age employee (employer &gt;20 staff)</td><td class="hl">Employer group plan</td><td>Medicare</td></tr>
+        <tr><td>Auto accident</td><td class="hl">Auto/liability insurance</td><td>Medicare (after 120 days)</td></tr>
+        <tr><td>Dual eligible (Medicare + Medicaid)</td><td class="hl">Medicare</td><td>Medicaid ($0 patient)</td></tr>
+        <tr><td>Workers' comp injury</td><td class="hl">Workers' comp</td><td>Medicare</td></tr>
+      </table></div>
+      <div class="ref-kv">
+        <div class="ref-kv-row"><span class="ref-kv-key">MSP violation penalty</span><span class="ref-kv-val red">Fines + Medicare exclusion risk</span></div>
+        <div class="ref-kv-row"><span class="ref-kv-key">Subrogation</span><span class="ref-kv-val">Medicare pursues liable party for reimbursement</span></div>
+      </div>`},
+
+  'fin-t1':{appName:'FinOps Academy · Financial Knowledge',tier:'bronze',appUrl:'finops-scenarios.html',
+    hint:'<strong>Level 1 — Financial Knowledge:</strong> Master accounting terminology, GAAP principles, and reconciliation concepts before operational tasks.',
+    html:`<div class="ref-section"><h4>Core Accounting Terminology</h4>
+      <table class="ref-table"><tr><th>Term</th><th>Definition</th><th>Context</th></tr>
+        <tr><td class="code hl">GAAP</td><td>Generally Accepted Accounting Principles</td><td>US financial reporting standard</td></tr>
+        <tr><td class="code hl">Accrual</td><td>Record revenue/expense when earned/incurred, not when cash moves</td><td>Healthcare: record revenue on DOS</td></tr>
+        <tr><td class="code hl">Depreciation</td><td>Allocation of asset cost over useful life</td><td>Equipment, buildings</td></tr>
+        <tr><td class="code hl">Variance</td><td>Difference between actual and budgeted amount</td><td>Favorable = better than budget</td></tr>
+        <tr><td class="code hl">AP Aging</td><td>Report of outstanding payables by age bucket</td><td>0-30, 31-60, 61-90, 90+ days</td></tr>
+        <tr><td class="code hl">AR Aging</td><td>Report of outstanding receivables by age bucket</td><td>Monitor payer payment speed</td></tr>
+      </table></div>
+      <div class="ref-section"><h4>Bank Reconciliation Formula</h4>
+      <div class="ref-alert"><strong>Adjusted Bank Balance</strong> = Bank Statement ± Outstanding Items (checks/deposits in transit)<br><strong>Adjusted GL Balance</strong> = GL Balance ± Unrecorded Items (fees, NSF checks, errors)<br>Both adjusted balances must equal each other. Any unexplained gap requires investigation.</div></div>`},
+
+  'fin-t2':{appName:'FinOps Accounting · Operational Tasks',tier:'silver',appUrl:'finops-accounting.html',
+    hint:'<strong>Level 2 — Operational:</strong> Work live reconciliations, journal entries, and variance analysis tasks inside the FinOps Accounting module.',
+    html:`<div class="ref-section"><h4>GL Variance Analysis Framework</h4>
+      <ol class="ref-steps">
+        <li><span class="step-n">1</span><strong>Volume variance:</strong> Did patient/transaction volume change vs prior period?</li>
+        <li><span class="step-n">2</span><strong>Rate variance:</strong> Did payer rates or prices change?</li>
+        <li><span class="step-n">3</span><strong>Mix variance:</strong> Did payer or service mix shift?</li>
+        <li><span class="step-n">4</span><strong>Coding/billing variance:</strong> Did coding patterns change affecting reimbursement?</li>
+        <li><span class="step-n">5</span>Confirm root cause before recommending budget revision</li>
+      </ol></div>
+      <div class="ref-section"><h4>Month-End Close Checklist</h4>
+      <div class="ref-kv">
+        <div class="ref-kv-row"><span class="ref-kv-key">Bank reconciliation</span><span class="ref-kv-val">All accounts reconciled by day 3</span></div>
+        <div class="ref-kv-row"><span class="ref-kv-key">AR aging review</span><span class="ref-kv-val">90+ day bucket escalated; write-offs approved</span></div>
+        <div class="ref-kv-row"><span class="ref-kv-key">Accruals posted</span><span class="ref-kv-val">Payroll, utilities, deferred revenue</span></div>
+        <div class="ref-kv-row"><span class="ref-kv-key">Intercompany eliminations</span><span class="ref-kv-val">All interco transactions eliminated</span></div>
+        <div class="ref-kv-row"><span class="ref-kv-key">Management review</span><span class="ref-kv-val">Variance explanations prepared for review by day 7</span></div>
+      </div></div>`},
+
+  'fin-t3':{appName:'FinOps Scenarios · Simulation Engine',tier:'gold',appUrl:'finops-scenarios.html',
+    hint:'<strong>Level 3 — Simulation:</strong> A $240,000 discrepancy has appeared during month-end close. Investigate, identify root cause, and prepare the escalation memo inside the scenarios module.',
+    html:`<div class="ref-section"><h4>AP Crisis Response Matrix</h4>
+      <table class="ref-table"><tr><th>Vendor</th><th>Amount</th><th>Status</th><th>Priority</th></tr>
+        <tr><td class="hl">McKesson (Pharma)</td><td>$51,000</td><td class="red">Credit Hold</td><td class="red">#1 — Critical ops</td></tr>
+        <tr><td class="hl">Medline (Supplies)</td><td>$38,000</td><td class="red">Credit Hold</td><td class="red">#2 — Critical ops</td></tr>
+        <tr><td class="hl">Stryker (Surgical)</td><td>$29,000</td><td class="red">Credit Hold</td><td class="amber">#3 — High</td></tr>
+        <tr><td>0-30 day vendors</td><td>$84,000</td><td class="green">Within terms</td><td class="green">DEFER</td></tr>
+      </table></div>
+      <div class="ref-section"><h4>Cash Flow Crisis Levers</h4>
+      <ol class="ref-steps">
+        <li><span class="step-n">1</span>Protect payroll first ($67K — legal obligation, non-negotiable)</li>
+        <li><span class="step-n">2</span>Negotiate partial payments with critical vendors to restore credit lines</li>
+        <li><span class="step-n">3</span>Accelerate AR collections — call top 10 largest accounts</li>
+        <li><span class="step-n">4</span>Draw credit line if available</li>
+        <li><span class="step-n">5</span>Defer non-critical AP (0-30 day still within terms)</li>
+      </ol></div>`},
+
+  'fin-t4':{appName:'Staff Accountant Interview · Role Certification',tier:'plat',appUrl:'staff-accountant-interview.html',
+    hint:'<strong>Level 4 — Certification:</strong> This is an adaptive interview simulation. Demonstrate competency in reconciliations, journal entries, month-end close, and GL review. Your responses are scored on technical accuracy and workflow logic.',
+    html:`<div class="ref-section"><h4>Staff Accountant Core Competencies</h4>
+      <table class="ref-table"><tr><th>Skill</th><th>Expected Proficiency</th><th>Assessment</th></tr>
+        <tr><td class="hl">Bank Reconciliation</td><td>Full recon including adjustments</td><td>Live calculation task</td></tr>
+        <tr><td class="hl">Journal Entries</td><td>Debits/credits for standard transactions</td><td>Written entry + explanation</td></tr>
+        <tr><td class="hl">Month-End Close</td><td>Checklist + escalation protocol</td><td>Workflow scenario</td></tr>
+        <tr><td class="hl">GL Review</td><td>Variance analysis + root cause</td><td>$400K variance scenario</td></tr>
+        <tr><td class="hl">AP/AR</td><td>Aging analysis + priority matrix</td><td>AP crisis scenario</td></tr>
+      </table></div>
+      <div class="ref-alert"><strong>Scoring model:</strong> Accuracy 40% + Workflow Logic 35% + Compliance 25%. Passing: 85/100. Below 70 = remediation required before certification issued.</div>`},
+
+  'con-t1':{appName:'Construction Academy · Regulatory Knowledge',tier:'bronze',appUrl:'permits-proposals.html',
+    hint:'<strong>Stage 1 — Regulatory:</strong> Master permits, OSHA requirements, bid processes, and subcontractor compliance rules.',
+    html:`<div class="ref-section"><h4>Construction Permit Types</h4>
+      <table class="ref-table"><tr><th>Permit</th><th>Issued By</th><th>Required For</th><th>Timeline</th></tr>
+        <tr><td class="hl">Building Permit</td><td>City Building Dept</td><td>All new construction, major renovations</td><td>4–12 weeks</td></tr>
+        <tr><td class="hl">Grading Permit</td><td>City/County</td><td>Earthwork, site grading, drainage</td><td>2–6 weeks</td></tr>
+        <tr><td class="hl">Electrical Permit</td><td>Building Dept</td><td>Electrical system installation</td><td>1–3 weeks</td></tr>
+        <tr><td class="hl">Mechanical Permit</td><td>Building Dept</td><td>HVAC, plumbing systems</td><td>1–3 weeks</td></tr>
+        <tr><td class="hl">Fire Clearance</td><td>Fire Marshall</td><td>Occupancy approval</td><td>After final inspection</td></tr>
+      </table></div>
+      <div class="ref-section"><h4>OSHA Construction Key Rules</h4>
+      <div class="ref-kv">
+        <div class="ref-kv-row"><span class="ref-kv-key">Fall protection required</span><span class="ref-kv-val red">Any work &gt;6 feet above lower level</span></div>
+        <div class="ref-kv-row"><span class="ref-kv-key">Hazard communication</span><span class="ref-kv-val">SDS sheets on site for all chemical products</span></div>
+        <div class="ref-kv-row"><span class="ref-kv-key">Excavation safety</span><span class="ref-kv-val">Trench &gt;5ft requires shoring or sloping</span></div>
+        <div class="ref-kv-row"><span class="ref-kv-key">Recordkeeping</span><span class="ref-kv-val">300 log for all work-related injuries/illnesses</span></div>
+      </div></div>`},
+
+  'con-t2':{appName:'Permits & Proposals · Build Packages',tier:'silver',appUrl:'permits-proposals.html',
+    hint:'<strong>Stage 2 — Operational:</strong> Inside the Permits & Proposals module, build a permit package, identify documentation gaps, and resolve compliance issues.',
+    html:`<div class="ref-section"><h4>Permit Package Checklist</h4>
+      <ol class="ref-steps">
+        <li><span class="step-n">1</span>Completed permit application with project description and valuation</li>
+        <li><span class="step-n">2</span>Architectural/structural drawings stamped by licensed engineer</li>
+        <li><span class="step-n">3</span>Site plan showing setbacks, utilities, parking</li>
+        <li><span class="step-n">4</span>Soils report (if new construction or major excavation)</li>
+        <li><span class="step-n">5</span>Title 24 energy compliance documentation (CA)</li>
+        <li><span class="step-n">6</span>Owner/contractor authorization + license numbers</li>
+        <li><span class="step-n">7</span>Permit fee payment</li>
+      </ol></div>
+      <div class="ref-section"><h4>30-Day Permit Delay Response</h4>
+      <div class="ref-alert"><strong>Immediate actions:</strong> Notify lender (draw schedule amendment); issue subcontractor delay notice (negotiate standby vs remobilization); hire permit expediter; escalate to city if possible.</div>
+      <div class="ref-kv">
+        <div class="ref-kv-row"><span class="ref-kv-key">Remobilization cost (typical)</span><span class="ref-kv-val red">$15K–$40K if clause triggers</span></div>
+        <div class="ref-kv-row"><span class="ref-kv-key">Subcontractor clause trigger</span><span class="ref-kv-val amber">Must start within 45 days of NTP</span></div>
+      </div></div>`},
+
+  'con-t3':{appName:'Construction Scenarios · Simulation Engine',tier:'gold',appUrl:'construction-scenarios.html',
+    hint:'<strong>Stage 3 — Simulation:</strong> Project halted after failed inspection. Use the scenario engine to determine the violation, build a remediation plan, and calculate financial exposure.',
+    html:`<div class="ref-section"><h4>Inspection Failure Response Protocol</h4>
+      <ol class="ref-steps">
+        <li><span class="step-n">1</span>Obtain written inspection failure report from inspector</li>
+        <li><span class="step-n">2</span>Identify specific code violation(s) cited</li>
+        <li><span class="step-n">3</span>Engage GC and relevant sub (electrical, structural, etc.) for remediation plan</li>
+        <li><span class="step-n">4</span>Calculate financial exposure: daily burn rate × estimated correction timeline</li>
+        <li><span class="step-n">5</span>Notify lender and owner immediately; document all corrective actions</li>
+        <li><span class="step-n">6</span>Schedule re-inspection; confirm correction with inspector before work restart</li>
+      </ol></div>
+      <div class="ref-section"><h4>Financial Exposure Calculation</h4>
+      <div class="ref-kv">
+        <div class="ref-kv-row"><span class="ref-kv-key">Contract value</span><span class="ref-kv-val">$2,400,000</span></div>
+        <div class="ref-kv-row"><span class="ref-kv-key">Weekly burn rate (when active)</span><span class="ref-kv-val">$48,000/week</span></div>
+        <div class="ref-kv-row"><span class="ref-kv-key">Delay cost (30 days)</span><span class="ref-kv-val amber">$0 direct burn + remobilization risk</span></div>
+        <div class="ref-kv-row"><span class="ref-kv-key">Draw schedule impact</span><span class="ref-kv-val red">All milestones shift; lender notification required</span></div>
+      </div></div>`},
+
+  'con-t4':{appName:'Construction Academy · Certification',tier:'plat',appUrl:'construction-scenarios.html',
+    hint:'<strong>Stage 4 — Certification:</strong> Demonstrate enterprise-level operational command. Design the full cross-sector orchestration response for the multi-event scenario below.',
+    html:`<div class="ref-section"><h4>Multi-Sector Event Map</h4>
+      <table class="ref-table"><tr><th>Sector</th><th>Event</th><th>Owner</th><th>Interdependency</th></tr>
+        <tr><td class="hl">Healthcare</td><td>Payer audit $890K</td><td>Rev Cycle Dir</td><td>HIPAA breach may affect timeline</td></tr>
+        <tr><td class="hl">FinOps</td><td>$340K GL variance</td><td>Controller</td><td>Audit adjustments may explain variance</td></tr>
+        <tr><td class="hl red">Legal</td><td>HIPAA breach notification</td><td>Compliance Officer</td><td>Patient notification required; affects HC audit</td></tr>
+        <tr><td class="hl">Construction</td><td>Facility expansion mid-permit</td><td>Project Manager</td><td>Capitalize costs in Q2 close</td></tr>
+        <tr><td class="hl">Insurance</td><td>Patient incident liability claim</td><td>Risk Manager</td><td>Notify liability carrier; may affect GL</td></tr>
+      </table></div>
+      <div class="ref-section"><h4>Command Structure</h4>
+      <ol class="ref-steps">
+        <li><span class="step-n">1</span>Daily sector standup — all 5 leads, 15 min, blockers + cross-sector flags</li>
+        <li><span class="step-n">2</span>Weekly executive rollup — CEO/CFO/COO, financial exposure + decisions</li>
+        <li><span class="step-n">3</span>Board notification — HIPAA breach, legal counsel coordinates</li>
+        <li><span class="step-n">4</span>30-day roadmap: Wk1 HIPAA+audit, Wk2 Q2 close, Wk3 liability, Wk4 all-sector review</li>
+      </ol></div>`}
+};
+
+/* ══ ACADEMY DATA ══ */
+const ACADEMIES = [
+  {
+    id:'hc', icon:'🏥', cls:'ac-hc',
+    title:'Healthcare Intelligence Academy',
+    sub:'CRCR · Claims · Denials · AR · Appeals · Certification',
+    totalXp:400,
+    modules:[
+      {id:'hc-t1',title:'Terminology & CRCR Core',desc:'EFT, ERA, DRG, APC, MSP, ABN — master the language',
+       tier:'bronze',icon:'📘',type:'mc',xp:60,passScore:100,
+       pipelineStage:'LEARN',
+       scenario:`CRCR Foundation — Stage 1. Match each acronym to its correct definition. Understanding these terms is the foundation of every operational workflow in healthcare revenue cycle.`,
+       objective:'What does ERA stand for and what is its primary function in the revenue cycle?',
+       options:[
+         {letter:'A',text:'Electronic Remittance Advice — explains how claims were paid/adjusted by the payer (835 transaction)',correct:true},
+         {letter:'B',text:'Electronic Revenue Assessment — calculates provider net revenue after adjustments'},
+         {letter:'C',text:'Eligibility Response Authorization — confirms patient insurance is active'},
+         {letter:'D',text:'Enhanced Reimbursement Algorithm — payer formula for calculating DRG payment'}
+       ],
+       explanation:'ERA (Electronic Remittance Advice) is transmitted via the 835 EDI transaction. It explains payment decisions: what was paid, what was adjusted (CO, PR, OA codes), and why. Combined with EFT (the actual money movement), it allows providers to auto-post payments to patient accounts.'},
+      {id:'hc-t2',title:'Operational Workflow',desc:'Registration → eligibility → auth → claim routing → denial review',
+       tier:'silver',icon:'⚙️',type:'text',xp:90,passScore:70,
+       pipelineStage:'PRACTICE',
+       scenario:`A new patient presents for a cardiology consultation. She has Blue Cross PPO primary and Medicare as secondary. The cardiologist also wants to order a stress test during the same visit. Your registration desk flags: <span class="dp">eligibility unverified</span>, <span class="dp">authorization status unknown</span> for the stress test, <span class="dp">COB not documented</span>.`,
+       objective:'Walk through the complete pre-service workflow you must complete before this visit is processed.',
+       evalCtx:'Healthcare revenue cycle operations evaluator. Expects: 270/271 eligibility verification for both payers. COB determination — Blue Cross primary (employer plan), Medicare secondary. 278 prior auth check for stress test CPT (93015). Collect auth number if required. Confirm deductible/copay. Document all findings in registration system. Flag cardiologist if auth not obtained before stress test.'},
+      {id:'hc-t3',title:'Live Claims Simulation',desc:'Resolve denials · Correct HCPCS · Process appeals · Reconcile ERA/EFT',
+       tier:'gold',icon:'🔬',type:'text',xp:120,passScore:70,
+       pipelineStage:'OPERATE',
+       scenario:`LIVE SIMULATION ACTIVE. Claims Lab shows: CPT <span class="dp">99215</span> denied <span class="dp">CO-4</span> + <span class="dp">CO-16</span>. DOS <span class="dp">03/15/2026</span>. Provider also billed CPT <span class="dp">93000</span> (EKG) same day. Medicare claim. Timely filing window closes in <span class="dp">28 days</span>.`,
+       objective:'Document your full resolution workflow as if executing it inside the Claims Lab. Include: root cause, corrective action, resubmission steps, and how you verify the fix worked.',
+       evalCtx:'Claims resolution specialist evaluating live workflow competency. Expects: CO-4 root cause = 99215 billed same day as procedure (93000 EKG) without modifier 25 (E/M significant and separate). CO-16 = missing/invalid field — identify which field. Add modifier 25 to 99215. Verify documentation supports Level 5 E/M. Correct and resubmit electronically. Confirm 277CA acceptance. Track in denial log. Must mention 28-day timely filing urgency.'},
+      {id:'hc-t4',title:'Certification Exam — HC Intelligence',desc:'Timed competency gate · Terminology + Workflow + Appeals + Compliance',
+       tier:'plat',icon:'🎯',type:'text',xp:130,passScore:80,
+       pipelineStage:'CERTIFY',
+       scenario:`CERTIFICATION GATE: DRG <span class="dp">470</span> inpatient claim — Major Joint Replacement — <span class="dp">$18,400</span>. Denial: <span class="dp">Not Medically Necessary</span>. Patient: 67-year-old Medicare beneficiary, severe osteoarthritis, KOOS score <span class="dp">28/100</span>, 18 months failed conservative treatment. Concurrent billing issue: outpatient lab draw <span class="dp">May 31</span>, hospital admission <span class="dp">June 2</span>. Appeal window: <span class="dp">14 days</span>.`,
+       objective:'Write the complete appeal strategy AND identify the DRG window rule issue AND outline your escalation path if the Level 1 appeal is denied.',
+       evalCtx:'HC certification examiner evaluating mastery. Part 1 - Appeal: KOOS 28/100 (threshold <45 = qualifies), 18 months conservative tx (exceeds 3-6 month typical requirement 3x), DRG 470 Medicare criteria met, cite CMS LCD, include physician notes + imaging + KOOS assessment. Part 2 - DRG window: May 31 lab = 2 days before June 2 admission = within 3-day window = DIAGNOSTIC = must be bundled into DRG, cannot be billed separately. Part 3 - Escalation: Level 1 written appeal → Peer-to-peer request (surgeon + payer medical director) → Level 2 external review → IRO (independent review organization, binding on payer).'}
+    ]
+  },
+  {
+    id:'ins', icon:'🛡️', cls:'ac-ins',
+    title:'Insurance Operations Academy',
+    sub:'CE Study Prep · Claims Pro · Authorization · COB · Certification',
+    totalXp:380,
+    modules:[
+      {id:'ins-t1',title:'Core Concepts & Policy Structures',desc:'EDI transactions · EFT/ERA · Claim lifecycle · Payer workflows',
+       tier:'bronze',icon:'📘',type:'mc',xp:55,passScore:100,
+       pipelineStage:'LEARN',
+       scenario:`Insurance CE Module A — Core Concepts. Two claims returned today: Claim A has a <span class="dp">277CA</span> error for invalid NPI. Claim B has an <span class="dp">835 EOB</span> with denial code <span class="dp">CO-50</span>. New provider Dr. Chen joined the practice 3 weeks ago.`,
+       objective:'Which statement correctly describes the situation and the correct first action for each claim?',
+       options:[
+         {letter:'A',text:'Both are denials — different processing stages. For both: appeal within 30 days.'},
+         {letter:'B',text:'Claim A = rejection (front-end, never adjudicated) — correct NPI issue and resubmit. Claim B = denial (adjudicated, payment refused) — appeal or write off. For Claim A, likely cause is Dr. Chen not yet enrolled with payer.',correct:true},
+         {letter:'C',text:'Claim A = denial, appeal immediately. Claim B = rejection, resubmit with corrected information.'},
+         {letter:'D',text:'Both require the same response: correct and resubmit within 30 days of service.'}
+       ],
+       explanation:'A 277CA indicates a rejection at the clearinghouse/front-end — the claim never entered payer adjudication. A 835 EOB denial means the payer processed the claim but refused payment. For Dr. Chen: new providers are commonly not yet enrolled with payers — NPI is valid but not in payer credentialing file. Interim solution: bill under credentialed supervising physician while enrollment is pending.'},
+      {id:'ins-t2',title:'Operational Tasks — CE Study Hub',desc:'Claims investigation · Authorization routing · COB logic · Underpayment analysis',
+       tier:'silver',icon:'⚙️',type:'text',xp:85,passScore:70,
+       pipelineStage:'PRACTICE',
+       scenario:`CE Study Hub Exercise: Patient with Medicare primary + Medicaid secondary (dual eligible). CPT <span class="dp">99213</span> billed <span class="dp">$285</span>. Medicare allowed: <span class="dp">$98.50</span>. Medicare paid 80% = <span class="dp">$78.80</span>. Patient responsibility: <span class="dp">$19.70</span>.`,
+       objective:'Explain the complete COB billing sequence, patient responsibility, and what happens to the $19.70 Medicare coinsurance.',
+       evalCtx:'Insurance COB and dual-eligible specialist. Expects: Medicare Part B billed first (primary). Medicare adjudicates and pays $78.80 (80% of $98.50 allowed). $19.70 patient responsibility (20% coinsurance). Medicaid is payer of last resort. Crossover claim sent to Medicaid (automatic in most states via CMS data match, or manually with Medicare EOB). Medicaid pays up to the $19.70 patient liability. Dual-eligible patient owes $0. Provider writes off difference between billed ($285) and total received.'},
+      {id:'ins-t3',title:'Simulation Lab — Claims Pro',desc:'Live queue · Payer escalation · Audit workflow · Appeals management',
+       tier:'gold',icon:'🔬',type:'text',xp:110,passScore:70,
+       pipelineStage:'SIMULATE',
+       scenario:`SIMULATION LAB — Claims Pro Queue Active. Aetna denied MRI Brain CPT <span class="dp">70553</span> — no prior authorization. DOS <span class="dp">05/20/2026</span>. Exposure: <span class="dp">$1,840</span>. Appeal window: <span class="dp">30 days</span>. Second item: <span class="dp">12 claims</span> rejected on 277CA — NPI not matched to payer credentialing file. Provider: Dr. Chen, joined 3 weeks ago.`,
+       objective:'Write your resolution plan for BOTH items: the auth denial and the NPI rejections. Include timeline and who owns each step.',
+       evalCtx:'Insurance operations specialist evaluating dual-issue resolution. For auth denial: verify if Aetna allows retro-auth (contact provider relations immediately); collect clinical documentation from ordering physician; submit retro-auth with clinical notes; if denied → Level 1 appeal + peer-to-peer request; 30-day appeal window. For NPI rejections: verify Dr. Chen enrollment status in Aetna portal; submit credentialing application immediately; in interim bill under credentialed supervising physician per Aetna agreement; once enrollment confirmed, resubmit under Dr. Chen NPI; 30-90 day enrollment timeline typical.'},
+      {id:'ins-t4',title:'Certification Exam — Insurance Operations',desc:'MSP · Subrogation · Cross-App Validation · Enterprise Resolution',
+       tier:'plat',icon:'🎯',type:'text',xp:130,passScore:80,
+       pipelineStage:'CERTIFY',
+       scenario:`CERTIFICATION GATE: Patient injured in auto accident. Treated at your facility. Total charges: <span class="dp">$34,500</span>. Patient has Medicare. Your billing team submitted to Medicare immediately after service without billing the auto liability carrier. It has been <span class="dp">45 days</span> since DOS. The auto carrier has not paid anything.`,
+       objective:'Identify the compliance violation, the correct MSP billing sequence, what must happen now, and the potential penalties for the error already made.',
+       evalCtx:'Insurance compliance and MSP specialist. Expects: Compliance violation — billing Medicare first when a liable payer (auto insurance) exists violates Medicare Secondary Payer (MSP) rules. Correct sequence: 1) Bill auto/liability insurance FIRST immediately after service. 2) If liability pays, bill Medicare for remaining. 3) If liability has NOT paid after 120 days, may submit to Medicare conditionally. Current situation: 45 days — still within 120-day window. Actions: contact auto carrier NOW and submit claim. Request Medicare conditional payment reversal if possible. Document all actions. Penalties: fines, demand for repayment of any Medicare payments made, potential Medicare exclusion for repeated violations. Subrogation: if Medicare paid, they will pursue auto carrier for reimbursement.'}
+    ]
+  },
+  {
+    id:'fin', icon:'💰', cls:'ac-fin',
+    title:'FinOps Intelligence Academy',
+    sub:'Accounting · Reconciliations · Scenarios · Staff Accountant Certification',
+    totalXp:400,
+    modules:[
+      {id:'fin-t1',title:'Financial Knowledge — Level 1',desc:'GAAP · Terminology · Reconciliations · Accruals · Depreciation',
+       tier:'bronze',icon:'📘',type:'mc',xp:60,passScore:100,
+       pipelineStage:'LEARN',
+       scenario:`FinOps Level 1 — Financial Knowledge. A GL variance report shows Actual Revenue: <span class="dp">$2.4M</span> vs Budget: <span class="dp">$2.8M</span>. Variance: <span class="dp">-$400K (-14.3%)</span>. Surgical: -$180K, Emergency: -$95K, Radiology: -$72K, Lab: -$53K. Your CFO asks for the first-line analysis approach.`,
+       objective:'Which is the MOST COMPLETE first analytical step?',
+       options:[
+         {letter:'A',text:'Revise the budget downward — actual performance is the new baseline'},
+         {letter:'B',text:'Investigate revenue drivers per department: case volume, case mix, payer mix, coding patterns vs prior period to isolate operational vs billing/financial variances',correct:true},
+         {letter:'C',text:'The variance is under 15% — document and move on, no action required'},
+         {letter:'D',text:'Submit variance report to the board immediately and request a budget adjustment'}
+       ],
+       explanation:'A complete GL variance analysis separates operational variance (volume/mix changes) from financial variance (rate/coding/billing). Each department needs its own root cause investigation before any budget revision or board escalation. A -14.3% variance always requires investigation across all four driver types.'},
+      {id:'fin-t2',title:'Operational Tasks — Reconciliations',desc:'Reconcile accounts · Resolve discrepancies · Route approvals · Variance analysis',
+       tier:'silver',icon:'⚙️',type:'text',xp:90,passScore:70,
+       pipelineStage:'OPERATE',
+       scenario:`Bank Reconciliation Task: GL Cash: <span class="dp">$487,320</span>. Bank Statement: <span class="dp">$439,200</span>. Reconciling items: Outstanding checks <span class="dp">$22,400</span>. Deposits in transit <span class="dp">$31,500</span>. Bank service charge (unrecorded in GL) <span class="dp">$380</span>. NSF patient check (unrecorded in GL) <span class="dp">$1,840</span>.`,
+       objective:'Calculate the adjusted bank balance, the adjusted GL balance, identify any unexplained variance, and describe your investigation steps.',
+       evalCtx:'Controller evaluating bank reconciliation accuracy. Correct: Bank adjusted = $439,200 + $31,500 - $22,400 = $448,300. GL adjusted = $487,320 - $380 - $1,840 = $485,100. Unexplained gap = $485,100 - $448,300 = $36,800. Investigation: check for unrecorded EFT receipts (payer deposits not in GL), duplicate journal entries, large timing differences, unauthorized bank transactions. Must escalate $36,800 unexplained gap to Controller. Cannot close month-end with unexplained variance.'},
+      {id:'fin-t3',title:'Scenario Simulation — FinOps Suite',desc:'Month-end close · Discrepancy investigation · Escalation memo · Ledger resolution',
+       tier:'gold',icon:'🔬',type:'text',xp:110,passScore:70,
+       pipelineStage:'SIMULATE',
+       scenario:`SIMULATION ENGINE ACTIVE. Cash alert triggered: Available cash <span class="dp">$145,000</span>. AP due in 18 days: <span class="dp">$312,000</span>. Three vendors on credit hold: McKesson (pharma) <span class="dp">$51K</span>, Medline (supplies) <span class="dp">$38K</span>, Stryker (surgical) <span class="dp">$29K</span>. Payroll due in 12 days: <span class="dp">$67,000</span>. Expected AR collections (18 days): <span class="dp">$89,000</span>.`,
+       objective:'Write the 72-hour / 7-day / 14-day cash flow crisis response plan. Identify which vendors to pay first, how much, and your cash preservation strategy.',
+       evalCtx:'CFO evaluating cash crisis management. Must protect payroll ($67K — legal obligation, highest priority). Net gap after payroll and collections: $145K+$89K=$234K available vs $312K AP = $78K shortfall. Priority: restore credit lines for McKesson (pharma) and Medline (supplies) — both operationally critical. Negotiate partial payments ~50% ($44.5K+$19K = $63.5K) to restore credit. 72hr: accelerate top 10 AR accounts, contact bank about credit line, negotiate AP extensions. 7-day: emergency collections on 60+ day AR. 14-day: draw credit line if needed, close negotiations. Defer 0-30 day vendors (still within terms). Must include payroll protection as first priority.'},
+      {id:'fin-t4',title:'Role Certification — Staff Accountant',desc:'Adaptive interview sim · Competency validator · Oral exam engine',
+       tier:'plat',icon:'🎯',type:'text',xp:140,passScore:80,
+       pipelineStage:'CERTIFY',
+       scenario:`STAFF ACCOUNTANT CERTIFICATION: A $240,000 discrepancy has appeared during month-end close. GL shows $487,320 cash. Bank shows $439,200. After standard reconciliation adjustments (outstanding checks $22,400, deposits in transit $31,500, bank fees $380, NSF $1,840), a <span class="dp">$36,800 unexplained variance</span> remains. The Controller is waiting for your analysis. Month-end close deadline is in <span class="dp">4 hours</span>.`,
+       objective:'Write your complete resolution memo to the Controller: what you found, what you did, what the risk is, and your recommended next steps. Include journal entries you would propose if applicable.',
+       evalCtx:'Staff accountant certification evaluator. Expects: Professional memo format. Root cause investigation: checked for unrecorded EFT receipts (common — payer deposits arrive before GL posting), duplicate journal entries, large timing differences, unauthorized transactions. Journal entry proposal if EFT not recorded: DR Cash $36,800 / CR AR $36,800 (or appropriate account). Risk assessment: cannot close month-end with unexplained variance — GAAP violation. Recommendation: extend close deadline; escalate to Controller and CFO; engage external auditor if internal investigation inconclusive. Timeline: investigate all bank statements line by line; cross-reference to 835 ERA deposits; identify the missing entry within 2 hours to meet close deadline.'}
+    ]
+  },
+  {
+    id:'con', icon:'🏗️', cls:'ac-con',
+    title:'Construction Intelligence Academy',
+    sub:'Permits · OSHA · Proposals · Scenarios · Multi-Sector Certification',
+    totalXp:380,
+    modules:[
+      {id:'con-t1',title:'Regulatory Knowledge — Stage 1',desc:'Permits · Inspections · OSHA · Bids · Subcontractor compliance',
+       tier:'bronze',icon:'📘',type:'mc',xp:55,passScore:100,
+       pipelineStage:'LEARN',
+       scenario:`Construction Stage 1 — Regulatory Knowledge. A GC is about to mobilize a medical office building project: <span class="dp">$2.4M contract</span>. City building permit is pending. Subcontractor mobilization clause: must start within <span class="dp">45 days</span> of NTP. The permit process just hit a <span class="dp">30-day delay</span> due to plan check.`,
+       objective:'What is the CORRECT immediate action regarding the lender and the subcontractors?',
+       options:[
+         {letter:'A',text:'Do nothing until the permit is issued — starting the clock creates liability'},
+         {letter:'B',text:'Notify lender of delay immediately (draw schedule amendment) AND issue formal 30-day delay notice to subcontractors (negotiate standby fee vs remobilization cost)',correct:true},
+         {letter:'C',text:'Pay all subcontractors in full now to prevent any contract issues during the delay'},
+         {letter:'D',text:'Cancel all subcontracts and rebid after the permit is received'}
+       ],
+       explanation:'Two immediate actions required: (1) Lender: formal delay notice to amend the milestone-based draw schedule. Owner delays typically do not trigger loan default but must be documented. (2) Subcontractors: issue formal delay notice per contract. With 45-day mobilization clause and 30-day delay, only 15 days of buffer remain. Negotiate standby fee now — remobilization cost ($15K–$40K) is far more expensive than a standby arrangement.'},
+      {id:'con-t2',title:'Permit Packages — Operational',desc:'Build permit packages · Identify missing docs · Resolve compliance gaps',
+       tier:'silver',icon:'⚙️',type:'text',xp:85,passScore:70,
+       pipelineStage:'OPERATE',
+       scenario:`Permits & Proposals Lab: You are assembling the permit package for the medical office building project. Plan check returned with <span class="dp">3 deficiencies</span>: (1) Structural drawings not stamped by licensed engineer. (2) Title 24 energy compliance documentation missing. (3) ADA compliance narrative not included. The permit window is <span class="dp">10 days</span> to resubmit before losing your place in queue.`,
+       objective:'Describe your 10-day remediation plan to resolve all three deficiencies and resubmit the complete package.',
+       evalCtx:'Construction PM evaluating permit package management. Expects: Day 1-2: Contact structural engineer of record to add licensed stamp (if drawings are correct, this is administrative; if revisions needed, may require 3-5 days). Simultaneously: engage Title 24 energy consultant — HVAC, lighting, envelope compliance documentation (1-3 day turnaround typical with expedited request). ADA narrative: prepare with architect — describe accessible routes, parking, restrooms, door hardware compliance. Day 3-4: Compile corrected package. Day 5: Internal review for completeness. Day 7: Resubmit via permit portal. Day 8-10: Buffer for any portal issues or minor corrections. Must note: losing queue position adds 4-8 weeks of additional delay — cannot afford to miss the 10-day window.'},
+      {id:'con-t3',title:'Simulation Engine — Failed Inspection',desc:'Determine violation · Build remediation plan · Calculate exposure · Escalate',
+       tier:'gold',icon:'🔬',type:'text',xp:110,passScore:70,
+       pipelineStage:'SIMULATE',
+       scenario:`SIMULATION ENGINE ACTIVE: Project halted. Inspector red-tagged the electrical rough inspection for <span class="dp">3 violations</span>: (1) Conduit fill percentage exceeded in panel feeder run. (2) Junction boxes without covers in ceiling space. (3) GFCI outlets not installed within 6 feet of water source in the lab area. Current schedule: <span class="dp">$48,000/week burn rate</span>. Estimated correction time: <span class="dp">5-7 business days</span>. Client completion deadline: <span class="dp">45 days</span>.`,
+       objective:'Calculate the total financial exposure, build the remediation priority order, and write the owner/lender notification memo.',
+       evalCtx:'Construction PM evaluating incident response. Financial exposure: $48K/week × ~1.4 weeks = ~$67K direct costs (labor standing by, equipment rental). Plus re-inspection fee. Schedule impact: 5-7 days correction + re-inspection scheduling (add 3-5 days for inspector availability) = ~10-12 calendar days. Against 45-day deadline = 33-35 days remaining after correction. Remediation priority: Start all three corrections simultaneously since different trades. GFCI — fastest fix (electrician, 1 day). Junction box covers — 1 day. Conduit fill — most complex, may require rerouting (3-5 days). Owner/lender notification memo should include: incident description, violations cited, correction plan, revised timeline, financial exposure estimate, insurance notification (if applicable).'},
+      {id:'con-t4',title:'Certification — Enterprise Multi-Sector Command',desc:'Cross-sector orchestration · Sector owners · 30-day roadmap · AI-guided resolution',
+       tier:'plat',icon:'🎯',type:'text',xp:130,passScore:80,
+       pipelineStage:'CERTIFY',
+       scenario:`MULTI-SECTOR CERTIFICATION: Simultaneously active events at a large medical group with active facility construction: (1) HC: Payer audit — <span class="dp">$890K</span> in claims under review. (2) FinOps: Q2 close with <span class="dp">$340K GL variance</span> unexplained. (3) Legal: <span class="dp">HIPAA breach notification</span> required within 60 days of discovery. (4) Construction: Facility expansion mid-permit, <span class="dp">electrical inspection failed</span>. (5) Insurance: Patient incident on construction site — <span class="dp">liability claim expected</span>.`,
+       objective:'Design the full cross-sector command response: assign sector owners, map the interdependencies between all 5 events, build the week-by-week 30-day roadmap, and define escalation criteria for board notification.',
+       evalCtx:'TSM master orchestrator certifying cross-sector command competency. Owner assignments: HC audit = Revenue Cycle Director. FinOps Q2 close = Controller. HIPAA = Chief Compliance Officer + Legal Counsel. Construction = Project Manager. Insurance = Risk Manager. Interdependencies must be identified: HIPAA breach may involve patient data from HC system = HC audit timeline may need to account for legal hold on records. GL $340K variance may be partially explained by Q2 audit adjustments (accruals) = Controller and RC Director must coordinate. Patient incident on construction site = notify liability carrier IMMEDIATELY = Risk Manager + Construction PM + Legal must align. Construction repair costs must be capitalized correctly in Q2 close. Communication structure: daily sector standup (all 5 leads, 15 min). Weekly executive rollup (CEO/CFO/COO). Board notification triggers: HIPAA breach (mandatory within 60 days), any event creating >$500K exposure, any regulatory investigation. 30-day roadmap: Week 1 — HIPAA notification + litigation hold + audit response prep. Week 2 — Q2 close + GL reconciliation + construction remediation. Week 3 — liability claim filed + audit documentation submitted. Week 4 — all-sector review + board update.'}
+    ]
+  }
+];
+
+/* ══ STATE ══ */
+let state = {groqKey:'', progress:{}, xp:0, currentAcademy:null};
+
+function loadState(){
+  try{
+    const s = JSON.parse(localStorage.getItem('tsm_wia_v3') || '{}');
+    state.groqKey = s.groqKey || '';
+    state.progress = s.progress || {};
+    state.xp = s.xp || 0;
+    ACADEMIES.forEach(a => {
+      if(!state.progress[a.id]) state.progress[a.id] = {ts:{}, done:0, complete:false};
+    });
+  }catch(e){}
+}
+function saveState(){
+  localStorage.setItem('tsm_wia_v3', JSON.stringify({groqKey:state.groqKey, progress:state.progress, xp:state.xp}));
+  localStorage.setItem('tsm_xp', state.xp);
+}
+function getAP(id){return state.progress[id] || {ts:{}, done:0, complete:false}}
+function isUnlocked(i){return i===0 || getAP(ACADEMIES[i-1].id).complete}
+function totalModules(){return ACADEMIES.reduce((s,a)=>s+a.modules.length,0)}
+function completedModules(){
+  return ACADEMIES.reduce((s,a)=>{
+    const p=getAP(a.id);
+    return s + Object.values(p.ts).filter(v=>v==='done').length;
+  },0);
+}
+function completedAcademies(){return ACADEMIES.filter(a=>getAP(a.id).complete).length}
+function getCurrentTier(){
+  const xp=state.xp;
+  if(xp>=1200)return{name:'Platinum',color:'#00cfff'};
+  if(xp>=700)return{name:'Gold',color:'#ffb400'};
+  if(xp>=300)return{name:'Silver',color:'#a0aec0'};
+  return{name:'Bronze',color:'#cd7f32'};
+}
+
+/* ── GROQ ── */
+async function callGroq(sys, usr){
+  const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',
+    headers:{'Authorization':`Bearer ${state.groqKey}`,'Content-Type':'application/json'},
+    body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:700,temperature:0.2,
+      messages:[{role:'system',content:sys},{role:'user',content:usr}]})
+  });
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e?.error?.message||`Groq ${r.status}`)}
+  const d = await r.json();
+  return d.choices?.[0]?.message?.content || '';
+}
+
+async function evalText(task, resp){
+  const sys = `You are a strict evaluator for TSM Workforce Intelligence Academy — a workforce readiness and certification platform.
+Correct answer context: ${task.evalCtx}
+Task objective: "${task.objective}"
+Pipeline stage: ${task.pipelineStage || 'OPERATE'}
+Score 0-100. Passing threshold: ${task.passScore}.
+Score guide: 90-100=expert mastery, 80-89=solid, 70-79=good with gaps, 60-69=partial, <60=insufficient.
+Respond ONLY with valid JSON (no markdown, no extra text):
+{"score":<integer>,"feedback":"<2-3 sentences — specific, actionable>","strengths":["<item>","<item>"],"gaps":["<item if any>"],"pass":<true if score>=${task.passScore}>}`;
+  const raw = await callGroq(sys, resp);
+  return JSON.parse(raw.replace(/```json|```/g,'').trim());
+}
+
+/* ── KEY ── */
+function saveKey(){
+  const k = document.getElementById('groq-key-input').value.trim();
+  if(!k) return;
+  state.groqKey = k; saveState();
+  document.getElementById('api-banner').classList.add('hidden');
+  document.getElementById('groq-status').textContent = 'AI LIVE';
+}
+function checkKey(){
+  if(state.groqKey){
+    document.getElementById('api-banner').classList.add('hidden');
+    document.getElementById('groq-key-input').value = state.groqKey;
+    document.getElementById('groq-status').textContent = 'AI LIVE';
+  }
+}
+
+/* ── MISSION BAR ── */
+function updateMissionBar(){
+  const tier = getCurrentTier();
+  document.getElementById('mb-xp').textContent = state.xp;
+  document.getElementById('mb-mods').textContent = `${completedModules()} / ${totalModules()}`;
+  document.getElementById('mb-acs').textContent = `${completedAcademies()} / ${ACADEMIES.length}`;
+  document.getElementById('mb-tier').textContent = tier.name;
+  document.getElementById('mb-tier').style.color = tier.color;
+  const maxXp = ACADEMIES.reduce((s,a)=>s+a.totalXp,0);
+  document.getElementById('xp-bar-fill').style.width = Math.min(100,(state.xp/maxXp)*100)+'%';
+}
+
+/* ── HUB ── */
+function renderHub(){
+  const g = document.getElementById('academy-grid'); g.innerHTML='';
+  ACADEMIES.forEach((ac,i)=>{
+    const p=getAP(ac.id), ul=isUnlocked(i), done=p.complete;
+    const completedCount = Object.values(p.ts).filter(v=>v==='done').length;
+    const pct = Math.round((completedCount/ac.modules.length)*100);
+
+    const modsHTML = ac.modules.map((mod,mi)=>{
+      const ts = p.ts[mod.id];
+      const isDone = ts==='done';
+      const isCurr = mi===p.done && ul && !done;
+      const isLocked = mi>p.done || (!ul&&!done);
+      const cls = isDone?'mod-done':(isCurr?'mod-curr':(isLocked?'mod-locked':''));
+      return `<div class="ac-module ${cls}">
+        <span class="am-icon">${mod.icon}</span>
+        <div class="am-info">
+          <div class="am-title">${mod.title}</div>
+          <div class="am-desc">${mod.desc}</div>
+        </div>
+        <div class="am-tier">
+          ${isDone ? '<span class="am-check">✓</span>' : `<div class="am-tier-dot ${mod.tier}"></div>`}
+        </div>
+      </div>`;
+    }).join('');
+
+    const badgeCls = done?'done':(ul?'avail':'locked');
+    const badgeTxt = done?'CERTIFIED':(ul?'AVAILABLE':'LOCKED');
+    const btnCls = done?'review':(ul?'go':'locked-btn');
+    const btnTxt = done?'REVIEW CERT':(ul?'ENTER ACADEMY →':'LOCKED');
+
+    const card = document.createElement('div');
+    card.className = `academy-card ${ac.cls}${!ul&&!done?' locked':''}`;
+    card.innerHTML = `
+      <div class="ac-stripe"></div>
+      <div class="ac-inner">
+        <div class="ac-header">
+          <div class="ac-icon-wrap">
+            <span class="ac-icon">${ac.icon}</span>
+            <div class="ac-badge-wrap">
+              <div class="ac-title">${ac.title}</div>
+              <div class="ac-sub">${ac.sub}</div>
+            </div>
+          </div>
+          <span class="ac-status-badge ${badgeCls}">${badgeTxt}</span>
+        </div>
+        <div class="ac-modules">${modsHTML}</div>
+        <div class="ac-footer">
+          <div class="ac-progress-wrap">
+            <div class="ac-progress-label">
+              <span>${completedCount} of ${ac.modules.length} modules</span>
+              <span>${pct}%</span>
+            </div>
+            <div class="ac-progress-bar"><div class="ac-progress-fill" style="width:${pct}%"></div></div>
+          </div>
+          <span class="ac-xp">+${ac.totalXp} XP</span>
+          <button class="ac-enter-btn ${btnCls}" ${!ul&&!done?'disabled':''}>${btnTxt}</button>
+        </div>
+      </div>`;
+    if(ul||done){
+      card.querySelector('.ac-enter-btn').addEventListener('click',()=>enterAcademy(i));
+      card.addEventListener('click',e=>{if(!e.target.classList.contains('ac-enter-btn'))enterAcademy(i)});
+    }
+    g.appendChild(card);
+  });
+  updateMissionBar();
+}
+
+/* ── RESEARCH ── */
+function openResearch(taskId){
+  const r = RESEARCH[taskId]; if(!r) return;
+  const panel = document.getElementById('research-panel');
+  document.getElementById('rp-app-name').textContent = r.appName;
+  document.getElementById('rp-hint').innerHTML = r.hint;
+  document.getElementById('rp-content').innerHTML = r.html;
+  const tb = document.getElementById('rp-tier-badge');
+  tb.textContent = r.tier.toUpperCase();
+  tb.className = `rp-tier-badge ${r.tier}`;
+  const ot = document.getElementById('rp-open-tab');
+  ot.innerHTML = r.appUrl ? `<a class="open-tab-btn" href="${r.appUrl}" target="_blank">↗ Open Full App in New Tab</a>` : '';
+  panel.classList.add('open');
+  const btn = document.getElementById(`rl-${taskId}`);
+  if(btn){btn.textContent='RESEARCH OPEN →';btn.classList.add('open')}
+}
+function closeResearch(){
+  document.getElementById('research-panel').classList.remove('open');
+  document.querySelectorAll('.rl-btn').forEach(b=>{b.textContent='LAUNCH RESEARCH TOOL →';b.classList.remove('open')});
+}
+
+/* ── ACADEMY SCREEN ── */
+function enterAcademy(idx){
+  state.currentAcademy = idx;
+  const ac = ACADEMIES[idx], p = getAP(ac.id);
+  document.getElementById('sc-label').textContent = `Academy ${idx+1} of ${ACADEMIES.length} · ${ac.icon}`;
+  document.getElementById('sc-name').textContent = ac.title + (p.complete?' ✓':'');
+
+  const pr = document.getElementById('sc-pips');
+  pr.innerHTML = `<span class="tpip-label">Modules</span>` +
+    ac.modules.map((m,i)=>{
+      const cls = p.ts[m.id]==='done'?'done':(i===p.done&&!p.complete?'curr':'');
+      return `<div class="tpip ${cls}" title="${m.title}"></div>`;
+    }).join('') +
+    `<span class="tpip-label">${p.done}/${ac.modules.length}</span>`;
+
+  const tp = document.getElementById('task-panel');
+  const banner = document.getElementById('sector-complete-banner');
+  tp.innerHTML='';
+  ac.modules.forEach((mod,mi)=>{
+    const isDone=p.ts[mod.id]==='done';
+    const isCurr=mi===p.done&&!p.complete;
+    const isLocked=mi>p.done;
+    tp.appendChild(buildTaskCard(mod,mi,isDone,isCurr,isLocked,ac));
+  });
+  tp.appendChild(banner);
+
+  if(p.complete){
+    const tierName = mod_tier_name(ac.modules[ac.modules.length-1].tier);
+    banner.classList.add('show');
+    document.getElementById('sco-title').textContent=`${ac.icon} ${ac.title} — Complete!`;
+    document.getElementById('sco-cert').textContent=`${tierName} Certificate Earned`;
+    document.getElementById('sco-sub').textContent=`All ${ac.modules.length} modules passed. Academy certified.`;
+    document.getElementById('sco-xp').textContent=`+${ac.totalXp+50} XP Earned`;
+  }else{
+    banner.classList.remove('show');
+  }
+  document.getElementById('sco-next-btn').onclick = goToNext;
+
+  closeResearch();
+  showScreen('screen-scenario');
+}
+
+function mod_tier_name(tier){
+  return{bronze:'🥉 Bronze',silver:'🥈 Silver',gold:'🥇 Gold',plat:'💎 Platinum'}[tier]||'Bronze';
+}
+
+function buildTaskCard(mod, mi, isDone, isCurr, isLocked, ac){
+  const card = document.createElement('div');
+  card.className = `task-card${isLocked?' locked-card':(isCurr?' active-card':'')}`;
+  card.id = `tc-${mod.id}`;
+
+  const nc = isDone?'done':(isCurr?'curr':'locked');
+  const ni = isDone?'✓':(mi+1);
+
+  const stages=['LEARN','PRACTICE','OPERATE','SIMULATE','CERTIFY'];
+  const pipeHTML = stages.map(s=>{
+    const isActive=s===mod.pipelineStage;
+    const isDoneStage=stages.indexOf(s)<stages.indexOf(mod.pipelineStage);
+    return `<span class="tcp-step${isActive?' active-step':(isDoneStage?' done-step':'')}">${s}</span>`;
+  }).join('<span class="tcp-arrow"> → </span>');
+
+  const researchBtn = RESEARCH[mod.id] ? `
+    <div class="research-launch">
+      <span class="rl-icon">🔬</span>
+      <div class="rl-text">
+        <div class="rl-label">Reference Data · ${mod_tier_name(mod.tier)}</div>
+        <div class="rl-sub">Open the research panel — investigate before you respond</div>
+      </div>
+      <button class="rl-btn" id="rl-${mod.id}" onclick="openResearch('${mod.id}')">LAUNCH RESEARCH TOOL →</button>
+    </div>` : '';
+
+  const appLaunch = (mod.tier==='gold'||mod.tier==='plat') && RESEARCH[mod.id]?.appUrl ? `
+    <div class="app-launch">
+      <span class="al-icon">🚀</span>
+      <div class="al-text">
+        <div class="al-label">Cross-App Exam Routing · ${RESEARCH[mod.id]?.appName||'Operational Module'}</div>
+        <div class="al-sub">This task requires you to work inside the operational app, then document your resolution below</div>
+      </div>
+      <a class="al-btn" href="${RESEARCH[mod.id].appUrl}" target="_blank">LAUNCH APP →</a>
+    </div>` : '';
+
+  let inputHTML = '';
+  if(mod.type==='text'){
+    inputHTML = `
+      <div class="task-obj">Objective: ${mod.objective}</div>
+      <textarea class="task-resp" id="resp-${mod.id}" placeholder="Use the Research Tool and App above to investigate, then document your complete workflow here... (min 80 chars)"
+        ${isDone||isLocked?' disabled':''}
+        oninput="chkTxt('${mod.id}')"
+      ></textarea>
+      <div class="task-foot">
+        <button class="submit-btn" id="sub-${mod.id}" onclick="doText('${mod.id}')"
+          ${isDone||isLocked?' disabled':''} disabled>
+          Evaluate with AI →
+        </button>
+        <span class="char-hint" id="hint-${mod.id}">Research → Work in app → Document workflow (min 80 chars)</span>
+      </div>`;
+  } else if(mod.type==='mc'){
+    const opts = mod.options.map(o=>
+      `<div class="mc-opt${isDone&&o.correct?' correct':''}${isDone&&!o.correct?' locked-opt':''}"
+        id="mc-${mod.id}-${o.letter}"
+        onclick="${isDone||isLocked?'':(`selectMC('${mod.id}','${o.letter}',${!!o.correct})`)}">
+        <span class="mc-let">${o.letter}</span><span>${o.text}</span>
+      </div>`
+    ).join('');
+    inputHTML = `<div class="task-obj">Select the best answer:</div><div class="mc-opts">${opts}</div>`;
+  }
+
+  const evalHTML = isDone ?
+    `<div class="eval-panel show"><div class="ep-head pass"><span class="ep-icon">✅</span><span class="ep-title">Module Objective Complete</span><span class="ep-score">PASS</span></div></div>` :
+    `<div class="eval-panel" id="ev-${mod.id}">
+      <div class="ep-head loading" id="evh-${mod.id}">
+        <span class="ep-icon" id="evi-${mod.id}">⏳</span>
+        <span class="ep-title" id="evt-${mod.id}">Evaluating<span class="loading-dots"></span></span>
+        <span class="ep-score" id="evs-${mod.id}"></span>
+      </div>
+      <div class="ep-body" id="evb-${mod.id}" style="display:none">
+        <div class="ep-feedback" id="evf-${mod.id}"></div>
+        <div class="ep-tags" id="evtg-${mod.id}"></div>
+        <div class="ep-actions">
+          <button class="next-btn" id="nxt-${mod.id}" onclick="advance('${mod.id}')">Next Module →</button>
+          <button class="retry-btn" id="rty-${mod.id}" onclick="retry('${mod.id}')">↺ Try Again</button>
+        </div>
+      </div>
+    </div>`;
+
+  card.innerHTML = `
+    <div class="tc-head">
+      <div class="tnum ${nc}">${ni}</div>
+      <div class="tc-title-block">
+        <div class="tc-tier ${mod.tier}">${mod_tier_name(mod.tier)} · ${mod.pipelineStage}</div>
+        <div class="tc-title">${mod.title}</div>
+        <div class="tc-domain">${mod.desc}</div>
+      </div>
+      <span class="tc-xp">+${mod.xp} XP</span>
+    </div>
+    <div class="tc-pipeline">${pipeHTML}</div>
+    <div class="tc-body">
+      <div class="scenario-box">${mod.scenario}</div>
+      ${researchBtn}
+      ${appLaunch}
+      ${inputHTML}
+      ${evalHTML}
+    </div>`;
+  return card;
+}
+
+/* ── TEXT TASKS ── */
+function chkTxt(id){
+  const ta=document.getElementById(`resp-${id}`);
+  const btn=document.getElementById(`sub-${id}`);
+  if(ta&&btn) btn.disabled = ta.value.trim().length < 80;
+}
+
+async function doText(id){
+  if(!state.groqKey){alert('Enter your Groq API key in the banner at the top. Get a free key at console.groq.com.');return}
+  const ac=ACADEMIES[state.currentAcademy];
+  const mod=ac.modules.find(m=>m.id===id);
+  const ta=document.getElementById(`resp-${id}`);
+  const btn=document.getElementById(`sub-${id}`);
+  const ev=document.getElementById(`ev-${id}`);
+  btn.disabled=true; ta.disabled=true; ev.classList.add('show');
+  const [hd,ic,tl]=[document.getElementById(`evh-${id}`),document.getElementById(`evi-${id}`),document.getElementById(`evt-${id}`)];
+  hd.className='ep-head loading'; ic.textContent='⏳'; tl.innerHTML='Evaluating with AI<span class="loading-dots"></span>';
+  try{
+    const res=await evalText(mod,ta.value.trim());
+    showEval(id,res,mod);
+  }catch(e){
+    hd.className='ep-head fail'; ic.textContent='⚠️'; tl.textContent=`Error: ${e.message}`;
+    document.getElementById(`evb-${id}`).style.display='block';
+    document.getElementById(`evf-${id}`).textContent='Check your Groq API key and try again. Key must start with "gsk_".';
+    document.getElementById(`rty-${id}`).classList.add('show');
+    btn.disabled=false; ta.disabled=false;
+  }
+}
+
+function showEval(id,res,mod){
+  const hd=document.getElementById(`evh-${id}`),ic=document.getElementById(`evi-${id}`),tl=document.getElementById(`evt-${id}`);
+  const sc=document.getElementById(`evs-${id}`),bd=document.getElementById(`evb-${id}`);
+  const fb=document.getElementById(`evf-${id}`),tg=document.getElementById(`evtg-${id}`);
+  const nx=document.getElementById(`nxt-${id}`),rt=document.getElementById(`rty-${id}`);
+  const pass=res.pass;
+  hd.className=`ep-head ${pass?'pass':'fail'}`;
+  ic.textContent=pass?'✅':'❌';
+  tl.textContent=pass?'PASSED — Objective Complete':`Score ${res.score}/${mod.passScore} — Below passing threshold`;
+  sc.textContent=`${res.score}/100`; bd.style.display='block'; fb.textContent=res.feedback;
+  tg.innerHTML=[...(res.strengths||[]).map(s=>`<span class="ep-tag str">✓ ${s}</span>`),
+    ...(res.gaps||[]).map(g=>`<span class="ep-tag gap">△ ${g}</span>`)].join('');
+  if(pass) nx.classList.add('show'); else rt.classList.add('show');
+}
+
+function retry(id){
+  const ta=document.getElementById(`resp-${id}`),btn=document.getElementById(`sub-${id}`),ev=document.getElementById(`ev-${id}`);
+  if(ta){ta.disabled=false;ta.value=''} if(btn)btn.disabled=true; if(ev)ev.classList.remove('show');
+}
+
+/* ── MC TASKS ── */
+function selectMC(id,letter,correct){
+  const ac=ACADEMIES[state.currentAcademy];
+  const mod=ac.modules.find(m=>m.id===id);
+  mod.options.forEach(o=>{
+    const el=document.getElementById(`mc-${id}-${o.letter}`); if(!el) return;
+    el.classList.remove('correct','wrong'); el.classList.add('locked-opt'); el.onclick=null;
+    if(o.letter===letter) el.classList.add(correct?'correct':'wrong');
+    else if(o.correct) el.classList.add('correct');
+  });
+  const ev=document.getElementById(`ev-${id}`),hd=document.getElementById(`evh-${id}`);
+  const ic=document.getElementById(`evi-${id}`),tl=document.getElementById(`evt-${id}`);
+  const sc=document.getElementById(`evs-${id}`),bd=document.getElementById(`evb-${id}`);
+  const fb=document.getElementById(`evf-${id}`),nx=document.getElementById(`nxt-${id}`),rt=document.getElementById(`rty-${id}`);
+  ev.classList.add('show');
+  hd.className=`ep-head ${correct?'pass':'fail'}`;
+  ic.textContent=correct?'✅':'❌';
+  tl.textContent=correct?'CORRECT — Module Objective Complete':'INCORRECT — Review the reference data and try again';
+  sc.textContent=correct?'100/100':'0/100'; bd.style.display='block';
+  fb.textContent=mod.explanation||'Review the Research Tool reference data for the correct answer.';
+  if(correct) nx.classList.add('show'); else rt.classList.add('show');
+}
+
+/* ── PROGRESSION ── */
+function advance(id){
+  const ac=ACADEMIES[state.currentAcademy], p=getAP(ac.id);
+  const mi=ac.modules.findIndex(m=>m.id===id), mod=ac.modules[mi];
+  state.xp+=mod.xp; p.ts[id]='done'; p.done=mi+1;
+  if(p.done>=ac.modules.length){
+    p.complete=true; state.xp+=50; saveState();
+    const banner=document.getElementById('sector-complete-banner');
+    const tierName=mod_tier_name(mod.tier);
+    banner.classList.add('show');
+    document.getElementById('sco-title').textContent=`${ac.icon} ${ac.title} — Certified!`;
+    document.getElementById('sco-cert').textContent=`${tierName} Certificate Earned`;
+    document.getElementById('sco-sub').textContent=`All ${ac.modules.length} modules passed. Academy certified.`;
+    document.getElementById('sco-xp').textContent=`+${ac.totalXp+50} XP Earned`;
+    banner.scrollIntoView({behavior:'smooth'});
+    updateMissionBar();
+  }else{
+    saveState(); enterAcademy(state.currentAcademy);
+  }
+}
+function goToNext(){
+  const next=state.currentAcademy+1;
+  if(next<ACADEMIES.length) enterAcademy(next);
+  else{goBack();setTimeout(()=>alert('🎓 All 4 Academies Complete! Full TSM Workforce Intelligence Certification Earned.'),300)}
+}
+function goBack(){closeResearch();showScreen('screen-hub');renderHub()}
+
+/* ── SCREEN NAV ── */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+/* ── CLOCK ── */
+function tick(){document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}
+
+/* ── INIT ── */
+loadState(); checkKey(); renderHub(); tick(); setInterval(tick,1000);
+</script>
+</body>
+</html>

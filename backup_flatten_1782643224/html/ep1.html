@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TSM Executive Portal v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #040d16;
+  --bg2:       rgba(0,200,255,0.04);
+  --bg3:       rgba(0,200,255,0.08);
+  --glass:     rgba(0,180,230,0.06);
+  --glass-hi:  rgba(0,200,255,0.12);
+  --border:    rgba(0,200,255,0.14);
+  --border-hi: rgba(0,200,255,0.4);
+  --cyan:      #00c8ff;
+  --cyan2:     rgba(0,200,255,0.7);
+  --cyan3:     rgba(0,200,255,0.15);
+  --green:     #1dff8f;
+  --green2:    rgba(29,158,117,1);
+  --amber:     #ffb830;
+  --red:       #ff4757;
+  --text:      #dff2ff;
+  --text2:     rgba(223,242,255,0.55);
+  --text3:     rgba(223,242,255,0.28);
+  --mono:      'DM Mono', monospace;
+  --display:   'Syne', sans-serif;
+  --r:         8px;
+  --rl:        14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+
+body {
+  font-family: var(--mono);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* grid bg */
+body::before {
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(0,200,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,200,255,0.025) 1px, transparent 1px);
+  background-size:52px 52px;
+  pointer-events:none;z-index:0;
+}
+
+.wrap { position:relative;z-index:1;max-width:1040px;margin:0 auto;padding:0 20px 80px; }
+
+/* ── TOPBAR ── */
+.topbar {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 0 14px;
+  border-bottom:1px solid var(--border);
+  margin-bottom:28px;
+  flex-wrap:wrap;gap:10px;
+}
+.topbar-logo {
+  font-family:var(--display);font-size:14px;font-weight:800;
+  letter-spacing:3px;color:var(--cyan);text-transform:uppercase;
+}
+.topbar-sub { font-size:11px;color:var(--text3);letter-spacing:2px;margin-top:2px; }
+.topbar-right { display:flex;align-items:center;gap:18px;flex-wrap:wrap; }
+.live-dot {
+  width:8px;height:8px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;
+}
+.live-label { font-size:12px;color:var(--green);font-weight:500;letter-spacing:1px; }
+.clock { font-size:11px;color:var(--text3);letter-spacing:1px;font-variant-numeric:tabular-nums; }
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
+
+/* ── TABS ── */
+.tabs { display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap; }
+.tab {
+  padding:7px 18px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:1px;
+  cursor:pointer;color:var(--text2);
+  background:var(--glass);
+  backdrop-filter:blur(6px);
+  transition:all 0.2s;text-transform:uppercase;
+}
+.tab:hover { border-color:var(--border-hi);color:var(--cyan); }
+.tab.on {
+  border-color:var(--cyan);color:var(--bg);
+  background:var(--cyan);font-weight:600;
+}
+
+/* ── GLASS CARD (base) ── */
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: var(--rl);
+  backdrop-filter: blur(12px);
+}
+.glass:hover { border-color: rgba(0,200,255,0.25); }
+
+/* ── STAT ROW ── */
+.stat-row { display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px; }
+.stat-card {
+  background:var(--glass);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:14px 16px;
+  backdrop-filter:blur(8px);
+  position:relative;overflow:hidden;
+}
+.stat-card::before {
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+  opacity:0.4;
+}
+.stat-lbl { font-size:10px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px; }
+.stat-val { font-size:15px;font-weight:500;color:var(--text); }
+.stat-live {
+  font-family:var(--display);font-size:20px;font-weight:800;
+  color:var(--green);letter-spacing:2px;
+  text-shadow:0 0 16px rgba(29,255,143,0.5);
+}
+
+/* ── PANEL ── */
+.panel {
+  background:var(--glass);
+  border:1px solid var(--border);
+  border-radius:var(--rl);
+  overflow:hidden;margin-bottom:14px;
+  backdrop-filter:blur(12px);
+  position:relative;
+}
+.panel::after {
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+  opacity:0.3;pointer-events:none;
+}
+.panel-head {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 16px;
+  background:rgba(0,200,255,0.05);
+  border-bottom:1px solid var(--border);
+  font-size:11px;font-weight:500;letter-spacing:1.5px;
+  color:var(--cyan2);text-transform:uppercase;
+}
+.panel-body { padding:14px 16px; }
+
+/* ── NODES ── */
+.node-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;padding:12px 14px; }
+.node-card {
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  background:rgba(0,200,255,0.03);
+  transition:border-color 0.2s;
+}
+.node-card:hover { border-color:var(--border-hi); }
+.node-name {
+  font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.node-id { font-size:10px;color:var(--text3); }
+.node-ping { font-size:10px;color:var(--text3);margin-top:3px; }
+.dot { width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0; }
+.dot-on  { background:var(--green);  box-shadow:0 0 5px var(--green); }
+.dot-war { background:var(--amber);  box-shadow:0 0 5px var(--amber); }
+.dot-off { background:var(--red); }
+
+/* ── RELAY ITEMS ── */
+.relay-item {
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  margin-bottom:8px;
+  background:rgba(0,200,255,0.03);
+}
+.relay-top { display:flex;align-items:center;gap:8px;margin-bottom:4px; }
+.relay-text { font-size:12px;color:var(--text);line-height:1.6;margin-bottom:3px; }
+.relay-owner { font-size:10px;color:var(--text3); }
+.pill { font-size:10px;padding:2px 8px;border-radius:999px;font-weight:500;letter-spacing:0.5px; }
+.pill-high   { background:rgba(255,71,87,0.15);color:#ff8a93;border:1px solid rgba(255,71,87,0.3); }
+.pill-medium { background:rgba(255,184,48,0.12);color:var(--amber);border:1px solid rgba(255,184,48,0.3); }
+.pill-low    { background:rgba(29,255,143,0.1);color:var(--green);border:1px solid rgba(29,255,143,0.25); }
+
+/* ── METRICS ── */
+.metrics { display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px; }
+.metric {
+  text-align:center;padding:12px 8px;
+  background:rgba(0,200,255,0.05);
+  border:1px solid var(--border);border-radius:var(--r);
+}
+.metric-val {
+  font-family:var(--display);font-size:24px;font-weight:700;
+  color:var(--cyan);text-shadow:0 0 12px rgba(0,200,255,0.4);
+}
+.metric-lbl { font-size:10px;color:var(--text3);letter-spacing:1px;margin-top:3px;text-transform:uppercase; }
+
+/* ── OPS ROWS ── */
+.ops-row {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 14px;border-bottom:1px solid var(--border);font-size:12px;
+}
+.ops-row:last-child { border-bottom:none; }
+.ops-lbl { color:var(--text2);letter-spacing:0.3px; }
+.ops-val { font-weight:500; }
+
+/* ── BUTTONS ── */
+.btn {
+  padding:7px 16px;border-radius:var(--r);
+  border:1px solid var(--border);
+  background:var(--glass);color:var(--text);
+  font-family:var(--mono);font-size:11px;letter-spacing:0.5px;
+  cursor:pointer;transition:all 0.15s;backdrop-filter:blur(6px);
+}
+.btn:hover { border-color:var(--border-hi);background:var(--glass-hi);color:var(--cyan); }
+.btn-cyan {
+  background:var(--cyan3);border-color:rgba(0,200,255,0.5);color:var(--cyan);
+}
+.btn-cyan:hover { background:rgba(0,200,255,0.22);border-color:var(--cyan); }
+.btn-sm { padding:4px 10px;font-size:10px; }
+
+/* ── STRATEGIST LINKS ── */
+.strat-links { display:flex;gap:8px;flex-wrap:wrap;margin-top:12px; }
+.strat-link {
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 14px;
+  border:1px solid var(--border);border-radius:var(--r);
+  background:var(--glass);color:var(--cyan2);
+  font-family:var(--mono);font-size:11px;letter-spacing:0.5px;
+  text-decoration:none;cursor:pointer;transition:all 0.15s;
+}
+.strat-link:hover { border-color:var(--cyan);background:var(--cyan3);color:var(--cyan); }
+.strat-link-new {
+  border-color:rgba(0,200,255,0.4);
+  background:rgba(0,200,255,0.08);
+  color:var(--cyan);
+}
+
+/* ── SECTION DIVIDER ── */
+.section-div {
+  display:flex;align-items:center;gap:12px;
+  margin:20px 0 14px;font-size:10px;
+  color:var(--text3);letter-spacing:2px;text-transform:uppercase;
+}
+.section-div::after { content:'';flex:1;height:1px;background:var(--border); }
+
+/* ── ADVANTAGE PANELS ── */
+.adv-vs {
+  font-size:10px;padding:2px 10px;border-radius:999px;
+  background:rgba(29,255,143,0.1);color:var(--green);
+  border:1px solid rgba(29,255,143,0.25);
+  font-weight:500;margin-left:8px;letter-spacing:0.5px;
+}
+.feat-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px;margin-bottom:4px; }
+.feat-card {
+  border:1px solid var(--border);border-radius:var(--rl);
+  background:var(--glass);backdrop-filter:blur(10px);overflow:hidden;
+  position:relative;
+}
+.feat-card::after {
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:0.25;
+}
+.feat-head {
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  background:rgba(0,200,255,0.05);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.feat-title { font-size:12px;font-weight:500;color:var(--text);letter-spacing:0.3px; }
+.feat-tag {
+  font-size:10px;padding:2px 8px;border-radius:999px;
+  background:rgba(0,200,255,0.1);color:var(--cyan);
+  border:1px solid rgba(0,200,255,0.25);
+}
+.feat-body { padding:12px 14px; }
+.feat-row {
+  display:flex;align-items:center;gap:8px;
+  padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;
+}
+.feat-row:last-child { border-bottom:none; }
+.feat-row-lbl { color:var(--text2);flex-shrink:0;min-width:90px;font-size:11px; }
+.score-bar { height:5px;border-radius:3px;background:rgba(0,200,255,0.08);flex:1;overflow:hidden;min-width:40px; }
+.score-fill { height:100%;border-radius:3px; }
+.roi-bar {
+  padding:8px 14px;
+  background:rgba(29,255,143,0.05);border-top:1px solid rgba(29,255,143,0.15);
+  font-size:11px;color:rgba(29,255,143,0.7);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.roi-val { font-weight:600;color:var(--green); }
+.mini-btn {
+  padding:3px 9px;border-radius:var(--r);
+  border:1px solid var(--border);background:var(--glass);
+  font-family:var(--mono);font-size:10px;color:var(--text2);cursor:pointer;
+  transition:all 0.15s;flex-shrink:0;
+}
+.mini-btn:hover { border-color:var(--border-hi);color:var(--cyan); }
+.mini-btn.ok { background:rgba(29,255,143,0.1);border-color:rgba(29,255,143,0.3);color:var(--green); }
+
+/* stage track */
+.stage-track { display:flex;align-items:flex-start;margin-bottom:12px; }
+.stage-node { flex:1;text-align:center;position:relative; }
+.stage-connector { position:absolute;top:14px;left:50%;width:100%;height:1px;background:var(--border);z-index:0; }
+.stage-dot {
+  width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:500;margin:0 auto 4px;position:relative;z-index:1;
+}
+.stage-dot.done   { background:var(--green2);color:#fff; }
+.stage-dot.active { background:rgba(0,200,255,0.15);color:var(--cyan);border:1.5px solid var(--cyan); }
+.stage-dot.pending{ background:rgba(0,200,255,0.04);color:var(--text3);border:1px solid var(--border); }
+.stage-lbl { font-size:9px;color:var(--text3);letter-spacing:0.5px; }
+
+/* close checklist */
+.check-item {
+  display:flex;align-items:center;gap:8px;
+  padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;cursor:pointer;
+}
+.check-item:last-child { border-bottom:none; }
+.check-box {
+  width:16px;height:16px;border-radius:4px;
+  border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;font-size:10px;transition:all 0.15s;
+}
+.check-box.checked { background:var(--green2);border-color:var(--green2);color:#fff; }
+.check-owner { font-size:10px;color:var(--text3);margin-left:auto;flex-shrink:0; }
+
+/* progress bar */
+.prog-bar { height:5px;border-radius:3px;background:rgba(0,200,255,0.08);overflow:hidden;margin-top:4px; }
+.prog-fill { height:100%;border-radius:3px;background:var(--green2); }
+
+/* heat cells */
+.heat-grid { display:grid;grid-template-columns:100px repeat(4,1fr);gap:4px;align-items:center; }
+.heat-cell { border-radius:var(--r);padding:5px 4px;text-align:center;font-size:10px;font-weight:500; }
+.heat-hi  { background:rgba(255,71,87,0.12);color:#ff8a93;border:1px solid rgba(255,71,87,0.2); }
+.heat-med { background:rgba(255,184,48,0.1);color:var(--amber);border:1px solid rgba(255,184,48,0.2); }
+.heat-low { background:rgba(29,255,143,0.08);color:var(--green);border:1px solid rgba(29,255,143,0.2); }
+
+/* AI gen */
+.ai-out {
+  font-size:12px;line-height:1.8;color:var(--text);white-space:pre-wrap;
+  background:rgba(0,200,255,0.03);border:1px solid var(--border);
+  border-radius:var(--r);padding:12px;min-height:60px;margin-top:10px;
+}
+
+/* renewal */
+.renewal-row { display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px; }
+.renewal-row:last-child { border-bottom:none; }
+
+/* permit stage */
+.permit-stage {
+  flex:1;border:1px solid var(--border);border-radius:4px;
+  padding:3px 0;text-align:center;font-size:9px;color:var(--text3);
+}
+.permit-stage.done   { background:rgba(29,158,117,0.2);border-color:rgba(29,158,117,0.4);color:var(--green); }
+.permit-stage.active { background:rgba(255,184,48,0.1);border-color:rgba(255,184,48,0.3);color:var(--amber); }
+
+@media(max-width:600px){
+  .stat-row{grid-template-columns:1fr 1fr}
+  .feat-grid{grid-template-columns:1fr}
+  .topbar{flex-direction:column}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div>
+    <div class="topbar-logo">TSM Executive Portal <span style="opacity:0.4">v2</span></div>
+    <div class="topbar-sub" id="ep-sector-label">Healthcare · Live Command View</div>
+  </div>
+  <div class="topbar-right">
+    <div style="display:flex;align-items:center;gap:7px">
+      <div class="live-dot"></div>
+      <span class="live-label">LIVE</span>
+    </div>
+    <div class="clock" id="ep-clock">--:--:--</div>
+    <button class="btn btn-cyan" onclick="pushDemoRelay()">Push relay ↗</button>
+    <a class="btn" href="/html/tsm-industry-hub/index.html">← Hub</a>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab on" onclick="switchTab('hc',this)">Healthcare</button>
+  <button class="tab" onclick="switchTab('ins',this)">Insurance</button>
+  <button class="tab" onclick="switchTab('finops',this)">FinOps</button>
+  <button class="tab" onclick="switchTab('construction',this)">Construction</button>
+  <button class="tab" onclick="switchTab('combined',this)">Enterprise view</button>
+</div>
+
+<!-- STAT ROW -->
+<div class="stat-row">
+  <div class="stat-card">
+    <div class="stat-lbl" id="ep-nodes-lbl">Nodes reporting</div>
+    <div class="stat-val" id="ep-hc-nodes">4 / 5</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-lbl">Latest document</div>
+    <div class="stat-val" style="font-size:12px" id="ep-latest-doc">HC Executive BNCA — May 2026</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-lbl">Risk posture</div>
+    <div class="stat-val" id="ep-risk">MEDIUM</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-lbl">Report status</div>
+    <div class="stat-live">LIVE</div>
+  </div>
+</div>
+
+<!-- NODE POSTURES -->
+<div class="panel">
+  <div class="panel-head">
+    <span id="ep-node-panel-title">Healthcare node postures</span>
+    <span style="font-size:10px;color:var(--text3)" id="ep-node-ts"></span>
+  </div>
+  <div class="node-grid" id="ep-node-grid"></div>
+</div>
+
+<!-- BNCA PANEL -->
+<div class="panel">
+  <div class="panel-head">
+    <span id="ep-bnca-title">Healthcare executive BNCA</span>
+    <button class="btn btn-cyan" onclick="handleGenerate()">Generate full report ↗</button>
+  </div>
+  <div class="panel-body">
+    <div style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.7" id="ep-bnca-summary"></div>
+    <div class="metrics">
+      <div class="metric"><div class="metric-val" id="ep-xp">0</div><div class="metric-lbl">Academy XP</div></div>
+      <div class="metric"><div class="metric-val" id="ep-missions">0</div><div class="metric-lbl">Missions</div></div>
+      <div class="metric"><div class="metric-val" id="ep-certs">0</div><div class="metric-lbl">Certs</div></div>
+    </div>
+    <div style="font-size:10px;letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;margin-bottom:8px">Strategist relay items</div>
+    <div id="ep-relay-items"></div>
+    <!-- STRATEGIST LINKS injected per sector -->
+    <div class="strat-links" id="ep-strat-links"></div>
+  </div>
+</div>
+
+<!-- OPS BOARD -->
+<div class="panel">
+  <div class="panel-head">Operations · dashboard</div>
+  <div id="ep-ops-board"></div>
+</div>
+
+<!-- SECTOR FEATURES -->
+<div id="sector-features"></div>
+
+</div><!-- /wrap -->
+
+<script>
+// ── DATA ─────────────────────────────────────────────────────
+const SECTOR_META = {
+  hc:{label:'Healthcare · Live Command View',doc:'HC Executive BNCA — May 2026',nodePanel:'Healthcare node postures',bncaTitle:'Healthcare executive BNCA',
+    strategistLinks:[
+      {label:'HC Main Strategist',href:'/html/hc-main-strategist/index.html',existing:true},
+      {label:'→ Executive Portal (HC)',href:'/html/executive-portal/index.html?tab=hc',existing:false},
+    ],
+    prompt:'Generate a concise Healthcare Executive BNCA for TSM. Include: Summary, Key Denial Trends (CO codes, SLA exposure), Auth Backlog status, Owner Lanes, and 3 Recommended Actions. Under 350 words.'},
+  ins:{label:'Insurance · Live Command View',doc:'Insurance Ops Report — May 2026',nodePanel:'Insurance node postures',bncaTitle:'Insurance executive BNCA',
+    strategistLinks:[
+      {label:'CE Command',href:'/html/tsm-insurance/insurance-ce-command.html',existing:true},
+      {label:'→ Executive Portal (INS)',href:'/html/executive-portal/index.html?tab=ins',existing:false},
+    ],
+    prompt:'Generate a concise Insurance Executive BNCA for TSM. Include: Summary, CE pipeline status, Claims routing health, Renewal risk posture, Owner Lanes, and 3 Recommended Actions. Under 350 words.'},
+  finops:{label:'FinOps · Live Command View',doc:'FinOps Intelligence Report — May 2026',nodePanel:'FinOps node postures',bncaTitle:'FinOps executive BNCA',
+    strategistLinks:[
+      {label:'FinOps Main Strategist',href:'/html/finops-main-strategist/index.html',existing:true},
+      {label:'→ Executive Portal (FinOps)',href:'/html/executive-portal/index.html?tab=finops',existing:false},
+    ],
+    prompt:'Generate a concise FinOps Executive BNCA for TSM. Include: Summary, Reconciliation variance status, Tax exposure flags, Zero Trust audit findings, Owner Lanes, and 3 Recommended Actions. Under 350 words.'},
+  construction:{label:'Construction · Live Command View',doc:'Construction Command Report — May 2026',nodePanel:'Construction node postures',bncaTitle:'Construction executive BNCA',
+    strategistLinks:[
+      {label:'Construction Strategist',href:'/html/construction-strategist/index.html',existing:true},
+      {label:'→ Executive Portal (CON)',href:'/html/executive-portal/index.html?tab=construction',existing:false},
+    ],
+    prompt:'Generate a concise Construction Executive BNCA for TSM. Include: Summary, Permit pipeline status, Legal dispute flags, Safety compliance scores, Owner Lanes, and 3 Recommended Actions. Under 350 words.'},
+  combined:{label:'Enterprise View · All Sectors',doc:'Enterprise BNCA — May 2026',nodePanel:'Enterprise node postures (all sectors)',bncaTitle:'Enterprise executive BNCA',
+    strategistLinks:[
+      {label:'HC Strategist',href:'/html/hc-main-strategist/index.html',existing:true},
+      {label:'FinOps Strategist',href:'/html/finops-main-strategist/index.html',existing:true},
+      {label:'→ Executive Portal (Enterprise)',href:'/html/executive-portal/index.html?tab=combined',existing:false},
+    ],
+    prompt:'Generate a concise Enterprise BNCA for TSM spanning Healthcare, Insurance, FinOps, and Construction. Include: Executive Summary, Cross-sector risk matrix highlights, Unified Owner Lanes, and 4 Recommended Actions (one per sector). Under 400 words.'},
+};
+
+const ALL_NODES = {
+  hc:[{id:'HC-CLM-01',name:'Claims Lab',status:'online'},{id:'HC-INS-01',name:'Insurance Claims',status:'online'},{id:'HC-DOC-01',name:'Doc Analysis',status:'online'},{id:'HC-CRC-01',name:'CRC Practice',status:'warning'},{id:'HC-SCN-01',name:'CRCR Scenarios',status:'online'}],
+  ins:[{id:'INS-CE-01',name:'CE Command',status:'online'},{id:'INS-CLM-01',name:'Claims Pro',status:'online'},{id:'INS-STD-01',name:'CE Study Prep',status:'offline'}],
+  finops:[{id:'FIN-ACC-01',name:'Accounting Core',status:'online'},{id:'FIN-TAX-01',name:'Tax Intelligence',status:'online'},{id:'FIN-REC-01',name:'Reconciliation',status:'warning'},{id:'FIN-ZT-01',name:'Zero Trust',status:'online'},{id:'FIN-OPS-01',name:'FinOps Ops',status:'online'}],
+  construction:[{id:'CON-PMT-01',name:'Permits Engine',status:'online'},{id:'CON-LEG-01',name:'Construction Legal',status:'warning'},{id:'CON-FIN-01',name:'Project Financials',status:'online'},{id:'CON-CMP-01',name:'Compliance Suite',status:'online'},{id:'CON-OPS-01',name:'Field Operations',status:'offline'}],
+};
+
+const RELAY = {
+  hc:[
+    {type:'denial',text:'CO-97 bundling — CLM-4488 neurology consult. Append modifier -59, resubmit.',priority:'high',owner:'Claims Team',sla:'24h'},
+    {type:'auth',text:'PA retroactive submission on CLM-7712 — Medicaid response pending.',priority:'medium',owner:'Auth Dept',sla:'48h'},
+    {type:'compliance',text:'CO-29 root cause identified — billing workflow gap Q1 mental health.',priority:'high',owner:'Compliance',sla:'72h'},
+    {type:'escalation',text:'PR-96 No Surprises Act review triggered CLM-6614 — legal escalation active.',priority:'high',owner:'Legal',sla:'24h'},
+    {type:'kpi',text:'Claims resolution accuracy at 80% — above 70% threshold.',priority:'low',owner:'Analytics',sla:'N/A'},
+  ],
+  ins:[
+    {type:'ce',text:'CE queue at 94% capacity — three study modules pending instructor review.',priority:'high',owner:'CE Team',sla:'48h'},
+    {type:'claims',text:'INS-CLM-4491 policy dispute — dental rider coverage ambiguity. Legal review queued.',priority:'medium',owner:'Claims Pro',sla:'72h'},
+    {type:'node',text:'INS-STD-01 offline — CE Study Prep node degraded. Learner sessions impacted.',priority:'high',owner:'Ops',sla:'24h'},
+    {type:'kpi',text:'Policy renewal rate at 87% YTD — on track for Q2 target.',priority:'low',owner:'Analytics',sla:'N/A'},
+  ],
+  finops:[
+    {type:'reconcile',text:'FIN-REC-01 — Q1 variance at $42K. Root cause under investigation.',priority:'high',owner:'Accounting',sla:'48h'},
+    {type:'tax',text:'Depreciation schedule mismatch on capital assets — CPA review required.',priority:'high',owner:'Tax Intel',sla:'72h'},
+    {type:'zero-trust',text:'Zero Trust audit complete — 2 access policy exceptions flagged.',priority:'medium',owner:'ZT Security',sla:'72h'},
+    {type:'kpi',text:'Month-end close completed in 3.2 days — below 4-day target.',priority:'low',owner:'Analytics',sla:'N/A'},
+  ],
+  construction:[
+    {type:'permit',text:'CON-PMT-4812 — foundation permit stalled at municipal review. Expedite filed.',priority:'high',owner:'Permits Eng',sla:'24h'},
+    {type:'legal',text:'Subcontractor liability dispute on Project Kestrel. Counsel engaged.',priority:'high',owner:'Legal',sla:'48h'},
+    {type:'node',text:'CON-OPS-01 offline — field operations node down. Safety log gap since Tuesday.',priority:'high',owner:'Compliance',sla:'24h'},
+    {type:'financials',text:'Project Kestrel budget variance at 7.2% over baseline — change order pending.',priority:'medium',owner:'Finance',sla:'72h'},
+    {type:'kpi',text:'On-time delivery rate at 91% across active projects.',priority:'low',owner:'Analytics',sla:'N/A'},
+  ],
+};
+RELAY.combined=[...RELAY.hc.slice(0,2),...RELAY.ins.slice(0,1),...RELAY.finops.slice(0,1),...RELAY.construction.slice(0,2)];
+
+// ── FEATURE DATA ──────────────────────────────────────────────
+const HC_DENIALS=[{id:'CLM-5501',code:'CO-4',risk:88,status:'flag'},{id:'CLM-5488',code:'CO-97',risk:74,status:'flag'},{id:'CLM-5412',code:'CO-16',risk:41,status:'review'},{id:'CLM-5390',code:'CO-29',risk:12,status:'ok'}];
+const HC_AUTH=[{id:'PA-2201',patient:'J. Morales',service:'MRI Brain w/ contrast',daysLeft:3,urgency:'high'},{id:'PA-2198',patient:'R. Okafor',service:'PT — 12 sessions',daysLeft:8,urgency:'medium'},{id:'PA-2187',patient:'S. Chen',service:'Cardiac cath',daysLeft:14,urgency:'low'}];
+const INS_CE=[{stage:'Enrolled',count:142,status:'done'},{stage:'In progress',count:89,status:'done'},{stage:'Exam ready',count:34,status:'active'},{stage:'Certified',count:21,status:'pending'}];
+const INS_RENEWAL=[{type:'Term life',rate:91,trend:'up'},{type:'Group health',rate:84,trend:'stable'},{type:'Dental rider',rate:72,trend:'down'},{type:'Disability',rate:67,trend:'down'}];
+const FIN_VARIANCE=[{cat:'Payroll',val:'+$18,400',pct:3.2,over:true},{cat:'Software licences',val:'+$9,200',pct:11.4,over:true},{cat:'Travel & expenses',val:'-$4,100',pct:8.7,over:false},{cat:'Capital equipment',val:'+$14,300',pct:6.1,over:true}];
+let FIN_CLOSE=[{task:'Bank reconciliation sign-off',owner:'Accounting',done:true},{task:'AP/AR ledger close',owner:'Accounting',done:true},{task:'Intercompany eliminations',owner:'Controller',done:false},{task:'Tax provision review',owner:'Tax Intel',done:false},{task:'Board package compiled',owner:'Finance Lead',done:false}];
+const CON_PERMITS=[{id:'PMT-4812',project:'Foundation — Kestrel',stageIdx:1,days:9},{id:'PMT-4798',project:'Electrical — Phase 2',stageIdx:3,days:2},{id:'PMT-4781',project:'Plumbing — Block C',stageIdx:0,days:14}];
+const STAGES=['Submitted','Under review','Approved','Issued'];
+const CON_SAFETY=[{project:'Project Kestrel',pct:94,inc:0},{project:'Block C Residential',pct:88,inc:1},{project:'Highway 7 Bridge',pct:97,inc:0}];
+const HEAT=[{s:'Healthcare',d:'HIGH',a:'MEDIUM',c:'HIGH',sl:'MEDIUM'},{s:'Insurance',d:'MEDIUM',a:'LOW',c:'MEDIUM',sl:'HIGH'},{s:'FinOps',d:'LOW',a:'LOW',c:'MEDIUM',sl:'MEDIUM'},{s:'Construction',d:'MEDIUM',a:'LOW',c:'HIGH',sl:'HIGH'}];
+
+// ── FEATURE RENDERERS ─────────────────────────────────────────
+function riskColor(r){return r>=70?'#ff6b78':r>=40?'var(--amber)':'var(--green)';}
+
+function buildHC(){return`
+<div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:12px">Suite advantages <span class="adv-vs">vs Waystar / Availity</span></div>
+<div class="feat-grid">
+  <div class="feat-card">
+    <div class="feat-head"><span class="feat-title">Denial prevention AI</span><span class="feat-tag">Not in Waystar</span></div>
+    <div class="feat-body">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Pre-submission CO risk scoring — flag before the payer sees it</div>
+      ${HC_DENIALS.map(d=>{const c=riskColor(d.risk);const bl=d.status==='flag'?'Fix now':d.status==='review'?'Review':'✓ Clear';return`<div class="feat-row"><span class="feat-row-lbl">${d.id} · ${d.code}</span><div class="score-bar"><div class="score-fill" style="width:${d.risk}%;background:${c}"></div></div><span style="font-size:11px;font-weight:500;color:${c};min-width:22px;text-align:right">${d.risk}</span><button class="mini-btn ${d.status==='ok'?'ok':''}">${bl}</button></div>`;}).join('')}
+    </div>
+    <div class="roi-bar"><span>~12 flags/mo avg</span><span class="roi-val">~$14K/mo recovered</span></div>
+  </div>
+  <div class="feat-card">
+    <div class="feat-head"><span class="feat-title">Auth aging tracker</span><span class="feat-tag">Not in Availity</span></div>
+    <div class="feat-body">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px">PA window countdown per case — eliminates retroactive backlog</div>
+      ${HC_AUTH.map(a=>{const c=a.urgency==='high'?'#ff6b78':a.urgency==='medium'?'var(--amber)':'var(--green)';const pct=Math.round(a.daysLeft/14*100);return`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:2px"><span style="color:var(--text2)">${a.id} · ${a.patient}</span><span style="color:${c};font-weight:500">${a.daysLeft}d left</span></div><div style="font-size:10px;color:var(--text3);margin-bottom:3px">${a.service}</div><div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${c}"></div></div></div>`;}).join('')}
+    </div>
+    <div class="roi-bar"><span>Eliminates retro PA backlog</span><span class="roi-val">~$8K/mo saved</span></div>
+  </div>
+</div>`;}
+
+function buildINS(){return`
+<div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:12px">Suite advantages <span class="adv-vs">vs Guidewire / Duck Creek</span></div>
+<div class="feat-grid">
+  <div class="feat-card">
+    <div class="feat-head"><span class="feat-title">CE completion pipeline</span><span class="feat-tag">Not in Guidewire</span></div>
+    <div class="feat-body">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Learner journey from enrolment to auto-issued cert — 286 active learners</div>
+      <div class="stage-track">${INS_CE.map((s,i)=>`<div class="stage-node">${i<INS_CE.length-1?'<div class="stage-connector"></div>':''}<div class="stage-dot ${s.status}">${s.count}</div><div class="stage-lbl">${s.stage}</div></div>`).join('')}</div>
+      <div style="font-size:11px;color:var(--text3)">Auto-cert issued on exam pass · no manual processing</div>
+    </div>
+    <div class="roi-bar"><span>Replaces manual cert tracking</span><span class="roi-val">~4h/wk saved</span></div>
+  </div>
+  <div class="feat-card">
+    <div class="feat-head"><span class="feat-title">Renewal risk scorer</span><span class="feat-tag">Not in Duck Creek</span></div>
+    <div class="feat-body">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Renewal probability by policy type — early intervention on at-risk books</div>
+      ${INS_RENEWAL.map(r=>{const c=r.rate>=85?'var(--green)':r.rate>=75?'var(--amber)':'#ff6b78';const ta=r.trend==='up'?'↑':r.trend==='down'?'↓':'→';const tc=r.trend==='up'?'var(--green)':r.trend==='down'?'#ff6b78':'var(--amber)';return`<div class="renewal-row"><span class="feat-row-lbl">${r.type}</span><div class="score-bar"><div class="score-fill" style="width:${r.rate}%;background:${c}"></div></div><span style="font-size:12px;font-weight:500;color:${c};min-width:32px;text-align:right">${r.rate}%</span><span style="color:${tc};font-weight:600">${ta}</span></div>`;}).join('')}
+    </div>
+    <div class="roi-bar"><span>Early intervention on at-risk policies</span><span class="roi-val">~$22K/qtr retained</span></div>
+  </div>
+</div>`;}
+
+function buildFINOPS(){
+  const done=FIN_CLOSE.filter(t=>t.done).length;
+  const pct=Math.round(done/FIN_CLOSE.length*100);
+  return`
+<div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:12px">Suite advantages <span class="adv-vs">vs FloQast / Workiva</span></div>
+<div class="feat-grid">
+  <div class="feat-card">
+    <div class="feat-head"><span class="feat-title">Variance root cause AI</span><span class="feat-tag">Not in FloQast</span></div>
+    <div class="feat-body">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">AI-attributed GL variance — root cause surfaced in seconds, not days</div>
+      ${FIN_VARIANCE.map(v=>{const c=v.over?'#ff6b78':'var(--green)';const bar=Math.min(Math.abs(v.pct)*5,100);return`<div class="feat-row"><span class="feat-row-lbl" style="min-width:130px">${v.cat}</span><span style="font-size:11px;font-weight:500;color:${c};min-width:68px;text-align:right;flex-shrink:0">${v.val}</span><div class="score-bar"><div class="score-fill" style="width:${bar}%;background:${c}"></div></div></div>`;}).join('')}
+    </div>
+    <div class="roi-bar"><span>$42K variance tracked · AI-attributed</span><span class="roi-val">Root cause in &lt;30s</span></div>
+  </div>
+  <div class="feat-card">
+    <div class="feat-head"><span class="feat-title">Month-end close checklist</span><span class="feat-tag">Not in Workiva</span></div>
+    <div class="feat-body">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:11px;color:var(--text3)">Close progress</span>
+        <span style="font-size:12px;font-weight:500;color:var(--green)">${done}/${FIN_CLOSE.length} complete</span>
+      </div>
+      <div class="prog-bar" style="margin-bottom:10px"><div class="prog-fill" style="width:${pct}%"></div></div>
+      ${FIN_CLOSE.map((t,i)=>`<div class="check-item" onclick="toggleClose(${i})"><div class="check-box ${t.done?'checked':''}">${t.done?'✓':''}</div><div style="flex:1;font-size:12px;color:${t.done?'var(--text3)':'var(--text)'};${t.done?'text-decoration:line-through':''}">${t.task}</div><div class="check-owner">${t.owner}</div></div>`).join('')}
+    </div>
+    <div class="roi-bar"><span>Owner-assigned · audit-ready log</span><span class="roi-val">${pct}% closed</span></div>
+  </div>
+</div>`;}
+
+function buildCON(){return`
+<div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:12px">Suite advantages <span class="adv-vs">vs Procore</span></div>
+<div class="feat-grid">
+  <div class="feat-card">
+    <div class="feat-head"><span class="feat-title">Permit stage pipeline</span><span class="feat-tag">Not in Procore</span></div>
+    <div class="feat-body">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Live municipal permit tracking — replaces manual council chasing</div>
+      ${CON_PERMITS.map(p=>`<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="font-weight:500;color:var(--text)">${p.id}</span><span style="color:var(--text3)">${p.project}</span></div><div style="display:flex;gap:2px">${STAGES.map((s,i)=>`<div class="permit-stage ${i<p.stageIdx?'done':i===p.stageIdx?'active':''}">${s}</div>`).join('')}</div><div style="font-size:10px;color:var(--text3);margin-top:3px">${p.days} days in current stage</div></div>`).join('')}
+    </div>
+    <div class="roi-bar"><span>Replaces manual council chasing</span><span class="roi-val">~6h/wk saved</span></div>
+  </div>
+  <div class="feat-card">
+    <div class="feat-head"><span class="feat-title">Safety scorecard</span><span class="feat-tag">Unified — not in Procore</span></div>
+    <div class="feat-body">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Compliance % + incident log per project — exec-ready single view</div>
+      ${CON_SAFETY.map(s=>{const c=s.pct>=95?'var(--green)':s.pct>=85?'var(--amber)':'#ff6b78';return`<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span style="font-weight:500;color:var(--text)">${s.project}</span><span style="color:${c};font-weight:600">${s.pct}%</span></div><div class="prog-bar"><div class="prog-fill" style="width:${s.pct}%;background:${c}"></div></div><div style="font-size:10px;color:var(--text3);margin-top:2px">Incidents this period: ${s.inc}</div></div>`;}).join('')}
+    </div>
+    <div class="roi-bar"><span>Unified safety + incident view</span><span class="roi-val">0 reportable incidents</span></div>
+  </div>
+</div>`;}
+
+function buildCOMBINED(){
+  const hc=v=>v==='HIGH'?'heat-hi':v==='MEDIUM'?'heat-med':'heat-low';
+  return`
+<div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:12px">Enterprise moat <span class="adv-vs">No single market equivalent</span></div>
+<div class="feat-grid">
+  <div class="feat-card">
+    <div class="feat-head"><span class="feat-title">Cross-sector risk matrix</span><span class="feat-tag">Unique to TSM</span></div>
+    <div class="feat-body">
+      <div class="heat-grid" style="margin-bottom:6px">
+        <div></div>${['Denial','Auth','Compliance','SLA'].map(h=>`<div style="text-align:center;font-size:10px;color:var(--text3);font-weight:500">${h}</div>`).join('')}
+      </div>
+      ${HEAT.map(r=>`<div class="heat-grid" style="margin-bottom:4px"><div style="font-size:11px;color:var(--text2)">${r.s}</div><div class="heat-cell ${hc(r.d)}">${r.d}</div><div class="heat-cell ${hc(r.a)}">${r.a}</div><div class="heat-cell ${hc(r.c)}">${r.c}</div><div class="heat-cell ${hc(r.sl)}">${r.sl}</div></div>`).join('')}
+    </div>
+    <div class="roi-bar"><span>4-sector unified risk view</span><span class="roi-val">No competitor offers this</span></div>
+  </div>
+  <div class="feat-card">
+    <div class="feat-head"><span class="feat-title">AI BNCA generator</span><span class="feat-tag">Unique to TSM</span></div>
+    <div style="padding:14px">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Generate a full executive BNCA report — select sector and fire</div>
+      <select id="ai-sector-sel" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--r);font-size:12px;background:rgba(0,200,255,0.04);color:var(--text);margin-bottom:8px;font-family:var(--mono)">
+        <option value="hc">Healthcare</option>
+        <option value="ins">Insurance</option>
+        <option value="finops">FinOps</option>
+        <option value="construction">Construction</option>
+        <option value="combined">Enterprise (all sectors)</option>
+      </select>
+      <button class="btn btn-cyan" style="width:100%;justify-content:center;display:flex" onclick="generateBNCA()">Generate BNCA report ↗</button>
+      <div class="ai-out" id="ai-gen-out" style="display:none"></div>
+    </div>
+    <div class="roi-bar"><span>Replaces 4h manual report prep</span><span class="roi-val">AI-generated in seconds</span></div>
+  </div>
+</div>`;}
+
+function renderFeatures(s){
+  const c=document.getElementById('sector-features');
+  const div=document.createElement('div');
+  div.className='';
+  const label=document.createElement('div');
+  label.className='section-div';label.textContent='Competitive advantages';
+  c.innerHTML='';c.appendChild(label);
+  const inner=document.createElement('div');
+  inner.innerHTML=s==='hc'?buildHC():s==='ins'?buildINS():s==='finops'?buildFINOPS():s==='construction'?buildCON():buildCOMBINED();
+  c.appendChild(inner);
+}
+
+function toggleClose(i){FIN_CLOSE[i].done=!FIN_CLOSE[i].done;document.getElementById('sector-features').querySelector('div+div').innerHTML=buildFINOPS();}
+
+// ── AI BNCA ───────────────────────────────────────────────────
+async function generateBNCA(){
+  const sel=document.getElementById('ai-sector-sel');
+  const s=sel?sel.value:'hc';
+  const out=document.getElementById('ai-gen-out');
+  out.style.display='block';out.textContent='Generating BNCA report…';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:SECTOR_META[s].prompt}]})
+    });
+    const d=await r.json();
+    out.textContent=d.content?.find(b=>b.type==='text')?.text||'No response.';
+  }catch(e){
+    out.textContent='API available when hosted. Prompt:\n\n'+SECTOR_META[s].prompt;
+  }
+}
+
+// ── CORE PORTAL ───────────────────────────────────────────────
+let cur='hc',xp=0,missions=0,certs=0,pushCount=0,overrides={};
+
+function loadStorage(){
+  try{const r=localStorage.getItem('tsm_workforce_academy_progress');if(r){const d=JSON.parse(r);xp=d.score||0;missions=(d.completedMissions||[]).length;certs=(d.certifications||[]).length;}}catch(e){}
+  try{const r=localStorage.getItem('tsm_strategist_relay');if(r)overrides['__storage']=JSON.parse(r);}catch(e){}
+}
+
+function getNodes(s){if(s==='combined')return Object.values(ALL_NODES).flat();return ALL_NODES[s]||ALL_NODES.hc;}
+function getRelay(s){return overrides[s]||RELAY[s]||RELAY.hc;}
+
+function computeRisk(s){
+  const n=getNodes(s);
+  const off=n.filter(x=>x.status==='offline').length;
+  const war=n.filter(x=>x.status==='warning').length;
+  if(off>=2||(off>=1&&war>=2))return'HIGH';
+  if(off>=1||war>=2)return'MEDIUM';
+  return'LOW';
+}
+
+function renderNodes(s){
+  document.getElementById('ep-node-grid').innerHTML=getNodes(s).map(n=>{
+    const ago=Math.round(Math.random()*90+5);
+    const dc=n.status==='online'?'dot-on':n.status==='warning'?'dot-war':'dot-off';
+    return`<div class="node-card"><div class="node-name">${n.name}<span class="dot ${dc}"></span></div><div class="node-id">${n.id}</div><div class="node-ping">ping ${ago}s · ${n.status.toUpperCase()}</div></div>`;
+  }).join('');
+  const ts=document.getElementById('ep-node-ts');if(ts)ts.textContent='refreshed '+new Date().toLocaleTimeString();
+}
+
+function renderStats(s){
+  const nodes=getNodes(s);
+  const on=nodes.filter(n=>n.status==='online').length;
+  document.getElementById('ep-hc-nodes').textContent=on+' / '+nodes.length;
+  document.getElementById('ep-nodes-lbl').textContent=s==='combined'?'Enterprise nodes online':'Nodes reporting';
+  const m=SECTOR_META[s];
+  document.getElementById('ep-latest-doc').textContent=m.doc;
+  document.getElementById('ep-sector-label').textContent=m.label;
+  document.getElementById('ep-node-panel-title').textContent=m.nodePanel;
+  document.getElementById('ep-bnca-title').textContent=m.bncaTitle;
+  const risk=computeRisk(s);
+  const el=document.getElementById('ep-risk');el.textContent=risk;
+  el.style.color=risk==='LOW'?'var(--green)':risk==='MEDIUM'?'var(--amber)':'var(--red)';
+}
+
+function renderBNCA(s){
+  const sums={hc:'Healthcare BNCA active — denial routing, auth remediation, and executive escalation lanes operational.',ins:'Insurance ops active — CE workflow queues, claims routing, and policy review systems monitoring live.',finops:'FinOps intelligence operational — reconciliation monitoring, tax exposure analysis, and zero-trust review active.',construction:'Construction command active — permits, compliance, legal review, and field ops coordination online.',combined:'Enterprise orchestration active across healthcare, insurance, FinOps, and construction sectors.'};
+  document.getElementById('ep-bnca-summary').textContent=sums[s]||sums.combined;
+  document.getElementById('ep-xp').textContent=xp;
+  document.getElementById('ep-missions').textContent=missions;
+  document.getElementById('ep-certs').textContent=certs;
+  const items=getRelay(s);
+  document.getElementById('ep-relay-items').innerHTML=items.map(item=>{
+    const pc=item.priority==='high'?'pill-high':item.priority==='medium'?'pill-medium':'pill-low';
+    return`<div class="relay-item"><div class="relay-top"><span class="pill ${pc}">${item.priority}</span><span style="font-size:10px;color:var(--text3)">${item.type}</span><span style="font-size:10px;color:var(--text3);margin-left:auto">SLA: ${item.sla}</span></div><div class="relay-text">${item.text}</div><div class="relay-owner">Owner: ${item.owner}</div></div>`;
+  }).join('');
+
+  // Strategist links
+  const m=SECTOR_META[s];
+  const linksEl=document.getElementById('ep-strat-links');
+  linksEl.innerHTML=m.strategistLinks.map(l=>
+    `<a class="strat-link ${l.existing?'':'strat-link-new'}" href="${l.href}">${l.existing?'':'→ '}${l.label}${l.existing?' ↗':''}</a>`
+  ).join('');
+}
+
+function renderOps(s){
+  const items=getRelay(s);
+  const hi=items.filter(r=>r.priority==='high').length;
+  const slaRisk=hi>=3?'Critical':hi>=1?'Elevated':'Normal';
+  const slaColor=slaRisk==='Critical'?'var(--red)':slaRisk==='Elevated'?'var(--amber)':'var(--green)';
+  const owners=[...new Set(items.filter(i=>i.priority!=='low').map(i=>i.owner))].slice(0,3).join(' · ')||'N/A';
+  const rows=[
+    {lbl:'Queue status',    val:items.length+' items pending',      col:items.length>3?'var(--red)':'var(--green)'},
+    {lbl:'Owner lanes',     val:owners,                             col:'var(--text)'},
+    {lbl:'SLA risk',        val:slaRisk,                            col:slaColor},
+    {lbl:'Strategist relay',val:'Active — '+items.length+' items',  col:'var(--cyan)'},
+  ];
+  document.getElementById('ep-ops-board').innerHTML=rows.map(r=>`<div class="ops-row"><span class="ops-lbl">${r.lbl}</span><span class="ops-val" style="color:${r.col}">${r.val}</span></div>`).join('');
+}
+
+function renderAll(s){renderNodes(s);renderStats(s);renderBNCA(s);renderOps(s);renderFeatures(s);}
+
+function handleGenerate(){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.tab')[4].classList.add('on');
+  cur='combined';renderAll('combined');
+}
+
+function switchTab(s,btn){
+  cur=s;document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderAll(s);
+}
+
+const PUSH_DEMOS={
+  hc:[{type:'denial',text:'CO-4 modifier missing on CLM-3390 — colonoscopy. Resubmit with modifier PT.',priority:'high',owner:'Claims Team',sla:'24h'},{type:'kpi',text:'Lab score at 85%. Mission HC-DENIAL-001 complete.',priority:'low',owner:'Analytics',sla:'N/A'}],
+  ins:[{type:'ce',text:'CE batch upload complete — 14 new modules published.',priority:'low',owner:'CE Team',sla:'N/A'},{type:'claims',text:'INS-CLM-9012 resolved — dental rider dispute settled.',priority:'medium',owner:'Claims Pro',sla:'48h'}],
+  finops:[{type:'reconcile',text:'FIN-REC-01 variance narrowed to $8K — partial root cause resolved.',priority:'medium',owner:'Accounting',sla:'48h'}],
+  construction:[{type:'permit',text:'CON-PMT-4812 expedite approved — foundation permit issued.',priority:'medium',owner:'Permits Eng',sla:'48h'}],
+  combined:[{type:'enterprise',text:'Cross-sector SLA review complete — all critical items acknowledged.',priority:'low',owner:'Executive',sla:'N/A'}],
+};
+
+function pushDemoRelay(){
+  pushCount++;
+  const demos=PUSH_DEMOS[cur]||PUSH_DEMOS.hc;
+  const item=demos[pushCount%demos.length];
+  const existing=(overrides[cur]||getRelay(cur)).slice();
+  existing.unshift(item);overrides[cur]=existing;
+  renderBNCA(cur);renderOps(cur);
+}
+
+// clock
+setInterval(()=>{document.getElementById('ep-clock').textContent=new Date().toLocaleTimeString('en-US',{hour12:false});},1000);
+
+// init
+loadStorage();renderAll('hc');
+setInterval(()=>{loadStorage();renderBNCA(cur);renderOps(cur);renderNodes(cur);},15000);
+
+// listen for orchestrator events
+['tsm:missionComplete','tsm:certificationAwarded','tsm:levelUp','tsm:strategistRelay'].forEach(e=>document.addEventListener(e,()=>{loadStorage();renderAll(cur);}));
+</script>
+</body>
+</html>

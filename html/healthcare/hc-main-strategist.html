@@ -1764,3 +1764,52 @@ PATTERN MATCH: [does this match active HonorHealth denial patterns CO-4/CO-11/CO
 <script src="/html/healthcare/js/relay-card.component.js"></script>
 </body>
 </html>
+
+<script>
+// ===== TSM_AUTONOMY_STANDARDIZED =====
+window.TSM_AUTONOMY_STANDARDIZED = true;
+</script>
+
+<!-- TSM ENFORCER BOOT -->
+<script src="../../core/tsm-enforcer.js"></script>
+
+
+<script>
+// ===== TSM WAR ROOM SCOPED RELAY FIX =====
+window.tsmMission = window.tsmMission || {
+  id: "HEALTHCARE-" + Date.now().toString(36),
+  vertical: "healthcare",
+  
+};
+
+function tsmWriteRelay(payload){
+  TSM_KERNEL.setRelay("healthcare", JSON.stringify(payload));
+}
+</script>
+
+
+<script>
+// ===== TSM STRATEGIST BRIDGE LAYER =====
+
+function tsmReadScopedRelay(vertical){
+  const key = "tsm_war_relay_" + vertical;
+  try {
+    return JSON.parse(localStorage.getItem(key));
+  } catch(e){
+    return null;
+  }
+}
+
+function tsmWriteScopedStrat(vertical, missionId){
+  localStorage.setItem("TSM_STRAT_CONFIRMED_healthcare_" + vertical, JSON.stringify({
+    vertical,
+    missionId,
+    timestamp: Date.now()
+  }));
+}
+</script>
+
+
+<!-- TSM KERNEL ENGINE -->
+<script src="../../core/tsm-kernel.js"></script>
+

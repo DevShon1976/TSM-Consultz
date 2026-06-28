@@ -232,13 +232,13 @@ body::before{content:'';position:fixed;top:0;right:0;width:500px;height:500px;ba
         ts.textContent = new Date(d.timestamp).toLocaleTimeString();
 
         // If strategist confirmed
-        const stratRaw = localStorage.getItem('TSM_STRAT_CONFIRMED');
+        const stratRaw = localStorage.getItem('TSM_STRAT_CONFIRMED_finops-suite');
         if (stratRaw) {
           pulse(strat, '#00ffc6');
           pulse(exec, '#f5a623');
           status.textContent = 'Strategist confirmed → Exec Portal ready';
         }
-        const execRaw = localStorage.getItem('TSM_EXEC_CONFIRMED');
+        const execRaw = localStorage.getItem('TSM_EXEC_CONFIRMED_finops-suite');
         if (execRaw) {
           pulse(exec, '#00ffc6');
           status.textContent = 'Chain complete ✓ All three tiers confirmed';
@@ -490,7 +490,7 @@ let docText = '';
 // Doc Search relay
 (function(){
   try {
-    const raw = sessionStorage.getItem('TSM_FINOPS_WAR_RELAY') || sessionStorage.getItem('tsm_finops_war_relay') || localStorage.getItem('tsm_finops_war_relay');
+    const raw = sessionStorage.getItem('tsm_war_relay_finops-suite') || sessionStorage.getItem('tsm_war_relay_finops-suite') || localStorage.getItem('tsm_war_relay_finops-suite');
     if (!raw) return;
     const relay = JSON.parse(raw);
     if (!relay.docText) return;
@@ -504,8 +504,8 @@ let docText = '';
       banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:rgba(0,180,100,.12);border-bottom:1px solid rgba(0,180,100,.3);padding:7px 20px;font-family:"Share Tech Mono",monospace;font-size:10px;color:#00d4aa;letter-spacing:1px;display:flex;justify-content:space-between';
       banner.innerHTML = `<span>⚡ DOC RELAY — ${relay.docType||'DOCUMENT'} · ${docText.length} chars · paste area loaded</span><button onclick="this.parentElement.remove()" style="background:none;border:none;color:#00d4aa;cursor:pointer">✕</button>`;
       document.body.prepend(banner);
-      sessionStorage.removeItem('TSM_FINOPS_WAR_RELAY');
-      localStorage.removeItem('tsm_finops_war_relay');
+      sessionStorage.removeItem('tsm_war_relay_finops-suite');
+      localStorage.removeItem('tsm_war_relay_finops-suite');
     }, 500);
   } catch(e) {}
 })();
@@ -969,8 +969,8 @@ async function fireEngines() {
   setTimeout(() => {
     try {
       const relayPayload = JSON.stringify({ docText, selectedDocType, engineOutputs: [e[1]||'',e[2]||'',e[3]||'',e[4]||'',e[5]||'',e[6]||''], timestamp: Date.now() });
-      sessionStorage.setItem('TSM_FINOPS_WAR_RELAY', relayPayload);
-      localStorage.setItem('tsm_finops_war_relay', relayPayload);
+      TSM_KERNEL.setRelay("finops-suite', relayPayload", ');
+      TSM_KERNEL.setRelay("finops-suite', relayPayload", ');
     } catch(err) {}
     showAnomalyAdvisorPanel([e[1]||'',e[2]||'',e[3]||'',e[4]||'',e[5]||'',e[6]||''], docText);
   }, 2800);
@@ -1170,8 +1170,8 @@ function storeRelay(e) {
     chainStep: 'war-room'
   };
   try {
-    sessionStorage.setItem('TSM_FINOPS_WAR_RELAY', JSON.stringify(payload));
-    localStorage.setItem('tsm_finops_war_relay', JSON.stringify(payload));
+    TSM_KERNEL.setRelay("finops-suite', JSON.stringify(payload", '));
+    TSM_KERNEL.setRelay("finops-suite', JSON.stringify(payload", '));
   } catch(err) { console.warn('Store error:', err); }
 }
 
@@ -1549,3 +1549,30 @@ window.howtoOpen = () => document.getElementById('howtoOverlay').classList.add('
 <script src="/html/tsm-mission-orchestrator.js"></script>
 </body>
 </html>
+
+<script>
+// ===== TSM_AUTONOMY_STANDARDIZED =====
+window.TSM_AUTONOMY_STANDARDIZED = true;
+</script>
+
+<!-- TSM ENFORCER BOOT -->
+<script src="../../core/tsm-enforcer.js"></script>
+
+
+<script>
+// ===== TSM WAR ROOM SCOPED RELAY FIX =====
+window.tsmMission = window.tsmMission || {
+  id: "FINOPS-SUITE-" + Date.now().toString(36),
+  vertical: "finops-suite",
+  
+};
+
+function tsmWriteRelay(payload){
+  TSM_KERNEL.setRelay("finops-suite", JSON.stringify(payload));
+}
+</script>
+
+
+<!-- TSM KERNEL ENGINE -->
+<script src="../../core/tsm-kernel.js"></script>
+
