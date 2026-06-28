@@ -248,7 +248,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 <!-- ── CHAIN NAVIGATION ── -->
 <div class="chain-nav">
   <div class="chain-step">
-    <div class="chain-node done" onclick="nav('/html/bpo/bpo-doc-uploader.html')">01 · INTAKE</div>
+    <div class="chain-node done" onclick="nav('/html/tsm-doc-search-multi.html')">01 · INTAKE</div>
     <div class="chain-arrow">→</div>
     <div class="chain-node active">02 · UNDERSTAND</div>
     <div class="chain-arrow">→</div>
@@ -257,7 +257,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
     <div class="chain-node" onclick="nav('/html/bpo/bpo-executive-portal.html')">04 · EXECUTE</div>
   </div>
   <div class="chain-right">
-    <button class="chain-btn" onclick="nav('/html/bpo/bpo-doc-uploader.html')">← BACK TO INTAKE</button>
+    <button class="chain-btn" onclick="nav('/html/tsm-doc-search-multi.html')">← BACK TO INTAKE</button>
     <button class="chain-btn" onclick="exportBrief()">⬇ EXPORT BRIEF</button>
     <button class="chain-btn primary" id="routeBtn" onclick="routeToStrategist()">ROUTE TO STRATEGIST →</button>
   </div>
@@ -404,7 +404,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 <!-- ── BOTTOM ACTION BAR ── -->
 <div class="action-bar">
   <div class="action-bar-label">SITUATION ROOM ·</div>
-  <button class="act-btn secondary" onclick="nav('/html/bpo/bpo-doc-uploader.html')">← INTAKE</button>
+  <button class="act-btn secondary" onclick="nav('/html/tsm-doc-search-multi.html')">← INTAKE</button>
   <button class="act-btn amber" id="fireEngineBtn" onclick="fireExtractionEngine()">⚡ FIRE EXTRACTION ENGINE</button>
   <button class="act-btn secondary" onclick="exportBrief()">⬇ EXPORT</button>
   <div class="act-spacer"></div>
@@ -451,6 +451,42 @@ function startDecisionCountdown(totalSecs) {
 startDecisionCountdown(decisionWindowSecs);
 
 // ── LOAD RELAY FROM UPLOADER ──
+// ── TSM AUTO-PIPELINE: auto-run if arriving from doc-search upload ──
+document.addEventListener('DOMContentLoaded', async function tsmBpoAutoPipeline() {
+  const flagRaw = sessionStorage.getItem('TSM_AUTO_PIPELINE') || localStorage.getItem('TSM_AUTO_PIPELINE');
+  if (!flagRaw) return;
+  let flag;
+  try { flag = JSON.parse(flagRaw); } catch(e) { return; }
+  if (flag.vertical !== 'bpo') return;
+  if (Date.now() - flag.ts > 60000) return;
+
+  sessionStorage.removeItem('TSM_AUTO_PIPELINE');
+  localStorage.removeItem('TSM_AUTO_PIPELINE');
+
+  const banner = document.createElement('div');
+  banner.id = 'tsm-auto-pipeline-banner';
+  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#0a2a1a;border-bottom:1px solid #34d399;padding:10px 20px;font-family:JetBrains Mono,monospace;font-size:11px;color:#34d399;display:flex;align-items:center;gap:12px;';
+  banner.innerHTML = `<span style="animation:blink 1s infinite">⚡</span> AUTO-PIPELINE ACTIVE — <span style="color:#fff">${flag.fileName}</span> — BPO Situation Room <span id="tsm-pipeline-status" style="color:#6b8fa0">Initializing</span>`;
+  document.body.prepend(banner);
+
+  const setStatus = (msg, color='#6b8fa0') => {
+    const el = document.getElementById('tsm-pipeline-status');
+    if (el) { el.textContent = msg; el.style.color = color; }
+  };
+
+  try {
+    setStatus('Running extraction engine...', '#fbbf24');
+    await new Promise(r => setTimeout(r, 1200)); // let loadRelay() fire first
+    await fireExtractionEngine();
+    setStatus('Extraction complete — routing to Strategist...', '#34d399');
+    await new Promise(r => setTimeout(r, 2000));
+    routeToStrategist();
+  } catch(e) {
+    setStatus('Pipeline error: ' + e.message, '#f87171');
+    console.error('TSM BPO Auto-Pipeline error:', e);
+  }
+});
+
 (function loadRelay() {
   try {
     const raw = sessionStorage.getItem('TSM_BPO_DOC') || sessionStorage.getItem('TSM_BPO_UPLOADER_RELAY');
