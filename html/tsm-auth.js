@@ -55,6 +55,10 @@ const PUBLIC_EXACT = new Set([
   '/html/tsm-doc-search-multi.html',
   '/html/tsm-career-training-platform.html',
   '/html/war-room-prep.html',
+  '/html/construction-suite/construction-war-room.html',
+  '/html/construction-suite/construction-strategist.html',
+  '/html/construction-suite/construction-executive-portal.html',
+  '/html/tsm-doc-search-multi.html',
 ]);
 
 const PUBLIC_PREFIXES = [
