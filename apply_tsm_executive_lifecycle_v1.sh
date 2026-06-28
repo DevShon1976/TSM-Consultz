@@ -1,3 +1,18 @@
+#!/bin/bash
+
+echo "===================================="
+echo "TSM EXECUTIVE LIFECYCLE ENGINE v1"
+echo "ONE-SHOT APPLY"
+echo "===================================="
+
+FILE="html/core/tsm-executive-briefing.js"
+PORTAL="html/construction-suite/construction-executive-portal.html"
+
+mkdir -p html/core
+
+echo "[1] Writing lifecycle-safe executive briefing engine..."
+
+cat > "$FILE" <<'JS'
 (function () {
 
   function render(root) {
@@ -55,3 +70,38 @@
   }
 
 })();
+JS
+
+echo "[2] Ensuring portal mount exists..."
+
+if [ -f "$PORTAL" ]; then
+  grep -q "tsm-executive-briefing-root" "$PORTAL" || cat <<'HTML' >> "$PORTAL"
+
+<!-- TSM EXECUTIVE BRIEFING MOUNT -->
+<div id="tsm-executive-briefing-root"></div>
+<script defer src="/core/tsm-executive-briefing.js"></script>
+
+HTML
+
+  echo "✔ Mount verified/injected"
+else
+  echo "❌ Portal not found"
+fi
+
+echo "[3] Git commit + push..."
+
+git add -A
+git commit -m "TSM Lifecycle Engine v1 - Executive Briefing stabilization" || echo "No changes to commit"
+
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+if [ "$BRANCH" != "main" ]; then
+  git branch -M main
+fi
+
+git push -u origin main
+
+echo "===================================="
+echo "✔ APPLY COMPLETE"
+echo "NEXT: fly deploy"
+echo "===================================="
