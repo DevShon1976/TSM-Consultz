@@ -66,7 +66,10 @@ const PUBLIC_PREFIXES = [
   '/assets/',
   '/css/',
   '/fonts/',
-  '/api/',   // ← ADD THIS — all API routes bypass auth
+  '/api/',
+  '/html/js/',
+  '/html/shared/',
+  '/html/tsm-mission-orchestrator.js',
 ];
 
 function isPublic(url) {
