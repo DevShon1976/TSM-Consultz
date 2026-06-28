@@ -26,36 +26,39 @@ const TSM_APP_CATALOG = {
   ],
 
   legal: [
-    { name: 'Legal War Room',           url: '/html/legal/legal-war-room.html',                    solves: ['case', 'dispute', 'contract', 'liability', 'claim', 'deadline'] },
-    { name: 'Case Strategist',          url: '/html/legal/legal-strategist.html',                  solves: ['strategy', 'argument', 'risk', 'precedent', 'filing'] },
-    { name: 'Legal Doc Search',         url: '/html/legal/legal-doc-search.html',                  solves: ['document', 'evidence', 'exhibit', 'discovery', 'record'] },
-    { name: 'Chief Strategist',         url: '/html/legal/legal-chief-strategist.html',            solves: ['executive', 'summary', 'partner', 'decision', 'brief'] },
+    { name: 'Legal War Room',           url: '/html/legal-pro/legal-war-room.html',                    solves: ['case', 'dispute', 'contract', 'liability', 'claim', 'deadline'] },
+    { name: 'Case Strategist',          url: '/html/legal-pro/case-strategist.html',                  solves: ['strategy', 'argument', 'risk', 'precedent', 'filing'] },
+    { name: 'Legal Doc Search',         url: '/html/tsm-doc-search-multi.html',                  solves: ['document', 'evidence', 'exhibit', 'discovery', 'record'] },
+    { name: 'Chief Strategist',         url: '/html/legal-pro/legal-main-strategist.html',            solves: ['executive', 'summary', 'partner', 'decision', 'brief'] },
   ],
 
   construction: [
-    { name: 'Construction War Room',    url: '/html/construction/construction-war-room.html',      solves: ['risk', 'bid', 'subcontractor', 'change order', 'schedule', 'delay'] },
-    { name: 'Project Strategist',       url: '/html/construction/construction-strategist.html',    solves: ['mitigation', 'strategy', 'recommendation', 'action'] },
-    { name: 'Executive Portal',         url: '/html/construction/construction-executive-portal.html', solves: ['executive', 'summary', 'owner', 'financial', 'report'] },
+    { name: 'Construction War Room',    url: '/html/construction-suite/construction-war-room.html',      solves: ['risk', 'bid', 'subcontractor', 'change order', 'schedule', 'delay'] },
+    { name: 'Project Strategist',       url: '/html/construction-suite/construction-strategist.html',    solves: ['mitigation', 'strategy', 'recommendation', 'action'] },
+    { name: 'Executive Portal',         url: '/html/construction-suite/construction-executive-portal.html', solves: ['executive', 'summary', 'owner', 'financial', 'report'] },
   ],
 
   'real-estate': [
-    { name: 'RE Doc Command',           url: '/html/real-estate/re-doc-command.html',              solves: ['document', 'intake', 'file', 'upload', 'extract'] },
-    { name: 'RE War Room',              url: '/html/real-estate/re-war-room.html',                 solves: ['deal', 'comp', 'market', 'risk', 'valuation', 'pricing'] },
-    { name: 'RE Strategist',            url: '/html/real-estate/re-strategist.html',               solves: ['strategy', 'recommendation', 'investment', 'positioning'] },
-    { name: 'RE Exec Portal',           url: '/html/real-estate/re-exec-portal.html',              solves: ['investor', 'summary', 'executive', 'report', 'brief'] },
+    { name: 'RE Doc Command',           url: '/html/reo-pro/re-doc-search.html',              solves: ['document', 'intake', 'file', 'upload', 'extract'] },
+    { name: 'RE War Room',              url: '/html/reo-pro/re-war-room.html',                 solves: ['deal', 'comp', 'market', 'risk', 'valuation', 'pricing'] },
+    { name: 'RE Strategist',            url: '/html/reo-pro/re-strategist.html',               solves: ['strategy', 'recommendation', 'investment', 'positioning'] },
+    { name: 'RE Exec Portal',           url: '/html/reo-pro/re-exec-portal.html',              solves: ['investor', 'summary', 'executive', 'report', 'brief'] },
   ],
 
   finops: [
-    { name: 'FinOps War Room',          url: '/html/finops/finops-war-room.html',                  solves: ['cost', 'spend', 'budget', 'overrun', 'variance', 'cloud', 'vendor'] },
-    { name: 'FinOps Strategist',        url: '/html/finops/finops-strategist.html',                solves: ['optimization', 'savings', 'reduction', 'recommendation'] },
-    { name: 'FinOps Executive Portal',  url: '/html/finops/finops-executive-portal.html',          solves: ['cfo', 'executive', 'summary', 'kpi', 'dashboard', 'report'] },
-    { name: 'FinOps Accounting Node',   url: '/html/finops/finops-accounting.html',                solves: ['ap', 'ar', 'invoice', 'aging', 'payable', 'receivable', 'balance'] },
+    { name: 'FinOps War Room',          url: '/html/finops-suite/finops-war-room.html',                  solves: ['cost', 'spend', 'budget', 'overrun', 'variance', 'cloud', 'vendor'] },
+    { name: 'FinOps Strategist',        url: '/html/finops-suite/finops-main-strategist.html',                solves: ['optimization', 'savings', 'reduction', 'recommendation'] },
+    { name: 'FinOps Executive Portal',  url: '/html/finops-suite/finops-executive-portal.html',          solves: ['cfo', 'executive', 'summary', 'kpi', 'dashboard', 'report'] },
+    { name: 'FinOps Accounting Node',   url: '/html/finops-suite/finops-accounting.html',                solves: ['ap', 'ar', 'invoice', 'aging', 'payable', 'receivable', 'balance'] },
   ],
 
   bpo: [
     { name: 'BPO Daily Workflow',       url: '/html/tsm-bpo-daily-workflow-gtm.html',              solves: ['schedule', 'daily', 'workflow', 'task', 'priority'] },
     { name: 'Universal Doc Router',     url: '/html/doc-search.html',                              solves: ['document', 'classify', 'route', 'intake', 'file'] },
     { name: 'BPO Competitive Playbook', url: '/html/bpo/tsm-bpo-competitive-playbook.html',        solves: ['competitive', 'scenario', 'playbook', 'comparison'] },
+    { name: 'BPO Situation Room',       url: '/html/bpo/bpo-situation-room.html',                  solves: ['anomaly', 'exception', 'escalation', 'complaint', 'sla'] },
+    { name: 'BPO Strategist',           url: '/html/bpo/bpo-strategist-v2.html',                   solves: ['decision', 'recommendation', 'strategy', 'root cause'] },
+    { name: 'BPO Executive Portal',     url: '/html/bpo/bpo-executive-portal.html',                solves: ['executive', 'summary', 'report', 'dashboard'] },
   ],
 
 };

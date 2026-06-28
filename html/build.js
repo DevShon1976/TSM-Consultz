@@ -32,7 +32,7 @@ const OBF_OPTIONS = {
   controlFlowFlattening: true,
   controlFlowFlatteningThreshold: 0.5,
   deadCodeInjection: false,          // keep false — adds bulk, not much protection
-  debugProtection: true,
+  debugProtection: false,
   debugProtectionInterval: 2000,
   disableConsoleOutput: false,       // keep console for your own debugging on Fly.io
   identifierNamesGenerator: 'hexadecimal',

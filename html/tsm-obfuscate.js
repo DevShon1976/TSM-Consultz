@@ -39,7 +39,7 @@ const OBF_CONFIG = {
   controlFlowFlatteningThreshold: 0.4,
   deadCodeInjection: true,
   deadCodeInjectionThreshold: 0.2,
-  debugProtection: true,           // makes DevTools debugger hang
+  debugProtection: false,           // makes DevTools debugger hang
   debugProtectionInterval: 2000,   // re-triggers every 2s
   disableConsoleOutput: false,      // keep console for debugging server-side
   identifierNamesGenerator: 'hexadecimal',
