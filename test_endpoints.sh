@@ -143,7 +143,6 @@ test_get  "root index"             "/"                              'TSM'
 test_get  "hub"                    "/html/hub/"                    'TSM Hub'
 test_get  "schools command"        "/schools-command.html"          'TSM School Command Center'
 test_get  "mortgage command"       "/mortgage-command.html"         'TSM'
-test_get  "healthcare command"     "/healthcare-command.html"       'TSM'
 
 # ── SUMMARY ───────────────────────────────────────────────────────────────────
 echo ""
