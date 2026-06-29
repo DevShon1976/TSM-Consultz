@@ -299,7 +299,7 @@ main{padding:18px;display:flex;flex-direction:column;gap:14px}
 
   <span style="color:#1a3a50;margin-right:6px;">──▶</span>
 
-  <a id="tsm-chain-strat" href="/html/legal-pro/legal-strategist.html" style="
+  <a id="tsm-chain-strat" href="/html/legal-pro/legal-main-strategist.html" style="
     color:#94a3b8;border:1px solid #1a3a50;
     padding:3px 10px;border-radius:3px;text-decoration:none;margin-right:6px;
     font-size:9px;letter-spacing:1px;transition:all .3s;
@@ -1170,7 +1170,7 @@ function buildAppDispatch(raw, defectManifest) {
   // Route map — legal-pro app URLs
   const routeMap = {
     'legal nodes':       'legal-nodes.html',
-    'case strategist':   'legal-strategist.html',
+    'case strategist':   'legal-main-strategist.html',
     'case strategist pro': 'case-strategist.html',
     'chief strategist':  'legal-main-strategist.html',
     'contracts node':    'legal-nodes.html#contracts',
@@ -1473,11 +1473,11 @@ setInterval(() => {
 })();
 </script>
 const LEGAL_APP_ROUTES = [
-  { keys:['contract','msa','nda','clause','indemnif','breach','termination'], app:'Case Strategist', url:'/html/legal/legal-strategist.html', reason:'Contract issue requires case strategy review' },
+  { keys:['contract','msa','nda','clause','indemnif','breach','termination'], app:'Case Strategist', url:'/html/legal/legal-main-strategist.html', reason:'Contract issue requires case strategy review' },
   { keys:['litigation','lawsuit','filing','complaint','motion','discovery'], app:'Legal War Room', url:'/html/legal/legal-war-room.html', reason:'Active litigation requires war room analysis' },
   { keys:['compliance','gdpr','hipaa','sox','regulation','audit','cfpb'], app:'Chief Strategist', url:'/html/legal/legal-chief-strategist.html', reason:'Regulatory compliance issue requires chief strategist' },
   { keys:['document','evidence','exhibit','discovery','record'], app:'Legal Doc Search', url:'/html/tsm-doc-search-multi.html', reason:'Document gap requires doc search review' },
-  { keys:['deadline','statute','sol','limitation','filing date'], app:'Case Strategist', url:'/html/legal/legal-strategist.html', reason:'Deadline risk requires immediate strategy review' },
+  { keys:['deadline','statute','sol','limitation','filing date'], app:'Case Strategist', url:'/html/legal/legal-main-strategist.html', reason:'Deadline risk requires immediate strategy review' },
 ];
  
 function legalResolveApp(text) {
@@ -1485,14 +1485,14 @@ function legalResolveApp(text) {
   for (const route of LEGAL_APP_ROUTES) {
     if (route.keys.some(k=>t.includes(k))) return route;
   }
-  return { app:'Case Strategist', url:'/html/legal/legal-strategist.html', reason:'General matter defect — strategy review required' };
+  return { app:'Case Strategist', url:'/html/legal/legal-main-strategist.html', reason:'General matter defect — strategy review required' };
 }
  
 async function legalGenerateMissionSteps(anomalyText, docText) {
   const route = legalResolveApp(anomalyText + ' ' + docText);
   const LEGAL_APPS = [
     'Legal War Room | /html/legal/legal-war-room.html',
-    'Case Strategist | /html/legal/legal-strategist.html',
+    'Case Strategist | /html/legal/legal-main-strategist.html',
     'Chief Strategist | /html/legal/legal-chief-strategist.html',
     'Legal Doc Search | /html/tsm-doc-search-multi.html',
   ].join('\n');
@@ -1501,7 +1501,7 @@ async function legalGenerateMissionSteps(anomalyText, docText) {
   const msg = `Anomaly:\n"${anomalyText.slice(0,600)}"\n\nDoc context:\n${(docText||'').slice(0,400)}\n\nAvailable apps:\n${LEGAL_APPS}\n\nGenerate 4-6 steps. Return ONLY:\n{"missionTitle":"...","summary":"...","steps":[{"id":"step-1","title":"...","appName":"...","appUrl":"...","objective":"...","instructions":"...","expectedOutput":"...","completionCriteria":"..."}]}`;
  
   try {
-    const res = await fetch('/api/hc/query', {
+    const res = await fetch('/api/legal/query', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ system:sys, message:msg, apiKey:localStorage.getItem('tsm_groq_key')||'' })
     });

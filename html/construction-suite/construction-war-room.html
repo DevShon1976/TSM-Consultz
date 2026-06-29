@@ -331,16 +331,18 @@ body{background:var(--bg);color:var(--text);font-family:'Courier New',monospace;
   </div>
 
   <div class="sb-section">
-    <div class="sb-label">PASTE DOCUMENT TEXT</div>
-    <textarea class="paste-area" id="docPaste" placeholder="Paste change order, draw request, job cost report, journal entry, OSHA citation, lien notice, subcontract, payroll doc, or any construction / accounting document..."></textarea>
+    
+  <div style="padding:8px 14px;border-bottom:1px solid var(--border)">
+    <div style="font-size:8px;letter-spacing:1.5px;color:var(--dim);margin-bottom:6px">UPLOAD DOCUMENT</div>
+    <label id="con-upload-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;background:rgba(0,255,150,0.04);border:1px dashed rgba(0,255,150,0.2);border-radius:3px;padding:7px 10px;font-size:9px;letter-spacing:1px;color:var(--dim);">
+      <span>📄</span>
+      <span id="con-upload-name">DROP FILE OR CLICK TO UPLOAD</span>
+      <input type="file" id="con-file-input" accept=".pdf,.docx,.xlsx,.csv,.txt,.png,.jpg,.jpeg" style="display:none" onchange="conHandleFile(this.files[0])">
+    </label>
   </div>
-
-  <div class="sb-section">
-    <div class="sb-label">GROQ API KEY</div>
-    <div class="groq-key-wrap">
-      <input type="password" class="groq-key-input" id="groqKey" placeholder="gsk_..." oninput="saveKey()">
-      <button class="btn btn-outline" onclick="testKey()">TEST</button>
-    </div>
+<div style="padding:8px 14px;border-bottom:1px solid var(--border)">
+    <div style="font-size:8px;letter-spacing:1.5px;color:var(--dim);margin-bottom:4px">AI ENGINE</div>
+    <div style="color:var(--green);font-size:9px;letter-spacing:1px">● SERVER CONNECTED · PROXY ACTIVE</div>
   </div>
 
   <div class="sb-section">
@@ -1804,5 +1806,30 @@ function tsmWriteRelay(payload){
 
 
 <!-- TSM KERNEL ENGINE -->
-<script src="/construction-suite/tsm-construction-analyzer.js"></script>
+<script src="/construction-suite/tsm-construction-analyzer.js">
+function conHandleFile(file) {
+  if (!file) return;
+  const lbl = document.getElementById('con-upload-name');
+  if (lbl) lbl.textContent = '⟳ READING ' + file.name + '...';
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const ta = document.getElementById('docPaste');
+    if (ta) { ta.value = e.target.result; ta.dispatchEvent(new Event('input')); }
+    if (lbl) lbl.textContent = '✓ ' + file.name;
+  };
+  reader.onerror = function() { if(lbl) lbl.textContent = '✗ Read error'; };
+  reader.readAsText(file);
+}
+document.addEventListener('DOMContentLoaded', function() {
+  const lbl = document.getElementById('con-upload-label');
+  if (!lbl) return;
+  lbl.addEventListener('dragover', e => { e.preventDefault(); lbl.style.borderColor='var(--green)'; });
+  lbl.addEventListener('dragleave', () => { lbl.style.borderColor='rgba(0,255,150,0.2)'; });
+  lbl.addEventListener('drop', e => {
+    e.preventDefault(); lbl.style.borderColor='rgba(0,255,150,0.2)';
+    const f = e.dataTransfer.files[0];
+    if (f) { document.getElementById('con-file-input').files=e.dataTransfer.files; conHandleFile(f); }
+  });
+});
+</script>
 

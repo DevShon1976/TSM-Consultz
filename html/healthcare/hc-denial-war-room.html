@@ -392,7 +392,7 @@ textarea::placeholder{color:var(--faint)}
   <script src="/js/core/tsm-auto-pipeline.js"></script>
 </head>
 <body>
-<div id="tsm-chain-bar" style="position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#040c12;border-top:1px solid #0d2233;display:flex;align-items:center;height:32px;padding:0 16px;font-family:'IBM Plex Mono',monospace;font-size:10px;"><span style="color:#3a5a70;margin-right:12px;font-size:9px;">TSM CHAIN</span><a href="#" style="color:#00ffc6;background:rgba(0,255,198,.08);border:1px solid #00ffc638;padding:3px 10px;border-radius:3px;text-decoration:none;margin-right:6px;font-size:9px;">&#9679; WAR ROOM</a><span style="color:#1a3a50;margin-right:6px;">--&gt;</span><a href="/html/healthcare/hc-main-strategist/index.html" style="color:#94a3b8;border:1px solid #1a3a50;padding:3px 10px;border-radius:3px;text-decoration:none;margin-right:6px;font-size:9px;">&#9675; STRATEGIST</a><span style="color:#1a3a50;margin-right:6px;">--&gt;</span><a href="/html/healthcare/executive-portal.html" style="color:#94a3b8;border:1px solid #1a3a50;padding:3px 10px;border-radius:3px;text-decoration:none;font-size:9px;">&#9675; EXEC PORTAL</a><span style="color:#1a3a50;margin-left:auto;font-size:9px;">HEALTHCARE RCM</span></div>
+<div id="tsm-chain-bar" style="position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#040c12;border-top:1px solid #0d2233;display:flex;align-items:center;height:32px;padding:0 16px;font-family:'IBM Plex Mono',monospace;font-size:10px;"><span style="color:#3a5a70;margin-right:12px;font-size:9px;">TSM CHAIN</span><a href="#" style="color:#00ffc6;background:rgba(0,255,198,.08);border:1px solid #00ffc638;padding:3px 10px;border-radius:3px;text-decoration:none;margin-right:6px;font-size:9px;">&#9679; WAR ROOM</a><span style="color:#1a3a50;margin-right:6px;">--&gt;</span><a href="/html/healthcare/hc-main-strategist.html" style="color:#94a3b8;border:1px solid #1a3a50;padding:3px 10px;border-radius:3px;text-decoration:none;margin-right:6px;font-size:9px;">&#9675; STRATEGIST</a><span style="color:#1a3a50;margin-right:6px;">--&gt;</span><a href="/html/healthcare/executive-portal.html" style="color:#94a3b8;border:1px solid #1a3a50;padding:3px 10px;border-radius:3px;text-decoration:none;font-size:9px;">&#9675; EXEC PORTAL</a><span style="color:#1a3a50;margin-left:auto;font-size:9px;">HEALTHCARE RCM</span></div>
 
 <!-- HEADER -->
 <div class="hdr">
@@ -470,12 +470,10 @@ textarea::placeholder{color:var(--faint)}
         <button class="btn btn-sample" onclick="loadSample('compliance')">📋 Compliance Sample</button>
         <button class="btn btn-ghost" onclick="clearAll()">Clear</button>
       </div>
-      <div class="key-row">
-        <div class="key-dot" id="key-dot"></div>
-        <div class="key-label">Groq API Key</div>
-        <input class="key-input" id="api-key" type="password" placeholder="gsk_..." oninput="onKeyInput(this.value)">
-        <button class="btn-ghost btn" style="padding:3px 10px;font-size:7px" onclick="testKey()">Test</button>
-        <span class="key-status" id="key-status"></span>
+      <div class="key-row" style="gap:8px">
+        <div class="key-dot" id="key-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)"></div>
+        <div class="key-label">AI Engine</div>
+        <span class="key-status" id="key-status" style="color:var(--green);font-size:9px">SERVER CONNECTED · PROXY ACTIVE</span>
       </div>
     </div>
     <div class="paste-panel">
@@ -723,7 +721,7 @@ textarea::placeholder{color:var(--faint)}
 
 <script>
 // ── STATE ──────────────────────────────────────────────────────────────────
-let GROQ_KEY = localStorage.getItem('groq_key') || '';
+const GROQ_KEY = ''; // client-side key removed — all calls proxied via /api/hc/stream
 let GROQ_MODEL = 'llama-3.3-70b-versatile';
 let docText = '';
 let currentMode = 'denial';
@@ -752,7 +750,7 @@ let currentMode = 'denial';
 // Doc Search relay — populate from redispatch (legal or HC docsearch handoff)
 (function(){
   try {
-    const raw = localStorage.getItem('tsm_legal_docsearch_relay') || localStorage.getItem('tsm_hc_docsearch_relay');
+    const raw = localStorage.getItem('tsm_hc_docsearch_relay');
     if (!raw) return;
     const relay = JSON.parse(raw);
     if (!relay.summary) return;
@@ -1329,7 +1327,7 @@ function clearAll(){
 // ── KEY ────────────────────────────────────────────────────────────────────
 function onKeyInput(v){
   GROQ_KEY = v.trim();
-  localStorage.setItem('groq_key', GROQ_KEY);
+  // localStorage.setItem('groq_key', GROQ_KEY); // removed
   const dot = document.getElementById('key-dot');
   if (dot) dot.className = 'key-dot' + (GROQ_KEY.startsWith('gsk_') ? ' ok' : '');
   const fireBtn = document.getElementById('fire-btn');
@@ -1349,7 +1347,7 @@ async function testKey(){
     const r = await fetch('https://api.groq.com/openai/v1/models', { headers: { 'Authorization': 'Bearer ' + key } });
     const d = await r.json();
     if(d.data){
-      GROQ_KEY = key; localStorage.setItem('groq_key', key);
+      GROQ_KEY = key; // localStorage.setItem('groq_key', key); // removed
       const dot = document.getElementById('key-dot');
       if (dot) dot.classList.add('ok');
       if (statusTxt) {

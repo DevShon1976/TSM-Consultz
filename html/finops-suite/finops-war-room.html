@@ -188,7 +188,7 @@ body::before{content:'';position:fixed;top:0;right:0;width:500px;height:500px;ba
 
   <span style="color:#1a3a50;margin-right:6px;">──▶</span>
 
-  <a id="tsm-chain-strat" href="/html/finops-suite/finops-strategist.html" style="
+  <a id="tsm-chain-strat" href="/html/finops-suite/finops-main-strategist.html" style="
     color:#94a3b8;border:1px solid #1a3a50;
     padding:3px 10px;border-radius:3px;text-decoration:none;margin-right:6px;
     font-size:9px;letter-spacing:1px;transition:all .3s;
@@ -316,6 +316,15 @@ body::before{content:'';position:fixed;top:0;right:0;width:500px;height:500px;ba
     </div>
 
     <div class="sb-sec">
+      <div class="sb-lbl">UPLOAD DOCUMENT</div>
+      <label id="fo-upload-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;background:rgba(0,255,150,0.04);border:1px dashed rgba(0,255,150,0.2);border-radius:4px;padding:8px 12px;font-size:9px;letter-spacing:1px;color:var(--dim);">
+        <span style="font-size:14px">📄</span>
+        <span id="fo-upload-name">DROP FILE OR CLICK TO UPLOAD</span>
+        <input type="file" id="fo-file-input" accept=".pdf,.docx,.xlsx,.csv,.txt,.png,.jpg,.jpeg" style="display:none" onchange="foHandleFile(this.files[0])">
+      </label>
+    </div>
+
+    <div class="sb-sec">
       <div class="sb-lbl">PASTE DOCUMENT TEXT</div>
       <textarea class="paste-area" id="docPaste" placeholder="Paste AP aging report, GL extract, bank reconciliation, ERA batch, invoice audit, budget variance, or any financial document..."></textarea>
       <div class="samples">
@@ -327,9 +336,9 @@ body::before{content:'';position:fixed;top:0;right:0;width:500px;height:500px;ba
     </div>
 
     <div class="sb-sec">
-      <div class="sb-lbl">GROQ API KEY</div>
+      <div class="sb-lbl">AI ENGINE STATUS</div>
       <div class="groq-wrap">
-        <input type="password" class="groq-inp" id="groqKey" placeholder="gsk_..." oninput="saveKey()">
+        <div style="color:var(--green);font-size:9px;letter-spacing:1px">● SERVER CONNECTED · PROXY ACTIVE</div>
         <button class="btn btn-outline" onclick="testKey()">TEST</button>
       </div>
     </div>
@@ -1578,5 +1587,46 @@ function tsmWriteRelay(payload){
 
 
 <!-- TSM KERNEL ENGINE -->
-<script src="../../core/tsm-kernel.js"></script>
+<script src="../../core/tsm-kernel.js">
+// ── FILE UPLOAD HANDLER ─────────────────────────────────────────────────────
+function foHandleFile(file) {
+  if (!file) return;
+  const label = document.getElementById('fo-upload-name');
+  if (label) label.textContent = '⟳ READING ' + file.name + '...';
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    const ta = document.getElementById('docPaste');
+    if (ta) {
+      ta.value = text;
+      ta.dispatchEvent(new Event('input'));
+    }
+    if (label) label.textContent = '✓ ' + file.name;
+    // Trigger drag-update if present
+    if (typeof updateDocText === 'function') updateDocText(text);
+  };
+  reader.onerror = function() {
+    if (label) label.textContent = '✗ Error reading file';
+  };
+  if (file.type.startsWith('image/')) {
+    reader.readAsDataURL(file);
+  } else {
+    reader.readAsText(file);
+  }
+}
+
+// Drag/drop onto the upload label
+document.addEventListener('DOMContentLoaded', function() {
+  const lbl = document.getElementById('fo-upload-label');
+  if (!lbl) return;
+  lbl.addEventListener('dragover', e => { e.preventDefault(); lbl.style.borderColor = 'var(--green)'; });
+  lbl.addEventListener('dragleave', () => { lbl.style.borderColor = 'rgba(0,255,150,0.2)'; });
+  lbl.addEventListener('drop', e => {
+    e.preventDefault();
+    lbl.style.borderColor = 'rgba(0,255,150,0.2)';
+    const f = e.dataTransfer.files[0];
+    if (f) { document.getElementById('fo-file-input').files = e.dataTransfer.files; foHandleFile(f); }
+  });
+});
+</script>
 
