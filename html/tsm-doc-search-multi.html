@@ -2179,6 +2179,22 @@ function tsmAutoLaunchIfEnabled(routed, classification, fileName) {
     localStorage.setItem(room.relayKey, payload);
     sessionStorage.setItem(room.docKey, classification.summary || '');
   } catch(e) {}
+  // Fire full autonomous pipeline — war room → strategist → exec portal
+  const verticalKey = primary.vertical === 'fo' ? 'finops'
+    : primary.vertical === 'ins' ? 'ins'
+    : primary.vertical === 'con' ? 'con'
+    : primary.vertical === 'leg' ? 'legal'
+    : primary.vertical === 're'  ? 're'
+    : primary.vertical === 'bpo' ? 'bpo'
+    : primary.vertical === 'hc'  ? 'hc'
+    : primary.vertical;
+  if (window.TSM_PIPELINE) {
+    window.TSM_PIPELINE.start(verticalKey, classification.fileName || fileName, classification.documentType || 'DOCUMENT');
+  } else {
+    // Fallback: write TSM_AUTO_PIPELINE directly
+    const pipeFlag = JSON.stringify({ active:true, vertical:verticalKey, phase:'war-room', fileName:classification.fileName||fileName, docType:classification.documentType||'DOCUMENT', ts:Date.now() });
+    try { sessionStorage.setItem('TSM_AUTO_PIPELINE', pipeFlag); localStorage.setItem('TSM_AUTO_PIPELINE', pipeFlag); } catch(e) {}
+  }
   // Small delay so user sees classification result before navigation
   setTimeout(() => { window.location.href = room.url; }, 1200);
 }
@@ -2400,5 +2416,8 @@ window.openHcNodeWithDoc = openHcNodeWithDoc;
   document.addEventListener('DOMContentLoaded', updateBtn);
 })();
 </script>
+
+<!-- TSM AUTO-PIPELINE ENGINE -->
+<script src="/js/core/tsm-auto-pipeline.js"></script>
 </body>
 </html>
