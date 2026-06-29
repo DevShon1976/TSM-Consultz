@@ -30,7 +30,7 @@ class TSMMissionStore {
     this.save();
   }
 
-  updateMission(id, patch) {
+  window.TSMEventBus.emit("MISSION_UPDATE", id, patch) {
     const m = this.state.missions.find(x => x.id === id);
     if (!m) return;
     Object.assign(m, patch);

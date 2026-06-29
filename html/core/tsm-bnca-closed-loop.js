@@ -12,7 +12,7 @@
   // =====================================================
   // CREATE MISSION
   // =====================================================
-  function createMission(data) {
+  function window.TSMEventBus.emit("SIGNAL", data) {
     return {
       id: "BNCA-" + Date.now(),
       created_at: new Date().toISOString(),
@@ -56,7 +56,7 @@
       action = "standard_review";
     }
 
-    const mission = createMission({ risk, exposure, priority, action });
+    const mission = window.TSMEventBus.emit("SIGNAL", { risk, exposure, priority, action });
 
     const exists = window.TSM_CLOSED_LOOP.missions.find(m =>
       m.risk === risk && m.exposure === exposure

@@ -60,24 +60,39 @@ class TSMOrchestrator {
 
     // MEDIUM → mission
     if (s >= 40 && s < 70) {
-      this.createMission(signal);
+      this.window.TSMEventBus.emit("SIGNAL", signal);
       return;
     }
 
     // HIGH → BNCA required
     if (s >= 70) {
       this.bus.emit("BNCA_REQUIRED", signal);
-      this.createMission(signal, true);
+      const mission = this.engine.window.TSMEventBus.emit("SIGNAL", signal);
+
+const bnca = window.TSMBNCAEngine.evaluate(mission);
+
+mission.bnca = bnca;
+mission.status = bnca.decision === "PASS"
+  ? "APPROVED"
+  : "BNCA_PENDING";
+
+this.window.TSMEventBus.emit("SIGNAL", mission);
+
+this.bus.emit("BNCA_RESULT", { mission, bnca });
+
+if (bnca.action === "EXECUTE") {
+  this.bus.emit("EXECUTE_MISSION", mission);
+}
     }
   }
 
-  createMission(signal, requiresBNCA = false) {
-    const mission = this.engine.createMission(signal);
+  window.TSMEventBus.emit("SIGNAL", signal, requiresBNCA = false) {
+    const mission = this.engine.window.TSMEventBus.emit("SIGNAL", signal);
 
     mission.requiresBNCA = requiresBNCA;
     mission.status = requiresBNCA ? "BNCA_PENDING" : "MISSION_CREATED";
 
-    this.store.addMission(mission);
+    this.window.TSMEventBus.emit("SIGNAL", mission);
 
     this.bus.emit("MISSION_CREATED", mission);
   }

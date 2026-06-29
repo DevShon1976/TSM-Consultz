@@ -6,7 +6,7 @@
     observers: []
   };
 
-  function createMission(payload) {
+  function window.TSMEventBus.emit("SIGNAL", payload) {
     return {
       id: "BNCA-" + Date.now(),
       created_at: new Date().toISOString(),
@@ -48,7 +48,7 @@
       priority = "MEDIUM";
     }
 
-    const mission = createMission({
+    const mission = window.TSMEventBus.emit("SIGNAL", {
       exposure,
       risk,
       action,

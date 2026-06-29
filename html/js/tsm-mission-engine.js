@@ -1,6 +1,6 @@
 // tsm-mission-engine.js
 class TSMMissionEngine {
-  createMission(signal) {
+  window.TSMEventBus.emit("SIGNAL", signal) {
     return {
       id: "M-" + Date.now().toString(36).toUpperCase(),
       sector: signal.sector,

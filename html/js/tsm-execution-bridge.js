@@ -16,12 +16,12 @@ class TSMExecutionBridge {
       await this.simulateWork();
 
       mission.status = "COMPLETE";
-      window.TSMMissionStore.updateMission(mission.id, mission);
+      window.TSMMissionStore.window.TSMEventBus.emit("MISSION_UPDATE", mission.id, mission);
 
       this.bus.emit("MISSION_COMPLETE", mission);
     } catch (err) {
       mission.status = "FAILED";
-      window.TSMMissionStore.updateMission(mission.id, mission);
+      window.TSMMissionStore.window.TSMEventBus.emit("MISSION_UPDATE", mission.id, mission);
 
       this.bus.emit("MISSION_FAILED", mission);
     }
