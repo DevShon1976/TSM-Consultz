@@ -109,7 +109,7 @@
 
     _missions[id] = mission;
     _syncState();
-    _emit('MISSION_CREATED', { mission: _clone(mission) });
+    this.bus.emit('MISSION_CREATED', { mission: _clone(mission) });
     _auditLog(id, 'created', { sector: mission.sector, priority: mission.priority });
 
     return _clone(mission);
@@ -138,7 +138,7 @@
 
     Object.assign(m, updates, { updatedAt: Date.now() });
     _syncState();
-    _emit('MISSION_UPDATED', { id, updates, mission: _clone(m) });
+    this.bus.emit('MISSION_UPDATED', { id, updates, mission: _clone(m) });
     _auditLog(id, 'updated', updates);
 
     return _clone(m);
@@ -198,7 +198,7 @@
     m.tasks.push(t);
     m.updatedAt = Date.now();
     _syncState();
-    _emit('MISSION_UPDATED', { id, change: 'task_added', task: t });
+    this.bus.emit('MISSION_UPDATED', { id, change: 'task_added', task: t });
     return t;
   }
 
@@ -292,7 +292,7 @@
     });
     m.updatedAt = Date.now();
     _syncState();
-    _emit('MISSION_UPDATED', { id, change: 'explainability_set' });
+    this.bus.emit('MISSION_UPDATED', { id, change: 'explainability_set' });
     return _clone(m);
   }
 
@@ -305,7 +305,7 @@
     m.updatedAt = Date.now();
     addTimeline(id, { event: 'escalated', data: { reason } });
     _syncState();
-    _emit('MISSION_ESCALATED', { id, reason, mission: _clone(m) });
+    this.bus.emit('MISSION_ESCALATED', { id, reason, mission: _clone(m) });
     _auditLog(id, 'escalated', { reason });
     return _clone(m);
   }
@@ -321,7 +321,7 @@
     m.execution.completedAt = Date.now();
     addTimeline(id, { event: 'completed', data: result });
     _syncState();
-    _emit('MISSION_COMPLETE', { id, result, mission: _clone(m) });
+    this.bus.emit('MISSION_COMPLETE', { id, result, mission: _clone(m) });
     _auditLog(id, 'completed', result);
     return _clone(m);
   }
@@ -333,7 +333,7 @@
     m.updatedAt = Date.now();
     addTimeline(id, { event: 'failed', data: { reason } });
     _syncState();
-    _emit('MISSION_UPDATED', { id, change: 'failed', reason });
+    this.bus.emit('MISSION_UPDATED', { id, change: 'failed', reason });
     _auditLog(id, 'failed', { reason });
     return _clone(m);
   }
@@ -370,8 +370,8 @@
     m.updatedAt = Date.now();
 
     _syncState();
-    _emit('WARROOM_FINDINGS_READY', { id, analysis, mission: _clone(m) });
-    _emit('STRATEGIST_READY', { id, mission: _clone(m) });
+    this.bus.emit('WARROOM_FINDINGS_READY', { id, analysis, mission: _clone(m) });
+    this.bus.emit('STRATEGIST_READY', { id, mission: _clone(m) });
     _auditLog(id, 'analysis_published', { findings: (analysis.findings || []).length });
 
     return _clone(m);
@@ -396,14 +396,14 @@
     }
   }
 
-  function _emit(event, payload) {
+  function this.bus.emit(event, payload) {
     if (global.TSMBus) global.TSMBus.emit(event, payload);
   }
 
   function _auditLog(missionId, action, data) {
     const entry = { missionId, action, data, ts: Date.now() };
     if (global.TSMState) global.TSMState.push('audit', entry);
-    _emit('AUDIT_ENTRY', entry);
+    this.bus.emit('AUDIT_ENTRY', entry);
   }
 
   function _clone(obj) {
