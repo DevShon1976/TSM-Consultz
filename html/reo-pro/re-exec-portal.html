@@ -501,6 +501,10 @@
 <script src="./html/js/tsm-runtime-lock.js"></script>
 <script src="./html/js/tsm-event-contract.js"></script>
 <script src="./html/js/tsm-autonomy-layer.js"></script>
+  <script src="/js/core/tsm-event-bus.js"></script>
+  <script src="/js/core/tsm-state.js"></script>
+  <script src="/js/core/tsm-mission-engine.js"></script>
+  <script src="/js/core/tsm-auto-pipeline.js"></script>
 </head>
 <body>
 
@@ -1412,6 +1416,28 @@ function exportBoard() {
 </script>
   <script src="/core/tsm-kernel.js"></script>
   <script src="/core/tsm-enforcer.js"></script>
+<script>
+/* TSM EXECUTIVE_APPROVED — Control Plane wiring */
+(function(){
+  function _emitApproval(decision) {
+    const bus = window.TSMBus || window.TSMEventBus;
+    if (bus && bus.emit) {
+      const vertical = (window.location.pathname.match(/\/(healthcare|finops|insurance|construction|legal|reo-pro|bpo)\//) || [])[1] || 'unknown';
+      bus.emit('EXECUTIVE_APPROVED', { vertical, decision, ts: Date.now() });
+    }
+  }
+  // Hook into any approve button
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('[id*="approve"],[class*="approve"],[data-action="approve"]').forEach(btn => {
+      btn.addEventListener('click', function() {
+        _emitApproval({ approved: true, approvedBy: 'executive', ts: Date.now() });
+      });
+    });
+  });
+  // Expose globally so manual calls work too
+  window.TSMApprove = _emitApproval;
+})();
+</script>
 </body>
 </html>
 
