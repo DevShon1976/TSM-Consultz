@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TSM Document Search</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600&display=swap');
+
+:root {
+  --bg:         #060c10;
+  --panel:      #0d1a20;
+  --panel2:     #0a1520;
+  --border:     #1a2e38;
+  --border-hi:  #264555;
+  --accent:     #1ee8b6;
+  --accent-dim: rgba(30,232,182,0.07);
+  --accent-mid: rgba(30,232,182,0.15);
+  --text:       #dff7ff;
+  --muted:      #6b8fa0;
+  --dim:        #3a5a6a;
+  --ins:        #38bdf8;
+  --health:     #22d3a0;
+  --fin:        #86efac;
+  --con:        #fbbf24;
+  --legal:      #c084fc;
+  --danger:     #f87171;
+  --mono:       'JetBrains Mono', monospace;
+  --sans:       'Space Grotesk', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.025) 2px, rgba(0,0,0,0.025) 4px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.page {
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 28px 24px 80px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 20px;
+  margin-bottom: 28px;
+}
+
+.header-left h1 {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+  margin-bottom: 3px;
+}
+
+.header-left p {
+  font-size: 12px;
+  color: var(--muted);
+  font-family: var(--mono);
+}
+
+.header-right {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.doc-count-pill {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: var(--accent-dim);
+  border: 1px solid rgba(30,232,182,0.2);
+  color: var(--accent);
+}
+
+.btn-ghost {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-hi);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-ghost:hover {
+  color: var(--danger);
+  border-color: rgba(248,113,113,0.4);
+  background: rgba(248,113,113,0.05);
+}
+
+.btn-nav {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  letter-spacing: .05em;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  transition: color .15s, border-color .15s;
+}
+
+.btn-nav:hover { color: var(--accent); border-color: rgba(30,232,182,0.3); }
+
+/* HC Node quick links */
+.node-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  align-items: center;
+}
+
+.node-links-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.node-link {
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  text-decoration: none;
+  white-space: nowrap;
+  letter-spacing: .04em;
+  background: rgba(34,211,160,0.08);
+  color: #22d3a0;
+  border: 1px solid rgba(34,211,160,0.2);
+  transition: background .15s;
+}
+
+.node-link:hover { background: rgba(34,211,160,0.18); }
+.node-link.exec   { background: rgba(30,232,182,0.08); color: var(--accent); border-color: rgba(30,232,182,0.25); }
+.node-link.exec:hover { background: rgba(30,232,182,0.18); }
+
+.search-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+  align-items: center;
+}
+
+.search-input-wrap {
+  flex: 1;
+  position: relative;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: var(--dim);
+  pointer-events: none;
+  font-family: var(--mono);
+}
+
+#search-query {
+  width: 100%;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px 10px 34px;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  outline: none;
+  transition: border-color .2s;
+}
+
+#search-query:focus { border-color: var(--accent); }
+#search-query::placeholder { color: var(--dim); }
+
+.filter-toggle-btn {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color .2s, color .2s;
+  letter-spacing: .05em;
+}
+
+.filter-toggle-btn:hover, .filter-toggle-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.filter-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+  display: none;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.filter-panel.open { display: grid; }
+
+.filter-group label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 6px;
+}
+
+.filter-group select,
+.filter-group input[type="date"],
+.filter-group input[type="number"] {
+  width: 100%;
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 10px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11px;
+  outline: none;
+  transition: border-color .2s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.filter-group select:focus,
+.filter-group input:focus { border-color: var(--accent); }
+.filter-group select option { background: var(--panel2); }
+
+.filter-actions {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.btn-apply {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 7px 16px;
+  border-radius: 6px;
+  border: 1px solid rgba(30,232,182,0.3);
+  background: var(--accent-dim);
+  color: var(--accent);
+  cursor: pointer;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  transition: background .15s;
+  white-space: nowrap;
+}
+
+.btn-apply:hover { background: var(--accent-mid); }
+
+.btn-reset {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 7px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  transition: color .15s;
+  white-space: nowrap;
+}
+
+.btn-reset:hover { color: var(--text); }
+
+.results-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.results-count {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--dim);
+}
+
+.results-count span { color: var(--accent); }
+
+.sort-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sort-wrap label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--dim);
+  white-space: nowrap;
+}
+
+.sort-wrap select {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+#results-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.doc-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  transition: border-color .2s, background .2s;
+  cursor: default;
+}
+
+.doc-card:hover {
+  border-color: var(--border-hi);
+  background: #0f2030;
+}
+
+.doc-card.bnca-flag { border-left: 3px solid var(--danger); }
+
+.doc-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.doc-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.doc-type-badge {
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.doc-filename {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.doc-card-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.btn-redispatch {
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(30,232,182,0.25);
+  background: var(--accent-dim);
+  color: var(--accent);
+  cursor: pointer;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  transition: background .15s;
+  white-space: nowrap;
+}
+
+.btn-redispatch:hover { background: var(--accent-mid); }
+
+.btn-open-node {
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(34,211,160,0.25);
+  background: rgba(34,211,160,0.06);
+  color: #22d3a0;
+  cursor: pointer;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background .15s;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-open-node:hover { background: rgba(34,211,160,0.14); }
+
+.btn-remove {
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(248,113,113,0.2);
+  background: transparent;
+  color: rgba(248,113,113,0.6);
+  cursor: pointer;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  transition: color .15s, border-color .15s;
+  white-space: nowrap;
+}
+
+.btn-remove:hover { color: var(--danger); border-color: rgba(248,113,113,0.5); }
+
+.doc-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.doc-meta-row .meta-item { display: flex; align-items: center; gap: 4px; }
+.doc-meta-row .meta-label { color: var(--dim); }
+.doc-meta-row .meta-val   { color: var(--text); }
+.doc-meta-row .meta-val.hi     { color: var(--accent); }
+.doc-meta-row .meta-val.danger { color: var(--danger); }
+
+.routing-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+}
+
+.routing-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--dim);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  margin-right: 2px;
+  white-space: nowrap;
+}
+
+.node-tag {
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  letter-spacing: .04em;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 2;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+}
+
+.empty-state .empty-icon { font-size: 32px; margin-bottom: 12px; opacity: 0.4; display: block; }
+.empty-state .empty-title { color: var(--muted); font-size: 13px; margin-bottom: 4px; }
+
+.demo-banner {
+  background: var(--accent-dim);
+  border: 1px solid rgba(30,232,182,0.2);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.demo-banner p { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.demo-banner p span { color: var(--accent); }
+
+.btn-seed {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(30,232,182,0.35);
+  background: var(--accent-dim);
+  color: var(--accent);
+  cursor: pointer;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  transition: background .15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-seed:hover { background: var(--accent-mid); }
+
+mark {
+  background: rgba(30,232,182,0.2);
+  color: var(--accent);
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.doc-card { animation: fadeSlideIn .2s ease-out; }
+
+@media (max-width: 600px) {
+  .header { flex-direction: column; align-items: flex-start; }
+  .doc-card-top { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="header">
+    <div class="header-left">
+      <h1>🗂 TSM Document Search</h1>
+      <p>hc-suite · cross-node record index · live sync</p>
+    </div>
+    <div class="header-right">
+      <div class="doc-count-pill" id="total-count">0 docs indexed</div>
+      <button class="btn-ghost" onclick="confirmClearAll()">Clear Index</button>
+      <a href="/html/healthcare/executive-portal.html" class="btn-nav">← Executive Portal</a>
+    </div>
+  </div>
+
+  <!-- Insurance Node Quick Links -->
+  <div class="node-links">
+    <span class="node-links-label">Insurance:</span>
+    <a class="node-link exec" href="/html/insurance-portal.html">Insurance Portal</a>
+    <a class="node-link" href="/html/ins-hub.html">INS Hub</a>
+    <a class="node-link" href="/html/ins-claims.html">Claims</a>
+    <a class="node-link" href="/html/ins-appeals.html">Appeals</a>
+    <a class="node-link" href="/html/ins-liability.html">Liability</a>
+    <a class="node-link" href="/html/ins-underwriting.html">Underwriting</a>
+    <a class="node-link" href="/html/ins-malpractice.html">Malpractice</a>
+    <a class="node-link" href="/html/ins-compliance.html">Compliance</a>
+  </div>
+
+  <div class="demo-banner" id="demo-banner">
+    <p>No HC records indexed yet. Records auto-index when <span>Set Mission from Client Data</span> is used in any HC node. Or seed sample records below.</p>
+    <button class="btn-seed" onclick="seedDemoData()">⚡ Seed HC Demo Records</button>
+  </div>
+
+  <div class="search-bar">
+    <div class="search-input-wrap">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="search-query" placeholder="Search by patient, claim #, payer, denial code, node..." autocomplete="off">
+    </div>
+    <button class="filter-toggle-btn" id="filter-toggle" onclick="toggleFilters()">⚙ Filters</button>
+  </div>
+
+  <div class="filter-panel" id="filter-panel">
+    <div class="filter-group">
+      <label>HC Node</label>
+      <select id="f-node">
+        <option value="">All Nodes</option>
+        <option value="hc-billing">HC Billing</option>
+        <option value="hc-compliance">HC Compliance</option>
+        <option value="hc-insurance">HC Insurance</option>
+        <option value="hc-medical">HC Medical</option>
+        <option value="hc-operations">HC Operations</option>
+        <option value="hc-financial">HC Financial</option>
+        <option value="hc-grants">HC Grants</option>
+        <option value="hc-legal">HC Legal</option>
+        <option value="hc-pharmacy">HC Pharmacy</option>
+        <option value="hc-vendors">HC Vendors</option>
+        <option value="hc-taxprep">HC Tax Prep</option>
+        <option value="bnca-engine">BNCA Escalated</option>
+        <option value="executive-portal">Executive Portal</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Date From</label>
+      <input type="date" id="f-date-from">
+    </div>
+    <div class="filter-group">
+      <label>Date To</label>
+      <input type="date" id="f-date-to">
+    </div>
+    <div class="filter-group">
+      <label>Min Exposure ($)</label>
+      <input type="number" id="f-amount-min" placeholder="0" min="0">
+    </div>
+    <div class="filter-group">
+      <label>Max Exposure ($)</label>
+      <input type="number" id="f-amount-max" placeholder="No limit" min="0">
+    </div>
+    <div class="filter-actions">
+      <button class="btn-apply" onclick="runSearch()">Apply</button>
+      <button class="btn-reset" onclick="resetFilters()">Reset</button>
+    </div>
+  </div>
+
+  <div class="results-meta">
+    <div class="results-count" id="results-count">&nbsp;</div>
+    <div class="sort-wrap">
+      <label>Sort:</label>
+      <select id="sort-by" onchange="runSearch()">
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+        <option value="amount-desc">Highest exposure</option>
+        <option value="amount-asc">Lowest exposure</option>
+        <option value="name">Filename A–Z</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="results-container">
+    <div class="empty-state" id="empty-state">
+      <span class="empty-icon">🗂</span>
+      <div class="empty-title">No records indexed</div>
+      > Use <strong>Set Mission from Client Data</strong> in any HC node to auto-index records here.<br>
+      Or seed demo records above to explore the search system.
+    </div>
+  </div>
+
+</div>
+
+<script>
+const TSM_NODES = {
+  "hc-billing":    { label:"HC Billing",    color:"#22d3a0" },
+  "hc-compliance": { label:"HC Compliance", color:"#22d3a0" },
+  "hc-insurance":  { label:"HC Insurance",  color:"#22d3a0" },
+  "hc-medical":    { label:"HC Medical",    color:"#22d3a0" },
+  "hc-operations": { label:"HC Operations", color:"#22d3a0" },
+  "hc-financial":  { label:"HC Financial",  color:"#22d3a0" },
+  "hc-grants":     { label:"HC Grants",     color:"#22d3a0" },
+  "hc-legal":      { label:"HC Legal",      color:"#22d3a0" },
+  "hc-pharmacy":   { label:"HC Pharmacy",   color:"#22d3a0" },
+  "hc-vendors":    { label:"HC Vendors",    color:"#22d3a0" },
+  "hc-taxprep":    { label:"HC Tax Prep",   color:"#22d3a0" },
+  "executive-portal": { label:"Executive Portal", color:"#1ee8b6" },
+  "strategist":    { label:"Strategist",    color:"#1ee8b6" },
+  "bnca-engine":   { label:"BNCA Escalated",color:"#f87171" },
+};
+
+const NODE_ROUTES = {
+  "hc-billing":    "/healthcare/hc-billing",
+  "hc-compliance": "/healthcare/hc-compliance",
+  "hc-insurance":  "/healthcare/hc-insurance",
+  "hc-medical":    "/healthcare/hc-medical",
+  "hc-operations": "/healthcare/hc-operations",
+  "hc-financial":  "/healthcare/hc-financial",
+  "hc-grants":     "/healthcare/hc-grants",
+  "hc-legal":      "/healthcare/hc-legal",
+  "hc-pharmacy":   "/healthcare/hc-pharmacy",
+  "hc-vendors":    "/healthcare/hc-vendors",
+  "hc-taxprep":    "/healthcare/hc-taxprep",
+};
+
+const DOC_TYPE_COLORS = {
+  "CLAIM APPEAL":        { bg:"rgba(56,189,248,0.12)",  text:"#38bdf8" },
+  "CLAIM":               { bg:"rgba(56,189,248,0.12)",  text:"#38bdf8" },
+  "POLICY":              { bg:"rgba(192,132,252,0.12)", text:"#c084fc" },
+  "VENDOR INVOICE (AP)": { bg:"rgba(134,239,172,0.12)", text:"#86efac" },
+  "LEDGER":              { bg:"rgba(134,239,172,0.12)", text:"#86efac" },
+  "PERMIT":              { bg:"rgba(251,191,36,0.12)",  text:"#fbbf24" },
+  "REMITTANCE":          { bg:"rgba(34,211,160,0.12)",  text:"#22d3a0" },
+  "DOCUMENT REPORT":     { bg:"rgba(148,163,184,0.12)", text:"#94a3b8" },
+};
+
+function docTypeColor(t) { return DOC_TYPE_COLORS[t] || { bg:"rgba(148,163,184,0.12)", text:"#94a3b8" }; }
+
+const STORAGE_KEY = "tsm_doc_index";
+const MAX_ENTRIES = 500;
+
+function loadIndex() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
+  catch(e) { return []; }
+}
+
+function saveIndex(docs) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(docs)); }
+  catch(e) { console.warn("Storage write failed:", e); }
+}
+
+function removeDoc(id) {
+  saveIndex(loadIndex().filter(d => d.id !== id));
+  runSearch();
+  refreshTotalCount();
+}
+
+function confirmClearAll() {
+  if (confirm("Clear all indexed HC records? This cannot be undone.")) {
+    saveIndex([]);
+    runSearch();
+    refreshTotalCount();
+  }
+}
+
+function getFilters() {
+  return {
+    query:     document.getElementById("search-query").value.trim().toLowerCase(),
+    node:      document.getElementById("f-node").value,
+    amountMin: parseFloat(document.getElementById("f-amount-min").value) || 0,
+    amountMax: parseFloat(document.getElementById("f-amount-max").value) || 0,
+    dateFrom:  document.getElementById("f-date-from").value,
+    dateTo:    document.getElementById("f-date-to").value,
+    sortBy:    document.getElementById("sort-by").value,
+  };
+}
+
+function searchDocs(filters) {
+  const { query, node, amountMin, amountMax, dateFrom, dateTo, sortBy } = filters;
+  let docs = loadIndex().filter(doc => {
+    if (query) {
+      const hay = [doc.fileName, doc.documentType, doc.vendor, doc.invoiceNo,
+                   doc.exclusionCode, doc.sourceNode,
+                   doc._hc && doc._hc.patient, doc._hc && doc._hc.cpt].join(" ").toLowerCase();
+      if (!hay.includes(query)) return false;
+    }
+    if (node && !(doc.routing || []).includes(node)) return false;
+    if (amountMin > 0 && doc.amount < amountMin) return false;
+    if (amountMax > 0 && doc.amount > amountMax) return false;
+    if (dateFrom && doc.timestamp < new Date(dateFrom).getTime()) return false;
+    if (dateTo   && doc.timestamp > new Date(dateTo + "T23:59:59").getTime()) return false;
+    return true;
+  });
+  const sorters = {
+    "newest":      (a,b) => b.timestamp - a.timestamp,
+    "oldest":      (a,b) => a.timestamp - b.timestamp,
+    "amount-desc": (a,b) => b.amount - a.amount,
+    "amount-asc":  (a,b) => a.amount - b.amount,
+    "name":        (a,b) => a.fileName.localeCompare(b.fileName),
+  };
+  docs.sort(sorters[sortBy] || sorters["newest"]);
+  return docs;
+}
+
+function highlight(text, query) {
+  if (!query || !text) return text || "";
+  const esc = query.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&");
+  return String(text).replace(new RegExp("(" + esc + ")", "gi"), "<mark>$1</mark>");
+}
+
+function renderCard(doc, query) {
+  const isBnca  = (doc.routing || []).includes("bnca-engine");
+  const dtColor = docTypeColor(doc.documentType);
+  const date    = new Date(doc.timestamp);
+  const dateStr = date.toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" });
+  const timeStr = date.toLocaleTimeString("en-US", { hour:"2-digit", minute:"2-digit" });
+  const hc      = doc._hc || {};
+
+  const nodeTagsHtml = (doc.routing || []).map(nid => {
+    const n = TSM_NODES[nid] || { label: nid, color: "#94a3b8" };
+    return '<span class="node-tag" style="background:' + n.color + '14;color:' + n.color + ';border:1px solid ' + n.color + '33;">' + n.label + '</span>';
+  }).join("");
+
+  const amountStr = doc.amount > 0 ? "$" + doc.amount.toLocaleString() : "—";
+  const amountCls = isBnca ? "danger" : "hi";
+  const openNodeRoute = NODE_ROUTES[doc.sourceNode] || null;
+
+  return '<div class="doc-card ' + (isBnca ? "bnca-flag" : "") + '" data-id="' + doc.id + '">' +
+    '<div class="doc-card-top">' +
+      '<div class="doc-card-title">' +
+        '<span class="doc-type-badge" style="background:' + dtColor.bg + ';color:' + dtColor.text + ';">' + highlight(doc.documentType, query) + '</span>' +
+        '<span class="doc-filename" title="' + doc.fileName + '">' + highlight(doc.fileName, query) + '</span>' +
+      '</div>' +
+      '<div class="doc-card-actions">' +
+        (openNodeRoute ? '<a class="btn-open-node" href="' + openNodeRoute + '" target="_blank">↗ Open Node</a>' : '') +
+        '<button class="btn-redispatch" onclick="redispatch(\'' + doc.id + '\')">↻ Re-dispatch</button>' +
+        '<button class="btn-remove" onclick="removeDoc(\'' + doc.id + '\')">✕ Remove</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="doc-meta-row">' +
+      (hc.patient ? '<div class="meta-item"><span class="meta-label">Patient:</span><span class="meta-val">' + highlight(hc.patient, query) + '</span></div>' : '') +
+      (doc.invoiceNo ? '<div class="meta-item"><span class="meta-label">Claim:</span><span class="meta-val hi">' + highlight(doc.invoiceNo, query) + '</span></div>' : '') +
+      (doc.vendor ? '<div class="meta-item"><span class="meta-label">Payer:</span><span class="meta-val">' + highlight(doc.vendor, query) + '</span></div>' : '') +
+      (doc.exclusionCode ? '<div class="meta-item"><span class="meta-label">Denial/CPT:</span><span class="meta-val">' + highlight(doc.exclusionCode, query) + '</span></div>' : '') +
+      '<div class="meta-item"><span class="meta-label">Exposure:</span><span class="meta-val ' + amountCls + '">' + amountStr + '</span></div>' +
+      '<div class="meta-item"><span class="meta-label">Node:</span><span class="meta-val">' + doc.sourceNode + '</span></div>' +
+      '<div class="meta-item"><span class="meta-label">Indexed:</span><span class="meta-val">' + dateStr + ' ' + timeStr + '</span></div>' +
+    '</div>' +
+    '<div class="routing-row"><span class="routing-label">Routed to:</span>' + nodeTagsHtml + '</div>' +
+  '</div>';
+}
+
+function runSearch() {
+  const filters   = getFilters();
+  const results   = searchDocs(filters);
+  const container = document.querySelector("#results-list");
+  const countEl   = document.getElementById("results-count");
+  const total     = loadIndex().length;
+
+  if (total === 0) {
+    container.innerHTML = document.getElementById("empty-state").outerHTML;
+    countEl.innerHTML = "";
+    return;
+  }
+
+  if (results.length === 0) {
+    container.innerHTML = '<div class="empty-state"><span class="empty-icon">🔍</span><div class="empty-title">No matching records</div>> Try broadening your search or adjusting filters.</div>';
+    countEl.innerHTML = '<span>0</span> results';
+    return;
+  }
+
+  countEl.innerHTML = 'Showing <span>' + results.length + '</span> of ' + total + ' indexed records';
+  container.innerHTML = results.map(doc => renderCard(doc, filters.query)).join("");
+}
+
+function redispatch(id) {
+  const doc = loadIndex().find(d => d.id === id);
+  if (!doc) return;
+  window.dispatchEvent(new CustomEvent("document_processed", { detail: doc }));
+  try { localStorage.setItem("tsm_bridge_mesh_relay", JSON.stringify({ ts: Date.now(), payload: doc })); } catch(e) {}
+  const btn = document.querySelector('[data-id="' + id + '"] .btn-redispatch');
+  if (btn) {
+    const orig = btn.textContent;
+    btn.textContent = "✓ Dispatched";
+    btn.style.color = "#1ee8b6";
+    setTimeout(() => { btn.textContent = orig; btn.style.color = ""; }, 2000);
+  }
+}
+
+function toggleFilters() {
+  const panel = document.getElementById("filter-panel");
+  const btn   = document.getElementById("filter-toggle");
+  const isOpen = panel.classList.toggle("open");
+  btn.classList.toggle("active", isOpen);
+  btn.textContent = isOpen ? "⚙ Hide Filters" : "⚙ Filters";
+}
+
+function resetFilters() {
+  ["f-node","f-date-from","f-date-to","f-amount-min","f-amount-max"].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = "";
+  });
+  runSearch();
+}
+
+function refreshTotalCount() {
+  const total = loadIndex().length;
+  document.getElementById("total-count").textContent = total + " record" + (total !== 1 ? "s" : "") + " indexed";
+  const banner = document.getElementById("demo-banner");
+  if (banner) banner.style.display = total === 0 ? "flex" : "none";
+}
+
+document.getElementById("search-query").addEventListener("input", () => runSearch());
+
+window.addEventListener("storage", e => {
+  if (e.key === "tsm_doc_index") { runSearch(); refreshTotalCount(); }
+});
+
+window.addEventListener("document_processed", e => {
+  if (!e.detail) return;
+  const docs = loadIndex();
+  if (!docs.some(d => d.id === e.detail.id)) {
+    const entry = {
+      id:            e.detail.id || "DOC-" + Date.now(),
+      fileName:      e.detail.fileName     || "Unknown",
+      documentType:  e.detail.documentType || "DOCUMENT REPORT",
+      vendor:        e.detail.vendor       || "",
+      invoiceNo:     e.detail.invoiceNo    || "",
+      exclusionCode: e.detail.exclusionCode|| "",
+      amount:        e.detail.amount       || 0,
+      sourceNode:    e.detail.sourceNode   || "unknown",
+      routing:       e.detail.routing      || [],
+      timestamp:     e.detail.timestamp    || Date.now(),
+      _hc:           e.detail._hc         || {},
+    };
+    docs.unshift(entry);
+    if (docs.length > MAX_ENTRIES) docs.splice(MAX_ENTRIES);
+    saveIndex(docs);
+  }
+  runSearch();
+  refreshTotalCount();
+});
+
+function seedDemoData() {
+  const now = Date.now(), day = 86400000;
+  const samples = [
+    { fileName:"CLM-0334_Maria_Santos.record",    documentType:"CLAIM",           vendor:"BlueCross BlueShield", invoiceNo:"CLM-0334", exclusionCode:"CO-29",  amount:3800,  sourceNode:"hc-billing",    routing:["executive-portal","strategist","hc-billing","bnca-engine"],   timestamp:now-1*3600000, _hc:{patient:"Maria Santos",  cpt:"93454", issue:"Timely filing deadline"} },
+    { fileName:"BNCA_CLM-0334_hc-billing.report", documentType:"CLAIM",           vendor:"BlueCross BlueShield", invoiceNo:"CLM-0334", exclusionCode:"CO-29",  amount:3800,  sourceNode:"hc-billing",    routing:["executive-portal","strategist","hc-billing","bnca-engine"],   timestamp:now-2*3600000, _hc:{patient:"Maria Santos",  cpt:"93454", issue:"BNCA: Urgent timely filing escalation"} },
+    { fileName:"CLM-27447_Maria_Santos.record",   documentType:"CLAIM APPEAL",    vendor:"BlueCross BlueShield", invoiceNo:"CLM-27447",exclusionCode:"CO-197", amount:28400, sourceNode:"hc-insurance",  routing:["executive-portal","strategist","hc-insurance","bnca-engine"], timestamp:now-3*3600000, _hc:{patient:"Maria Santos",  cpt:"27447", issue:"Auth not on file — CO-197"} },
+    { fileName:"HIPAA_audit_Q2.record",           documentType:"DOCUMENT REPORT", vendor:"",                     invoiceNo:"",         exclusionCode:"HIPAA-7",amount:0,     sourceNode:"hc-compliance", routing:["executive-portal","strategist","hc-compliance"],               timestamp:now-1*day,     _hc:{patient:"",              cpt:"",      issue:"OIG documentation gap — 31 claims"} },
+    { fileName:"HRSA_grant_report_Q2.record",     documentType:"DOCUMENT REPORT", vendor:"HRSA",                 invoiceNo:"GR-2024",  exclusionCode:"",       amount:2900000,sourceNode:"hc-grants",    routing:["executive-portal","strategist","hc-grants"],                   timestamp:now-2*day,     _hc:{patient:"",              cpt:"",      issue:"3 HRSA reports overdue 72hr"} },
+    { fileName:"AR_aging_Q2.record",              documentType:"LEDGER",          vendor:"",                     invoiceNo:"AR-Q2",    exclusionCode:"",       amount:31000, sourceNode:"hc-financial",  routing:["executive-portal","strategist","hc-financial"],                timestamp:now-3*day,     _hc:{patient:"",              cpt:"",      issue:"90+ day AR bucket — escalate"} },
+    { fileName:"Step_therapy_Celebrex.record",    documentType:"DOCUMENT REPORT", vendor:"BlueCross BlueShield", invoiceNo:"RX-8812",  exclusionCode:"",       amount:0,     sourceNode:"hc-pharmacy",   routing:["executive-portal","strategist","hc-pharmacy"],                 timestamp:now-4*day,     _hc:{patient:"Maria Santos",  cpt:"",      issue:"Step therapy denial — Celebrex"} },
+    { fileName:"Vendor_SLA_breach.record",        documentType:"VENDOR INVOICE (AP)",vendor:"Midwest Surgical", invoiceNo:"VND-0441", exclusionCode:"VND-441",amount:8400,  sourceNode:"hc-vendors",    routing:["executive-portal","strategist","hc-vendors"],                  timestamp:now-5*day,     _hc:{patient:"",              cpt:"",      issue:"SLA breach — 72hr late delivery"} },
+  ].map((s,i) => ({ ...s, id:"DOC-SEED-"+(now-i) }));
+  const merged = [...samples, ...loadIndex()].slice(0, MAX_ENTRIES);
+  saveIndex(merged);
+  runSearch();
+  refreshTotalCount();
+  document.getElementById("demo-banner").style.display = "none";
+}
+
+refreshTotalCount();
+runSearch();
+// ════════════════════════════════════════════════════════════════════════════
+// TSM DOC INDEX RECEIVER  — reads records pushed from insurance-portal
+// ════════════════════════════════════════════════════════════════════════════
+(function initDocIndexReceiver() {
+  const INDEX_KEY = "tsm_doc_index";
+
+  function renderRecord(rec, container) {
+    const isBnca   = (rec.routing || []).includes("bnca-engine");
+    const ts       = new Date(rec.timestamp).toLocaleString();
+    const amt      = rec.amount ? "$" + Number(rec.amount).toLocaleString() : "—";
+    const docType  = rec.documentType || "DOCUMENT REPORT";
+    const typeColor = isBnca ? "#f87171" : "#38bdf8";
+
+    const routeTags = (rec.routing || []).map(r => {
+      const colors = {
+        "executive-portal": "#1ee8b6", "strategist": "#1ee8b6",
+        "tsm-insurance": "#38bdf8",   "hc-billing": "#22d3a0",
+        "hc-vendors": "#22d3a0",      "bnca-engine": "#f87171",
+        "finops-accounting": "#86efac","construction-command": "#fbbf24",
+      };
+      const c = colors[r] || "#888";
+      const label = r === "bnca-engine" ? "BNCA Escalated"
+                  : r === "executive-portal" ? "Executive Portal"
+                  : r === "tsm-insurance" ? "HC Insurance"
+                  : r === "hc-billing" ? "HC Billing"
+                  : r === "hc-vendors" ? "HC Vendors"
+                  : r === "strategist" ? "Strategist"
+                  : r;
+      return `<span style="background:${c}18;color:${c};border:1px solid ${c}44;padding:2px 8px;border-radius:3px;font-size:10px;font-family:var(--mono,monospace);">${label}</span>`;
+    }).join(" ");
+
+    // Derive node URL for OPEN NODE button
+    const nodeMap = {
+      "tsm-insurance": "/html/insurance-portal.html",
+      "hc-billing":    "/html/hc-billing.html",
+      "hc-vendors":    "/html/hc-vendors.html",
+    };
+    const primaryNode = (rec.routing || []).find(r => nodeMap[r]) || "tsm-insurance";
+    const nodeUrl     = nodeMap[primaryNode] || "/html/insurance-portal.html";
+
+    const card = document.createElement("div");
+    card.setAttribute("data-tsm-id", rec.id);
+    card.style.cssText = `border-left:3px solid ${typeColor};background:#0d1f17;border:1px solid #1a2e1f;border-left:3px solid ${typeColor};border-radius:4px;padding:14px 16px;margin-bottom:10px;`;
+    card.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="background:${typeColor}22;color:${typeColor};border:1px solid ${typeColor}44;padding:2px 8px;border-radius:3px;font-size:10px;font-family:var(--mono,monospace);text-transform:uppercase;">${docType}</span>
+          <span style="color:#e2ffe8;font-weight:600;font-size:13px;">${rec.fileName}</span>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <a href="${nodeUrl}" target="_blank" style="background:#0d2a1d;border:1px solid #1ee8b6;color:#1ee8b6;padding:4px 10px;border-radius:3px;font-size:10px;font-family:var(--mono,monospace);text-decoration:none;cursor:pointer;">↗ OPEN NODE</a>
+          <button onclick="(function(el){try{const idx=JSON.parse(localStorage.getItem('tsm_doc_index')||'[]');localStorage.setItem('tsm_doc_index',JSON.stringify(idx.filter(r=>r.id!=='${rec.id}')));el.closest('[data-tsm-id]').remove();}catch(e){}})(this)" style="background:#1a0d0d;border:1px solid #f87171;color:#f87171;padding:4px 10px;border-radius:3px;font-size:10px;font-family:var(--mono,monospace);cursor:pointer;">✕ REMOVE</button>
+        </div>
+      </div>
+      <div style="font-size:11px;color:#88aa88;margin-bottom:8px;line-height:1.8;">
+        ${rec.vendor ? `<span>Vendor: <strong style="color:#ccc;">${rec.vendor}</strong></span> &nbsp;` : ""}
+        ${rec.invoiceNo && rec.invoiceNo !== "—" ? `<span>Claim: <strong style="color:#38bdf8;">${rec.invoiceNo}</strong></span> &nbsp;` : ""}
+        <span>Exposure: <strong style="color:${isBnca ? "#f87171" : "#e2ffe8"};">${amt}</strong></span> &nbsp;
+        <span>Node: <strong style="color:#1ee8b6;">${rec.sourceNode || "insurance-portal"}</strong></span> &nbsp;
+        <span>Indexed: <strong style="color:#556655;">${ts}</strong></span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;">
+        <span style="font-size:10px;color:#445544;font-family:var(--mono,monospace);margin-right:4px;">ROUTED TO:</span>
+        ${routeTags}
+      </div>
+    `;
+    container.insertAdjacentElement("afterbegin", card);
+  }
+
+  function loadIndex() {
+    try {
+      const records = JSON.parse(localStorage.getItem(INDEX_KEY) || "[]");
+      if (!records.length) return;
+
+      // ── Swap "#doc-results-tbody" for whatever your results tbody id is ──
+      const container = document.querySelector("#doc-results-list") || document.querySelector(".results-list") || document.querySelector(".doc-cards-container");
+      if (!container) return;
+
+      // Dedupe: skip IDs already rendered
+      const rendered = new Set([...container.querySelectorAll("[data-tsm-id]")].map(r => r.dataset.tsmId));
+      records.forEach(rec => { if (!rendered.has(rec.id)) renderRecord(rec, container); });
+    } catch(e) { console.warn("[TSM DocIndex] Load failed:", e); }
+  }
+
+  // Load on page open
+  document.addEventListener("DOMContentLoaded", loadIndex);
+
+  // Real-time: if insurance-portal pushes while this tab is open
+  window.addEventListener("storage", e => {
+    if (e.key === INDEX_KEY && e.newValue) loadIndex();
+  });
+})();
+</script>
+</body>
+</html>

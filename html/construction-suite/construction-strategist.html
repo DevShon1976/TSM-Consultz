@@ -1067,6 +1067,11 @@ ENGINE 06 — BNCA EXEC: ${engines.e6||''}
     // Update escalate bar
     const sub = document.getElementById('escalBarSub');
     if (sub) sub.textContent = 'BNCA synthesis complete — ready to escalate to Executive Portal.';
+
+    // TSM AUTO-ESCALATE TO EXEC
+    if (localStorage.getItem('tsm_auto_mode') === 'on') {
+      setTimeout(() => { escalateToExecutive(); }, 2000);
+    }
  
   } catch(e) {
     out.textContent = '[Error] ' + e.message;
@@ -1081,6 +1086,7 @@ function storeStrategistRelay(bncaText) {
   if (!warRoomRelay) return;
   const payload = {
     summary: bncaText,
+    bncaText: bncaText,
     docType: warRoomRelay.docType,
     scenario: warRoomRelay.docType || 'manual',
     engines: warRoomRelay.engines,
@@ -1284,5 +1290,70 @@ EXECUTIVE ESCALATION: [Yes/No] — [reason]`;
   } catch(e){ console.warn('Construction issue pack error:',e); }
 })();
 </script>
+
+<script>
+/* TSM AUTO-RUN STRATEGIST */
+(function(){
+  try {
+    const raw = sessionStorage.getItem('TSM_CONSTRUCTION_WAR_RELAY') || localStorage.getItem('TSM_CONSTRUCTION_WAR_RELAY') || localStorage.getItem('tsm_construction_war_relay');
+    if (!raw) return;
+    if (localStorage.getItem('tsm_auto_mode') === 'off') return;
+    setTimeout(() => { if (typeof runBNCA === 'function') runBNCA(); }, 2500);
+  } catch(e) { console.warn('[TSM AutoRun Strategist]', e); }
+})();
+</script>
+  <script src="./tsm-kernel-upgrade.js"></script>
 </body>
 </html>
+
+<script>
+// ===== TSM_AUTONOMY_STANDARDIZED =====
+window.TSM_AUTONOMY_STANDARDIZED = true;
+</script>
+
+<!-- TSM ENFORCER BOOT -->
+
+
+
+<script>
+// ===== TSM WAR ROOM SCOPED RELAY FIX =====
+window.tsmMission = window.tsmMission || {
+  id: "CONSTRUCTION-SUITE-" + Date.now().toString(36),
+  vertical: "construction-suite",
+  
+};
+
+function tsmWriteRelay(payload){
+  TSM_KERNEL.setRelay("construction-suite", JSON.stringify(payload));
+}
+</script>
+
+
+<script>
+// ===== TSM STRATEGIST BRIDGE LAYER =====
+
+function tsmReadScopedRelay(vertical){
+  const key = "tsm_war_relay_" + vertical;
+  try {
+    return JSON.parse(localStorage.getItem(key));
+  } catch(e){
+    return null;
+  }
+}
+
+function tsmWriteScopedStrat(vertical, missionId){
+  localStorage.setItem("TSM_STRAT_CONFIRMED_construction-suite_" + vertical, JSON.stringify({
+    vertical,
+    missionId,
+    timestamp: Date.now()
+  }));
+}
+</script>
+
+
+<!-- TSM KERNEL ENGINE -->
+<script src="/js/core/tsm-event-bus.js"></script>
+<script src="/js/core/tsm-state.js"></script>
+<script src="/js/core/tsm-mission-engine.js"></script>
+<script src="/construction-suite/tsm-construction-strategist-bridge.js"></script>
+

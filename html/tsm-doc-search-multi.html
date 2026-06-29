@@ -747,7 +747,22 @@ if (window.pdfjsLib) {
   <div id="isolation-detail" style="display:none;margin:0 0 .9rem;padding:.6rem .8rem;border:1px solid rgba(30,232,182,.18);border-radius:4px;background:#060a10;font-family:var(--mono);font-size:.48rem;color:#a0b8a0;line-height:1.7;"></div>
 
   <!-- DOC ROUTER UPLOAD -->
-  <div class="upload-zone" id="upload-zone" onclick="document.getElementById('doc-file-input').click()">
+  <div 
+<!-- TSM AUTONOMY TOGGLE -->
+<div id="tsm-autonomy-bar" style="display:flex;align-items:center;gap:12px;padding:8px 14px;background:rgba(0,212,170,.06);border:1px solid rgba(0,212,170,.2);border-radius:4px;margin-bottom:12px;font-family:var(--mono);font-size:10px;">
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div id="tsm-auto-dot" style="width:8px;height:8px;border-radius:50%;background:var(--dim);transition:.3s;"></div>
+    <span style="color:var(--text2);letter-spacing:.08em;">AUTO-RUN CHAIN</span>
+  </div>
+  <label style="position:relative;display:inline-block;width:36px;height:18px;cursor:pointer;">
+    <input type="checkbox" id="tsm-auto-toggle" style="opacity:0;width:0;height:0;" onchange="if(typeof tsmToggleAuto==='function')tsmToggleAuto(this.checked)">
+    <span id="tsm-auto-slider" style="position:absolute;inset:0;background:rgba(255,255,255,.1);border-radius:9px;transition:.3s;border:1px solid rgba(255,255,255,.15);"></span>
+    <span id="tsm-auto-knob" style="position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#888;transition:.3s;"></span>
+  </label>
+  <span id="tsm-auto-label" style="color:var(--dim);letter-spacing:.06em;">MANUAL</span>
+  <span style="color:var(--dim);margin-left:auto;font-size:9px;">When ON: upload → classify → war room → strategist → exec portal</span>
+</div>
+<div class="upload-zone" id="upload-zone" onclick="document.getElementById('doc-file-input').click()">
     <div class="uz-title">⬆ Drop files here or click to upload</div>
     <div class="uz-sub">PDF · images · text/CSV · ZIP — auto-classified &amp; routed to the right war room(s)</div>
     <input type="file" id="doc-file-input" multiple accept=".pdf,.txt,.csv,.png,.jpg,.jpeg,.webp,.zip">
@@ -883,8 +898,8 @@ const VERTICALS = {
     searchPlaceholder: "Search by project, permit #, contractor, subcode...",
     nodes: {
       "con-war-room":   { label:"Construction War Room", route:"/html/construction-suite/construction-war-room.html" },
-      "strategist":     { label:"Strategist",            route:null },
-      "bnca-engine":    { label:"BNCA Escalated",        route:null },
+      "strategist":     { label:"Strategist",            route:"/html/construction-suite/construction-strategist.html" },
+      "bnca-engine":    { label:"BNCA Escalated",        route:"/html/construction-suite/construction-executive-portal.html" },
     },
     seed: [
       { fileName:"PERMIT_Mesa_88B.record",           documentType:"PERMIT",          vendor:"City of Mesa",     invoiceNo:"PMT-88B",     exclusionCode:"COD-14",  amount:4800,   sourceNode:"con-permits",routing:["con-permits","strategist"],              timestamp:Date.now()-1*3600000, _ext:{client:"Horizon Build Co",ref:"PMT-88B"} },
@@ -922,8 +937,8 @@ const VERTICALS = {
     searchPlaceholder: "Search by property, listing #, escrow, address, agent...",
     nodes: {
       "re-war-room":    { label:"RE War Room", route:"/html/reo-pro/re-war-room.html" },
-      "strategist":     { label:"Strategist",  route:null },
-      "bnca-engine":    { label:"BNCA Escalated", route:null },
+      "strategist":     { label:"Strategist",  route:"/html/reo-pro/re-strategist.html" },
+      "bnca-engine":    { label:"BNCA Escalated", route:"/html/reo-pro/re-exec-portal.html" },
     },
     seed: [
       { fileName:"Listing_Agreement_123Maple.record",  documentType:"CONTRACT",       vendor:"Keller Williams",      invoiceNo:"LST-0091", exclusionCode:"",       amount:0,      sourceNode:"re-doc-command",routing:["re-doc-command","re-strategist","strategist"],       timestamp:Date.now()-1*3600000, _ext:{client:"Maple St Holdings", ref:"LST-0091", defectFlags:[]} },
@@ -941,8 +956,8 @@ const VERTICALS = {
     searchPlaceholder: "Search by matter, case #, client, filing, exhibit...",
     nodes: {
       "leg-war-room":   { label:"Legal War Room", route:"/html/legal-pro/legal-war-room.html" },
-      "strategist":     { label:"Strategist",     route:null },
-      "bnca-engine":    { label:"BNCA Escalated", route:null },
+      "strategist":     { label:"Strategist",     route:"/html/legal-pro/legal-main-strategist.html" },
+      "bnca-engine":    { label:"BNCA Escalated", route:"/html/legal-pro/legal-executive-portal.html" },
     },
     seed: [
       { fileName:"Complaint_Doe_v_Acme.record",        documentType:"FILING",         vendor:"Superior Court",   invoiceNo:"CV-2024-0091", exclusionCode:"",       amount:0,    sourceNode:"leg-index",      routing:["leg-index","leg-strategist","strategist"],                 timestamp:Date.now()-1*3600000, _ext:{client:"Jane Doe",   ref:"CV-2024-0091"} },
@@ -960,7 +975,7 @@ const VERTICALS = {
     searchPlaceholder: "Search by patient, claim #, payer, CPT/denial code...",
     nodes: {
       "hc-war-room":  { label:"HC War Room",    route:"/html/healthcare/hc-denial-war-room.html" },
-      "hc-denial":    { label:"Billing Node",   route:"__HC_NODE__" },
+      "hc-denial":    { label:"Billing Node",   route:"/html/healthcare/hc-billing/index.html" },
       "hc-command":   { label:"HC Command Chain",  route:"/html/healthcare/index.html" },
       "operations":   { label:"Operations",        route:"/html/healthcare/hc-operations/index.html" },
       "medical":      { label:"Medical",           route:"/html/healthcare/hc-medical/index.html" },
@@ -973,8 +988,8 @@ const VERTICALS = {
       "taxprep":      { label:"Tax Prep",          route:"/html/healthcare/hc-taxprep/index.html" },
       "grants":       { label:"Grants",            route:"/html/healthcare/hc-grants/index.html" },
       "insurance":    { label:"Insurance",         route:"/html/healthcare/hc-insurance/index.html" },
-      "strategist":   { label:"Strategist",        route:null },
-      "bnca-engine":  { label:"BNCA Escalated",    route:null },
+      "strategist":   { label:"Strategist",        route:"/html/healthcare/hc-main-strategist.html" },
+      "bnca-engine":  { label:"BNCA Escalated",    route:"/html/healthcare/executive-portal.html" },
     },
     seed: [
       { fileName:"Denial_CLM-HC-7731.record",       documentType:"DENIAL",       vendor:"Aetna",  invoiceNo:"CLM-HC-7731", exclusionCode:"CO-50",  amount:8200,  sourceNode:"hc-denial", routing:["hc-denial","strategist"],                  timestamp:Date.now()-1*3600000, _ext:{client:"Patient #4471", ref:"CLM-HC-7731"} },
@@ -1430,32 +1445,59 @@ function confirmClearAll() {
 }
 
 const WAR_ROOM_ROUTES = {
-  'fo-war-room':  { label:'FinOps War Room',        url:'/html/finops-suite/finops-war-room.html',              relayKey:'tsm_finops_war_relay',        docKey:'finopsWarRoomDoc' },
-  'ins-war-room': { label:'Insurance War Room',      url:'/html/tsm-insurance/insurance-war-room.html',          relayKey:'TSM_INS_WAR_RELAY',           docKey:'insuranceWarRoomDoc' },
-  'con-war-room': { label:'Construction War Room',   url:'/html/construction-suite/construction-war-room.html',  relayKey:'TSM_CONSTRUCTION_WAR_RELAY',  docKey:'constructionWarRoomDoc' },
-  'bpo-war-room': { label:'BPO War Room',            url:'/html/bpo/bpo-situation-room.html',                          relayKey:'TSM_BPO_DOC',           docKey:'bpoWarRoomDoc' },
-  're-war-room':  { label:'Real Estate War Room',    url:'/html/reo-pro/re-war-room.html',                       relayKey:'TSM_RE_WAR_RELAY',            docKey:'reWarRoomDoc' },
-  'leg-war-room': { label:'Legal War Room',          url:'/html/legal-pro/legal-war-room.html',                  relayKey:'TSM_LEGAL_WAR_RELAY',         docKey:'legalWarRoomDoc' },
-  'hc-war-room':  { label:'HC Denial War Room',      url:'/html/healthcare/hc-denial-war-room.html',             relayKey:'TSM_HC_WAR_RELAY',            docKey:'hcWarRoomDoc' },
+  'fo-war-room':  { label:'FinOps War Room',       url:'/html/finops-suite/finops-war-room.html',            relay:'tsm_fin_docsearch_relay',    autoKey:'TSM_FIN_WAR_RELAY' },
+  'ins-war-room': { label:'Insurance War Room',     url:'/html/tsm-insurance/insurance-war-room.html',        relay:'tsm_ins_docsearch_relay',    autoKey:'TSM_INS_WAR_RELAY' },
+  'con-war-room': { label:'Construction War Room',  url:'/html/construction-suite/construction-war-room.html',relay:'tsm_con_docsearch_relay',    autoKey:'TSM_CONSTRUCTION_WAR_RELAY' },
+  'bpo-war-room': { label:'BPO War Room',           url:'/html/bpo/bpo-situation-room.html',                  relay:'tsm_bpo_docsearch_relay',    autoKey:'TSM_BPO_WAR_RELAY' },
+  're-war-room':  { label:'Real Estate War Room',   url:'/html/reo-pro/re-war-room.html',                     relay:'tsm_re_docsearch_relay',     autoKey:'TSM_RE_WAR_RELAY' },
+  'leg-war-room': { label:'Legal War Room',         url:'/html/legal-pro/legal-war-room.html',                relay:'tsm_leg_docsearch_relay',    autoKey:'TSM_LEG_WAR_RELAY' },
+  'hc-war-room':  { label:'HC Denial War Room',     url:'/html/healthcare/hc-denial-war-room.html',           relay:'tsm_hc_docsearch_relay',     autoKey:'TSM_HC_WAR_RELAY' },
 
   // Aliases for legacy node-specific routing keys in DEMO_DOCS
-  'ins-az':         { label:'Insurance War Room',    url:'/html/tsm-insurance/insurance-war-room.html',          relayKey:'TSM_INS_WAR_RELAY',           docKey:'insuranceWarRoomDoc' },
-  'ins-hub':        { label:'Insurance War Room',    url:'/html/tsm-insurance/insurance-war-room.html',          relayKey:'TSM_INS_WAR_RELAY',           docKey:'insuranceWarRoomDoc' },
-  'con-hub':        { label:'Construction War Room', url:'/html/construction-suite/construction-war-room.html',  relayKey:'TSM_CONSTRUCTION_WAR_RELAY',  docKey:'constructionWarRoomDoc' },
-  'con-permits':    { label:'Construction War Room', url:'/html/construction-suite/construction-war-room.html',  relayKey:'TSM_CONSTRUCTION_WAR_RELAY',  docKey:'constructionWarRoomDoc' },
-  'leg-index':      { label:'Legal War Room',        url:'/html/legal-pro/legal-war-room.html',                  relayKey:'TSM_LEGAL_WAR_RELAY',         docKey:'legalWarRoomDoc' },
-  'leg-ediscovery': { label:'Legal War Room',        url:'/html/legal-pro/legal-war-room.html',                  relayKey:'TSM_LEGAL_WAR_RELAY',         docKey:'legalWarRoomDoc' },
-  'leg-strategist': { label:'Legal War Room',        url:'/html/legal-pro/legal-war-room.html',                  relayKey:'TSM_LEGAL_WAR_RELAY',         docKey:'legalWarRoomDoc' },
-  'hc-denial':      { label:'HC Denial War Room',    url:'/html/healthcare/hc-denial-war-room.html',             relayKey:'TSM_HC_WAR_RELAY',            docKey:'hcWarRoomDoc' },
-  're-doc-command': { label:'Real Estate War Room',  url:'/html/reo-pro/re-war-room.html',                       relayKey:'TSM_RE_WAR_RELAY',            docKey:'reWarRoomDoc' },
-  're-exec':        { label:'Real Estate War Room',  url:'/html/reo-pro/re-war-room.html',                       relayKey:'TSM_RE_WAR_RELAY',            docKey:'reWarRoomDoc' },
-  're-strategist':  { label:'Real Estate War Room',  url:'/html/reo-pro/re-war-room.html',                       relayKey:'TSM_RE_WAR_RELAY',            docKey:'reWarRoomDoc' },
-  'fo-accounting':  { label:'FinOps War Room',       url:'/html/finops-suite/finops-war-room.html',              relayKey:'tsm_finops_war_relay',        docKey:'finopsWarRoomDoc' },
-  'fo-financial':   { label:'FinOps War Room',       url:'/html/finops-suite/finops-war-room.html',              relayKey:'tsm_finops_war_relay',        docKey:'finopsWarRoomDoc' },
-  'bpo-sops':       { label:'BPO War Room',          url:'/html/bpo/bpo-situation-room.html',                          relayKey:'TSM_BPO_DOC',           docKey:'bpoWarRoomDoc' },
-  'bpo-cmd':        { label:'BPO War Room',          url:'/html/bpo/bpo-situation-room.html',                          relayKey:'TSM_BPO_DOC',           docKey:'bpoWarRoomDoc' },
-  'bpo-launch':     { label:'BPO War Room',          url:'/html/bpo/bpo-situation-room.html',                          relayKey:'TSM_BPO_DOC',           docKey:'bpoWarRoomDoc' },
+  'ins-az':         { label:'Insurance War Room',    url:'/html/tsm-insurance/insurance-war-room.html',        relay:'tsm_ins_docsearch_relay',    autoKey:'TSM_INS_WAR_RELAY' },
+  'ins-hub':        { label:'Insurance War Room',    url:'/html/tsm-insurance/insurance-war-room.html',        relay:'tsm_ins_docsearch_relay',    autoKey:'TSM_INS_WAR_RELAY' },
+  'con-hub':        { label:'Construction War Room', url:'/html/construction-suite/construction-war-room.html',relay:'tsm_con_docsearch_relay',    autoKey:'TSM_CONSTRUCTION_WAR_RELAY' },
+  'con-permits':    { label:'Construction War Room', url:'/html/construction-suite/construction-war-room.html',relay:'tsm_con_docsearch_relay',    autoKey:'TSM_CONSTRUCTION_WAR_RELAY' },
+  'leg-index':      { label:'Legal War Room',        url:'/html/legal-pro/legal-war-room.html',                relay:'tsm_leg_docsearch_relay',    autoKey:'TSM_LEG_WAR_RELAY' },
+  'leg-ediscovery': { label:'Legal War Room',        url:'/html/legal-pro/legal-war-room.html',                relay:'tsm_leg_docsearch_relay',    autoKey:'TSM_LEG_WAR_RELAY' },
+  'leg-strategist': { label:'Legal War Room',        url:'/html/legal-pro/legal-war-room.html',                relay:'tsm_leg_docsearch_relay',    autoKey:'TSM_LEG_WAR_RELAY' },
+  'hc-denial':      { label:'HC Denial War Room',    url:'/html/healthcare/hc-denial-war-room.html',           relay:'tsm_hc_docsearch_relay',     autoKey:'TSM_HC_WAR_RELAY' },
+  're-doc-command': { label:'Real Estate War Room',  url:'/html/reo-pro/re-war-room.html',                     relay:'tsm_re_docsearch_relay',     autoKey:'TSM_RE_WAR_RELAY' },
+  're-exec':        { label:'Real Estate War Room',  url:'/html/reo-pro/re-war-room.html',                     relay:'tsm_re_docsearch_relay',     autoKey:'TSM_RE_WAR_RELAY' },
+  're-strategist':  { label:'Real Estate War Room',  url:'/html/reo-pro/re-war-room.html',                     relay:'tsm_re_docsearch_relay',     autoKey:'TSM_RE_WAR_RELAY' },
+  'fo-accounting':  { label:'FinOps War Room',       url:'/html/finops-suite/finops-war-room.html',            relay:'tsm_fin_docsearch_relay',    autoKey:'TSM_FIN_WAR_RELAY' },
+  'fo-financial':   { label:'FinOps War Room',       url:'/html/finops-suite/finops-war-room.html',            relay:'tsm_fin_docsearch_relay',    autoKey:'TSM_FIN_WAR_RELAY' },
+  'bpo-sops':       { label:'BPO War Room',          url:'/html/bpo/bpo-situation-room.html',                  relay:'tsm_bpo_docsearch_relay',    autoKey:'TSM_BPO_WAR_RELAY' },
+  'bpo-cmd':        { label:'BPO War Room',          url:'/html/bpo/bpo-situation-room.html',                  relay:'tsm_bpo_docsearch_relay',    autoKey:'TSM_BPO_WAR_RELAY' },
+  'bpo-launch':     { label:'BPO War Room',          url:'/html/bpo/bpo-situation-room.html',                  relay:'tsm_bpo_docsearch_relay',    autoKey:'TSM_BPO_WAR_RELAY' },
 };
+
+
+// ── TSM AUTONOMY ENGINE ──────────────────────────────────────────────────────
+window.TSM_AUTO_MODE = false;
+
+function tsmToggleAuto(on) {
+  window.TSM_AUTO_MODE = on;
+  const dot   = document.getElementById('tsm-auto-dot');
+  const label = document.getElementById('tsm-auto-label');
+  const knob  = document.getElementById('tsm-auto-knob');
+  const slider= document.getElementById('tsm-auto-slider');
+  if (on) {
+    if (dot)    dot.style.background    = '#00d4aa';
+    if (label)  label.textContent       = 'AUTO';
+    if (label)  label.style.color       = '#00d4aa';
+    if (knob)   { knob.style.left = '20px'; knob.style.background = '#00d4aa'; }
+    if (slider) slider.style.background = 'rgba(0,212,170,.3)';
+    localStorage.setItem('tsm_auto_mode', 'on');
+  } else {
+    if (dot)    dot.style.background    = 'var(--dim)';
+    if (label)  label.textContent       = 'MANUAL';
+    if (label)  label.style.color       = 'var(--dim)';
+    if (knob)   { knob.style.left = '2px'; knob.style.background = '#888'; }
+    if (slider) slider.style.background = 'rgba(255,255,255,.1)';
+    localStorage.removeItem('tsm_auto_mode');
+  }
+}
 
 function openWarRoomPicker(id) {
   const doc = loadIndex().find(d => d.id === id || d.id.startsWith(id));
@@ -1509,9 +1551,23 @@ function launchWarRoom(id, roomKey) {
     timestamp: Date.now()
   });
   try {
-    sessionStorage.setItem(room.relayKey, payload);
-    localStorage.setItem(room.relayKey, payload);
-    sessionStorage.setItem(room.docKey, doc._ext?.docText || doc._ext?.summary || '');
+    const relayPayload = JSON.stringify({
+      docText:  syntheticText,
+      docType:  doc.documentType,
+      fileName: doc.fileName,
+      client:   doc._ext?.client || '',
+      ref:      doc._ext?.ref || doc.invoiceNo || '',
+      source:   'doc-search',
+      timestamp: Date.now()
+    });
+    localStorage.setItem(room.relay, relayPayload);
+    localStorage.setItem(room.autoKey, relayPayload);
+    if (window.TSM_AUTO_MODE) {
+      localStorage.setItem('tsm_auto_mode', 'on');
+    } else {
+      localStorage.removeItem('tsm_auto_mode');
+    }
+    TSM_KERNEL.setDoc(doc._ext?.docText || doc._ext?.summary || '');
   } catch(e) {}
   window.location.href = room.url;
 }
@@ -1522,9 +1578,9 @@ function launchWarRoomDirect(roomKey, payloadJson) {
   try {
     const payload = JSON.parse(decodeURIComponent(payloadJson));
     const raw = JSON.stringify({ ...payload, source: 'doc-search', timestamp: Date.now() });
-    sessionStorage.setItem(room.relayKey, raw);
-    localStorage.setItem(room.relayKey, raw);
-    sessionStorage.setItem(room.docKey, payload.docText || '');
+    ;
+    ;
+    TSM_KERNEL.setDoc(payload.docText || '');
     window.location.href = room.url;
   } catch(e) { console.error('Launch error:', e); }
 }
@@ -2175,10 +2231,12 @@ function handleFiles(fileList) {
  
 const dropZone  = document.getElementById("upload-zone");
 const fileInput = document.getElementById("doc-file-input");
-fileInput.addEventListener("change", e => { handleFiles(e.target.files); fileInput.value = ""; });
+if(fileInput) fileInput.addEventListener("change", e => { handleFiles(e.target.files); fileInput.value = ""; });
+if(dropZone){
 ["dragenter","dragover"].forEach(evt => dropZone.addEventListener(evt, e => { e.preventDefault(); dropZone.classList.add("dragover"); }));
 ["dragleave","drop"].forEach(evt => dropZone.addEventListener(evt, e => { e.preventDefault(); dropZone.classList.remove("dragover"); }));
 dropZone.addEventListener("drop", e => { handleFiles(e.dataTransfer.files); });
+}
  
 switchVertical("fo");
 // ── HC NODE ROUTING ───────────────────────────────────────────────────────
@@ -2335,5 +2393,6 @@ window.openHcNodeWithDoc = openHcNodeWithDoc;
   document.addEventListener('DOMContentLoaded', updateBtn);
 })();
 </script>
+<script>window.TSM_CONTROL_PLANE=true;</script>
 </body>
 </html>

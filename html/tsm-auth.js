@@ -54,6 +54,11 @@ const PUBLIC_EXACT = new Set([
   '/api/auth/logout',
   '/html/tsm-doc-search-multi.html',
   '/html/tsm-career-training-platform.html',
+  '/html/war-room-prep.html',
+  '/html/construction-suite/construction-war-room.html',
+  '/html/construction-suite/construction-strategist.html',
+  '/html/construction-suite/construction-executive-portal.html',
+  '/html/tsm-doc-search-multi.html',
 ]);
 
 const PUBLIC_PREFIXES = [
@@ -61,7 +66,10 @@ const PUBLIC_PREFIXES = [
   '/assets/',
   '/css/',
   '/fonts/',
-  '/api/',   // ← ADD THIS — all API routes bypass auth
+  '/api/',
+  '/html/js/',
+  '/html/shared/',
+  '/html/tsm-mission-orchestrator.js',
 ];
 
 function isPublic(url) {

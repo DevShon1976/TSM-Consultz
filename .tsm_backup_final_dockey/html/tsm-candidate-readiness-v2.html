@@ -1,0 +1,1868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>TSM · Employee Readiness & Retention System</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#04080f;--bg2:#070d18;--bg3:#0a1220;--panel:#0c1520;
+  --border:rgba(100,200,255,.08);--border2:rgba(201,168,76,.25);
+  --gold:#c9a84c;--gold2:#e8c87a;--gold3:rgba(201,168,76,.07);
+  --green:#10b981;--green2:rgba(16,185,129,.1);
+  --teal:#14b8a6;--blue:#3b82f6;--purple:#8b5cf6;
+  --red:#ef4444;--amber:#f59e0b;
+  --text:#a8bcd0;--dim:#3a4a5e;--bright:#e8f0f8;
+  --mono:'DM Mono',monospace;--display:'Bebas Neue',sans-serif;
+  --bar:'Barlow',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(20,184,166,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(20,184,166,.015) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+
+/* ── TOPBAR ── */
+.topbar{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:48px;background:rgba(4,8,15,.92);border-bottom:0.5px solid var(--border);backdrop-filter:blur(12px);}
+.t-logo{font-family:var(--display);font-size:18px;color:var(--gold);letter-spacing:3px;}
+.t-center{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);}
+.t-right{display:flex;align-items:center;gap:10px;font-size:9px;color:var(--dim);}
+.live-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+.mgr-btn{padding:4px 12px;background:var(--gold3);border:0.5px solid var(--border2);border-radius:3px;color:var(--gold);font-size:8px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .15s;}
+.mgr-btn:hover{background:rgba(201,168,76,.15);}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(16,185,129,.4);}50%{opacity:.8;box-shadow:0 0 0 4px rgba(16,185,129,0);}}
+
+/* ── PROGRESS TRACK ── */
+.progress-track{position:sticky;top:48px;z-index:90;background:rgba(4,8,15,.95);border-bottom:0.5px solid var(--border);padding:12px 28px;backdrop-filter:blur(8px);}
+.pt-inner{display:flex;align-items:center;justify-content:center;gap:0;max-width:760px;margin:0 auto;overflow-x:auto;}
+.pt-step{display:flex;align-items:center;gap:5px;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);padding:4px 0;white-space:nowrap;}
+.pt-step.active{color:var(--gold);}
+.pt-step.done{color:var(--green);}
+.pt-num{width:20px;height:20px;border-radius:50%;border:0.5px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;flex-shrink:0;}
+.pt-step.done .pt-num{background:var(--green);border-color:var(--green);color:#000;}
+.pt-step.active .pt-num{background:var(--gold3);border-color:var(--gold);}
+.pt-line{flex:1;height:0.5px;background:var(--border);margin:0 6px;min-width:14px;}
+.pt-line.done{background:var(--green);}
+
+/* ── HERO ── */
+.hero{position:relative;z-index:1;padding:48px 28px 32px;max-width:700px;margin:0 auto;text-align:center;}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);padding:5px 14px;border:0.5px solid var(--border2);border-radius:20px;background:var(--gold3);margin-bottom:20px;}
+.hero-title{font-family:var(--display);font-size:52px;color:var(--bright);letter-spacing:3px;line-height:1.05;margin-bottom:12px;}
+.hero-title span{color:var(--gold);}
+.hero-sub{font-family:var(--bar);font-size:14px;font-weight:400;color:var(--text);line-height:1.8;margin-bottom:8px;}
+
+/* ── FORM AREA ── */
+.form-wrap{position:relative;z-index:1;max-width:700px;margin:0 auto;padding:0 28px 80px;}
+.step-panel{display:none;animation:stepin .25s ease both;}
+.step-panel.active{display:block;}
+@keyframes stepin{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+.step-hdr{display:flex;align-items:flex-start;gap:14px;padding:20px 22px;background:var(--panel);border:0.5px solid var(--border);border-bottom:0.5px solid rgba(201,168,76,.15);border-radius:10px 10px 0 0;}
+.step-num{font-family:var(--display);font-size:32px;color:var(--gold);line-height:1;flex-shrink:0;opacity:.6;}
+.step-title{font-family:var(--bar);font-size:18px;font-weight:700;color:var(--bright);margin-bottom:3px;}
+.step-desc{font-size:10px;color:var(--dim);line-height:1.6;}
+.step-body{background:var(--panel);border:0.5px solid var(--border);border-top:none;border-radius:0 0 10px 10px;padding:22px;margin-bottom:16px;}
+
+/* Level badge */
+.level-badge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:3px;font-size:8px;letter-spacing:2px;text-transform:uppercase;font-family:var(--mono);}
+.lv1{background:rgba(59,130,246,.1);color:var(--blue);border:0.5px solid rgba(59,130,246,.3);}
+.lv2{background:rgba(245,158,11,.1);color:var(--amber);border:0.5px solid rgba(245,158,11,.3);}
+.lv3{background:rgba(239,68,68,.1);color:var(--red);border:0.5px solid rgba(239,68,68,.3);}
+
+/* ── FIELDS ── */
+.field-group{margin-bottom:18px;}
+.field-label{display:block;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:7px;}
+.field-label span{color:var(--gold);margin-left:3px;}
+.field-input{width:100%;background:var(--bg3);border:0.5px solid var(--border);border-radius:5px;padding:10px 13px;font-family:var(--mono);font-size:11px;color:var(--bright);outline:none;transition:border-color .15s;}
+.field-input:focus{border-color:var(--gold);}
+.field-input::placeholder{color:var(--dim);}
+select.field-input{cursor:pointer;}
+select.field-input option{background:var(--bg3);color:var(--bright);}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+
+/* ── OPT CARDS ── */
+.opt-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.opt-card{padding:10px 13px;border:0.5px solid var(--border);border-radius:6px;cursor:pointer;display:flex;align-items:flex-start;gap:9px;transition:all .12s;background:var(--bg3);}
+.opt-card:hover{border-color:rgba(201,168,76,.3);background:var(--gold3);}
+.opt-card.selected{border-color:var(--gold);background:var(--gold3);}
+.opt-card input{display:none;}
+.opt-indicator{width:14px;height:14px;border-radius:50%;border:0.5px solid var(--dim);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:8px;transition:all .12s;}
+.opt-card.selected .opt-indicator{background:var(--gold);border-color:var(--gold);color:#000;}
+.opt-text{font-size:10px;color:var(--text);line-height:1.5;}
+.opt-text strong{display:block;font-size:11px;color:var(--bright);font-family:var(--bar);font-weight:600;margin-bottom:1px;}
+
+/* ── CHECKBOXES ── */
+.chk-grid{display:flex;flex-direction:column;gap:6px;}
+.chk-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border:0.5px solid var(--border);border-radius:5px;cursor:pointer;background:var(--bg3);transition:all .12s;font-size:11px;color:var(--text);}
+.chk-item:hover{border-color:rgba(20,184,166,.3);background:rgba(20,184,166,.05);}
+.chk-item.checked{border-color:rgba(16,185,129,.3);background:var(--green2);color:var(--bright);}
+.chk-box{width:16px;height:16px;border-radius:3px;border:0.5px solid var(--dim);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .12s;}
+.chk-item.checked .chk-box{background:var(--green);border-color:var(--green);color:#000;}
+
+/* ── SKILL ROWS ── */
+.skill-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid var(--border);}
+.skill-row:last-child{border-bottom:none;}
+.skill-name{flex:1;font-size:11px;color:var(--text);}
+.skill-dots{display:flex;gap:5px;}
+.skill-dot{width:24px;height:8px;border-radius:2px;border:0.5px solid var(--dim);cursor:pointer;transition:all .12s;background:transparent;}
+.skill-dot.lit-1{background:var(--red);border-color:var(--red);}
+.skill-dot.lit-2{background:var(--amber);border-color:var(--amber);}
+.skill-dot.lit-3{background:var(--amber);border-color:var(--amber);}
+.skill-dot.lit-4{background:var(--green);border-color:var(--green);}
+.skill-dot.lit-5{background:var(--green);border-color:var(--green);}
+.skill-label{font-size:9px;color:var(--dim);width:60px;text-align:right;}
+
+/* ── SCENARIOS ── */
+.scenario-box{background:var(--bg3);border:0.5px solid var(--border);border-radius:8px;padding:16px 18px;margin-bottom:12px;}
+.scenario-prompt{font-size:12px;color:var(--text);line-height:1.8;margin-bottom:14px;padding-bottom:12px;border-bottom:0.5px solid var(--border);}
+.scenario-tag{display:inline-block;font-size:8px;letter-spacing:2px;text-transform:uppercase;padding:2px 8px;border-radius:2px;background:rgba(59,130,246,.1);color:var(--blue);border:0.5px solid rgba(59,130,246,.3);margin-bottom:10px;}
+.radio-list{display:flex;flex-direction:column;gap:6px;}
+.radio-opt{display:flex;align-items:flex-start;gap:9px;padding:8px 12px;border:0.5px solid var(--border);border-radius:5px;cursor:pointer;font-size:11px;color:var(--text);background:var(--bg);transition:all .12s;}
+.radio-opt:hover{border-color:rgba(201,168,76,.3);}
+.radio-opt.selected{border-color:var(--gold);background:var(--gold3);color:var(--bright);}
+.radio-opt.correct{border-color:var(--green);background:var(--green2);color:var(--bright);}
+.radio-opt.wrong{border-color:var(--red);background:rgba(239,68,68,.08);}
+.radio-mark{width:14px;height:14px;border-radius:50%;border:0.5px solid var(--dim);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:8px;}
+.radio-opt.selected .radio-mark{background:var(--gold);border-color:var(--gold);color:#000;}
+
+/* ── NAV BUTTONS ── */
+.step-nav{display:flex;justify-content:space-between;align-items:center;margin-top:8px;}
+.btn{padding:10px 22px;border-radius:5px;font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:none;transition:all .15s;}
+.btn-gold{background:var(--gold);color:#000;font-weight:700;}
+.btn-gold:hover{background:var(--gold2);}
+.btn-outline{background:transparent;color:var(--dim);border:0.5px solid var(--border);}
+.btn-outline:hover{color:var(--text);border-color:rgba(100,200,255,.2);}
+.btn-lg{padding:13px 32px;font-size:11px;letter-spacing:2px;}
+.btn-teal{background:rgba(20,184,166,.15);color:var(--teal);border:0.5px solid rgba(20,184,166,.3);}
+.btn-teal:hover{background:rgba(20,184,166,.25);}
+.step-hint{font-size:9px;color:var(--dim);}
+
+/* ── ACADEMY CARDS ── */
+.academy-section{margin-bottom:22px;}
+.academy-section-title{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--dim);margin-bottom:10px;padding-bottom:6px;border-bottom:0.5px solid var(--border);}
+.academy-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;}
+.academy-card{display:block;text-decoration:none;padding:11px 14px;background:var(--bg3);border:0.5px solid var(--border);border-radius:6px;transition:all .15s;cursor:pointer;}
+.academy-card:hover{border-color:rgba(201,168,76,.3);background:var(--gold3);transform:translateY(-1px);}
+.academy-card-name{font-size:11px;color:var(--bright);font-family:var(--bar);font-weight:600;margin-bottom:3px;}
+.academy-card-tag{font-size:9px;color:var(--dim);}
+.academy-card-icon{font-size:16px;margin-bottom:6px;}
+
+/* ── FLASH CARDS ── */
+.flashcard-wrap{perspective:1000px;margin-bottom:20px;}
+.flashcard{width:100%;min-height:200px;position:relative;transform-style:preserve-3d;transition:transform .5s;cursor:pointer;border-radius:10px;}
+.flashcard.flipped{transform:rotateY(180deg);}
+.fc-face{position:absolute;width:100%;min-height:200px;backface-visibility:hidden;border-radius:10px;padding:28px 24px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border:0.5px solid var(--border);}
+.fc-front{background:var(--panel);}
+.fc-back{background:var(--bg3);transform:rotateY(180deg);}
+.fc-term{font-family:var(--display);font-size:28px;color:var(--gold);letter-spacing:2px;margin-bottom:8px;}
+.fc-hint{font-size:9px;color:var(--dim);letter-spacing:1px;}
+.fc-def{font-size:12px;color:var(--text);line-height:1.8;max-width:500px;}
+.fc-category{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--teal);margin-bottom:12px;}
+.fc-nav{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:12px;}
+.fc-counter{font-size:10px;color:var(--dim);}
+.fc-prog{width:100%;height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:14px;}
+.fc-prog-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--gold));transition:width .3s;}
+
+/* ── QUIZ ── */
+.quiz-header{display:flex;justify-content:space-between;align-items:center;padding:10px 0;margin-bottom:16px;border-bottom:0.5px solid var(--border);}
+.quiz-timer{font-family:var(--display);font-size:24px;color:var(--gold);}
+.quiz-timer.warn{color:var(--red);}
+.quiz-progress-text{font-size:10px;color:var(--dim);}
+.quiz-q{font-size:13px;color:var(--bright);line-height:1.8;margin-bottom:16px;font-family:var(--bar);}
+.quiz-result-banner{padding:16px;border-radius:6px;text-align:center;margin-bottom:16px;}
+.qr-pass{background:var(--green2);border:0.5px solid rgba(16,185,129,.3);}
+.qr-fail{background:rgba(239,68,68,.08);border:0.5px solid rgba(239,68,68,.3);}
+
+/* ── LEVEL 3 SCENARIO ── */
+.anomaly-flag{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:rgba(239,68,68,.07);border:0.5px solid rgba(239,68,68,.3);border-radius:6px;margin:12px 0;font-size:11px;color:var(--red);}
+.anomaly-icon{font-size:16px;flex-shrink:0;}
+.app-required{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(139,92,246,.07);border:0.5px solid rgba(139,92,246,.3);border-radius:5px;margin-bottom:6px;cursor:pointer;text-decoration:none;transition:all .12s;}
+.app-required:hover{background:rgba(139,92,246,.15);}
+.app-required-label{font-size:10px;color:var(--purple);}
+.app-required-name{font-size:11px;color:var(--bright);font-family:var(--bar);font-weight:600;}
+.app-check{margin-left:auto;font-size:9px;color:var(--dim);}
+.app-required.visited .app-check{color:var(--green);}
+.app-required.visited .app-required-label{color:var(--green);}
+.timer-bar{width:100%;height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:4px;}
+.timer-bar-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--amber),var(--red));transition:width 1s linear;}
+
+/* ── RESULTS ── */
+#results-panel{display:none;}
+.results-hdr{text-align:center;padding:40px 22px 24px;background:var(--panel);border:0.5px solid var(--border);border-radius:10px 10px 0 0;position:relative;overflow:hidden;}
+.results-hdr::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--teal),var(--gold));}
+.result-badge{display:inline-flex;align-items:center;gap:6px;font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:4px 14px;border-radius:20px;margin-bottom:16px;}
+.result-badge.ready{background:var(--green2);color:var(--green);border:0.5px solid rgba(16,185,129,.3);}
+.result-badge.review{background:rgba(245,158,11,.1);color:var(--amber);border:0.5px solid rgba(245,158,11,.3);}
+.results-name{font-family:var(--bar);font-size:28px;font-weight:800;color:var(--bright);margin-bottom:4px;}
+.results-role{font-size:11px;color:var(--dim);}
+.score-circle{width:90px;height:90px;border-radius:50%;border:3px solid var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:20px auto 0;}
+.score-circle-val{font-family:var(--display);font-size:30px;color:var(--gold);line-height:1;}
+.score-circle-lbl{font-size:8px;color:var(--dim);letter-spacing:1px;margin-top:2px;}
+.results-body{background:var(--panel);border:0.5px solid var(--border);border-top:none;border-radius:0 0 10px 10px;padding:22px;margin-bottom:16px;}
+.rdim-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+.rdim{background:var(--bg3);border-radius:6px;padding:12px 14px;}
+.rdim-label{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:7px;}
+.rdim-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:5px;}
+.rdim-fill{height:100%;border-radius:3px;transition:width 1s ease;}
+.rdim-val{font-size:11px;color:var(--text);}
+.reco-box{padding:14px 16px;border-radius:6px;border-left:3px solid var(--green);background:var(--green2);margin-bottom:16px;}
+.reco-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:5px;}
+.reco-val{font-size:13px;color:var(--green);line-height:1.6;}
+.result-actions{display:flex;gap:8px;flex-wrap:wrap;}
+
+/* Progression unlock tiles */
+.unlock-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px;}
+.unlock-tile{padding:14px;border-radius:8px;text-align:center;border:0.5px solid var(--border);background:var(--bg3);}
+.unlock-tile.unlocked{border-color:rgba(16,185,129,.3);background:var(--green2);}
+.unlock-tile.locked{opacity:.5;}
+.unlock-level{font-family:var(--display);font-size:22px;color:var(--dim);margin-bottom:4px;}
+.unlock-tile.unlocked .unlock-level{color:var(--green);}
+.unlock-name{font-size:10px;color:var(--text);}
+.unlock-score{font-size:9px;color:var(--dim);margin-top:4px;}
+
+/* ── MANAGER DASHBOARD ── */
+#manager-panel{display:none;position:fixed;inset:0;z-index:200;background:rgba(4,8,15,.97);overflow-y:auto;}
+.mgr-inner{max-width:900px;margin:0 auto;padding:28px;}
+.mgr-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:0.5px solid var(--border);}
+.mgr-title{font-family:var(--display);font-size:36px;color:var(--gold);letter-spacing:3px;}
+.candidate-table{width:100%;border-collapse:collapse;}
+.candidate-table th{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);padding:8px 10px;text-align:left;border-bottom:0.5px solid var(--border);}
+.candidate-table td{font-size:11px;color:var(--text);padding:10px 10px;border-bottom:0.5px solid rgba(100,200,255,.04);}
+.candidate-table tr:hover td{background:rgba(255,255,255,.02);}
+.status-pip{display:inline-flex;align-items:center;gap:5px;font-size:9px;padding:2px 8px;border-radius:3px;}
+.pip-ready{background:var(--green2);color:var(--green);}
+.pip-review{background:rgba(245,158,11,.1);color:var(--amber);}
+.pip-risk{background:rgba(239,68,68,.08);color:var(--red);}
+.cand-name{font-family:var(--bar);font-weight:600;color:var(--bright);}
+.level-pips{display:flex;gap:4px;}
+.lp{width:16px;height:16px;border-radius:3px;font-size:8px;display:flex;align-items:center;justify-content:center;border:0.5px solid var(--border);color:var(--dim);}
+.lp.done{background:var(--green);color:#000;border-color:var(--green);}
+.lp.active{background:var(--gold3);color:var(--gold);border-color:var(--gold);}
+.mgr-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+.mstat{background:var(--panel);border:0.5px solid var(--border);border-radius:8px;padding:14px 16px;}
+.mstat-val{font-family:var(--display);font-size:32px;color:var(--gold);}
+.mstat-lbl{font-size:9px;color:var(--dim);letter-spacing:1px;margin-top:2px;}
+.search-bar{width:100%;background:var(--bg3);border:0.5px solid var(--border);border-radius:5px;padding:9px 13px;font-family:var(--mono);font-size:11px;color:var(--bright);outline:none;margin-bottom:14px;}
+.search-bar:focus{border-color:var(--gold);}
+.mgr-filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.filter-btn{padding:4px 12px;border-radius:3px;font-size:9px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:0.5px solid var(--border);background:var(--bg3);color:var(--dim);transition:all .12s;}
+.filter-btn.active{background:var(--gold3);color:var(--gold);border-color:var(--border2);}
+.expand-row{background:var(--bg3);padding:14px 16px;border-radius:0 0 6px 6px;display:none;}
+.expand-row.open{display:block;}
+
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="t-logo">TSM</div>
+  <div class="t-center">Employee Readiness & Retention System</div>
+  <div class="t-right">
+    <div class="live-dot"></div>
+    <span>Live Mode</span>
+    <div class="mgr-btn" onclick="openManager()">⊞ Manager View</div>
+  </div>
+</div>
+
+<!-- PROGRESS TRACK -->
+<div class="progress-track">
+  <div class="pt-inner">
+    <div class="pt-step active" id="pt-1"><div class="pt-num">1</div><span>Profile</span></div>
+    <div class="pt-line" id="pl-1"></div>
+    <div class="pt-step" id="pt-2"><div class="pt-num">2</div><span>Track</span></div>
+    <div class="pt-line" id="pl-2"></div>
+    <div class="pt-step" id="pt-3"><div class="pt-num">3</div><span>Skills</span></div>
+    <div class="pt-line" id="pl-3"></div>
+    <div class="pt-step" id="pt-4"><div class="pt-num">4</div><span>Scenarios</span></div>
+    <div class="pt-line" id="pl-4"></div>
+    <div class="pt-step" id="pt-5"><div class="pt-num">5</div><span>Academy</span></div>
+    <div class="pt-line" id="pl-5"></div>
+    <div class="pt-step" id="pt-6"><div class="pt-num">L1</div><span>Flash Cards</span></div>
+    <div class="pt-line" id="pl-6"></div>
+    <div class="pt-step" id="pt-7"><div class="pt-num">L2</div><span>Quiz</span></div>
+    <div class="pt-line" id="pl-7"></div>
+    <div class="pt-step" id="pt-8"><div class="pt-num">L3</div><span>Readiness Exam</span></div>
+    <div class="pt-line" id="pl-8"></div>
+    <div class="pt-step" id="pt-9"><div class="pt-num">✓</div><span>Results</span></div>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">◈ TSM Workforce Intelligence System</div>
+  <div class="hero-title">Employee<br><span>Readiness</span><br>System</div>
+  <div class="hero-sub">Multi-level simulation, academy training, and progressive certification — from first-day readiness to confident sector placement.</div>
+</div>
+
+<!-- FORM AREA -->
+<div class="form-wrap">
+
+  <!-- STEP 1: PROFILE -->
+  <div class="step-panel active" id="step-1">
+    <div class="step-hdr">
+      <div class="step-num">01</div>
+      <div>
+        <div class="step-title">Candidate Profile</div>
+        <div class="step-desc">Basic information to personalize your readiness track and match you to the right sector path.</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">First Name <span>*</span></label>
+          <input class="field-input" id="f-fname" type="text" placeholder="First name">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Last Name <span>*</span></label>
+          <input class="field-input" id="f-lname" type="text" placeholder="Last name">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">Email Address <span>*</span></label>
+          <input class="field-input" id="f-email" type="email" placeholder="your@email.com">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Phone Number</label>
+          <input class="field-input" id="f-phone" type="tel" placeholder="(555) 000-0000">
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Years of Professional Experience <span>*</span></label>
+        <select class="field-input" id="f-exp">
+          <option value="">Select experience level</option>
+          <option value="0">Less than 1 year</option>
+          <option value="1">1–2 years</option>
+          <option value="3">3–5 years</option>
+          <option value="6">6–10 years</option>
+          <option value="11">10+ years</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Highest Education Level</label>
+        <select class="field-input" id="f-edu">
+          <option value="">Select education</option>
+          <option value="hs">High School / GED</option>
+          <option value="some">Some College</option>
+          <option value="aa">Associate Degree</option>
+          <option value="ba">Bachelor's Degree</option>
+          <option value="ms">Master's or Higher</option>
+          <option value="cert">Professional Certification</option>
+        </select>
+      </div>
+    </div>
+    <div class="step-nav">
+      <span class="step-hint">Step 1 of 8 · ~20 minutes total</span>
+      <button class="btn btn-gold" onclick="nextStep(1)">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: TRACK -->
+  <div class="step-panel" id="step-2">
+    <div class="step-hdr">
+      <div class="step-num">02</div>
+      <div>
+        <div class="step-title">Role Track Selection</div>
+        <div class="step-desc">Choose your target sector. This unlocks your academy modules, flash card deck, and exam scenarios.</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="field-group">
+        <label class="field-label">Target Role Track <span>*</span></label>
+        <div class="opt-grid">
+          <div class="opt-card" onclick="selectOpt(this,'track','healthcare')">
+            <input type="radio" name="track" value="healthcare">
+            <div class="opt-indicator">✓</div>
+            <div class="opt-text"><strong>Healthcare Admin</strong>Medical billing, prior auth, AR recovery, compliance</div>
+          </div>
+          <div class="opt-card" onclick="selectOpt(this,'track','insurance')">
+            <input type="radio" name="track" value="insurance">
+            <div class="opt-indicator">✓</div>
+            <div class="opt-text"><strong>Insurance Operations</strong>Claims, benefits, CE compliance, licensing</div>
+          </div>
+          <div class="opt-card" onclick="selectOpt(this,'track','finops')">
+            <input type="radio" name="track" value="finops">
+            <div class="opt-indicator">✓</div>
+            <div class="opt-text"><strong>Financial Operations</strong>AP/AR, accounting, reporting, audit readiness</div>
+          </div>
+          <div class="opt-card" onclick="selectOpt(this,'track','legal')">
+            <input type="radio" name="track" value="legal">
+            <div class="opt-indicator">✓</div>
+            <div class="opt-text"><strong>Legal & Compliance</strong>Document review, contract analysis, paralegal</div>
+          </div>
+          <div class="opt-card" onclick="selectOpt(this,'track','admin')">
+            <input type="radio" name="track" value="admin">
+            <div class="opt-indicator">✓</div>
+            <div class="opt-text"><strong>Office & Admin Support</strong>Data entry, scheduling, customer communications</div>
+          </div>
+          <div class="opt-card" onclick="selectOpt(this,'track','industrial')">
+            <input type="radio" name="track" value="industrial">
+            <div class="opt-indicator">✓</div>
+            <div class="opt-text"><strong>Light Industrial</strong>Warehouse, logistics, forklift, coordination</div>
+          </div>
+        </div>
+      </div>
+      <div class="field-group" style="margin-top:18px;">
+        <label class="field-label">Job Search Urgency</label>
+        <div class="opt-grid" style="grid-template-columns:1fr 1fr 1fr;">
+          <div class="opt-card" onclick="selectOpt(this,'urgency','immediate')"><input type="radio" name="urgency"><div class="opt-indicator">✓</div><div class="opt-text"><strong>Immediately</strong>Ready now</div></div>
+          <div class="opt-card" onclick="selectOpt(this,'urgency','weeks')"><input type="radio" name="urgency"><div class="opt-indicator">✓</div><div class="opt-text"><strong>2–4 Weeks</strong>Actively looking</div></div>
+          <div class="opt-card" onclick="selectOpt(this,'urgency','months')"><input type="radio" name="urgency"><div class="opt-indicator">✓</div><div class="opt-text"><strong>1–3 Months</strong>Exploring options</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="step-nav">
+      <button class="btn btn-outline" onclick="prevStep(2)">← Back</button>
+      <button class="btn btn-gold" onclick="nextStep(2)">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: SKILLS -->
+  <div class="step-panel" id="step-3">
+    <div class="step-hdr">
+      <div class="step-num">03</div>
+      <div>
+        <div class="step-title">Skills Self-Assessment</div>
+        <div class="step-desc">Rate your proficiency honestly — this calibrates your readiness score and development plan.</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="field-group">
+        <label class="field-label" style="margin-bottom:12px;">Core Competency Ratings <span style="color:var(--dim);font-size:8px;">1 = Beginner · 5 = Expert</span></label>
+        <div id="skill-rows"></div>
+      </div>
+      <div class="field-group" style="margin-top:18px;">
+        <label class="field-label">Compliance & Documentation</label>
+        <div class="chk-grid">
+          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box">✓</div>Familiar with HIPAA privacy standards</div>
+          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box">✓</div>Experience with electronic document management</div>
+          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box">✓</div>Completed onboarding or compliance training before</div>
+          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box">✓</div>Worked within a regulated industry or environment</div>
+          <div class="chk-item" onclick="toggleChk(this)"><div class="chk-box">✓</div>Comfortable with digital forms and data entry workflows</div>
+        </div>
+      </div>
+      <div class="field-group" style="margin-top:18px;">
+        <label class="field-label">Communication Style</label>
+        <div class="opt-grid">
+          <div class="opt-card" onclick="selectOpt(this,'comm','written')"><input type="radio" name="comm"><div class="opt-indicator">✓</div><div class="opt-text"><strong>Primarily Written</strong>Email, documents, chat</div></div>
+          <div class="opt-card" onclick="selectOpt(this,'comm','verbal')"><input type="radio" name="comm"><div class="opt-indicator">✓</div><div class="opt-text"><strong>Primarily Verbal</strong>Phone, in-person, meetings</div></div>
+          <div class="opt-card" onclick="selectOpt(this,'comm','both')"><input type="radio" name="comm"><div class="opt-indicator">✓</div><div class="opt-text"><strong>Both Equally</strong>Comfortable with either</div></div>
+          <div class="opt-card" onclick="selectOpt(this,'comm','developing')"><input type="radio" name="comm"><div class="opt-indicator">✓</div><div class="opt-text"><strong>Still Developing</strong>Looking to improve</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="step-nav">
+      <button class="btn btn-outline" onclick="prevStep(3)">← Back</button>
+      <button class="btn btn-gold" onclick="nextStep(3)">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: INTAKE SCENARIOS -->
+  <div class="step-panel" id="step-4">
+    <div class="step-hdr">
+      <div class="step-num">04</div>
+      <div>
+        <div class="step-title">Intake Scenarios</div>
+        <div class="step-desc">Real-world situations from your target field. Choose the best response for each scenario.</div>
+      </div>
+    </div>
+    <div class="step-body" id="scenario-body"></div>
+    <div class="step-nav">
+      <button class="btn btn-outline" onclick="prevStep(4)">← Back</button>
+      <button class="btn btn-gold" onclick="nextStep(4)">Continue to Academy →</button>
+    </div>
+  </div>
+
+  <!-- STEP 5: ACADEMY HUB -->
+  <div class="step-panel" id="step-5">
+    <div class="step-hdr">
+      <div class="step-num">05</div>
+      <div>
+        <div class="step-title">Academy Training Hub</div>
+        <div class="step-desc">Your personalized learning resources. Complete your track-specific modules to unlock Level 1 training below.</div>
+      </div>
+    </div>
+    <div class="step-body" id="academy-body">
+      <!-- injected by JS -->
+    </div>
+    <div class="step-nav">
+      <button class="btn btn-outline" onclick="prevStep(5)">← Back</button>
+      <button class="btn btn-gold" onclick="nextStep(5)">Begin Level 1 · Flash Cards →</button>
+    </div>
+  </div>
+
+  <!-- STEP 6: LEVEL 1 — FLASH CARDS -->
+  <div class="step-panel" id="step-6">
+    <div class="step-hdr">
+      <div class="step-num" style="opacity:1;"><span class="level-badge lv1">Level 1</span></div>
+      <div>
+        <div class="step-title">Terminology Flash Cards</div>
+        <div class="step-desc">Master your sector's core vocabulary. Click each card to reveal the definition. Work through all cards before advancing.</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="fc-prog"><div class="fc-prog-fill" id="fc-prog-fill" style="width:0%"></div></div>
+      <div class="fc-counter" id="fc-counter" style="text-align:center;margin-bottom:12px;"></div>
+      <div class="flashcard-wrap">
+        <div class="flashcard" id="flashcard" onclick="flipCard()">
+          <div class="fc-face fc-front">
+            <div class="fc-category" id="fc-cat"></div>
+            <div class="fc-term" id="fc-term"></div>
+            <div class="fc-hint">Click to reveal definition →</div>
+          </div>
+          <div class="fc-face fc-back">
+            <div class="fc-category" id="fc-cat-b"></div>
+            <div class="fc-def" id="fc-def"></div>
+          </div>
+        </div>
+      </div>
+      <div class="fc-nav">
+        <button class="btn btn-outline" onclick="fcPrev()" id="fc-prev-btn">← Prev</button>
+        <button class="btn btn-teal" onclick="fcNext()" id="fc-next-btn">Next →</button>
+      </div>
+      <div style="text-align:center;margin-top:14px;font-size:9px;color:var(--dim);">Review all <span id="fc-total-lbl"></span> cards to unlock Level 2</div>
+    </div>
+    <div class="step-nav">
+      <button class="btn btn-outline" onclick="prevStep(6)">← Back</button>
+      <button class="btn btn-gold" id="fc-advance-btn" onclick="nextStep(6)" style="display:none;">Level 2 Unlocked — Begin Quiz →</button>
+    </div>
+  </div>
+
+  <!-- STEP 7: LEVEL 2 — QUIZ -->
+  <div class="step-panel" id="step-7">
+    <div class="step-hdr">
+      <div class="step-num" style="opacity:1;"><span class="level-badge lv2">Level 2</span></div>
+      <div>
+        <div class="step-title">Exam-Style Quiz</div>
+        <div class="step-desc">10 questions · 12-minute time limit · 70% required to advance to Level 3</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="quiz-header">
+        <div>
+          <div class="quiz-progress-text" id="quiz-progress-text">Question 1 of 10</div>
+        </div>
+        <div class="quiz-timer" id="quiz-timer">12:00</div>
+      </div>
+      <div id="quiz-body">
+        <div style="text-align:center;padding:32px;color:var(--dim);">Loading quiz…</div>
+      </div>
+    </div>
+    <div class="step-nav" id="quiz-nav" style="display:none;">
+      <button class="btn btn-outline" onclick="prevStep(7)">← Back</button>
+      <button class="btn btn-gold" id="quiz-advance-btn" onclick="nextStep(7)" style="display:none;">Level 3 Unlocked — Begin Exam →</button>
+    </div>
+  </div>
+
+  <!-- STEP 8: LEVEL 3 — PRE-READINESS EXAM -->
+  <div class="step-panel" id="step-8">
+    <div class="step-hdr">
+      <div class="step-num" style="opacity:1;"><span class="level-badge lv3">Level 3</span></div>
+      <div>
+        <div class="step-title">Pre-Readiness Timed Exam</div>
+        <div class="step-desc">Real business scenarios with unexpected anomalies. You will be directed to TSM apps to resolve issues — visit the required tools as part of your exam response.</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="quiz-header">
+        <div>
+          <div class="quiz-progress-text" id="l3-progress-text">Scenario 1 of 3</div>
+        </div>
+        <div class="quiz-timer" id="l3-timer">20:00</div>
+      </div>
+      <div class="timer-bar"><div class="timer-bar-fill" id="l3-timer-bar" style="width:100%"></div></div>
+      <div id="l3-body"></div>
+    </div>
+    <div class="step-nav" id="l3-nav" style="display:none;">
+      <span class="step-hint" id="l3-hint"></span>
+      <button class="btn btn-gold btn-lg" onclick="generateResults()">Generate Full Report →</button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results-panel">
+    <div class="results-hdr">
+      <div class="result-badge ready" id="result-badge">● PLACEMENT READY</div>
+      <div class="results-name" id="result-name">—</div>
+      <div class="results-role" id="result-role">—</div>
+      <div class="score-circle">
+        <div class="score-circle-val" id="result-score">—</div>
+        <div class="score-circle-lbl">READINESS</div>
+      </div>
+    </div>
+    <div class="results-body">
+
+      <div style="margin-bottom:18px;">
+        <div style="font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--dim);margin-bottom:10px;">Certification Levels Completed</div>
+        <div class="unlock-grid">
+          <div class="unlock-tile unlocked" id="unlock-l1">
+            <div class="unlock-level">L1</div>
+            <div class="unlock-name">Flash Cards</div>
+            <div class="unlock-score" id="ul1-score">Terminology</div>
+          </div>
+          <div class="unlock-tile" id="unlock-l2">
+            <div class="unlock-level">L2</div>
+            <div class="unlock-name">Exam Quiz</div>
+            <div class="unlock-score" id="ul2-score">—</div>
+          </div>
+          <div class="unlock-tile" id="unlock-l3">
+            <div class="unlock-level">L3</div>
+            <div class="unlock-name">Readiness Exam</div>
+            <div class="unlock-score" id="ul3-score">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--dim);margin-bottom:12px;">Readiness Dimensions</div>
+      <div class="rdim-grid">
+        <div class="rdim"><div class="rdim-label">Workflow Accuracy</div><div class="rdim-bar"><div class="rdim-fill" id="dim-workflow" style="width:0%;background:var(--green);"></div></div><div class="rdim-val" id="dim-workflow-val">—</div></div>
+        <div class="rdim"><div class="rdim-label">Compliance Understanding</div><div class="rdim-bar"><div class="rdim-fill" id="dim-compliance" style="width:0%;background:var(--green);"></div></div><div class="rdim-val" id="dim-compliance-val">—</div></div>
+        <div class="rdim"><div class="rdim-label">Communication Skills</div><div class="rdim-bar"><div class="rdim-fill" id="dim-comm" style="width:0%;background:var(--amber);"></div></div><div class="rdim-val" id="dim-comm-val">—</div></div>
+        <div class="rdim"><div class="rdim-label">Adaptability Index</div><div class="rdim-bar"><div class="rdim-fill" id="dim-adapt" style="width:0%;background:var(--green);"></div></div><div class="rdim-val" id="dim-adapt-val">—</div></div>
+      </div>
+
+      <div class="reco-box">
+        <div class="reco-label">Placement Recommendation</div>
+        <div class="reco-val" id="result-reco">—</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+        <div style="background:var(--bg3);border-radius:6px;padding:14px 16px;">
+          <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:10px;">Strengths Identified</div>
+          <div id="result-strengths"></div>
+        </div>
+        <div style="background:var(--bg3);border-radius:6px;padding:14px 16px;">
+          <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:10px;">Development Plan</div>
+          <div id="result-gaps"></div>
+        </div>
+      </div>
+
+      <div style="padding:14px 16px;border:0.5px solid var(--border2);border-radius:6px;background:var(--gold3);font-size:11px;color:var(--text);line-height:1.8;font-style:italic;margin-bottom:16px;">
+        "TSM is designed to support staffing organizations in improving placement outcomes, strengthening client trust, and reinforcing employee confidence by investing in readiness and long-term development."
+      </div>
+
+      <div class="result-actions">
+        <button class="btn btn-gold" onclick="downloadCandidatePDF()">Download Full Report</button>
+        <button class="btn btn-teal" onclick="openManager()">View in Manager Dashboard</button>
+        <button class="btn btn-outline" onclick="location.reload()">Retake Assessment</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /form-wrap -->
+
+<!-- MANAGER DASHBOARD OVERLAY -->
+<div id="manager-panel">
+  <div class="mgr-inner">
+    <div class="mgr-topbar">
+      <div>
+        <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--dim);margin-bottom:4px;">TSM Workforce Intelligence</div>
+        <div class="mgr-title">Manager Dashboard</div>
+      </div>
+      <button class="btn btn-outline" onclick="closeManager()">✕ Close</button>
+    </div>
+
+    <div class="mgr-stats" id="mgr-stats">
+      <div class="mstat"><div class="mstat-val" id="mst-total">0</div><div class="mstat-lbl">Total Candidates</div></div>
+      <div class="mstat"><div class="mstat-val" id="mst-ready">0</div><div class="mstat-lbl">Placement Ready</div></div>
+      <div class="mstat"><div class="mstat-val" id="mst-avg">—</div><div class="mstat-lbl">Avg Readiness</div></div>
+      <div class="mstat"><div class="mstat-val" id="mst-l3">0</div><div class="mstat-lbl">L3 Certified</div></div>
+    </div>
+
+    <input class="search-bar" id="mgr-search" placeholder="Search by name, email, or track…" oninput="renderCandidateTable()">
+    <div class="mgr-filters">
+      <div class="filter-btn active" onclick="setFilter('all',this)">All</div>
+      <div class="filter-btn" onclick="setFilter('ready',this)">Placement Ready</div>
+      <div class="filter-btn" onclick="setFilter('review',this)">Review</div>
+      <div class="filter-btn" onclick="setFilter('risk',this)">Development Track</div>
+      <div class="filter-btn" onclick="setFilter('healthcare',this)">Healthcare</div>
+      <div class="filter-btn" onclick="setFilter('insurance',this)">Insurance</div>
+      <div class="filter-btn" onclick="setFilter('finops',this)">FinOps</div>
+      <div class="filter-btn" onclick="setFilter('legal',this)">Legal</div>
+    </div>
+
+    <table class="candidate-table" id="candidate-table">
+      <thead>
+        <tr>
+          <th>Candidate</th>
+          <th>Track</th>
+          <th>Score</th>
+          <th>Levels</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="candidate-tbody"></tbody>
+    </table>
+
+    <div style="margin-top:20px;padding-top:16px;border-top:0.5px solid var(--border);display:flex;gap:8px;">
+      <button class="btn btn-outline" onclick="clearAllCandidates()">Clear All Records</button>
+      <button class="btn btn-gold" onclick="exportCSV()">Export CSV</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════ STATE ══════════════ */
+let currentStep = 1;
+const state = {
+  fname:'',lname:'',email:'',phone:'',exp:'',edu:'',
+  track:'',urgency:'',comm:'',
+  skills:{},compliance:0,scenarios:{},
+  l1done:false,l2score:0,l3score:0,
+  visitedApps:{}
+};
+
+/* ══ TRACK DATA ══ */
+const TRACK_LABELS = {
+  healthcare:'Medical Billing / Healthcare Admin',
+  insurance:'Insurance Operations',
+  finops:'Financial Operations / AR-AP',
+  legal:'Legal & Compliance',
+  admin:'Office & Administrative Support',
+  industrial:'Light Industrial / Logistics'
+};
+
+const TRACK_SKILLS = {
+  healthcare:['Medical Billing (ICD-10/CPT)','Prior Authorization Workflows','EMR Navigation (Cerner/Epic)','Denial Management & Appeals','Patient Communication'],
+  insurance:['Claims Processing','Benefits Administration','CE Compliance Knowledge','State Licensing Procedures','Policy Interpretation'],
+  finops:['AP/AR Ledger Management','Account Reconciliation','Financial Reporting','Spreadsheet Proficiency','Audit Documentation'],
+  legal:['Document Review & Analysis','Contract Interpretation','Legal Research Tools','Case File Management','Compliance Protocols'],
+  admin:['Data Entry & Accuracy','Scheduling & Coordination','Customer Communication','Office Software (MS/Google)','Multi-tasking Under Pressure'],
+  industrial:['Warehouse Safety Protocols','Inventory Management','Forklift / Equipment Operation','Logistics Coordination','Physical Endurance & Safety'],
+};
+
+/* ══ ACADEMY LINKS ══ */
+const ACADEMY = {
+  healthcare:[
+    {name:'CRC Practice',url:'/html/healthcare/crc-hc-practice.html',icon:'🏥',tag:'Certification Prep'},
+    {name:'CRCR Scenarios',url:'/html/healthcare/crcr-scenarios.html',icon:'📋',tag:'Scenario Drill'},
+    {name:'TSM Job Prep',url:'/html/tsm-job-prep.html',icon:'💼',tag:'Career Readiness'},
+    {name:'HC War Room',url:'/html/hc-denial-war-room.html',icon:'⚔️',tag:'Live Simulation'},
+    {name:'TSM Enterprise OS',url:'/html/tsm-enterprise-operating-system.html',icon:'🖥️',tag:'Platform Orientation'},
+    {name:'Staffing Readiness Demo',url:'/html/tsm-staffing-readiness-demo.html',icon:'🎯',tag:'Placement Simulation'},
+  ],
+  insurance:[
+    {name:'AHIP Prep',url:'/html/tsm-insurance/ahip.html',icon:'🛡️',tag:'Certification Prep'},
+    {name:'Insurance CE Prep',url:'/html/tsm-insurance/ce-study-prep.html',icon:'📚',tag:'CE Compliance'},
+    {name:'Insurance War Room',url:'/html/insurance-war-room.html',icon:'⚔️',tag:'Live Simulation'},
+    {name:'TSM Job Prep',url:'/html/tsm-job-prep.html',icon:'💼',tag:'Career Readiness'},
+    {name:'Staffing Readiness Demo',url:'/html/tsm-staffing-readiness-demo.html',icon:'🎯',tag:'Placement Simulation'},
+    {name:'TSM Enterprise OS',url:'/html/tsm-enterprise-operating-system.html',icon:'🖥️',tag:'Platform Orientation'},
+  ],
+  finops:[
+    {name:'Accounting Study Guide',url:'/html/finops-suite/study-guide.html',icon:'📊',tag:'Study Guide'},
+    {name:'Staff Accountant Interview',url:'/html/finops-suite/staff-accountant-interview.html',icon:'🎤',tag:'Interview Prep'},
+    {name:'CRCR Study Mode',url:'/html/finops-suite/crcr-study-mode.html',icon:'📝',tag:'Certification Prep'},
+    {name:'FinOps War Room',url:'/html/finops-war-room.html',icon:'⚔️',tag:'Live Simulation'},
+    {name:'TSM Job Prep',url:'/html/tsm-job-prep.html',icon:'💼',tag:'Career Readiness'},
+    {name:'TSM Enterprise OS',url:'/html/tsm-enterprise-operating-system.html',icon:'🖥️',tag:'Platform Orientation'},
+  ],
+  legal:[
+    {name:'TSM Job Prep',url:'/html/tsm-job-prep.html',icon:'💼',tag:'Career Readiness'},
+    {name:'Legal War Room',url:'/html/legal-war-room.html',icon:'⚔️',tag:'Live Simulation'},
+    {name:'TSM Enterprise OS',url:'/html/tsm-enterprise-operating-system.html',icon:'🖥️',tag:'Platform Orientation'},
+    {name:'Staffing Readiness Demo',url:'/html/tsm-staffing-readiness-demo.html',icon:'🎯',tag:'Placement Simulation'},
+  ],
+  admin:[
+    {name:'TSM Job Prep',url:'/html/tsm-job-prep.html',icon:'💼',tag:'Career Readiness'},
+    {name:'TSM Enterprise OS',url:'/html/tsm-enterprise-operating-system.html',icon:'🖥️',tag:'Platform Orientation'},
+    {name:'Staffing Readiness Demo',url:'/html/tsm-staffing-readiness-demo.html',icon:'🎯',tag:'Placement Simulation'},
+  ],
+  industrial:[
+    {name:'TSM Job Prep',url:'/html/tsm-job-prep.html',icon:'💼',tag:'Career Readiness'},
+    {name:'REO Pro Pack Index',url:'https://tsm-shell.fly.dev/reo-pro/pack-index.html',icon:'📦',tag:'Operations Index'},
+    {name:'Staffing Readiness Demo',url:'/html/tsm-staffing-readiness-demo.html',icon:'🎯',tag:'Placement Simulation'},
+    {name:'TSM Enterprise OS',url:'/html/tsm-enterprise-operating-system.html',icon:'🖥️',tag:'Platform Orientation'},
+  ]
+};
+
+/* ══ FLASH CARD DECKS ══ */
+const FLASH_CARDS = {
+  healthcare:[
+    {term:'ICD-10-CM',cat:'Coding',def:'International Classification of Diseases, 10th Revision, Clinical Modification — the standardized diagnostic coding system used for medical billing and insurance claims in the US.'},
+    {term:'CPT Code',cat:'Coding',def:'Current Procedural Terminology code — a 5-digit code that describes a medical, surgical, or diagnostic procedure performed by a healthcare provider.'},
+    {term:'Prior Authorization',cat:'Insurance',def:'A requirement by an insurance plan that the provider obtain approval before delivering specific services, procedures, or medications to ensure coverage.'},
+    {term:'EOB',cat:'Claims',def:'Explanation of Benefits — a document from the insurer showing what was billed, what was covered, what was adjusted, and what the patient owes.'},
+    {term:'Denial Management',cat:'Revenue Cycle',def:'The process of identifying, analyzing, and appealing insurance claim denials to recover revenue that was initially rejected.'},
+    {term:'EMR / EHR',cat:'Technology',def:'Electronic Medical/Health Record — a digital version of a patient\'s paper chart used by providers to document and access clinical information.'},
+    {term:'HIPAA',cat:'Compliance',def:'Health Insurance Portability and Accountability Act — federal law governing the privacy and security of protected health information (PHI).'},
+    {term:'Coordination of Benefits',cat:'Insurance',def:'A process used to determine the order in which multiple insurance plans pay when a patient has more than one coverage.'},
+    {term:'Claim Scrubbing',cat:'Billing',def:'The automated process of checking a claim for errors before submission to reduce denials and accelerate payment.'},
+    {term:'CRCR',cat:'Certification',def:'Certified Revenue Cycle Representative — a professional credential awarded by HFMA demonstrating competency in healthcare revenue cycle operations.'},
+    {term:'Remittance Advice',cat:'Claims',def:'A document accompanying payment from an insurer that details which claims are paid, adjusted, or denied and at what amounts.'},
+    {term:'AR Days',cat:'Metrics',def:'Accounts Receivable Days — a metric measuring the average number of days it takes to collect payment after a service is billed.'},
+  ],
+  insurance:[
+    {term:'Subrogation',cat:'Claims',def:'The right of an insurer to pursue a third party that caused an insurance loss to the insured, in order to recover the amount paid.'},
+    {term:'Underwriting',cat:'Core',def:'The process of evaluating and selecting risks for insurance coverage and determining appropriate premium rates based on that risk.'},
+    {term:'AHIP',cat:'Certification',def:'America\'s Health Insurance Plans — a leading trade group whose certification is required for agents selling Medicare Advantage and Part D plans.'},
+    {term:'CE Credits',cat:'Licensing',def:'Continuing Education credits — required hours of professional development that licensed insurance agents must complete to renew their state license.'},
+    {term:'Indemnity',cat:'Core',def:'A type of insurance policy that reimburses a policyholder for actual losses, or a contractual obligation to compensate for loss or damage.'},
+    {term:'Loss Ratio',cat:'Metrics',def:'The ratio of insurance claims paid to total premiums earned — a key profitability metric for insurers.'},
+    {term:'E&O Insurance',cat:'Liability',def:'Errors and Omissions insurance — professional liability coverage that protects agents from claims made by clients due to inadequate work or negligent actions.'},
+    {term:'Adverse Selection',cat:'Underwriting',def:'The tendency for higher-risk individuals to seek more insurance coverage, which can skew a pool and increase costs for the insurer.'},
+    {term:'Binder',cat:'Policy',def:'A temporary document that provides proof of insurance coverage before the official policy is issued.'},
+    {term:'Claims Adjuster',cat:'Operations',def:'A person who investigates insurance claims to determine the insurer\'s liability and negotiate settlements with claimants.'},
+  ],
+  finops:[
+    {term:'Accounts Receivable',cat:'Accounting',def:'Money owed to a business by its clients for goods or services delivered but not yet paid for — recorded as a current asset on the balance sheet.'},
+    {term:'Accounts Payable',cat:'Accounting',def:'Money a business owes to its suppliers or vendors for products or services received — recorded as a current liability.'},
+    {term:'Bank Reconciliation',cat:'Accounting',def:'The process of comparing a company\'s internal financial records against bank statements to ensure they match and identify discrepancies.'},
+    {term:'General Ledger',cat:'Accounting',def:'The master record of all financial transactions of a company, organized by account and used to prepare financial statements.'},
+    {term:'GAAP',cat:'Standards',def:'Generally Accepted Accounting Principles — the standard framework of accounting rules and guidelines used by US companies for financial reporting.'},
+    {term:'Days Sales Outstanding',cat:'Metrics',def:'DSO — a measure of the average number of days it takes to collect payment after a sale is made; a lower number indicates faster collection.'},
+    {term:'Accrual Accounting',cat:'Methods',def:'An accounting method where revenue and expenses are recorded when they are earned or incurred, regardless of when cash is actually exchanged.'},
+    {term:'Variance Analysis',cat:'Reporting',def:'The process of comparing actual financial results to budgeted or expected figures to identify and explain differences.'},
+    {term:'Trial Balance',cat:'Reporting',def:'A bookkeeping worksheet that lists all ledger account balances to verify that debits equal credits before preparing financial statements.'},
+    {term:'Cash Flow Statement',cat:'Reporting',def:'A financial statement that summarizes actual cash inflows and outflows from operating, investing, and financing activities over a period.'},
+  ],
+  legal:[
+    {term:'Indemnification Clause',cat:'Contracts',def:'A contract provision that obligates one party to compensate another for losses or damages arising from specific events or actions.'},
+    {term:'Force Majeure',cat:'Contracts',def:'A contract clause that excuses a party from performance obligations due to extraordinary events beyond their control, such as natural disasters.'},
+    {term:'Due Diligence',cat:'Process',def:'A comprehensive appraisal of a business or transaction undertaken by a prospective party, examining records and operations to verify facts.'},
+    {term:'Statute of Limitations',cat:'Litigation',def:'The maximum time after an event within which legal proceedings may be initiated — varies by jurisdiction and type of case.'},
+    {term:'Subpoena',cat:'Litigation',def:'A legal order requiring a person to appear in court or produce documents — failure to comply can result in contempt of court.'},
+    {term:'Fiduciary Duty',cat:'Obligations',def:'A legal obligation to act in the best interest of another party, requiring loyalty, care, and full disclosure — common in trustee and corporate officer roles.'},
+    {term:'Redline',cat:'Drafting',def:'A marked-up version of a document showing proposed changes from one version to the next — standard practice in contract negotiation.'},
+    {term:'Escrow',cat:'Transactions',def:'A financial arrangement where a third party holds and regulates payment between parties in a transaction, releasing funds when conditions are met.'},
+    {term:'Chain of Custody',cat:'Evidence',def:'A chronological documentation showing the seizure, control, transfer, and analysis of evidence — critical for maintaining legal admissibility.'},
+    {term:'Tortious Interference',cat:'Claims',def:'A claim that a third party intentionally caused harm by disrupting a contractual or business relationship without justification.'},
+  ],
+  admin:[
+    {term:'SOP',cat:'Operations',def:'Standard Operating Procedure — a written set of step-by-step instructions that helps staff perform routine operations consistently and efficiently.'},
+    {term:'Ticketing System',cat:'Technology',def:'Software used to create, track, and manage requests or issues — common in IT, customer service, and operations support roles.'},
+    {term:'CRM',cat:'Technology',def:'Customer Relationship Management system — software used to manage interactions with clients, track communications, and maintain contact records.'},
+    {term:'Escalation Path',cat:'Operations',def:'A defined sequence for routing unresolved issues to higher authority when standard procedures have not resolved them.'},
+    {term:'Data Hygiene',cat:'Data',def:'The practice of maintaining clean, accurate, and up-to-date records — includes removing duplicates, correcting errors, and standardizing formats.'},
+    {term:'KPI',cat:'Metrics',def:'Key Performance Indicator — a measurable value that shows how effectively an individual or team is achieving key objectives.'},
+    {term:'Turnaround Time',cat:'Metrics',def:'TAT — the time taken to complete a process or fulfill a request from initiation to completion; a common performance metric in admin roles.'},
+    {term:'Audit Trail',cat:'Compliance',def:'A chronological record of system activities that provides documentary evidence of the sequence of activities for compliance and troubleshooting.'},
+  ],
+  industrial:[
+    {term:'OSHA',cat:'Safety',def:'Occupational Safety and Health Administration — the federal agency that sets and enforces workplace safety standards to protect employees from hazards.'},
+    {term:'FIFO',cat:'Inventory',def:'First In, First Out — an inventory management method where the oldest stock is used or shipped first, reducing waste and spoilage.'},
+    {term:'Cycle Count',cat:'Inventory',def:'A perpetual inventory auditing procedure where a small subset of inventory items are counted on a rotating schedule rather than all at once.'},
+    {term:'Bill of Lading',cat:'Logistics',def:'A legal document issued by a carrier that details the type, quantity, and destination of goods being transported — a contract between shipper and carrier.'},
+    {term:'Pick List',cat:'Warehouse',def:'A document or digital instruction that tells a warehouse worker which items to retrieve from storage to fulfill an order.'},
+    {term:'Pallet Jack',cat:'Equipment',def:'A wheeled tool used to lift and transport pallets — requires basic operator training and falls under OSHA equipment safety guidelines.'},
+    {term:'LTL Shipping',cat:'Logistics',def:'Less Than Truckload — a shipping method for freight that doesn\'t require a full trailer, allowing multiple shippers to share trailer space.'},
+    {term:'Hazmat',cat:'Safety',def:'Hazardous Materials — substances that pose a risk to health, safety, or the environment, requiring special handling, labeling, and training protocols.'},
+  ]
+};
+
+/* ══ QUIZ QUESTIONS ══ */
+const QUIZ_QUESTIONS = {
+  healthcare:[
+    {q:'A claim is rejected with denial code CO-4. This typically means:',opts:['The patient is not eligible','Incorrect procedure code for the service billed','The claim was filed past the timely filing limit','The service requires prior authorization'],correct:1},
+    {q:'Under HIPAA, which of the following is considered PHI?',opts:['A de-identified patient record','A patient\'s diagnosis combined with their date of birth','Aggregate health statistics','An employee\'s work schedule'],correct:1},
+    {q:'What is the standard timely filing limit for most commercial insurers?',opts:['30 days from DOS','60 days from DOS','90 days from DOS','Varies by payer — verify each contract'],correct:3},
+    {q:'A CO-45 adjustment code means:',opts:['Duplicate claim','Charge exceeds the fee schedule / maximum allowed amount','Non-covered service','Claim lacks required documentation'],correct:1},
+    {q:'Which of the following best describes the difference between a crossover claim and a standard claim?',opts:['A crossover claim is for out-of-network providers only','A crossover claim involves both Medicare and Medicaid','A crossover claim is used for inpatient services only','A crossover claim is filed directly by the patient'],correct:1},
+    {q:'The Clean Claim Rate (CCR) measures:',opts:['The percentage of claims paid on first submission without errors','The number of claims filed per provider per month','The average days to payment','The ratio of denials to appeals'],correct:0},
+    {q:'Which modifier indicates a procedure was performed by two surgeons?',opts:['Modifier -50','-57','-62','-80'],correct:2},
+    {q:'A Notice of Admission (NOA) is required for which type of coverage?',opts:['Commercial PPO','Medicare Advantage','Medicaid Managed Care in all states','Workers\' Compensation'],correct:1},
+    {q:'When a payer requests a refund for an overpayment, the correct action is to:',opts:['Ignore it until a second notice arrives','Process the refund request per your organization\'s overpayment policy and document the transaction','Rebill the claim to offset','Dispute it immediately without review'],correct:1},
+    {q:'CPT code 99213 represents:',opts:['A new patient office visit, moderate complexity','An established patient office visit, low-moderate complexity','A telehealth visit only','A preventive wellness exam'],correct:1},
+  ],
+  insurance:[
+    {q:'When a client\'s policy lapses due to non-payment, the correct first step is:',opts:['Issue a new policy immediately','Check for a grace period and notify the client of reinstatement requirements','Cancel all coverage records','File a state complaint'],correct:1},
+    {q:'A producer\'s E&O policy protects against:',opts:['Client fraud','The producer\'s own negligent acts or omissions in professional services','Natural disasters','Market losses'],correct:1},
+    {q:'Under the ACA, insurers are generally prohibited from denying coverage based on:',opts:['Age for Medicare plans','Pre-existing conditions for individual and small group plans','Occupation for life insurance','Location for auto insurance'],correct:1},
+    {q:'Coinsurance differs from a copay in that coinsurance:',opts:['Is a fixed dollar amount per visit','Is a percentage of costs shared after the deductible is met','Is paid before the deductible','Only applies to specialist visits'],correct:1},
+    {q:'A subrogation right gives an insurer the ability to:',opts:['Cancel a policy mid-term','Recover claims costs from a responsible third party','Deny coverage retroactively','Increase premiums after a loss'],correct:1},
+    {q:'State licensing CE requirements are typically measured in:',opts:['Days','Credit hours or clock hours','Modules completed','Exam scores'],correct:1},
+    {q:'The role of a Managing General Agent (MGA) is:',opts:['Selling directly to consumers only','Underwriting and binding authority on behalf of insurers','Regulating state filings','Processing claims for self-funded employers'],correct:1},
+    {q:'When calculating a loss ratio, you divide:',opts:['Claims paid by total expenses','Claims paid by premiums earned','Premiums earned by claims paid','Operating costs by net revenue'],correct:1},
+    {q:'Which document provides temporary proof of coverage before a formal policy is issued?',opts:['Certificate of Insurance','Summary Plan Description','Binder','Declaration Page'],correct:2},
+    {q:'An insured has a $2,000 deductible, $6,000 out-of-pocket max, and 80/20 coinsurance. A covered service costs $12,000. What does the insured owe?',opts:['$2,400','$6,000','$2,000 + 20% of remaining = $4,000','$12,000'],correct:1},
+  ],
+  finops:[
+    {q:'Which accounting principle requires that expenses be recognized in the same period as the revenue they helped generate?',opts:['Conservatism principle','Matching principle','Cost principle','Going concern principle'],correct:1},
+    {q:'A debit entry increases which type of account?',opts:['Liability accounts only','Expense and asset accounts','Revenue and liability accounts','Equity accounts only'],correct:1},
+    {q:'DSO of 45 means:',opts:['45% of invoices are past due','It takes an average of 45 days to collect payment after billing','45 days remain before year-end close','45 invoices are outstanding'],correct:1},
+    {q:'During month-end close, the purpose of an accrual journal entry is to:',opts:['Reverse all prior-period entries','Record revenue or expense incurred but not yet reflected in cash','Reconcile bank statements','Archive completed invoices'],correct:1},
+    {q:'A negative cash flow from operations typically signals:',opts:['That the company is growing too fast','That the company may not be generating sufficient cash from its core business','Normal seasonal variation','High capital expenditures only'],correct:1},
+    {q:'GAAP requires that fixed assets be recorded at:',opts:['Fair market value','Historical cost','Replacement value','Appraised value'],correct:1},
+    {q:'Which report summarizes revenues, costs, and expenses over a specific period?',opts:['Balance Sheet','Cash Flow Statement','Income Statement','Trial Balance'],correct:2},
+    {q:'When reconciling accounts, an outstanding check refers to:',opts:['A check with insufficient funds','A check issued but not yet cleared the bank','A check older than 90 days','A bounced check'],correct:1},
+    {q:'Amortization is the process of:',opts:['Depreciating physical assets','Spreading the cost of an intangible asset over its useful life','Writing off bad debt','Calculating tax liability'],correct:1},
+    {q:'A three-way match in AP processing involves verifying:',opts:['Invoice, receipt, and employee ID','Purchase order, receiving report, and vendor invoice','Budget, forecast, and actuals','Bank statement, ledger, and audit report'],correct:1},
+  ],
+  legal:[
+    {q:'A contract requires "time is of the essence." This means:',opts:['The contract has no defined end date','Deadlines are strictly binding and failure to perform on time may constitute breach','The timeline is negotiable','A time-based penalty clause is automatic'],correct:1},
+    {q:'An NDA\'s primary purpose is to:',opts:['Transfer intellectual property','Prevent parties from disclosing confidential information to third parties','Establish payment terms','Assign liability for disputes'],correct:1},
+    {q:'Work product doctrine protects:',opts:['All written communications between employees','Materials prepared by an attorney in anticipation of litigation','Client files at all times','Physical evidence at trial'],correct:1},
+    {q:'Which clause limits one party\'s financial liability to a specified amount?',opts:['Indemnification clause','Limitation of liability clause','Liquidated damages clause','Warranty disclaimer'],correct:1},
+    {q:'Chain of custody documentation is most critical in:',opts:['Contract drafting','Evidence handling for litigation','Licensing negotiations','Corporate filings'],correct:1},
+    {q:'A retainer agreement typically establishes:',opts:['The attorney\'s billing rate and scope of representation','A permanent employment relationship','Guaranteed case outcomes','All discovery procedures'],correct:0},
+    {q:'When reviewing a contract, "boilerplate" language refers to:',opts:['Custom negotiated terms','Standardized clauses used routinely, such as governing law or severability','Financial terms only','Definitions section only'],correct:1},
+    {q:'A statute of limitations that has run means:',opts:['The claim becomes stronger','The right to file that type of legal claim has expired','A new law applies retroactively','The case must be appealed'],correct:1},
+    {q:'E-discovery refers to:',opts:['Electronic filing of court documents','The process of identifying, collecting, and producing electronically stored information for litigation','Cloud storage compliance','Email archiving policy'],correct:1},
+    {q:'What is the purpose of a red-line document in contract negotiation?',opts:['Final signed version','A marked-up draft showing proposed changes between versions','An executed amendment','A settlement agreement'],correct:1},
+  ],
+  admin:[
+    {q:'You receive an urgent email from a VP and a routine request from a client at the same moment. What is the correct prioritization approach?',opts:['Always handle VP requests first, regardless of context','Assess urgency and impact — address whichever has a closer deadline or higher consequence first','Handle client requests first — they generate revenue','Delegate both and confirm completion later'],correct:0},
+    {q:'Which of the following is the most effective way to document a verbal agreement reached in a meeting?',opts:['Mental note and follow up when convenient','Send a written recap email summarizing key decisions and action items within 24 hours','Ask HR to document it','Create a formal legal contract immediately'],correct:1},
+    {q:'Data entry accuracy is best maintained by:',opts:['Speed above all else','Working without verification checks','Double-checking entries against source documents and using system validation rules','Entering data once and trusting the system'],correct:2},
+    {q:'When scheduling a meeting across multiple time zones, the correct approach is to:',opts:['Use your local time and let others convert','Specify a universal time zone (e.g., ET) and include the equivalent for all participants','Send calendar invites without time zone notes','Schedule at the convenience of the highest-ranking attendee only'],correct:1},
+    {q:'An SOP should be updated when:',opts:['Never — SOPs are permanent','The underlying process changes, new technology is introduced, or an error is discovered','Once per year regardless of changes','Only when management requests it'],correct:1},
+    {q:'You notice a recurring error in a colleague\'s data entries. The correct response is:',opts:['Silently fix it each time','Report it to the colleague\'s manager immediately','Bring it to their attention professionally with examples and document the conversation','Ignore it — it\'s not your responsibility'],correct:2},
+    {q:'Which is the most appropriate communication channel for sending sensitive personnel information?',opts:['Group Slack channel','Encrypted email or secure document portal per company policy','Regular email with a read receipt','Text message for speed'],correct:1},
+    {q:'A client submits a complaint about a service issue. Your first step is:',opts:['Escalate immediately to your manager','Acknowledge the complaint, document it, and begin gathering relevant information before responding','Tell the client it will be addressed "soon"','Transfer them to another department'],correct:1},
+    {q:'When managing a shared calendar for an executive, conflicts should be resolved by:',opts:['Always accepting the most recent invitation','Canceling lower-priority commitments without notifying affected parties','Flagging the conflict to the executive with context before making changes','Declining all new requests'],correct:2},
+    {q:'GDPR and similar privacy regulations primarily affect admin roles by requiring:',opts:['Using only paper records','Protecting personal data, obtaining consent, and ensuring secure storage and disposal','Encrypting all social media posts','Restricting access to all external communication'],correct:1},
+  ],
+  industrial:[
+    {q:'OSHA\'s lockout/tagout (LOTO) procedure is required when:',opts:['A piece of equipment is noisy','Performing maintenance on machinery where unexpected energization could cause injury','Lifting loads over 25 lbs','Operating a forklift indoors'],correct:1},
+    {q:'A cycle count discrepancy should first trigger:',opts:['An immediate full physical inventory','A recount, adjacent location check, and lead notification before adjusting records','A write-off of the variance','Filing a theft report'],correct:1},
+    {q:'The primary purpose of a Bill of Lading is:',opts:['To estimate shipping costs','To serve as a contract and receipt between shipper and carrier for goods in transit','To document warehouse inventory','To authorize customs clearance only'],correct:1},
+    {q:'FIFO inventory management is especially important for:',opts:['Heavy machinery','Perishable goods and date-sensitive materials','Non-consumable parts','Packaging materials'],correct:1},
+    {q:'When a forklift operator notices hydraulic fluid leaking during a shift, the correct response is:',opts:['Continue operating and report at end of shift','Stop operations, tag the equipment out of service, and notify maintenance immediately','Add fluid and continue','Reduce load weight and proceed with caution'],correct:1},
+    {q:'An LTL shipment is most appropriate when:',opts:['You need guaranteed same-day delivery','Your freight is less than a full truckload and cost-efficiency matters','You are shipping hazardous materials across state lines','Your goods require climate control'],correct:1},
+    {q:'A GHS-compliant SDS (Safety Data Sheet) must include:',opts:['Shipping carrier information','Hazard identification, first aid measures, and handling/storage instructions','Employee training records','Inventory quantity by SKU'],correct:1},
+    {q:'Ergonomic best practices for repetitive lifting include:',opts:['Bending at the waist for heavy loads','Rotating tasks, using mechanical assist for loads over 50 lbs, and proper lift posture','Wearing a back brace at all times','Avoiding lifting entirely'],correct:1},
+    {q:'A "hot" shipment designation means:',opts:['Temperature-sensitive goods','An expedited, high-priority shipment needed immediately','Hazardous materials','Oversized freight'],correct:1},
+    {q:'When receiving a delivery, discrepancies between the packing slip and actual goods should be:',opts:['Accepted and updated in the system later','Documented on the delivery receipt before signing and reported to the purchasing team','Signed for regardless and disputed later','Returned without documentation'],correct:1},
+  ],
+};
+
+/* ══ LEVEL 3 SCENARIOS ══ */
+const L3_SCENARIOS = {
+  healthcare:[
+    {
+      tag:'Billing Anomaly',
+      title:'Duplicate Claim Detected Mid-Month',
+      scenario:'You\'re processing a high-volume billing batch for a large orthopedic group. Midway through, the clearinghouse flags claim #HC-4421 as a potential duplicate — same patient, same DOS, same provider, but submitted under a slightly different NPI format. However, the original claim was paid two weeks ago and the RA is on file. Finance is pressuring you to push through the batch by EOD.',
+      anomaly:'The NPI discrepancy may indicate an EHR data migration issue that affected 47 other claims in the same batch.',
+      question:'What is the correct sequence of actions, and which TSM tool would you use first to investigate?',
+      opts:[
+        {text:'Push the batch — Finance has authority and the RA confirms the original was paid.',correct:false},
+        {text:'Halt the batch, isolate the flagged claims, use the HC Denial War Room to run a duplicate claim audit across the batch, document findings, and notify your lead before resubmitting.',correct:true},
+        {text:'Void claim #HC-4421 without investigation and process the rest.',correct:false},
+        {text:'Resubmit all 47 claims immediately to reset the clock.',correct:false},
+      ],
+      apps:[
+        {name:'HC Denial War Room',url:'/html/hc-denial-war-room.html',label:'Run duplicate claim analysis'},
+        {name:'HC Billing Node',url:'/html/hc-billing.html',label:'Review billing batch queue'},
+      ]
+    },
+    {
+      tag:'Compliance Escalation',
+      title:'Unauthorized PHI Request — Business Associate',
+      scenario:'Your organization\'s business associate (a third-party billing vendor) sends a request for a bulk patient data export including names, dates of birth, diagnosis codes, and insurance IDs for "performance benchmarking." The request is not covered under the current BAA, and no patient authorization is attached. Your manager is out of office.',
+      anomaly:'A review of your access log shows this vendor accessed your portal twice last week outside of normal business hours.',
+      question:'How do you respond, and which TSM tool helps you document and escalate this risk?',
+      opts:[
+        {text:'Send the export — they\'re a business associate, so they have implicit access.',correct:false},
+        {text:'Decline the request, document it with timestamps, notify your compliance officer, flag the after-hours access, and use the HC War Room to create a compliance escalation record.',correct:true},
+        {text:'Send a redacted version to show good faith.',correct:false},
+        {text:'Wait for your manager to return.',correct:false},
+      ],
+      apps:[
+        {name:'HC Compliance Node',url:'/html/hc-compliance.html',label:'Log compliance incident'},
+        {name:'HC Denial War Room',url:'/html/hc-denial-war-room.html',label:'Create escalation brief'},
+      ]
+    },
+    {
+      tag:'Revenue Cycle',
+      title:'Payer Portal Down — Mass Claim Deadline Today',
+      scenario:'It\'s the last business day before 847 claims hit their 90-day timely filing limit. The payer\'s online portal is completely down. You\'ve confirmed this with other billers in your network. Submitting via clearinghouse is possible but this payer historically requires the portal for this claim type. The payer\'s phone hold time is 2+ hours.',
+      anomaly:'You discover the payer issued a bulletin 6 days ago noting planned maintenance and an official 14-day deadline extension — but no one on your team received it.',
+      question:'What is your action plan to protect the claims and document your due diligence?',
+      opts:[
+        {text:'Write off the claims — missing the deadline is unavoidable.',correct:false},
+        {text:'Submit via clearinghouse with the extension bulletin attached as supporting documentation, log all steps with timestamps, confirm receipt, and send an internal memo documenting the bulletin failure to distribute.',correct:true},
+        {text:'Wait for the portal to come back online, even if it exceeds the deadline.',correct:false},
+        {text:'Redate the claims to avoid the deadline issue.',correct:false},
+      ],
+      apps:[
+        {name:'HC Financial Node',url:'/html/hc-financial.html',label:'Document AR risk exposure'},
+        {name:'HC Operations Node',url:'/html/hc-operations.html',label:'Log vendor communication failure'},
+      ]
+    }
+  ],
+  insurance:[
+    {
+      tag:'Claims Anomaly',
+      title:'Conflicting Loss Dates Across Policy Layers',
+      scenario:'A commercial property claim comes in for storm damage. The insured has a primary policy and an umbrella policy with two different carriers. The date of loss reported to the primary carrier is March 3. The same insured reported March 5 to the umbrella carrier. Both carriers have now received the same adjuster\'s report, but the report uses March 4.',
+      anomaly:'A quick search reveals this insured filed a similar claim 14 months ago that was resolved with a significant settlement.',
+      question:'How do you handle this claim, and which TSM tool supports your investigation workflow?',
+      opts:[
+        {text:'Process both claims separately using each carrier\'s reported date.',correct:false},
+        {text:'Flag the date discrepancies, initiate a multi-carrier coordination review, document the prior claim history as a potential SIU referral trigger, and hold payment pending adjuster clarification.',correct:true},
+        {text:'Accept the adjuster\'s report date as official and process both claims.',correct:false},
+        {text:'Deny both claims due to inconsistent reporting.',correct:false},
+      ],
+      apps:[
+        {name:'Insurance War Room',url:'/html/insurance-war-room.html',label:'Run claims anomaly analysis'},
+        {name:'Ins Claims Node',url:'/html/tsm-insurance/ins-claims.html',label:'Log multi-carrier coordination'},
+      ]
+    },
+    {
+      tag:'CE Compliance',
+      title:'Licensing Renewal — Incomplete CE Credits',
+      scenario:'An agent on your team submits their CE completion certificate for state license renewal. The renewal window closes in 72 hours. Upon review, you notice the certificate lists 20 completed hours, but the state requires 24 — and the 4 missing hours are in the required ethics category, which cannot be substituted.',
+      anomaly:'The CE provider\'s website is currently showing a system error and cannot issue additional certificates. You find an approved alternative provider who can deliver the ethics course online, but it\'s 3 hours long and the agent has client appointments tomorrow.',
+      question:'What is the correct escalation and resolution path?',
+      opts:[
+        {text:'Submit the renewal with the existing 20 hours and explain the situation in the notes.',correct:false},
+        {text:'Identify the approved alternative provider, coordinate the agent\'s schedule to complete the ethics course before deadline, ensure the certificate is issued and recorded, then submit the renewal — and escalate the CE provider outage to your compliance team.',correct:true},
+        {text:'Request a blanket extension from the state without exhausting available options.',correct:false},
+        {text:'Advise the agent to postpone renewal and pay the late fee.',correct:false},
+      ],
+      apps:[
+        {name:'Insurance CE Prep',url:'/html/tsm-insurance/ce-study-prep.html',label:'Find approved CE alternatives'},
+        {name:'Ins Compliance Node',url:'/html/tsm-insurance/ins-compliance.html',label:'Document compliance risk'},
+      ]
+    },
+    {
+      tag:'Underwriting',
+      title:'Binder Issued — Undisclosed Prior Claim',
+      scenario:'Your agency issued a binder 10 days ago for a new commercial auto policy. The coverage is now active. During a routine audit, you discover the applicant omitted a $180,000 liability claim from two years ago on their application. The policy is already bound and the client has begun operations.',
+      anomaly:'The prior claim was with the same carrier but a different policy number under a related LLC entity name.',
+      question:'What is the required action under good faith insurance principles and regulatory standards?',
+      opts:[
+        {text:'Leave it — the policy is active and the claim was under a different LLC.',correct:false},
+        {text:'Immediately notify the underwriter and carrier, document the material misrepresentation, assess whether rescission or rate adjustment is warranted, and consult your E&O policy regarding your exposure.',correct:true},
+        {text:'Wait to see if the client discloses it at renewal.',correct:false},
+        {text:'Cancel the policy and refund the premium without carrier notification.',correct:false},
+      ],
+      apps:[
+        {name:'Ins Underwriting Node',url:'/html/tsm-insurance/ins-underwriting.html',label:'Log material misrepresentation'},
+        {name:'Insurance War Room',url:'/html/insurance-war-room.html',label:'Run underwriting risk brief'},
+      ]
+    }
+  ],
+  finops:[
+    {
+      tag:'Reconciliation Anomaly',
+      title:'Month-End Close — $47K Unresolved Variance',
+      scenario:'It\'s month-end close. Your reconciliation reveals a $47,300 variance between the GL and bank statement. Initial review points to three wire transfers from the 28th — all properly authorized — but the bank statement shows an additional $47,300 debit that doesn\'t match any GL entry, any approved vendor, or any PO in the system.',
+      anomaly:'The debit originates from a wire to an account in a state where you have no vendors. The transaction description reads "SVC-CONSULT-INT" — a code your team doesn\'t recognize.',
+      question:'What is the correct response, and which TSM tool do you use to document and escalate?',
+      opts:[
+        {text:'Book the variance as a miscellaneous expense to close the period.',correct:false},
+        {text:'Immediately halt period close, escalate to the Controller and CFO, contact the bank\'s fraud team, preserve all wire documentation, and log the incident in the FinOps War Room with full timestamps.',correct:true},
+        {text:'Contact the unknown vendor directly before notifying leadership.',correct:false},
+        {text:'Reverse the entry and resubmit end-of-month reports.',correct:false},
+      ],
+      apps:[
+        {name:'FinOps War Room',url:'/html/finops-war-room.html',label:'Create fraud escalation brief'},
+        {name:'FinOps Main Strategist',url:'/html/finops-main-strategist.html',label:'Run financial anomaly analysis'},
+      ]
+    },
+    {
+      tag:'AR Recovery',
+      title:'Major Client — 120-Day Outstanding Balance',
+      scenario:'A top-5 revenue client has a $212,000 outstanding balance across 6 invoices, the oldest now 120 days past due. Your outreach log shows 4 emails and 2 calls — all unresponded. Your CFO wants to refer to collections. Legal has drafted a demand letter. However, your sales team just closed a $600,000 renewal with this same client last week.',
+      anomaly:'During your review, you discover the oldest invoice had an incorrect billing address that was only corrected 60 days ago — meaning the client may have never received it.',
+      question:'What is the balanced action plan that protects AR while preserving the client relationship?',
+      opts:[
+        {text:'Immediately send to collections as directed.',correct:false},
+        {text:'Communicate the billing address error discovery to leadership, propose a 15-day payment plan agreement before collections escalation, coordinate with sales to leverage the renewal relationship, and document all steps.',correct:true},
+        {text:'Write off the oldest invoices and start fresh.',correct:false},
+        {text:'Apply the renewal revenue to offset the outstanding balance without client notification.',correct:false},
+      ],
+      apps:[
+        {name:'FinOps War Room',url:'/html/finops-war-room.html',label:'Build AR recovery strategy'},
+        {name:'FinOps Main Strategist',url:'/html/finops-main-strategist.html',label:'Generate client escalation plan'},
+      ]
+    },
+    {
+      tag:'Audit Readiness',
+      title:'External Audit Request — 72-Hour Notice',
+      scenario:'Your company receives a notice that an external audit will begin in 72 hours, covering 18 months of AP transactions. Your AP lead is on leave and the documentation system was migrated to a new platform 4 months ago — some historical records weren\'t fully transferred and exist only in the legacy system, which requires IT access.',
+      anomaly:'A preliminary internal review shows 3 invoices over $10,000 that were paid without a corresponding PO — a policy violation that has never been formally addressed.',
+      question:'How do you prepare your organization for a successful audit outcome?',
+      opts:[
+        {text:'Delay the audit by citing the AP lead\'s absence.',correct:false},
+        {text:'Immediately request IT access to legacy records, compile all AP documentation across both systems, proactively disclose the PO exceptions to your CFO with context, prepare a remediation note, and have a complete package ready before auditors arrive.',correct:true},
+        {text:'Only provide documents from the new system and explain the migration.',correct:false},
+        {text:'Create retroactive POs for the undocumented invoices.',correct:false},
+      ],
+      apps:[
+        {name:'FinOps Main Strategist',url:'/html/finops-main-strategist.html',label:'Build audit readiness plan'},
+        {name:'FinOps War Room',url:'/html/finops-war-room.html',label:'Document exception findings'},
+      ]
+    }
+  ],
+  legal:[
+    {
+      tag:'Contract Review',
+      title:'Indemnification Clause — Mutual vs. One-Sided',
+      scenario:'You\'re reviewing a vendor services agreement for a client. The contract contains an indemnification clause that appears mutual on first read, but a detailed review reveals the vendor\'s obligation is limited to "gross negligence or willful misconduct only," while your client bears indemnification for any claim arising from use of the services — including claims caused by vendor defects.',
+      anomaly:'The contract also contains a limitation of liability clause that caps the vendor\'s total exposure at one month of fees — currently $800. Your client\'s project exposure is $2.4M.',
+      question:'What is your action, and which TSM tool supports your documentation?',
+      opts:[
+        {text:'Approve the contract — indemnification clauses are standard.',correct:false},
+        {text:'Flag both clauses with specific annotations, calculate the risk exposure gap, draft proposed counter-language, escalate to supervising counsel, and document all issues in the Legal War Room.',correct:true},
+        {text:'Delete the limitation of liability clause and return the document.',correct:false},
+        {text:'Advise the client to accept and manage risk through insurance.',correct:false},
+      ],
+      apps:[
+        {name:'Legal War Room',url:'/html/legal-war-room.html',label:'Log contract risk findings'},
+        {name:'TSM Job Prep',url:'/html/tsm-job-prep.html',label:'Review contract review SOP'},
+      ]
+    },
+    {
+      tag:'Compliance',
+      title:'Employee Request to Backdate — HR Documentation',
+      scenario:'An HR manager asks you to prepare amended employment documentation for a recent termination, backdating the effective date by 11 days to fall before the employee\'s health insurance renewal date — which would eliminate a costly COBRA liability. The HR manager says the original date was "a clerical error."',
+      anomaly:'A review of the original documents shows the termination date was signed by both parties and is consistent across three separate system entries made on different dates.',
+      question:'What is the correct response?',
+      opts:[
+        {text:'Prepare the amended document — HR has authority over employment records.',correct:false},
+        {text:'Decline clearly, document the request with specifics, advise the HR manager of the legal and regulatory risk, escalate to General Counsel, and preserve the original documentation chain.',correct:true},
+        {text:'Prepare the document but note your objection informally.',correct:false},
+        {text:'Check with HR leadership before refusing.',correct:false},
+      ],
+      apps:[
+        {name:'Legal War Room',url:'/html/legal-war-room.html',label:'Create compliance escalation record'},
+        {name:'TSM Enterprise OS',url:'/html/tsm-enterprise-operating-system.html',label:'Document incident chain of custody'},
+      ]
+    },
+    {
+      tag:'E-Discovery',
+      title:'Litigation Hold — Scope Dispute',
+      scenario:'Your organization receives a litigation hold notice related to a contract dispute. The hold covers "all communications related to Project Meridian" for the past 24 months. A department head insists that his team\'s Slack messages and personal email used for work purposes are out of scope because the notice only mentions "email and documents."',
+      anomaly:'You locate a policy memo from 8 months ago that explicitly states company business conducted on personal email or messaging platforms is subject to the company\'s data preservation obligations.',
+      question:'What is your proper response and next step?',
+      opts:[
+        {text:'Agree with the department head — the notice says email and documents only.',correct:false},
+        {text:'Inform the department head that the policy memo extends preservation obligations to all business communications regardless of platform, coordinate with IT and Legal to ensure all relevant channels are preserved, and document the department head\'s initial resistance.',correct:true},
+        {text:'Issue a new, narrower litigation hold to limit scope.',correct:false},
+        {text:'Wait for opposing counsel to clarify scope.',correct:false},
+      ],
+      apps:[
+        {name:'Legal War Room',url:'/html/legal-war-room.html',label:'Document e-discovery scope resolution'},
+        {name:'TSM Enterprise OS',url:'/html/tsm-enterprise-operating-system.html',label:'Coordinate cross-department hold'},
+      ]
+    }
+  ],
+  admin:[
+    {
+      tag:'Operations Crisis',
+      title:'Executive Travel — Day-Of Itinerary Collapse',
+      scenario:'You manage travel for a VP. It\'s 6:45 AM. She boards for a 9 AM flight to close a major client deal. At 7:20 AM, the airline cancels the flight. The next available direct flight departs at 4 PM — after the meeting. An alternative routing via connection lands 2 hours late. Driving is 6 hours.',
+      anomaly:'When you call the airline, you learn a second flight at 11 AM has one business class seat available — but it\'s $900 over the approved travel budget, requiring VP-level pre-approval from someone who is currently on a different flight.',
+      question:'What is your action plan in the next 30 minutes?',
+      opts:[
+        {text:'Book the 4 PM flight and notify the VP.',correct:false},
+        {text:'Simultaneously: text the VP the full situation with options and costs, contact the traveling approver\'s EA to obtain emergency budget authorization, book the 11 AM seat on hold if possible, and have the meeting team on standby for a potential video dial-in as a fallback.',correct:true},
+        {text:'Wait for the VP to land and figure it out herself.',correct:false},
+        {text:'Book the cheapest option without consulting anyone.',correct:false},
+      ],
+      apps:[
+        {name:'TSM Enterprise OS',url:'/html/tsm-enterprise-operating-system.html',label:'Log travel incident and actions'},
+        {name:'TSM Job Prep',url:'/html/tsm-job-prep.html',label:'Review executive support protocols'},
+      ]
+    },
+    {
+      tag:'Data Integrity',
+      title:'CRM Migration — Duplicate Records Discovered',
+      scenario:'Your company just completed a CRM migration. You\'re the first to run an account report post-migration and you notice that a major client appears 3 times with slightly different data in each record — different primary contacts, different contract dates, and conflicting open-opportunity amounts totaling a $340,000 variance.',
+      anomaly:'The migration vendor\'s contract includes a 30-day warranty period that expires in 6 days. Escalating now may void the signed acceptance form your manager submitted last week.',
+      question:'What is the correct action?',
+      opts:[
+        {text:'Manually merge the records yourself to avoid the escalation.',correct:false},
+        {text:'Document all discrepancies with screenshots, escalate immediately to your manager with the warranty timeline highlighted, contact the migration vendor in writing within the warranty window, and recommend pausing new record creation until data integrity is verified.',correct:true},
+        {text:'Accept the data as-is — migration issues are expected.',correct:false},
+        {text:'Wait for the acceptance period to lapse and then address it.',correct:false},
+      ],
+      apps:[
+        {name:'TSM Enterprise OS',url:'/html/tsm-enterprise-operating-system.html',label:'Document data integrity incident'},
+        {name:'Staffing Readiness Demo',url:'/html/tsm-staffing-readiness-demo.html',label:'Review data governance protocols'},
+      ]
+    },
+    {
+      tag:'Client Relations',
+      title:'Angry Client Escalation — Misquoted Contract Terms',
+      scenario:'A client calls furious. They were quoted Net-30 payment terms when signing their service agreement 60 days ago. Their first invoice just arrived with Net-15 terms and a late fee already applied — because their payment arrived on day 22. Upon reviewing the signed contract, you see it clearly states Net-15. The salesperson who quoted Net-30 has since left the company.',
+      anomaly:'You find an internal email from the salesperson sent to operations the day the contract was signed, explicitly stating the client was promised Net-30.',
+      question:'How do you handle this situation?',
+      opts:[
+        {text:'Enforce the contract — it says Net-15 and the client signed it.',correct:false},
+        {text:'Acknowledge the client\'s frustration, document the email as evidence of a sales promise, waive the late fee for this invoice, escalate to your manager to determine if the contract should be amended, and commit to a written resolution within 24 hours.',correct:true},
+        {text:'Tell the client it\'s their responsibility to read the contract.',correct:false},
+        {text:'Offer a discount on future services without addressing the root issue.',correct:false},
+      ],
+      apps:[
+        {name:'TSM Enterprise OS',url:'/html/tsm-enterprise-operating-system.html',label:'Log client escalation record'},
+        {name:'TSM Job Prep',url:'/html/tsm-job-prep.html',label:'Review client relations protocols'},
+      ]
+    }
+  ],
+  industrial:[
+    {
+      tag:'Safety Anomaly',
+      title:'Forklift Near-Miss — Unlicensed Operator',
+      scenario:'During your shift, you witness a near-miss incident where a forklift came within feet of striking a pedestrian in an aisle. The forklift operator is a temp worker placed two weeks ago. When you check the equipment certification binder, you find no forklift certification on file for this worker — and the staffing agency\'s paperwork only lists "warehouse associate."',
+      anomaly:'The shift supervisor is aware of the near-miss but asks you to leave it out of the incident report "since nothing actually happened" and to avoid involving HR.',
+      question:'What is the correct action under OSHA and workplace safety standards?',
+      opts:[
+        {text:'Follow the supervisor\'s instructions — no one was hurt.',correct:false},
+        {text:'Complete an accurate incident report documenting the near-miss, flag the missing certification, take the temp worker off forklift duty immediately, and escalate to safety management and HR regardless of supervisor instructions.',correct:true},
+        {text:'File the report but omit the certification issue.',correct:false},
+        {text:'Let the staffing agency handle it.',correct:false},
+      ],
+      apps:[
+        {name:'REO Pro Pack Index',url:'https://tsm-shell.fly.dev/reo-pro/pack-index.html',label:'Review safety incident protocols'},
+        {name:'TSM Enterprise OS',url:'/html/tsm-enterprise-operating-system.html',label:'File safety incident report'},
+      ]
+    },
+    {
+      tag:'Inventory Discrepancy',
+      title:'Inbound Shipment — Quantity vs. PO Mismatch',
+      scenario:'A 40-pallet inbound shipment arrives for a priority order. The BOL shows 2,400 units of SKU-8821. Your PO shows 2,400 units. But when your team finishes receiving, the physical count comes to 2,187 — a 213-unit shortage. The carrier\'s driver insists the count was right when it left the origin facility and won\'t sign a shortage notation.',
+      anomaly:'When you pull up the original PO, you find a note from purchasing that the vendor had previously shorted a shipment by 180 units and issued a credit 6 months ago — the same SKU.',
+      question:'What is the correct receiving and escalation procedure?',
+      opts:[
+        {text:'Accept the shipment and adjust inventory to match the received count.',correct:false},
+        {text:'Document the shortage on the delivery receipt before carrier departure, photograph the pallets, flag the prior shortage history to purchasing, place the inventory in a "discrepancy hold" status, and file a freight claim with the carrier in writing within the required timeframe.',correct:true},
+        {text:'Refuse the entire shipment.',correct:false},
+        {text:'Accept the BOL count and request a credit from the vendor later.',correct:false},
+      ],
+      apps:[
+        {name:'REO Pro Pack Index',url:'https://tsm-shell.fly.dev/reo-pro/pack-index.html',label:'Log inbound discrepancy claim'},
+        {name:'TSM Enterprise OS',url:'/html/tsm-enterprise-operating-system.html',label:'Create vendor shortage record'},
+      ]
+    },
+    {
+      tag:'Logistics Crisis',
+      title:'Carrier No-Show — Priority Outbound Shipment',
+      scenario:'A carrier fails to show for a scheduled 2 PM pickup of a $180,000 priority outbound shipment. The customer\'s receiving dock closes at 5 PM and is 2 hours away. The carrier claims the driver called in sick and the next available truck is tomorrow morning. The customer has a hard requirement: delivery today or the order is cancelled with a 15% restocking penalty.',
+      anomaly:'You discover the broker who booked this carrier had been flagged internally 3 months ago for reliability issues — the flag was never acted upon.',
+      question:'What is your immediate response to protect the shipment and the customer relationship?',
+      opts:[
+        {text:'Notify the customer the shipment will be delayed until tomorrow.',correct:false},
+        {text:'Immediately contact backup carriers for an emergency pickup, escalate the broker flag to your logistics manager, prepare a written incident record, and keep the customer updated in real time — accepting that the relationship cost requires decisive action.',correct:true},
+        {text:'Rebook with the same carrier for tomorrow without escalation.',correct:false},
+        {text:'Cancel the order proactively to avoid the penalty.',correct:false},
+      ],
+      apps:[
+        {name:'REO Pro Pack Index',url:'https://tsm-shell.fly.dev/reo-pro/pack-index.html',label:'Find backup carrier options'},
+        {name:'TSM Enterprise OS',url:'/html/tsm-enterprise-operating-system.html',label:'Document carrier failure incident'},
+      ]
+    }
+  ],
+};
+
+/* ══ NAVIGATION ══ */
+function nextStep(from){
+  if(from===1){
+    state.fname=document.getElementById('f-fname').value.trim();
+    state.lname=document.getElementById('f-lname').value.trim();
+    state.email=document.getElementById('f-email').value.trim();
+    if(!state.fname||!state.email){alert('Please enter your name and email to continue.');return;}
+  }
+  if(from===2&&!state.track){alert('Please select a role track to continue.');return;}
+  if(from===3) buildScenarios();
+  if(from===4) buildAcademy();
+  if(from===5) buildFlashCards();
+  if(from===6){
+    if(!state.l1done){alert('Complete all flash cards to unlock Level 2.');return;}
+    startQuiz();
+  }
+  if(from===7){
+    if(state.l2score<70){alert(`Level 2 requires 70% to advance. Your score: ${state.l2score}%. Review your flash cards and retake the quiz.`);return;}
+    startL3();
+  }
+  goToStep(from+1);
+}
+function prevStep(from){goToStep(from-1);}
+
+function goToStep(n){
+  document.getElementById('step-'+currentStep)?.classList.remove('active');
+  document.getElementById('step-'+n)?.classList.add('active');
+  for(let i=1;i<=9;i++){
+    const el=document.getElementById('pt-'+i);
+    const line=document.getElementById('pl-'+i);
+    if(!el)continue;
+    el.classList.remove('active','done');
+    if(i<n){el.classList.add('done');if(line)line.classList.add('done');}
+    else if(i===n){el.classList.add('active');if(line)line.classList.remove('done');}
+    else{if(line)line.classList.remove('done');}
+  }
+  currentStep=n;
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(n===3) buildSkills();
+}
+
+function selectOpt(el,name,val){
+  document.querySelectorAll(`[onclick*="'${name}'"]`).forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  state[name]=val;
+}
+function toggleChk(el){
+  el.classList.toggle('checked');
+  state.compliance=document.querySelectorAll('.chk-item.checked').length;
+}
+
+function buildSkills(){
+  const track=state.track||'admin';
+  const skills=TRACK_SKILLS[track];
+  const container=document.getElementById('skill-rows');
+  if(!container)return;
+  container.innerHTML=skills.map((s,i)=>`
+    <div class="skill-row">
+      <span class="skill-name">${s}</span>
+      <div class="skill-dots" id="sdots-${i}">
+        ${[1,2,3,4,5].map(d=>`<div class="skill-dot" onclick="ratSkill(${i},${d})" id="sd-${i}-${d}"></div>`).join('')}
+      </div>
+      <span class="skill-label" id="slbl-${i}">Not rated</span>
+    </div>`).join('');
+}
+function ratSkill(skill,val){
+  state.skills[skill]=val;
+  const labels=['Beginner','Basic','Intermediate','Proficient','Expert'];
+  const lblEl=document.getElementById('slbl-'+skill);
+  lblEl.textContent=labels[val-1];
+  lblEl.style.color=['var(--red)','var(--amber)','var(--amber)','var(--green)','var(--green)'][val-1];
+  for(let d=1;d<=5;d++){
+    const dot=document.getElementById(`sd-${skill}-${d}`);
+    dot.className='skill-dot'+(d<=val?` lit-${d}`:'');
+  }
+}
+
+function buildScenarios(){
+  const track=state.track||'admin';
+  const scenarios=(TRACK_SCENARIOS[track]||TRACK_SCENARIOS.admin);
+  const body=document.getElementById('scenario-body');
+  body.innerHTML=scenarios.map((s,si)=>`
+    <div class="scenario-box">
+      <span class="scenario-tag">${s.tag}</span>
+      <div class="scenario-prompt">${s.prompt}</div>
+      <div class="radio-list">
+        ${s.options.map((o,oi)=>`
+          <div class="radio-opt" id="so-${si}-${oi}" onclick="selectScenario(${si},${oi},${o.correct})">
+            <div class="radio-mark">✓</div>${o.text}
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+function selectScenario(si,oi,correct){
+  const count=document.querySelectorAll(`[id^="so-${si}-"]`).length;
+  for(let i=0;i<count;i++) document.getElementById(`so-${si}-${i}`)?.classList.remove('selected');
+  document.getElementById(`so-${si}-${oi}`)?.classList.add('selected');
+  state.scenarios[si]=correct;
+}
+
+/* ══ ACADEMY ══ */
+function buildAcademy(){
+  const track=state.track||'admin';
+  const apps=ACADEMY[track]||ACADEMY.admin;
+  const universal=[
+    {name:'TSM Job Prep',url:'/html/tsm-job-prep.html',icon:'💼',tag:'Career Readiness'},
+    {name:'TSM Enterprise OS',url:'/html/tsm-enterprise-operating-system.html',icon:'🖥️',tag:'Platform Orientation'},
+    {name:'Staffing Readiness Demo',url:'/html/tsm-staffing-readiness-demo.html',icon:'🎯',tag:'Placement Simulation'},
+    {name:'REO Pro Pack Index',url:'https://tsm-shell.fly.dev/reo-pro/pack-index.html',icon:'📦',tag:'Operations Pack'},
+  ];
+  const body=document.getElementById('academy-body');
+  const unique=apps.filter(a=>!universal.find(u=>u.url===a.url));
+
+  body.innerHTML=`
+    <div class="academy-section">
+      <div class="academy-section-title">◈ ${TRACK_LABELS[track]||'Your Track'} — Recommended Training</div>
+      <div class="academy-grid">
+        ${unique.map(a=>`<a class="academy-card" href="${a.url}" target="_blank" rel="noopener">
+          <div class="academy-card-icon">${a.icon}</div>
+          <div class="academy-card-name">${a.name}</div>
+          <div class="academy-card-tag">${a.tag}</div>
+        </a>`).join('')}
+      </div>
+    </div>
+    <div class="academy-section">
+      <div class="academy-section-title">◈ Universal · All Sectors</div>
+      <div class="academy-grid">
+        ${universal.map(a=>`<a class="academy-card" href="${a.url}" target="_blank" rel="noopener">
+          <div class="academy-card-icon">${a.icon}</div>
+          <div class="academy-card-name">${a.name}</div>
+          <div class="academy-card-tag">${a.tag}</div>
+        </a>`).join('')}
+      </div>
+    </div>
+    <div style="padding:12px 14px;background:var(--gold3);border:0.5px solid var(--border2);border-radius:6px;font-size:10px;color:var(--text);line-height:1.8;">
+      ◈ <strong style="color:var(--gold);">Tip:</strong> Open your academy resources in separate tabs while you complete the exam levels below. Level 3 scenarios will direct you to specific TSM tools as part of your assessment.
+    </div>`;
+}
+
+/* ══ FLASH CARDS (LEVEL 1) ══ */
+let fcIndex = 0;
+let fcSeen = new Set();
+let fcDeck = [];
+
+function buildFlashCards(){
+  const track=state.track||'admin';
+  fcDeck=FLASH_CARDS[track]||FLASH_CARDS.admin;
+  fcIndex=0;
+  fcSeen=new Set();
+  renderFC();
+  document.getElementById('fc-total-lbl').textContent=fcDeck.length;
+}
+
+function renderFC(){
+  const card=fcDeck[fcIndex];
+  document.getElementById('fc-term').textContent=card.term;
+  document.getElementById('fc-cat').textContent=card.cat;
+  document.getElementById('fc-cat-b').textContent=card.cat;
+  document.getElementById('fc-def').textContent=card.def;
+  document.getElementById('fc-counter').textContent=`${fcIndex+1} / ${fcDeck.length} · ${fcSeen.size} reviewed`;
+  document.getElementById('fc-prog-fill').style.width=`${(fcSeen.size/fcDeck.length)*100}%`;
+  document.getElementById('flashcard').classList.remove('flipped');
+  fcSeen.add(fcIndex);
+  checkFCDone();
+}
+function flipCard(){document.getElementById('flashcard').classList.toggle('flipped');}
+function fcNext(){
+  if(fcIndex<fcDeck.length-1){fcIndex++;renderFC();}
+  else{fcIndex=0;renderFC();}
+}
+function fcPrev(){
+  if(fcIndex>0){fcIndex--;renderFC();}
+}
+function checkFCDone(){
+  if(fcSeen.size>=fcDeck.length){
+    state.l1done=true;
+    document.getElementById('fc-advance-btn').style.display='inline-block';
+    document.querySelector('#step-6 .step-hint') && (document.querySelector('#step-6 .step-body').insertAdjacentHTML('beforeend',''));
+  }
+}
+
+/* ══ QUIZ (LEVEL 2) ══ */
+let quizState={qs:[],current:0,answers:{},timer:null,seconds:720};
+
+function startQuiz(){
+  const track=state.track||'admin';
+  const pool=QUIZ_QUESTIONS[track]||QUIZ_QUESTIONS.admin;
+  quizState.qs=[...pool].sort(()=>Math.random()-.5).slice(0,10);
+  quizState.current=0;quizState.answers={};quizState.seconds=720;
+  renderQuizQ();
+  startQuizTimer();
+  document.getElementById('quiz-nav').style.display='flex';
+}
+
+function startQuizTimer(){
+  clearInterval(quizState.timer);
+  quizState.timer=setInterval(()=>{
+    quizState.seconds--;
+    const m=Math.floor(quizState.seconds/60);
+    const s=quizState.seconds%60;
+    const el=document.getElementById('quiz-timer');
+    el.textContent=`${m}:${String(s).padStart(2,'0')}`;
+    el.classList.toggle('warn',quizState.seconds<120);
+    if(quizState.seconds<=0){clearInterval(quizState.timer);scoreQuiz();}
+  },1000);
+}
+
+function renderQuizQ(){
+  const q=quizState.qs[quizState.current];
+  const body=document.getElementById('quiz-body');
+  document.getElementById('quiz-progress-text').textContent=`Question ${quizState.current+1} of ${quizState.qs.length}`;
+  body.innerHTML=`
+    <div class="quiz-q">${q.q}</div>
+    <div class="radio-list">
+      ${q.opts.map((o,i)=>`
+        <div class="radio-opt" id="qq-${i}" onclick="selectQuizOpt(${i})">
+          <div class="radio-mark">${String.fromCharCode(65+i)}</div>${o}
+        </div>`).join('')}
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:14px;">
+      ${quizState.current<quizState.qs.length-1
+        ?`<button class="btn btn-gold" onclick="quizNext()">Next →</button>`
+        :`<button class="btn btn-gold" onclick="scoreQuiz()">Submit Quiz →</button>`
+      }
+    </div>`;
+}
+function selectQuizOpt(i){
+  document.querySelectorAll('[id^="qq-"]').forEach(el=>el.classList.remove('selected'));
+  document.getElementById('qq-'+i).classList.add('selected');
+  quizState.answers[quizState.current]=i;
+}
+function quizNext(){
+  if(quizState.answers[quizState.current]===undefined){alert('Please select an answer before continuing.');return;}
+  quizState.current++;
+  renderQuizQ();
+}
+function scoreQuiz(){
+  clearInterval(quizState.timer);
+  const correct=quizState.qs.filter((q,i)=>quizState.answers[i]===q.correct).length;
+  const pct=Math.round((correct/quizState.qs.length)*100);
+  state.l2score=pct;
+  const pass=pct>=70;
+  const body=document.getElementById('quiz-body');
+  body.innerHTML=`
+    <div class="quiz-result-banner ${pass?'qr-pass':'qr-fail'}">
+      <div style="font-family:var(--display);font-size:36px;color:${pass?'var(--green)':'var(--red)'};">${pct}%</div>
+      <div style="font-family:var(--bar);font-size:16px;font-weight:700;color:var(--bright);margin:4px 0;">${pass?'Level 2 Passed':'Level 2 — Retake Required'}</div>
+      <div style="font-size:10px;color:var(--dim);">${correct} of ${quizState.qs.length} correct · ${pass?'Level 3 unlocked':'Score 70% or higher to continue'}</div>
+    </div>
+    <div style="margin-top:16px;">
+      ${quizState.qs.map((q,i)=>{
+        const userAns=quizState.answers[i];
+        const correct2=q.correct;
+        const right=userAns===correct2;
+        return `<div style="padding:10px 0;border-bottom:0.5px solid var(--border);">
+          <div style="font-size:11px;color:${right?'var(--green)':'var(--red)'};margin-bottom:3px;">${right?'✓':'✗'} Q${i+1}: ${q.q.substring(0,60)}…</div>
+          <div style="font-size:10px;color:var(--dim);">Correct: ${q.opts[correct2]}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    ${!pass?`<div style="margin-top:14px;"><button class="btn btn-gold" onclick="retakeQuiz()">Retake Level 2</button></div>`:''}`;
+  document.getElementById('ul2-score').textContent=`${pct}% · ${pass?'Passed':'Needs Retry'}`;
+  if(pass){
+    document.getElementById('unlock-l2').classList.add('unlocked');
+    document.getElementById('quiz-advance-btn').style.display='inline-block';
+  }
+}
+function retakeQuiz(){startQuiz();}
+
+/* ══ LEVEL 3 ══ */
+let l3State={scenarios:[],current:0,answers:{},timer:null,seconds:1200};
+
+function startL3(){
+  const track=state.track||'admin';
+  l3State.scenarios=L3_SCENARIOS[track]||L3_SCENARIOS.admin;
+  l3State.current=0;l3State.answers={};l3State.seconds=1200;
+  renderL3();
+  startL3Timer();
+  document.getElementById('l3-nav').style.display='flex';
+}
+
+function startL3Timer(){
+  clearInterval(l3State.timer);
+  l3State.timer=setInterval(()=>{
+    l3State.seconds--;
+    const m=Math.floor(l3State.seconds/60);
+    const s=l3State.seconds%60;
+    const el=document.getElementById('l3-timer');
+    el.textContent=`${m}:${String(s).padStart(2,'0')}`;
+    el.classList.toggle('warn',l3State.seconds<300);
+    const pct=(l3State.seconds/1200)*100;
+    document.getElementById('l3-timer-bar').style.width=pct+'%';
+    if(l3State.seconds<=0){clearInterval(l3State.timer);generateResults();}
+  },1000);
+}
+
+function renderL3(){
+  const s=l3State.scenarios[l3State.current];
+  document.getElementById('l3-progress-text').textContent=`Scenario ${l3State.current+1} of ${l3State.scenarios.length}`;
+  const body=document.getElementById('l3-body');
+  body.innerHTML=`
+    <div class="scenario-box">
+      <span class="scenario-tag">${s.tag}</span>
+      <div style="font-family:var(--bar);font-size:16px;font-weight:700;color:var(--bright);margin-bottom:8px;">${s.title}</div>
+      <div class="scenario-prompt">${s.scenario}</div>
+      <div class="anomaly-flag">
+        <div class="anomaly-icon">⚠</div>
+        <div><strong style="display:block;margin-bottom:3px;">Anomaly Detected</strong>${s.anomaly}</div>
+      </div>
+      <div style="font-size:11px;color:var(--bright);margin:14px 0 8px;font-family:var(--bar);font-weight:600;">${s.question}</div>
+      <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--purple);margin-bottom:10px;">▸ Required Tools — Visit Before Answering</div>
+      ${s.apps.map(a=>`<a class="app-required" href="${a.url}" target="_blank" rel="noopener" id="app-${encodeURIComponent(a.url)}" onclick="markAppVisited('${a.url}')">
+        <div>
+          <div class="app-required-label">Open TSM Tool</div>
+          <div class="app-required-name">${a.name}</div>
+          <div style="font-size:9px;color:var(--dim);">${a.label}</div>
+        </div>
+        <div class="app-check">○ Not visited</div>
+      </a>`).join('')}
+      <div class="radio-list" style="margin-top:16px;">
+        ${s.opts.map((o,oi)=>`
+          <div class="radio-opt" id="l3o-${l3State.current}-${oi}" onclick="selectL3(${l3State.current},${oi},${o.correct})">
+            <div class="radio-mark">✓</div>${o.text}
+          </div>`).join('')}
+      </div>
+      ${l3State.current<l3State.scenarios.length-1
+        ?`<div style="display:flex;justify-content:flex-end;margin-top:14px;"><button class="btn btn-gold" onclick="l3Next()">Next Scenario →</button></div>`
+        :`<div style="height:16px;"></div>`
+      }
+    </div>`;
+  const hint=`${l3State.scenarios.length-l3State.current-1} scenario(s) remaining`;
+  document.getElementById('l3-hint').textContent=l3State.current<l3State.scenarios.length-1?hint:'All scenarios complete — generate your report';
+}
+
+function markAppVisited(url){
+  state.visitedApps[url]=true;
+  setTimeout(()=>{
+    const el=document.getElementById('app-'+encodeURIComponent(url));
+    if(el){el.classList.add('visited');const chk=el.querySelector('.app-check');if(chk)chk.textContent='✓ Visited';}
+  },500);
+}
+function selectL3(si,oi,correct){
+  const count=document.querySelectorAll(`[id^="l3o-${si}-"]`).length;
+  for(let i=0;i<count;i++) document.getElementById(`l3o-${si}-${i}`)?.classList.remove('selected');
+  document.getElementById(`l3o-${si}-${oi}`)?.classList.add('selected');
+  l3State.answers[si]=correct;
+}
+function l3Next(){
+  if(l3State.answers[l3State.current]===undefined){alert('Please select a response before advancing.');return;}
+  l3State.current++;
+  renderL3();
+}
+
+/* ══ RESULTS ══ */
+function generateResults(){
+  clearInterval(l3State.timer);
+  const skillVals=Object.values(state.skills);
+  const avgSkill=skillVals.length?skillVals.reduce((a,b)=>a+b,0)/skillVals.length:3;
+  const skillPct=Math.round((avgSkill/5)*100);
+  const scenarioCorrect=Object.values(state.scenarios).filter(Boolean).length;
+  const scenarioTotal=Object.keys(state.scenarios).length||1;
+  const scenarioPct=Math.round((scenarioCorrect/scenarioTotal)*100);
+  const compliancePct=Math.min(100,state.compliance*20);
+  const expBonus={0:0,1:5,3:10,6:15,11:20}[state.exp]||0;
+
+  const l3correct=Object.values(l3State.answers).filter(Boolean).length;
+  const l3total=l3State.scenarios.length||3;
+  const l3pct=Math.round((l3correct/l3total)*100);
+  state.l3score=l3pct;
+
+  const visitedCount=Object.keys(state.visitedApps).length;
+  const appBonus=Math.min(10,visitedCount*3);
+
+  const workflow=Math.min(98,Math.round(scenarioPct*0.35+skillPct*0.35+l3pct*0.2+expBonus*0.1));
+  const compliance=Math.min(98,Math.round(compliancePct*0.6+skillPct*0.3+l3pct*0.1));
+  const commMap={written:78,verbal:72,both:85,developing:55};
+  const comm=Math.min(95,(commMap[state.comm]||70)+Math.round(expBonus*0.4));
+  const adapt=Math.min(95,Math.round((workflow+compliance+comm)/3+expBonus*0.5+appBonus));
+  const overall=Math.round(workflow*0.35+compliance*0.3+comm*0.2+adapt*0.15);
+
+  document.getElementById('result-name').textContent=`${state.fname} ${state.lname}`;
+  document.getElementById('result-role').textContent=`Role Path: ${TRACK_LABELS[state.track]||'General Professional'}`;
+  document.getElementById('result-score').textContent=overall+'%';
+
+  setTimeout(()=>{setDim('workflow',workflow);setDim('compliance',compliance);setDim('comm',comm);setDim('adapt',adapt);},100);
+
+  const badge=document.getElementById('result-badge');
+  let reco;
+  if(overall>=85){
+    badge.textContent='● PLACEMENT READY';badge.className='result-badge ready';
+    reco='✓ Placement Ready — strong performance across all levels. Recommend immediate submission to open requisitions.';
+  } else if(overall>=70){
+    badge.textContent='◎ REVIEW RECOMMENDED';badge.className='result-badge review';
+    reco='◎ Placement Likely — 1–2 targeted coaching sessions before client submission. Continue Level 2/3 drills to close gaps.';
+  } else {
+    badge.textContent='○ DEVELOPMENT TRACK';badge.className='result-badge review';
+    reco='○ Development Track — complete 2–3 simulation modules and revisit assessment in 2 weeks.';
+  }
+  document.getElementById('result-reco').textContent=reco;
+
+  const allSkills=TRACK_SKILLS[state.track]||TRACK_SKILLS.admin;
+  const strengths=allSkills.filter((_,i)=>(state.skills[i]||3)>=4).slice(0,4);
+  const gaps=allSkills.filter((_,i)=>(state.skills[i]||3)<=3).slice(0,3);
+  document.getElementById('result-strengths').innerHTML=(strengths.length?strengths:allSkills.slice(0,3)).map(s=>`<div style="display:flex;align-items:flex-start;gap:7px;font-size:11px;color:var(--text);padding:4px 0;"><span style="color:var(--green);flex-shrink:0;">✓</span>${s}</div>`).join('');
+  document.getElementById('result-gaps').innerHTML=(gaps.length?gaps:['Review module recommended']).map((g,i)=>`<div style="padding:5px 0;border-bottom:0.5px solid var(--border);"><div style="font-size:11px;color:var(--text);">→ ${g}</div><div style="font-size:9px;color:var(--dim);">Target: ${['1 coaching session','Practice module ×2','Simulation drill'][i]||'Self-study'}</div></div>`).join('');
+
+  // Level unlock tiles
+  document.getElementById('ul1-score').textContent=`${fcDeck.length} terms · Complete`;
+  document.getElementById('ul2-score').textContent=`${state.l2score}% · ${state.l2score>=70?'Passed':'Partial'}`;
+  document.getElementById('ul3-score').textContent=`${l3pct}% · ${l3correct}/${l3total} correct`;
+  if(state.l2score>=70){document.getElementById('unlock-l2').classList.add('unlocked');}
+  if(l3pct>=60){document.getElementById('unlock-l3').classList.add('unlocked');}
+
+  document.getElementById('step-8').classList.remove('active');
+  document.getElementById('results-panel').style.display='block';
+  for(let i=1;i<=9;i++){document.getElementById('pt-'+i)?.classList.add('done');document.getElementById('pl-'+i)?.classList.add('done');}
+  window.scrollTo({top:0,behavior:'smooth'});
+
+  window._resultData={fname:state.fname,lname:state.lname,track:TRACK_LABELS[state.track]||'General',overall,workflow,compliance,comm,adapt,reco,strengths:strengths.length?strengths:allSkills.slice(0,3),gaps:gaps.length?gaps:['Review module recommended'],l1:true,l2:state.l2score,l3:l3pct};
+
+  try {
+    const existing=JSON.parse(localStorage.getItem('tsm_candidates')||'[]');
+    const entry={
+      id:'cand_'+Date.now(),timestamp:new Date().toISOString(),
+      fname:state.fname,lname:state.lname,email:state.email,phone:state.phone,
+      track:TRACK_LABELS[state.track]||'General',
+      overall,workflow,compliance,comm,adapt,
+      status:overall>=85?'ready':overall>=70?'review':'risk',
+      reco,l1:true,l2:state.l2score,l3:l3pct,
+      strengths:strengths.length?strengths:allSkills.slice(0,3),
+      gaps:gaps.length?gaps:['Review module recommended'],
+      source:'errs-portal',new:true,
+    };
+    existing.unshift(entry);
+    localStorage.setItem('tsm_candidates',JSON.stringify(existing.slice(0,100)));
+  } catch(e){console.warn('localStorage sync failed:',e);}
+}
+
+function setDim(id,val){
+  const fill=document.getElementById('dim-'+id);
+  const lbl=document.getElementById('dim-'+id+'-val');
+  if(fill) fill.style.width=val+'%';
+  const color=val>=80?'var(--green)':val>=65?'var(--amber)':'var(--red)';
+  if(fill) fill.style.background=color;
+  const label=val>=80?'High':val>=65?'Medium':'Developing';
+  if(lbl){lbl.textContent=`${val}% — ${label}`;lbl.style.color=color;}
+}
+
+/* ══ MANAGER DASHBOARD ══ */
+let mgrFilter='all';
+
+function openManager(){
+  document.getElementById('manager-panel').style.display='block';
+  renderCandidateTable();
+}
+function closeManager(){document.getElementById('manager-panel').style.display='none';}
+
+function setFilter(f,el){
+  mgrFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderCandidateTable();
+}
+
+function renderCandidateTable(){
+  const candidates=JSON.parse(localStorage.getItem('tsm_candidates')||'[]');
+  const search=(document.getElementById('mgr-search')?.value||'').toLowerCase();
+  const filtered=candidates.filter(c=>{
+    const matchSearch=!search||`${c.fname} ${c.lname} ${c.email} ${c.track}`.toLowerCase().includes(search);
+    const matchFilter=mgrFilter==='all'||c.status===mgrFilter||c.track.toLowerCase().includes(mgrFilter);
+    return matchSearch&&matchFilter;
+  });
+
+  const ready=candidates.filter(c=>c.status==='ready').length;
+  const avg=candidates.length?Math.round(candidates.reduce((a,b)=>a+b.overall,0)/candidates.length):0;
+  const l3cert=candidates.filter(c=>c.l3>=60).length;
+  document.getElementById('mst-total').textContent=candidates.length;
+  document.getElementById('mst-ready').textContent=ready;
+  document.getElementById('mst-avg').textContent=candidates.length?avg+'%':'—';
+  document.getElementById('mst-l3').textContent=l3cert;
+
+  const tbody=document.getElementById('candidate-tbody');
+  if(!filtered.length){
+    tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--dim);font-size:11px;">No candidates found</td></tr>`;
+    return;
+  }
+  tbody.innerHTML=filtered.map((c,i)=>`
+    <tr onclick="toggleExpand('exp-${i}')" style="cursor:pointer;">
+      <td>
+        <div class="cand-name">${c.fname} ${c.lname}</div>
+        <div style="font-size:9px;color:var(--dim);">${c.email}</div>
+        ${c.new?'<span style="font-size:8px;background:rgba(16,185,129,.15);color:var(--green);padding:1px 6px;border-radius:2px;margin-top:3px;display:inline-block;">NEW</span>':''}
+      </td>
+      <td style="font-size:11px;">${c.track.split('/')[0].trim()}</td>
+      <td><span style="font-family:var(--display);font-size:18px;color:var(--gold);">${c.overall}%</span></td>
+      <td>
+        <div class="level-pips">
+          <div class="lp ${c.l1?'done':''}">L1</div>
+          <div class="lp ${c.l2>=70?'done':c.l2>0?'active':''}">L2</div>
+          <div class="lp ${c.l3>=60?'done':c.l3>0?'active':''}">L3</div>
+        </div>
+      </td>
+      <td><span class="status-pip pip-${c.status}">${c.status==='ready'?'● Ready':c.status==='review'?'◎ Review':'○ Dev Track'}</span></td>
+      <td style="font-size:10px;color:var(--dim);">${new Date(c.timestamp).toLocaleDateString()}</td>
+      <td style="font-size:9px;color:var(--dim);">▾</td>
+    </tr>
+    <tr><td colspan="7" style="padding:0;">
+      <div class="expand-row" id="exp-${i}">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:10px;">
+          ${[['Workflow',c.workflow],['Compliance',c.compliance],['Communication',c.comm],['Adaptability',c.adapt]].map(([l,v])=>`
+          <div style="background:var(--bg);border-radius:4px;padding:8px 10px;">
+            <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:5px;">${l}</div>
+            <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:4px;"><div style="width:${v}%;height:100%;background:${v>=80?'var(--green)':v>=65?'var(--amber)':'var(--red)'};border-radius:2px;"></div></div>
+            <div style="font-size:11px;color:${v>=80?'var(--green)':v>=65?'var(--amber)':'var(--red)'};">${v}%</div>
+          </div>`).join('')}
+        </div>
+        <div style="font-size:10px;color:var(--text);line-height:1.6;margin-bottom:8px;">${c.reco}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <div style="font-size:9px;color:var(--dim);">L2 Score: ${c.l2||'—'}% · L3 Score: ${c.l3||'—'}%</div>
+        </div>
+      </div>
+    </td></tr>`).join('');
+}
+
+function toggleExpand(id){
+  const el=document.getElementById(id);
+  if(el) el.classList.toggle('open');
+}
+function clearAllCandidates(){
+  if(confirm('Clear all candidate records? This cannot be undone.')){
+    localStorage.removeItem('tsm_candidates');
+    renderCandidateTable();
+  }
+}
+function exportCSV(){
+  const candidates=JSON.parse(localStorage.getItem('tsm_candidates')||'[]');
+  if(!candidates.length){alert('No candidate records to export.');return;}
+  const headers=['Name','Email','Track','Overall','Workflow','Compliance','Communication','Adaptability','L1','L2 Score','L3 Score','Status','Date'];
+  const rows=candidates.map(c=>[
+    `"${c.fname} ${c.lname}"`,c.email,`"${c.track}"`,
+    c.overall,c.workflow,c.compliance,c.comm,c.adapt,
+    c.l1?'Complete':'—',c.l2||'—',c.l3||'—',c.status,
+    new Date(c.timestamp).toLocaleDateString()
+  ].join(','));
+  const csv=[headers.join(','),...rows].join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`TSM-Candidates-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();URL.revokeObjectURL(url);
+}
+
+/* ══ PDF ══ */
+function downloadCandidatePDF(){
+  const d=window._resultData;
+  if(!d)return;
+  const now=new Date();
+  const css=`body{font-family:'Segoe UI',sans-serif;color:#1a2332;padding:40px;max-width:700px;margin:0 auto;}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #c9a84c;padding-bottom:16px;margin-bottom:24px;}
+.logo{font-size:28px;font-weight:900;letter-spacing:3px;color:#c9a84c;}
+h2{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#6b7280;margin:20px 0 10px;border-bottom:1px solid #e5e7eb;padding-bottom:5px;}
+.bar-row{display:flex;align-items:center;gap:12px;margin:8px 0;}
+.bar-label{width:180px;font-size:12px;color:#374151;}
+.bar{flex:1;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:4px;}
+.levels{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:14px 0;}
+.lvl{background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:12px;text-align:center;}
+.lvl.done{background:#f0fdf4;border-color:#86efac;}
+.lvl-name{font-size:11px;font-weight:700;color:#374151;margin-bottom:4px;}
+.lvl-score{font-size:24px;font-weight:900;color:#10b981;}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:12px 0;}
+.box{background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:12px 14px;}
+.reco{background:#f0fdf4;border-left:4px solid #10b981;padding:12px 16px;border-radius:0 6px 6px 0;margin:12px 0;font-size:13px;color:#065f46;}
+.footer{margin-top:24px;padding-top:12px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;font-size:10px;color:#9ca3af;}`;
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>TSM Readiness Report</title><style>${css}</style></head><body>
+<div class="hdr"><div><div class="logo">TSM</div><div style="font-size:10px;color:#6b7280;letter-spacing:2px;margin-top:2px;">EMPLOYEE READINESS & RETENTION SYSTEM</div></div>
+<div style="text-align:right;font-size:11px;color:#6b7280;"><div style="font-size:20px;font-weight:700;color:#1a2332;margin-bottom:4px;">${d.fname} ${d.lname}</div><div>${d.track}</div><div style="margin-top:6px;">Generated: ${now.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}</div><div>ID: TSM-E-${Math.floor(Math.random()*90000)+10000}</div></div></div>
+<div style="display:flex;justify-content:center;margin-bottom:20px;"><div style="text-align:center;width:100px;height:100px;border-radius:50%;border:4px solid #c9a84c;display:flex;flex-direction:column;align-items:center;justify-content:center;"><div style="font-size:32px;font-weight:900;color:#c9a84c;">${d.overall}%</div><div style="font-size:9px;color:#9ca3af;">READINESS</div></div></div>
+<h2>Certification Levels</h2>
+<div class="levels">
+  <div class="lvl done"><div class="lvl-name">Level 1 — Flash Cards</div><div style="font-size:13px;color:#10b981;">✓ Complete</div></div>
+  <div class="lvl ${d.l2>=70?'done':''}"><div class="lvl-name">Level 2 — Quiz</div><div class="lvl-score" style="color:${d.l2>=70?'#10b981':'#f59e0b'}">${d.l2}%</div></div>
+  <div class="lvl ${d.l3>=60?'done':''}"><div class="lvl-name">Level 3 — Readiness Exam</div><div class="lvl-score" style="color:${d.l3>=60?'#10b981':'#f59e0b'}">${d.l3}%</div></div>
+</div>
+<h2>Readiness Dimensions</h2>
+${[['Workflow Accuracy',d.workflow],['Compliance Understanding',d.compliance],['Communication Skills',d.comm],['Adaptability Index',d.adapt]].map(([l,v])=>`<div class="bar-row"><div class="bar-label">${l}</div><div class="bar"><div class="bar-fill" style="width:${v}%;background:${v>=80?'#10b981':v>=65?'#f59e0b':'#ef4444'};"></div></div><div style="width:40px;text-align:right;font-size:12px;font-weight:700;color:${v>=80?'#10b981':v>=65?'#f59e0b':'#ef4444'};">${v}%</div></div>`).join('')}
+<h2>Placement Recommendation</h2><div class="reco">${d.reco}</div>
+<div class="two">
+<div class="box"><h3 style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin-bottom:8px;">Strengths</h3>${d.strengths.map(s=>`<div style="display:flex;gap:7px;font-size:12px;color:#374151;margin-bottom:5px;"><span style="color:#10b981;font-weight:700;">✓</span>${s}</div>`).join('')}</div>
+<div class="box"><h3 style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin-bottom:8px;">Development Plan</h3>${d.gaps.map((g,i)=>`<div style="margin-bottom:8px;"><div style="font-size:12px;color:#374151;">→ ${g}</div><div style="font-size:10px;color:#9ca3af;">${['1 coaching session','Practice module ×2','Simulation drill'][i]||'Self-study'}</div></div>`).join('')}</div>
+</div>
+<div class="footer"><div>TSM Employee Readiness & Retention System</div><div>CONFIDENTIAL — Candidate copy</div></div>
+</body></html>`;
+  const blob=new Blob([html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;
+  a.download=`TSM-Readiness-${d.fname}${d.lname}-${now.getFullYear()}.html`;
+  a.click();URL.revokeObjectURL(url);
+}
+
+/* ══ INTAKE SCENARIOS (from original) ══ */
+const TRACK_SCENARIOS={
+  healthcare:[{tag:'Prior Authorization',prompt:'A patient\'s prior auth request was denied for a scheduled MRI. The patient calls frustrated, saying their doctor says it\'s medically necessary. What is your first step?',options:[{text:'Immediately tell the patient to find a different insurance plan.',correct:false},{text:'Review the denial reason code, gather clinical documentation, and initiate a peer-to-peer review request.',correct:true},{text:'Approve the MRI anyway and process it as an emergency.',correct:false},{text:'Transfer the call to billing and move on.',correct:false}]},{tag:'Compliance',prompt:'A colleague asks you to share a patient\'s billing record via personal email for a "quick review." What do you do?',options:[{text:'Send it — they\'re a colleague and it\'s just billing data.',correct:false},{text:'Decline. Share only through HIPAA-compliant, encrypted channels per your organization\'s policy.',correct:true},{text:'Send a redacted version.',correct:false},{text:'Ask your manager tomorrow and share in the meantime.',correct:false}]}],
+  insurance:[{tag:'Claims Processing',prompt:'A claim comes in with a date-of-service discrepancy — the provider billed for March 15 but the system shows March 12. How do you handle this?',options:[{text:'Process the claim as submitted and let the audit catch it.',correct:false},{text:'Reject the claim immediately without any documentation.',correct:false},{text:'Flag the discrepancy, contact the provider for a corrected claim, and document the interaction.',correct:true},{text:'Change the date yourself and continue.',correct:false}]},{tag:'CE Compliance',prompt:'Your state license renewal is in 45 days and you need 24 CE credits. You have 18 completed. What is the correct response?',options:[{text:'Wait until the last week and complete all remaining credits at once.',correct:false},{text:'Assess which approved courses cover the remaining 6 credits and schedule them with enough time for processing.',correct:true},{text:'Skip renewal — it auto-renews.',correct:false},{text:'Ask a colleague to share their CE certificate.',correct:false}]}],
+  finops:[{tag:'AR Recovery',prompt:'An invoice 90 days overdue has not responded to two email reminders. What is your escalation path?',options:[{text:'Write off the balance immediately.',correct:false},{text:'Send a third email with identical content.',correct:false},{text:'Escalate to phone contact, document attempts, and flag for collections review per AR policy.',correct:true},{text:'Delete the invoice to keep books clean.',correct:false}]},{tag:'Reconciliation',prompt:'During month-end reconciliation you find a $3,200 variance between the bank statement and the general ledger. What do you do first?',options:[{text:'Adjust the ledger to match the bank statement without investigation.',correct:false},{text:'Identify the date and source of the variance, review transaction entries, and document findings before any adjustment.',correct:true},{text:'Report it as an error and close the books.',correct:false},{text:'Ignore it — variances under $5,000 are normal.',correct:false}]}],
+  legal:[{tag:'Document Review',prompt:'You are reviewing a contract and notice an indemnification clause that appears to be overly broad for your client. What is your action?',options:[{text:'Sign it — the client can sort it out later.',correct:false},{text:'Flag the clause with a specific annotation, note the risk, and escalate to supervising counsel for review.',correct:true},{text:'Delete the clause from the document.',correct:false},{text:'Tell the client verbally and take no written action.',correct:false}]},{tag:'Compliance',prompt:'A client asks you to backdate a signature on a legal document. What do you do?',options:[{text:'Do it — the client is always right.',correct:false},{text:'Do it only if the date is close enough.',correct:false},{text:'Decline clearly, explain the legal and ethical risk, and document the request.',correct:true},{text:'Ask a colleague to handle it.',correct:false}]}],
+  admin:[{tag:'Prioritization',prompt:'You arrive Monday morning with 47 unread emails, a 9am meeting, a document due at 10am, and a ringing phone. What is your first action?',options:[{text:'Answer the phone first, no matter what.',correct:false},{text:'Read all 47 emails before doing anything else.',correct:false},{text:'Quickly triage — silence the phone, check for urgent flags in email, confirm meeting time, and start the document.',correct:true},{text:'Work from home.',correct:false}]},{tag:'Data Accuracy',prompt:'While entering patient/client data you notice the previous entry appears to have a typo in a key field. What do you do?',options:[{text:'Continue — it\'s not your entry.',correct:false},{text:'Flag and correct it with a change note, or escalate if you don\'t have edit access.',correct:true},{text:'Delete the entry.',correct:false},{text:'Overwrite it silently.',correct:false}]}],
+  industrial:[{tag:'Safety Protocol',prompt:'You notice a spill on a warehouse floor near a forklift path. What is your immediate action?',options:[{text:'Keep working and report it at end of shift.',correct:false},{text:'Stop operations in the affected area, place safety markers, and report to your supervisor immediately.',correct:true},{text:'Clean it up yourself without telling anyone.',correct:false},{text:'Walk around it.',correct:false}]},{tag:'Inventory',prompt:'Your pick list shows 20 units of an item but you can only locate 16 in the bin. What do you do?',options:[{text:'Ship 16 and mark the order complete.',correct:false},{text:'Write 20 on the pick sheet anyway.',correct:false},{text:'Document the discrepancy, check adjacent bins and cycle count, then notify your lead before proceeding.',correct:true},{text:'Ask a co-worker to find the missing units while you move on.',correct:false}]}],
+};
+</script>
+</body>
+</html>

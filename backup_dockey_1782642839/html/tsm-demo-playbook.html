@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TSM DEMO PLAYBOOK — Tier 1 + Tier 2</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#06050c;--s2:#0c0a18;--s3:#120f22;--s4:#1a1530;
+  --border:rgba(181,108,255,.13);--border2:rgba(181,108,255,.22);
+  --purple:#b56cff;--purple2:#d4a0ff;--purple3:rgba(181,108,255,.08);
+  --gold:#c9a84c;--green:#00ffc6;--red:#ff4d6d;
+  --amber:#ff9500;--cyan:#00e5ff;--pink:#ff6b9d;
+  --text:#d8cce8;--dim:#4a3a68;--faint:#2a1f48;
+  --mono:'IBM Plex Mono',monospace;--orb:'Orbitron',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--mono);font-size:11px;overflow:hidden}
+
+/* SCANLINE */
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:9999}
+
+/* LAYOUT */
+.shell{display:grid;grid-template-rows:42px 1fr;height:100vh}
+.topbar{background:var(--s2);border-bottom:1px solid var(--border2);display:flex;align-items:center;padding:0 16px;gap:0;position:relative;z-index:100}
+.tb-brand{font-family:var(--orb);font-size:.62rem;color:var(--purple);letter-spacing:.18em;font-weight:700;margin-right:20px;white-space:nowrap}
+.tb-brand span{color:var(--gold)}
+.tb-tabs{display:flex;flex:1;overflow:hidden}
+.tb-tab{border:none;background:none;color:var(--dim);font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;cursor:pointer;padding:0 14px;height:42px;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;text-transform:uppercase}
+.tb-tab:hover{color:var(--text)}
+.tb-tab.active{color:var(--purple);border-bottom-color:var(--purple)}
+.tb-tab.tier2{color:var(--gold)}
+.tb-tab.tier2.active{color:var(--gold);border-bottom-color:var(--gold)}
+.tb-right{display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0}
+.tb-clock{font-family:var(--orb);font-size:.7rem;color:var(--green);letter-spacing:.1em;min-width:48px;text-align:right}
+.tb-timer-btn{border:1px solid rgba(0,255,198,.3);background:rgba(0,255,198,.05);color:var(--green);font-family:var(--mono);font-size:.55rem;letter-spacing:.1em;cursor:pointer;padding:3px 8px;transition:all .2s}
+.tb-timer-btn:hover{background:rgba(0,255,198,.12)}
+.tb-timer-btn.running{border-color:var(--red);color:var(--red);background:rgba(255,77,109,.05)}
+
+.main{display:grid;grid-template-columns:220px 1fr;overflow:hidden}
+
+/* SIDEBAR */
+.sidebar{background:var(--s2);border-right:1px solid var(--border);overflow-y:auto;padding:12px 0}
+.sb-section{padding:0 12px;margin-bottom:16px}
+.sb-label{font-size:.5rem;letter-spacing:.15em;color:var(--dim);text-transform:uppercase;padding:0 12px;margin-bottom:6px;display:block}
+.sb-prospect{border:1px solid var(--border);background:var(--faint);padding:8px 10px;margin:0 8px 4px;cursor:pointer;transition:all .18s;position:relative}
+.sb-prospect:hover{border-color:rgba(181,108,255,.3);background:var(--purple3)}
+.sb-prospect.active{border-color:var(--purple);background:var(--purple3)}
+.sb-prospect.tier2-item.active{border-color:var(--gold);background:rgba(201,164,76,.06)}
+.sb-prospect.tier2-item{border-color:rgba(201,164,76,.15)}
+.sb-prospect-name{font-size:.6rem;color:var(--text);letter-spacing:.06em;font-weight:600;margin-bottom:2px}
+.sb-prospect.active .sb-prospect-name{color:var(--purple)}
+.sb-prospect.tier2-item.active .sb-prospect-name{color:var(--gold)}
+.sb-prospect-sub{font-size:.52rem;color:var(--dim);line-height:1.4}
+.sb-tier-badge{font-size:.45rem;padding:1px 5px;letter-spacing:.08em;border-radius:2px;position:absolute;top:6px;right:6px}
+.badge-t1{background:rgba(0,229,100,.1);color:var(--green);border:1px solid rgba(0,229,100,.2)}
+.badge-t2{background:rgba(201,164,76,.1);color:var(--gold);border:1px solid rgba(201,164,76,.2)}
+
+.sb-divider{border:none;border-top:1px solid var(--border);margin:10px 8px}
+
+/* quick nav */
+.sb-quicknav{padding:0 8px}
+.sb-qnav-btn{width:100%;border:none;background:none;color:var(--dim);font-family:var(--mono);font-size:.55rem;letter-spacing:.08em;cursor:pointer;padding:5px 10px;text-align:left;transition:color .15s;border-left:2px solid transparent;margin-bottom:2px}
+.sb-qnav-btn:hover{color:var(--cyan);border-left-color:rgba(0,229,255,.3)}
+.sb-qnav-btn.active-beat{color:var(--cyan);border-left-color:var(--cyan)}
+
+/* progress ring */
+.sb-progress{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 8px}
+.progress-ring-wrap{position:relative;width:64px;height:64px}
+.progress-ring-wrap svg{transform:rotate(-90deg)}
+.progress-ring-bg{fill:none;stroke:var(--faint);stroke-width:5}
+.progress-ring-fill{fill:none;stroke:var(--green);stroke-width:5;stroke-linecap:round;stroke-dasharray:163;stroke-dashoffset:163;transition:stroke-dashoffset .6s ease}
+.progress-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.progress-pct{font-family:var(--orb);font-size:.75rem;color:var(--green);line-height:1}
+.progress-lbl{font-size:.42rem;color:var(--dim);letter-spacing:.08em;margin-top:1px}
+.sb-beats-done{font-size:.52rem;color:var(--dim);text-align:center}
+
+/* CONTENT */
+.content{overflow-y:auto;padding:20px 24px}
+
+/* OVERVIEW header */
+.prospect-header{margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.prospect-tier{font-size:.52rem;letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px}
+.prospect-tier.t1{color:var(--green)}
+.prospect-tier.t2{color:var(--gold)}
+.prospect-name{font-family:var(--orb);font-size:1.4rem;color:var(--purple2);letter-spacing:.06em;font-weight:700;margin-bottom:4px}
+.prospect-name.t2{color:var(--gold)}
+.prospect-tagline{font-size:.65rem;color:var(--dim);line-height:1.7}
+.prospect-runtime{display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-size:.55rem;color:var(--amber);letter-spacing:.1em;background:rgba(255,149,0,.06);border:1px solid rgba(255,149,0,.2);padding:3px 10px}
+
+/* HOOK CARD */
+.hook-card{background:var(--s3);border:1px solid rgba(0,229,255,.2);padding:14px 16px;margin-bottom:16px;position:relative;overflow:hidden}
+.hook-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cyan),transparent)}
+.hook-label{font-size:.5rem;letter-spacing:.15em;color:var(--cyan);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.hook-label::after{content:'';flex:1;height:1px;background:rgba(0,229,255,.15)}
+.hook-text{font-size:.68rem;color:var(--text);line-height:1.85;font-style:italic;border-left:2px solid rgba(0,229,255,.3);padding-left:12px}
+
+/* BEATS */
+.beats-grid{display:flex;flex-direction:column;gap:10px}
+.beat{border:1px solid var(--border);background:var(--s3);transition:all .2s;cursor:pointer}
+.beat.active{border-color:var(--purple);background:rgba(181,108,255,.04)}
+.beat.done{border-color:rgba(0,255,198,.25);background:rgba(0,255,198,.02)}
+.beat.wow{border-color:rgba(181,108,255,.35);background:rgba(181,108,255,.05)}
+.beat-header{display:flex;align-items:center;gap:10px;padding:10px 12px}
+.beat-num{font-family:var(--orb);font-size:.55rem;color:var(--dim);letter-spacing:.1em;min-width:22px}
+.beat.active .beat-num{color:var(--purple)}
+.beat.done .beat-num{color:var(--green)}
+.beat-title{font-size:.65rem;font-weight:600;letter-spacing:.06em;flex:1}
+.beat.active .beat-title{color:var(--purple2)}
+.beat.done .beat-title{color:var(--green)}
+.beat-time{font-size:.5rem;color:var(--dim);letter-spacing:.08em;background:var(--faint);padding:2px 7px;border-radius:2px;white-space:nowrap}
+.beat.active .beat-time{color:var(--amber);background:rgba(255,149,0,.08);border:1px solid rgba(255,149,0,.2)}
+.beat-check{width:16px;height:16px;border:1px solid var(--dim);border-radius:2px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.beat.done .beat-check{border-color:var(--green);background:rgba(0,255,198,.12)}
+.beat-check-icon{display:none;color:var(--green);font-size:.7rem}
+.beat.done .beat-check-icon{display:block}
+.beat-body{padding:0 12px 12px;display:none}
+.beat.active .beat-body,.beat.open .beat-body{display:block}
+.beat-desc{font-size:.63rem;color:var(--dim);line-height:1.8;margin-bottom:10px}
+
+/* WOW badge */
+.wow-badge{display:inline-flex;align-items:center;gap:5px;font-size:.5rem;letter-spacing:.12em;color:#000;background:var(--purple);padding:2px 8px;margin-bottom:8px;font-weight:700}
+.beat.wow .beat-title::after{content:' ★';color:var(--purple);font-size:.55rem}
+
+/* TALK POINTS */
+.talk-block{background:var(--faint);border-left:2px solid var(--purple);padding:8px 10px;margin-bottom:8px}
+.talk-block.green{border-left-color:var(--green)}
+.talk-block.cyan{border-left-color:var(--cyan)}
+.talk-block.amber{border-left-color:var(--amber)}
+.talk-block.red{border-left-color:var(--red)}
+.talk-block-label{font-size:.48rem;letter-spacing:.12em;color:var(--dim);text-transform:uppercase;margin-bottom:4px}
+.talk-block.green .talk-block-label{color:var(--green)}
+.talk-block.cyan .talk-block-label{color:var(--cyan)}
+.talk-block.amber .talk-block-label{color:var(--amber)}
+.talk-block.red .talk-block-label{color:var(--red)}
+.talk-block-text{font-size:.63rem;color:var(--text);line-height:1.75;font-style:italic}
+
+/* XP BREAKDOWN */
+.xp-breakdown{background:var(--s4);border:1px solid rgba(181,108,255,.2);padding:10px 12px;margin:8px 0}
+.xp-breakdown-title{font-size:.52rem;letter-spacing:.12em;color:var(--purple);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.xp-breakdown-title::after{content:'';flex:1;height:1px;background:rgba(181,108,255,.15)}
+.xp-item{display:flex;align-items:flex-start;gap:8px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:.61rem;line-height:1.6}
+.xp-item:last-child{border-bottom:none}
+.xp-dot{width:5px;height:5px;border-radius:50%;background:var(--purple);flex-shrink:0;margin-top:5px}
+.xp-dot.green{background:var(--green)}
+.xp-dot.amber{background:var(--amber)}
+.xp-dot.cyan{background:var(--cyan)}
+.xp-key{color:var(--purple2);font-weight:600;min-width:110px}
+.xp-val{color:var(--dim)}
+
+/* CLOSE CARD */
+.close-card{background:var(--s3);border:1px solid rgba(0,229,100,.2);padding:12px 14px;margin-top:12px;position:relative;overflow:hidden}
+.close-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--green),transparent)}
+.close-label{font-size:.5rem;letter-spacing:.15em;color:var(--green);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.close-label::after{content:'';flex:1;height:1px;background:rgba(0,229,100,.15)}
+.close-text{font-size:.66rem;color:var(--text);line-height:1.85;font-style:italic;border-left:2px solid rgba(0,229,100,.3);padding-left:12px}
+.close-goal{margin-top:8px;font-size:.56rem;color:var(--green);background:rgba(0,229,100,.05);border:1px solid rgba(0,229,100,.15);padding:4px 10px;display:inline-block}
+
+/* DOC TAGS */
+.doc-tags{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0}
+.doc-tag{font-size:.52rem;padding:2px 8px;letter-spacing:.06em;border:1px solid;border-radius:2px;display:flex;align-items:center;gap:4px}
+.doc-tag.denial{border-color:rgba(255,77,109,.3);color:var(--red);background:rgba(255,77,109,.06)}
+.doc-tag.eob{border-color:rgba(0,229,255,.3);color:var(--cyan);background:rgba(0,229,255,.06)}
+.doc-tag.auth{border-color:rgba(255,149,0,.3);color:var(--amber);background:rgba(255,149,0,.06)}
+.doc-tag.finops{border-color:rgba(201,164,76,.3);color:var(--gold);background:rgba(201,164,76,.06)}
+
+/* CHECKLIST */
+.checklist{display:flex;flex-direction:column;gap:4px;margin:8px 0}
+.check-item{display:flex;align-items:center;gap:8px;cursor:pointer;padding:3px 0}
+.check-box{width:13px;height:13px;border:1px solid var(--dim);border-radius:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.check-item.checked .check-box{border-color:var(--green);background:rgba(0,255,198,.1)}
+.check-icon{color:var(--green);font-size:.6rem;display:none}
+.check-item.checked .check-icon{display:block}
+.check-item.checked .check-label{color:var(--dim);text-decoration:line-through}
+.check-label{font-size:.6rem;color:var(--text);line-height:1.5}
+
+/* COPPER STAR MULTI-PASS */
+.pass-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.pass-card{border:1px solid var(--border);background:var(--faint);padding:10px;transition:border-color .2s}
+.pass-card:hover{border-color:rgba(181,108,255,.3)}
+.pass-num{font-family:var(--orb);font-size:.52rem;color:var(--dim);margin-bottom:4px}
+.pass-title{font-size:.6rem;color:var(--text);font-weight:600;margin-bottom:4px}
+.pass-route{font-size:.52rem;color:var(--amber);letter-spacing:.06em}
+.pass-route.hc{color:var(--green)}
+.pass-route.finops{color:var(--gold)}
+
+/* STAKEHOLDER ROW */
+.stakeholder-row{display:flex;gap:8px;margin:8px 0}
+.stakeholder{flex:1;background:var(--faint);border:1px solid var(--border);padding:8px;text-align:center}
+.sh-role{font-size:.5rem;color:var(--dim);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+.sh-name{font-size:.6rem;color:var(--text);font-weight:600;margin-bottom:4px}
+.sh-cares{font-size:.52rem;color:var(--purple);line-height:1.5}
+
+/* TECH CHECKLIST CARD */
+.tech-card{background:var(--s3);border:1px solid rgba(0,229,255,.15);padding:12px 14px;margin-top:14px}
+.tech-label{font-size:.5rem;letter-spacing:.15em;color:var(--cyan);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.tech-label::after{content:'';flex:1;height:1px;background:rgba(0,229,255,.12)}
+
+/* CORE ENGINE section */
+.engine-section{background:var(--s2);border:1px solid var(--border2);padding:16px;margin-bottom:20px}
+.engine-title{font-family:var(--orb);font-size:.65rem;color:var(--purple);letter-spacing:.15em;margin-bottom:12px;text-transform:uppercase}
+.engine-beats{display:flex;flex-direction:column;gap:0}
+.engine-beat{display:flex;align-items:flex-start;gap:12px;padding:9px 0;border-bottom:1px solid var(--faint)}
+.engine-beat:last-child{border-bottom:none}
+.eb-num{font-family:var(--orb);font-size:.6rem;color:var(--purple);min-width:28px;padding-top:1px}
+.eb-content{flex:1}
+.eb-title{font-size:.63rem;color:var(--text);font-weight:600;margin-bottom:3px}
+.eb-desc{font-size:.59rem;color:var(--dim);line-height:1.7}
+.eb-time{font-size:.5rem;color:var(--amber);background:rgba(255,149,0,.06);border:1px solid rgba(255,149,0,.15);padding:1px 6px;display:inline-block;margin-bottom:4px}
+
+/* FALLBACK PROTOCOL */
+.fallback-banner{background:rgba(255,77,109,.04);border:1px solid rgba(255,77,109,.2);padding:10px 12px;margin:10px 0;display:flex;gap:10px;align-items:flex-start}
+.fallback-icon{color:var(--red);font-size:.8rem;flex-shrink:0;margin-top:2px}
+.fallback-text{font-size:.6rem;color:var(--text);line-height:1.7}
+.fallback-text strong{color:var(--red)}
+
+/* STATUS BAR */
+.statusbar{position:fixed;bottom:0;left:0;right:0;background:var(--s2);border-top:1px solid var(--border);padding:3px 16px;display:flex;align-items:center;gap:14px;font-size:.52rem;color:var(--dim);z-index:50}
+.sb-dot{width:4px;height:4px;border-radius:50%;background:var(--purple);box-shadow:0 0 4px var(--purple)}
+.sb-dot.green{background:var(--green);box-shadow:0 0 4px var(--green)}
+.status-r{margin-left:auto}
+
+/* ANIMATIONS */
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.pulse{animation:pulse 2s infinite}
+@keyframes slide-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.slide-in{animation:slide-in .3s ease both}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--faint);border-radius:2px}
+
+/* overview screen */
+.overview-screen{display:none}
+.overview-screen.active{display:block}
+.prospect-screen{display:none}
+.prospect-screen.active{display:block;animation:slide-in .25s ease both}
+
+/* remx flag */
+.remx-card{background:var(--s3);border:1px solid rgba(255,149,0,.2);padding:12px 14px;margin-top:16px}
+.remx-label{font-size:.5rem;letter-spacing:.15em;color:var(--amber);text-transform:uppercase;margin-bottom:8px}
+.remx-text{font-size:.62rem;color:var(--dim);line-height:1.7}
+
+/* responsive */
+@media(max-width:700px){.main{grid-template-columns:1fr}.sidebar{display:none}.pass-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="tb-brand">◈ TSM <span>DEMO</span> PLAYBOOK</div>
+  <div class="tb-tabs">
+    <button class="tb-tab active" onclick="showOverview()">OVERVIEW</button>
+    <button class="tb-tab" onclick="showProspect('regina')">MY BILLING SOL.</button>
+    <button class="tb-tab" onclick="showProspect('sunrise')">SUNRISE DME</button>
+    <button class="tb-tab" onclick="showProspect('ultimate')">ULTIMATE MED.</button>
+    <button class="tb-tab tier2" onclick="showProspect('copper')">COPPER STAR ★</button>
+  </div>
+  <div class="tb-right">
+    <div class="tb-clock" id="timerDisplay">0:00</div>
+    <button class="tb-timer-btn" id="timerBtn" onclick="toggleTimer()">▶ START</button>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <span class="sb-label">TIER 1 — FAST CLOSE</span>
+  <div class="sb-prospect active" id="sb-overview" onclick="showOverview()">
+    <div class="sb-prospect-name">CORE ENGINE</div>
+    <div class="sb-prospect-sub">5-beat framework · all 4 demos</div>
+  </div>
+  <div class="sb-prospect" id="sb-regina" onclick="showProspect('regina')">
+    <span class="sb-tier-badge badge-t1">T1</span>
+    <div class="sb-prospect-name">MY BILLING SOLUTION</div>
+    <div class="sb-prospect-sub">Regina · sells billing outcomes<br>fastest close path</div>
+  </div>
+  <div class="sb-prospect" id="sb-sunrise" onclick="showProspect('sunrise')">
+    <span class="sb-tier-badge badge-t1">T1</span>
+    <div class="sb-prospect-name">SUNRISE DME</div>
+    <div class="sb-prospect-sub">Small op · prior auth / CMN<br>denial pain</div>
+  </div>
+  <div class="sb-prospect" id="sb-ultimate" onclick="showProspect('ultimate')">
+    <span class="sb-tier-badge badge-t1">T1</span>
+    <div class="sb-prospect-name">ULTIMATE MEDICAL</div>
+    <div class="sb-prospect-sub">Family-operated · proactive<br>objection: "we already appeal"</div>
+  </div>
+
+  <hr class="sb-divider">
+
+  <span class="sb-label">TIER 2 — LONGER CYCLE</span>
+  <div class="sb-prospect tier2-item" id="sb-copper" onclick="showProspect('copper')">
+    <span class="sb-tier-badge badge-t2">T2</span>
+    <div class="sb-prospect-name">COPPER STAR HOME MED.</div>
+    <div class="sb-prospect-sub">Multi-stakeholder · 4 passes<br>15 min structured</div>
+  </div>
+
+  <hr class="sb-divider">
+
+  <div class="sb-progress">
+    <div class="progress-ring-wrap">
+      <svg width="64" height="64" viewBox="0 0 64 64">
+        <circle class="progress-ring-bg" cx="32" cy="32" r="26"/>
+        <circle class="progress-ring-fill" id="progressRing" cx="32" cy="32" r="26"/>
+      </svg>
+      <div class="progress-center">
+        <div class="progress-pct" id="progressPct">0%</div>
+        <div class="progress-lbl">BEATS</div>
+      </div>
+    </div>
+    <div class="sb-beats-done" id="beatsDoneLabel">0 / 5 complete</div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content" id="contentArea">
+
+  <!-- ═══════════════════════════════════════════════════ OVERVIEW -->
+  <div class="overview-screen active" id="screen-overview">
+    <div class="prospect-header">
+      <div class="prospect-tier t1">DEMO INTELLIGENCE — ALL PROSPECTS</div>
+      <div class="prospect-name" style="font-size:1.1rem">THE CORE ENGINE</div>
+      <div class="prospect-tagline">Same 5-beat sequence runs all 4 demos. What changes per prospect: the hook, the document, and the close. Lead every demo with HC Denial War Room — not Insurance — these are medical billing / DME companies fighting CO-4/CO-5/prior-auth denials.</div>
+      <div class="prospect-runtime pulse">⏱ TARGET RUNTIME: 6–8 MIN TIER 1 · 15 MIN TIER 2</div>
+    </div>
+
+    <div class="engine-section">
+      <div class="engine-title">◈ THE 5-BEAT SEQUENCE</div>
+      <div class="engine-beats">
+        <div class="engine-beat">
+          <div class="eb-num">B1</div>
+          <div class="eb-content">
+            <div class="eb-time">30 SEC</div>
+            <div class="eb-title">HOOK — Name their denial pain before touching the keyboard</div>
+            <div class="eb-desc">Prospect-specific. See each prospect tab for exact script. Never open with a slide.</div>
+          </div>
+        </div>
+        <div class="engine-beat">
+          <div class="eb-num">B2</div>
+          <div class="eb-content">
+            <div class="eb-time">90 SEC</div>
+            <div class="eb-title">LIVE UPLOAD — The differentiator moment</div>
+            <div class="eb-desc">Open tsm-doc-search-multi.html. Drag a real denial/EOB if they send one. Otherwise: Denial_CLM-HC-7731 (Aetna CO-50 · $8,200 · #4471) or EOB_BCBS_July. Watch classification — say nothing for 3 seconds, then point at the ⚡ HC Denial War Room badge.</div>
+          </div>
+        </div>
+        <div class="engine-beat">
+          <div class="eb-num">B3</div>
+          <div class="eb-content">
+            <div class="eb-time">60–90 SEC</div>
+            <div class="eb-title">WAR ROOM — Content already loaded, no re-upload</div>
+            <div class="eb-desc">Click the badge. Walk: denial reason → financial exposure → recovery path. No retyping needed — this is the handoff.</div>
+          </div>
+        </div>
+        <div class="engine-beat">
+          <div class="eb-num">B4</div>
+          <div class="eb-content">
+            <div class="eb-time">90–120 SEC</div>
+            <div class="eb-title">STRATEGIST + EXPLAINABILITY PANEL ★ THE WOW MOMENT</div>
+            <div class="eb-desc">Run HC Strategist Analysis. While streaming: <em>"Most denial software tells you what happened. Watch what this tells you about why it believes what it's telling you."</em> Panel renders: confidence score animates · data sources weighted HIGH/MED/LOW · reasoning chain line-by-line · named action owners · Business Impact Delta (No Action -$X vs With Action +$Y). The closer for billing companies: <em>"When your team tells an auditor 'the AI says appeal this,' you now have receipts — not a black box."</em></div>
+          </div>
+        </div>
+        <div class="engine-beat">
+          <div class="eb-num">B5</div>
+          <div class="eb-content">
+            <div class="eb-time">30–60 SEC</div>
+            <div class="eb-title">EXECUTIVE PORTAL + CLOSE</div>
+            <div class="eb-desc">Relay pushes to Executive Portal. Frame as: what an owner/ops manager sees every morning without lifting a finger. Then prospect-specific ask — see each tab.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fallback-banner">
+      <div class="fallback-icon">⚠</div>
+      <div class="fallback-text"><strong>IF LIVE AI LAGS MID-DEMO:</strong> Don't panic-narrate. Say <em>"Let me pull up the one I ran this morning"</em> and tab to a second browser with the flow already completed. Run the full flow once, solo, in the hour before each call — keep that tab open as backup and you'll always know the real runtime.</div>
+    </div>
+
+    <div class="tech-card">
+      <div class="tech-label">⚡ TOMORROW'S TECH CHECKLIST — PRE-CALL</div>
+      <div class="checklist" id="tech-checklist">
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"><span class="check-icon">✓</span></div><div class="check-label">Run full 5-beat flow solo — keep completed run open in background tab as fallback</div></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"><span class="check-icon">✓</span></div><div class="check-label">Confirm live HC Strategist call completes in reasonable time before call connects</div></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"><span class="check-icon">✓</span></div><div class="check-label">tsm-doc-search-multi.html and HC Denial War Room open in adjacent tabs — don't navigate live</div></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"><span class="check-icon">✓</span></div><div class="check-label">One denial doc per prospect ready to drop even if they don't send their own</div></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"><span class="check-icon">✓</span></div><div class="check-label">Copper Star: all 4 docs (CO-5 denial, prior auth, W-9, exec feed doc) pre-staged in folder</div></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"><span class="check-icon">✓</span></div><div class="check-label">FinOps War Room also warmed up — Copper Star W-9 needs to route there live</div></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"><span class="check-icon">✓</span></div><div class="check-label">Afternoon demos: solo dry-run within hour before each call</div></div>
+      </div>
+    </div>
+
+    <div class="remx-card">
+      <div class="remx-label">◈ REMX / REZEO — FLAGGED, NOT BUILT YET</div>
+      <div class="remx-text">These are workforce/BPO plays, not denial-recovery plays. Don't lead with AI — lead with workforce productivity. Different demo engine: BPO Daily Workflow, Executive Portal, SLA monitoring, team productivity tracking. No explainability panel, no doc-upload moment as centerpiece. Worth its own playbook once you have LinkedIn stakeholder names for RemX.</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ REGINA -->
+  <div class="prospect-screen" id="screen-regina">
+    <div class="prospect-header">
+      <div class="prospect-tier t1">TIER 1 · FASTEST CLOSE PATH</div>
+      <div class="prospect-name">MY BILLING SOLUTION</div>
+      <div class="prospect-tagline">Contact: <strong style="color:var(--text)">Regina</strong> · She already sells billing-recovery outcomes to her own clients. You're not pitching a tool for her business — you're pitching the engine she could put <em>behind</em> her own service. Recovers more per client without growing headcount.</div>
+      <div class="prospect-runtime">⏱ 6–8 MIN · HC DENIAL WAR ROOM ENGINE</div>
+    </div>
+
+    <div class="hook-card">
+      <div class="hook-label">◈ OPENING HOOK — BEAT 1</div>
+      <div class="hook-text">"Regina, I built an AI platform that finds reimbursement leakage and tells you exactly why it believes a claim is recoverable — confidence score, reasoning, dollar impact, named owner. Given what you already do for your clients, I think this could either replace part of your current stack or let you take on more clients without adding staff. Got 10 minutes for me to run a real denial through it live?"</div>
+    </div>
+
+    <div class="beats-grid" id="beats-regina">
+      <div class="beat done" onclick="toggleBeat(this,'regina',0)">
+        <div class="beat-header">
+          <div class="beat-num">B1</div>
+          <div class="beat-title">Hook</div>
+          <div class="beat-time">30 SEC</div>
+          <div class="beat-check"><span class="beat-check-icon">✓</span></div>
+        </div>
+        <div class="beat-body">
+          <div class="beat-desc">Use the opening hook above verbatim. Regina knows billing — match her energy, don't over-explain. Get to the keyboard fast.</div>
+        </div>
+      </div>
+
+      <div class="beat" onclick="toggleBeat(this,'regina',1)">
+        <div class="beat-header">
+          <div class="beat-num">B2</div>
+          <div class="beat-title">Live Upload</div>
+          <div class="beat-time">90 SEC</div>
+          <div class="beat-check"><span class="beat-check-icon">✓</span></div>
+        </div>
+        <div class="beat-body">
+          <div class="beat-desc">Open tsm-doc-search-multi.html. Drop the denial doc. Let classification land silently for 3 sec, then point at the badge.</div>
+          <div class="doc-tags">
+            <span class="doc-tag denial">⚡ Denial_CLM-HC-7731</span>
+            <span class="doc-tag eob">EOB_BCBS_July</span>
+            <span class="doc-tag denial">Aetna CO-50 · $8,200</span>
+          </div>
+          <div class="talk-block cyan">
+            <div class="talk-block-label">SAY NOTHING — let the 3-second classification land</div>
+            <div class="talk-block-text">Then point: "It just classified the document type, identified the payer, pulled the dollar amount, found the denial code, and auto-routed it — without us touching anything."</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="beat" onclick="toggleBeat(this,'regina',2)">
+        <div class="beat-header">
+          <div class="beat-num">B3</div>
+          <div class="beat-title">War Room</div>
+          <div class="beat-time">60–90 SEC</div>
+          <div class="beat-check"><span class="beat-check-icon">✓</span></div>
+        </div>
+        <div class="beat-body">
+          <div class="beat-desc">Click the ⚡ HC Denial War Room badge. Walk her through denial reason → financial exposure → recovery path. Nothing to retype — this is the handoff moment.</div>
+          <div class="talk-block">
+            <div class="talk-block-label">NARRATE</div>
+            <div class="talk-block-text">"This is what your clients' denial teams are doing manually right now — hunting for the reason code, calculating exposure, figuring out the appeal path. The engine does it in the time it takes to click."</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="beat wow" onclick="toggleBeat(this,'regina',3)">
+        <div class="beat-header">
+          <div class="beat-num">B4</div>
+          <div class="beat-title">Strategist + Explainability Panel</div>
+          <div class="beat-time">90–120 SEC</div>
+          <div class="beat-check"><span class="beat-check-icon">✓</span></div>
+        </div>
+        <div class="beat-body">
+          <div class="wow-badge">★ WOW MOMENT — SPEND EXTRA 20 SEC HERE FOR REGINA</div>
+          <div class="beat-desc">Click ◈ RUN HC STRATEGIST ANALYSIS. While it streams, say the setup line. When the panel renders, walk each element deliberately.</div>
+          <div class="talk-block">
+            <div class="talk-block-label">SETUP LINE — say while streaming</div>
+            <div class="talk-block-text">"Most denial software tells you what happened. Watch what this tells you about why it believes what it's telling you."</div>
+          </div>
+          <div class="xp-breakdown">
+            <div class="xp-breakdown-title">WALK THE PANEL IN THIS ORDER</div>
+            <div class="xp-item"><div class="xp-dot green"></div><div><span class="xp-key">Confidence score</span><span class="xp-val"> animates to e.g. 87% — "not a guess, a probability"</span></div></div>
+            <div class="xp-item"><div class="xp-dot cyan"></div><div><span class="xp-key">Data sources</span><span class="xp-val"> weighted HIGH/MED/LOW — exactly what it used</span></div></div>
+            <div class="xp-item"><div class="xp-dot"></div><div><span class="xp-key">Reasoning chain</span><span class="xp-val"> the AI's literal logic, line by line — "this is the audit trail"</span></div></div>
+            <div class="xp-item"><div class="xp-dot amber"></div><div><span class="xp-key">Named action owners</span><span class="xp-val"> not "billing team" — specific person + deadline</span></div></div>
+            <div class="xp-item"><div class="xp-dot green"></div><div><span class="xp-key">Business Impact Delta</span><span class="xp-val"> No Action -$X · With Action +$Y · recovery timeline</span></div></div>
+          </div>
+          <div class="talk-block green">
+            <div class="talk-block-label">CLOSER — REGINA-SPECIFIC</div>
+            <div class="talk-block-text">"This panel is the part your clients never had to ask 'why should I trust this' about — it's already answered. When your team tells a client or an auditor 'the AI says appeal this,' you now have receipts — not a black box."</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="beat" onclick="toggleBeat(this,'regina',4)">
+        <div class="beat-header">
+          <div class="beat-num">B5</div>
+          <div class="beat-title">Executive Portal + Close</div>
+          <div class="beat-time">30–60 SEC</div>
+          <div class="beat-check"><span class="beat-check-icon">✓</span></div>
+        </div>
+        <div class="beat-body">
+          <div class="beat-desc">Push to Executive Portal. Frame as the owner/ops manager morning view — aggregate recovery, actions, confidence — without lifting a finger.</div>
+          <div class="close-card">
+            <div class="close-label">◈ THE ASK</div>
+            <div class="close-text">"What would it take to run this against three of your live client accounts this week and compare the recovery rate to what you got without it?"</div>
+            <div class="close-goal">GOAL: live demo → push for working pilot if it lands. She's the shortest path to revenue.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ SUNRISE -->
+  <div class="prospect-screen" id="screen-sunrise">
+    <div class="prospect-header">
+      <div class="prospect-tier t1">TIER 1 · SMALL OP</div>
+      <div class="prospect-name">SUNRISE DME</div>
+      <div class="prospect-tagline">Small operation, named contact. DME denial pain is universal — prior auth denials, CMN issues, eligibility failures, missing documentation. Lead with their vocabulary throughout.</div>
+      <div class="prospect-runtime">⏱ 6–8 MIN · HC DENIAL WAR ROOM ENGINE</div>
+    </div>
+
+    <div class="hook-card">
+      <div class="hook-label">◈ OPENING HOOK — BEAT 1</div>
+      <div class="hook-text">"I want to show you something with yesterday's actual denied claims, not a canned demo — do you have one handy, or should I pull a sample DME denial?"</div>
+    </div>
+
+    <div class="beats-grid" id="beats-sunrise">
+      <div class="beat done" onclick="toggleBeat(this,'sunrise',0)">
+        <div class="beat-header"><div class="beat-num">B1</div><div class="beat-title">Hook</div><div class="beat-time">30 SEC</div><div class="beat-check"><span class="beat-check-icon">✓</span></div></div>
+        <div class="beat-body"><div class="beat-desc">Use hook above. If they have a live denial — great, drop it. If not, go straight to the demo doc. Don't over-explain, get to the upload moment fast.</div></div>
+      </div>
+
+      <div class="beat" onclick="toggleBeat(this,'sunrise',1)">
+        <div class="beat-header"><div class="beat-num">B2</div><div class="beat-title">Live Upload</div><div class="beat-time">90 SEC</div><div class="beat-check"><span class="beat-check-icon">✓</span></div></div>
+        <div class="beat-body">
+          <div class="beat-desc">DME denial codes overlap heavily with the Aetna CO-50/prior-auth combo. Use it if they can't produce live.</div>
+          <div class="doc-tags">
+            <span class="doc-tag denial">Their live denial (if sent)</span>
+            <span class="doc-tag auth">Prior-auth combo</span>
+            <span class="doc-tag denial">Aetna CO-50 fallback</span>
+          </div>
+          <div class="talk-block cyan"><div class="talk-block-label">3-SECOND RULE</div><div class="talk-block-text">Say nothing while it classifies. Let the visual do the work. Then: "It just found your denial code, payer, dollar amount — and told you which recovery path to take."</div></div>
+        </div>
+      </div>
+
+      <div class="beat" onclick="toggleBeat(this,'sunrise',2)">
+        <div class="beat-header"><div class="beat-num">B3</div><div class="beat-title">War Room</div><div class="beat-time">60–90 SEC</div><div class="beat-check"><span class="beat-check-icon">✓</span></div></div>
+        <div class="beat-body">
+          <div class="beat-desc">Translate the screen into DME vocabulary as you go — even if the demo doc says something slightly different, narrate it as CMN/prior-auth/eligibility.</div>
+          <div class="talk-block amber"><div class="talk-block-label">LANGUAGE TO USE</div><div class="talk-block-text">"What you're seeing here — this is your CMN documentation gap, this is your prior auth failure path, this is your eligibility check result. Same logic your billers use, running in seconds."</div></div>
+        </div>
+      </div>
+
+      <div class="beat wow" onclick="toggleBeat(this,'sunrise',3)">
+        <div class="beat-header"><div class="beat-num">B4</div><div class="beat-title">Strategist + Explainability Panel</div><div class="beat-time">90–120 SEC</div><div class="beat-check"><span class="beat-check-icon">✓</span></div></div>
+        <div class="beat-body">
+          <div class="wow-badge">★ WOW MOMENT</div>
+          <div class="talk-block"><div class="talk-block-label">SETUP LINE</div><div class="talk-block-text">"Most denial software tells you what happened. Watch what this tells you about why it believes what it's telling you."</div></div>
+          <div class="xp-breakdown">
+            <div class="xp-breakdown-title">WALK THE PANEL</div>
+            <div class="xp-item"><div class="xp-dot green"></div><div><span class="xp-key">Confidence score</span><span class="xp-val"> animates in</span></div></div>
+            <div class="xp-item"><div class="xp-dot cyan"></div><div><span class="xp-key">Data sources</span><span class="xp-val"> HIGH/MED/LOW weights</span></div></div>
+            <div class="xp-item"><div class="xp-dot"></div><div><span class="xp-key">Reasoning chain</span><span class="xp-val"> literal AI logic</span></div></div>
+            <div class="xp-item"><div class="xp-dot amber"></div><div><span class="xp-key">Named owners</span><span class="xp-val"> specific people + deadlines</span></div></div>
+            <div class="xp-item"><div class="xp-dot green"></div><div><span class="xp-key">Impact Delta</span><span class="xp-val"> No Action -$X · With Action +$Y</span></div></div>
+          </div>
+          <div class="talk-block green"><div class="talk-block-label">CLOSER</div><div class="talk-block-text">"When your team tells a client or an auditor 'the AI says appeal this,' you now have receipts — not a black box."</div></div>
+        </div>
+      </div>
+
+      <div class="beat" onclick="toggleBeat(this,'sunrise',4)">
+        <div class="beat-header"><div class="beat-num">B5</div><div class="beat-title">Executive Portal + Close</div><div class="beat-time">30–60 SEC</div><div class="beat-check"><span class="beat-check-icon">✓</span></div></div>
+        <div class="beat-body">
+          <div class="beat-desc">Push to Executive Portal. Frame it as: what ops management sees every morning before anyone opens a claim.</div>
+          <div class="close-card">
+            <div class="close-label">◈ THE ASK</div>
+            <div class="close-text">"This is built to run against your denial queue every morning before anyone touches it by hand. Want me to run it against your actual queue for a week, no cost, and we compare what it catches against what you caught manually?"</div>
+            <div class="close-goal">GOAL: one-week free pilot on their live denial queue.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ ULTIMATE -->
+  <div class="prospect-screen" id="screen-ultimate">
+    <div class="prospect-header">
+      <div class="prospect-tier t1">TIER 1 · PROACTIVE PITCH</div>
+      <div class="prospect-name">ULTIMATE MEDICAL SUPPLY</div>
+      <div class="prospect-tagline">Family-operated, fewer approval layers. Likely objection: <em>"we already appeal denials, what's new here?"</em> Address it inside the demo — don't wait for it. Reframe the engine as pre-submission intelligence, not just post-bounce recovery.</div>
+      <div class="prospect-runtime">⏱ 6–8 MIN · HC DENIAL WAR ROOM ENGINE</div>
+    </div>
+
+    <div class="hook-card">
+      <div class="hook-label">◈ OPENING HOOK — BEAT 1</div>
+      <div class="hook-text">"What if your billing team could catch the patterns that cause denials before you resubmit, not after?"</div>
+    </div>
+
+    <div class="beats-grid" id="beats-ultimate">
+      <div class="beat done" onclick="toggleBeat(this,'ultimate',0)">
+        <div class="beat-header"><div class="beat-num">B1</div><div class="beat-title">Hook</div><div class="beat-time">30 SEC</div><div class="beat-check"><span class="beat-check-icon">✓</span></div></div>
+        <div class="beat-body"><div class="beat-desc">Lead with the proactive angle. They appeal already — your edge is catching things upstream before they bounce. Set that frame in the first sentence.</div></div>
+      </div>
+
+      <div class="beat" onclick="toggleBeat(this,'ultimate',1)">
+        <div class="beat-header"><div class="beat-num">B2</div><div class="beat-title">Live Upload</div><div class="beat-time">90 SEC</div><div class="beat-check"><span class="beat-check-icon">✓</span></div></div>
+        <div class="beat-body">
+          <div class="beat-desc">Standard upload flow. Drop the demo doc if they don't send their own.</div>
+          <div class="doc-tags"><span class="doc-tag denial">Denial_CLM-HC-7731</span><span class="doc-tag eob">EOB_BCBS_July</span></div>
+          <div class="talk-block cyan"><div class="talk-block-label">3-SECOND RULE</div><div class="talk-block-text">Let classification land silently. Then point at the badge. Don't over-narrate.</div></div>
+        </div>
+      </div>
+
+      <div class="beat" onclick="toggleBeat(this,'ultimate',2)">
+        <div class="beat-header"><div class="beat-num">B3</div><div class="beat-title">War Room</div><div class="beat-time">60–90 SEC</div><div class="beat-check"><span class="beat-check-icon">✓</span></div></div>
+        <div class="beat-body">
+          <div class="beat-desc">Standard war room walk. Don't pre-address the objection here — save the reframe for after Beat 4.</div>
+        </div>
+      </div>
+
+      <div class="beat wow" onclick="toggleBeat(this,'ultimate',3)">
+        <div class="beat-header"><div class="beat-num">B4</div><div class="beat-title">Strategist + Explainability Panel + REFRAME</div><div class="beat-time">90–120 SEC</div><div class="beat-check"><span class="beat-check-icon">✓</span></div></div>
+        <div class="beat-body">
+          <div class="wow-badge">★ WOW MOMENT + OBJECTION KILL</div>
+          <div class="talk-block"><div class="talk-block-label">SETUP LINE</div><div class="talk-block-text">"Most denial software tells you what happened. Watch what this tells you about why it believes what it's telling you."</div></div>
+          <div class="xp-breakdown">
+            <div class="xp-breakdown-title">WALK THE PANEL — THEN PAUSE AND REFRAME</div>
+            <div class="xp-item"><div class="xp-dot green"></div><div><span class="xp-key">Confidence + sources</span><span class="xp-val"> walk normally</span></div></div>
+            <div class="xp-item"><div class="xp-dot"></div><div><span class="xp-key">Reasoning chain</span><span class="xp-val"> THIS is the key element for Ultimate — it's the QA logic</span></div></div>
+            <div class="xp-item"><div class="xp-dot amber"></div><div><span class="xp-key">Named owners + delta</span><span class="xp-val"> walk normally</span></div></div>
+          </div>
+          <div class="talk-block green">
+            <div class="talk-block-label">REFRAME — ADDRESS OBJECTION BEFORE THEY SAY IT</div>
+            <div class="talk-block-text">"Everything you just saw runs the same way before a claim goes out the door, not just after it bounces. The reasoning chain is the same logic you'd use to QA a claim manually — it just runs in two seconds instead of twenty minutes."</div>
+          </div>
+          <div class="talk-block green"><div class="talk-block-label">CLOSER</div><div class="talk-block-text">"When your team tells an auditor 'the AI says appeal this,' you now have receipts — not a black box."</div></div>
+        </div>
+      </div>
+
+      <div class="beat" onclick="toggleBeat(this,'ultimate',4)">
+        <div class="beat-header"><div class="beat-num">B5</div><div class="beat-title">Executive Portal + Close</div><div class="beat-time">30–60 SEC</div><div class="beat-check"><span class="beat-check-icon">✓</span></div></div>
+        <div class="beat-body">
+          <div class="beat-desc">Executive Portal — aggregate view for the family ownership group.</div>
+          <div class="close-card">
+            <div class="close-label">◈ THE ASK</div>
+            <div class="close-text">"Let's pick your worst recurring denial reason from the last 90 days and I'll show you next week how many of those this would have caught before submission."</div>
+            <div class="close-goal">GOAL: specific second meeting anchored to their real denial data.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ COPPER STAR -->
+  <div class="prospect-screen" id="screen-copper">
+    <div class="prospect-header">
+      <div class="prospect-tier t2">TIER 2 · MULTI-STAKEHOLDER · IN-PERSON</div>
+      <div class="prospect-name t2">COPPER STAR HOME MEDICAL</div>
+      <div class="prospect-tagline">More bureaucracy, more stakeholders. A single denial isn't enough — show breadth across the whole revenue cycle in one sitting. Four mini-passes through the same engine, not one pass.</div>
+      <div class="prospect-runtime" style="color:var(--gold);border-color:rgba(201,164,76,.3);background:rgba(201,164,76,.05)">⏱ 15 MIN STRUCTURED · 4-PASS SEQUENCE</div>
+    </div>
+
+    <div class="stakeholder-row">
+      <div class="stakeholder">
+        <div class="sh-role">BILLING MANAGER</div>
+        <div class="sh-name">Claim-by-claim view</div>
+        <div class="sh-cares">Denial resolution speed · appeal accuracy</div>
+      </div>
+      <div class="stakeholder">
+        <div class="sh-role">REVENUE CYCLE DIRECTOR</div>
+        <div class="sh-name">Weekly trend view</div>
+        <div class="sh-cares">Pattern analysis · recovery rate trends</div>
+      </div>
+      <div class="stakeholder">
+        <div class="sh-role">OPERATIONS MANAGER</div>
+        <div class="sh-name">Who owns each action</div>
+        <div class="sh-cares">Named owners · SLA · no ambiguity</div>
+      </div>
+    </div>
+
+    <div class="talk-block amber" style="margin-bottom:14px">
+      <div class="talk-block-label">TALKING POINT — ADDRESS THE ROOM</div>
+      <div class="talk-block-text">"What you're seeing is one engine that the billing manager uses claim-by-claim, the revenue cycle director uses for the weekly trend view, and the ops manager uses to know who owns each action — same data, three views."</div>
+    </div>
+
+    <div class="engine-section" style="margin-bottom:14px">
+      <div class="engine-title" style="color:var(--gold)">◈ THE 4-PASS SEQUENCE</div>
+      <div class="pass-grid">
+        <div class="pass-card">
+          <div class="pass-num">PASS 01</div>
+          <div class="pass-title">CO-5 DME Denial</div>
+          <div class="pass-route hc">→ HC DENIAL WAR ROOM</div>
+          <div style="font-size:.56rem;color:var(--dim);margin-top:6px;line-height:1.6">Full Beat 2–4 flow — anchor pass. Run it exactly like the Tier 1 demos. This establishes the engine.</div>
+        </div>
+        <div class="pass-card">
+          <div class="pass-num">PASS 02</div>
+          <div class="pass-title">Prior Auth Failure</div>
+          <div class="pass-route hc">→ HC DENIAL WAR ROOM</div>
+          <div style="font-size:.56rem;color:var(--dim);margin-top:6px;line-height:1.6">Drop a second doc, same flow but faster — you're showing this isn't a one-trick scenario.</div>
+        </div>
+        <div class="pass-card">
+          <div class="pass-num">PASS 03</div>
+          <div class="pass-title">Missing W-9</div>
+          <div class="pass-route finops">→ FINOPS WAR ROOM ★</div>
+          <div style="font-size:.56rem;color:var(--dim);margin-top:6px;line-height:1.6">Drop it and show the AI correctly routes to <em>FinOps</em> — not HC. Proves classification isn't hardcoded to one doc type.</div>
+        </div>
+        <div class="pass-card">
+          <div class="pass-num">PASS 04</div>
+          <div class="pass-title">Financial Impact Analysis</div>
+          <div class="pass-route" style="color:var(--gold)">→ EXECUTIVE PORTAL</div>
+          <div style="font-size:.56rem;color:var(--dim);margin-top:6px;line-height:1.6">Zoom out. Show aggregate Business Impact Delta across everything just run — total $ at risk vs recoverable in one exec sentence.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="beats-grid" id="beats-copper">
+      <div class="beat done" onclick="toggleBeat(this,'copper',0)">
+        <div class="beat-header"><div class="beat-num">B1</div><div class="beat-title">Hook + Room Setup</div><div class="beat-time">60 SEC</div><div class="beat-check"><span class="beat-check-icon">✓</span></div></div>
+        <div class="beat-body">
+          <div class="beat-desc">Introduce yourself to all three stakeholders. Anchor the session: "I'm going to run four documents through the engine — different document types, different war rooms — in 15 minutes."</div>
+          <div class="talk-block cyan"><div class="talk-block-label">OPEN WITH</div><div class="talk-block-text">"Before I show you any slides, I want to show you your actual denial problem in real time. Here's a CO-5 DME denial — same type you're fighting right now."</div></div>
+        </div>
+      </div>
+
+      <div class="beat" onclick="toggleBeat(this,'copper',1)">
+        <div class="beat-header"><div class="beat-num">B2</div><div class="beat-title">Pass 1 + 2 — HC Denial + Prior Auth</div><div class="beat-time">5–6 MIN</div><div class="beat-check"><span class="beat-check-icon">✓</span></div></div>
+        <div class="beat-body">
+          <div class="beat-desc">Run Pass 01 (CO-5 denial) as the full Beat 2–4 anchor demo. Then immediately drop the prior auth doc — same engine, faster narration. You're establishing breadth.</div>
+          <div class="doc-tags">
+            <span class="doc-tag denial">CO-5 DME Denial</span>
+            <span class="doc-tag auth">Prior Auth Failure</span>
+          </div>
+          <div class="talk-block"><div class="talk-block-label">AFTER PASS 2</div><div class="talk-block-text">"Two different denial types, two seconds apart, same engine — it doesn't matter what flavor the denial is."</div></div>
+        </div>
+      </div>
+
+      <div class="beat wow" onclick="toggleBeat(this,'copper',2)">
+        <div class="beat-header"><div class="beat-num">B3</div><div class="beat-title">Pass 3 — W-9 Routes to FinOps ★</div><div class="beat-time">2–3 MIN</div><div class="beat-check"><span class="beat-check-icon">✓</span></div></div>
+        <div class="beat-body">
+          <div class="wow-badge">★ CLASSIFICATION PROOF MOMENT</div>
+          <div class="beat-desc">Drop the W-9 doc into tsm-doc-search-multi.html. Watch it NOT go to HC — it routes to FinOps War Room.</div>
+          <div class="doc-tags"><span class="doc-tag finops">Missing W-9 (AP document)</span></div>
+          <div class="talk-block green"><div class="talk-block-label">POINT AT THE FINOPS BADGE</div><div class="talk-block-text">"Watch where this one routes. It's not a denial — it's an AP document. The engine knows the difference automatically. Your billing team doesn't have to triage."</div></div>
+          <div class="talk-block"><div class="talk-block-label">TO THE OPS MANAGER SPECIFICALLY</div><div class="talk-block-text">"This is what eliminates the 'wrong queue' problem. Every document lands in the right war room without a human making that routing decision."</div></div>
+        </div>
+      </div>
+
+      <div class="beat" onclick="toggleBeat(this,'copper',3)">
+        <div class="beat-header"><div class="beat-num">B4</div><div class="beat-title">Pass 4 — Executive Portal Aggregate</div><div class="beat-time">3–4 MIN</div><div class="beat-check"><span class="beat-check-icon">✓</span></div></div>
+        <div class="beat-body">
+          <div class="beat-desc">Pull up Executive Portal. Show the aggregate view across all four passes — total dollar at risk, total recoverable, confidence, action owners.</div>
+          <div class="talk-block amber"><div class="talk-block-label">TO THE REVENUE CYCLE DIRECTOR</div><div class="talk-block-text">"This is your weekly trend view — every denial processed, recovery rate, dollars at risk vs recovered, without pulling a single report."</div></div>
+          <div class="talk-block"><div class="talk-block-label">TO THE BILLING MANAGER</div><div class="talk-block-text">"And everything that feeds this view came from the claim-by-claim engine you just watched run — it flows up automatically."</div></div>
+        </div>
+      </div>
+
+      <div class="beat" onclick="toggleBeat(this,'copper',4)">
+        <div class="beat-header"><div class="beat-num">B5</div><div class="beat-title">Close — Ask for the Next Stakeholder</div><div class="beat-time">60–90 SEC</div><div class="beat-check"><span class="beat-check-icon">✓</span></div></div>
+        <div class="beat-body">
+          <div class="beat-desc">Longer cycle — don't ask for a contract. Ask for the next stakeholder in the room or above it.</div>
+          <div class="close-card" style="border-color:rgba(201,164,76,.25)">
+            <div class="close-label" style="color:var(--gold)">◈ THE ASK — DON'T ASK FOR A CONTRACT</div>
+            <div class="close-text">"Who else on your team needs to see this before this becomes a real conversation — I'd rather walk your billing manager through their own queue directly than re-pitch this from scratch."</div>
+            <div class="close-goal" style="color:var(--gold);background:rgba(201,164,76,.05);border-color:rgba(201,164,76,.2)">GOAL: next stakeholder introduced or billing manager direct session booked. Consider a one-page leave-behind.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tech-card">
+      <div class="tech-label">⚡ IN-PERSON TECH SETUP — COPPER STAR SPECIFIC</div>
+      <div class="checklist">
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"><span class="check-icon">✓</span></div><div class="check-label">All 4 docs pre-staged in a folder — CO-5 denial, prior auth, W-9, exec feed doc</div></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"><span class="check-icon">✓</span></div><div class="check-label">FinOps War Room warmed up and logged in — W-9 must route there live in front of the room</div></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"><span class="check-icon">✓</span></div><div class="check-label">HC Denial War Room already has a completed run in background tab as fallback</div></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"><span class="check-icon">✓</span></div><div class="check-label">Executive Portal showing aggregate view from a pre-run session ready to pull up</div></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"><span class="check-icon">✓</span></div><div class="check-label">Know which stakeholder role is in the room — tailor live narration to their view</div></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /shell -->
+
+<!-- STATUS BAR -->
+<div class="statusbar">
+  <div class="sb-dot pulse"></div>
+  <span>TSM DEMO PLAYBOOK</span>
+  <span style="color:var(--faint)">|</span>
+  <span id="sbProspect" style="color:var(--purple)">CORE ENGINE</span>
+  <span style="color:var(--faint)">|</span>
+  <span id="sbBeat" style="color:var(--dim)">No beat active</span>
+  <div class="status-r" style="color:var(--dim)">HC DENIAL WAR ROOM ENGINE · All 4 Demos</div>
+</div>
+
+<script>
+// ─── STATE ───
+let currentProspect = 'overview';
+const beatState = { regina:{}, sunrise:{}, ultimate:{}, copper:{} };
+const BEAT_COUNTS = { regina:5, sunrise:5, ultimate:5, copper:5 };
+
+// ─── TIMER ───
+let timerRunning = false, timerSec = 0, timerInterval = null;
+function toggleTimer(){
+  timerRunning = !timerRunning;
+  const btn = document.getElementById('timerBtn');
+  if(timerRunning){
+    btn.textContent = '■ STOP'; btn.classList.add('running');
+    timerInterval = setInterval(()=>{ timerSec++; updateTimerDisplay(); }, 1000);
+  } else {
+    clearInterval(timerInterval); btn.textContent = '▶ START'; btn.classList.remove('running');
+    timerSec = 0; updateTimerDisplay();
+  }
+}
+function updateTimerDisplay(){
+  const m = Math.floor(timerSec/60), s = timerSec%60;
+  document.getElementById('timerDisplay').textContent = m+':'+(s<10?'0':'')+s;
+}
+
+// ─── NAV ───
+function showOverview(){
+  setActive('overview');
+  document.querySelectorAll('.prospect-screen,.overview-screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-overview').classList.add('active');
+  document.getElementById('sbProspect').textContent = 'CORE ENGINE';
+  document.getElementById('sbBeat').textContent = 'No beat active';
+  document.getElementById('sbProspect').style.color = 'var(--purple)';
+  updateProgress('overview');
+}
+
+function showProspect(id){
+  setActive(id);
+  document.querySelectorAll('.prospect-screen,.overview-screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  const names = {regina:'MY BILLING SOLUTION',sunrise:'SUNRISE DME',ultimate:'ULTIMATE MEDICAL',copper:'COPPER STAR'};
+  document.getElementById('sbProspect').textContent = names[id]||id.toUpperCase();
+  document.getElementById('sbProspect').style.color = id==='copper'?'var(--gold)':'var(--purple)';
+  document.getElementById('sbBeat').textContent = 'No beat active';
+  currentProspect = id;
+  updateProgress(id);
+}
+
+function setActive(id){
+  document.querySelectorAll('.sb-prospect').forEach(s=>s.classList.remove('active'));
+  const el = document.getElementById('sb-'+id);
+  if(el) el.classList.add('active');
+  document.querySelectorAll('.tb-tab').forEach(t=>t.classList.remove('active'));
+  const tabs = ['overview','regina','sunrise','ultimate','copper'];
+  const ti = tabs.indexOf(id);
+  if(ti>=0) document.querySelectorAll('.tb-tab')[ti].classList.add('active');
+}
+
+// ─── BEAT TOGGLE ───
+function toggleBeat(el, prospect, idx){
+  const isOpen = el.classList.contains('open') || el.classList.contains('active');
+  // close all beats in this prospect
+  document.querySelectorAll('#beats-'+prospect+' .beat').forEach(b=>{
+    b.classList.remove('active');
+    if(!b.classList.contains('done')) b.classList.remove('open');
+  });
+  if(!isOpen){
+    el.classList.add('active');
+    document.getElementById('sbBeat').textContent = 'Beat '+(idx+1)+' · '+el.querySelector('.beat-title').textContent.trim().substring(0,40);
+  } else {
+    document.getElementById('sbBeat').textContent = 'No beat active';
+  }
+}
+
+function markBeatDone(el, prospect){
+  if(el.classList.contains('done')){
+    el.classList.remove('done');
+    beatState[prospect][el.dataset.idx||0] = false;
+  } else {
+    el.classList.add('done');
+    beatState[prospect][el.dataset.idx||0] = true;
+  }
+  updateProgress(prospect);
+}
+
+// ─── CHECKLIST ───
+function toggleCheck(el){
+  el.classList.toggle('checked');
+}
+
+// ─── PROGRESS ───
+function updateProgress(prospect){
+  if(prospect==='overview') { setProgress(0,0); return; }
+  const beats = document.querySelectorAll('#beats-'+prospect+' .beat');
+  const done = document.querySelectorAll('#beats-'+prospect+' .beat.done').length;
+  const total = beats.length;
+  setProgress(done, total);
+}
+
+function setProgress(done, total){
+  const pct = total===0?0:Math.round((done/total)*100);
+  const circumference = 163;
+  const offset = circumference - (pct/100)*circumference;
+  document.getElementById('progressRing').style.strokeDashoffset = offset;
+  document.getElementById('progressPct').textContent = pct+'%';
+  document.getElementById('beatsDoneLabel').textContent = done+' / '+total+' complete';
+}
+
+// double-click a beat header to mark done
+document.addEventListener('dblclick', e=>{
+  const beatHeader = e.target.closest('.beat-header');
+  if(beatHeader){
+    const beat = beatHeader.closest('.beat');
+    const prospect = beat.closest('[id^="beats-"]')?.id.replace('beats-','');
+    if(prospect) markBeatDone(beat, prospect);
+  }
+});
+
+// init
+showOverview();
+</script>
+</body>
+</html>

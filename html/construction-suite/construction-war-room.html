@@ -250,13 +250,13 @@ body{background:var(--bg);color:var(--text);font-family:'Courier New',monospace;
         ts.textContent = new Date(d.timestamp).toLocaleTimeString();
 
         // If strategist confirmed
-        const stratRaw = localStorage.getItem('TSM_STRAT_CONFIRMED');
+        const stratRaw = localStorage.getItem('TSM_STRAT_CONFIRMED_construction-suite');
         if (stratRaw) {
           pulse(strat, '#00ffc6');
           pulse(exec, '#f5a623');
           status.textContent = 'Strategist confirmed → Exec Portal ready';
         }
-        const execRaw = localStorage.getItem('TSM_EXEC_CONFIRMED');
+        const execRaw = localStorage.getItem('TSM_EXEC_CONFIRMED_construction-suite');
         if (execRaw) {
           pulse(exec, '#00ffc6');
           status.textContent = 'Chain complete ✓ All three tiers confirmed';
@@ -550,7 +550,8 @@ let groqKey = localStorage.getItem('tsm_groq_key') || '';
     const raw = localStorage.getItem('tsm_con_docsearch_relay');
     if (!raw) return;
     const relay = JSON.parse(raw);
-    if (!relay.summary) return;
+    const relayText = relay.docText || relay.summary || '';
+    if (!relayText) return;
     localStorage.removeItem('tsm_con_docsearch_relay');
     // TSM AUTO-FIRE
     if (localStorage.getItem('tsm_auto_mode') !== 'off') {
@@ -561,7 +562,7 @@ let groqKey = localStorage.getItem('tsm_groq_key') || '';
       }, 900);
     }
     const ta = document.getElementById('docPaste');
-    if (ta) ta.value = relay.summary;
+    if (ta) ta.value = relayText;
   } catch(e) { console.warn('Doc search relay error:', e); }
 })();
 if(groqKey) document.getElementById('groqKey').value=groqKey;
@@ -1331,6 +1332,11 @@ async function fireEngines() {
   document.getElementById('fireBtn').disabled=false;
   addLog('All 6 Engines Complete','App dispatch ready — escalate to Strategist','p');
   storeSession(e);
+  // TSM AUTO-ESCALATE
+  if (localStorage.getItem('tsm_auto_mode') === 'on') {
+    addLog('Auto-escalating to Strategist','TSM Autonomy Engine active','p');
+    setTimeout(() => { escalateToStrategist(); }, 2000);
+  }
 }
 
 // ═══════════════════════════════
@@ -1346,6 +1352,7 @@ function storeSession(e){
     };
     sessionStorage.setItem('TSM_CONSTRUCTION_WAR_RELAY',JSON.stringify(payload));
     localStorage.setItem('tsm_construction_war_relay',JSON.stringify(payload));
+    localStorage.setItem('TSM_CONSTRUCTION_WAR_RELAY',JSON.stringify(payload));
   }catch(err){console.warn('Store error:',err);}
 }
 
@@ -1775,6 +1782,35 @@ async function tsmLaunchMission() {
   });
 }
 </script>
-<script src="/html/tsm-mission-orchestrator.js"></script>
+  <script src="./tsm-kernel-upgrade.js"></script>
 </body>
 </html>
+
+<script>
+// ===== TSM_AUTONOMY_STANDARDIZED =====
+window.TSM_AUTONOMY_STANDARDIZED = true;
+</script>
+
+<!-- TSM ENFORCER BOOT -->
+
+
+<script>
+// ===== TSM WAR ROOM SCOPED RELAY FIX =====
+window.tsmMission = window.tsmMission || {
+  id: "CONSTRUCTION-SUITE-" + Date.now().toString(36),
+  vertical: "construction-suite",
+  
+};
+
+function tsmWriteRelay(payload){
+  TSM_KERNEL.setRelay("construction-suite", JSON.stringify(payload));
+}
+</script>
+
+
+<!-- TSM KERNEL ENGINE -->
+<script src="/js/core/tsm-event-bus.js"></script>
+<script src="/js/core/tsm-state.js"></script>
+<script src="/js/core/tsm-mission-engine.js"></script>
+<script src="/construction-suite/tsm-construction-analyzer.js"></script>
+

@@ -270,13 +270,13 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
         ts.textContent = new Date(d.timestamp).toLocaleTimeString();
 
         // If strategist confirmed
-        const stratRaw = localStorage.getItem('TSM_STRAT_CONFIRMED');
+        const stratRaw = localStorage.getItem('TSM_STRAT_CONFIRMED_bpo');
         if (stratRaw) {
           pulse(strat, '#00ffc6');
           pulse(exec, '#f5a623');
           status.textContent = 'Strategist confirmed → Exec Portal ready';
         }
-        const execRaw = localStorage.getItem('TSM_EXEC_CONFIRMED');
+        const execRaw = localStorage.getItem('TSM_EXEC_CONFIRMED_bpo');
         if (execRaw) {
           pulse(exec, '#00ffc6');
           status.textContent = 'Chain complete ✓ All three tiers confirmed';
@@ -1062,5 +1062,26 @@ function nav(url) { window.location.href = url; }
   } catch(e) { console.warn('[TSM AutoFire]', e); }
 })();
 </script>
+  <script src="/core/tsm-kernel.js"></script>
+  <script src="/core/tsm-enforcer.js"></script>
 </body>
 </html>
+
+<script>
+// ===== TSM_AUTONOMY_STANDARDIZED =====
+window.TSM_AUTONOMY_STANDARDIZED = true;
+</script>
+
+<script>
+// ===== TSM WAR ROOM SCOPED RELAY FIX =====
+window.tsmMission = window.tsmMission || {
+  id: "BPO-" + Date.now().toString(36),
+  vertical: "bpo",
+  
+};
+
+function tsmWriteRelay(payload){
+  TSM_KERNEL.setRelay("bpo", JSON.stringify(payload));
+}
+</script>
+
