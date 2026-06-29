@@ -752,6 +752,11 @@ if (window.pdfjsLib) {
     <div class="uz-sub">PDF · images · text/CSV · ZIP — auto-classified &amp; routed to the right war room(s)</div>
     <input type="file" id="doc-file-input" multiple accept=".pdf,.txt,.csv,.png,.jpg,.jpeg,.webp,.zip">
   </div>
+<div id="tsm-auto-launch-bar" style="display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--panel);border:1px solid var(--border);border-radius:8px;margin-bottom:10px;font-family:var(--mono);font-size:11px;">
+  <span style="color:var(--dim);letter-spacing:.08em;">AUTO-LAUNCH MODE</span>
+  <button id="tsm-auto-launch-btn" onclick="tsmToggleAutoLaunch()" style="padding:4px 12px;border-radius:5px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-family:var(--mono);font-size:10px;cursor:pointer;letter-spacing:.06em;">MANUAL</button>
+  <span id="tsm-auto-launch-status" style="color:var(--dim);font-size:10px;">Upload → classify → click ⚡ to launch</span>
+</div>
   <div class="upload-queue" id="upload-queue"></div>
   <div id="zip-seclog" style="display:none;margin:0 0 1rem;font-family:var(--mono);"></div>
  
@@ -845,8 +850,8 @@ const VERTICALS = {
     searchPlaceholder: "Search by client, GL code, ledger, invoice, vendor...",
     nodes: {
       "fo-war-room":    { label:"FinOps War Room", route:"/html/finops-suite/finops-war-room.html" },
-      "strategist":     { label:"Strategist",      route:null },
-      "bnca-engine":    { label:"BNCA Escalated",  route:null },
+      "strategist":     { label:"Strategist",      route:"/html/finops-suite/finops-main-strategist.html" },
+      "bnca-engine":    { label:"BNCA Escalated",  route:"/html/finops-suite/finops-executive-portal.html" },
     },
     seed: [
       { fileName:"GL_Reconciliation_Q2.record",    documentType:"LEDGER",          vendor:"Internal",          invoiceNo:"GL-Q2-2024",  exclusionCode:"VAR-12",  amount:41200,  sourceNode:"fo-accounting", routing:["fo-accounting","strategist"],            timestamp:Date.now()-1*3600000, _ext:{client:"Apex Corp",     ref:"GLR-001"} },
@@ -864,8 +869,8 @@ const VERTICALS = {
     searchPlaceholder: "Search by policyholder, claim #, carrier, coverage code...",
     nodes: {
       "ins-war-room":   { label:"Insurance War Room", route:"/html/tsm-insurance/insurance-war-room.html" },
-      "strategist":     { label:"Strategist",         route:null },
-      "bnca-engine":    { label:"BNCA Escalated",     route:null },
+      "strategist":     { label:"Strategist",         route:"/html/tsm-insurance/insurance-strategist.html" },
+      "bnca-engine":    { label:"BNCA Escalated",     route:"/html/tsm-insurance/insurance-executive-portal.html" },
     },
     seed: [
       { fileName:"CLM-INS-4412_Ramirez.record",    documentType:"CLAIM",           vendor:"State Farm",        invoiceNo:"CLM-INS-4412",exclusionCode:"CO-4",    amount:15400,  sourceNode:"ins-az",   routing:["ins-az","ins-hub","strategist"],            timestamp:Date.now()-2*3600000, _ext:{client:"Luis Ramirez",  ref:"POL-SF-9944"} },
@@ -883,8 +888,8 @@ const VERTICALS = {
     searchPlaceholder: "Search by project, permit #, contractor, subcode...",
     nodes: {
       "con-war-room":   { label:"Construction War Room", route:"/html/construction-suite/construction-war-room.html" },
-      "strategist":     { label:"Strategist",            route:null },
-      "bnca-engine":    { label:"BNCA Escalated",        route:null },
+      "strategist":     { label:"Strategist",            route:"/html/construction-suite/construction-strategist.html" },
+      "bnca-engine":    { label:"BNCA Escalated",        route:"/html/construction-suite/construction-executive-portal.html" },
     },
     seed: [
       { fileName:"PERMIT_Mesa_88B.record",           documentType:"PERMIT",          vendor:"City of Mesa",     invoiceNo:"PMT-88B",     exclusionCode:"COD-14",  amount:4800,   sourceNode:"con-permits",routing:["con-permits","strategist"],              timestamp:Date.now()-1*3600000, _ext:{client:"Horizon Build Co",ref:"PMT-88B"} },
@@ -902,8 +907,8 @@ const VERTICALS = {
     searchPlaceholder: "Search by client, SOP, team, ticket #, service line...",
     nodes: {
       "bpo-war-room":   { label:"BPO War Room", route:"/html/bpo/bpo-situation-room.html" },
-      "strategist":     { label:"Strategist",   route:null },
-      "bnca-engine":    { label:"BNCA Escalated", route:null },
+      "strategist":     { label:"Strategist",   route:"/html/bpo/bpo-strategist.html" },
+      "bnca-engine":    { label:"BNCA Escalated", route:"/html/bpo/bpo-executive-portal.html" },
     },
     seed: [
       { fileName:"SLA_Report_Acme_June.record",      documentType:"DOCUMENT REPORT", vendor:"Acme Corp",        invoiceNo:"SLA-06-24",   exclusionCode:"SLA-BRK", amount:0,      sourceNode:"bpo-cmd",  routing:["bpo-cmd","strategist"],                  timestamp:Date.now()-1*3600000, _ext:{client:"Acme Corp",      ref:"SLA-24-06"} },
@@ -922,8 +927,8 @@ const VERTICALS = {
     searchPlaceholder: "Search by property, listing #, escrow, address, agent...",
     nodes: {
       "re-war-room":    { label:"RE War Room", route:"/html/reo-pro/re-war-room.html" },
-      "strategist":     { label:"Strategist",  route:null },
-      "bnca-engine":    { label:"BNCA Escalated", route:null },
+      "strategist":     { label:"Strategist",  route:"/html/reo-pro/re-strategist.html" },
+      "bnca-engine":    { label:"BNCA Escalated", route:"/html/reo-pro/re-exec-portal.html" },
     },
     seed: [
       { fileName:"Listing_Agreement_123Maple.record",  documentType:"CONTRACT",       vendor:"Keller Williams",      invoiceNo:"LST-0091", exclusionCode:"",       amount:0,      sourceNode:"re-doc-command",routing:["re-doc-command","re-strategist","strategist"],       timestamp:Date.now()-1*3600000, _ext:{client:"Maple St Holdings", ref:"LST-0091", defectFlags:[]} },
@@ -941,8 +946,8 @@ const VERTICALS = {
     searchPlaceholder: "Search by matter, case #, client, filing, exhibit...",
     nodes: {
       "leg-war-room":   { label:"Legal War Room", route:"/html/legal-pro/legal-war-room.html" },
-      "strategist":     { label:"Strategist",     route:null },
-      "bnca-engine":    { label:"BNCA Escalated", route:null },
+      "strategist":     { label:"Strategist",     route:"/html/legal-pro/legal-main-strategist.html" },
+      "bnca-engine":    { label:"BNCA Escalated", route:"/html/legal-pro/legal-executive-portal.html" },
     },
     seed: [
       { fileName:"Complaint_Doe_v_Acme.record",        documentType:"FILING",         vendor:"Superior Court",   invoiceNo:"CV-2024-0091", exclusionCode:"",       amount:0,    sourceNode:"leg-index",      routing:["leg-index","leg-strategist","strategist"],                 timestamp:Date.now()-1*3600000, _ext:{client:"Jane Doe",   ref:"CV-2024-0091"} },
@@ -960,7 +965,7 @@ const VERTICALS = {
     searchPlaceholder: "Search by patient, claim #, payer, CPT/denial code...",
     nodes: {
       "hc-war-room":  { label:"HC War Room",    route:"/html/healthcare/hc-denial-war-room.html" },
-      "hc-denial":    { label:"Billing Node",   route:"__HC_NODE__" },
+      "hc-denial":    { label:"Billing Node",   route:"/html/healthcare/hc-billing/index.html" },
       "hc-command":   { label:"HC Command Chain",  route:"/html/healthcare/index.html" },
       "operations":   { label:"Operations",        route:"/html/healthcare/hc-operations/index.html" },
       "medical":      { label:"Medical",           route:"/html/healthcare/hc-medical/index.html" },
@@ -973,8 +978,8 @@ const VERTICALS = {
       "taxprep":      { label:"Tax Prep",          route:"/html/healthcare/hc-taxprep/index.html" },
       "grants":       { label:"Grants",            route:"/html/healthcare/hc-grants/index.html" },
       "insurance":    { label:"Insurance",         route:"/html/healthcare/hc-insurance/index.html" },
-      "strategist":   { label:"Strategist",        route:null },
-      "bnca-engine":  { label:"BNCA Escalated",    route:null },
+      "strategist":   { label:"Strategist",        route:"/html/healthcare/hc-main-strategist.html" },
+      "bnca-engine":  { label:"BNCA Escalated",    route:"/html/healthcare/executive-portal.html" },
     },
     seed: [
       { fileName:"Denial_CLM-HC-7731.record",       documentType:"DENIAL",       vendor:"Aetna",  invoiceNo:"CLM-HC-7731", exclusionCode:"CO-50",  amount:8200,  sourceNode:"hc-denial", routing:["hc-denial","strategist"],                  timestamp:Date.now()-1*3600000, _ext:{client:"Patient #4471", ref:"CLM-HC-7731"} },
@@ -2121,6 +2126,64 @@ function uqStatus(id, html, cls) {
   status.innerHTML  = html;
 }
  
+
+// ===== TSM AUTO-LAUNCH ENGINE =====
+window.TSM_AUTO_LAUNCH = false;
+
+function tsmToggleAutoLaunch() {
+  window.TSM_AUTO_LAUNCH = !window.TSM_AUTO_LAUNCH;
+  const btn = document.getElementById('tsm-auto-launch-btn');
+  const status = document.getElementById('tsm-auto-launch-status');
+  if (window.TSM_AUTO_LAUNCH) {
+    btn.textContent = 'AUTO';
+    btn.style.background = 'rgba(0,212,170,.15)';
+    btn.style.color = 'var(--green)';
+    btn.style.borderColor = 'var(--green)';
+    status.textContent = 'Upload → classify → auto-launch to war room';
+    status.style.color = 'var(--green)';
+  } else {
+    btn.textContent = 'MANUAL';
+    btn.style.background = 'var(--surface)';
+    btn.style.color = 'var(--muted)';
+    btn.style.borderColor = 'var(--border)';
+    status.textContent = 'Upload → classify → click ⚡ to launch';
+    status.style.color = 'var(--dim)';
+  }
+}
+
+function tsmAutoLaunchIfEnabled(routed, classification, fileName) {
+  if (!window.TSM_AUTO_LAUNCH) return;
+  if (!routed || routed.length === 0) return;
+  // Launch to primary vertical war room
+  const primary = routed[0];
+  const roomKey = primary.vertical + '-war-room';
+  const room = WAR_ROOM_ROUTES[roomKey];
+  if (!room) return;
+  const synth = [
+    classification.summary || '',
+    `TYPE:${classification.documentType || ''}`,
+    `CLIENT:${classification.client || ''}`,
+    `REF:${classification.ref || ''}`
+  ].filter(Boolean).join('\n');
+  const payload = JSON.stringify({
+    docText:  synth,
+    docType:  classification.documentType || 'DOCUMENT',
+    fileName: classification.fileName || fileName,
+    client:   classification.client || '',
+    ref:      classification.ref || '',
+    source:   'doc-search-auto',
+    timestamp: Date.now()
+  });
+  try {
+    sessionStorage.setItem(room.relayKey, payload);
+    localStorage.setItem(room.relayKey, payload);
+    sessionStorage.setItem(room.docKey, classification.summary || '');
+  } catch(e) {}
+  // Small delay so user sees classification result before navigation
+  setTimeout(() => { window.location.href = room.url; }, 1200);
+}
+// ===== END TSM AUTO-LAUNCH ENGINE =====
+
 async function processFile(file) {
   const qid = uqAdd(file);
   try {
@@ -2151,6 +2214,8 @@ return `<span class="uq-badge" onclick="launchWarRoomDirect('${roomKey}','${enco
     }).filter(Boolean).join("");
 
     uqStatus(qid, `${classification.documentType || "Routed"} → ${badges}${warRoomBtns ? '<br><span style="font-size:8px;color:var(--dim);margin-right:4px;">OPEN IN:</span>' + warRoomBtns : ''}`, "ok");
+
+    tsmAutoLaunchIfEnabled(routed, classification, file.name);
 
     if (routed.some(r => r.vertical === currentVertical)) {
       runSearch();
