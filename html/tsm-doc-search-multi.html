@@ -2396,3 +2396,39 @@ window.openHcNodeWithDoc = openHcNodeWithDoc;
 <script>window.TSM_CONTROL_PLANE=true;</script>
 </body>
 </html>
+<script>
+(function(){
+  const p = new URLSearchParams(location.search);
+  const sector = p.get('sector');
+  const auto = p.get('autorun');
+  if (!sector || !auto) return;
+  // Switch to correct vertical tab then auto-launch first war room
+  setTimeout(function(){
+    if (typeof switchVertical === 'function') switchVertical(sector);
+    setTimeout(function(){
+      const docs = typeof loadIndex === 'function' ? loadIndex() : [];
+      if (docs.length) {
+        // Find first war room route for this sector
+        const warRoomKeys = { hc:'hc-war-room', finops:'fo-war-room', con:'con-war-room', ins:'ins-war-room', legal:'leg-war-room', re:'re-war-room', bpo:'bpo-war-room' };
+        const roomKey = warRoomKeys[sector];
+        if (roomKey && typeof launchWarRoom === 'function') {
+          launchWarRoom(docs[0].id, roomKey);
+        }
+      } else {
+        // No docs — seed one then launch directly
+        const relay = window.TSMRunner && window.TSMRunner.RELAY_MAP[sector];
+        const doc = window.TSMRunner && window.TSMRunner.SAMPLE_DOCS[sector];
+        if (relay && doc) {
+          const payload = JSON.stringify({ docText: doc, docType: 'DEMO', source: 'demo-runner', autorun: true, timestamp: Date.now() });
+          localStorage.setItem(relay.relay, payload);
+          localStorage.setItem(relay.autoKey, payload);
+          localStorage.setItem('tsm_auto_mode', 'on');
+          const warRoomKeys = { hc:'hc-war-room', finops:'fo-war-room', con:'con-war-room', ins:'ins-war-room', legal:'leg-war-room', re:'re-war-room', bpo:'bpo-war-room' };
+          const room = WAR_ROOM_ROUTES[warRoomKeys[sector]];
+          if (room) window.location.href = room.url;
+        }
+      }
+    }, 600);
+  }, 400);
+})();
+</script>
