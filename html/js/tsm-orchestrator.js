@@ -86,7 +86,7 @@ if (bnca.action === "EXECUTE") {
     }
   }
 
-  window.TSMEventBus.emit("SIGNAL", signal, requiresBNCA = false) {
+  processSignal(signal, requiresBNCA = false) {
     const mission = this.engine.window.TSMEventBus.emit("SIGNAL", signal);
 
     mission.requiresBNCA = requiresBNCA;
