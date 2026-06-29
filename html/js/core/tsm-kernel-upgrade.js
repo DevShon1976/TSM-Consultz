@@ -151,7 +151,7 @@
       switch (event.type) {
 
         case "MISSION_CREATED":
-          window.TSMEventBus.emit("SIGNAL", event.payload);
+          
           break;
 
         case "MISSION_UPDATED":

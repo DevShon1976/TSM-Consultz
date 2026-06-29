@@ -1,7 +1,5 @@
 window.TSMHub = {
-
   launch(config) {
-
     console.log("[HUB LAUNCH]", config);
 
     if (window.TSMTelemetry) {
@@ -24,11 +22,9 @@ window.TSMHub = {
 
       return result;
     });
-
   },
 
   transition(route, payload) {
-
     console.log("[HUB ROUTE]", route);
 
     localStorage.setItem(
@@ -40,14 +36,11 @@ window.TSMHub = {
   },
 
   resumeLastMission() {
-
     const saved = localStorage.getItem("tsm_last_mission");
-
     if (!saved) return null;
 
     const mission = JSON.parse(saved);
-
     console.log("[HUB RESUME]", mission);
-
     return mission;
   }
+};

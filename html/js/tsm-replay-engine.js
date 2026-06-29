@@ -40,7 +40,7 @@ class TSMReplayEngine {
     switch (event.type) {
 
       case "MISSION_CREATED":
-        window.TSMEventBus.emit("SIGNAL", event.payload);
+        console.warn("BLOCKED_SIGNAL_REPLAY", event.payload);
         break;
 
       case "MISSION_UPDATED":

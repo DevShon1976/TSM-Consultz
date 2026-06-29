@@ -76,8 +76,6 @@ mission.status = bnca.decision === "PASS"
   ? "APPROVED"
   : "BNCA_PENDING";
 
-window.TSMEventBus.emit("SIGNAL", mission);
-
 this.bus.emit("BNCA_RESULT", { mission, bnca });
 
 if (bnca.action === "EXECUTE") {
@@ -92,7 +90,6 @@ if (bnca.action === "EXECUTE") {
     mission.requiresBNCA = requiresBNCA;
     mission.status = requiresBNCA ? "BNCA_PENDING" : "MISSION_CREATED";
 
-    window.TSMEventBus.emit("SIGNAL", mission);
 
     this.bus.emit("MISSION_CREATED", mission);
   }
