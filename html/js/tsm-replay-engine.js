@@ -44,11 +44,11 @@ class TSMReplayEngine {
         break;
 
       case "MISSION_UPDATED":
-        store.window.TSMEventBus.emit("MISSION_UPDATE", event.payload.id, event.payload);
+        window.TSMEventBus.emit("MISSION_UPDATE", event.payload.id, event.payload);
         break;
 
       case "EXECUTION_COMPLETE":
-        store.window.TSMEventBus.emit("MISSION_UPDATE", event.payload.id, {
+        window.TSMEventBus.emit("MISSION_UPDATE", event.payload.id, {
           status: "COMPLETE"
         });
         break;
