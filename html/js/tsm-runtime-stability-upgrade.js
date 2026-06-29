@@ -77,15 +77,24 @@ function __tsm_hash(obj){
   GraphRuntime.lastHash = sig;
 `
   ).replace(
-    /function render\s*\(.*?\)\s*\{/,
-    `function render(containerId="causalGraph") {
-
+    /function render\s*\(([^)]*)\)\s*\{/,
+    (_match, paramsRaw) => {
+      // Forward bare param names (strip defaults) to the renamed impl —
+      // passing "containerId = 'x'" as a call ARGUMENT would silently
+      // reassign the caller's value, which is not what we want here.
+      const callArgs = paramsRaw.split(',').map(p => p.split('=')[0].trim()).filter(Boolean).join(', ');
+      return `function render(${paramsRaw}) {
   if (GraphRuntime.isRendering) return;
   GraphRuntime.isRendering = true;
-`
-  ).replace(
-    /GraphRuntime\.isRendering\s*=\s*false/g,
-    `GraphRuntime.isRendering = false`
+  try {
+    return __tsm_renderImpl(${callArgs});
+  } finally {
+    GraphRuntime.isRendering = false;
+  }
+}
+
+function __tsm_renderImpl(${paramsRaw}) {`;
+    }
   );
 }
 
