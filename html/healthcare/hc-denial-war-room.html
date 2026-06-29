@@ -739,6 +739,13 @@ let currentMode = 'denial';
       document.body.prepend(banner);
       sessionStorage.removeItem('TSM_HC_WAR_RELAY');
       localStorage.removeItem('TSM_HC_WAR_RELAY');
+      // TSM AUTO-PIPELINE: auto-fire engines if arriving from doc-search auto-launch
+      if (relay.source === 'doc-search-auto' || sessionStorage.getItem('TSM_AUTO_PIPELINE') || localStorage.getItem('TSM_AUTO_PIPELINE')) {
+        setTimeout(() => {
+          if (typeof runPipeline === 'function') runPipeline();
+          else if (typeof fireAll === 'function') fireAll();
+        }, 1200);
+      }
     }, 500);
   } catch(e) {}
 })();
@@ -2574,6 +2581,9 @@ window.howtoOpen = () => document.getElementById('howtoOverlay').classList.add('
 <script src="/js/core/tsm-state.js"></script>
 <script src="/js/core/tsm-mission-engine.js"></script>
 <script src="/healthcare/tsm-hc-analyzer.js"></script>
+
+<!-- TSM AUTO-PIPELINE ENGINE -->
+<script src="/js/core/tsm-auto-pipeline.js"></script>
 </body>
 </html>
 
