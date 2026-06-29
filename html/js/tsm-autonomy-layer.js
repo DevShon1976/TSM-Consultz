@@ -1,109 +1,59 @@
 /**
  * TSM AUTONOMY LAYER v1
- * Controlled self-triggering mission system (bounded autonomy)
+ * Controlled self-triggering system
  */
 
 (function () {
   "use strict";
 
-  const bus = window.TSMEventBus;
+  const MAX_DEPTH = 2;
+  const COOLDOWN_MS = 4000;
 
-  const STATE = {
+  const state = {
     depth: 0,
-    maxDepth: 2,
-    cooldownMs: 3000,
-    lastTrigger: 0,
-    enabled: true
+    lastTrigger: 0
   };
 
   function canTrigger() {
     const now = Date.now();
 
-    if (!STATE.enabled) return false;
-    if (STATE.depth >= STATE.maxDepth) return false;
-    if (now - STATE.lastTrigger < STATE.cooldownMs) return false;
+    if (state.depth >= MAX_DEPTH) return false;
+    if (now - state.lastTrigger < COOLDOWN_MS) return false;
 
     return true;
   }
 
-  function evaluateMission(mission) {
-    // Safe default if BNCA missing
-    const bnca = window.TSMBNCAEngine?.evaluate?.(mission) || {
-      decision: "PASS",
-      action: "EXECUTE"
-    };
+  function trigger(signal, depth = 0) {
+    if (!window.TSMEventBus) return;
 
-    return bnca;
-  }
-
-  function shouldSpawnFollowUp(mission, bnca) {
-    if (!mission) return false;
-
-    // Blocked by governance
-    if (bnca.decision === "BLOCK") return false;
-
-    // Only high severity or failed missions self-trigger
-    if (mission.severity >= 70) return true;
-    if (mission.status === "FAILED") return true;
-
-    return false;
-  }
-
-  function spawnFollowUp(mission) {
     if (!canTrigger()) return;
 
-    STATE.depth++;
-    STATE.lastTrigger = Date.now();
+    state.depth = depth;
+    state.lastTrigger = Date.now();
 
-    const followUp = {
-      type: "AUTONOMY_FOLLOW_UP",
-      source: "TSM_AUTONOMY_LAYER",
-      parentMissionId: mission.id,
-      sector: mission.sector,
-      severity: mission.severity,
-      payload: {
-        reason: "autonomous_follow_up",
-        original: mission
-      },
-      timestamp: Date.now()
-    };
-
-    bus.emit("SIGNAL", followUp);
-
-    setTimeout(() => {
-      STATE.depth = Math.max(0, STATE.depth - 1);
-    }, STATE.cooldownMs);
+    window.TSMEventBus.emit("SIGNAL", {
+      ...signal,
+      __autonomy: true,
+      __depth: depth
+    });
   }
 
   function onMissionComplete(mission) {
-    const bnca = evaluateMission(mission);
+    if (!mission) return;
 
-    mission.bnca = bnca;
-
-    if (shouldSpawnFollowUp(mission, bnca)) {
-      spawnFollowUp(mission);
+    if (mission.severity >= 70 || mission.status === "FAILED") {
+      trigger({
+        type: "AUTONOMY_REPLAY",
+        payload: mission
+      }, 1);
     }
   }
 
   function init() {
-    // Hook into completion lifecycle
-    bus.on("MISSION_COMPLETE", onMissionComplete);
-
-    // Replay-aware wake-up system
-    bus.on("MISSION_REPLAYED", (mission) => {
-      if (mission?.status === "FAILED" || mission?.severity >= 80) {
-        spawnFollowUp(mission);
-      }
-    });
-
-    console.log("[TSM AUTONOMY LAYER] ACTIVE");
+    window.TSMEventBus.on("MISSION_COMPLETE", onMissionComplete);
   }
 
-  init();
+  window.TSMAutonomyLayer = { init, trigger };
 
-  window.TSMAutonomyLayer = {
-    enable: () => (STATE.enabled = true),
-    disable: () => (STATE.enabled = false),
-    state: STATE
-  };
+  window.addEventListener("load", init);
 })();

@@ -73,13 +73,16 @@ const bnca = window.TSMBNCAEngine.evaluate(mission);
 
 mission.bnca = bnca;
 mission.status = bnca.decision === "PASS"
-  ? "APPROVED"
+  ? "COMPLETED"
   : "BNCA_PENDING";
 
 this.bus.emit("BNCA_RESULT", { mission, bnca });
 
 if (bnca.action === "EXECUTE") {
   this.bus.emit("EXECUTE_MISSION", mission);
+
+    // AUTONOMY SAFE COMPLETION GATE
+    if (mission?.status === "COMPLETED" || mission?.status === "COMPLETED") { this.bus.emit("COMPLETED", mission); }
 }
     }
   }
@@ -96,3 +99,55 @@ if (bnca.action === "EXECUTE") {
 }
 
 window.TSMOrchestrator = new TSMOrchestrator();
+// AUTO-INJECTED SAFETY HOOK
+if (this.bus && this.engine) {
+  const originalDecide = TSMOrchestrator.prototype.decide;
+
+  TSMOrchestrator.prototype.decide = function(signal) {
+    const result = originalDecide.call(this, signal);
+
+    try {
+      if (result?.status === "COMPLETED" || result?.status === "COMPLETED") {
+        this.bus.emit("COMPLETED", result);
+      }
+    } catch (e) {
+      console.warn("MISSION_COMPLETE hook failed", e);
+    }
+
+    return result;
+  };
+}
+
+// ===============================
+// AUTONOMY COMPLETION HOOK (PATCH)
+// ===============================
+(function () {
+
+  const bus = window.TSMEventBus;
+
+  if (!bus) return;
+
+  // wrap existing emit safely
+  const originalEmit = bus.emit;
+
+  bus.emit = function(event, payload) {
+
+    // forward everything normally
+    originalEmit.call(bus, event, payload);
+
+    // REQUIRED AUTONOMY TRIGGER POINT
+    if (event === "COMPLETED") {
+
+      if (window.TSMAutonomyLayer?.trigger) {
+        window.TSMAutonomyLayer.trigger({
+          type: "AUTONOMY_WAKE",
+          payload
+        }, 1);
+      }
+    }
+  };
+
+})();
+
+
+// ===============================
