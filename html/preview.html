@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TSM Exec Kit — Preview</title>
+<style>
+/* ==========================================================================
+   TSM Exec Kit — shared WIP tracker + explainability panel
+   Drop-in CSS for all 7 executive portals.
+
+   THEME MAPPING
+   --------------------------------------------------------------------------
+   Each portal already defines its own dark-theme tokens (seen in the audit:
+   --s2, --bg3, --border2, accent purples like rgba(181,108,255,.12) and
+   rgba(168,85,247,.2), JetBrains Mono for data/labels). Rather than guessing
+   exact hexes per portal, this file defines its OWN --tsmk-* tokens with
+   sane dark-theme defaults, and falls back to your existing tokens first if
+   they exist. Edit the :root block below once per portal (2 min) to make
+   the kit invisible — i.e. indistinguishable from native portal chrome.
+   ========================================================================== */
+
+:root {
+  --tsmk-bg:        var(--bg3, var(--s2, #12152a));
+  --tsmk-bg-raised:  var(--bg2, #181c34);
+  --tsmk-border:     var(--border2, var(--border, rgba(168, 85, 247, 0.18)));
+  --tsmk-accent:     var(--accent, #b56cff);
+  --tsmk-accent-dim: rgba(181, 108, 255, 0.14);
+  --tsmk-text:       var(--text, #e7e6f0);
+  --tsmk-text-dim:   var(--text-dim, #8d8aa3);
+  --tsmk-success:    var(--success, #34d399);
+  --tsmk-warning:    var(--warning, #fbbf24);
+  --tsmk-danger:     var(--danger, #f87171);
+  --tsmk-mono:       'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --tsmk-sans:       var(--font-sans, -apple-system, 'Inter', system-ui, sans-serif);
+  --tsmk-radius:     10px;
+}
+
+.tsmk-wip, .tsmk-explain { font-family: var(--tsmk-sans); color: var(--tsmk-text); }
+
+/* ---------------------------------------------------------------------- */
+/* WIP TRACKER                                                            */
+/* ---------------------------------------------------------------------- */
+
+.tsmk-wip {
+  background: var(--tsmk-bg);
+  border: 1px solid var(--tsmk-border);
+  border-radius: var(--tsmk-radius);
+  padding: 16px 18px;
+}
+
+.tsmk-wip-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.tsmk-wip-title {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tsmk-text-dim);
+  font-weight: 600;
+}
+
+.tsmk-wip-eta {
+  font-family: var(--tsmk-mono);
+  font-size: 11px;
+  color: var(--tsmk-text-dim);
+}
+
+.tsmk-wip-track {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+}
+
+.tsmk-wip-step {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 4px;
+}
+
+.tsmk-wip-step::before {
+  content: '';
+  position: absolute;
+  top: 9px;
+  left: -50%;
+  width: 100%;
+  height: 2px;
+  background: var(--tsmk-border);
+  z-index: 0;
+}
+.tsmk-wip-step:first-child::before { display: none; }
+
+.tsmk-wip-step.is-done::before,
+.tsmk-wip-step.is-active::before { background: var(--tsmk-accent); }
+
+.tsmk-wip-dot {
+  position: relative;
+  z-index: 1;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--tsmk-bg-raised);
+  border: 2px solid var(--tsmk-border);
+  color: var(--tsmk-text-dim);
+}
+
+.tsmk-wip-step.is-done .tsmk-wip-dot {
+  background: var(--tsmk-success);
+  border-color: var(--tsmk-success);
+  color: #06281c;
+}
+.tsmk-wip-step.is-active .tsmk-wip-dot {
+  background: var(--tsmk-accent);
+  border-color: var(--tsmk-accent);
+  color: #1a0a2e;
+  animation: tsmk-pulse 1.6s ease-in-out infinite;
+}
+.tsmk-wip-step.is-blocked .tsmk-wip-dot {
+  background: var(--tsmk-danger);
+  border-color: var(--tsmk-danger);
+  color: #2a0808;
+}
+
+@keyframes tsmk-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(181,108,255,.45); }
+  50% { box-shadow: 0 0 0 5px rgba(181,108,255,0); }
+}
+
+.tsmk-wip-label {
+  margin-top: 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--tsmk-text);
+}
+.tsmk-wip-step.is-pending .tsmk-wip-label,
+.tsmk-wip-step.is-pending .tsmk-wip-time { color: var(--tsmk-text-dim); }
+
+.tsmk-wip-time {
+  margin-top: 3px;
+  font-family: var(--tsmk-mono);
+  font-size: 10px;
+  color: var(--tsmk-text-dim);
+}
+
+.tsmk-wip-detail {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--tsmk-border);
+  font-size: 12px;
+  color: var(--tsmk-text-dim);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.tsmk-wip-detail .tsmk-spinner {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--tsmk-border);
+  border-top-color: var(--tsmk-accent);
+  animation: tsmk-spin .8s linear infinite;
+}
+@keyframes tsmk-spin { to { transform: rotate(360deg); } }
+
+/* compact variant for embedding in a header strip */
+.tsmk-wip.tsmk-compact { padding: 10px 14px; }
+.tsmk-wip.tsmk-compact .tsmk-wip-label { font-size: 10.5px; }
+.tsmk-wip.tsmk-compact .tsmk-wip-head { margin-bottom: 8px; }
+
+/* ---------------------------------------------------------------------- */
+/* EXPLAINABILITY PANEL                                                   */
+/* ---------------------------------------------------------------------- */
+
+.tsmk-explain { display: flex; flex-direction: column; gap: 10px; }
+
+.tsmk-exp-card {
+  background: var(--tsmk-bg);
+  border: 1px solid var(--tsmk-border);
+  border-left: 3px solid var(--tsmk-accent);
+  border-radius: var(--tsmk-radius);
+  overflow: hidden;
+  transition: border-color .15s ease;
+}
+.tsmk-exp-card[data-severity="high"]  { border-left-color: var(--tsmk-danger); }
+.tsmk-exp-card[data-severity="med"]   { border-left-color: var(--tsmk-warning); }
+.tsmk-exp-card[data-severity="low"]   { border-left-color: var(--tsmk-success); }
+
+.tsmk-exp-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 15px;
+  cursor: pointer;
+  user-select: none;
+}
+.tsmk-exp-row:hover { background: var(--tsmk-accent-dim); }
+
+.tsmk-exp-claim {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--tsmk-text);
+}
+.tsmk-exp-impact {
+  margin-top: 4px;
+  font-family: var(--tsmk-mono);
+  font-size: 11.5px;
+  color: var(--tsmk-text-dim);
+}
+
+.tsmk-exp-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.tsmk-conf-badge {
+  font-family: var(--tsmk-mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--tsmk-accent-dim);
+  color: var(--tsmk-accent);
+  white-space: nowrap;
+}
+
+.tsmk-exp-chevron {
+  width: 16px; height: 16px;
+  color: var(--tsmk-text-dim);
+  transition: transform .18s ease;
+  flex-shrink: 0;
+}
+.tsmk-exp-card.is-open .tsmk-exp-chevron { transform: rotate(90deg); color: var(--tsmk-accent); }
+
+.tsmk-exp-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .2s ease;
+  border-top: 1px solid transparent;
+}
+.tsmk-exp-card.is-open .tsmk-exp-body {
+  border-top: 1px solid var(--tsmk-border);
+}
+
+.tsmk-exp-body-inner { padding: 13px 15px 15px; }
+
+.tsmk-exp-why-label {
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--tsmk-text-dim);
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.tsmk-exp-rationale {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--tsmk-text);
+  margin-bottom: 12px;
+}
+
+.tsmk-exp-data {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.tsmk-exp-datapoint {
+  background: var(--tsmk-bg-raised);
+  border: 1px solid var(--tsmk-border);
+  border-radius: 7px;
+  padding: 6px 10px;
+}
+.tsmk-exp-datapoint .l {
+  font-size: 9.5px;
+  color: var(--tsmk-text-dim);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.tsmk-exp-datapoint .v {
+  font-family: var(--tsmk-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tsmk-text);
+}
+
+.tsmk-exp-sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tsmk-exp-source-tag {
+  font-family: var(--tsmk-mono);
+  font-size: 10.5px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: transparent;
+  border: 1px solid var(--tsmk-border);
+  color: var(--tsmk-text-dim);
+}
+
+.tsmk-exp-empty {
+  text-align: center;
+  padding: 24px 12px;
+  color: var(--tsmk-text-dim);
+  font-size: 12.5px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tsmk-wip-step.is-active .tsmk-wip-dot { animation: none; }
+  .tsmk-spinner { animation: none; }
+  .tsmk-exp-body, .tsmk-exp-chevron { transition: none; }
+}
+
+@media (max-width: 640px) {
+  .tsmk-wip-track { flex-wrap: wrap; row-gap: 18px; }
+  .tsmk-wip-step { flex: 1 1 30%; }
+}
+
+</style>
+<style>
+  body {
+    background: #0b0d1a;
+    color: #e7e6f0;
+    font-family: -apple-system, 'Inter', system-ui, sans-serif;
+    margin: 0;
+    padding: 40px 24px 80px;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; }
+  h1 { font-size: 18px; letter-spacing: .02em; margin: 0 0 4px; }
+  .sub { color: #8d8aa3; font-size: 13px; margin-bottom: 34px; }
+  h2 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+    color: #8d8aa3; margin: 36px 0 12px; font-weight: 700;
+  }
+  .note {
+    font-size: 12px; color: #8d8aa3; margin-top: 10px; line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>TSM Exec Kit — Live Preview</h1>
+  <div class="sub">Sample data styled after the Insurance executive portal (highest-priority gap: no WIP, cosmetic-only confidence badge).</div>
+
+  <h2>WIP Tracker — compact header variant</h2>
+  <div id="wip-compact"></div>
+
+  <h2>WIP Tracker — full variant, mid-pipeline</h2>
+  <div id="wip-full"></div>
+  <div class="note">Drives off <code>status</code> per stage: <code>done</code> / <code>active</code> (pulses, shows <code>detail</code> line) / <code>pending</code> / <code>blocked</code> (red).</div>
+
+  <h2>Explainability Panel — replaces the "Confidence 91%" badge-only pattern</h2>
+  <div id="explain-demo"></div>
+  <div class="note">Click a card to expand. The collapsed row is what an exec scans; the expanded "Why" is what was missing in 5 of 7 portals — it's the same rationale the engine already generated internally, just surfaced instead of discarded.</div>
+</div>
+
+<script>
+
+
+(function (global) {
+  'use strict';
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function chevronSvg() {
+    return '<svg class="tsmk-exp-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">' +
+           '<path d="M9 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* WIP TRACKER                                                       */
+  /* ---------------------------------------------------------------- */
+
+  
+  function renderWIP(target, stages, opts) {
+    opts = opts || {};
+    var el = typeof target === 'string' ? document.getElementById(target) : target;
+    if (!el) return;
+
+    if (!stages || !stages.length) {
+      el.innerHTML = '<div class="tsmk-wip"><div class="tsmk-exp-empty">No pipeline data yet.</div></div>';
+      return;
+    }
+
+    var activeStage = stages.find(function (s) { return s.status === 'active'; });
+
+    var stepsHtml = stages.map(function (s) {
+      var statusClass = 'is-' + (s.status || 'pending');
+      var dotContent = s.status === 'done' ? '&#10003;'
+                      : s.status === 'blocked' ? '!'
+                      : s.status === 'active' ? '' : '';
+      return (
+        '<div class="tsmk-wip-step ' + statusClass + '">' +
+          '<div class="tsmk-wip-dot">' + dotContent + '</div>' +
+          '<div class="tsmk-wip-label">' + esc(s.label) + '</div>' +
+          (s.time ? '<div class="tsmk-wip-time">' + esc(s.time) + '</div>' : '') +
+        '</div>'
+      );
+    }).join('');
+
+    var detailHtml = (activeStage && activeStage.detail)
+      ? '<div class="tsmk-wip-detail"><span class="tsmk-spinner"></span>' + esc(activeStage.detail) + '</div>'
+      : '';
+
+    el.innerHTML =
+      '<div class="tsmk-wip' + (opts.compact ? ' tsmk-compact' : '') + '">' +
+        '<div class="tsmk-wip-head">' +
+          '<div class="tsmk-wip-title">' + esc(opts.title || 'Pipeline Status') + '</div>' +
+          (opts.eta ? '<div class="tsmk-wip-eta">' + esc(opts.eta) + '</div>' : '') +
+        '</div>' +
+        '<div class="tsmk-wip-track">' + stepsHtml + '</div>' +
+        detailHtml +
+      '</div>';
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* EXPLAINABILITY PANEL                                              */
+  /* ---------------------------------------------------------------- */
+
+  
+  function renderExplainability(target, items, opts) {
+    opts = opts || {};
+    var el = typeof target === 'string' ? document.getElementById(target) : target;
+    if (!el) return;
+
+    if (!items || !items.length) {
+      el.innerHTML = '<div class="tsmk-explain"><div class="tsmk-exp-empty">No AI recommendations to explain yet.</div></div>';
+      return;
+    }
+
+    var cardsHtml = items.map(function (item, idx) {
+      var open = opts.openFirst && idx === 0;
+      var conf = (item.confidence != null) ? Math.round(item.confidence) + '%' : null;
+
+      var dataPointsHtml = (item.dataPoints && item.dataPoints.length)
+        ? '<div class="tsmk-exp-data">' + item.dataPoints.map(function (dp) {
+            return '<div class="tsmk-exp-datapoint"><div class="l">' + esc(dp.label) + '</div><div class="v">' + esc(dp.value) + '</div></div>';
+          }).join('') + '</div>'
+        : '';
+
+      var sourcesHtml = (item.sources && item.sources.length)
+        ? '<div class="tsmk-exp-sources">' + item.sources.map(function (src) {
+            return '<span class="tsmk-exp-source-tag">' + esc(src) + '</span>';
+          }).join('') + '</div>'
+        : '';
+
+      return (
+        '<div class="tsmk-exp-card' + (open ? ' is-open' : '') + '" data-severity="' + esc(item.severity || '') + '" data-id="' + esc(item.id || '') + '">' +
+          '<div class="tsmk-exp-row" data-toggle="' + esc(item.id || idx) + '">' +
+            '<div>' +
+              '<div class="tsmk-exp-claim">' + esc(item.claim) + '</div>' +
+              (item.impact ? '<div class="tsmk-exp-impact">' + esc(item.impact) + '</div>' : '') +
+            '</div>' +
+            '<div class="tsmk-exp-meta">' +
+              (conf ? '<span class="tsmk-conf-badge">' + conf + ' conf</span>' : '') +
+              chevronSvg() +
+            '</div>' +
+          '</div>' +
+          '<div class="tsmk-exp-body">' +
+            '<div class="tsmk-exp-body-inner">' +
+              '<div class="tsmk-exp-why-label">Why</div>' +
+              '<div class="tsmk-exp-rationale">' + esc(item.rationale || 'No rationale provided — flag this recommendation for review.') + '</div>' +
+              dataPointsHtml +
+              sourcesHtml +
+            '</div>' +
+          '</div>' +
+        '</div>'
+      );
+    }).join('');
+
+    el.innerHTML = '<div class="tsmk-explain">' + cardsHtml + '</div>';
+
+    // wire up toggle behavior + auto-set max-height for the open/close transition
+    var cards = el.querySelectorAll('.tsmk-exp-card');
+    cards.forEach(function (card) {
+      var body = card.querySelector('.tsmk-exp-body');
+      var inner = card.querySelector('.tsmk-exp-body-inner');
+      function sync() {
+        body.style.maxHeight = card.classList.contains('is-open') ? (inner.scrollHeight + 4) + 'px' : '0px';
+      }
+      sync();
+      card.querySelector('.tsmk-exp-row').addEventListener('click', function () {
+        card.classList.toggle('is-open');
+        sync();
+      });
+      // re-measure on window resize since text reflow changes height
+      window.addEventListener('resize', sync);
+    });
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* OPTIONAL: relay-aware convenience wiring                          */
+  /* ---------------------------------------------------------------- */
+
+  
+  function fromRelay(relayObj) {
+    relayObj = relayObj || {};
+    return {
+      wip: Array.isArray(relayObj.wip) ? relayObj.wip : [],
+      explain: Array.isArray(relayObj.explain) ? relayObj.explain : []
+    };
+  }
+
+  global.TSMExecKit = {
+    renderWIP: renderWIP,
+    renderExplainability: renderExplainability,
+    fromRelay: fromRelay
+  };
+
+})(window);
+
+</script>
+<script>
+  // ---- WIP demo data -----------------------------------------------
+  var stages = [
+    { id: 'ingest',  label: 'Data Ingestion',        status: 'done',   time: '9:02 AM' },
+    { id: 'engines', label: 'Engine Analysis (6/6)', status: 'done',   time: '9:14 AM' },
+    { id: 'report',  label: 'Report Generation',     status: 'active', time: '9:15 AM', detail: 'Drafting executive summary from 6 engine outputs…' },
+    { id: 'review',  label: 'Awaiting Review',       status: 'pending' },
+    { id: 'delivered', label: 'Delivered to Exec',   status: 'pending' }
+  ];
+
+  TSMExecKit.renderWIP('wip-compact', stages, { compact: true, eta: 'Updated 9:15 AM' });
+  TSMExecKit.renderWIP('wip-full', stages, { title: 'Strategist Pipeline' });
+
+  // ---- Explainability demo data -------------------------------------
+  var items = [
+    {
+      id: 'e1',
+      claim: 'Appeal Denial #4471 — Aetna, CPT 99214 + 96127',
+      confidence: 91,
+      severity: 'high',
+      impact: '$82,400 recoverable · 14-day appeal window',
+      rationale: 'Payer denied under bundling edit CCI-204, but modifier 25 was applied correctly per CMS guidance for a significant, separately identifiable E/M service on the same day as the depression screening. The current NCCI edit table (loaded 6/27) lists an exception for this exact CPT pair when modifier 25 is present, which directly contradicts the stated denial reason.',
+      sources: ['Engine 3 — Denials Analyst', 'NCCI Edit Table v2026.1', 'Payer Contract §4.2 (Aetna)'],
+      dataPoints: [
+        { label: 'Similar appeals won (90d)', value: '78%' },
+        { label: 'Avg recovery time', value: '34 days' },
+        { label: 'Payer response rate', value: '92%' }
+      ]
+    },
+    {
+      id: 'e2',
+      claim: 'Escalate Prior Auth backlog — Cigna, 11 pending > 7 days',
+      confidence: 74,
+      severity: 'med',
+      impact: '11 cases, est. $310K in delayed billing',
+      rationale: 'Cigna\'s average turnaround on this auth type is 3.2 days per the last 60-day baseline. 11 of 14 open requests have exceeded 7 days with no payer response logged, which is 2.3x the baseline variance threshold the engine flags as "needs escalation."',
+      sources: ['Engine 1 — Authorization Tracker', '60-day payer baseline'],
+      dataPoints: [
+        { label: 'Baseline turnaround', value: '3.2 days' },
+        { label: 'Current avg wait', value: '9.6 days' }
+      ]
+    },
+    {
+      id: 'e3',
+      claim: 'No action needed — Collections trending normal',
+      confidence: 88,
+      severity: 'low',
+      impact: 'Informational',
+      rationale: 'Collections rate this period (96.1%) is within one standard deviation of the trailing 12-month average (95.4%). No threshold breach detected.',
+      sources: ['Engine 5 — Collections Monitor']
+    }
+  ];
+
+  TSMExecKit.renderExplainability('explain-demo', items, { openFirst: true });
+</script>
+</body>
+</html>
