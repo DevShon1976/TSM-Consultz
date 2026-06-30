@@ -51,9 +51,41 @@ PYEOF
 )"
 rm -f "$PROMPT_FILE"
 
-RESPONSE=$(curl -s -X POST "$BASE_URL/api/music/sweet/ai" \
-  -H "Content-Type: application/json" \
-  --data-raw "$REQUEST_BODY")
+HTTP_STATUS=""
+RESPONSE=""
+ATTEMPTS=0
+MAX_ATTEMPTS=3
+
+while [ "$ATTEMPTS" -lt "$MAX_ATTEMPTS" ]; do
+  ATTEMPTS=$((ATTEMPTS+1))
+  echo "Attempt $ATTEMPTS/$MAX_ATTEMPTS (90s timeout)..."
+
+  HTTP_RESPONSE=$(curl -sS --max-time 90 -w "\n___HTTP_STATUS___%{http_code}" -X POST "$BASE_URL/api/music/sweet/ai" \
+    -H "Content-Type: application/json" \
+    --data-raw "$REQUEST_BODY") || {
+      echo "curl failed (network error, timeout, or connection refused) on attempt $ATTEMPTS."
+      HTTP_RESPONSE=""
+    }
+
+  if [ -n "$HTTP_RESPONSE" ]; then
+    HTTP_STATUS="${HTTP_RESPONSE##*___HTTP_STATUS___}"
+    RESPONSE="${HTTP_RESPONSE%___HTTP_STATUS___*}"
+    if [ -n "$RESPONSE" ] && [ "$HTTP_STATUS" != "" ]; then
+      break
+    fi
+  fi
+
+  echo "Empty or incomplete response, retrying in 3s..."
+  sleep 3
+done
+
+echo "HTTP status: ${HTTP_STATUS:-unknown}"
+if [ -z "$RESPONSE" ]; then
+  echo "FAIL: no response body after $MAX_ATTEMPTS attempts."
+  echo "This points to a server-side issue (timeout, crash, or cold-start failure) rather than a script bug."
+  echo "Check: fly logs   (or)   fly status   to see what the app did during these requests."
+  exit 1
+fi
 
 echo "--- Raw response ---"
 echo "$RESPONSE" | python3 -m json.tool 2>/dev/null || echo "$RESPONSE"
