@@ -92,10 +92,13 @@ echo "$RESPONSE" | python3 -m json.tool 2>/dev/null || echo "$RESPONSE"
 echo
 
 echo "--- Bar-break check ---"
-echo "$RESPONSE" | python3 <<'PYEOF'
+RESPONSE_FILE="$(mktemp)"
+printf '%s' "$RESPONSE" > "$RESPONSE_FILE"
+python3 - "$RESPONSE_FILE" <<'PYEOF'
 import json, re, sys
 
-raw = sys.stdin.read()
+with open(sys.argv[1], "r", encoding="utf-8") as fh:
+    raw = fh.read()
 
 try:
     outer = json.loads(raw)
@@ -135,3 +138,4 @@ if all(results):
 else:
     print("❌ At least one section came back as a run-on line. The AI may need a stronger prompt constraint, or this was an off-sample generation — try running again to rule out one-off model variance before assuming a regression.")
 PYEOF
+rm -f "$RESPONSE_FILE"
