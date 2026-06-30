@@ -801,6 +801,26 @@ function writeExecRelay(e) {
       engines: relayData?.engines || {},
       enginesCount: document.getElementById('kpi-engines').textContent
     };
+    // ── TSM EXEC KIT: WIP + explainability ──────────────────────────
+    try {
+      payload.wip = (window.TSMExecKitProducer && TSMExecKitProducer.buildWip([
+        { id:'discovery',  label:'Discovery',        status:'done' },
+        { id:'warroom',    label:'War Room',         status:'done' },
+        { id:'strategist', label:'Strategist Synth', status:'done', time: new Date().toLocaleTimeString() },
+        { id:'exec',       label:'Executive Review', status:'active' }
+      ])) || [];
+      payload.explain = (window.TSMExecKitProducer && TSMExecKitProducer.buildExplain([
+        {
+          claim: (relayData?.matter || relayData?.docType || 'Matter') + ' — Strategist Synthesis',
+          confidence: null,
+          severity: 'med',
+          rationale: payload.summary || payload.narrative || relayData?.summary || relayData?.narrative || 'See strategist brief for full reasoning chain.',
+          sources: ['Legal Strategist']
+        }
+      ])) || [];
+    } catch(e) { console.warn('[exec-kit] producer patch error:', e); }
+    // ── END TSM EXEC KIT ─────────────────────────────────────────────
+
     sessionStorage.setItem('TSM_STRATEGIST_RELAY', JSON.stringify(payload));
   } catch(err) { console.warn('Relay write error:', err); }
 }
@@ -861,6 +881,7 @@ setInterval(() => {
 
 <style>body{padding-bottom:40px!important}</style>
 <div id="tsm-chain-bar" style="position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#040c12;border-top:1px solid #0d2233;display:flex;align-items:center;height:32px;padding:0 16px;font-family:'IBM Plex Mono',monospace;font-size:10px;"><span style="color:#3a5a70;margin-right:12px;font-size:9px;">TSM CHAIN</span><a href="/html/legal-pro/legal-war-room.html" style="color:#94a3b8;border:1px solid #1a3a50;padding:3px 10px;border-radius:3px;text-decoration:none;margin-right:6px;font-size:9px;">&#9675; WAR ROOM</a><span style="color:#1a3a50;margin-right:6px;">--&gt;</span><a href="#" style="color:var(--purple, #b388ff);background:rgba(255,255,255,.05);border:1px solid var(--purple, #b388ff)55;padding:3px 10px;border-radius:3px;text-decoration:none;margin-right:6px;font-size:9px;">&#9679; STRATEGIST</a><span style="color:#1a3a50;margin-right:6px;">--&gt;</span><a href="/html/legal-pro/legal-executive-portal.html" style="color:#94a3b8;border:1px solid #1a3a50;padding:3px 10px;border-radius:3px;text-decoration:none;margin-right:6px;font-size:9px;">&#9675; EXEC PORTAL</a><span style="color:#1a3a50;margin-left:auto;font-size:9px;">LEGAL</span></div>
+  <script src="/shared/tsm-exec-kit-producer.js"></script>
 </body>
 </html>
 // ===== TSM_AUTONOMY_STANDARDIZED =====

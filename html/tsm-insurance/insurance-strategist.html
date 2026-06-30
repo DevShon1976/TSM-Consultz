@@ -614,6 +614,26 @@ async function runStrategist(){
     chainStep:'insurance-strategist'
   };
   try{
+    // ── TSM EXEC KIT: WIP + explainability ──────────────────────────
+    try {
+      relay.wip = (window.TSMExecKitProducer && TSMExecKitProducer.buildWip([
+        { id:'ingest', label:'Document Ingestion', status:'done' },
+        { id:'nodes',  label:'4 Node Analysis',    status:'done' },
+        { id:'bnca',   label:'BNCA Synthesis',     status:'done', time: new Date().toLocaleTimeString() },
+        { id:'relay',  label:'Relayed to Exec',    status:'active', detail:'Awaiting executive review' }
+      ])) || [];
+      relay.explain = (window.TSMExecKitProducer && TSMExecKitProducer.buildExplain([
+        {
+          claim: (warRoomData?.docType || 'Claim') + ' — BNCA confidence ' + (overall?overall[1]:'78') + '%',
+          confidence: overall ? parseInt(overall[1]) : 78,
+          severity: (overall && parseInt(overall[1]) < 70) ? 'high' : 'med',
+          rationale: relay.summary || relay.narrative || relay.fullBrief || relay.brief || relay.bncaText || 'Synthesized from 4-node strategist analysis — see full brief for engine-by-engine detail.',
+          sources: ['Insurance Strategist — 4 Node Synthesis']
+        }
+      ])) || [];
+    } catch(e) { console.warn('[exec-kit] producer patch error:', e); }
+    // ── END TSM EXEC KIT ─────────────────────────────────────────────
+
     sessionStorage.setItem('TSM_INS_STRAT_RELAY',JSON.stringify(relay));
     localStorage.setItem('tsm_ins_strat_relay',JSON.stringify(relay));
   }catch(e){}
@@ -1066,6 +1086,7 @@ function insXPParseExplain(raw){
 })();
 </script>
   <script src="./tsm-kernel-upgrade.js"></script>
+  <script src="/shared/tsm-exec-kit-producer.js"></script>
 </body>
 </html>
 

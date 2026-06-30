@@ -822,6 +822,27 @@ function escalateToExec() {
   buildFullBrief();
   const payload = buildStratPayload();
   try {
+    // ── TSM EXEC KIT: WIP + explainability ──────────────────────────
+    try {
+      payload.wip = (window.TSMExecKitProducer && TSMExecKitProducer.buildWip([
+        { id:'docsearch',  label:'Document Search',   status:'done' },
+        { id:'warroom',    label:'War Room Analysis', status:'done' },
+        { id:'strategist', label:'Strategist Brief',  status:'done', time: new Date().toLocaleTimeString() },
+        { id:'exec',       label:'Executive Portal',  status:'active' }
+      ])) || [];
+      payload.explain = (window.TSMExecKitProducer && TSMExecKitProducer.buildExplain([
+        {
+          claim: payload.reportTitle || payload.docName || 'RE Strategist Brief',
+          confidence: payload.confidence || null,
+          severity: 'med',
+          impact: payload.exposure || '',
+          rationale: payload.fullBrief || payload.narrative || payload.summary || payload.brief || 'See full strategist brief for detailed reasoning.',
+          sources: ['RE Strategist']
+        }
+      ])) || [];
+    } catch(e) { console.warn('[exec-kit] producer patch error:', e); }
+    // ── END TSM EXEC KIT ─────────────────────────────────────────────
+
     localStorage.setItem('TSM_RE_WAR_RELAY', JSON.stringify(payload));
     sessionStorage.setItem('TSM_RE_WAR_RELAY', JSON.stringify(payload));
     localStorage.setItem('tsm_re_strat_payload', JSON.stringify(payload));
@@ -916,6 +937,7 @@ function reXPParseExplain(raw){
   <script src="./tsm-kernel-upgrade.js"></script>
 
 <div id="tsm-chain-bar" style="position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#040c12;border-top:1px solid #0d2233;display:flex;align-items:center;height:32px;padding:0 16px;font-family:'IBM Plex Mono',monospace;font-size:10px;"><span style="color:#3a5a70;margin-right:12px;font-size:9px;">TSM CHAIN</span><a href="/html/reo-pro/re-war-room.html" style="color:#94a3b8;border:1px solid #1a3a50;padding:3px 10px;border-radius:3px;text-decoration:none;margin-right:6px;font-size:9px;">&#9675; WAR ROOM</a><span style="color:#1a3a50;margin-right:6px;">--&gt;</span><a href="#" style="color:var(--amber, #ffab00);background:rgba(255,255,255,.05);border:1px solid var(--amber, #ffab00)55;padding:3px 10px;border-radius:3px;text-decoration:none;margin-right:6px;font-size:9px;">&#9679; STRATEGIST</a><span style="color:#1a3a50;margin-right:6px;">--&gt;</span><a href="/html/reo-pro/re-exec-portal.html" style="color:#94a3b8;border:1px solid #1a3a50;padding:3px 10px;border-radius:3px;text-decoration:none;margin-right:6px;font-size:9px;">&#9675; EXEC PORTAL</a><span style="color:#1a3a50;margin-left:auto;font-size:9px;">REAL ESTATE</span></div>
+  <script src="/shared/tsm-exec-kit-producer.js"></script>
 </body>
 </html>
 
