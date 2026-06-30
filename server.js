@@ -1,4 +1,6 @@
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
 
 process.on('uncaughtException', (err) => {
   console.error('💥 UNCAUGHT EXCEPTION:', err.message, err.stack);
@@ -1055,11 +1057,56 @@ app.get('/api/collective/bnca/latest', (req, res) => {
 // Per-vertical: WIP tasks, readiness score, data quality, decision queue, trends.
 // ══════════════════════════════════════════════════════════════════════════════
 
-const WIP_TASKS = {};         // vertical -> [ {id, action, owner, status, due, risk, createdAt, updatedAt} ]
-const WIP_READINESS = {};     // vertical -> { dataCompleteness, stakeholderCoverage, mitigationPlans, resourceAvailability, openRisks, updatedAt }
-const WIP_DATA_QUALITY = {};  // vertical -> [ {id, source, status, updatedAt} ]
-const WIP_DECISIONS = {};     // vertical -> [ {id, title, impact, cost, recommendation, confidence, status, createdAt, decidedAt} ]
-const WIP_TRENDS = {};        // vertical -> [ {id, event, date, resolutionHours, notes, createdAt} ]
+
+// ── WIP PERSISTENCE LAYER ────────────────────────────────────────────────────
+// Backed by Fly Volume mounted at /app/data (see fly.toml [mounts]).
+// Falls back to local ./data if volume path is unavailable (local dev).
+const WIP_DATA_DIR = fs.existsSync('/app/data') ? '/app/data' : path.join(__dirname, 'data');
+if (!fs.existsSync(WIP_DATA_DIR)) fs.mkdirSync(WIP_DATA_DIR, { recursive: true });
+const WIP_STATE_FILE = path.join(WIP_DATA_DIR, 'wip-master.json');
+
+function loadWipState() {
+  try {
+    if (fs.existsSync(WIP_STATE_FILE)) {
+      const raw = fs.readFileSync(WIP_STATE_FILE, 'utf8');
+      const parsed = JSON.parse(raw);
+      return {
+        tasks: parsed.tasks || {},
+        readiness: parsed.readiness || {},
+        dataQuality: parsed.dataQuality || {},
+        decisions: parsed.decisions || {},
+        trends: parsed.trends || {}
+      };
+    }
+  } catch (err) {
+    console.error('[wip-persistence] load failed, starting empty:', err.message);
+  }
+  return { tasks: {}, readiness: {}, dataQuality: {}, decisions: {}, trends: {} };
+}
+
+let wipSaveTimer = null;
+function saveWipState() {
+  // debounce rapid writes
+  if (wipSaveTimer) clearTimeout(wipSaveTimer);
+  wipSaveTimer = setTimeout(() => {
+    try {
+      const snapshot = {
+        tasks: WIP_TASKS, readiness: WIP_READINESS, dataQuality: WIP_DATA_QUALITY,
+        decisions: WIP_DECISIONS, trends: WIP_TRENDS, savedAt: Date.now()
+      };
+      fs.writeFileSync(WIP_STATE_FILE, JSON.stringify(snapshot, null, 2));
+    } catch (err) {
+      console.error('[wip-persistence] save failed:', err.message);
+    }
+  }, 250);
+}
+
+const _WIP_LOADED = loadWipState();
+const WIP_TASKS = _WIP_LOADED.tasks;         // vertical -> [ {id, action, owner, status, due, risk, createdAt, updatedAt} ]
+const WIP_READINESS = _WIP_LOADED.readiness;     // vertical -> { dataCompleteness, stakeholderCoverage, mitigationPlans, resourceAvailability, openRisks, updatedAt }
+const WIP_DATA_QUALITY = _WIP_LOADED.dataQuality;  // vertical -> [ {id, source, status, updatedAt} ]
+const WIP_DECISIONS = _WIP_LOADED.decisions;     // vertical -> [ {id, title, impact, cost, recommendation, confidence, status, createdAt, decidedAt} ]
+const WIP_TRENDS = _WIP_LOADED.trends;        // vertical -> [ {id, event, date, resolutionHours, notes, createdAt} ]
 
 function ensureWipVertical(v) {
   if (!COLLECTIVE_VERTICALS.includes(v)) return false;
@@ -1109,6 +1156,7 @@ app.post('/api/wip/task', (req, res) => {
     due: due || '', risk: risk || 'LOW', createdAt: Date.now(), updatedAt: Date.now()
   };
   WIP_TASKS[vertical].unshift(task);
+  saveWipState();
   res.json({ ok: true, task });
 });
 
@@ -1119,6 +1167,7 @@ app.patch('/api/wip/task/:id', (req, res) => {
   if (!task) return res.status(404).json({ ok: false, error: 'task not found' });
   Object.assign(task, req.body, { id: task.id, vertical: undefined, updatedAt: Date.now() });
   delete task.vertical;
+  saveWipState();
   res.json({ ok: true, task });
 });
 
@@ -1126,6 +1175,7 @@ app.delete('/api/wip/task/:id', (req, res) => {
   const { vertical } = req.body || req.query || {};
   if (!ensureWipVertical(vertical)) return res.status(400).json({ ok: false, error: 'valid vertical required' });
   WIP_TASKS[vertical] = WIP_TASKS[vertical].filter(t => t.id !== req.params.id);
+  saveWipState();
   res.json({ ok: true, deleted: req.params.id });
 });
 
@@ -1134,6 +1184,7 @@ app.post('/api/wip/readiness', (req, res) => {
   const { vertical, dataCompleteness, stakeholderCoverage, mitigationPlans, resourceAvailability, openRisks } = req.body || {};
   if (!ensureWipVertical(vertical)) return res.status(400).json({ ok: false, error: 'valid vertical required' });
   WIP_READINESS[vertical] = { dataCompleteness, stakeholderCoverage, mitigationPlans, resourceAvailability, openRisks, updatedAt: Date.now() };
+  saveWipState();
   res.json({ ok: true, readiness: WIP_READINESS[vertical], overall: computeReadinessOverall(WIP_READINESS[vertical]) });
 });
 
@@ -1151,6 +1202,7 @@ app.post('/api/wip/data-quality', (req, res) => {
   }
   const entry = { id: wipId('dq'), source, status: status || 'UNKNOWN', updatedAt: Date.now() };
   list.unshift(entry);
+  saveWipState();
   res.json({ ok: true, entry });
 });
 
@@ -1158,6 +1210,7 @@ app.delete('/api/wip/data-quality/:id', (req, res) => {
   const { vertical } = req.body || req.query || {};
   if (!ensureWipVertical(vertical)) return res.status(400).json({ ok: false, error: 'valid vertical required' });
   WIP_DATA_QUALITY[vertical] = WIP_DATA_QUALITY[vertical].filter(d => d.id !== req.params.id);
+  saveWipState();
   res.json({ ok: true, deleted: req.params.id });
 });
 
@@ -1171,6 +1224,7 @@ app.post('/api/wip/decision', (req, res) => {
     confidence: confidence != null ? confidence : 80, status: 'PENDING', createdAt: Date.now(), decidedAt: null
   };
   WIP_DECISIONS[vertical].unshift(decision);
+  saveWipState();
   res.json({ ok: true, decision });
 });
 
@@ -1182,6 +1236,7 @@ app.patch('/api/wip/decision/:id', (req, res) => {
   if (!decision) return res.status(404).json({ ok: false, error: 'decision not found' });
   decision.status = status;
   decision.decidedAt = status === 'PENDING' ? null : Date.now();
+  saveWipState();
   res.json({ ok: true, decision });
 });
 
@@ -1195,6 +1250,7 @@ app.post('/api/wip/trend', (req, res) => {
     resolutionHours: resolutionHours != null ? resolutionHours : null, notes: notes || '', createdAt: Date.now()
   };
   WIP_TRENDS[vertical].unshift(trend);
+  saveWipState();
   res.json({ ok: true, trend });
 });
 
