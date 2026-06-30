@@ -33,7 +33,7 @@ post_json() {
     echo "  Attempt $attempts/$max_attempts (90s timeout)..."
     if curl -sS --max-time 90 -X POST "$ENDPOINT" \
         -H "Content-Type: application/json" \
-        --data-raw "@$body_file" -o "$out_file"; then
+        --data-binary "@$body_file" -o "$out_file"; then
       if [ -s "$out_file" ]; then
         return 0
       fi
