@@ -672,6 +672,27 @@ function populateFromRelay(d) {
     document.getElementById('relayAge').textContent = age < 1 ? 'Just synced' : `Synced ${age}m ago`;
   }
   if (n4) document.getElementById('relayContent').textContent = n4.slice(0, 420) + (n4.length > 420 ? '...' : '');
+    // ── TSM PATCH: wire stratJson KPIs into existing portal elements ──
+    (function wireInsuranceKPIs() {
+      try {
+        var raw = JSON.parse(localStorage.getItem('tsm_ins_strat_relay') || sessionStorage.getItem('TSM_INS_STRAT_RELAY') || '{}');
+        var sj = raw.stratJson || raw.json || raw;
+        var set = function(id, val) { var e = document.getElementById(id); if (e && val) e.textContent = val; };
+        set('kpiExposure',   sj.noActionRevLoss);
+        set('kpiRecovery',   sj.actionRevLoss);
+        set('kpiNetRisk',    sj.recoveryTime);
+        set('kpiConfidence', sj.confidence != null ? sj.confidence + '%' : null);
+        // Ticker dupes
+        set('tk1',  sj.noActionRevLoss); set('tk1b', sj.noActionRevLoss);
+        set('tk2',  sj.confidence != null ? sj.confidence + '%' : null);
+        set('tk2b', sj.confidence != null ? sj.confidence + '%' : null);
+        set('tk3',  sj.actionRevLoss);   set('tk3b', sj.actionRevLoss);
+        set('tk4',  sj.recoveryTime);    set('tk4b', sj.recoveryTime);
+        console.log('[TSM-INS-EXEC] KPIs wired from stratJson');
+      } catch(e) { console.warn('[TSM-INS-EXEC] KPI wire failed:', e); }
+    })();
+    // ── END TSM PATCH ────────────────────────────────────────────────
+
 
   // ── Parse Node 4 (Executive Package) ──
   const expM   = n4.match(/FINANCIAL IMPACT[:\s]+([^\n]+)/i);
