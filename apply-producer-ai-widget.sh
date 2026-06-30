@@ -1,270 +1,136 @@
-/**
- * producer-ai-widget.js
- * TSM Sweet Music™ OS — Floating Producer AI (ZAY)
- *
- * A persistent floating assistant that lives on every music-command page.
- * Reactive: watches SMOS state for stage transitions and surfaces a single
- *           dismissible nudge toward the logical next step.
- * Proactive: click-to-open chat panel, calls /api/music/sweet/ai with the
- *            current page + SMOS context so ZAY can answer in-context.
- *
- * Requires sweet-music-engine.js to be loaded first (depends on window.SMOS).
- *
- * Usage: <script src="../js/producer-ai-widget.js"></script>
- *        (adjust relative path per page depth, same convention as sweet-music-engine.js)
- */
+#!/usr/bin/env bash
+set -euo pipefail
 
-(function () {
-  if (typeof window === 'undefined') return;
+# ── TSM Consultz: Floating Producer AI (ZAY) widget — preview rollout ──
+#
+# Usage:
+#   export GITHUB_TOKEN=ghp_xxxxx
+#   ./apply-producer-ai-widget.sh
+#
+# What it does:
+#   1. Clones DevShon1976/TSM-Consultz
+#   2. Adds the new shared file: html/music-command/js/producer-ai-widget.js
+#   3. Wires it (+ sweet-music-engine.js, which was missing) into:
+#        - html/music-command/creation/song-builder.html
+#        - html/music-command/index.html
+#      so you can preview the floating bubble + reactive nudges on the two
+#      highest-traffic pages before it goes everywhere.
+#   4. Switches song-builder.html's raw localStorage write to SMOS.song.save()
+#      now that it actually has the engine loaded, for consistency with the
+#      rest of the codebase.
+#   5. Commits and pushes to main.
+#
+# Nothing here echoes or logs your token.
 
-  function boot() {
-    if (!window.SMOS) {
-      console.warn('[ProducerAI] SMOS engine not found — widget disabled on this page.');
-      return;
-    }
-    injectStyles();
-    injectMarkup();
-    wireEvents();
-    maybeShowReactiveNudge();
-  }
+REPO="DevShon1976/TSM-Consultz"
+BRANCH="main"
+WORKDIR="$(mktemp -d)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-  // ── Styles ──────────────────────────────────────────────────────
-  function injectStyles() {
-    const css = `
-      #pai-bubble{position:fixed;bottom:22px;right:22px;width:54px;height:54px;border-radius:50%;
-        background:var(--purple,#b388ff);color:#000;display:flex;align-items:center;justify-content:center;
-        font-size:1.3rem;cursor:pointer;z-index:9999;box-shadow:0 4px 18px rgba(179,136,255,0.45);
-        border:none;transition:transform 0.15s ease;font-family:'IBM Plex Mono',monospace;}
-      #pai-bubble:hover{transform:scale(1.07);}
-      #pai-bubble .pai-dot{position:absolute;top:-2px;right:-2px;width:12px;height:12px;border-radius:50%;
-        background:var(--cyan,#00e5ff);border:2px solid var(--bg,#0a0a0c);display:none;}
-      #pai-bubble.pai-has-nudge .pai-dot{display:block;}
+if [ -z "${GITHUB_TOKEN:-}" ]; then
+  echo "ERROR: set GITHUB_TOKEN in your shell first (export GITHUB_TOKEN=ghp_...)" >&2
+  exit 1
+fi
 
-      #pai-nudge{position:fixed;bottom:88px;right:22px;max-width:280px;background:var(--card,#13131f);
-        border:1px solid rgba(179,136,255,0.35);border-radius:10px;padding:14px 16px;z-index:9998;
-        font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--text,#e0e0e0);line-height:1.5;
-        box-shadow:0 8px 24px rgba(0,0,0,0.5);display:none;animation:paiSlideIn 0.25s ease;}
-      #pai-nudge.show{display:block;}
-      @keyframes paiSlideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-      #pai-nudge .pai-nudge-label{font-family:'Orbitron',sans-serif;font-size:0.55rem;color:var(--purple,#b388ff);
-        letter-spacing:0.15em;margin-bottom:8px;text-transform:uppercase;}
-      #pai-nudge .pai-nudge-actions{display:flex;gap:8px;margin-top:12px;}
-      #pai-nudge button{font-family:'Orbitron',sans-serif;font-size:0.58rem;font-weight:700;border-radius:5px;
-        padding:7px 12px;cursor:pointer;border:none;}
-      #pai-nudge .pai-go{background:var(--purple,#b388ff);color:#000;}
-      #pai-nudge .pai-dismiss{background:transparent;color:var(--muted,#666680);border:1px solid var(--border,#1e1e2e);}
+if [ ! -f "$SCRIPT_DIR/producer-ai-widget.js" ]; then
+  echo "ERROR: producer-ai-widget.js must be in the same directory as this script." >&2
+  exit 1
+fi
 
-      #pai-panel{position:fixed;bottom:22px;right:22px;width:320px;max-height:440px;background:var(--card,#13131f);
-        border:1px solid rgba(179,136,255,0.35);border-radius:12px;z-index:9999;display:none;flex-direction:column;
-        font-family:'IBM Plex Mono',monospace;box-shadow:0 12px 36px rgba(0,0,0,0.6);overflow:hidden;}
-      #pai-panel.show{display:flex;}
-      #pai-panel-header{padding:14px 16px;border-bottom:1px solid var(--border,#1e1e2e);display:flex;
-        align-items:center;justify-content:space-between;background:rgba(179,136,255,0.05);}
-      #pai-panel-header .pai-title{font-family:'Orbitron',sans-serif;font-size:0.68rem;color:var(--purple,#b388ff);
-        letter-spacing:0.1em;}
-      #pai-panel-header .pai-title small{display:block;font-size:0.52rem;color:var(--muted,#666680);margin-top:2px;
-        letter-spacing:0.05em;}
-      #pai-close{background:none;border:none;color:var(--muted,#666680);cursor:pointer;font-size:1rem;line-height:1;}
-      #pai-close:hover{color:var(--text,#e0e0e0);}
-      #pai-messages{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;
-        min-height:120px;max-height:260px;}
-      .pai-msg{font-size:0.72rem;line-height:1.55;padding:9px 12px;border-radius:8px;max-width:90%;}
-      .pai-msg-zay{background:var(--surface,#111118);color:var(--text,#e0e0e0);align-self:flex-start;
-        border:1px solid var(--border,#1e1e2e);}
-      .pai-msg-user{background:rgba(179,136,255,0.15);color:var(--text,#e0e0e0);align-self:flex-end;}
-      #pai-input-row{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--border,#1e1e2e);}
-      #pai-input{flex:1;background:var(--surface,#111118);border:1px solid var(--border,#1e1e2e);border-radius:6px;
-        padding:8px 10px;color:var(--text,#e0e0e0);font-family:'IBM Plex Mono',monospace;font-size:0.72rem;outline:none;}
-      #pai-input:focus{border-color:var(--purple,#b388ff);}
-      #pai-send{background:var(--purple,#b388ff);color:#000;border:none;border-radius:6px;padding:0 12px;
-        cursor:pointer;font-family:'Orbitron',sans-serif;font-size:0.6rem;font-weight:700;}
-      .pai-thinking{font-size:0.68rem;color:var(--muted,#666680);align-self:flex-start;}
-    `;
-    const style = document.createElement('style');
-    style.id = 'pai-styles';
-    style.textContent = css;
-    document.head.appendChild(style);
-  }
+echo "Cloning into temp dir..."
+git clone --depth 1 -b "$BRANCH" "https://${GITHUB_TOKEN}@github.com/${REPO}.git" "$WORKDIR" >/dev/null 2>&1
 
-  // ── Markup ──────────────────────────────────────────────────────
-  function injectMarkup() {
-    const wrap = document.createElement('div');
-    wrap.innerHTML = `
-      <div id="pai-nudge"></div>
-      <div id="pai-panel">
-        <div id="pai-panel-header">
-          <div class="pai-title">🎚️ ZAY<small>Your Producer AI</small></div>
-          <button id="pai-close" aria-label="Close">✕</button>
-        </div>
-        <div id="pai-messages"></div>
-        <div id="pai-input-row">
-          <input id="pai-input" type="text" placeholder="Ask ZAY anything..." />
-          <button id="pai-send">→</button>
-        </div>
-      </div>
-      <button id="pai-bubble" aria-label="Open Producer AI">🎚️<span class="pai-dot"></span></button>
-    `;
-    document.body.appendChild(wrap);
-  }
+JS_TARGET="$WORKDIR/html/music-command/js/producer-ai-widget.js"
+SONG_FILE="$WORKDIR/html/music-command/creation/song-builder.html"
+INDEX_FILE="$WORKDIR/html/music-command/index.html"
 
-  // ── State ───────────────────────────────────────────────────────
-  const PAI_KEY = 'smos_producer_ai_state';
-  function loadState() {
-    return SMOS.store.get(PAI_KEY) || { lastNudgeStage: null, dismissed: {} };
-  }
-  function saveState(s) {
-    SMOS.store.set(PAI_KEY, s);
-  }
+for f in "$SONG_FILE" "$INDEX_FILE"; do
+  if [ ! -f "$f" ]; then
+    echo "ERROR: expected file not found: $f" >&2
+    exit 1
+  fi
+done
 
-  // ── Reactive nudges ─────────────────────────────────────────────
-  // Each rule: condition based on SMOS state + current page, returns a nudge or null.
-  function getApplicablePage() {
-    const p = window.location.pathname;
-    if (p.includes('song-builder')) return 'song-builder';
-    if (p.includes('cadence-builder')) return 'cadence-builder';
-    if (p.includes('beat-workbench')) return 'beat-workbench';
-    if (p.includes('producer-ai')) return 'producer-ai';
-    if (p.includes('/index.html') || p.endsWith('/music-command/')) return 'dashboard';
-    return 'other';
-  }
+echo "Adding producer-ai-widget.js..."
+cp "$SCRIPT_DIR/producer-ai-widget.js" "$JS_TARGET"
 
-  function maybeShowReactiveNudge() {
-    const page = getApplicablePage();
-    const state = loadState();
-    const song = SMOS.song.load();
-    const beat = SMOS.beatIntel.load();
+echo "Wiring widget into song-builder.html..."
+python3 - "$SONG_FILE" <<'PYEOF'
+import sys
 
-    let nudge = null;
-    let stageKey = null;
+path = sys.argv[1]
+with open(path, "r", encoding="utf-8") as fh:
+    content = fh.read()
 
-    if (page === 'song-builder' && song && song.verse1) {
-      stageKey = 'song-ready';
-      nudge = {
-        text: "Song's ready — want me to check your flow and syllable count in Cadence Studio?",
-        actionLabel: '→ Cadence Studio',
-        action: () => SMOS.nav.toCadence()
-      };
-    } else if (page === 'dashboard' && beat && beat.bpm && !(song && song.verse1)) {
-      stageKey = 'beat-no-song';
-      nudge = {
-        text: `You've got a beat locked in (${beat.genre || 'genre'} · ${beat.bpm} BPM) but no song yet — want to build one around it?`,
-        actionLabel: '→ Song Builder',
-        action: () => SMOS.nav.toSongBuilder()
-      };
-    } else if (page === 'cadence-builder' && song && song.verse1) {
-      // only nudge once they've likely finished analyzing — keep light touch, no auto-detect of analysis completion yet
-      stageKey = 'cadence-loaded';
-      nudge = null; // reserved for future: nudge toward Recording Coach once flow is solid
-    }
+# 1. Add SMOS engine + widget script before </body>
+old_close = "</body>\n</html>"
+new_close = (
+    '<script src="../js/sweet-music-engine.js"></script>\n'
+    '<script src="../js/producer-ai-widget.js"></script>\n'
+    "</body>\n</html>"
+)
+if old_close not in content:
+    print("ERROR: </body></html> not found as expected in song-builder.html")
+    sys.exit(1)
+content = content.replace(old_close, new_close, 1)
 
-    if (nudge && stageKey && state.lastNudgeStage !== stageKey && !state.dismissed[stageKey]) {
-      showNudge(nudge, stageKey);
-    }
-  }
+# 2. Switch raw localStorage write to SMOS.song.save() now that engine is present
+old_save = "  localStorage.setItem('smos_song', JSON.stringify(d));"
+new_save = "  SMOS.song.save(d);"
+if old_save not in content:
+    print("ERROR: expected localStorage.setItem call not found in song-builder.html (may already be patched)")
+    sys.exit(1)
+content = content.replace(old_save, new_save, 1)
 
-  function showNudge(nudge, stageKey) {
-    const el = document.getElementById('pai-nudge');
-    el.innerHTML = `
-      <div class="pai-nudge-label">🎚️ ZAY suggests</div>
-      <div>${nudge.text}</div>
-      <div class="pai-nudge-actions">
-        <button class="pai-go">${nudge.actionLabel}</button>
-        <button class="pai-dismiss">Not now</button>
-      </div>
-    `;
-    el.classList.add('show');
-    document.getElementById('pai-bubble').classList.add('pai-has-nudge');
+# 3. Switch copySong's raw localStorage read to SMOS.song.load() for consistency
+old_read = "  const d = JSON.parse(localStorage.getItem('smos_song')||'{}');"
+new_read = "  const d = SMOS.song.load();"
+if old_read in content:
+    content = content.replace(old_read, new_read, 1)
 
-    el.querySelector('.pai-go').onclick = () => {
-      el.classList.remove('show');
-      nudge.action();
-    };
-    el.querySelector('.pai-dismiss').onclick = () => {
-      el.classList.remove('show');
-      const state = loadState();
-      state.dismissed[stageKey] = true;
-      state.lastNudgeStage = stageKey;
-      saveState(state);
-      document.getElementById('pai-bubble').classList.remove('pai-has-nudge');
-    };
+with open(path, "w", encoding="utf-8") as fh:
+    fh.write(content)
 
-    const state = loadState();
-    state.lastNudgeStage = stageKey;
-    saveState(state);
-  }
+print("song-builder.html patched.")
+PYEOF
 
-  // ── Proactive chat ──────────────────────────────────────────────
-  function wireEvents() {
-    const bubble = document.getElementById('pai-bubble');
-    const panel = document.getElementById('pai-panel');
-    const nudgeEl = document.getElementById('pai-nudge');
-    const closeBtn = document.getElementById('pai-close');
-    const sendBtn = document.getElementById('pai-send');
-    const input = document.getElementById('pai-input');
+echo "Wiring widget into index.html..."
+python3 - "$INDEX_FILE" <<'PYEOF'
+import sys
 
-    bubble.addEventListener('click', () => {
-      nudgeEl.classList.remove('show');
-      panel.classList.toggle('show');
-      bubble.classList.remove('pai-has-nudge');
-      if (panel.classList.contains('show') && !panel.dataset.greeted) {
-        panel.dataset.greeted = '1';
-        addMessage('zay', "What's up — I'm ZAY, your producer. Ask me anything about where you are in the process, or what to do next.");
-      }
-    });
+path = sys.argv[1]
+with open(path, "r", encoding="utf-8") as fh:
+    content = fh.read()
 
-    closeBtn.addEventListener('click', () => panel.classList.remove('show'));
+marker = '<!-- TSM ENFORCER BOOT -->'
+if marker not in content:
+    print("ERROR: expected marker '<!-- TSM ENFORCER BOOT -->' not found in index.html")
+    sys.exit(1)
 
-    sendBtn.addEventListener('click', sendMessage);
-    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
+injected = (
+    '<script src="js/sweet-music-engine.js"></script>\n'
+    '<script src="js/producer-ai-widget.js"></script>\n\n'
+    + marker
+)
+content = content.replace(marker, injected, 1)
 
-    async function sendMessage() {
-      const text = input.value.trim();
-      if (!text) return;
-      addMessage('user', text);
-      input.value = '';
-      const thinkingEl = addThinking();
+with open(path, "w", encoding="utf-8") as fh:
+    fh.write(content)
 
-      const page = getApplicablePage();
-      const song = SMOS.song.load();
-      const beat = SMOS.beatIntel.load();
-      const context = `Current page: ${page}. Beat context: ${beat && beat.bpm ? `${beat.genre||'?'} ${beat.bpm}BPM ${beat.key||''}` : 'none set'}. Song built: ${song && song.verse1 ? 'yes' : 'no'}.`;
+print("index.html patched.")
+PYEOF
 
-      try {
-        const reply = await SMOS.ask(
-          `User question: "${text}"\nContext: ${context}\nRespond in 1-3 short sentences, practical and direct, like a producer in the room. Suggest a single next concrete action if relevant.`,
-          "You are ZAY, an experienced, encouraging but no-nonsense music producer AI embedded as a floating assistant inside Sweet Music OS. Keep replies brief and conversational, never a list."
-        );
-        thinkingEl.remove();
-        addMessage('zay', reply);
-      } catch (e) {
-        thinkingEl.remove();
-        addMessage('zay', "Couldn't reach the studio line just now — try that again in a sec.");
-      }
-    }
+cd "$WORKDIR"
+git config user.email "claude-fix@local"
+git config user.name "Claude Fix Script"
+git add html/music-command/js/producer-ai-widget.js html/music-command/creation/song-builder.html html/music-command/index.html
+if git diff --cached --quiet; then
+  echo "No changes to commit."
+else
+  git commit -m "Add floating Producer AI (ZAY) widget, preview on song-builder + dashboard; wire missing SMOS engine include into song-builder.html" >/dev/null
+  git push origin "$BRANCH" >/dev/null
+  echo "Pushed to $BRANCH."
+fi
 
-    function addMessage(who, text) {
-      const messages = document.getElementById('pai-messages');
-      const div = document.createElement('div');
-      div.className = `pai-msg pai-msg-${who === 'zay' ? 'zay' : 'user'}`;
-      div.textContent = text;
-      messages.appendChild(div);
-      messages.scrollTop = messages.scrollHeight;
-    }
-
-    function addThinking() {
-      const messages = document.getElementById('pai-messages');
-      const div = document.createElement('div');
-      div.className = 'pai-thinking';
-      div.textContent = 'ZAY is thinking...';
-      messages.appendChild(div);
-      messages.scrollTop = messages.scrollHeight;
-      return div;
-    }
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', boot);
-  } else {
-    boot();
-  }
-})();
+rm -rf "$WORKDIR"
+echo "Done. Preview the bubble on the Song Builder and Dashboard pages after Fly redeploys."
