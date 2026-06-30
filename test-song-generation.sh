@@ -123,7 +123,7 @@ except Exception as e:
 
 def check(field):
     val = song.get(field, "")
-    lines = [l for l in val.split("\\n") if l.strip()]
+    lines = [l for l in val.split("\n") if l.strip()]
     status = "PASS" if len(lines) >= 2 else "FAIL"
     print(f"{status}: {field} has {len(lines)} newline-separated bar(s)")
     if status == "FAIL":
