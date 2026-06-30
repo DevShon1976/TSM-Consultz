@@ -10,8 +10,6 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('💥 UNHANDLED REJECTION at:', promise, 'reason:', reason);
 });
 
-const path = require("path");
-const fs = require("fs");
 const https = require('https');
 
 const app = express();
