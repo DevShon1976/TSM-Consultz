@@ -120,6 +120,7 @@ var SP = {
   education: 'You are an education operations AI for TSM Command. Expert in school administration, compliance, staffing, student outcomes, budget, grants. Be strategic.',
   hospitality: 'You are a hospitality operations AI for TSM Command. Expert in hotel ops, concierge, staffing, revenue management, guest experience. Be service-oriented.',
   enterprise: 'You are a senior business strategist AI for TSM Command. Expert in enterprise strategy, GTM, operations optimization, ROI analysis. Be executive-level and direct.',
+  o2c: 'You are an Order-to-Cash operations AI for TSM Command. Expert in quote-to-order, credit management, ATP/inventory allocation, shipping, invoicing, AR, and cash application. Given structured order, KPI, and SLA-breach data, identify root causes of bottlenecks, flag financial/operational risk, and recommend the specific next action for each at-risk order. Be precise and operational. No preamble.',
   strategist: 'You are the TSM Sovereign Strategist — the ultimate business consultant AI. Deep expertise across healthcare, financial, legal, real estate, construction, insurance, education, hospitality, enterprise strategy, M&A, GTM. Be bold and transformative.'
 };
 
@@ -748,6 +749,22 @@ app.post('/api/legal/query', async (req, res) => {
 app.post('/api/construction/query', async (req, res) => {
   try { var a = await groqChat(SP.construction, req.body.question || req.body.query || '', req.body.maxTokens || 400); return res.json({ ok: true, answer: a, createdAt: new Date().toISOString() }); }
   catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.post('/api/o2c/query', async (req, res) => {
+  const { orders, kpis, sla_breaches, stage_distribution, context, maxTokens } = req.body || {};
+  if (!Array.isArray(orders)) return res.status(400).json({ ok: false, error: 'orders array required' });
+  const summary = JSON.stringify({ kpis, sla_breaches, stage_distribution, order_count: orders.length }, null, 2);
+  const prompt = `Current O2C pipeline snapshot:\n${summary}\n\n` +
+    (context ? `Additional context: ${context}\n\n` : '') +
+    `Identify the top risks, the root cause of any SLA breaches, and the single most important next action for each at-risk order. Be specific and reference order IDs.`;
+  try {
+    const answer = await groqChat(SP.o2c, prompt, maxTokens || 1200);
+    return res.json({ ok: true, answer, createdAt: new Date().toISOString() });
+  } catch (e) {
+    console.error('O2C GROQ ERROR:', e.message);
+    return res.status(500).json({ ok: false, error: e.message });
+  }
 });
 
 app.post('/api/insurance/query', async (req, res) => {
