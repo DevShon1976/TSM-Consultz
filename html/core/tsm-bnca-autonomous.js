@@ -6,7 +6,7 @@
     observers: []
   };
 
-  function window.TSMEventBus.emit("SIGNAL", payload) {
+  function buildSignalPayload(payload) {
     return {
       id: "BNCA-" + Date.now(),
       created_at: new Date().toISOString(),
