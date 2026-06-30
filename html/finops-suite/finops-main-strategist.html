@@ -1087,6 +1087,21 @@ async function generateReport(){
     const _excM = _txt.match(/(?:EXCEPTION COUNT|CRITICAL ITEMS)[:\s]+(\d+)/i);
     const _compM = _txt.match(/(?:COMPLIANCE|PERIOD)[:\s]+([^\n]+)/i);
     sessionStorage.setItem('tsm_strategist_relay', JSON.stringify({
+      wip: (window.TSMExecKitProducer && TSMExecKitProducer.buildWip([
+        { id:'ingest',    label:'Document Ingestion', status:'done' },
+        { id:'extract',   label:'Field Extraction',   status:'done' },
+        { id:'synth',     label:'Strategist Synthesis', status:'done', time: new Date().toLocaleTimeString() },
+        { id:'relay',     label:'Relayed to Exec',    status:'active', detail:'Awaiting executive review' }
+      ])) || [],
+      explain: (window.TSMExecKitProducer && TSMExecKitProducer.buildExplain([
+        {
+          claim: 'FinOps Exposure Analysis — ' + (typeof _expM !== 'undefined' && _expM ? _expM[1] : 'see brief'),
+          confidence: (typeof _riskM !== 'undefined' && _riskM) ? parseInt(_riskM[1]) : null,
+          severity: 'med',
+          rationale: _txt || 'See full strategist summary for detailed reasoning.',
+          sources: ['FinOps Strategist']
+        }
+      ])) || [],
       summary: _txt,
       source: relaySource,
       timestamp: Date.now(),
@@ -1099,6 +1114,21 @@ async function generateReport(){
       compliance: _compM ? _compM[1].trim().slice(0,12) : null
     }));
     localStorage.setItem('tsm_strategist_relay', JSON.stringify({
+      wip: (window.TSMExecKitProducer && TSMExecKitProducer.buildWip([
+        { id:'ingest',    label:'Document Ingestion', status:'done' },
+        { id:'extract',   label:'Field Extraction',   status:'done' },
+        { id:'synth',     label:'Strategist Synthesis', status:'done', time: new Date().toLocaleTimeString() },
+        { id:'relay',     label:'Relayed to Exec',    status:'active', detail:'Awaiting executive review' }
+      ])) || [],
+      explain: (window.TSMExecKitProducer && TSMExecKitProducer.buildExplain([
+        {
+          claim: 'FinOps Exposure Analysis — ' + (typeof _expM !== 'undefined' && _expM ? _expM[1] : 'see brief'),
+          confidence: (typeof _riskM !== 'undefined' && _riskM) ? parseInt(_riskM[1]) : null,
+          severity: 'med',
+          rationale: _txt || 'See full strategist summary for detailed reasoning.',
+          sources: ['FinOps Strategist']
+        }
+      ])) || [],
       summary: _txt,
       source: relaySource,
       timestamp: Date.now(),
@@ -1159,6 +1189,21 @@ function relayToExecutive(){
   const _compM = output.match(/(?:COMPLIANCE|PERIOD)[:\s]+([^\n]+)/i);
   const existing = JSON.parse(localStorage.getItem('tsm_strategist_relay') || '{}');
   localStorage.setItem('tsm_strategist_relay', JSON.stringify({
+    wip: (window.TSMExecKitProducer && TSMExecKitProducer.buildWip([
+      { id:'ingest',    label:'Document Ingestion', status:'done' },
+      { id:'extract',   label:'Field Extraction',   status:'done' },
+      { id:'synth',     label:'Strategist Synthesis', status:'done', time: new Date().toLocaleTimeString() },
+      { id:'relay',     label:'Relayed to Exec',    status:'active', detail:'Awaiting executive review' }
+    ])) || [],
+    explain: (window.TSMExecKitProducer && TSMExecKitProducer.buildExplain([
+      {
+        claim: 'FinOps Exposure Analysis — ' + (typeof _expM !== 'undefined' && _expM ? _expM[1] : 'see brief'),
+        confidence: (typeof _riskM !== 'undefined' && _riskM) ? parseInt(_riskM[1]) : null,
+        severity: 'med',
+        rationale: output || 'See full strategist summary for detailed reasoning.',
+        sources: ['FinOps Strategist']
+      }
+    ])) || [],
     summary: output,
     source: relaySource,
     timestamp: Date.now(),
@@ -1560,6 +1605,7 @@ function managerExport(){
 
 <style>body{padding-bottom:40px!important}</style>
 <div id="tsm-chain-bar" style="position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#040c12;border-top:1px solid #0d2233;display:flex;align-items:center;height:32px;padding:0 16px;font-family:'IBM Plex Mono',monospace;font-size:10px;"><span style="color:#3a5a70;margin-right:12px;font-size:9px;">TSM CHAIN</span><a href="/html/finops-suite/finops-war-room.html" style="color:#94a3b8;border:1px solid #1a3a50;padding:3px 10px;border-radius:3px;text-decoration:none;margin-right:6px;font-size:9px;">&#9675; WAR ROOM</a><span style="color:#1a3a50;margin-right:6px;">--&gt;</span><a href="#" style="color:var(--green, #00ff94);background:rgba(255,255,255,.05);border:1px solid var(--green, #00ff94)55;padding:3px 10px;border-radius:3px;text-decoration:none;margin-right:6px;font-size:9px;">&#9679; STRATEGIST</a><span style="color:#1a3a50;margin-right:6px;">--&gt;</span><a href="/html/finops-suite/finops-executive-portal.html" style="color:#94a3b8;border:1px solid #1a3a50;padding:3px 10px;border-radius:3px;text-decoration:none;margin-right:6px;font-size:9px;">&#9675; EXEC PORTAL</a><span style="color:#1a3a50;margin-left:auto;font-size:9px;">FINOPS</span></div>
+  <script src="/shared/tsm-exec-kit-producer.js"></script>
 </body>
 </html>
 // ===== TSM AUTONOMY PATCH (FINOPS MISSION CORE) =====

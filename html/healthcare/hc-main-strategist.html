@@ -1300,6 +1300,25 @@ async function escalateToExecPortal(){
       claimId:      document.getElementById('dp-claim-id')?.textContent?.trim() || '',
       liveSignals
     };
+    // ── TSM EXEC KIT: WIP + explainability ──────────────────────────
+    try {
+      payload.wip = (window.TSMExecKitProducer && TSMExecKitProducer.buildWip([
+        { id:'signals',    label:'Live Signal Capture', status:'done' },
+        { id:'strategist', label:'Main Strategist',     status:'done', time: new Date().toLocaleTimeString() },
+        { id:'relay',      label:'Relayed to Exec',     status:'active', detail:'Awaiting executive review' }
+      ])) || [];
+      payload.explain = (window.TSMExecKitProducer && TSMExecKitProducer.buildExplain([
+        {
+          claim: (payload.claimId ? 'Claim ' + payload.claimId : 'HC Strategist') + ' — Main Strategist Synthesis',
+          confidence: payload.confidence || null,
+          severity: 'med',
+          rationale: payload.summary || payload.narrative || payload.brief || 'See full strategist brief for detailed reasoning.',
+          sources: ['HC Main Strategist']
+        }
+      ])) || [];
+    } catch(e) { console.warn('[exec-kit] producer patch error:', e); }
+    // ── END TSM EXEC KIT ─────────────────────────────────────────────
+
     sessionStorage.setItem('TSM_EXEC_RELAY', JSON.stringify(payload));
     localStorage.setItem('TSM_EXEC_RELAY', JSON.stringify(payload));
     if (window.TSMMemory) TSMMemory.push(TSMMemory.EVENT_TYPES.STRATEGIST_RELAY, 'Main Strategist relayed to Executive Portal', {}, 'success');
@@ -1765,6 +1784,7 @@ PATTERN MATCH: [does this match active HonorHealth denial patterns CO-4/CO-11/CO
   <script src="./tsm-kernel-upgrade.js"></script>
 
 <div id="tsm-chain-bar" style="position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#040c12;border-top:1px solid #0d2233;display:flex;align-items:center;height:32px;padding:0 16px;font-family:'IBM Plex Mono',monospace;font-size:10px;"><span style="color:#3a5a70;margin-right:12px;font-size:9px;">TSM CHAIN</span><a href="/html/healthcare/hc-denial-war-room.html" style="color:#94a3b8;border:1px solid #1a3a50;padding:3px 10px;border-radius:3px;text-decoration:none;margin-right:6px;font-size:9px;">&#9675; WAR ROOM</a><span style="color:#1a3a50;margin-right:6px;">--&gt;</span><a href="#" style="color:var(--pink, #ec4899);background:rgba(255,255,255,.05);border:1px solid var(--pink, #ec4899)55;padding:3px 10px;border-radius:3px;text-decoration:none;margin-right:6px;font-size:9px;">&#9679; STRATEGIST</a><span style="color:#1a3a50;margin-right:6px;">--&gt;</span><a href="/html/healthcare/executive-portal.html" style="color:#94a3b8;border:1px solid #1a3a50;padding:3px 10px;border-radius:3px;text-decoration:none;margin-right:6px;font-size:9px;">&#9675; EXEC PORTAL</a><span style="color:#1a3a50;margin-left:auto;font-size:9px;">HEALTHCARE RCM</span></div>
+  <script src="/shared/tsm-exec-kit-producer.js"></script>
 </body>
 </html>
 

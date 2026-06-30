@@ -1092,6 +1092,25 @@ function storeStrategistRelay(bncaText) {
     chainStep: 'strategist'
   };
   try {
+    // ── TSM EXEC KIT: WIP + explainability ──────────────────────────
+    try {
+      payload.wip = (window.TSMExecKitProducer && TSMExecKitProducer.buildWip([
+        { id:'engines',    label:'Engine Analysis',     status:'done' },
+        { id:'strategist', label:'Strategist Synth',    status:'done', time: new Date().toLocaleTimeString() },
+        { id:'relay',      label:'Relayed to Exec',     status:'active', detail:'Awaiting executive review' }
+      ])) || [];
+      payload.explain = (window.TSMExecKitProducer && TSMExecKitProducer.buildExplain([
+        {
+          claim: (payload.scenario || payload.docType || 'Construction') + ' — Strategist Synthesis',
+          confidence: payload.confidence || null,
+          severity: 'med',
+          rationale: payload.summary || payload.narrative || payload.briefText || payload.brief || 'See full strategist brief for detailed reasoning.',
+          sources: ['Construction Strategist']
+        }
+      ])) || [];
+    } catch(e) { console.warn('[exec-kit] producer patch error:', e); }
+    // ── END TSM EXEC KIT ─────────────────────────────────────────────
+
     sessionStorage.setItem('TSM_CONSTRUCTION_STRATEGIST_RELAY', JSON.stringify(payload));
     localStorage.setItem('tsm_construction_strategist_output', JSON.stringify(payload));
   } catch(e) { console.warn('Store error:', e); }
@@ -1299,6 +1318,7 @@ EXECUTIVE ESCALATION: [Yes/No] — [reason]`;
 })();
 </script>
   <script src="./tsm-kernel-upgrade.js"></script>
+  <script src="/shared/tsm-exec-kit-producer.js"></script>
 </body>
 </html>
 
