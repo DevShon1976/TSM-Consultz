@@ -978,7 +978,7 @@ app.post('/api/doc-router/classify', async (req, res) => {
 // ── COLLECTIVE BNCA ───────────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
 
-const COLLECTIVE_VERTICALS = ['healthcare', 'finops', 'bpo', 'legal', 'real-estate', 'insurance', 'construction'];
+const COLLECTIVE_VERTICALS = ['healthcare', 'finops', 'bpo', 'legal', 'real-estate', 'insurance', 'construction', 'o2c'];
 
 const COLLECTIVE_SIGNALS = []; // { vertical, signal, severity, riskLevel, confidence, topIssue, ownerLanes, hitlRequired, actions, impactDelta, kpi, warRoom, bnca, timestamp, source }
 const COLLECTIVE_BNCA = [];   // synthesis results
