@@ -879,7 +879,7 @@
     <div class="kpi-sub pos" id="kpi-pipeline-sub">loading relay...</div>
   </div>
   <div class="kpi">
-    <div class="kpi-val amber" id="kpi-pullthrough">—</div>
+    <div class="kpi-val amber" id="kpi-pullthrough" data-also="kpi-confidence">—</div>
     <div class="kpi-label">Pull-Through Rate</div>
     <div class="kpi-sub neg">Target: 75%</div>
   </div>
@@ -889,7 +889,7 @@
     <div class="kpi-sub pos" id="kpi-revenue-sub">loading relay...</div>
   </div>
   <div class="kpi">
-    <div class="kpi-val red" id="kpi-risk">—</div>
+    <div class="kpi-val red" id="kpi-risk" data-also="kpi-no-action-rev">—</div>
     <div class="kpi-label">Dollar Risk Exposure</div>
     <div class="kpi-sub neg" id="kpi-risk-sub">loading relay...</div>
   </div>
@@ -903,6 +903,16 @@
     <div class="kpi-label">Closings This Week</div>
     <div class="kpi-sub pos" id="kpi-closings-sub">loading relay...</div>
   </div>
+    <div class="kpi-block">
+      <div class="kpi-label">Action Rev Loss</div>
+      <div class="kpi-val green" id="kpi-action-rev">—</div>
+      <div class="kpi-sub pos" id="kpi-action-rev-sub">with recommended actions</div>
+    </div>
+    <div class="kpi-block">
+      <div class="kpi-label">Recovery Time</div>
+      <div class="kpi-val amber" id="kpi-recovery-time">—</div>
+      <div class="kpi-sub" id="kpi-recovery-time-sub">estimated by strategist</div>
+    </div>
 </div>
 
 <!-- LAYOUT -->
@@ -1444,6 +1454,20 @@ function loadWarPayload() {
 
       // ── Auto-surface proof of relay receipt — no manual click required ──
       extractRelayIntelligence();
+      // ── TSM PATCH: wire Strategist JSON KPIs (noActionRevLoss/actionRevLoss/recoveryTime/confidence) ──
+      (function wireStratKPIs() {
+        try {
+          var raw = JSON.parse(localStorage.getItem('TSM_RE_WAR_RELAY') || sessionStorage.getItem('TSM_RE_WAR_RELAY') || '{}');
+          var sj = raw.stratJson || raw.json || raw;
+          var setEl = function(id, val) { var e = document.getElementById(id); if (e && val) e.textContent = val; };
+          setEl('kpi-no-action-rev', sj.noActionRevLoss);
+          setEl('kpi-risk',           sj.noActionRevLoss);
+          setEl('kpi-pullthrough',    sj.confidence != null ? sj.confidence + '%' : null);
+          setEl('kpi-action-rev',    sj.actionRevLoss);
+          setEl('kpi-recovery-time', sj.recoveryTime);
+          setEl('kpi-confidence',    sj.confidence != null ? sj.confidence + '%' : null);
+        } catch(e) { console.warn('[TSM-RE-EXEC] KPI wire failed:', e); }
+      })();
       generateBrief();
     } else {
       // ── No relay — standalone mode. Don't show stale/fake demo numbers ──
@@ -1988,6 +2012,54 @@ function exportBoard() {
     if (RELAY_KEYS.indexOf(e.key) !== -1) mount();
   });
 })();
+</script>
+<script>
+    // ── TSM PATCH: wire Strategist JSON fields into KPI tiles ──────────
+    (function wireStratKPIs(relayJson) {
+      try {
+        // relayJson may be the parsed JSON object from the ===JSON=== block
+        // or embedded in TSM_HC_RELAY / TSM_RELAY_DATA localStorage keys
+        var raw = relayJson
+          || JSON.parse(localStorage.getItem('TSM_HC_RELAY') || '{}')
+          || JSON.parse(localStorage.getItem('TSM_RELAY_DATA') || '{}');
+
+        var stratJson = raw.stratJson || raw.json || raw;
+
+        var noAction   = stratJson.noActionRevLoss  || '—';
+        var withAction = stratJson.actionRevLoss     || '—';
+        var recovery   = stratJson.recoveryTime      || '—';
+        var confidence = stratJson.confidence != null ? stratJson.confidence + '%' : '—';
+
+        // Target KPI tile elements by data-kpi attribute (preferred)
+        // or fall back to id-based lookup used in older portals
+        function setKPI(selector, value) {
+          var el = document.querySelector(selector);
+          if (el) el.textContent = value;
+        }
+
+        // Primary: data-kpi attributes
+        setKPI('[data-kpi="noActionRevLoss"]',  noAction);
+        setKPI('[data-kpi="actionRevLoss"]',    withAction);
+        setKPI('[data-kpi="recoveryTime"]',     recovery);
+        setKPI('[data-kpi="confidence"]',       confidence);
+
+        // Fallback: id-based tiles (common pattern in HC portal)
+        setKPI('#kpi-no-action-rev',   noAction);
+        setKPI('#kpi-action-rev',      withAction);
+        setKPI('#kpi-recovery-time',   recovery);
+        setKPI('#kpi-confidence',      confidence);
+
+        // Also surface in the Decision Center audit row if present
+        setKPI('#exec-rev-at-risk',    noAction);
+        setKPI('#exec-rev-protected',  withAction);
+        setKPI('#exec-recovery-eta',   recovery);
+
+        console.log('[TSM-HC-EXEC] KPI tiles wired:', {noAction, withAction, recovery, confidence});
+      } catch(e) {
+        console.warn('[TSM-HC-EXEC] KPI wire failed:', e);
+      }
+    })(window.__TSM_STRAT_JSON__ || null);
+    // ── END TSM PATCH ───────────────────────────────────────────────────
 </script>
 </body>
 </html>
