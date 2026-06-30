@@ -7,12 +7,12 @@ Strategist JSON block into HC exec portal KPI tiles.
 Usage (run from repo root in Codespaces):
   python3 patch-hc-exec-kpi.py
 
-Targets: html/hc-command/hc-exec-portal.html
+Targets: html/healthcare/executive-portal.html
 """
 
 import re, sys, pathlib
 
-TARGET = pathlib.Path("html/hc-command/hc-exec-portal.html")
+TARGET = pathlib.Path("html/healthcare/executive-portal.html")
 
 if not TARGET.exists():
     sys.exit(f"ERROR: {TARGET} not found — run from repo root.")
