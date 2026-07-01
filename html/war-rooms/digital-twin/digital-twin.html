@@ -1,0 +1,223 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TSM Enterprise Digital Twin</title>
+<style>
+:root{--bg:#030508;--bg2:#060810;--bg3:#080c14;--border:rgba(0,220,180,.1);
+--teal:#00dcb4;--teal-dim:rgba(0,220,180,.4);--gold:#ffd700;--red:#ff3b3b;
+--amber:#ff9500;--green:#22c55e;--blue:#3b82f6;--purple:#a855f7;
+--text:#c0e8e0;--text-dim:#3a6a60;--card:#060a10;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Courier New',monospace;font-size:12px;min-height:100vh}
+.nav{display:flex;align-items:center;background:#020406;border-bottom:1px solid var(--border);height:42px;padding:0 20px}
+.nav-brand{color:var(--teal);font-weight:700;font-size:12px;letter-spacing:3px;margin-right:24px}
+.nav-right{margin-left:auto;display:flex;gap:20px;color:var(--text-dim);font-size:10px}
+.nav-clock{color:var(--teal-dim)}
+.nav-live{color:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.main{padding:20px 24px;overflow-y:auto;height:calc(100vh - 42px)}
+.twin-header{margin-bottom:20px}
+.twin-title{font-size:16px;letter-spacing:2px;color:var(--text)}
+.twin-sub{color:var(--text-dim);font-size:10px;margin-top:4px}
+.health-banner{background:rgba(0,220,180,.05);border:1px solid var(--border);padding:12px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between}
+.health-score{font-family:'Orbitron',sans-serif;font-size:32px;font-weight:700;color:var(--teal)}
+.health-label{font-size:9px;color:var(--text-dim);letter-spacing:2px;margin-top:2px}
+.health-status{font-size:11px;letter-spacing:1.5px;color:var(--green)}
+.domain-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px}
+.domain-card{background:var(--card);border:1px solid var(--border);padding:14px 12px}
+.domain-name{font-size:9px;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:8px}
+.domain-score{font-size:22px;font-weight:700;color:var(--teal)}
+.domain-score.warn{color:var(--amber)} .domain-score.bad{color:var(--red)}
+.domain-delta{font-size:9px;margin-top:3px}
+.delta-up{color:var(--green)} .delta-down{color:var(--red)}
+.domain-bar{height:3px;background:var(--bg3);margin-top:8px;border-radius:2px}
+.domain-fill{height:100%;border-radius:2px;transition:width 1s}
+.twin-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px}
+.section{background:var(--card);border:1px solid var(--border)}
+.section-head{padding:10px 14px;border-bottom:1px solid var(--border);font-size:10px;letter-spacing:1.5px;color:var(--text-dim);display:flex;justify-content:space-between}
+.section-body{padding:14px}
+.signal-list{display:flex;flex-direction:column;gap:6px}
+.signal-item{display:flex;align-items:center;gap:10px;padding:6px 10px;background:var(--bg3);border:1px solid var(--border)}
+.signal-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.sig-ok{background:var(--green)} .sig-warn{background:var(--amber)} .sig-bad{background:var(--red)}
+.signal-text{flex:1;font-size:10px;color:var(--text)}
+.signal-src{font-size:9px;color:var(--text-dim)}
+.signal-time{font-size:9px;color:var(--text-dim);margin-left:auto}
+.forecast-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.forecast-card{background:var(--bg3);border:1px solid var(--border);padding:10px;text-align:center}
+.forecast-label{font-size:8px;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px}
+.forecast-val{font-size:15px;font-weight:700;color:var(--teal)}
+.forecast-trend{font-size:9px;margin-top:3px}
+.ai-output{background:var(--bg3);border:1px solid var(--border);padding:14px;font-size:10px;line-height:1.7;color:var(--text);white-space:pre-wrap;min-height:100px}
+.ai-output.loading{color:var(--text-dim)}
+.btn{border:1px solid;font-family:inherit;font-size:9px;letter-spacing:1.5px;cursor:pointer;padding:8px 18px;transition:.2s;margin-right:8px}
+.btn-teal{background:var(--teal);border-color:var(--teal);color:#000;font-weight:700}
+.btn-gold{background:var(--gold);border-color:var(--gold);color:#000;font-weight:700}
+</style></head><body>
+<div class="nav">
+  <div class="nav-brand">⬡ TSM ENTERPRISE DIGITAL TWIN</div>
+  <div class="nav-right">
+    <span class="nav-live">● LIVE</span>
+    <span id="navStatus">10 DOMAINS ACTIVE</span>
+    <span class="nav-clock" id="navClock">--:--:--</span>
+  </div>
+</div>
+<div class="main">
+  <div class="twin-header">
+    <div class="twin-title">ENTERPRISE <b style="color:var(--teal)">DIGITAL TWIN</b></div>
+    <div class="twin-sub">Live business simulation · Predictive analytics · Executive mission control</div>
+  </div>
+
+  <div class="health-banner">
+    <div>
+      <div style="font-size:9px;color:var(--text-dim);letter-spacing:2px;margin-bottom:4px">ENTERPRISE HEALTH SCORE</div>
+      <div style="display:flex;align-items:baseline;gap:12px">
+        <div class="health-score" id="healthScore">--</div>
+        <div class="health-status" id="healthStatus">CALCULATING...</div>
+      </div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px">LAST UPDATED</div>
+      <div style="font-size:11px;color:var(--teal)" id="lastUpdate">--:--:--</div>
+    </div>
+  </div>
+
+  <div class="domain-grid" id="domainGrid"></div>
+
+  <div class="twin-grid">
+    <div class="section">
+      <div class="section-head"><span>LIVE SIGNAL FEED</span><span id="signalMeta"></span></div>
+      <div class="section-body"><div class="signal-list" id="signalList"></div></div>
+    </div>
+    <div class="section">
+      <div class="section-head"><span>30-DAY FORECAST</span></div>
+      <div class="section-body"><div class="forecast-grid" id="forecastGrid"></div></div>
+    </div>
+  </div>
+
+  <div class="section" style="margin-bottom:18px">
+    <div class="section-head"><span>AI EXECUTIVE RECOMMENDATIONS</span></div>
+    <div class="section-body">
+      <div style="margin-bottom:12px">
+        <button class="btn btn-teal" id="btnAnalyze">GENERATE EXECUTIVE BRIEF</button>
+        <button class="btn btn-gold" id="btnRelay">RELAY TO BOARD →</button>
+      </div>
+      <div class="ai-output" id="aiOutput">Click Generate to produce an AI executive brief synthesizing all domain signals, risks, and 30-day recommendations.</div>
+    </div>
+  </div>
+</div>
+<script src="/runtime/kernel/canonical-core.js"></script>
+<script>
+(function(){
+  function tick(){ document.getElementById('navClock').textContent=new Date().toLocaleTimeString(); }
+  setInterval(tick,1000); tick();
+
+  const DOMAINS=[
+    {id:'sales',name:'SALES',score:84,delta:+3,color:'#00dcb4'},
+    {id:'finance',name:'FINANCE',score:91,delta:+1,color:'#22c55e'},
+    {id:'ops',name:'OPERATIONS',score:72,delta:-5,color:'#ff9500'},
+    {id:'mfg',name:'MANUFACTURING',score:88,delta:+2,color:'#00dcb4'},
+    {id:'procurement',name:'PROCUREMENT',score:65,delta:-8,color:'#ff3b3b'},
+    {id:'hr',name:'HR',score:79,delta:0,color:'#00dcb4'},
+    {id:'cx',name:'CUSTOMER SVC',score:83,delta:+4,color:'#22c55e'},
+    {id:'supply',name:'SUPPLY CHAIN',score:70,delta:-3,color:'#ff9500'},
+    {id:'logistics',name:'LOGISTICS',score:86,delta:+1,color:'#22c55e'},
+    {id:'it',name:'IT OPS',score:94,delta:+2,color:'#00dcb4'}
+  ];
+
+  const SIGNALS=[
+    {type:'ok',text:'O2C pipeline: 5 orders active, $333K in flight','src':'O2C','time':'12:09'},
+    {type:'warn',text:'CPQ: Glendale Data Center credit hold — $97.5K at risk','src':'CPQ','time':'12:07'},
+    {type:'bad',text:'Procurement score dropped 8pts — supplier risk elevated','src':'SUPPLY CHAIN','time':'11:58'},
+    {type:'ok',text:'CRM: Honeywell proposal at $280K — health score 82','src':'CRM','time':'11:45'},
+    {type:'warn',text:'Approvals: 8 SLA breaches — Finance Review bottleneck','src':'APPROVALS','time':'11:32'},
+    {type:'ok',text:'Governance: SOX controls passing — ISO 27001 exception noted','src':'GOVERNANCE','time':'11:20'},
+    {type:'ok',text:'Integration Hub: 8 systems online, 16 errors/hr avg','src':'INTEGRATION','time':'11:15'}
+  ];
+
+  const FORECASTS=[
+    {label:'Revenue (30d)',value:'$2.4M',trend:'+12%',up:true},
+    {label:'Cost Exposure',value:'$340K',trend:'-4%',up:false},
+    {label:'Win Rate',value:'68%',trend:'+5pts',up:true},
+    {label:'SLA Compliance',value:'91%',trend:'+3pts',up:true},
+    {label:'Churn Risk',value:'2 accounts',trend:'stable',up:null},
+    {label:'Supply Risk',value:'HIGH',trend:'elevated',up:false}
+  ];
+
+  function computeHealth(){
+    return Math.round(DOMAINS.reduce((a,d)=>a+d.score,0)/DOMAINS.length);
+  }
+
+  function renderHealth(){
+    const score=computeHealth();
+    document.getElementById('healthScore').textContent=score;
+    document.getElementById('healthStatus').textContent=score>=85?'HEALTHY':score>=70?'WATCH':'AT RISK';
+    document.getElementById('healthStatus').style.color=score>=85?'var(--green)':score>=70?'var(--amber)':'var(--red)';
+    document.getElementById('lastUpdate').textContent=new Date().toLocaleTimeString();
+  }
+
+  function renderDomains(){
+    document.getElementById('domainGrid').innerHTML=DOMAINS.map(d=>{
+      const cls=d.score>=85?'':d.score>=70?'warn':'bad';
+      const deltaStr=d.delta===0?'—':d.delta>0?`↑ +${d.delta}`:`↓ ${d.delta}`;
+      const deltaCls=d.delta>0?'delta-up':d.delta<0?'delta-down':'';
+      return `<div class="domain-card">
+        <div class="domain-name">${d.name}</div>
+        <div class="domain-score ${cls}">${d.score}</div>
+        <div class="domain-delta ${deltaCls}">${deltaStr}</div>
+        <div class="domain-bar"><div class="domain-fill" style="width:${d.score}%;background:${d.color}"></div></div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderSignals(){
+    document.getElementById('signalMeta').textContent=`${SIGNALS.length} signals`;
+    document.getElementById('signalList').innerHTML=SIGNALS.map(s=>`
+      <div class="signal-item">
+        <div class="signal-dot sig-${s.type}"></div>
+        <span class="signal-text">${s.text}</span>
+        <span class="signal-src">${s.src}</span>
+        <span class="signal-time">${s.time}</span>
+      </div>`).join('');
+  }
+
+  function renderForecasts(){
+    document.getElementById('forecastGrid').innerHTML=FORECASTS.map(f=>{
+      const tc=f.up===true?'delta-up':f.up===false?'delta-down':'';
+      return `<div class="forecast-card">
+        <div class="forecast-label">${f.label}</div>
+        <div class="forecast-val">${f.value}</div>
+        <div class="forecast-trend ${tc}">${f.trend}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Simulate live domain score drift
+  setInterval(()=>{
+    DOMAINS.forEach(d=>{
+      const drift=Math.round((Math.random()-0.5)*4);
+      d.score=Math.max(30,Math.min(99,d.score+drift));
+      d.delta=drift;
+      d.color=d.score>=85?'#00dcb4':d.score>=70?'#ff9500':'#ff3b3b';
+    });
+    renderDomains(); renderHealth();
+  }, 8000);
+
+  async function runAnalysis(){
+    const out=document.getElementById('aiOutput');
+    out.className='ai-output loading'; out.textContent='Generating executive brief from all domain signals...';
+    try{
+      const payload={domains:DOMAINS,signals:SIGNALS,forecasts:FORECASTS,health_score:computeHealth(),maxTokens:1400};
+      const res=await fetch('/api/digital-twin/query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const d=await res.json(); out.className='ai-output'; out.textContent=d.answer||d.output||'No brief generated.';
+    } catch(e){ out.className='ai-output'; out.textContent=`Analysis failed: ${e.message}`; }
+  }
+
+  document.getElementById('btnAnalyze').addEventListener('click',runAnalysis);
+  document.getElementById('btnRelay').addEventListener('click',()=>{
+    try{ localStorage.setItem('TSM_TWIN_RELAY',JSON.stringify({vertical:'digital-twin',domains:DOMAINS,health_score:computeHealth(),timestamp:new Date().toISOString()})); } catch(e){}
+    document.getElementById('navStatus').textContent='TWIN: RELAYED TO BOARD';
+  });
+
+  renderHealth(); renderDomains(); renderSignals(); renderForecasts();
+})();
+</script></body></html>

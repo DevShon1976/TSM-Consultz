@@ -1,458 +1,5 @@
-const express = require('express');
-const fs = require('fs');
-const path = require('path');
-
-process.on('uncaughtException', (err) => {
-  console.error('💥 UNCAUGHT EXCEPTION:', err.message, err.stack);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('💥 UNHANDLED REJECTION at:', promise, 'reason:', reason);
-});
-
-const https = require('https');
-
-const app = express();
-const PORT = process.env.PORT || 8080;
-const HTML_ROOT = path.join(__dirname, "html");
-// AUTH REMOVED — in-house use only
-// const { tsmAuthMiddleware } = require('./html/tsm-auth');
-
-app.use(express.json());
-app.use(require('express').urlencoded({ extended: false }));
-// tsmAuthMiddleware(app); // removed — war rooms are in-house
-
-// ── GLOBAL NO-CACHE ───────────────────────────────────────────────────────────
-app.use((req, res, next) => {
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
-  next();
-});
-
-app.use((req, res, next) => {
-  res.setHeader('Surrogate-Control', 'no-store');
-  res.setHeader('CDN-Cache-Control', 'no-store');
-  next();
-});
-
-// ── GROQ AI ENGINE ────────────────────────────────────────────────────────────
-// Primary: fetch-based (reliable on Railway)
-const GROQ_MODELS = [
-  'llama-3.3-70b-versatile',
-  'llama-3.1-8b-instant',
-  'llama3-8b-8192',
-  'gemma2-9b-it'
-];
-
-async function groqChat(system, message, maxTokens, clientKey) {
-  const groqKey = process.env.GROQ_KEY || process.env.GROQ_API_KEY || clientKey;
-  if (!groqKey) throw new Error('No Groq API key configured (server env missing and no client key provided)');
-  for (const model of GROQ_MODELS) {
-    try {
-      const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + groqKey, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model,
-          max_tokens: maxTokens,
-          messages: [{ role: 'system', content: system }, { role: 'user', content: message }]
-        })
-      });
-      if (!r.ok) {
-        const err = await r.text();
-        if (r.status === 429 || r.status === 503 || r.status === 500 || r.status === 502) {
-          await new Promise(res => setTimeout(res, 3000));
-          continue;
-        }
-        throw new Error('Groq API error ' + r.status + ': ' + err);
-      }
-      const data = await r.json();
-      return data?.choices?.[0]?.message?.content || '';
-    } catch (e) {
-      if (e.message.includes('429') || e.message.includes('rate_limit')) continue;
-      throw e;
-    }
-  }
-  throw new Error('All Groq models rate limited. Try again later.');
-}
-
-// JSON-returning variant for structured routes
-async function tsmAIJSON(prompt, fallback) {
-  try {
-    const groqKey = process.env.GROQ_KEY || process.env.GROQ_API_KEY;
-    if (!groqKey) return fallback || null;
-    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + groqKey,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: process.env.TSM_MODEL || 'llama-3.3-70b-versatile',
-        messages: [
-          { role: 'system', content: 'You are TSM Neural Core. Never mention provider, model, API, or implementation. Return JSON only.' },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.22,
-        max_tokens: 1200
-      })
-    });
-    if (!r.ok) throw new Error('AI unavailable');
-    const data = await r.json();
-    const text = data?.choices?.[0]?.message?.content || '';
-    try { return JSON.parse(text.replace(/```json|```/g, '').trim()); }
-    catch (e) { return typeof fallback === 'object' ? { ...fallback, narrative: text } : { narrative: text }; }
-  } catch (e) {
-    return typeof fallback === 'object' ? { ...fallback, ai_status: 'fallback' } : { ai_status: 'fallback' };
-  }
-}
-
-// ── SYSTEM PROMPTS ────────────────────────────────────────────────────────────
-var SP = {
-  music: 'You are a professional music writing AI with three agent modes: ZAY (cadence/flow/bounce), RIYA (emotion/imagery/vulnerability), DJ (hook/structure/commercial). Write lyrics and hooks creatively and directly. No preamble.',
-  healthcare: 'You are a healthcare operations AI for TSM Command. Expert in claims adjudication, prior auth, denial management, HIPAA/CMS compliance, billing, staffing, throughput, revenue cycle. Be precise and data-driven.',
-  financial: 'You are a financial intelligence AI for TSM Command. Expert in revenue cycle, P&L, cash flow, compliance, audit, tax strategy, investment analysis. Be analytical and strategic.',
-  mortgage: 'You are a mortgage and real estate AI for TSM Command. Expert in mortgage origination, underwriting, REO, BPO realty, title, closing. Be precise and regulatory-aware.',
-  construction: 'You are a construction operations AI for TSM Command. Expert in project management, bid analysis, cost control, contractor/vendor management, scheduling. Be direct and operational.',
-  legal: 'You are a legal intelligence AI for TSM Command. Expert in contract analysis, regulatory compliance, case strategy, risk assessment. Note: AI analysis only, not legal advice.',
-  insurance: 'You are an insurance intelligence AI for TSM Command. Expert in P&C, life, health insurance, claims, underwriting, AZ market, NPN licensing. Be precise.',
-  education: 'You are an education operations AI for TSM Command. Expert in school administration, compliance, staffing, student outcomes, budget, grants. Be strategic.',
-  hospitality: 'You are a hospitality operations AI for TSM Command. Expert in hotel ops, concierge, staffing, revenue management, guest experience. Be service-oriented.',
-  enterprise: 'You are a senior business strategist AI for TSM Command. Expert in enterprise strategy, GTM, operations optimization, ROI analysis. Be executive-level and direct.',
-  o2c: 'You are an Order-to-Cash operations AI for TSM Command. Expert in quote-to-order, credit management, ATP/inventory allocation, shipping, invoicing, AR, and cash application. Given structured order, KPI, and SLA-breach data, identify root causes of bottlenecks, flag financial/operational risk, and recommend the specific next action for each at-risk order. Be precise and operational. No preamble.',
-  crm: 'You are a CRM customer-lifecycle AI for TSM Command. Expert in lead qualification, account/opportunity management, pipeline health, case escalation, and churn risk. Given structured lead/contact/account/opportunity/case data, KPIs, and SLA-breach data, identify the highest-risk records, the root cause of stalled deals or breached cases, and the specific next action per record. Reference record IDs. Be precise and operational. No preamble.',
-  approval: 'You are an Enterprise Approval Center AI for TSM Command. Expert in multi-level approval workflows, delegation rules, escalation management, SLA compliance, and audit governance. Given structured approval request data, KPIs, SLA breaches, and attention flags, identify bottlenecks, escalation risks, and the specific next action per at-risk request. Reference request IDs. Be precise and operational. No preamble.',
-  cpq: 'You are a CPQ (Configure-Price-Quote) operations AI for TSM Command. Expert in product configuration, compatibility rules, discount policy, margin management, quote lifecycle, and approval workflows. Given structured quote pipeline, KPI, and SLA-breach data, identify configuration conflicts, margin risks, stalled quotes, and the specific next action per at-risk quote. Reference quote IDs. Be precise and operational. No preamble.',
-  catalog: 'You are a Product Catalog Management AI for TSM Command. Expert in product hierarchy, lifecycle management, SKU/variant management, bill of materials, compliance tracking, inventory linkage, and pricing synchronization. Given structured product catalog data, KPIs, and attention flags (low-stock, compliance, end-of-life), identify catalog data-quality risks, lifecycle bottlenecks, and the specific next action per flagged product. Reference SKUs/product IDs. Be precise and operational. No preamble.',
-  strategist: 'You are the TSM Sovereign Strategist — the ultimate business consultant AI. Deep expertise across healthcare, financial, legal, real estate, construction, insurance, education, hospitality, enterprise strategy, M&A, GTM. Be bold and transformative.'
-};
-
-// ── GLOBAL STATE ──────────────────────────────────────────────────────────────
-global.MUSIC_PLATFORM = global.MUSIC_PLATFORM || {
-  artistDNA: { status: 'active', artist: 'Current Artist', styleTerms: ['pain', 'resilience'], weights: { cadence: 0.88, emotion: 0.91, structure: 0.76, imagery: 0.82 }, learnedSongs: [] },
-  agentRuns: [], activity: []
-};
-global.MUSIC_SUITE_STATE = global.MUSIC_SUITE_STATE || {
-  artistsOnline: 12, releasesDropping: 3, monthlyStreams: '84M', revenueMTD: 847400, pipelineValue: 2400000, aiStatus: 'online'
-};
-const TSM_MEMORY = global.__TSM_MEMORY__ = global.__TSM_MEMORY__ || {
-  healthcare: { nodes: {}, hcStrategist: null, mainStrategist: null, executive: null }
-};
-const TSM_MESH = {
-  HEALTHCARE: { owner: 'HC Strategist', controller: 'Healthcare Command', risks: ['Revenue leakage', 'Denial escalation', 'Patient throughput degradation', 'Compliance exposure'] },
-  CONSTRUCTION: { owner: 'Construction Strategist', controller: 'Construction Command', risks: ['Permit delays', 'Schedule variance', 'Cost overrun', 'Supply chain disruption'] },
-  FINANCE: { owner: 'Financial Strategist', controller: 'Financial Command', risks: ['Margin compression', 'Payer variance', 'Cash flow slowdown', 'Revenue forecasting deviation'] }
-};
-
-app.use('/html/runtime', express.static(path.join(__dirname, 'html', 'runtime')));
-app.use('/', express.static(path.join(__dirname, 'html')));
-const suites = [
-  { route: '/construction', dir: 'html/construction-suite', index: 'construction-hub.html' },
-  { route: '/finops', dir: 'html/finops-suite', index: 'finops-presentation/index.html' },
-  { route: '/healthcare', dir: 'html/healthcare', index: 'index.html' },
-  { route: '/insurance', dir: 'html/tsm-insurance', index: 'ins-presentation.html' },
-  { route: '/music', dir: 'html/music-command', index: 'index.html' },
-];
-
-// ── HEALTH & STUB ROUTES ──────────────────────────────────────────────────────
-app.post('/api/re/query', async (req, res) => {
-  try { const a = await groqChat(SP.mortgage, req.body.message||req.body.question||req.body.query||'', req.body.maxTokens||1024); return res.json({ ok:true, answer:a, output:a }); }
-  catch(e){ return res.status(500).json({ ok:false, error:e.message }); }
-});
-app.post('/api/education/query', async (req, res) => {
-  try { const a = await groqChat(SP.education, req.body.message||req.body.question||req.body.query||'', req.body.maxTokens||1024); return res.json({ ok:true, answer:a, output:a }); }
-  catch(e){ return res.status(500).json({ ok:false, error:e.message }); }
-});
-app.post('/api/enterprise/query', async (req, res) => {
-  try { const a = await groqChat(SP.enterprise, req.body.message||req.body.question||req.body.query||'', req.body.maxTokens||1024); return res.json({ ok:true, answer:a, output:a }); }
-  catch(e){ return res.status(500).json({ ok:false, error:e.message }); }
-});
-app.post('/api/re/query', async (req, res) => {
-  try { const a = await groqChat(SP.mortgage, req.body.message||req.body.question||req.body.query||'', req.body.maxTokens||1024); return res.json({ ok:true, answer:a, output:a, reply:a }); }
-  catch(e){ return res.status(500).json({ ok:false, error:e.message }); }
-});
-app.post('/api/education/query', async (req, res) => {
-  try { const a = await groqChat(SP.education, req.body.message||req.body.question||req.body.query||'', req.body.maxTokens||1024); return res.json({ ok:true, answer:a, output:a, reply:a }); }
-  catch(e){ return res.status(500).json({ ok:false, error:e.message }); }
-});
-app.post('/api/enterprise/query', async (req, res) => {
-  try { const a = await groqChat(SP.enterprise, req.body.message||req.body.question||req.body.query||'', req.body.maxTokens||1024); return res.json({ ok:true, answer:a, output:a, reply:a }); }
-  catch(e){ return res.status(500).json({ ok:false, error:e.message }); }
-});
-app.get('/health', (req, res) => res.json({ status: 'ok', v: 3 }));
-app.post('/api/bpo/query', async (req, res) => {
-  try {
-    const sys = 'You are a BPO operations intelligence AI for TSM Command. Expert in BPO, workforce management, SLA performance, staffing ops. Be direct.';
-    const msg = req.body.message || req.body.question || req.body.query || '';
-    const a = await groqChat(sys, msg, req.body.maxTokens || 1024);
-    return res.json({ ok: true, reply: a, answer: a, output: a, createdAt: new Date().toISOString() });
-  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
-});
-app.post('/api/wip/sector-ai', (req, res) => res.json({ content: 'ok' }));
-
-app.get('/api/hc/strategist-rollup', (req, res) => {
-  res.json({ ok: true, controller: 'HC STRATEGIST', status: 'ROLLUP ACTIVE', nodes_online: 11, executive_escalations: 3, bnca: 'Enterprise healthcare synthesis complete', mesh: true, timestamp: new Date().toISOString() });
-});
-
-app.get('/api/hc/nodes', (req, res) => {
-  res.json({ ok: true, status: 'HC node route online', nodes: ['operations', 'billing', 'medical', 'pharmacy', 'financial', 'legal', 'vendors', 'compliance', 'tax-prep', 'grants', 'insurance'] });
-});
-
-app.get('/api/music/activity', (_req, res) => res.json({ ok: true, activity: global.MUSIC_PLATFORM.activity || [], platform: global.MUSIC_PLATFORM }));
-app.get('/api/music/platform', (_req, res) => res.json({ ok: true, platform: global.MUSIC_PLATFORM }));
-app.get('/executive-portal', (req, res) => res.redirect('/html/executive-portal/index.html'));
-app.get('/healthcare/executive-portal', (req, res) => res.redirect('/html/executive-portal/index.html'));
-
-// ── STATIC MOUNTS ─────────────────────────────────────────────────────────────
-const dirPath = path.join(__dirname, 'html');// ── STATIC MOUNTS v2 ──
-
-app.use('/html', express.static(path.join(__dirname, 'html'), { setHeaders: (res) => res.setHeader('Cache-Control', 'no-store') }));
-app.use('/js', express.static(path.join(__dirname, 'html/tsm-insurance/public/js')));
-app.use('/js', express.static(path.join(__dirname, 'html/js')));
-app.use('/bpo', express.static(path.join(__dirname, 'html/bpo')));
-app.use('/shared', express.static(path.join(__dirname, 'html/bpo/shared')));
-app.use('/insurance', express.static(path.join(__dirname, 'html/tsm-insurance')));
-app.use('/construction', express.static(path.join(__dirname, 'html/construction-suite')));
-app.use(express.static(dirPath));
-app.use(express.static(__dirname));
-
-// ── HC NODE ROUTES ────────────────────────────────────────────────────────────
-app.get('/html/hc-strategist', (req, res) => res.redirect('/healthcare/hc-strategist/'));
-app.get('/html/hc-strategist/', (req, res) => res.redirect('/healthcare/hc-strategist/'));
-app.get('/html/hc-strategist/index.html', (req, res) => res.redirect('/healthcare/hc-strategist/'));
-
-['hc-medical', 'hc-billing', 'hc-vendors', 'hc-grants', 'hc-insurance', 'hc-legal', 'hc-operations', 'hc-financial', 'hc-taxprep', 'hc-compliance', 'hc-pharmacy', 'hc-strategist'].forEach(function (node) {
-  var dir = path.join(__dirname, 'html/healthcare', node);
-  app.use('/healthcare/' + node, express.static(dir, { setHeaders: (res) => res.setHeader('Cache-Control', 'no-store') }));
-  app.get('/healthcare/' + node, (req, res) => { res.setHeader('Cache-Control', 'no-store,no-cache,must-revalidate'); res.sendFile(path.join(dir, 'index.html')); });
-  app.get('/healthcare/' + node + '/', (req, res) => { res.setHeader('Cache-Control', 'no-store,no-cache,must-revalidate'); res.sendFile(path.join(dir, 'index.html')); });
-});
-
-// ── SUITE ROUTES ──────────────────────────────────────────────────────────────
-suites.forEach(s => {
-  if (!s.route || !s.index) return;
-  app.get(s.route, (req, res) => res.sendFile(path.join(dirPath, s.index)));
-  app.get(s.route + '/', (req, res) => res.sendFile(path.join(dirPath, s.index)));
-});
-
-// ── HC API ROUTES ─────────────────────────────────────────────────────────────
-app.post('/api/hc/query', async (req, res) => {
-  try {
-    var body = req.body || {};
-    var sys = body.system || SP.healthcare;
-    var msg = body.message || body.question || body.query;
-    if (!msg) return res.status(400).json({ ok: false, error: 'Query required' });
-    var a = await groqChat(sys, msg, body.maxTokens || 1024);
-    console.log('[HC QUERY DEBUG] a =', JSON.stringify(a));
-    return res.json({ ok: true, output: a, answer: a, reply: a, content: a, createdAt: new Date().toISOString() });
-  } catch (e) { console.log('[HC ERROR]', e.message); return res.status(500).json({ ok: false, error: e.message }); }
-});
-
-const clientUsage = {}; // v3
-
-// ── HC NODE REPORT STORE ──────────────────────────────────────────────────────
-// In-memory store for node reports relayed from war rooms → strategist → exec
-const hcNodeReports = {}; // keyed by node id
-
-app.post('/api/hc/node-report', (req, res) => {
-  try {
-    const { nodeId, nodeLabel, report, analysisText, denialCodes, claimIds, severity, kpi, ts } = req.body || {};
-    if (!nodeId) return res.status(400).json({ ok: false, error: 'nodeId required' });
-    hcNodeReports[nodeId] = {
-      nodeId,
-      nodeLabel: nodeLabel || nodeId,
-      report: report || '',
-      analysisText: analysisText || '',
-      denialCodes: denialCodes || [],
-      claimIds: claimIds || [],
-      severity: severity || 'INFO',
-      kpi: kpi || {},
-      ts: ts || Date.now(),
-      receivedAt: Date.now()
-    };
-    console.log('[HC NODE REPORT] stored:', nodeId, 'severity:', severity);
-    return res.json({ ok: true, nodeId, stored: true });
-  } catch (e) {
-    return res.status(500).json({ ok: false, error: e.message });
-  }
-});
-
-app.get('/api/hc/node-reports', (req, res) => {
-  try {
-    const reports = Object.values(hcNodeReports).sort((a, b) => b.ts - a.ts);
-    return res.json({ ok: true, reports, count: reports.length });
-  } catch (e) {
-    return res.status(500).json({ ok: false, error: e.message });
-  }
-});
-
-app.delete('/api/hc/node-reports', (req, res) => {
-  const { nodeId } = req.body || req.query || {};
-  if (nodeId) {
-    delete hcNodeReports[nodeId];
-    return res.json({ ok: true, cleared: nodeId });
-  }
-  Object.keys(hcNodeReports).forEach(k => delete hcNodeReports[k]);
-  return res.json({ ok: true, cleared: 'all' });
-});
-
-
-app.post('/api/hc/stream', async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  const { model, sys, user, maxTok } = req.body;
-  if (!sys || !user) return res.status(400).json({ error: 'Missing sys or user' });
-
-  const clientId = req.ip;
-  const today = new Date().toDateString();
-  const key = clientId + '_' + today;
-  clientUsage[key] = (clientUsage[key] || 0) + 1;
-  if (clientUsage[key] > 20) {
-    return res.status(429).json({ error: 'Daily analysis limit reached. Contact TSM to upgrade.' });
-  }
-
-  const groqKey = process.env.GROQ_KEY || process.env.GROQ_API_KEY;
-  if (!groqKey) return res.status(500).json({ error: 'GROQ_KEY not configured on server.' });
-
-  try {
-    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + (process.env.GROQ_KEY || process.env.GROQ_API_KEY)
-      },
-      body: JSON.stringify({
-        model: model || 'llama-3.3-70b-versatile',
-        stream: true,
-        max_tokens: maxTok || 500,
-        messages: [{ role: 'system', content: sys }, { role: 'user', content: user }]
-      })
-    });
-
-    if (!groqRes.ok) {
-      const err = await groqRes.json();
-      return res.status(502).json({ error: err.error?.message || 'Groq error' });
-    }
-
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    const { Readable } = require('stream');
-    Readable.fromWeb(groqRes.body).pipe(res);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-app.post('/api/war-room/stream', async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  const { model, messages, max_tokens, temperature } = req.body;
-  if (!Array.isArray(messages) || !messages.length) return res.status(400).json({ error: 'Missing messages' });
-
-  const groqKey = process.env.GROQ_KEY || process.env.GROQ_API_KEY;
-  if (!groqKey) return res.status(500).json({ error: 'GROQ_KEY not configured on server.' });
-
-  try {
-    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + groqKey
-      },
-      body: JSON.stringify({
-        model: model || 'llama-3.3-70b-versatile',
-        stream: true,
-        max_tokens: max_tokens || 600,
-        temperature: temperature ?? 0.4,
-        messages
-      })
-    });
-
-    if (!groqRes.ok) {
-      const err = await groqRes.json().catch(() => ({}));
-      return res.status(502).json({ error: err.error?.message || 'Groq error' });
-    }
-
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    const { Readable } = require('stream');
-    Readable.fromWeb(groqRes.body).pipe(res);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-app.post('/api/hc/ask', async (req, res) => {
-  try {
-    var body = req.body || {};
-    if (!body.message || !body.message.trim()) return res.status(400).json({ ok: false, error: 'Message is required' });
-    var a = await groqChat(body.system || SP.healthcare, body.message, 1024);
-    return res.json({ ok: true, output: a, content: a });
-  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
-});
-
-app.post('/api/hc/triage', async (req, res) => {
-  try {
-    const { client = '', taskType = '', department = '', priority = 'P3', deadline = '', description = '', notes = '' } = req.body || {};
-    if (!description) return res.status(400).json({ ok: false, error: 'Description is required' });
-    const sp = `You are an expert Healthcare BPO triage AI for TSM. Respond in this EXACT format:\nPRIORITY: [P1-CRITICAL / P2-HIGH / P3-MEDIUM / P4-LOW]\nDEPARTMENT: [best-fit department]\nROUTE_TO: [Billing & Coding / Clinical Operations / Compliance / Executive / Finance / Provider Relations]\nURGENCY_REASON: [1 sentence max]\nRECOMMENDED_ACTION: [2-4 bullet points starting with •]\nESCALATE_TO_STRATEGIST: [YES / NO]\nESCALATE_REASON: [1 sentence, or N/A]\nESTIMATED_RESOLUTION: [timeframe]`;
-    const result = await groqChat(sp, `Client: ${client}\nTask Type: ${taskType}\nDepartment: ${department}\nPriority: ${priority}\nDeadline: ${deadline}\nDescription: ${description}\nNotes: ${notes}`, 1024);
-    res.json({ ok: true, content: result });
-  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
-});
-
-app.post('/api/hc/strategist', async (req, res) => {
-  try {
-    const { task = {}, aiTriage = '', query = '' } = req.body || {};
-    const sp = `You are the TSM Healthcare BPO Strategist. Produce executive-grade strategy in this EXACT format:\nSTRATEGIC_SUMMARY: [2-3 sentences]\nROOT_CAUSE: [1 sentence]\nIMPACT_LEVEL: [HIGH / MEDIUM / LOW] — [impact in 1 sentence]\nRECOMMENDED_STRATEGY:\n• [Action 1]\n• [Action 2]\n• [Action 3]\nOWNER_LANES: [departments]\nTIMELINE: [Day 1-2: ... / Week 1: ...]\nESCALATE_TO_EXECUTIVE: [YES / NO]\nESCALATE_REASON: [1 sentence, or N/A]\nCONFIDENCE: [percentage]`;
-    const result = await groqChat(sp, `TASK: ${JSON.stringify(task)}\nTRIAGE_OUTPUT: ${aiTriage}\nQUERY: ${query || 'Full strategic assessment'}`, 1024);
-    res.json({ ok: true, content: result });
-  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
-});
-
-app.post('/api/hc/layer2', async (req, res) => {
-  try {
-    const { system: org = 'TSM Healthcare', location = '' } = req.body || {};
-    const sp = `You are a senior Healthcare BPO enterprise strategist for ${org}${location ? ' · ' + location : ''}. Synthesize findings across ALL nodes. Return structured BNCA:\n\nENTERPRISE BNCA SUMMARY\n========================\nTOP RISKS (ranked by revenue impact):\n1. [Risk · Node · $ impact]\n2. [Risk · Node · $ impact]\n3. [Risk · Node · $ impact]\n\nIMMEDIATE ACTIONS (next 48 hours):\n1. [Action · Owner Lane · Expected outcome]\n2. [Action · Owner Lane · Expected outcome]\n3. [Action · Owner Lane · Expected outcome]\n\n30-DAY RECOVERY PLAN:\n[Concise cross-node plan with milestones]\n\nESCALATE_TO_EXECUTIVE: YES/NO\nESCALATE_REASON: [reason if YES]\nCONFIDENCE: [0-100]%`;
-    const result = await groqChat(sp, `Run full enterprise BNCA for ${org}${location ? ' at ' + location : ''}`, 1500);
-    res.json({ ok: true, output: result });
-  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
-});
-
-app.post('/api/hc/node/:node', async (req, res) => {
-  const node = req.params.node;
-  const payload = req.body || {};
-  const result = await tsmAIJSON(`Analyze healthcare node ${node}. Payload: ${JSON.stringify(payload).slice(0, 4000)}. Return JSON: {"node":"${node}","status":"READY|WATCH|RISK","top_issue":"...","findings":[],"actions":[],"bnca":"...","owner_lane":"...","confidence":0}`,
-    { node, status: 'WATCH', top_issue: 'Node requires review', findings: [], actions: [], bnca: 'Review node output.', owner_lane: 'office manager', confidence: 80 });
-  TSM_MEMORY.healthcare.nodes[node] = result;
-  res.json({ ok: true, node, result, ts: new Date().toISOString() });
-});
-
-app.post('/api/hc/bnca', async (req, res) => {
-  const payload = req.body || {};
-  const result = await tsmAIJSON(`Healthcare Command BNCA. Nodes: ${JSON.stringify(TSM_MEMORY.healthcare.nodes).slice(0, 6000)}. Payload: ${JSON.stringify(payload).slice(0, 4000)}. Return JSON: {"suite":"healthcare-command","top_issue":"...","risk_level":"READY|WATCH|RISK|URGENT","node_summary":[],"bnca":"...","owner_lanes":[],"hitl_review_required":true,"confidence":0}`,
-    { suite: 'healthcare-command', top_issue: 'Review needed', risk_level: 'WATCH', node_summary: [], bnca: 'Prioritize billing/auth/compliance.', owner_lanes: ['office manager'], hitl_review_required: true, confidence: 82 });
-  TSM_MEMORY.healthcare.hcCommand = result;
-  res.json({ ok: true, result, ts: new Date().toISOString() });
-});
-
-app.post('/api/hc-strategist/bnca', async (req, res) => {
-  const payload = req.body || {};
-  const result = await tsmAIJSON(`HC Strategist synthesis. Memory: ${JSON.stringify(TSM_MEMORY.healthcare).slice(0, 8000)}. Payload: ${JSON.stringify(payload).slice(0, 4000)}. Return JSON: {"suite":"hc-strategist","strategic_summary":"...","priority_actions":[],"bnca":"...","relay_to_main_strategist":true,"confidence":0}`,
-    { suite: 'hc-strategist', strategic_summary: 'HC Strategist review needed.', priority_actions: [], bnca: 'Relay to Main Strategist.', relay_to_main_strategist: true, confidence: 82 });
-  TSM_MEMORY.healthcare.hcStrategist = result;
-  res.json({ ok: true, result, ts: new Date().toISOString() });
-});
-
-app.post('/api/main-strategist/healthcare', async (req, res) => {
-  const payload = req.body || {};
-  const result = await tsmAIJSON(`Main Strategist executive package. Memory: ${JSON.stringify(TSM_MEMORY.healthcare).slice(0, 9000)}. Return JSON: {"suite":"main-strategist","executive_issue":"...","financial_or_operational_impact":"...","recommendation":"...","decision_options":[],"hitl_relay":"...","send_to_executive_portal":true,"confidence":0}`,
-    { suite: 'main-strategist', executive_issue: 'Healthcare readiness needs review.', financial_or_operational_impact: 'Billing pressure may affect throughput.', recommendation: 'Start office manager workflow pilot.', decision_options: ['30-day pilot'], hitl_relay: 'Review BNCA and confirm owner lanes.', send_to_executive_portal: true, confidence: 84 });
+app.use('/war-rooms', express.static(path.join(__dirname, 'html', 'war-rooms'), { setHeaders: (res) => res.setHeader('Cache-Control', 'no-store') }));
+ workflow pilot.', decision_options: ['30-day pilot'], hitl_relay: 'Review BNCA and confirm owner lanes.', send_to_executive_portal: true, confidence: 84 });
   TSM_MEMORY.healthcare.mainStrategist = result;
   res.json({ ok: true, result, ts: new Date().toISOString() });
 });
@@ -771,6 +318,43 @@ app.post('/api/o2c/query', async (req, res) => {
   }
 });
 
+
+app.post('/api/mdm/query', async (req, res) => {
+  const { records, kpis, context, maxTokens } = req.body || {};
+  if (!Array.isArray(records)) return res.status(400).json({ ok: false, error: 'records array required' });
+  const summary = JSON.stringify({ kpis, record_count: records.length, domains: [...new Set(records.map(r => r.domain))], issues: records.filter(r => r.status !== 'CLEAN').map(r => ({id:r.id,domain:r.domain,status:r.status,quality:r.quality})) }, null, 2);
+  const prompt = `MDM snapshot:\n${summary}\n\n` + (context||'') + `\nIdentify duplicate clusters, stale records, quality failures, and the specific stewardship action per record. Reference record IDs.`;
+  try { const answer = await groqChat(SP.mdm, prompt, maxTokens || 1200); return res.json({ ok: true, answer, createdAt: new Date().toISOString() }); }
+  catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
+
+app.post('/api/integration/query', async (req, res) => {
+  const { systems, integrations, kpis, context, maxTokens } = req.body || {};
+  const summary = JSON.stringify({ kpis, degraded: (systems||[]).filter(s=>s.status!=='up'), error_total: (systems||[]).reduce((a,s)=>a+(s.errors||0),0), warn_integrations: (integrations||[]).filter(i=>i.status!=='ok') }, null, 2);
+  const prompt = `Integration Hub snapshot:\n${summary}\n\n` + (context||'') + `\nIdentify the highest-risk interfaces, root cause of errors or latency spikes, and the specific remediation action per affected system.`;
+  try { const answer = await groqChat(SP.integration, prompt, maxTokens || 1200); return res.json({ ok: true, answer, createdAt: new Date().toISOString() }); }
+  catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
+
+app.post('/api/governance/query', async (req, res) => {
+  const { controls, risks, audit, kpis, context, maxTokens } = req.body || {};
+  const summary = JSON.stringify({ kpis, failed_controls: (controls||[]).filter(c=>c.status!=='PASS'), open_risks: (risks||[]).filter(r=>r.status==='OPEN'), flagged_audit: (audit||[]).filter(a=>a.result!=='OK') }, null, 2);
+  const prompt = `Governance snapshot:\n${summary}\n\n` + (context||'') + `\nIdentify the highest-severity compliance failures, open risks, and audit anomalies with specific remediation actions per finding.`;
+  try { const answer = await groqChat(SP.governance, prompt, maxTokens || 1200); return res.json({ ok: true, answer, createdAt: new Date().toISOString() }); }
+  catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
+
+app.post('/api/digital-twin/query', async (req, res) => {
+  const { domains, signals, forecasts, health_score, context, maxTokens } = req.body || {};
+  const summary = JSON.stringify({ health_score, at_risk_domains: (domains||[]).filter(d=>d.score<75).map(d=>({name:d.name,score:d.score,delta:d.delta})), warn_signals: (signals||[]).filter(s=>s.type!=='ok'), forecasts }, null, 2);
+  const prompt = `Enterprise Digital Twin snapshot:\n${summary}\n\n` + (context||'') + `\nGenerate an executive brief: top 3 risks, top 3 opportunities, and the single most important decision required in the next 30 days.`;
+  try { const answer = await groqChat(SP.digital_twin, prompt, maxTokens || 1400); return res.json({ ok: true, answer, createdAt: new Date().toISOString() }); }
+  catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+});
+
 app.post('/api/crm/query', async (req, res) => {
   const { leads, contacts, accounts, opportunities, cases, kpis, lead_breaches, opp_breaches, case_breaches, context, maxTokens } = req.body || {};
   const summary = JSON.stringify({
@@ -1057,7 +641,7 @@ app.post('/api/doc-router/classify', async (req, res) => {
 // ── COLLECTIVE BNCA ───────────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
 
-const COLLECTIVE_VERTICALS = ['healthcare', 'finops', 'bpo', 'legal', 'real-estate', 'insurance', 'construction', 'o2c', 'crm', 'cpq'];
+const COLLECTIVE_VERTICALS = ['healthcare', 'finops', 'bpo', 'legal', 'real-estate', 'insurance', 'construction', 'o2c', 'crm', 'cpq', 'mdm', 'integration', 'governance'];
 
 const COLLECTIVE_SIGNALS = []; // { vertical, signal, severity, riskLevel, confidence, topIssue, ownerLanes, hitlRequired, actions, impactDelta, kpi, warRoom, bnca, timestamp, source }
 const COLLECTIVE_BNCA = [];   // synthesis results

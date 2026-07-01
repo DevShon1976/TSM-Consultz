@@ -1,0 +1,183 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TSM Integration Hub</title>
+<style>
+:root{--bg:#050810;--bg2:#080c1a;--bg3:#0a1020;--border:rgba(0,200,255,.1);
+--cyan:#00c8ff;--cyan-dim:rgba(0,200,255,.4);--gold:#ffd700;--red:#ff3b3b;
+--amber:#ff9500;--green:#22c55e;--purple:#a855f7;--text:#c0d8f0;--text-dim:#3a5a7a;--card:#080c18;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Courier New',monospace;font-size:12px;min-height:100vh}
+.nav{display:flex;align-items:center;background:#030610;border-bottom:1px solid var(--border);height:38px;padding:0 16px}
+.nav-brand{color:var(--cyan);font-weight:700;font-size:11px;letter-spacing:2px;margin-right:24px}
+.nav-right{margin-left:auto;display:flex;gap:16px;color:var(--text-dim);font-size:10px}
+.nav-clock{color:var(--cyan-dim)}
+.main{padding:18px 22px;overflow-y:auto;height:calc(100vh - 38px)}
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:24px}
+.kpi-card{background:var(--card);border:1px solid var(--border);padding:12px 10px;text-align:center}
+.kpi-label{font-size:8px;letter-spacing:1px;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase}
+.kpi-value{font-size:20px;font-weight:700;color:var(--cyan)}
+.kpi-value.warn{color:var(--amber)} .kpi-value.bad{color:var(--red)} .kpi-value.good{color:var(--green)}
+.hub-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:24px}
+.section{background:var(--card);border:1px solid var(--border)}
+.section-head{padding:10px 14px;border-bottom:1px solid var(--border);font-size:10px;letter-spacing:1.5px;color:var(--text-dim);display:flex;justify-content:space-between}
+.section-body{padding:14px}
+.sys-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.sys-card{background:var(--bg3);border:1px solid var(--border);padding:10px;text-align:center}
+.sys-name{font-size:9px;letter-spacing:1px;color:var(--text-dim);margin-bottom:6px}
+.sys-status{font-size:11px;font-weight:700}
+.sys-status.up{color:var(--green)} .sys-status.warn{color:var(--amber)} .sys-status.down{color:var(--red)}
+.sys-latency{font-size:8px;color:var(--text-dim);margin-top:3px}
+.sys-pulse{width:6px;height:6px;border-radius:50%;margin:4px auto 0;animation:pulse 2s infinite}
+.pulse-up{background:var(--green)} .pulse-warn{background:var(--amber)} .pulse-down{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+table{width:100%;border-collapse:collapse;font-size:10px}
+th{text-align:left;color:var(--text-dim);font-size:8px;letter-spacing:1px;padding:5px 8px;border-bottom:1px solid var(--border)}
+td{padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text)}
+.tag{display:inline-block;font-size:8px;padding:2px 6px;border:1px solid}
+.tag-ok{color:var(--green);border-color:var(--green)} .tag-warn{color:var(--amber);border-color:var(--amber)} .tag-err{color:var(--red);border-color:var(--red)}
+.bus-viz{display:flex;align-items:center;justify-content:center;gap:6px;padding:16px;flex-wrap:wrap}
+.bus-node{background:var(--bg3);border:1px solid var(--border);padding:8px 12px;font-size:9px;letter-spacing:1px;color:var(--cyan);position:relative}
+.bus-node::after{content:'→';position:absolute;right:-12px;top:50%;transform:translateY(-50%);color:var(--cyan-dim);font-size:10px}
+.bus-node:last-child::after{display:none}
+.bus-pulse{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--cyan);margin-right:5px;animation:pulse 1.5s infinite}
+.ai-output{background:var(--bg3);border:1px solid var(--border);padding:12px;font-size:10px;line-height:1.6;color:var(--text);white-space:pre-wrap;min-height:80px}
+.ai-output.loading{color:var(--text-dim)}
+.btn{border:1px solid;font-family:inherit;font-size:9px;letter-spacing:1.5px;cursor:pointer;padding:7px 16px;transition:.2s;margin-right:8px}
+.btn-cyan{background:var(--cyan);border-color:var(--cyan);color:#000;font-weight:700}
+.btn-gold{background:var(--gold);border-color:var(--gold);color:#000;font-weight:700}
+</style></head><body>
+<div class="nav">
+  <div class="nav-brand">TSM SHELL // INTEGRATION HUB</div>
+  <div class="nav-right"><span id="navStatus">MONITORING: 8 SYSTEMS</span><span class="nav-clock" id="navClock">--:--:--</span></div>
+</div>
+<div class="main">
+  <div style="margin-bottom:16px">
+    <div style="font-size:13px;letter-spacing:1px">ENTERPRISE <b style="color:var(--cyan)">INTEGRATION HUB</b></div>
+    <div style="color:var(--text-dim);font-size:10px;margin-top:2px">API monitoring · Event bus · Data lineage · Interface health</div>
+  </div>
+  <div class="kpi-grid" id="kpiGrid"></div>
+  <div class="section" style="margin-bottom:18px">
+    <div class="section-head"><span>SYSTEM HEALTH MONITOR</span><span id="healthMeta"></span></div>
+    <div class="section-body"><div class="sys-grid" id="sysGrid"></div></div>
+  </div>
+  <div class="hub-grid">
+    <div class="section">
+      <div class="section-head"><span>EVENT BUS VISUALIZATION</span></div>
+      <div class="section-body">
+        <div class="bus-viz" id="busViz"></div>
+        <div style="margin-top:12px;font-size:9px;color:var(--text-dim);text-align:center" id="busStats"></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-head"><span>INTEGRATION CATALOG</span></div>
+      <div class="section-body" id="catalogBody"></div>
+    </div>
+  </div>
+  <div class="section" style="margin-bottom:18px">
+    <div class="section-head"><span>AI INTEGRATION ASSISTANT</span></div>
+    <div class="section-body">
+      <div style="margin-bottom:10px">
+        <button class="btn btn-cyan" id="btnAnalyze">ANALYZE INTEGRATION HEALTH</button>
+        <button class="btn btn-gold" id="btnRelay">RELAY TO STRATEGIST →</button>
+      </div>
+      <div class="ai-output" id="aiOutput">Click Analyze to get AI-generated integration health assessment and recommendations.</div>
+    </div>
+  </div>
+</div>
+<script src="/runtime/kernel/canonical-core.js"></script>
+<script>
+(function(){
+  function tick(){ document.getElementById('navClock').textContent=new Date().toLocaleTimeString(); }
+  setInterval(tick,1000); tick();
+
+  const SYSTEMS=[
+    {id:'crm',name:'CRM',status:'up',latency:42,msgs:1240,errors:0},
+    {id:'erp',name:'ERP / SAP',status:'up',latency:87,msgs:8832,errors:2},
+    {id:'hr',name:'HR',status:'up',latency:55,msgs:440,errors:0},
+    {id:'finance',name:'Finance',status:'warn',latency:210,msgs:3310,errors:8},
+    {id:'supply',name:'Supply Chain',status:'up',latency:68,msgs:2180,errors:1},
+    {id:'mfg',name:'Manufacturing',status:'up',latency:33,msgs:5520,errors:0},
+    {id:'bi',name:'BI / Analytics',status:'warn',latency:340,msgs:920,errors:5},
+    {id:'ai',name:'AI Engine',status:'up',latency:180,msgs:670,errors:0}
+  ];
+
+  const INTEGRATIONS=[
+    {from:'CRM',to:'ERP',type:'REST API',status:'ok',throughput:'1.2K/hr'},
+    {from:'ERP',to:'Finance',type:'IDOC',status:'warn',throughput:'3.3K/hr'},
+    {from:'Supply Chain',to:'ERP',type:'EDI',status:'ok',throughput:'2.1K/hr'},
+    {from:'Manufacturing',to:'BI',type:'Event Stream',status:'ok',throughput:'5.5K/hr'},
+    {from:'HR',to:'Finance',type:'REST API',status:'ok',throughput:'440/hr'},
+    {from:'AI Engine',to:'CRM',type:'Webhook',status:'ok',throughput:'670/hr'},
+    {from:'BI',to:'AI Engine',type:'GraphQL',status:'warn',throughput:'920/hr'}
+  ];
+
+  function renderKpis(){
+    const up=SYSTEMS.filter(s=>s.status==='up').length;
+    const warn=SYSTEMS.filter(s=>s.status==='warn').length;
+    const totalMsgs=SYSTEMS.reduce((a,s)=>a+s.msgs,0);
+    const totalErrors=SYSTEMS.reduce((a,s)=>a+s.errors,0);
+    const avgLatency=Math.round(SYSTEMS.reduce((a,s)=>a+s.latency,0)/SYSTEMS.length);
+    const kpis=[
+      {label:'Systems Online',value:up+'/'+SYSTEMS.length,cls:'good'},
+      {label:'Warnings',value:warn,cls:warn>0?'warn':'good'},
+      {label:'Messages/hr',value:totalMsgs.toLocaleString(),cls:''},
+      {label:'Errors',value:totalErrors,cls:totalErrors>0?'warn':'good'},
+      {label:'Avg Latency',value:avgLatency+'ms',cls:avgLatency>200?'warn':'good'}
+    ];
+    document.getElementById('kpiGrid').innerHTML=kpis.map(k=>`
+      <div class="kpi-card"><div class="kpi-label">${k.label}</div><div class="kpi-value ${k.cls}">${k.value}</div></div>`).join('');
+  }
+
+  function renderSystems(){
+    const up=SYSTEMS.filter(s=>s.status==='up').length;
+    document.getElementById('healthMeta').textContent=`${up}/${SYSTEMS.length} online`;
+    document.getElementById('sysGrid').innerHTML=SYSTEMS.map(s=>`
+      <div class="sys-card">
+        <div class="sys-name">${s.name}</div>
+        <div class="sys-status ${s.status}">${s.status.toUpperCase()}</div>
+        <div class="sys-latency">${s.latency}ms · ${s.msgs.toLocaleString()}/hr</div>
+        <div class="sys-pulse pulse-${s.status}"></div>
+      </div>`).join('');
+  }
+
+  function renderBus(){
+    const nodes=['CRM','ERP','Finance','Supply Chain','Manufacturing','BI','AI Engine'];
+    document.getElementById('busViz').innerHTML=nodes.map(n=>`
+      <div class="bus-node"><span class="bus-pulse"></span>${n}</div>`).join('');
+    const totalMsgs=SYSTEMS.reduce((a,s)=>a+s.msgs,0);
+    document.getElementById('busStats').textContent=`${totalMsgs.toLocaleString()} messages/hr · Event bus active · All streams nominal`;
+  }
+
+  function renderCatalog(){
+    const rows=INTEGRATIONS.map(i=>{
+      const cls=i.status==='ok'?'tag-ok':'tag-warn';
+      return `<tr><td>${i.from}</td><td>${i.to}</td><td>${i.type}</td><td>${i.throughput}</td><td><span class="tag ${cls}">${i.status.toUpperCase()}</span></td></tr>`;
+    }).join('');
+    document.getElementById('catalogBody').innerHTML=`<table><thead><tr><th>FROM</th><th>TO</th><th>TYPE</th><th>THROUGHPUT</th><th>STATUS</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  async function runAnalysis(){
+    const out=document.getElementById('aiOutput');
+    out.className='ai-output loading'; out.textContent='Analyzing integration health...';
+    try{
+      const payload={systems:SYSTEMS,integrations:INTEGRATIONS,kpis:{up:SYSTEMS.filter(s=>s.status==='up').length,warn:SYSTEMS.filter(s=>s.status==='warn').length,errors:SYSTEMS.reduce((a,s)=>a+s.errors,0)},maxTokens:1200};
+      const res=await fetch('/api/integration/query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const d=await res.json(); out.className='ai-output'; out.textContent=d.answer||d.output||'No analysis returned.';
+    } catch(e){ out.className='ai-output'; out.textContent=`Analysis failed: ${e.message}`; }
+  }
+
+  // Simulate live updates
+  setInterval(()=>{
+    SYSTEMS.forEach(s=>{ s.latency=Math.max(20,s.latency+Math.round((Math.random()-0.5)*20)); s.msgs+=Math.round(Math.random()*10); });
+    renderKpis(); renderSystems();
+  }, 5000);
+
+  document.getElementById('btnAnalyze').addEventListener('click',runAnalysis);
+  document.getElementById('btnRelay').addEventListener('click',()=>{
+    try{ localStorage.setItem('TSM_INTEGRATION_RELAY',JSON.stringify({vertical:'integration',systems:SYSTEMS,integrations:INTEGRATIONS,timestamp:new Date().toISOString()})); } catch(e){}
+    document.getElementById('navStatus').textContent='MONITORING: RELAYED';
+  });
+
+  renderKpis(); renderSystems(); renderBus(); renderCatalog();
+})();
+</script></body></html>
