@@ -19,7 +19,7 @@ const path = require('path');
 const JavaScriptObfuscator = require('javascript-obfuscator');
 
 // ── CONFIG ────────────────────────────────────────────────────────────────────
-const HTML_DIR  = path.join(__dirname, 'html');
+const HTML_DIR  = __dirname; // build.js lives inside html/ already -- don't join 'html' again
 const DRY_RUN   = process.argv.includes('--dry-run');
 const SINGLE    = (() => {
   const idx = process.argv.indexOf('--file');
