@@ -122,6 +122,7 @@ var SP = {
   enterprise: 'You are a senior business strategist AI for TSM Command. Expert in enterprise strategy, GTM, operations optimization, ROI analysis. Be executive-level and direct.',
   o2c: 'You are an Order-to-Cash operations AI for TSM Command. Expert in quote-to-order, credit management, ATP/inventory allocation, shipping, invoicing, AR, and cash application. Given structured order, KPI, and SLA-breach data, identify root causes of bottlenecks, flag financial/operational risk, and recommend the specific next action for each at-risk order. Be precise and operational. No preamble.',
   crm: 'You are a CRM customer-lifecycle AI for TSM Command. Expert in lead qualification, account/opportunity management, pipeline health, case escalation, and churn risk. Given structured lead/contact/account/opportunity/case data, KPIs, and SLA-breach data, identify the highest-risk records, the root cause of stalled deals or breached cases, and the specific next action per record. Reference record IDs. Be precise and operational. No preamble.',
+  approval: 'You are an Enterprise Approval Center AI for TSM Command. Expert in multi-level approval workflows, delegation rules, escalation management, SLA compliance, and audit governance. Given structured approval request data, KPIs, SLA breaches, and attention flags, identify bottlenecks, escalation risks, and the specific next action per at-risk request. Reference request IDs. Be precise and operational. No preamble.',
   cpq: 'You are a CPQ (Configure-Price-Quote) operations AI for TSM Command. Expert in product configuration, compatibility rules, discount policy, margin management, quote lifecycle, and approval workflows. Given structured quote pipeline, KPI, and SLA-breach data, identify configuration conflicts, margin risks, stalled quotes, and the specific next action per at-risk quote. Reference quote IDs. Be precise and operational. No preamble.',
   catalog: 'You are a Product Catalog Management AI for TSM Command. Expert in product hierarchy, lifecycle management, SKU/variant management, bill of materials, compliance tracking, inventory linkage, and pricing synchronization. Given structured product catalog data, KPIs, and attention flags (low-stock, compliance, end-of-life), identify catalog data-quality risks, lifecycle bottlenecks, and the specific next action per flagged product. Reference SKUs/product IDs. Be precise and operational. No preamble.',
   strategist: 'You are the TSM Sovereign Strategist — the ultimate business consultant AI. Deep expertise across healthcare, financial, legal, real estate, construction, insurance, education, hospitality, enterprise strategy, M&A, GTM. Be bold and transformative.'
@@ -791,6 +792,23 @@ app.post('/api/crm/query', async (req, res) => {
     return res.json({ ok: true, answer, createdAt: new Date().toISOString() });
   } catch (e) {
     console.error('CRM GROQ ERROR:', e.message);
+    return res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+
+app.post('/api/approval/query', async (req, res) => {
+  const { requests, kpis, sla_breaches, attention_flags, stage_distribution, context, maxTokens } = req.body || {};
+  if (!Array.isArray(requests)) return res.status(400).json({ ok: false, error: 'requests array required' });
+  const summary = JSON.stringify({ kpis, sla_breaches, attention_flags, stage_distribution, request_count: requests.length }, null, 2);
+  const prompt = `Current Approval Center snapshot:\n${summary}\n\n` +
+    (context ? `Additional context: ${context}\n\n` : '') +
+    `Identify the highest-risk approval requests, root causes of SLA breaches or escalations, delegation conflicts, and the single most important next action per at-risk request. Reference request IDs. Be specific and operational.`;
+  try {
+    const answer = await groqChat(SP.approval, prompt, maxTokens || 1200);
+    return res.json({ ok: true, answer, createdAt: new Date().toISOString() });
+  } catch (e) {
+    console.error('APPROVAL GROQ ERROR:', e.message);
     return res.status(500).json({ ok: false, error: e.message });
   }
 });
