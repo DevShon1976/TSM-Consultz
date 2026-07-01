@@ -1,44 +1,41 @@
 // ================================
-// TSM Approval Engine (Recovery Build)
+// TSM Approval Engine (Constructor Version)
 // ================================
 
-window.TSMApprovalEngine = (function () {
+class TSMApprovalEngine {
 
-    let model = {
-        loaded: false,
-        data: [],
-        rules: {}
-    };
+    constructor() {
+        this.model = {
+            loaded: false,
+            data: [],
+            rules: {}
+        };
+    }
 
-    function loadSampleData() {
-        model.data = [
+    loadModel() {
+        this.model.loaded = true;
+        console.log("[TSMApprovalEngine] Model initialized");
+        return this.model;
+    }
+
+    loadSampleData() {
+        this.model.data = [
             { id: 1, claim: "CPT 99215", status: "DENIED", amount: 42000 },
             { id: 2, claim: "CPT 99214", status: "APPROVED", amount: 12000 }
         ];
 
         console.log("[TSMApprovalEngine] Sample data loaded");
-        return model.data;
+        return this.model.data;
     }
 
-    function loadModel() {
-        model.loaded = true;
-        console.log("[TSMApprovalEngine] Model initialized");
-        return model;
-    }
-
-    function analyze() {
+    analyze() {
         return {
-            total: model.data.length,
-            denied: model.data.filter(x => x.status === "DENIED").length,
-            approved: model.data.filter(x => x.status === "APPROVED").length
+            total: this.model.data.length,
+            denied: this.model.data.filter(x => x.status === "DENIED").length,
+            approved: this.model.data.filter(x => x.status === "APPROVED").length
         };
     }
+}
 
-    return {
-        loadModel,
-        loadSampleData,
-        analyze,
-        getModel: () => model
-    };
-
-})();
+// expose globally (important for HTML access)
+window.TSMApprovalEngine = TSMApprovalEngine;
