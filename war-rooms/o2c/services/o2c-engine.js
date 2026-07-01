@@ -164,6 +164,63 @@
         relayed_at: Date.now()
       };
     }
+
+    /* ── Canonical core wiring ──────────────────────────────────
+       Maps each order onto the shared cross-vertical field contract
+       (architecture/canonical/entities.json) so WIP, Collective BNCA,
+       and any future consumer can read O2C orders generically without
+       knowing O2C-specific field names. Vertical-specific fields
+       (customer/value/currency/notes) ride along unchanged -- this is
+       additive, not a replacement schema. */
+    async _canonical() {
+      if (this._canonicalCore) return this._canonicalCore;
+      if (typeof window === 'undefined' || !window.CanonicalCore) {
+        console.warn('O2CEngine: CanonicalCore not available -- include /runtime/kernel/canonical-core.js before o2c-engine.js to enable getCanonicalOrders().');
+        return null;
+      }
+      const cc = new window.CanonicalCore();
+      await cc.load();
+      this._canonicalCore = cc;
+      return cc;
+    }
+
+    _riskLevelFor(order, breachIds) {
+      if (!breachIds.has(order.order_id)) return 'low';
+      const breach = this.getSlaBreaches().find(b => b.order_id === order.order_id);
+      return breach && breach.hours_over > 48 ? 'high' : 'medium';
+    }
+
+    /** Returns canonical-compliant records for every loaded order.
+     *  Falls back to raw orders (unprocessed) if CanonicalCore isn't
+     *  loaded, so callers can still function during partial rollout. */
+    async getCanonicalOrders() {
+      const cc = await this._canonical();
+      if (!cc) return this.orders;
+
+      const breaches = this.getSlaBreaches();
+      const breachIds = new Set(breaches.map(b => b.order_id));
+      const stage = id => this.stageIndex[id];
+
+      return this.orders.map(o => {
+        const s = stage(o.stage);
+        const { record } = cc.process({
+          id: o.order_id,
+          type: 'o2c_order',
+          vertical: 'o2c',
+          owner: o.owner || 'Unassigned',
+          status: s ? s.label : o.stage,
+          current_stage: o.stage,
+          risk_level: this._riskLevelFor(o, breachIds),
+          sla_state: breachIds.has(o.order_id) ? 'breached' : 'on_track',
+          linked_war_room: '/war-rooms/o2c/o2c-war-room.html',
+          customer: o.customer,
+          value: o.value,
+          currency: o.currency,
+          notes: o.notes || ''
+        });
+        return record;
+      });
+    }
   }
 
   global.TSMO2CEngine = O2CEngine;
