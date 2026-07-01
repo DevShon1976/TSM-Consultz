@@ -1584,7 +1584,16 @@ const MDM_LAST_VALIDATED = {};
 // rejected) is appended here — this IS the audit trail for Phase 6's "version history"
 // and "change approvals" requirements. Survives process lifetime, not restarts (matches
 // the rest of the platform's in-memory-state pattern; swap for the Fly volume if needed).
-const MDM_MERGE_LOG = [];
+let mdmDb = null;
+try {
+  mdmDb = require('./mdm-db.js');
+  mdmDb.initSchema();
+  console.log('[MDM] SQLite persistence enabled at', process.env.TSM_DB_PATH || '/data/tsm_mdm.sqlite');
+} catch (e) {
+  console.warn('[MDM] SQLite persistence unavailable (' + e.message + ') — merge history will not survive a restart until better-sqlite3 is installed.');
+}
+
+const MDM_MERGE_LOG = mdmDb ? mdmDb.loadMergeLog() : [];
 
 app.post('/api/mdm/merge', (req, res) => {
   const { domain, survivorId, mergedId, actor, decision } = req.body || {};
@@ -1606,6 +1615,10 @@ app.post('/api/mdm/merge', (req, res) => {
     ts: new Date().toISOString()
   };
   MDM_MERGE_LOG.push(entry);
+  if (mdmDb) {
+    try { mdmDb.logMerge(entry); }
+    catch (e) { console.warn('[MDM] failed to persist merge decision ' + entry.id + ': ' + e.message); }
+  }
 
   // Approved merge actually retires the losing record from the working dataset —
   // this is what makes it a real golden-record operation, not just a log entry.
@@ -1628,6 +1641,10 @@ app.post('/api/mdm/reset', (req, res) => {
     MDM_SEED_DATA[domain] = JSON.parse(JSON.stringify(MDM_SEED_DATA_ORIGINAL[domain]));
   });
   MDM_MERGE_LOG.length = 0;
+  if (mdmDb) {
+    try { mdmDb.clearMergeLog(); }
+    catch (e) { console.warn('[MDM] failed to clear persisted merge log: ' + e.message); }
+  }
   res.json({ ok: true, reset: true });
 });
 

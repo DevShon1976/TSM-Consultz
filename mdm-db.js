@@ -34,14 +34,15 @@ db.pragma('foreign_keys = ON');
 
 const SHARED_DDL = `
 CREATE TABLE IF NOT EXISTS merge_log (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id TEXT PRIMARY KEY,        -- matches server.js's MRG-<timestamp>-<rand> format
   domain TEXT NOT NULL,
-  record_id_kept TEXT NOT NULL,
-  record_id_merged TEXT NOT NULL,
-  match_reason TEXT,        -- 'identifier_exact' | 'fuzzy_name' | 'manual'
-  match_score REAL,
-  merged_by TEXT,
-  merged_at TEXT DEFAULT (datetime('now'))
+  survivor_id TEXT NOT NULL,
+  merged_id TEXT NOT NULL,
+  survivor_name TEXT,
+  merged_name TEXT,
+  decision TEXT NOT NULL,     -- 'APPROVED' | 'REJECTED'
+  actor TEXT,
+  ts TEXT DEFAULT (datetime('now'))
 );
 
 CREATE TABLE IF NOT EXISTS stewardship (
@@ -240,13 +241,28 @@ function bumpVersion(table, id) {
   return stmt.run(id);
 }
 
-/** Record a merge decision — called from the dedup/merge-suggestion flow. */
-function logMerge({ domain, keptId, mergedId, matchReason, matchScore, mergedBy }) {
+/** Persist a merge decision, exactly matching the entry shape /api/mdm/merge builds. */
+function logMerge(entry) {
   const stmt = db.prepare(`
-    INSERT INTO merge_log (domain, record_id_kept, record_id_merged, match_reason, match_score, merged_by)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO merge_log (id, domain, survivor_id, merged_id, survivor_name, merged_name, decision, actor, ts)
+    VALUES (@id, @domain, @survivorId, @mergedId, @survivorName, @mergedName, @decision, @actor, @ts)
   `);
-  return stmt.run(domain, keptId, mergedId, matchReason, matchScore, mergedBy || 'system');
+  return stmt.run(entry);
+}
+
+/** Read the full merge log back out, newest first — used to hydrate MDM_MERGE_LOG on server startup. */
+function loadMergeLog(limit = 200) {
+  const rows = db.prepare(`SELECT * FROM merge_log ORDER BY ts DESC LIMIT ?`).all(limit);
+  return rows.map(r => ({
+    id: r.id, domain: r.domain, survivorId: r.survivor_id, mergedId: r.merged_id,
+    survivorName: r.survivor_name, mergedName: r.merged_name, decision: r.decision,
+    actor: r.actor, ts: r.ts
+  }));
+}
+
+/** Clear the merge log — used by /api/mdm/reset so a reset is durable, not just in-memory. */
+function clearMergeLog() {
+  db.prepare(`DELETE FROM merge_log`).run();
 }
 
 module.exports = {
@@ -254,5 +270,7 @@ module.exports = {
   initSchema,
   bumpVersion,
   logMerge,
+  loadMergeLog,
+  clearMergeLog,
   DOMAIN_TABLE_MAP,
 };
