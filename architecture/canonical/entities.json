@@ -1,0 +1,71 @@
+{
+  "version": "v1",
+  "description": "Canonical field contract every vertical entity (order, opportunity, case, ticket, claim, etc.) must include. Vertical-specific fields extend this, they do not replace it. See runtime/kernel/canonical-core.js for the enforcement layer.",
+  "fields": {
+    "id": {
+      "type": "string",
+      "required": true,
+      "description": "Stable unique identifier for the entity, unique within its type."
+    },
+    "type": {
+      "type": "string",
+      "required": true,
+      "description": "Entity type, e.g. 'o2c_order', 'crm_opportunity'. Used for cross-vertical routing."
+    },
+    "vertical": {
+      "type": "string",
+      "required": true,
+      "enum": ["o2c", "crm", "cpq", "catalog", "approvals", "mdm", "integration", "governance", "wip", "healthcare", "finops", "bpo", "legal", "real-estate", "insurance", "construction"],
+      "description": "Which War Room / vertical owns this entity."
+    },
+    "owner": {
+      "type": "string",
+      "required": true,
+      "default": "Unassigned",
+      "description": "Person or lane responsible for moving this entity forward."
+    },
+    "status": {
+      "type": "string",
+      "required": true,
+      "description": "Free-text or vertical-defined lifecycle status label."
+    },
+    "current_stage": {
+      "type": "string",
+      "required": false,
+      "description": "Stage id within the vertical's own stage model, e.g. o2c-model.json stages[].id."
+    },
+    "risk_level": {
+      "type": "string",
+      "required": true,
+      "enum": ["low", "medium", "high", "critical"],
+      "default": "low",
+      "description": "Normalized risk tier. WIP task board and Collective BNCA both render this generically."
+    },
+    "sla_state": {
+      "type": "string",
+      "required": false,
+      "enum": ["on_track", "at_risk", "breached", "n/a"],
+      "default": "n/a",
+      "description": "Normalized SLA status. Populate this from vertical-specific breach logic (e.g. O2CEngine.getSlaBreaches())."
+    },
+    "linked_war_room": {
+      "type": "string",
+      "required": true,
+      "description": "Path to the entryPoint war room HTML for this entity, so cross-vertical views (Collective BNCA, WIP) can route back to source."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "iso8601",
+      "required": true
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "iso8601",
+      "required": true
+    }
+  },
+  "explicitly_not_canonical": {
+    "note": "These stay vertical-specific by design. Do not hoist into the canonical core -- doing so recreates the bloated-shared-object anti-pattern.",
+    "examples": ["customer", "value", "currency", "lead_source", "pipeline_stage", "insurance_plan"]
+  }
+}
