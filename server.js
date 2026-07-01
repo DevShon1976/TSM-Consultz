@@ -121,6 +121,7 @@ var SP = {
   hospitality: 'You are a hospitality operations AI for TSM Command. Expert in hotel ops, concierge, staffing, revenue management, guest experience. Be service-oriented.',
   enterprise: 'You are a senior business strategist AI for TSM Command. Expert in enterprise strategy, GTM, operations optimization, ROI analysis. Be executive-level and direct.',
   o2c: 'You are an Order-to-Cash operations AI for TSM Command. Expert in quote-to-order, credit management, ATP/inventory allocation, shipping, invoicing, AR, and cash application. Given structured order, KPI, and SLA-breach data, identify root causes of bottlenecks, flag financial/operational risk, and recommend the specific next action for each at-risk order. Be precise and operational. No preamble.',
+  crm: 'You are a CRM customer-lifecycle AI for TSM Command. Expert in lead qualification, account/opportunity management, pipeline health, case escalation, and churn risk. Given structured lead/contact/account/opportunity/case data, KPIs, and SLA-breach data, identify the highest-risk records, the root cause of stalled deals or breached cases, and the specific next action per record. Reference record IDs. Be precise and operational. No preamble.',
   strategist: 'You are the TSM Sovereign Strategist — the ultimate business consultant AI. Deep expertise across healthcare, financial, legal, real estate, construction, insurance, education, hospitality, enterprise strategy, M&A, GTM. Be bold and transformative.'
 };
 
@@ -767,6 +768,31 @@ app.post('/api/o2c/query', async (req, res) => {
   }
 });
 
+app.post('/api/crm/query', async (req, res) => {
+  const { leads, contacts, accounts, opportunities, cases, kpis, lead_breaches, opp_breaches, case_breaches, context, maxTokens } = req.body || {};
+  const summary = JSON.stringify({
+    kpis,
+    lead_breaches, opp_breaches, case_breaches,
+    counts: {
+      leads: Array.isArray(leads) ? leads.length : undefined,
+      contacts: Array.isArray(contacts) ? contacts.length : undefined,
+      accounts: Array.isArray(accounts) ? accounts.length : undefined,
+      opportunities: Array.isArray(opportunities) ? opportunities.length : undefined,
+      cases: Array.isArray(cases) ? cases.length : undefined
+    }
+  }, null, 2);
+  const prompt = `Current CRM snapshot:\n${summary}\n\n` +
+    (context ? `Additional context: ${context}\n\n` : '') +
+    `Identify the highest-risk leads/opportunities/cases, the root cause of any SLA breaches or stalled pipeline stages, and the single most important next action for each at-risk record. Reference record IDs.`;
+  try {
+    const answer = await groqChat(SP.crm, prompt, maxTokens || 1200);
+    return res.json({ ok: true, answer, createdAt: new Date().toISOString() });
+  } catch (e) {
+    console.error('CRM GROQ ERROR:', e.message);
+    return res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 app.post('/api/insurance/query', async (req, res) => {
   const { system, message, maxTokens, question, query } = req.body || {};
   const msg = message || question || query || '';
@@ -978,7 +1004,7 @@ app.post('/api/doc-router/classify', async (req, res) => {
 // ── COLLECTIVE BNCA ───────────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
 
-const COLLECTIVE_VERTICALS = ['healthcare', 'finops', 'bpo', 'legal', 'real-estate', 'insurance', 'construction', 'o2c'];
+const COLLECTIVE_VERTICALS = ['healthcare', 'finops', 'bpo', 'legal', 'real-estate', 'insurance', 'construction', 'o2c', 'crm'];
 
 const COLLECTIVE_SIGNALS = []; // { vertical, signal, severity, riskLevel, confidence, topIssue, ownerLanes, hitlRequired, actions, impactDelta, kpi, warRoom, bnca, timestamp, source }
 const COLLECTIVE_BNCA = [];   // synthesis results
