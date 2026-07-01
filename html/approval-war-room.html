@@ -189,11 +189,7 @@ tr:hover td{background:rgba(0,255,80,.03)}
 </div>
 
 <script src="/runtime/kernel/canonical-core.js"></script>
-<script src="/js/core/tsm-event-bus.js"></script>
-<script src="/js/core/tsm-state.js"></script>
-<script src="/js/core/tsm-mission-engine.js"></script>
-<script src="/js/core/tsm-auto-pipeline.js"></script>
-<script src="/services/approval-engine.js"></script>
+<script src="/war-rooms/approval/services/approval-engine.js"></script>
 <script>
 (function () {
   let MODEL = null;
@@ -437,12 +433,38 @@ tr:hover td{background:rgba(0,255,80,.03)}
     renderQueue();
   });
 
-  document.getElementById('btnCheckDelegation').addEventListener('click', checkDelegation);
-  document.getElementById('btnRunAnalysis').addEventListener('click', runAnalysis);
-  document.getElementById('btnRelay').addEventListener('click', relayToStrategist);
+  document.addEventListener("DOMContentLoaded", () => {
 
-  loadModel();
-})();
+    const engine = window.TSMApprovalEngine
+        ? new window.TSMApprovalEngine()
+        : null;
+
+    if (!engine) {
+        console.error("TSMApprovalEngine not loaded");
+        return;
+    }
+
+    window._tsmEngine = engine;
+
+    engine.loadModel();
+    engine.loadSampleData();
+
+    document.getElementById('btnCheckDelegation')
+        ?.addEventListener('click', checkDelegation);
+
+    document.getElementById('btnRunAnalysis')
+        ?.addEventListener('click', runAnalysis);
+
+    document.getElementById('btnRelay')
+        ?.addEventListener('click', relayToStrategist);
+});
+
+<script src="/js/core/tsm-event-bus.js"></script>
+<script src="/js/core/tsm-state.js"></script>
+<script src="/js/core/tsm-mission-engine.js"></script>
+<script src="/js/core/tsm-auto-pipeline.js"></script>
+<script src="/services/approval-engine.js"></script>
+
 </script>
 </body>
 </html>
