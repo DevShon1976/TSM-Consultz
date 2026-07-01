@@ -147,6 +147,7 @@ const TSM_MESH = {
 };
 
 app.use('/html/runtime', express.static(path.join(__dirname, 'html', 'runtime')));
+app.use('/architecture', express.static(path.join(__dirname, 'architecture')));
 app.use('/', express.static(path.join(__dirname, 'html')));
 const suites = [
   { route: '/construction', dir: 'html/construction-suite', index: 'construction-hub.html' },
