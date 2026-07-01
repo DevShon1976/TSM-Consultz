@@ -191,6 +191,23 @@ tr:hover td{background:rgba(0,255,80,.03)}
 </div>
 
 <script src="/runtime/kernel/canonical-core.js"></script>
+
+<!-- TSM CONTROL PLANE -- correct load order -->
+<script src="/js/core/tsm-event-bus.js"></script>
+<script src="/js/core/tsm-state.js"></script>
+<script src="/js/core/tsm-mission-engine.js"></script>
+<script src="/js/core/tsm-auto-pipeline.js"></script>
+
+<!-- TSM CROSS-WAR-ROOM FOUNDATION MODULES -->
+<script src="/js/foundation/tsm-kpi-cards.js"></script>
+<script src="/js/foundation/tsm-decision-engine.js"></script>
+<script src="/js/foundation/tsm-workflow-engine.js"></script>
+<script src="/js/foundation/tsm-analytics-hub.js"></script>
+<script src="/js/foundation/tsm-collaboration.js"></script>
+<script src="/js/foundation/tsm-enterprise-search.js"></script>
+<script src="/js/foundation/tsm-governance.js"></script>
+<script src="/js/foundation/tsm-integration-layer.js"></script>
+
 <script src="/war-rooms/o2c/services/o2c-engine.js"></script>
 <script>
 // Inline fallback copy of o2c-model.json. Used only if the live fetch below
@@ -285,24 +302,24 @@ const O2C_MODEL_FALLBACK = {
 
   function renderKpis(kpis) {
     const defs = MODEL.kpis || [];
-    const grid = document.getElementById('kpiGrid');
-    grid.innerHTML = '';
-    defs.forEach(d => {
+    if (!window.TSMKpiCards) {
+      // Foundation module failed to load -- keep the war room usable.
+      const grid = document.getElementById('kpiGrid');
+      grid.innerHTML = defs.map(d => `<div class="kpi-card"><div class="kpi-label">${d.label}</div><div class="kpi-value">${kpis[d.id]}</div></div>`).join('');
+      return;
+    }
+    const cards = defs.map(d => {
       const val = kpis[d.id];
-      let display = val;
-      let cls = '';
-      if (d.unit === 'usd') display = '$' + Number(val || 0).toLocaleString();
-      if (d.unit === 'pct') display = val + '%';
-      if (d.unit === 'days') display = val + 'd';
-      if (d.id === 'bottleneck_count' && val > 0) cls = 'bad';
-      if (d.id === 'credit_holds' && val > 0) cls = 'warn';
-      if (d.id === 'fill_rate' && val < 90) cls = 'warn';
-
-      const card = document.createElement('div');
-      card.className = 'kpi-card';
-      card.innerHTML = `<div class="kpi-label">${d.label}</div><div class="kpi-value ${cls}">${display}</div>`;
-      grid.appendChild(card);
+      const card = { id: d.id, label: d.label, value: val };
+      if (d.unit === 'usd') { card.kind = 'revenue'; }
+      else if (d.unit === 'pct') { card.kind = 'percent'; if (d.id === 'fill_rate') card.target = 90; }
+      else if (d.unit === 'days') { card.kind = 'custom'; card.format = v => v + 'd'; }
+      else { card.kind = 'risk'; }
+      if (d.id === 'bottleneck_count') { card.kind = 'risk'; card.badAt = 1; }
+      if (d.id === 'credit_holds') { card.kind = 'risk'; card.warnAt = 1; }
+      return card;
     });
+    TSMKpiCards.render('#kpiGrid', cards);
   }
 
   function renderStageCounts(dist) {
@@ -426,11 +443,5 @@ const O2C_MODEL_FALLBACK = {
   loadModel();
 })();
 </script>
-
-<!-- TSM CONTROL PLANE -- correct load order -->
-<script src="/js/core/tsm-event-bus.js"></script>
-<script src="/js/core/tsm-state.js"></script>
-<script src="/js/core/tsm-mission-engine.js"></script>
-<script src="/js/core/tsm-auto-pipeline.js"></script>
 </body>
 </html>
