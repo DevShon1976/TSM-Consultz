@@ -767,4 +767,5 @@ grep -n "o2c/query" server.js | head -5
 echo ""
 echo "All done. If SYNTAX OK above:"
 echo "  git add -A && git commit -m 'feat: O2C war room — engine, model, CPQ relay import, AI analysis'"
-echo "  fly deploy -a tsm-consultz"
+echo "  fly deploy -a tsm-consultz"node 
+build_o2c.sh
