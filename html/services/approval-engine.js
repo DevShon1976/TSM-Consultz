@@ -1,10 +1,6 @@
 // ==========================================
-// TSM Approval Engine — ONE-SHOT RECOVERY FIX
-// Fixes:
-// - Missing /services/approval-engine.js
-// - "not defined"
-// - "not a constructor"
-// - broken UI initialization
+// TSM Approval Engine — STABLE PRODUCTION FIX
+// Adds missing storage + prevents UI crashes
 // ==========================================
 
 class TSMApprovalEngine {
@@ -30,6 +26,8 @@ class TSMApprovalEngine {
             { id: 3, claim: "CPT 81002", status: "DENIED", amount: 8000 }
         ];
 
+        this.saveToStorage();
+
         console.log("[TSMApprovalEngine] Sample data loaded");
         return this.model.data;
     }
@@ -44,7 +42,43 @@ class TSMApprovalEngine {
                 : 0
         };
     }
+
+    // ================================
+    // 🔥 ADD MISSING METHODS (FIX)
+    // ================================
+
+    saveToStorage() {
+        try {
+            localStorage.setItem(
+                "TSM_APPROVAL_ENGINE_DATA",
+                JSON.stringify(this.model.data)
+            );
+            console.log("[TSMApprovalEngine] Saved to storage");
+        } catch (e) {
+            console.warn("[TSMApprovalEngine] Storage save failed", e);
+        }
+    }
+
+    loadFromStorage() {
+        try {
+            const data = localStorage.getItem("TSM_APPROVAL_ENGINE_DATA");
+
+            if (!data) {
+                console.warn("[TSMApprovalEngine] No storage found");
+                return [];
+            }
+
+            this.model.data = JSON.parse(data);
+
+            console.log("[TSMApprovalEngine] Loaded from storage");
+            return this.model.data;
+
+        } catch (e) {
+            console.warn("[TSMApprovalEngine] Storage load failed", e);
+            return [];
+        }
+    }
 }
 
-// IMPORTANT: expose globally for HTML access
+// expose globally
 window.TSMApprovalEngine = TSMApprovalEngine;
