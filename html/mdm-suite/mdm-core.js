@@ -24,9 +24,16 @@ function similarity(a, b) {
 
 // Weighted match score across configurable fields per domain
 const FIELD_WEIGHTS = {
-  customer: { name: 0.5, address: 0.25, taxId: 0.25 },
-  vendor:   { name: 0.5, address: 0.25, taxId: 0.25 },
-  gl:       { name: 0.4, accountNumber: 0.6 }
+  customer:     { name: 0.5, address: 0.25, taxId: 0.25 },
+  vendor:       { name: 0.5, address: 0.25, taxId: 0.25 },
+  product:      { name: 0.6, sku: 0.4 },
+  employee:     { name: 0.5, employeeId: 0.5 },
+  asset:        { name: 0.4, assetTag: 0.6 },
+  location:     { name: 0.5, address: 0.5 },
+  orgunit:      { name: 0.6, orgCode: 0.4 },
+  costcenter:   { name: 0.5, ccCode: 0.5 },
+  profitcenter: { name: 0.5, pcCode: 0.5 },
+  gl:           { name: 0.4, accountNumber: 0.6 }
 };
 
 function recordSimilarity(recA, recB, domain) {
@@ -39,16 +46,45 @@ function recordSimilarity(recA, recB, domain) {
   return totalWeight ? score / totalWeight : 0;
 }
 
+// Fields that are meant to be unique identifiers, not free text. If two records share
+// an identical non-empty value in any of these, that alone is strong duplicate evidence
+// — stronger than fuzzy name similarity, which can legitimately be low for the same
+// real-world entity (e.g. "Whitfield, Latorrey" vs "Whitfield, L." with a shared
+// employeeId). Without this, an exact identifier match can still lose to a borderline
+// weighted score and silently fall below threshold.
+const IDENTIFIER_FIELDS = ['taxId', 'employeeId', 'assetTag', 'sku', 'accountNumber', 'ccCode', 'pcCode', 'orgCode'];
+
+function sharedIdentifier(recA, recB) {
+  for (const field of IDENTIFIER_FIELDS) {
+    const a = recA[field], b = recB[field];
+    if (!a || !b) continue;
+    const av = String(a).trim(), bv = String(b).trim();
+    if (av === '' || av !== bv) continue;
+    // Guard against sentinel/placeholder values (e.g. two unrelated employees both
+    // left with employeeId "N/A") forcing a false match. A real identifier match
+    // must also satisfy that field's own format validator — reusing the existing
+    // per-field regex rather than a separate blacklist that could drift out of sync.
+    const validator = FORMAT_VALIDATORS[field];
+    if (validator && !validator(av)) continue;
+    return field;
+  }
+  return null;
+}
+
 function findDuplicates(records, domain, threshold = 0.82) {
   const matches = [];
   for (let i = 0; i < records.length; i++) {
     for (let j = i + 1; j < records.length; j++) {
-      const score = recordSimilarity(records[i], records[j], domain);
+      let score = recordSimilarity(records[i], records[j], domain);
+      const idField = sharedIdentifier(records[i], records[j]);
+      if (idField) score = Math.max(score, 0.95);
       if (score >= threshold) {
         matches.push({
           recordA: records[i],
           recordB: records[j],
           matchScore: Math.round(score * 100),
+          matchReason: idField ? 'identifier_exact' : 'fuzzy_name',
+          matchField: idField || null,
           domain
         });
       }
@@ -59,15 +95,28 @@ function findDuplicates(records, domain, threshold = 0.82) {
 
 // Data quality scoring — completeness + format validation
 const REQUIRED_FIELDS = {
-  customer: ['name', 'address', 'taxId', 'email'],
-  vendor:   ['name', 'address', 'taxId'],
-  gl:       ['name', 'accountNumber']
+  customer:     ['name', 'address', 'taxId', 'email'],
+  vendor:       ['name', 'address', 'taxId'],
+  product:      ['name', 'sku', 'category'],
+  employee:     ['name', 'employeeId', 'department'],
+  asset:        ['name', 'assetTag', 'location'],
+  location:     ['name', 'address', 'region'],
+  orgunit:      ['name', 'parentUnit', 'orgCode'],
+  costcenter:   ['name', 'ccCode', 'owner'],
+  profitcenter: ['name', 'pcCode', 'owner'],
+  gl:           ['name', 'accountNumber']
 };
 
 const FORMAT_VALIDATORS = {
-  email: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v || ''),
-  taxId: v => /^\d{2}-\d{7}$/.test(v || ''),
-  accountNumber: v => /^\d{4,6}$/.test(v || '')
+  email:         v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v || ''),
+  taxId:         v => /^\d{2}-\d{7}$/.test(v || ''),
+  accountNumber: v => /^\d{4,6}$/.test(v || ''),
+  sku:           v => /^PRD-\d{3,6}$/.test(v || ''),
+  employeeId:    v => /^EMP-\d{3,6}$/.test(v || ''),
+  assetTag:      v => /^AST-\d{3,6}$/.test(v || ''),
+  orgCode:       v => /^ORG-\d{3,6}$/.test(v || ''),
+  ccCode:        v => /^CC-\d{3,6}$/.test(v || ''),
+  pcCode:        v => /^PC-\d{3,6}$/.test(v || '')
 };
 
 function scoreRecord(record, domain) {
