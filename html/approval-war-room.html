@@ -203,10 +203,45 @@ tr:hover td{background:rgba(0,255,80,.03)}
   function setClock() { const el = document.getElementById('navClock'); if (el) el.textContent = new Date().toLocaleTimeString(); }
   setInterval(setClock, 1000); setClock();
 
+  // Maps a raw approval_request record onto the canonical entity contract
+  // (architecture/canonical/entities.json). 'owner' = the accountable party,
+  // which for an approval is the approver (who must act), not the requestor
+  // (who only originated it). 'status' proxies off 'stage' since there's no
+  // separate lifecycle field. 'linked_war_room' is a constant identifying
+  // this page as the record's origin for cross-vertical routing.
+  function toCanonicalRecord(req) {
+    return {
+      id: req.request_id,
+      vertical: 'approvals',
+      type: 'approval_request',
+      owner: req.approver,
+      status: req.stage,
+      linked_war_room: 'approval-war-room',
+      requestType: req.type,
+      requestor: req.requestor,
+      amount: req.amount,
+      submitted_at: req.submitted_at
+    };
+  }
+
+  async function validateSampleData() {
+    if (typeof CanonicalCore === 'undefined' || !MODEL || !MODEL.sample_data) return;
+    const core = new CanonicalCore();
+    await core.load();
+    const requests = MODEL.sample_data.requests || [];
+    const invalid = requests
+      .map(r => ({ id: r.request_id, result: core.process(toCanonicalRecord(r)) }))
+      .filter(x => !x.result.valid);
+    if (invalid.length) {
+      console.warn('[CanonicalCore] ' + invalid.length + '/' + requests.length + ' approval records failed canonical validation:', invalid);
+    }
+  }
+
   async function loadModel() {
     const res = await fetch('/war-rooms/approval/data/approval-model.json');
     MODEL = await res.json();
     engine = new TSMApprovalEngine(MODEL);
+    validateSampleData();
     const hydrated = engine.loadFromStorage();
     renderStageList();
     if (hydrated) renderAll();
