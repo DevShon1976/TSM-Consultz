@@ -56,7 +56,7 @@ td{padding:7px 8px;border-bottom:1px solid var(--border);color:var(--text)}
 <div class="layout">
   <div class="sidebar">
     <div><div class="sb-label">DATA</div>
-      <button class="btn btn-ghost" id="btnLoad">LOAD SAMPLE DATA</button>
+      <button class="btn btn-ghost" id="btnLoad">REFRESH</button>
       <button class="btn btn-ghost" id="btnReset">RESET DATA</button>
     </div>
     <div><div class="sb-label">DOMAINS</div>
@@ -207,9 +207,14 @@ td{padding:7px 8px;border-bottom:1px solid var(--border);color:var(--text)}
     } catch(e){ out.className='ai-output'; out.textContent=`Analysis failed: ${e.message}`; }
   }
   document.getElementById('btnLoad').addEventListener('click',()=>loadFromEngine().catch(e=>alert(e.message)));
-  document.getElementById('btnReset').addEventListener('click',()=>{
-    if(!confirm('Reset MDM data? This reloads the current server-side state (merges already approved will remain retired).')) return;
-    loadFromEngine().catch(e=>alert(e.message));
+  document.getElementById('btnReset').addEventListener('click',async()=>{
+    if(!confirm('Reset MDM data? This restores all domains to their original seeded state and clears the merge decision log. This cannot be undone.')) return;
+    try{
+      const r=await fetch('/api/mdm/reset',{method:'POST'});
+      const d=await r.json();
+      if(!d.ok) throw new Error(d.error||'Reset failed');
+      await loadFromEngine();
+    } catch(e){ alert(`Reset failed: ${e.message}`); }
   });
   document.getElementById('btnAnalyze').addEventListener('click',runAnalysis);
   document.getElementById('btnRelay').addEventListener('click',()=>{

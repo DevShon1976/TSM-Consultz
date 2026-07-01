@@ -1508,6 +1508,9 @@ app.get('/api/integration/health', (req, res) => {
 // ── PHASE 6: MASTER DATA MANAGEMENT (MDM) ──────────────────────────────────────
 const { findDuplicates: mdmFindDuplicates, scoreDataset: mdmScoreDataset } = require('./html/mdm-suite/mdm-core.js');
 const MDM_SEED_DATA = require('./html/mdm-suite/mdm-seed-data.json');
+// Deep-cloned at load time, before any merge can mutate MDM_SEED_DATA, so a real
+// reset is possible (restores retired records and clears the decision log).
+const MDM_SEED_DATA_ORIGINAL = JSON.parse(JSON.stringify(MDM_SEED_DATA));
 
 app.get('/api/mdm/analysis/:domain', (req, res) => {
   const domain = req.params.domain;
@@ -1614,6 +1617,17 @@ app.post('/api/mdm/merge', (req, res) => {
 
 app.get('/api/mdm/merge-history', (req, res) => {
   res.json({ ok: true, log: MDM_MERGE_LOG.slice(-200).reverse() });
+});
+
+// Real reset: restores every domain to its original seeded state (undoes any
+// approved merges) and clears the decision log. Previously "RESET DATA" just
+// re-fetched current state with no way to actually undo anything.
+app.post('/api/mdm/reset', (req, res) => {
+  Object.keys(MDM_SEED_DATA_ORIGINAL).forEach(domain => {
+    MDM_SEED_DATA[domain] = JSON.parse(JSON.stringify(MDM_SEED_DATA_ORIGINAL[domain]));
+  });
+  MDM_MERGE_LOG.length = 0;
+  res.json({ ok: true, reset: true });
 });
 
 app.post('/api/mdm/query', async (req, res) => {
