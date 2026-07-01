@@ -1507,7 +1507,7 @@ app.get('/api/integration/health', (req, res) => {
 
 
 // ── PHASE 6: MASTER DATA MANAGEMENT (MDM) ──────────────────────────────────────
-const { findDuplicates: mdmFindDuplicates, scoreDataset: mdmScoreDataset } = require('./html/mdm-suite/mdm-core.js');
+const { findDuplicates: mdmFindDuplicates, scoreDataset: mdmScoreDataset } = require('./mdm-core.js');
 const MDM_SEED_DATA = require('./html/mdm-suite/mdm-seed-data.json');
 // Deep-cloned at load time, before any merge can mutate MDM_SEED_DATA, so a real
 // reset is possible (restores retired records and clears the decision log).

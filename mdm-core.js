@@ -57,7 +57,17 @@ const IDENTIFIER_FIELDS = ['taxId', 'employeeId', 'assetTag', 'sku', 'accountNum
 function sharedIdentifier(recA, recB) {
   for (const field of IDENTIFIER_FIELDS) {
     const a = recA[field], b = recB[field];
-    if (a && b && String(a).trim() !== '' && String(a).trim() === String(b).trim()) return field;
+    if (!a || !b) continue;
+    const trimmedA = String(a).trim(), trimmedB = String(b).trim();
+    if (trimmedA === '' || trimmedA !== trimmedB) continue;
+    // Guard: a shared value that fails this field's own format validator
+    // (e.g. both "N/A", both "0", both "-") is not reliable identifier
+    // evidence -- it's two placeholders that happen to be equal, not a
+    // real shared ID. Reuses FORMAT_VALIDATORS below rather than a
+    // separate sentinel blacklist that could drift out of sync with it.
+    const validator = FORMAT_VALIDATORS[field];
+    if (validator && !validator(trimmedA)) continue;
+    return field;
   }
   return null;
 }
@@ -68,12 +78,15 @@ function findDuplicates(records, domain, threshold = 0.82) {
     for (let j = i + 1; j < records.length; j++) {
       let score = recordSimilarity(records[i], records[j], domain);
       const idField = sharedIdentifier(records[i], records[j]);
+      const matchReason = idField ? 'identifier_exact' : 'fuzzy_name';
       if (idField) score = Math.max(score, 0.95);
       if (score >= threshold) {
         matches.push({
           recordA: records[i],
           recordB: records[j],
           matchScore: Math.round(score * 100),
+          matchReason,
+          matchField: idField || null,
           domain
         });
       }
