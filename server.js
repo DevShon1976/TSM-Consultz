@@ -814,6 +814,39 @@ app.post('/api/approval/query', async (req, res) => {
   }
 });
 
+// ── FOUNDATION: AI Decision Engine ─────────────────────────────────────────
+// Generic cross-war-room decision endpoint. Every vertical (o2c, crm, approval,
+// cpq, catalog, mdm, and future phases) can call this instead of a bespoke
+// /api/{vertical}/query route. `vertical` selects the SP[] system prompt;
+// `mode` selects the analysis type; `snapshot` is the vertical's own JSON
+// shape (kpis, breaches, records, whatever it already sends).
+const FOUNDATION_MODES = {
+  root_cause: 'Identify the root cause of the flagged breaches/anomalies below. For each, trace back to the specific operational or data condition that caused it. Reference record/order/request IDs. Be precise and operational. No preamble.',
+  anomaly: 'Scan the snapshot below for anomalies -- values, patterns, or records that deviate from expected norms. Rank by severity. Reference specific IDs. No preamble.',
+  recommendation: 'Given the snapshot below, recommend the single most important next action for each at-risk item, ordered by priority. Reference specific IDs. Be specific and operational. No preamble.',
+  impact: 'Given the snapshot below, quantify the business impact (revenue, cost, SLA, risk exposure) of the flagged items if left unaddressed. Reference specific IDs. No preamble.',
+  predictive: 'Given the snapshot below, predict which currently-healthy items are most likely to breach SLA or become at-risk next, and why. Reference specific IDs. No preamble.'
+};
+
+app.post('/api/foundation/decision', async (req, res) => {
+  const { vertical, mode, snapshot, context, maxTokens } = req.body || {};
+  if (!vertical || !SP[vertical]) {
+    return res.status(400).json({ ok: false, error: `Unknown vertical "${vertical}". Must be one of: ${Object.keys(SP).join(', ')}` });
+  }
+  const modeInstruction = FOUNDATION_MODES[mode] || FOUNDATION_MODES.recommendation;
+  const summary = JSON.stringify(snapshot || {}, null, 2);
+  const prompt = `Current ${vertical.toUpperCase()} snapshot:\n${summary}\n\n` +
+    (context ? `Additional context: ${context}\n\n` : '') +
+    modeInstruction;
+  try {
+    const answer = await groqChat(SP[vertical], prompt, maxTokens || 1200);
+    return res.json({ ok: true, vertical, mode: mode || 'recommendation', answer, createdAt: new Date().toISOString() });
+  } catch (e) {
+    console.error('FOUNDATION DECISION ERROR:', e.message);
+    return res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 app.post('/api/cpq/query', async (req, res) => {
   const { quotes, kpis, sla_breaches, stage_distribution, context, maxTokens } = req.body || {};
   if (!Array.isArray(quotes)) return res.status(400).json({ ok: false, error: 'quotes array required' });
