@@ -1,159 +1,227 @@
-/* TSM O2C Engine v1.0
-   Order-to-Cash lifecycle: Inquiry → Credit → Confirmed → ATP →
-   Warehouse → Shipped → Delivered → Invoiced → Collected → Closed.
-   Reads CPQ relay payload to import Won quotes as new orders. */
+/* ============================================================
+   TSM O2C ENGINE
+   war-rooms/o2c/services/o2c-engine.js
+   Pure client-side computation layer for the Order-to-Cash
+   War Room. No direct AI calls happen here -- this only
+   shapes data. AI analysis goes through /api/o2c/query.
+   ============================================================ */
 
-class TSMO2CEngine {
-  constructor(model) {
-    this.model  = model || {};
-    this.orders = [];
-    this._storageKey = 'TSM_O2C_STATE';
+(function (global) {
+  'use strict';
+
+  function _bus() {
+    return (typeof window !== 'undefined' && window.TSMEventBus) || null;
   }
 
-  /* ── Persistence ────────────────────────────────────────────────────────── */
-  loadFromStorage() {
-    try {
-      const raw = localStorage.getItem(this._storageKey);
-      if (!raw) return false;
-      const s = JSON.parse(raw);
-      this.orders = s.orders || [];
-      return this.orders.length > 0;
-    } catch(e) { return false; }
-  }
+  class O2CEngine {
+    constructor(model) {
+      this.model = model || { stages: [], kpis: [], sample_orders: [] };
+      this.orders = [];
+      this.stageIndex = {};
+      (this.model.stages || []).forEach((s, i) => { this.stageIndex[s.id] = s; });
+    }
 
-  saveToStorage() {
-    try {
-      localStorage.setItem(this._storageKey,
-        JSON.stringify({ orders: this.orders, savedAt: Date.now() }));
-    } catch(e) {}
-  }
-
-  clearStorage() {
-    try { localStorage.removeItem(this._storageKey); } catch(e) {}
-    this.orders = [];
-  }
-
-  loadSampleData() {
-    this.orders = (this.model.sample_data?.orders || []).map(o => ({ ...o }));
-  }
-
-  /* ── CPQ Relay Import ───────────────────────────────────────────────────── */
-  checkCPQRelay() {
-    try {
-      const raw = localStorage.getItem('TSM_CPQ_RELAY') ||
-                  sessionStorage.getItem('TSM_CPQ_RELAY');
-      if (!raw) return null;
-      const relay = JSON.parse(raw);
-      const wonQuotes = (relay.quotes || []).filter(q => q.stage === 'Won');
-      const existingCPQIds = new Set(
-        this.orders.filter(o => o.cpq_quote_id).map(o => o.cpq_quote_id)
-      );
-      const newQuotes = wonQuotes.filter(q => !existingCPQIds.has(q.quote_id));
-      return newQuotes.length > 0 ? { relay, newQuotes } : null;
-    } catch(e) { return null; }
-  }
-
-  importFromCPQ(quotes) {
-    const now = new Date().toISOString();
-    const imported = quotes.map((q, i) => ({
-      order_id:        `SO-${Date.now()}-${String(i+1).padStart(3,'0')}`,
-      customer:        q.name || q.customer || 'Unknown Customer',
-      stage:           'Order Confirmed',
-      stage_entered_at: now,
-      order_value:     q.net_value || 0,
-      ar_balance:      0,
-      credit_approved: true,
-      on_time:         true,
-      cycle_days:      0,
-      origin:          'cpq',
-      cpq_quote_id:    q.quote_id
-    }));
-    this.orders.unshift(...imported);
-    this.saveToStorage();
-    return imported;
-  }
-
-  /* ── KPI Computation ────────────────────────────────────────────────────── */
-  computeKpis() {
-    const closedStages = ['Closed'];
-    const active = this.orders.filter(o => !closedStages.includes(o.stage));
-    const totalValue = active.reduce((s, o) => s + (Number(o.order_value) || 0), 0);
-    const arOpen = this.orders.reduce((s, o) => s + (Number(o.ar_balance) || 0), 0);
-    const breaches = this.getSlaBreaches();
-    const delivered = this.orders.filter(o =>
-      ['Delivered','Invoiced','Collected','Closed'].includes(o.stage));
-    const onTime = delivered.filter(o => o.on_time).length;
-    const avgCycle = this.orders.filter(o => o.cycle_days > 0).length
-      ? Math.round(this.orders.filter(o => o.cycle_days > 0)
-          .reduce((s, o) => s + o.cycle_days, 0) /
-          this.orders.filter(o => o.cycle_days > 0).length * 10) / 10
-      : 0;
-    return {
-      open_orders:      active.length,
-      order_value:      totalValue,
-      sla_breach_count: breaches.length,
-      ar_open:          arOpen,
-      avg_cycle_days:   avgCycle,
-      on_time_pct:      delivered.length
-        ? Math.round(onTime / delivered.length * 100) : 100
-    };
-  }
-
-  getStageDistribution() {
-    const stages = this.model.entities?.order?.stages || [];
-    const dist = {};
-    stages.forEach(s => { dist[s.id] = { count: 0, value: 0, label: s.label }; });
-    this.orders.forEach(o => {
-      const s = stages.find(st => st.label === o.stage);
-      if (s) {
-        dist[s.id].count++;
-        dist[s.id].value += Number(o.order_value) || 0;
+    loadOrders(orders) {
+      this.orders = Array.isArray(orders) ? orders : [];
+      const bus = _bus();
+      if (bus && bus.emit) {
+        bus.emit('O2C_ORDERS_LOADED', { count: this.orders.length, ts: Date.now() });
       }
-    });
-    return dist;
+      return this.orders;
+    }
+
+    loadSampleOrders() {
+      return this.loadOrders(this.model.sample_orders || []);
+    }
+
+    /** Returns orders whose time-in-stage exceeds that stage's SLA. */
+    getSlaBreaches() {
+      return this.orders
+        .map(o => {
+          const stage = this.stageIndex[o.stage];
+          if (!stage) return null;
+          const hoursIn = Number(o.entered_stage_at_hours_ago || 0);
+          const over = hoursIn > stage.sla_hours;
+          return over
+            ? {
+                order_id: o.order_id,
+                customer: o.customer,
+                stage: stage.label,
+                hours_in_stage: hoursIn,
+                sla_hours: stage.sla_hours,
+                hours_over: +(hoursIn - stage.sla_hours).toFixed(1),
+                value: o.value,
+                notes: o.notes || ''
+              }
+            : null;
+        })
+        .filter(Boolean)
+        .sort((a, b) => b.hours_over - a.hours_over);
+    }
+
+    /** Counts open orders per stage -- feeds the bottleneck heatmap. */
+    getStageDistribution() {
+      const dist = {};
+      (this.model.stages || []).forEach(s => { dist[s.id] = { label: s.label, count: 0, value: 0 }; });
+      this.orders.forEach(o => {
+        if (dist[o.stage]) {
+          dist[o.stage].count += 1;
+          dist[o.stage].value += Number(o.value || 0);
+        }
+      });
+      return dist;
+    }
+
+    computeKpis() {
+      const breaches = this.getSlaBreaches();
+      const totalValue = this.orders.reduce((sum, o) => sum + Number(o.value || 0), 0);
+      const creditHolds = this.orders.filter(o => o.stage === 'credit').length;
+      const arOrders = this.orders.filter(o => o.stage === 'ar' || o.stage === 'reconcile');
+      const avgDso = arOrders.length
+        ? Math.round(arOrders.reduce((s, o) => s + Number(o.entered_stage_at_hours_ago || 0), 0) / arOrders.length / 24)
+        : 0;
+      const avgCycleHours = this.orders.length
+        ? this.orders.reduce((s, o) => s + Number(o.entered_stage_at_hours_ago || 0), 0) / this.orders.length
+        : 0;
+
+      const kpis = {
+        cycle_time: +(avgCycleHours / 24).toFixed(1),
+        order_value: totalValue,
+        bottleneck_count: breaches.length,
+        credit_holds: creditHolds,
+        dso: avgDso,
+        fill_rate: this.orders.length
+          ? +(((this.orders.length - breaches.length) / this.orders.length) * 100).toFixed(1)
+          : 100
+      };
+
+      const bus = _bus();
+      if (bus && bus.emit) {
+        bus.emit('O2C_KPIS_COMPUTED', { kpis, ts: Date.now() });
+      }
+      return kpis;
+    }
+
+    /** Lightweight, local risk flags -- not a substitute for AI analysis,
+     *  just enough signal to color the UI before the AI call returns. */
+    getRiskFlags() {
+      const flags = [];
+      this.getSlaBreaches().forEach(b => {
+        flags.push({
+          type: b.hours_over > 48 ? 'high' : 'medium',
+          signal: 'shipping_delay'.includes(b.stage.toLowerCase()) ? 'shipping_delay' : 'sla_breach',
+          order_id: b.order_id,
+          message: `${b.order_id} (${b.customer}) is ${b.hours_over}h over SLA in ${b.stage}.`
+        });
+      });
+      return flags;
+    }
+
+    /** Builds the payload sent to the server-side AI proxy at /api/o2c/query.
+     *  Mirrors the structured prompt-forcing pattern used elsewhere in TSM Shell. */
+    buildAnalysisPayload(extraContext) {
+      return {
+        vertical: 'o2c',
+        orders: this.orders,
+        kpis: this.computeKpis(),
+        sla_breaches: this.getSlaBreaches(),
+        stage_distribution: this.getStageDistribution(),
+        context: extraContext || ''
+      };
+    }
+
+    async runAnalysis(extraContext) {
+      const payload = this.buildAnalysisPayload(extraContext);
+      const bus = _bus();
+      if (bus && bus.emit) bus.emit('O2C_ANALYSIS_STARTED', { ts: Date.now() });
+
+      const res = await fetch('/api/o2c/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        if (bus && bus.emit) bus.emit('O2C_ANALYSIS_FAILED', { status: res.status, ts: Date.now() });
+        throw new Error('O2C analysis request failed: ' + res.status);
+      }
+
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'O2C analysis returned ok:false');
+      if (bus && bus.emit) bus.emit('AI_ANALYSIS_COMPLETE', { vertical: 'o2c', data, ts: Date.now() });
+      return data;
+    }
+
+    /** Relay payload for handoff to the O2C Strategist / Executive Portal tier. */
+    buildRelayPayload(analysis) {
+      return {
+        vertical: 'o2c',
+        orders: this.orders,
+        kpis: this.computeKpis(),
+        sla_breaches: this.getSlaBreaches(),
+        risk_flags: this.getRiskFlags(),
+        analysis: analysis || null,
+        relayed_at: Date.now()
+      };
+    }
+
+    /* ── Canonical core wiring ──────────────────────────────────
+       Maps each order onto the shared cross-vertical field contract
+       (architecture/canonical/entities.json) so WIP, Collective BNCA,
+       and any future consumer can read O2C orders generically without
+       knowing O2C-specific field names. Vertical-specific fields
+       (customer/value/currency/notes) ride along unchanged -- this is
+       additive, not a replacement schema. */
+    async _canonical() {
+      if (this._canonicalCore) return this._canonicalCore;
+      if (typeof window === 'undefined' || !window.CanonicalCore) {
+        console.warn('O2CEngine: CanonicalCore not available -- include /runtime/kernel/canonical-core.js before o2c-engine.js to enable getCanonicalOrders().');
+        return null;
+      }
+      const cc = new window.CanonicalCore();
+      await cc.load();
+      this._canonicalCore = cc;
+      return cc;
+    }
+
+    _riskLevelFor(order, breachIds) {
+      if (!breachIds.has(order.order_id)) return 'low';
+      const breach = this.getSlaBreaches().find(b => b.order_id === order.order_id);
+      return breach && breach.hours_over > 48 ? 'high' : 'medium';
+    }
+
+    /** Returns canonical-compliant records for every loaded order.
+     *  Falls back to raw orders (unprocessed) if CanonicalCore isn't
+     *  loaded, so callers can still function during partial rollout. */
+    async getCanonicalOrders() {
+      const cc = await this._canonical();
+      if (!cc) return this.orders;
+
+      const breaches = this.getSlaBreaches();
+      const breachIds = new Set(breaches.map(b => b.order_id));
+      const stage = id => this.stageIndex[id];
+
+      return this.orders.map(o => {
+        const s = stage(o.stage);
+        const { record } = cc.process({
+          id: o.order_id,
+          type: 'o2c_order',
+          vertical: 'o2c',
+          owner: o.owner || 'Unassigned',
+          status: s ? s.label : o.stage,
+          current_stage: o.stage,
+          risk_level: this._riskLevelFor(o, breachIds),
+          sla_state: breachIds.has(o.order_id) ? 'breached' : 'on_track',
+          linked_war_room: '/war-rooms/o2c/o2c-war-room.html',
+          customer: o.customer,
+          value: o.value,
+          currency: o.currency,
+          notes: o.notes || ''
+        });
+        return record;
+      });
+    }
   }
 
-  getSlaBreaches() {
-    const slaMap = this.model.sla_hours_by_stage || {};
-    const closed = ['Collected','Closed'];
-    const now = Date.now();
-    return this.orders
-      .filter(o => !closed.includes(o.stage) && o.stage_entered_at)
-      .map(o => {
-        const sla = Number(slaMap[o.stage]) || 48;
-        const hoursIn = (now - new Date(o.stage_entered_at).getTime()) / 3_600_000;
-        return { order_id: o.order_id, customer: o.customer,
-                 stage: o.stage, hours_over: Math.round(hoursIn - sla) };
-      })
-      .filter(b => b.hours_over > 0);
-  }
-
-  /* ── AI Analysis ────────────────────────────────────────────────────────── */
-  async runAnalysis() {
-    const kpis            = this.computeKpis();
-    const sla_breaches    = this.getSlaBreaches();
-    const stage_distribution = this.getStageDistribution();
-    const res = await fetch('/api/o2c/query', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        orders: this.orders, kpis, sla_breaches,
-        stage_distribution, maxTokens: 1200
-      })
-    });
-    if (!res.ok) throw new Error(`/api/o2c/query returned ${res.status}`);
-    return res.json();
-  }
-
-  /* ── Strategist Relay ───────────────────────────────────────────────────── */
-  buildRelayPayload(aiText) {
-    return {
-      vertical:     'o2c',
-      orders:       this.orders,
-      kpis:         this.computeKpis(),
-      sla_breaches: this.getSlaBreaches(),
-      ai_analysis:  aiText,
-      timestamp:    new Date().toISOString()
-    };
-  }
-}
+  global.TSMO2CEngine = O2CEngine;
+})(typeof window !== 'undefined' ? window : this);
