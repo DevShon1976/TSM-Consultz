@@ -126,6 +126,9 @@ tr:hover td{background:rgba(0,255,80,.03)}
       <div class="btn-row">
         <button class="btn btn-ghost btn-full" id="btnLoadSample">LOAD SAMPLE DATA</button>
       </div>
+      <div class="btn-row" style="margin-top:6px">
+        <button class="btn btn-ghost btn-full" id="btnResetData">RESET SAVED DATA</button>
+      </div>
     </div>
 
     <div class="sb-section">
@@ -205,8 +208,10 @@ tr:hover td{background:rgba(0,255,80,.03)}
     const res = await fetch('/war-rooms/crm/data/crm-model.json');
     MODEL = await res.json();
     engine = new TSMCRMEngine(MODEL);
+    const hydrated = engine.loadFromStorage();
     renderTabs();
     renderStageList();
+    if (hydrated) renderAll();
   }
 
   function renderTabs() {
@@ -332,6 +337,7 @@ tr:hover td{background:rgba(0,255,80,.03)}
       btn.addEventListener('click', () => {
         const result = engine.convertLead(btn.getAttribute('data-lead'));
         if (result.error) { alert(result.error); return; }
+        engine.saveToStorage();
         alert(`Converted ${result.lead.name} \u2192 Account ${result.account.account_id}, Contact ${result.contact.contact_id}, Opportunity ${result.opportunity.opp_id}`);
         renderAll();
       });
@@ -391,6 +397,14 @@ tr:hover td{background:rgba(0,255,80,.03)}
 
   document.getElementById('btnLoadSample').addEventListener('click', () => {
     engine.loadSampleData();
+    engine.saveToStorage();
+    renderAll();
+  });
+
+  document.getElementById('btnResetData').addEventListener('click', () => {
+    if (!confirm('Clear all saved CRM data from this browser? This cannot be undone.')) return;
+    engine.clearStorage();
+    Object.keys(engine.data).forEach(k => { engine.data[k] = []; });
     renderAll();
   });
 
