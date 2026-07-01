@@ -45,6 +45,15 @@ td{padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text)}
 .btn{border:1px solid;font-family:inherit;font-size:9px;letter-spacing:1.5px;cursor:pointer;padding:7px 16px;transition:.2s;margin-right:8px}
 .btn-cyan{background:var(--cyan);border-color:var(--cyan);color:#000;font-weight:700}
 .btn-gold{background:var(--gold);border-color:var(--gold);color:#000;font-weight:700}
+.qrow{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:var(--bg3);border:1px solid var(--border);margin-bottom:6px;font-size:10px}
+.qrow .depth-bad{color:var(--red)} .qrow .depth-warn{color:var(--amber)} .qrow .depth-ok{color:var(--green)}
+.etl-row{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);margin-bottom:6px;font-size:10px}
+.etl-err{color:var(--red);font-size:8px;margin-top:3px}
+.lineage-row{padding:8px 10px;background:var(--bg3);border:1px solid var(--border);margin-bottom:6px;font-size:10px}
+.lineage-entity{color:var(--cyan);font-weight:700;margin-bottom:3px}
+.lineage-flow{color:var(--text-dim);font-size:9px}
+.err-row{padding:7px 10px;border-bottom:1px solid var(--border);font-size:9px;color:var(--text-dim)}
+.err-row .err-sys{color:var(--red)}
 </style></head><body>
 <div class="nav">
   <div class="nav-brand">TSM SHELL // INTEGRATION HUB</div>
@@ -73,6 +82,26 @@ td{padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text)}
       <div class="section-body" id="catalogBody"></div>
     </div>
   </div>
+  <div class="hub-grid">
+    <div class="section">
+      <div class="section-head"><span>MESSAGE QUEUE MONITOR</span><span id="queueMeta"></span></div>
+      <div class="section-body" id="queueBody"></div>
+    </div>
+    <div class="section">
+      <div class="section-head"><span>ETL STATUS</span><span id="etlMeta"></span></div>
+      <div class="section-body" id="etlBody"></div>
+    </div>
+  </div>
+  <div class="hub-grid">
+    <div class="section">
+      <div class="section-head"><span>DATA LINEAGE</span></div>
+      <div class="section-body" id="lineageBody"></div>
+    </div>
+    <div class="section">
+      <div class="section-head"><span>ERROR HANDLING DASHBOARD</span><span id="errorMeta"></span></div>
+      <div class="section-body" id="errorBody"></div>
+    </div>
+  </div>
   <div class="section" style="margin-bottom:18px">
     <div class="section-head"><span>AI INTEGRATION ASSISTANT</span></div>
     <div class="section-body">
@@ -90,94 +119,124 @@ td{padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text)}
   function tick(){ document.getElementById('navClock').textContent=new Date().toLocaleTimeString(); }
   setInterval(tick,1000); tick();
 
-  const SYSTEMS=[
-    {id:'crm',name:'CRM',status:'up',latency:42,msgs:1240,errors:0},
-    {id:'erp',name:'ERP / SAP',status:'up',latency:87,msgs:8832,errors:2},
-    {id:'hr',name:'HR',status:'up',latency:55,msgs:440,errors:0},
-    {id:'finance',name:'Finance',status:'warn',latency:210,msgs:3310,errors:8},
-    {id:'supply',name:'Supply Chain',status:'up',latency:68,msgs:2180,errors:1},
-    {id:'mfg',name:'Manufacturing',status:'up',latency:33,msgs:5520,errors:0},
-    {id:'bi',name:'BI / Analytics',status:'warn',latency:340,msgs:920,errors:5},
-    {id:'ai',name:'AI Engine',status:'up',latency:180,msgs:670,errors:0}
-  ];
+  // All data below comes from /api/integration/detail — the previous version of this
+  // page hardcoded SYSTEMS/INTEGRATIONS as static client-side arrays that never touched
+  // the server's real INTEGRATION_CATALOG, and the AI button called a /query endpoint
+  // that didn't exist (404). Both fixed: this is now a real read from the backend.
+  let SYSTEMS=[], FLOWS=[], QUEUES=[], ETL_JOBS=[], LINEAGE=[], ERROR_LOG=[];
 
-  const INTEGRATIONS=[
-    {from:'CRM',to:'ERP',type:'REST API',status:'ok',throughput:'1.2K/hr'},
-    {from:'ERP',to:'Finance',type:'IDOC',status:'warn',throughput:'3.3K/hr'},
-    {from:'Supply Chain',to:'ERP',type:'EDI',status:'ok',throughput:'2.1K/hr'},
-    {from:'Manufacturing',to:'BI',type:'Event Stream',status:'ok',throughput:'5.5K/hr'},
-    {from:'HR',to:'Finance',type:'REST API',status:'ok',throughput:'440/hr'},
-    {from:'AI Engine',to:'CRM',type:'Webhook',status:'ok',throughput:'670/hr'},
-    {from:'BI',to:'AI Engine',type:'GraphQL',status:'warn',throughput:'920/hr'}
-  ];
+  async function loadFromEngine(){
+    const r=await fetch('/api/integration/detail'); const d=await r.json();
+    if(!d.ok) throw new Error(d.error||'Failed to load integration detail');
+    SYSTEMS=d.systems||[]; FLOWS=d.flows||[]; QUEUES=d.queues||[]; ETL_JOBS=d.etlJobs||[]; LINEAGE=d.lineage||[]; ERROR_LOG=d.errorLog||[];
+    renderAll();
+  }
 
-  function renderKpis(){
-    const up=SYSTEMS.filter(s=>s.status==='up').length;
-    const warn=SYSTEMS.filter(s=>s.status==='warn').length;
-    const totalMsgs=SYSTEMS.reduce((a,s)=>a+s.msgs,0);
-    const totalErrors=SYSTEMS.reduce((a,s)=>a+s.errors,0);
-    const avgLatency=Math.round(SYSTEMS.reduce((a,s)=>a+s.latency,0)/SYSTEMS.length);
+  function computeKpis(){
+    const healthy=SYSTEMS.filter(s=>s.status==='healthy').length;
+    const degraded=SYSTEMS.filter(s=>s.status==='degraded'||s.status==='warning').length;
+    const totalThroughput=FLOWS.reduce((a,f)=>a+(f.throughputPerHr||0),0);
+    const totalErrors=SYSTEMS.reduce((a,s)=>a+(s.errorCount||0),0);
+    const avgLatency=FLOWS.length?Math.round(FLOWS.reduce((a,f)=>a+(f.latencyMs||0),0)/FLOWS.length):0;
+    const backedUpQueues=QUEUES.filter(q=>q.depth>50||q.oldestMsgAgeSec>60).length;
+    const failedEtl=ETL_JOBS.filter(j=>j.status==='failed').length;
+    return { healthy, total: SYSTEMS.length, degraded, totalThroughput, totalErrors, avgLatency, backedUpQueues, failedEtl };
+  }
+
+  function renderAll(){ const k=computeKpis(); renderKpis(k); renderSystems(k); renderBus(k); renderCatalog(); renderQueues(); renderEtl(); renderLineage(); renderErrors(); renderStatus(k); }
+
+  function renderKpis(k){
     const kpis=[
-      {label:'Systems Online',value:up+'/'+SYSTEMS.length,cls:'good'},
-      {label:'Warnings',value:warn,cls:warn>0?'warn':'good'},
-      {label:'Messages/hr',value:totalMsgs.toLocaleString(),cls:''},
-      {label:'Errors',value:totalErrors,cls:totalErrors>0?'warn':'good'},
-      {label:'Avg Latency',value:avgLatency+'ms',cls:avgLatency>200?'warn':'good'}
+      {label:'Systems Online',value:k.healthy+'/'+k.total,cls:k.degraded>0?'warn':'good'},
+      {label:'Degraded/Warning',value:k.degraded,cls:k.degraded>0?'warn':'good'},
+      {label:'Flow Throughput/hr',value:k.totalThroughput.toLocaleString(),cls:''},
+      {label:'Errors',value:k.totalErrors,cls:k.totalErrors>0?'warn':'good'},
+      {label:'Avg Latency',value:k.avgLatency+'ms',cls:k.avgLatency>200?'warn':'good'}
     ];
-    document.getElementById('kpiGrid').innerHTML=kpis.map(k=>`
-      <div class="kpi-card"><div class="kpi-label">${k.label}</div><div class="kpi-value ${k.cls}">${k.value}</div></div>`).join('');
+    document.getElementById('kpiGrid').innerHTML=kpis.map(x=>`<div class="kpi-card"><div class="kpi-label">${x.label}</div><div class="kpi-value ${x.cls}">${x.value}</div></div>`).join('');
   }
 
-  function renderSystems(){
-    const up=SYSTEMS.filter(s=>s.status==='up').length;
-    document.getElementById('healthMeta').textContent=`${up}/${SYSTEMS.length} online`;
-    document.getElementById('sysGrid').innerHTML=SYSTEMS.map(s=>`
-      <div class="sys-card">
-        <div class="sys-name">${s.name}</div>
-        <div class="sys-status ${s.status}">${s.status.toUpperCase()}</div>
-        <div class="sys-latency">${s.latency}ms · ${s.msgs.toLocaleString()}/hr</div>
-        <div class="sys-pulse pulse-${s.status}"></div>
-      </div>`).join('');
+  function renderSystems(k){
+    document.getElementById('healthMeta').textContent=`${k.healthy}/${k.total} online`;
+    document.getElementById('sysGrid').innerHTML=SYSTEMS.map(s=>{
+      const cls=s.status==='healthy'?'up':(s.status==='degraded'?'down':'warn');
+      const flow=FLOWS.find(f=>f.from===s.system||f.to===s.system);
+      return `<div class="sys-card">
+        <div class="sys-name">${s.system}</div>
+        <div class="sys-status ${cls}">${s.status.toUpperCase()}</div>
+        <div class="sys-latency">${flow?flow.latencyMs+'ms · ':''}${s.errorCount} error${s.errorCount===1?'':'s'}</div>
+        <div class="sys-pulse pulse-${cls}"></div>
+      </div>`;
+    }).join('');
   }
 
-  function renderBus(){
-    const nodes=['CRM','ERP','Finance','Supply Chain','Manufacturing','BI','AI Engine'];
-    document.getElementById('busViz').innerHTML=nodes.map(n=>`
-      <div class="bus-node"><span class="bus-pulse"></span>${n}</div>`).join('');
-    const totalMsgs=SYSTEMS.reduce((a,s)=>a+s.msgs,0);
-    document.getElementById('busStats').textContent=`${totalMsgs.toLocaleString()} messages/hr · Event bus active · All streams nominal`;
+  function renderBus(k){
+    document.getElementById('busViz').innerHTML=SYSTEMS.map(s=>`<div class="bus-node"><span class="bus-pulse"></span>${s.system}</div>`).join('');
+    document.getElementById('busStats').textContent=`${k.totalThroughput.toLocaleString()} messages/hr across ${FLOWS.length} flows · ${k.backedUpQueues} queue${k.backedUpQueues===1?'':'s'} backed up`;
   }
 
   function renderCatalog(){
-    const rows=INTEGRATIONS.map(i=>{
-      const cls=i.status==='ok'?'tag-ok':'tag-warn';
-      return `<tr><td>${i.from}</td><td>${i.to}</td><td>${i.type}</td><td>${i.throughput}</td><td><span class="tag ${cls}">${i.status.toUpperCase()}</span></td></tr>`;
+    const rows=FLOWS.map(f=>{
+      const cls=f.status==='ok'?'tag-ok':'tag-warn';
+      return `<tr><td>${f.from}</td><td>${f.to}</td><td>${f.type}</td><td>${f.throughputPerHr.toLocaleString()}/hr</td><td>${f.latencyMs}ms</td><td><span class="tag ${cls}">${f.status.toUpperCase()}</span></td></tr>`;
     }).join('');
-    document.getElementById('catalogBody').innerHTML=`<table><thead><tr><th>FROM</th><th>TO</th><th>TYPE</th><th>THROUGHPUT</th><th>STATUS</th></tr></thead><tbody>${rows}</tbody></table>`;
+    document.getElementById('catalogBody').innerHTML=`<table><thead><tr><th>FROM</th><th>TO</th><th>TYPE</th><th>THROUGHPUT</th><th>LATENCY</th><th>STATUS</th></tr></thead><tbody>${rows}</tbody></table>`;
   }
+
+  function renderQueues(){
+    const backed=QUEUES.filter(q=>q.depth>50||q.oldestMsgAgeSec>60).length;
+    document.getElementById('queueMeta').textContent=`${backed} backed up`;
+    document.getElementById('queueBody').innerHTML=QUEUES.map(q=>{
+      const cls=q.depth>200||q.oldestMsgAgeSec>500?'depth-bad':(q.depth>50||q.oldestMsgAgeSec>60?'depth-warn':'depth-ok');
+      return `<div class="qrow"><span>${q.name}<br><span style="color:var(--text-dim);font-size:8px">${q.consumers} consumer${q.consumers===1?'':'s'} · oldest msg ${q.oldestMsgAgeSec}s</span></span><span class="${cls}">${q.depth} queued</span></div>`;
+    }).join('');
+  }
+
+  function renderEtl(){
+    const failed=ETL_JOBS.filter(j=>j.status==='failed').length;
+    document.getElementById('etlMeta').textContent=`${failed} failed`;
+    const statusColor={success:'var(--green)',running:'var(--cyan)',failed:'var(--red)'};
+    document.getElementById('etlBody').innerHTML=ETL_JOBS.map(j=>`
+      <div class="etl-row">
+        <span>${j.name}<br><span style="color:var(--text-dim);font-size:8px">${j.system}${j.rowsProcessed?' · '+j.rowsProcessed.toLocaleString()+' rows':''}${j.durationSec?' · '+j.durationSec+'s':''}</span>${j.errorMsg?`<div class="etl-err">${j.errorMsg}</div>`:''}</span>
+        <span style="color:${statusColor[j.status]||'var(--text-dim)'};font-weight:700">${j.status.toUpperCase()}</span>
+      </div>`).join('');
+  }
+
+  function renderLineage(){
+    document.getElementById('lineageBody').innerHTML=LINEAGE.map(l=>`
+      <div class="lineage-row">
+        <div class="lineage-entity">${l.entity}</div>
+        <div class="lineage-flow">${l.upstream.join(', ')} &rarr; <b style="color:var(--text)">${l.entity}</b> &rarr; ${l.downstream.join(', ')}</div>
+      </div>`).join('');
+  }
+
+  function renderErrors(){
+    document.getElementById('errorMeta').textContent=`${ERROR_LOG.length} recent`;
+    if(!ERROR_LOG.length){ document.getElementById('errorBody').innerHTML='<div style="color:var(--text-dim);padding:10px;text-align:center">No errors logged.</div>'; return; }
+    document.getElementById('errorBody').innerHTML=ERROR_LOG.map(e=>`
+      <div class="err-row"><span class="err-sys">${e.system}</span> — ${new Date(e.ts).toLocaleString()}<br>${e.message}</div>`).join('');
+  }
+
+  function renderStatus(k){ document.getElementById('navStatus').textContent=`MONITORING: ${k.healthy}/${k.total} SYSTEMS`; }
 
   async function runAnalysis(){
     const out=document.getElementById('aiOutput');
     out.className='ai-output loading'; out.textContent='Analyzing integration health...';
     try{
-      const payload={systems:SYSTEMS,integrations:INTEGRATIONS,kpis:{up:SYSTEMS.filter(s=>s.status==='up').length,warn:SYSTEMS.filter(s=>s.status==='warn').length,errors:SYSTEMS.reduce((a,s)=>a+s.errors,0)},maxTokens:1200};
+      const payload={systems:SYSTEMS,flows:FLOWS,queues:QUEUES,etlJobs:ETL_JOBS,errorLog:ERROR_LOG,kpis:computeKpis(),maxTokens:1200};
       const res=await fetch('/api/integration/query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-      const d=await res.json(); out.className='ai-output'; out.textContent=d.answer||d.output||'No analysis returned.';
+      const d=await res.json(); out.className='ai-output'; out.textContent=d.answer||d.output||d.error||'No analysis returned.';
     } catch(e){ out.className='ai-output'; out.textContent=`Analysis failed: ${e.message}`; }
   }
 
-  // Simulate live updates
-  setInterval(()=>{
-    SYSTEMS.forEach(s=>{ s.latency=Math.max(20,s.latency+Math.round((Math.random()-0.5)*20)); s.msgs+=Math.round(Math.random()*10); });
-    renderKpis(); renderSystems();
-  }, 5000);
-
   document.getElementById('btnAnalyze').addEventListener('click',runAnalysis);
   document.getElementById('btnRelay').addEventListener('click',()=>{
-    try{ localStorage.setItem('TSM_INTEGRATION_RELAY',JSON.stringify({vertical:'integration',systems:SYSTEMS,integrations:INTEGRATIONS,timestamp:new Date().toISOString()})); } catch(e){}
+    try{ localStorage.setItem('TSM_INTEGRATION_RELAY',JSON.stringify({vertical:'integration',systems:SYSTEMS,flows:FLOWS,kpis:computeKpis(),timestamp:new Date().toISOString()})); } catch(e){}
     document.getElementById('navStatus').textContent='MONITORING: RELAYED';
   });
 
-  renderKpis(); renderSystems(); renderBus(); renderCatalog();
+  loadFromEngine().catch(e=>console.error('[INTEGRATION]',e));
+  setInterval(()=>loadFromEngine().catch(()=>{}), 15000);
 })();
 </script></body></html>
