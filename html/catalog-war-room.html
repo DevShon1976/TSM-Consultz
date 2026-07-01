@@ -191,10 +191,51 @@ tr:hover td{background:rgba(0,255,80,.03)}
   function setClock() { const el = document.getElementById('navClock'); if (el) el.textContent = new Date().toLocaleTimeString(); }
   setInterval(setClock, 1000); setClock();
 
+  // compliance_status is a stronger risk signal than defaulting -- a flagged
+  // product is a real risk, and stock below reorder point is a real risk;
+  // this combines both rather than leaving risk_level at the schema default.
+  function deriveRiskLevel(p) {
+    if (p.compliance_status === 'flagged') return 'high';
+    if (p.compliance_status === 'pending_review') return 'medium';
+    if (typeof p.stock_qty === 'number' && typeof p.reorder_point === 'number' && p.stock_qty < p.reorder_point) return 'medium';
+    return 'low';
+  }
+
+  function toCanonicalRecord(p) {
+    return {
+      id: p.sku,
+      vertical: 'catalog',
+      type: 'catalog_product',
+      status: p.stage,
+      risk_level: deriveRiskLevel(p),
+      linked_war_room: 'catalog-war-room',
+      category: p.category,
+      family: p.family,
+      list_price: p.list_price,
+      stock_qty: p.stock_qty,
+      reorder_point: p.reorder_point,
+      source_updated_at: p.updated_at
+    };
+  }
+
+  async function validateSampleData() {
+    if (typeof CanonicalCore === 'undefined' || !MODEL || !MODEL.sample_data) return;
+    const core = new CanonicalCore();
+    await core.load();
+    const products = MODEL.sample_data.products || [];
+    const invalid = products
+      .map(p => ({ sku: p.sku, result: core.process(toCanonicalRecord(p)) }))
+      .filter(x => !x.result.valid);
+    if (invalid.length) {
+      console.warn('[CanonicalCore] ' + invalid.length + '/' + products.length + ' catalog products failed canonical validation:', invalid);
+    }
+  }
+
   async function loadModel() {
     const res = await fetch('/war-rooms/catalog/data/catalog-model.json');
     MODEL = await res.json();
     engine = new TSMCatalogEngine(MODEL);
+    validateSampleData();
     const hydrated = engine.loadFromStorage();
     renderStageList();
     if (hydrated) renderAll();

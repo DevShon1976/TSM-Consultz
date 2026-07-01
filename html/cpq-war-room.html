@@ -183,10 +183,50 @@ tr:hover td{background:rgba(0,255,80,.03)}
   function setClock() { const el = document.getElementById('navClock'); if (el) el.textContent = new Date().toLocaleTimeString(); }
   setInterval(setClock, 1000); setClock();
 
+  // margin_pct/needs_approval are real commercial-risk signals for a quote --
+  // thin margin matters regardless of approval state; an approval requirement
+  // alone is a lesser but still real risk. No accountable-person field exists
+  // in this data, so 'owner' is left to the schema default rather than guessed.
+  function deriveRiskLevel(q) {
+    if (typeof q.margin_pct === 'number' && q.margin_pct < 25) return 'high';
+    if (q.needs_approval === true) return 'medium';
+    return 'low';
+  }
+
+  function toCanonicalRecord(q) {
+    return {
+      id: q.quote_id,
+      vertical: 'cpq',
+      type: 'cpq_quote',
+      status: q.stage,
+      risk_level: deriveRiskLevel(q),
+      linked_war_room: 'cpq-war-room',
+      net_value: q.net_value,
+      list_value: q.list_value,
+      discount_pct: q.discount_pct,
+      margin_pct: q.margin_pct,
+      needs_approval: q.needs_approval
+    };
+  }
+
+  async function validateSampleData() {
+    if (typeof CanonicalCore === 'undefined' || !MODEL || !MODEL.sample_data) return;
+    const core = new CanonicalCore();
+    await core.load();
+    const quotes = MODEL.sample_data.quotes || [];
+    const invalid = quotes
+      .map(q => ({ id: q.quote_id, result: core.process(toCanonicalRecord(q)) }))
+      .filter(x => !x.result.valid);
+    if (invalid.length) {
+      console.warn('[CanonicalCore] ' + invalid.length + '/' + quotes.length + ' CPQ quotes failed canonical validation:', invalid);
+    }
+  }
+
   async function loadModel() {
     const res = await fetch('/war-rooms/cpq/data/cpq-model.json');
     MODEL = await res.json();
     engine = new TSMCPQEngine(MODEL);
+    validateSampleData();
     const hydrated = engine.loadFromStorage();
     renderStageList();
     populateSkuSelect();
