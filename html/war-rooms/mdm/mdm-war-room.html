@@ -41,6 +41,13 @@ td{padding:7px 8px;border-bottom:1px solid var(--border);color:var(--text)}
 .quality-fill{height:100%;border-radius:2px}
 .ai-output{background:var(--bg3);border:1px solid var(--border);padding:12px;font-size:10px;line-height:1.6;color:var(--text);white-space:pre-wrap;min-height:80px}
 .ai-output.loading{color:var(--text-dim)}
+.btn-sm{width:auto;display:inline-block;padding:4px 9px;font-size:8px;margin:0 0 0 6px}
+.merge-row{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);margin-bottom:6px;font-size:10px}
+.merge-names{color:var(--text)} .merge-score{color:var(--gold);font-weight:700;margin-left:8px}
+.merge-actions{white-space:nowrap}
+.issue-list{font-size:8px;color:var(--red);margin-top:2px}
+.history-row{display:flex;gap:10px;padding:6px 10px;border-bottom:1px solid var(--border);font-size:9px;color:var(--text-dim)}
+.history-row .decision-approved{color:var(--green)} .history-row .decision-rejected{color:var(--red)}
 </style></head><body>
 <div class="nav">
   <div class="nav-brand">TSM SHELL // MDM</div>
@@ -71,35 +78,56 @@ td{padding:7px 8px;border-bottom:1px solid var(--border);color:var(--text)}
       <div class="section-body" id="recordBody"><div style="color:var(--text-dim);padding:20px;text-align:center">No records loaded.</div></div>
     </div>
     <div class="section">
+      <div class="section-head"><span>MERGE SUGGESTIONS</span><span id="mergeMeta"></span></div>
+      <div class="section-body" id="mergeBody"><div style="color:var(--text-dim);padding:20px;text-align:center">No duplicate clusters loaded.</div></div>
+    </div>
+    <div class="section">
       <div class="section-head"><span>AI ANOMALY DETECTION</span></div>
       <div class="section-body"><div class="ai-output" id="aiOutput">Run analysis to detect data anomalies, duplicate clusters, and stewardship recommendations.</div></div>
+    </div>
+    <div class="section">
+      <div class="section-head"><span>CHANGE HISTORY &middot; VERSION LOG</span><span id="historyMeta"></span></div>
+      <div class="section-body" id="historyBody"><div style="color:var(--text-dim);padding:20px;text-align:center">No merge decisions yet.</div></div>
     </div>
   </div>
 </div>
 <script src="/runtime/kernel/canonical-core.js"></script>
 <script>
 (function(){
-  let MODEL=null, records=[];
+  // records/duplicates/mergeLog are the real single-source-of-truth data — pulled from
+  // /api/mdm/detail, which runs the deterministic Levenshtein dedup + quality-scoring
+  // engine (mdm-core.js) against the seed dataset (mdm-seed-data.json: customer/vendor/gl).
+  // This replaced a static, disconnected sample-data file that never touched the real engine.
+  const KPI_DEFS=[
+    { id:'total_records',    label:'Total Records',    unit:'count' },
+    { id:'duplicate_count',  label:'Duplicates Found', unit:'count' },
+    { id:'quality_score',    label:'Data Quality',     unit:'pct'   },
+    { id:'pending_approvals',label:'Pending Merges',   unit:'count' },
+    { id:'anomalies',        label:'AI Anomalies',     unit:'count' },
+    { id:'stewards_active',  label:'Active Stewards',  unit:'count' }
+  ];
+  let records=[], duplicates=[], mergeLog=[];
   function tick(){ document.getElementById('navClock').textContent=new Date().toLocaleTimeString(); }
   setInterval(tick,1000); tick();
-  async function init(){
-    const r=await fetch('/war-rooms/mdm/data/mdm-model.json'); MODEL=await r.json();
-    try{ const s=JSON.parse(localStorage.getItem('TSM_MDM_STATE')||'null'); if(s){ records=s.records||[]; renderAll(); } } catch(e){}
+
+  async function loadFromEngine(){
+    const r=await fetch('/api/mdm/detail'); const d=await r.json();
+    if(!d.ok) throw new Error(d.error||'Failed to load MDM detail');
+    records=d.records||[]; duplicates=d.duplicates||[]; mergeLog=d.mergeLog||[];
+    renderAll();
   }
-  function save(){ try{ localStorage.setItem('TSM_MDM_STATE',JSON.stringify({records,savedAt:Date.now()})); } catch(e){} }
   function computeKpis(){
     const dups=records.filter(r=>r.status==='DUPLICATE').length;
     const quals=records.map(r=>r.quality||0);
     const avgQ=quals.length?Math.round(quals.reduce((a,b)=>a+b,0)/quals.length):0;
-    const anomalies=records.filter(r=>r.status==='STALE'||r.status==='INCOMPLETE').length;
-    return { total_records:records.length, duplicate_count:dups, quality_score:avgQ, pending_approvals:records.filter(r=>r.status==='INCOMPLETE').length, anomalies, stewards_active:new Set(records.map(r=>r.steward)).size };
+    const anomalies=records.filter(r=>r.status==='INCOMPLETE').length;
+    return { total_records:records.length, duplicate_count:dups, quality_score:avgQ, pending_approvals:duplicates.length, anomalies, stewards_active:new Set(records.map(r=>r.steward)).size };
   }
   function renderAll(){
-    const k=computeKpis(); renderKpis(k); renderDomains(); renderRecords(); renderStatus(k);
+    const k=computeKpis(); renderKpis(k); renderDomains(); renderRecords(); renderMerges(); renderHistory(); renderStatus(k);
   }
   function renderKpis(k){
-    const defs=MODEL.kpis||[];
-    document.getElementById('kpiGrid').innerHTML=defs.map(d=>{
+    document.getElementById('kpiGrid').innerHTML=KPI_DEFS.map(d=>{
       let v=k[d.id],disp=v,cls='';
       if(d.unit==='pct') disp=v+'%';
       if(d.id==='duplicate_count'&&v>0) cls='bad';
@@ -109,7 +137,7 @@ td{padding:7px 8px;border-bottom:1px solid var(--border);color:var(--text)}
     }).join('');
   }
   function renderDomains(){
-    const domains=MODEL.domains||[];
+    const domains=[...new Set(records.map(r=>r.domain))];
     document.getElementById('domainList').innerHTML=domains.map(d=>{
       const count=records.filter(r=>r.domain===d).length;
       return `<div class="domain-item"><span class="domain-name">${d}</span><span class="domain-count">${count}</span></div>`;
@@ -123,26 +151,71 @@ td{padding:7px 8px;border-bottom:1px solid var(--border);color:var(--text)}
       const hc=r.quality>=85?'#22c55e':r.quality>=70?'#ff9500':'#ff3b3b';
       const qBar=`<div class="quality-bar"><div class="quality-fill" style="width:${r.quality}%;background:${hc}"></div></div> ${r.quality}%`;
       const dupTag=r.duplicates>0?`<span class="tag tag-dup">${r.duplicates} DUP</span>`:'&mdash;';
-      return `<tr><td>${r.id}</td><td>${r.domain}</td><td>${r.name}</td><td>${qBar}</td><td><span class="tag ${tagMap[r.status]||''}">${r.status}</span></td><td>${dupTag}</td><td>${r.steward}</td><td>${r.last_validated}</td></tr>`;
+      const issues=(r.issues&&r.issues.length)?`<div class="issue-list">${r.issues.join(' · ')}</div>`:'';
+      return `<tr><td>${r.id}${issues}</td><td>${r.domain}</td><td>${r.name}</td><td>${qBar}</td><td><span class="tag ${tagMap[r.status]||''}">${r.status}</span></td><td>${dupTag}</td><td>${r.steward}</td><td>${r.last_validated}</td></tr>`;
     }).join('');
     document.getElementById('recordBody').innerHTML=`<table><thead><tr><th>ID</th><th>DOMAIN</th><th>NAME</th><th>QUALITY</th><th>STATUS</th><th>DUPLICATES</th><th>STEWARD</th><th>VALIDATED</th></tr></thead><tbody>${rows}</tbody></table>`;
   }
+  function renderMerges(){
+    document.getElementById('mergeMeta').textContent=`${duplicates.length} cluster${duplicates.length===1?'':'s'}`;
+    if(!duplicates.length){ document.getElementById('mergeBody').innerHTML='<div style="color:var(--text-dim);padding:20px;text-align:center">No duplicate clusters detected.</div>'; return; }
+    document.getElementById('mergeBody').innerHTML=duplicates.map(m=>`
+      <div class="merge-row" data-domain="${m.domain}" data-a="${m.recordA.id}" data-b="${m.recordB.id}">
+        <span class="merge-names">${m.recordA.id} "${m.recordA.name}" &harr; ${m.recordB.id} "${m.recordB.name}"<span class="merge-score">${m.matchScore}% match</span></span>
+        <span class="merge-actions">
+          <button class="btn btn-green btn-sm" data-action="approve" data-survivor="${m.recordA.id}" data-merged="${m.recordB.id}" data-domain="${m.domain}">KEEP ${m.recordA.id}</button>
+          <button class="btn btn-green btn-sm" data-action="approve" data-survivor="${m.recordB.id}" data-merged="${m.recordA.id}" data-domain="${m.domain}">KEEP ${m.recordB.id}</button>
+          <button class="btn btn-ghost btn-sm" data-action="reject" data-survivor="${m.recordA.id}" data-merged="${m.recordB.id}" data-domain="${m.domain}">REJECT</button>
+        </span>
+      </div>`).join('');
+  }
+  function renderHistory(){
+    document.getElementById('historyMeta').textContent=`${mergeLog.length} decision${mergeLog.length===1?'':'s'}`;
+    if(!mergeLog.length){ document.getElementById('historyBody').innerHTML='<div style="color:var(--text-dim);padding:20px;text-align:center">No merge decisions yet.</div>'; return; }
+    document.getElementById('historyBody').innerHTML=mergeLog.map(h=>`
+      <div class="history-row">
+        <span>${new Date(h.ts).toLocaleString()}</span>
+        <span class="decision-${h.decision.toLowerCase()}">${h.decision}</span>
+        <span>${h.domain}: kept ${h.survivorId} "${h.survivorName}" over ${h.mergedId} "${h.mergedName}"</span>
+        <span>&mdash; ${h.actor}</span>
+      </div>`).join('');
+  }
   function renderStatus(k){ document.getElementById('navStatus').textContent=`ENGINE: ${k.total_records} RECORDS · ${k.duplicate_count} DUPS`; }
+
+  async function handleMergeAction(e){
+    const btn=e.target.closest('button[data-action]');
+    if(!btn) return;
+    const { action, survivor, merged, domain } = btn.dataset;
+    const actor = window.prompt('Steward name for this decision:', 'R. Whitfield');
+    if(actor===null) return; // cancelled
+    try{
+      const res=await fetch('/api/mdm/merge',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({domain, survivorId:survivor, mergedId:merged, actor, decision: action==='reject'?'REJECTED':'APPROVED'})});
+      const d=await res.json();
+      if(!d.ok) throw new Error(d.error||'Merge failed');
+      await loadFromEngine();
+    } catch(err){ alert(`Merge action failed: ${err.message}`); }
+  }
+  document.getElementById('mergeBody').addEventListener('click', handleMergeAction);
+
   async function runAnalysis(){
     const out=document.getElementById('aiOutput');
     out.className='ai-output loading'; out.textContent='Running MDM anomaly detection...';
     try{
-      const res=await fetch('/api/mdm/query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({records,kpis:computeKpis(),maxTokens:1200})});
-      const d=await res.json(); out.className='ai-output'; out.textContent=d.answer||d.output||'No analysis returned.';
+      const res=await fetch('/api/mdm/query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({records,duplicates,kpis:computeKpis(),maxTokens:1200})});
+      const d=await res.json(); out.className='ai-output'; out.textContent=d.answer||d.output||d.error||'No analysis returned.';
     } catch(e){ out.className='ai-output'; out.textContent=`Analysis failed: ${e.message}`; }
   }
-  document.getElementById('btnLoad').addEventListener('click',()=>{ records=(MODEL.sample_data?.records||[]).map(r=>({...r})); save(); renderAll(); });
-  document.getElementById('btnReset').addEventListener('click',()=>{ if(!confirm('Reset MDM data?')) return; records=[]; save(); renderAll(); });
+  document.getElementById('btnLoad').addEventListener('click',()=>loadFromEngine().catch(e=>alert(e.message)));
+  document.getElementById('btnReset').addEventListener('click',()=>{
+    if(!confirm('Reset MDM data? This reloads the current server-side state (merges already approved will remain retired).')) return;
+    loadFromEngine().catch(e=>alert(e.message));
+  });
   document.getElementById('btnAnalyze').addEventListener('click',runAnalysis);
   document.getElementById('btnRelay').addEventListener('click',()=>{
-    try{ localStorage.setItem('TSM_MDM_RELAY',JSON.stringify({vertical:'mdm',records,kpis:computeKpis(),timestamp:new Date().toISOString()})); } catch(e){}
+    try{ localStorage.setItem('TSM_MDM_RELAY',JSON.stringify({vertical:'mdm',records,duplicates,kpis:computeKpis(),timestamp:new Date().toISOString()})); } catch(e){}
     document.getElementById('navStatus').textContent='ENGINE: RELAYED';
   });
-  init().catch(e=>console.error('[MDM]',e));
+  loadFromEngine().catch(e=>console.error('[MDM]',e));
 })();
 </script></body></html>
