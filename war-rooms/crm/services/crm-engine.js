@@ -36,6 +36,39 @@
       this.data[entityKey] = [...(this.data[entityKey] || []), ...records];
     }
 
+    /* ---------- Persistence ----------
+       Engine state (this.data) previously only lived in memory --
+       a page refresh mid-demo silently dropped any loaded/converted
+       records. Persist the full working set to localStorage on every
+       mutation, and rehydrate on init before falling back to samples. */
+
+    saveToStorage() {
+      try {
+        localStorage.setItem('TSM_CRM_DATA', JSON.stringify(this.data));
+        return true;
+      } catch (e) {
+        console.warn('CRMEngine: saveToStorage failed', e);
+        return false;
+      }
+    }
+
+    loadFromStorage() {
+      try {
+        const raw = localStorage.getItem('TSM_CRM_DATA');
+        if (!raw) return false;
+        const parsed = JSON.parse(raw);
+        ENTITY_KEYS.forEach(k => { this.data[k] = Array.isArray(parsed[k]) ? parsed[k] : []; });
+        return true;
+      } catch (e) {
+        console.warn('CRMEngine: loadFromStorage failed', e);
+        return false;
+      }
+    }
+
+    clearStorage() {
+      try { localStorage.removeItem('TSM_CRM_DATA'); } catch (e) { /* noop */ }
+    }
+
     /* ---------- Stage model helpers ---------- */
 
     _idField(entityKey) {
