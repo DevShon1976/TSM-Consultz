@@ -204,37 +204,13 @@ tr:hover td{background:rgba(0,255,80,.03)}
   setInterval(setClock, 1000); setClock();
 
   async function loadModel() {
-
-    // Wait for engine to exist (fixes async load issues)
-    const waitForEngine = () => {
-        return new Promise((resolve) => {
-            const check = () => {
-                if (window.TSMApprovalEngine) {
-                    resolve(true);
-                } else {
-                    setTimeout(check, 50);
-                }
-            };
-            check();
-        });
-    };
-
-    await waitForEngine();
-
-    const EngineClass = window.TSMApprovalEngine;
-
-    if (!EngineClass) {
-        console.error("Engine failed to load");
-        return;
-    }
-
-    engine = new EngineClass();
-
-    engine.loadModel();
-    engine.loadSampleData();
-
-    window._tsmEngine = engine;
-}
+    const res = await fetch('/war-rooms/approval/data/approval-model.json');
+    MODEL = await res.json();
+    engine = new TSMApprovalEngine(MODEL);
+    const hydrated = engine.loadFromStorage();
+    renderStageList();
+    if (hydrated) renderAll();
+  }
 
   function renderStageList() {
     const def = (MODEL.entities || {}).approval_request || { stages: [] };
