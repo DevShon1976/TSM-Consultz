@@ -1,8 +1,22 @@
 /**
- * TSM AUTO-PIPELINE v1.0
- * Central orchestration spine — all 7 verticals
- * Sits in html/js/core/tsm-auto-pipeline.js
+ * TSM AUTO-PIPELINE v1.1
+ * Central orchestration spine — all verticals
+ * Correctly located at html/js/core/tsm-auto-pipeline.js (served as /js/core/tsm-auto-pipeline.js)
+ *
+ * FIX (2026-07-01): This file previously only contained a 6-line TSMEventBus stub.
+ * The real orchestration engine (RELAY_REGISTRY, relay detection, auto-launch) was
+ * sitting unreferenced at the repo root and was never actually served or executed
+ * by any of the 18+ war room / strategist / exec portal pages that <script> it.
+ * This merges the real engine into the path Express actually serves, and keeps
+ * the TSMEventBus definition CPQ and others already depend on.
  */
+
+/* TSM Event Bus — preserved from prior stub, other pages depend on this existing */
+window.TSMEventBus = window.TSMEventBus || {
+  _handlers: {},
+  on: function(evt, fn) { (this._handlers[evt] = this._handlers[evt] || []).push(fn); },
+  emit: function(evt, data) { (this._handlers[evt] || []).forEach(fn => fn(data)); }
+};
 
 (function(global) {
   'use strict';
@@ -15,6 +29,18 @@
     legal:        { keys: ['TSM_LEGAL_WAR_RELAY','tsm_legal_war_relay'],                 entryFn: 'runSynthesis',   strategistPath: '/legal-pro/legal-main-strategist.html' },
     realestate:   { keys: ['TSM_RE_WAR_RELAY','tsm_re_war_relay'],                       entryFn: 'runStrategist',  strategistPath: '/reo-pro/re-strategist.html' },
     bpo:          { keys: ['TSM_BPO_WAR_RELAY','tsm_bpo_war_relay'],                     entryFn: 'runStrategist',  strategistPath: '/bpo/bpo-strategist-v2.html' },
+
+    /* Added: verticals that exist in server.js (SP.cpq / SP.o2c / SP.crm / SP.approval /
+       SP.mdm / SP.integration / SP.governance / SP.digital_twin) but were never wired
+       into the pipeline engine because it was never actually loading. */
+    cpq:          { keys: ['TSM_CPQ_WAR_RELAY','tsm_cpq_war_relay'],                     entryFn: 'runStrategist',  strategistPath: '/cpq-war-room.html' },
+    o2c:          { keys: ['TSM_O2C_WAR_RELAY','tsm_o2c_war_relay'],                     entryFn: 'runStrategist',  strategistPath: '/war-rooms/o2c/o2c-war-room.html' },
+    crm:          { keys: ['TSM_CRM_WAR_RELAY','tsm_crm_war_relay'],                     entryFn: 'runStrategist',  strategistPath: '/war-rooms/crm/crm-war-room.html' },
+    approval:     { keys: ['TSM_APPROVAL_WAR_RELAY','tsm_approval_war_relay'],           entryFn: 'runStrategist',  strategistPath: '/approval-war-room.html' },
+    mdm:          { keys: ['TSM_MDM_WAR_RELAY','tsm_mdm_war_relay'],                     entryFn: 'runStrategist',  strategistPath: '/war-rooms/mdm/mdm-war-room.html' },
+    integration:  { keys: ['TSM_INTEGRATION_WAR_RELAY','tsm_integration_war_relay'],     entryFn: 'runStrategist',  strategistPath: '/war-rooms/integration-hub/integration-hub.html' },
+    governance:   { keys: ['TSM_GOVERNANCE_WAR_RELAY','tsm_governance_war_relay'],       entryFn: 'runStrategist',  strategistPath: '/war-rooms/governance/governance-war-room.html' },
+    digitaltwin:  { keys: ['TSM_DIGITALTWIN_WAR_RELAY','tsm_digitaltwin_war_relay'],     entryFn: 'runStrategist',  strategistPath: '/war-rooms/digital-twin/digital-twin-war-room.html' },
   };
 
   const State = {
@@ -48,6 +74,14 @@
     if (path.includes('legal'))                                 return 'legal';
     if (path.includes('reo') || path.includes('re-'))          return 'realestate';
     if (path.includes('bpo'))                                   return 'bpo';
+    if (path.includes('cpq'))                                   return 'cpq';
+    if (path.includes('o2c') || path.includes('order-to-cash')) return 'o2c';
+    if (path.includes('crm'))                                   return 'crm';
+    if (path.includes('approval'))                              return 'approval';
+    if (path.includes('mdm'))                                   return 'mdm';
+    if (path.includes('integration'))                           return 'integration';
+    if (path.includes('governance'))                            return 'governance';
+    if (path.includes('digital-twin') || path.includes('digitaltwin')) return 'digitaltwin';
     return null;
   }
 
