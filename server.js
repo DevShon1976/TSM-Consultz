@@ -217,7 +217,6 @@ app.use('/shared', express.static(path.join(__dirname, 'html/bpo/shared')));
 app.use('/insurance', express.static(path.join(__dirname, 'html/tsm-insurance')));
 app.use('/construction', express.static(path.join(__dirname, 'html/construction-suite')));
 app.use(express.static(dirPath));
-app.use(express.static(__dirname));
 
 // ── HC NODE ROUTES ────────────────────────────────────────────────────────────
 app.get('/html/hc-strategist', (req, res) => res.redirect('/healthcare/hc-strategist/'));
