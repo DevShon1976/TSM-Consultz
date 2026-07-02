@@ -37,7 +37,7 @@ window.TSMEventBus = window.TSMEventBus || {
     o2c:          { keys: ['TSM_O2C_WAR_RELAY','tsm_o2c_war_relay'],                     entryFn: 'runStrategist',  strategistPath: '/war-rooms/o2c/o2c-war-room.html' },
     crm:          { keys: ['TSM_CRM_WAR_RELAY','tsm_crm_war_relay'],                     entryFn: 'runStrategist',  strategistPath: '/war-rooms/crm/crm-war-room.html' },
     approval:     { keys: ['TSM_APPROVAL_WAR_RELAY','tsm_approval_war_relay'],           entryFn: 'runStrategist',  strategistPath: '/approval-war-room.html' },
-    mdm:          { keys: ['TSM_MDM_WAR_RELAY','tsm_mdm_war_relay'],                     entryFn: 'runStrategist',  strategistPath: '/html/mdm-suite/mdm-strategist.html' },
+    mdm:          { keys: ['TSM_MDM_WAR_RELAY','tsm_mdm_war_relay'],                     entryFn: 'runStrategist',  strategistPath: '/war-rooms/mdm/mdm-war-room.html' },
     integration:  { keys: ['TSM_INTEGRATION_WAR_RELAY','tsm_integration_war_relay'],     entryFn: 'runStrategist',  strategistPath: '/war-rooms/integration-hub/integration-hub.html' },
     governance:   { keys: ['TSM_GOVERNANCE_WAR_RELAY','tsm_governance_war_relay'],       entryFn: 'runStrategist',  strategistPath: '/war-rooms/governance/governance-war-room.html' },
     digitaltwin:  { keys: ['TSM_DIGITALTWIN_WAR_RELAY','tsm_digitaltwin_war_relay'],     entryFn: 'runStrategist',  strategistPath: '/war-rooms/digital-twin/digital-twin-war-room.html' },
