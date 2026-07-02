@@ -1356,7 +1356,7 @@ app.post('/api/wip/decision', (req, res) => {
   res.json({ ok: true, decision });
 });
 
-app.patch('/api/wip/decision/:id', (req, res) => {
+app.patch('/api/wip/decision/:id', requireApiKey, (req, res) => {
   const { vertical, status } = req.body || {};
   if (!ensureWipVertical(vertical)) return res.status(400).json({ ok: false, error: 'valid vertical required' });
   if (!['APPROVED', 'REJECTED', 'PENDING'].includes(status)) return res.status(400).json({ ok: false, error: 'status must be APPROVED, REJECTED, or PENDING' });
@@ -1443,7 +1443,7 @@ app.get('/api/governance/risk', (req, res) => {
   res.json({ ok: true, risks: GOVERNANCE_RISK_REGISTER });
 });
 
-app.post('/api/governance/risk/:id/resolve', (req, res) => {
+app.post('/api/governance/risk/:id/resolve', requireApiKey, (req, res) => {
   const risk = GOVERNANCE_RISK_REGISTER.find(r => r.id === req.params.id);
   if (!risk) return res.status(404).json({ ok: false, error: "Risk not found" });
   risk.status = 'RESOLVED';
@@ -1516,7 +1516,7 @@ app.get('/api/integration/catalog', (req, res) => {
   res.json({ ok: true, integrations: INTEGRATION_CATALOG });
 });
 
-app.post('/api/integration/:id/sync', (req, res) => {
+app.post('/api/integration/:id/sync', requireApiKey, (req, res) => {
   const item = INTEGRATION_CATALOG.find(i => i.id === req.params.id);
   if (!item) return res.status(404).json({ ok: false, error: "Integration not found" });
   item.lastSync = Date.now();
@@ -1706,7 +1706,16 @@ const MDM_LAST_VALIDATED = {};
 // the rest of the platform's in-memory-state pattern; swap for the Fly volume if needed).
 const MDM_MERGE_LOG = [];
 
-app.post('/api/mdm/merge', (req, res) => {
+// ── AUTH: shared-secret gate for mutating endpoints ────────────────────────
+function requireApiKey(req, res, next) {
+  const key = req.headers['x-api-key'];
+  if (!key || key !== process.env.TSM_API_KEY) {
+    return res.status(401).json({ ok: false, error: 'Unauthorized' });
+  }
+  next();
+}
+
+app.post('/api/mdm/merge', requireApiKey, (req, res) => {
   const { domain, survivorId, mergedId, actor, decision } = req.body || {};
   if (!domain || !survivorId || !mergedId) {
     return res.status(400).json({ ok: false, error: 'domain, survivorId, mergedId required' });
@@ -1743,7 +1752,7 @@ app.get('/api/mdm/merge-history', (req, res) => {
 // Real reset: restores every domain to its original seeded state (undoes any
 // approved merges) and clears the decision log. Previously "RESET DATA" just
 // re-fetched current state with no way to actually undo anything.
-app.post('/api/mdm/reset', (req, res) => {
+app.post('/api/mdm/reset', requireApiKey, (req, res) => {
   Object.keys(MDM_SEED_DATA_ORIGINAL).forEach(domain => {
     MDM_SEED_DATA[domain] = JSON.parse(JSON.stringify(MDM_SEED_DATA_ORIGINAL[domain]));
   });
