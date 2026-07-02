@@ -2207,6 +2207,19 @@ return `<span class="uq-badge" onclick="launchWarRoomDirect('${roomKey}','${enco
 
     uqStatus(qid, `${classification.documentType || "Routed"} → ${badges}${warRoomBtns ? '<br><span style="font-size:8px;color:var(--dim);margin-right:4px;">OPEN IN:</span>' + warRoomBtns : ''}`, "ok");
 
+    // TSM AUTO-CHAIN — single-vertical match + AUTO mode: launch straight into the war room
+    if (routed.length === 1 && localStorage.getItem('tsm_auto_mode') !== 'off') {
+      const r = routed[0];
+      const roomKey = r.vertical + '-war-room';
+      const room = WAR_ROOM_ROUTES[roomKey];
+      if (room) {
+        const synth = [classification.summary||'',`TYPE:${classification.documentType||''}`,`CLIENT:${classification.client||''}`,`REF:${classification.ref||''}`].filter(Boolean).join('\n');
+        const payloadJson = encodeURIComponent(JSON.stringify({docText:synth,docType:classification.documentType||'DOCUMENT',fileName:classification.fileName||file.name,client:classification.client||'',ref:classification.ref||''}));
+        uqStatus(qid, `${classification.documentType || "Routed"} → ${badges} <span style="color:var(--dim);font-size:8px;">⚡ launching ${room.label} in 2s…</span>`, "ok");
+        setTimeout(() => { launchWarRoomDirect(roomKey, payloadJson); }, 2000);
+      }
+    }
+
     if (routed.some(r => r.vertical === currentVertical)) {
       runSearch();
       refreshTotalCount();

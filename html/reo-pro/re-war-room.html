@@ -2185,19 +2185,7 @@ Always use ► section headers. Include specific dollar amounts, timelines, and 
     let savedOutputs = [];
     let runCount = 0;
 
-// Doc Search relay init
-(function(){
-  const docRelay = JSON.parse(sessionStorage.getItem('TSM_RE_WAR_RELAY') || localStorage.getItem('TSM_RE_WAR_RELAY') || 'null');
-  if (docRelay?.doc) {
-    const d = docRelay.doc; const ext = d._ext || {};
-    window.__docRelayContext = `\n\nDOC CONTEXT: File: ${d.fileName} | Type: ${d.documentType} | Client: ${ext.client||'N/A'} | Exposure: ${d.amount?'$'+d.amount.toLocaleString():'N/A'} | ${(ext.docText||'').slice(0,300)}`;
-    window.__docRelayBanner = `⚡ DOC LOADED — ${d.fileName} · ${d.documentType}`;
-    sessionStorage.removeItem('tsm_re_docsearch_relay');
-    localStorage.removeItem('tsm_re_docsearch_relay');
-    // TSM AUTO-FIRE
-    if (localStorage.getItem('tsm_auto_mode') !== 'off') { setTimeout(() => { if (typeof fireEngines === 'function') fireEngines(); }, 900); }
-  }
-})();
+
     let currentOutput = '';
     let selectedScenarios = new Set();
     let sessionPayload = {};
@@ -3027,9 +3015,14 @@ Dollar amounts and party names required.`;
     const docLower = (docType + ' ' + relay.docText.slice(0, 200)).toLowerCase();
     const matchedNode = Object.entries(typeNodeMap).find(([k]) => docLower.includes(k))?.[1] || 'REAM';
     
-    setTimeout(() => {
+    setTimeout(async () => {
       const nodeBtn = document.querySelector(`[data-node="${matchedNode}"]`);
-      if (nodeBtn) nodeBtn.click();
+      if (!nodeBtn) return;
+      await runNode(nodeBtn);
+      // TSM AUTO-CHAIN — escalate to Strategist once analysis is in, same as Construction's pattern
+      if (localStorage.getItem('tsm_auto_mode') !== 'off') {
+        setTimeout(() => { if (typeof escalateToStrategist === 'function') escalateToStrategist(); }, 1500);
+      }
     }, 800);
 
   } catch(e) { console.warn('RE War Room relay error:', e); }
