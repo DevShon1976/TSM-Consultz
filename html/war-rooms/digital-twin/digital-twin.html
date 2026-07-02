@@ -124,7 +124,34 @@ body{background:var(--bg);color:var(--text);font-family:'Courier New',monospace;
     {id:'it',name:'IT OPS',score:94,delta:+2,color:'#00dcb4'}
   ];
 
+  // ── LIVE BPO SIGNAL: reads real relay data written by bpo-situation-room.html
+  // and bpo-strategist-v2.html, instead of a hardcoded line. First real
+  // (non-static) signal source in Digital Twin -- see phases.json Phase 10 note.
+  function getBpoLiveSignal(){
+    try {
+      const stratRaw = localStorage.getItem('TSM_BPO_STRAT_RELAY');
+      const warRaw = localStorage.getItem('TSM_BPO_WAR_RELAY');
+      if (stratRaw) {
+        const s = JSON.parse(stratRaw);
+        const conf = s.recommendation?.confidence || '—';
+        const sector = s.sector || 'BPO';
+        const t = new Date(s.timestamp);
+        const time = isNaN(t) ? '—' : t.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+        return {type:'ok', text:`BPO: ${sector} strategist brief generated — ${conf}% confidence`, src:'BPO', time, live:true};
+      }
+      if (warRaw) {
+        const w = JSON.parse(warRaw);
+        const sector = w.selectedSector || 'BPO';
+        const t = new Date(w.timestamp);
+        const time = isNaN(t) ? '—' : t.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+        return {type:'warn', text:`BPO: ${sector} case extracted, awaiting strategist review`, src:'BPO', time, live:true};
+      }
+    } catch(e) {}
+    return {type:'warn', text:'BPO: no active case data — open bpo-situation-room.html to generate live signal', src:'BPO', time:'—', live:false};
+  }
+
   const SIGNALS=[
+    getBpoLiveSignal(),
     {type:'ok',text:'O2C pipeline: 5 orders active, $333K in flight','src':'O2C','time':'12:09'},
     {type:'warn',text:'CPQ: Glendale Data Center credit hold — $97.5K at risk','src':'CPQ','time':'12:07'},
     {type:'bad',text:'Procurement score dropped 8pts — supplier risk elevated','src':'SUPPLY CHAIN','time':'11:58'},
