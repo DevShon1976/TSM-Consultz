@@ -80,7 +80,17 @@
   const cfg=MAP[current] || MAP.executive;
 
   function sectorIntel(){
-    return window.TSMSectorIntelligence || {
+    const api = window.TSMSectorIntelligence;
+    if (api && typeof api.getMeta === "function") {
+      const meta = api.getMeta(current) || {};
+      return {
+        label:()=>meta.label || cfg.owner,
+        relay:()=>cfg.owner,
+        action:()=>cfg.actions && cfg.actions[0] ? cfg.actions[0] : "Assign owner",
+        summary:()=>meta.continuityNarrative || (cfg.owner + " active.")
+      };
+    }
+    return {
       label:()=>cfg.owner,
       relay:()=>cfg.owner,
       action:()=>cfg.actions && cfg.actions[0] ? cfg.actions[0] : "Assign owner",
