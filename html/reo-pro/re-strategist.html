@@ -542,6 +542,10 @@ function loadPayload() {
     if (raw) {
       warRoomPayload = JSON.parse(raw);
       applyPayload();
+      // TSM AUTO-CHAIN — finish the chain to Exec Portal without a manual click
+      if (localStorage.getItem('tsm_auto_mode') !== 'off') {
+        setTimeout(() => { escalateToExec(true); }, 1800);
+      }
     } else {
       document.getElementById('ib-detail').textContent = 'No war room payload — running in standalone mode';
       document.getElementById('ctx-modules').textContent = 'Standalone';
@@ -723,7 +727,7 @@ async function runRescuePlan() {
   await populateRescuePanel();
 }
 
-async function buildFullBrief() {
+async function buildFullBrief(silent) {
   // Build from stratSaved modules OR fall back to war room relay payload
   const hasModules = stratSaved.length > 0;
   const hasRelay = warRoomPayload && (
@@ -760,7 +764,7 @@ async function buildFullBrief() {
 
   document.getElementById('stratContent').value = content;
   stratPayload.fullBrief = content;
-  alert('Full brief compiled — ' + (hasRelay ? 'War Room relay included. ' : '') + (hasModules ? stratSaved.length + ' strategy modules included.' : 'Run strategy modules to add analysis.'));
+  if (!silent) alert('Full brief compiled — ' + (hasRelay ? 'War Room relay included. ' : '') + (hasModules ? stratSaved.length + ' strategy modules included.' : 'Run strategy modules to add analysis.'));
 }
 
 function autoStratSave(title, text) {
@@ -818,8 +822,8 @@ function buildStratPayload() {
   };
 }
 
-function escalateToExec() {
-  buildFullBrief();
+function escalateToExec(silent) {
+  buildFullBrief(silent);
   const payload = buildStratPayload();
   try {
     // ── TSM EXEC KIT: WIP + explainability ──────────────────────────

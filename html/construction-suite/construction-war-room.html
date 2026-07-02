@@ -562,7 +562,13 @@ let groqKey = localStorage.getItem('tsm_groq_key') || '';
     if (!relayText) return;
     localStorage.removeItem('tsm_con_docsearch_relay');
     // TSM AUTO-FIRE
-    if (localStorage.getItem('tsm_auto_mode') !== 'off') { setTimeout(() => { if (typeof fireEngines === 'function') fireEngines(); }, 900); }
+    if (localStorage.getItem('tsm_auto_mode') !== 'off') {
+      setTimeout(async () => {
+        if (typeof fireEngines === 'function') await fireEngines();
+        // TSM AUTO-CHAIN — escalate to Strategist once the 6-engine sweep is in
+        setTimeout(() => { if (typeof escalateToStrategist === 'function') escalateToStrategist(); }, 1500);
+      }, 900);
+    }
     const ta = document.getElementById('docPaste');
     if (ta) ta.value = relayText;
   } catch(e) { console.warn('Doc search relay error:', e); }

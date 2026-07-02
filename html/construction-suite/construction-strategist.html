@@ -871,6 +871,13 @@ function loadWarRoomRelay() {
     warRoomRelay = JSON.parse(raw);
     if (!warRoomRelay) return false;
     populateFromWarRoom(warRoomRelay);
+    // TSM AUTO-CHAIN — synthesize BNCA and escalate to Executive Portal without manual clicks
+    if (localStorage.getItem('tsm_auto_mode') !== 'off') {
+      setTimeout(async () => {
+        if (typeof runConstructionBNCAFromRelay === 'function') await runConstructionBNCAFromRelay();
+        setTimeout(() => { if (typeof escalateToExecutive === 'function') escalateToExecutive(); }, 1500);
+      }, 1000);
+    }
     return true;
   } catch(e) { console.warn('War Room relay error:', e); return false; }
 }
