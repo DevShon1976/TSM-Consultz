@@ -1,4 +1,5 @@
 <!DOCTYPE html><html lang="en"><head>
+<script src="/config/tsm-client-key.js"></script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>TSM MDM War Room</title>
 <style>
@@ -189,7 +190,7 @@ td{padding:7px 8px;border-bottom:1px solid var(--border);color:var(--text)}
     const actor = window.prompt('Steward name for this decision:', 'R. Whitfield');
     if(actor===null) return; // cancelled
     try{
-      const res=await fetch('/api/mdm/merge',{method:'POST',headers:{'Content-Type':'application/json'},
+      const res=await fetch('/api/mdm/merge',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':window.TSM_CLIENT_KEY||''},
         body:JSON.stringify({domain, survivorId:survivor, mergedId:merged, actor, decision: action==='reject'?'REJECTED':'APPROVED'})});
       const d=await res.json();
       if(!d.ok) throw new Error(d.error||'Merge failed');
@@ -210,7 +211,7 @@ td{padding:7px 8px;border-bottom:1px solid var(--border);color:var(--text)}
   document.getElementById('btnReset').addEventListener('click',async()=>{
     if(!confirm('Reset MDM data? This restores all domains to their original seeded state and clears the merge decision log. This cannot be undone.')) return;
     try{
-      const r=await fetch('/api/mdm/reset',{method:'POST'});
+      const r=await fetch('/api/mdm/reset',{method:'POST',headers:{'x-api-key':window.TSM_CLIENT_KEY||''}});
       const d=await r.json();
       if(!d.ok) throw new Error(d.error||'Reset failed');
       await loadFromEngine();
